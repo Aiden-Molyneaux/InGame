@@ -77,6 +77,7 @@ search the ID across `docs/`.
 | `DISC-` | Discovery |
 | `NOTIF-` | Notifications & engagement |
 | `MOD-` | Moderation |
+| `ACH-` | Achievements & easter eggs |
 
 IDs are **append-only**: never renumber. A retired behavior is marked `(removed)` with a changelog
 note, keeping the number burned so old references stay unambiguous.

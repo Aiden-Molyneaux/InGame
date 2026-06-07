@@ -23,6 +23,10 @@
   starting number) [behavior]
 - OQ-003: Does "currently playing" (WTP-03) also surface as a status on the collection entry
   (COL-02), or only in the queue? [undecided]
+- OQ-004: Specific achievement & easter-egg **content** — which milestones, which eggs, their
+  triggers and rewards. Dedicated brainstorm when the engine is built (ACH-*). [behavior/content]
+- OQ-005: Hidden easter-egg presentation — fully invisible until unlocked, or shown as a locked
+  "???" mystery slot that hints something exists? (ACH-03) [presentation]
 
 ## Resolved (moved to decisions/)
 *(none yet — foundational decisions are in `decisions/0001-foundational-product-decisions.md`)*

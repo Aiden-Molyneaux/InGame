@@ -4,7 +4,7 @@
 > Screens and visuals are owned by the design-spec; endpoint shapes by the api-contract. This
 > document references those by ID. See [`../00-INDEX.md`](../00-INDEX.md) for the working agreement.
 
-**Version:** 0.2 (draft) · **Last updated:** 2026-06-07 · **Owner:** Claude Code
+**Version:** 0.3 (draft) · **Last updated:** 2026-06-07 · **Owner:** Claude Code
 
 ---
 
@@ -150,7 +150,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | COSM-01 | P0 | A library of cosmetic items typed as: effect · sticker · art asset · frame · device skin · device model. |
 | COSM-02 | P0 | A **free baseline** set is always available so everyone can customize meaningfully. |
 | COSM-03 | P0 | Premium items are gated by **entitlement** (owned via purchase or earned). The store's moat = **things you can't just draw** (animated/dynamic effects, curated packs). |
-| COSM-04 | P1 | Some cosmetics are **earned** via milestones/contribution (e.g. "100 adoptions → free effect"). |
+| COSM-04 | P1 | Some cosmetics are **earned**, not bought — delivered via the achievement system (ACH-04), including **achievement-exclusive** items that are never purchasable (prestige). |
 
 ### 5.9 Economy & store (`ECON-`)
 | ID | Pri | Behavior |
@@ -159,7 +159,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | ECON-02 | P0 | Every user starts with **5 Customizer currency**; earns more via **login bonuses / milestones**; can **purchase** more. (Values server-configurable per SYS-04.) |
 | ECON-03 | P0 | **Adopting a premium card costs 1 Customizer currency.** Adopting a **non-premium** card is **free**. |
 | ECON-04 | P0 | **Scoped adoption rights.** Adopting a premium card grants the right to use **that design for that game only**. It does **not** grant the standalone premium effect for reuse elsewhere (protects effect sales). |
-| ECON-05 | P0 | **Creator reward = clout (v2 choice "A").** When a creator's premium card is adopted, the creator earns **adoption-count, contributor prestige, and cosmetic unlock milestones** — *not* currency or money. *(Future toggle "B" — currency kickback — is noted in decisions; real revenue-share is parked, §11.)* |
+| ECON-05 | P0 | **Creator reward = clout (v2 choice "A").** When a creator's premium card is adopted, the creator earns **adoption-count, contributor prestige, and cosmetic unlock milestones** (delivered via the achievement system, ACH-04) — *not* currency or money. *(Future toggle "B" — currency kickback — is noted in decisions; real revenue-share is parked, §11.)* |
 | ECON-05a | P2 | *(reserved)* Currency-kickback to creators — a future-toggle of ECON-05, off in v2. |
 | ECON-06 | P0 | **In-app purchases via Apple/Google IAP** with server-side **receipt validation** and **restore purchases**. Implemented via a cross-platform IAP layer (RevenueCat — see api-contract / decisions). |
 | ECON-07 | P0 | A **wallet** holds the currency balance; a **ledger** records every change (login bonus, purchase, adoption spend, milestone) for auditability. |
@@ -206,6 +206,22 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | MOD-02 | P0 | Reported content can be **soft-hidden** pending review. |
 | MOD-03 | P1 | A minimal review queue (can begin as manual/admin-only). |
 
+### 5.15 Achievements & easter eggs (`ACH-`)
+> The **system** is specified here; the specific achievement/egg **content** is a later brainstorm (OQ-004).
+> Shipping the engine in v2 is deliberate — it avoids retrofitting event plumbing and back-granting
+> retrospective achievements later.
+
+| ID | Pri | Behavior |
+|---|---|---|
+| ACH-01 | P1 | Achievement system with **data-driven, server-configurable definitions** (trigger condition + reward + visibility). New achievements/eggs ship **without an app release** (per SYS-04). |
+| ACH-02 | P1 | An **event-driven trigger engine** evaluates domain events (friend added, game added, entry contributed, entitlement acquired, card published/adopted, …) against conditions. Unlocks are **idempotent** — once per user, not farmable by repeating an action. |
+| ACH-03 | P1 | Two visibility types: **milestone** (visible, shows progress, e.g. "7/10 games") and **easter egg** (hidden until unlocked — a surprise). |
+| ACH-04 | P1 | **Rewards**: a badge/clout (default), and optionally **Customizer currency** and/or a **cosmetic entitlement** — including **achievement-exclusive cosmetics** that are *earnable only, never purchasable* (prestige that doesn't cannibalize the store). Reuses wallet/ledger (ECON-07) + entitlements (COSM-03). All reward values server-configurable. |
+| ACH-05 | P1 | Earned achievements/badges **display on the profile** as a showcase/flex surface (subject to privacy, PROF-03). |
+| ACH-06 | P1 | An unlock fires a **notification + in-app celebration moment** (NOTIF-01) — on-brand for the arcade aesthetic. |
+| ACH-07 | P2 | Easter eggs may **target specific entities** (a specific catalog game, a specific user) via data-driven definitions. |
+| ACH-08 | P1 | A **domain-event emission convention** is established in **Foundation (Phase 1)** so every feature emits the events the engine consumes — this is what lets achievements ship in v2 with **no retrofit and no retrospective back-granting**. |
+
 ---
 
 ## 6. Data model (entity overview)
@@ -223,6 +239,7 @@ Authoritative field-level shapes live in [`api-contract.md`](api-contract.md); t
 - **What to Play:** `play_queue_items` (user × game, position, source, currently_playing)
 - **Engagement:** `notifications` · `notification_prefs` · `device_push_tokens`
 - **Moderation:** `reports` (+ soft-hide flags on cards/entries)
+- **Achievements:** `achievements` (definition: key, type milestone|egg, condition spec, reward spec, visibility, active — config/seed data) · `user_achievements` (user × achievement, progress, unlocked_at). Achievement-exclusive cosmetics are `cosmetic_items` flagged non-purchasable.
 
 ---
 
@@ -238,12 +255,12 @@ Authoritative field-level shapes live in [`api-contract.md`](api-contract.md); t
 
 ## 8. Implementation phasing (build order; the design is unified)
 
-1. **Foundation** — auth (refresh + Apple), users/profile, data layer + migrations, ownership security (SYS-01), tab-nav shell, **testing harness + CI (SYS-06)**.
+1. **Foundation** — auth (refresh + Apple), users/profile, data layer + migrations, ownership security (SYS-01), tab-nav shell, **testing harness + CI (SYS-06)**, **domain-event convention (ACH-08)**.
 2. **Catalog + Collection** — create/search/dedup catalog, collection CRUD, status/hours/stats. *(Core usable here.)*
 3. **Customization** — Card editor + Device editor (free assets only), composition renderer, effects.
 4. **Community & Economy** — publish/adopt cards, wallet + Customizer currency, store + IAP + entitlements, contributor profile.
 5. **Social** — friends, profiles, compare hours, Top-5, recommendations, What to Play.
-6. **Engagement** — push notifications, activity feed, discovery, moderation tooling.
+6. **Engagement** — push notifications, activity feed, discovery, moderation tooling, **achievements engine + celebration (ACH-\*)**.
 
 ---
 
@@ -273,3 +290,4 @@ Recorded so they're conscious choices, not omissions:
 |---|---|---|---|
 | 2026-06-07 | 0.1 | Initial spec drafted from brainstorming. | All |
 | 2026-06-07 | 0.2 | Added testing harness/CI and per-endpoint authorization-test requirements; web clarified as dev/testing-only surface. See `testing-strategy.md` + decision 0002. | SYS-06, SYS-07 |
+| 2026-06-07 | 0.3 | Added Achievements & easter eggs system (data-driven, event-driven, idempotent; mixed rewards incl. achievement-exclusive cosmetics). Reconciled COSM-04/ECON-05 milestone unlocks into it. See decision 0003. | ACH-01..08 |

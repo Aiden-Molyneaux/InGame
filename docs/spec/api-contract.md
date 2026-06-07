@@ -131,9 +131,19 @@
 | POST | `/reports` | `{ targetType, targetId, reason }` (MOD-01) |
 | *(admin)* | `/admin/reports` (+ resolve/hide) | Minimal review queue (MOD-02/03) |
 
+## Achievements (`ACH-`)
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/achievements` | Visible achievement definitions + progress hints; easter eggs hidden or shown as a locked "???" per design (OQ-005) (ACH-03) |
+| GET | `/me/achievements` | Caller's unlocks + progress (ACH-02/05) |
+| GET | `/users/:id/achievements` | A user's showcased achievements, honoring privacy (ACH-05, PROF-03) |
+
+*(Unlocks happen server-side via the event engine — there is no client "unlock" call.)*
+
 ---
 
 ## Changelog
 | Date | Version | Change |
 |---|---|---|
 | 2026-06-07 | 0.1 | Initial draft seam derived from product-spec v0.1. Shapes to be hardened during design. |
+| 2026-06-07 | 0.2 | Added Achievements endpoints (ACH-). |
