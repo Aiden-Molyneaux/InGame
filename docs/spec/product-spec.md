@@ -4,7 +4,7 @@
 > Screens and visuals are owned by the design-spec; endpoint shapes by the api-contract. This
 > document references those by ID. See [`../00-INDEX.md`](../00-INDEX.md) for the working agreement.
 
-**Version:** 0.1 (draft) · **Last updated:** 2026-06-07 · **Owner:** Claude Code
+**Version:** 0.2 (draft) · **Last updated:** 2026-06-07 · **Owner:** Claude Code
 
 ---
 
@@ -84,6 +84,8 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | SYS-03 | P0 | API base URL and all secrets are **environment-configured**, never hardcoded. |
 | SYS-04 | P0 | Economy and tuning values (starting balance, login bonus, adoption cost, milestone thresholds) are **server-configurable** without an app release. |
 | SYS-05 | P1 | Sensitive/abuse-prone endpoints (auth, create-entry, report) are **rate-limited**. |
+| SYS-06 | P0 | An **automated testing harness + CI** exist from Phase 1 (before feature code). Approach: risk-based, meaningful-tests-first — see [`testing-strategy.md`](testing-strategy.md). |
+| SYS-07 | P0 | **Every mutating endpoint carries a standing authorization test** proving a user cannot read/modify another user's resource (enforces SYS-01). |
 
 ### 5.2 Authentication & identity (`AUTH-`)
 | ID | Pri | Behavior |
@@ -230,12 +232,13 @@ Authoritative field-level shapes live in [`api-contract.md`](api-contract.md); t
 - **Auth:** access+refresh tokens (AUTH-02); refresh rotation; argon2/bcrypt hashing.
 - **Performance:** list endpoints paginate; the catalog search is indexed on `normalized_name`.
 - **Accessibility:** despite the heavy visual theming, respect dynamic type and minimum contrast on functional UI (to be detailed in design-spec).
+- **Testing:** risk-based, meaningful-tests-first; harness + CI from Phase 1 (SYS-06/07). Full approach in [`testing-strategy.md`](testing-strategy.md).
 
 ---
 
 ## 8. Implementation phasing (build order; the design is unified)
 
-1. **Foundation** — auth (refresh + Apple), users/profile, data layer + migrations, ownership security (SYS-01), tab-nav shell.
+1. **Foundation** — auth (refresh + Apple), users/profile, data layer + migrations, ownership security (SYS-01), tab-nav shell, **testing harness + CI (SYS-06)**.
 2. **Catalog + Collection** — create/search/dedup catalog, collection CRUD, status/hours/stats. *(Core usable here.)*
 3. **Customization** — Card editor + Device editor (free assets only), composition renderer, effects.
 4. **Community & Economy** — publish/adopt cards, wallet + Customizer currency, store + IAP + entitlements, contributor profile.
@@ -269,3 +272,4 @@ Recorded so they're conscious choices, not omissions:
 | Date | Version | Change | IDs |
 |---|---|---|---|
 | 2026-06-07 | 0.1 | Initial spec drafted from brainstorming. | All |
+| 2026-06-07 | 0.2 | Added testing harness/CI and per-endpoint authorization-test requirements; web clarified as dev/testing-only surface. See `testing-strategy.md` + decision 0002. | SYS-06, SYS-07 |
