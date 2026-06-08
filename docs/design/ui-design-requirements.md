@@ -6,8 +6,8 @@
 > "how it looks/feels"). Behavior questions raised while designing go to
 > [`../open-questions.md`](../open-questions.md), not edited into the spec directly.
 
-**Version:** 0.2 (in progress) · **Last updated:** 2026-06-08 · **Owner:** Claude Code → Claude Design
-**Status:** the **5 tabs** + **Add Game, the Game page, the Card editor, and the Admin/Moderator console** are specified; the remaining detail screens (Part 4.5) are pending the ongoing walkthrough.
+**Version:** 0.3 · **Last updated:** 2026-06-08 · **Owner:** Claude Code → Claude Design
+**Status:** **ALL screens specified** (5 tabs + 16 detail screens/flows). Ready to hand to Claude Design. Open design notes live in `open-questions.md` (`OQ-005/006/007`).
 
 ---
 
@@ -63,11 +63,11 @@ Two screens are designed **once, with two modes**:
 | 7 | Game page (adaptive) | Detail | shared catalog page; the **owned state folds in** your personal stats + card; card gallery lives here. **Specified** (4.2) |
 | 8 | Card editor | Editor | **specified** (4.3) — the heaviest screen |
 | 9 | Admin/Moderator console | Mod-only | **specified** (4.4) |
-| — | Device editor | Editor | *pending (4.5)* |
-| — | Compare Hours · Lists/Top-5 editor · Find/Add Friends | Social detail | *pending (4.5)* |
-| — | Contributor profile · Achievements | Pride | *pending (4.5; reached from Profile)* |
-| — | Store item detail/purchase · Wallet | Commerce | *pending (4.5)* |
-| — | Auth · Onboarding · Settings · Report | System | *pending (4.5)* |
+| — | Device editor | Editor | **specified** (4.5) |
+| — | Compare Hours · Lists/Top-5 editor · Find/Add Friends | Social detail | **specified** (4.6–4.8) |
+| — | Contributor profile · Achievements | Pride | **specified** (4.9–4.10; reached from Profile) |
+| — | Store item detail/purchase · Wallet | Commerce | **specified** (4.11–4.12) |
+| — | Auth · Onboarding · Settings · Report | System | **specified** (4.13–4.16) |
 
 ---
 
@@ -176,8 +176,61 @@ Two screens are designed **once, with two modes**:
 - **Catalog dedup/merge** — merge a duplicate into the canonical (re-point collections/cards), then **soft-delete with a 3-day restore** (`MOD-05`).
 **States:** queues (empty / with items) · item detail + action · restore-window items.
 
-### 4.5 Still pending
-**Device editor**, then **Compare Hours · Lists/Top-5 editor · Find/Add Friends · Contributor profile · Achievements · Store item detail/purchase · Wallet · Auth · Onboarding · Settings · Report.**
+### 4.5 Device editor (`DEV-01..03`)
+**Purpose:** customize your Device shell (the app/profile frame). **Persona:** Curator. **Lighter than the card editor.**
+**Must host:** **model selection** (own/switch; free default device always renders) · **shell colour** · **sticker placement** (place/scale/rotate from the library; free + premium **preview-then-acquire**). **Personal only** (not published/adopted). **Hard rule:** decoration must never obscure navigation.
+**States:** editing · premium-reconcile · model switch.
+
+### 4.6 Compare Hours (`SOC-03`)
+**Purpose:** friendly comparison. Reached from a friend's profile/Friends.
+**Must host:** per-game **hours side-by-side** (games you both own) · **total hours** · **total games** (collection size) · who's-ahead · **friends leaderboard**. *(Completion % out for v2.)*
+**States:** has-overlap vs no-shared-games · loading.
+
+### 4.7 Lists / Top-5 editor (`SOC-04`)
+**Purpose:** curate your Top-5. **v2 = Top-5 only** (general lists parked).
+**Must host:** pick ≤ 5 games **from your collection**, **order** them (shown as Game Cards), share.
+**States:** empty · editing · full (5).
+
+### 4.8 Find / Add Friends (`SOC-07`)
+**Must host:** **username search** → send request · your **invite link + QR** · **incoming/outgoing requests**. (No contacts-matching.)
+**States:** searching · results · request sent/pending.
+
+### 4.9 Contributor profile — "My Contributions" (`CAT-07`)
+**Purpose:** Contributor pride surface. **Friend-viewable** (privacy-gated); **stats + badges, no level**.
+**Must host:** games you brought to the catalog · fields you added · cards you designed · adoption/usage stats · contributor achievement badges.
+**States:** self vs friend-view · empty (new user).
+
+### 4.10 Achievements (`ACH-03/05`)
+**Purpose:** your achievements. Reached from Profile **only**; **friend-viewable** (earned ones).
+**Must host:** earned + in-progress **milestones** (with progress) · **easter eggs** (presentation per `OQ-005`) · reward badges. *(Content = `OQ-004`, deferred.)*
+**States:** self vs friend-view · unlock celebration moment.
+
+### 4.11 Store item detail / purchase (`ECON-06`)
+**Must host:** **live preview on your own stuff** (effect/finish on a sample card; device model on your device; sticker shown) · price (currency, or real money for currency packs) · owned/locked · **buy** (currency packs → IAP + receipt validation + **restore**; cosmetics → spend currency).
+**States:** detail · purchasing (success/fail/restore) · can't-afford → buy currency.
+
+### 4.12 Wallet (`ECON-07`)
+**Must host:** **balance** (prominent) · earn/spend **ledger** (history) · **buy currency** (IAP packs). Reached via the header counter / Store.
+**States:** balance · ledger (empty/populated) · buy-flow.
+
+### 4.13 Auth (`AUTH-01..05`)
+**Must host:** **register** (email + username + password) · **login** · **Sign in with Apple** · **password reset** · logout.
+**States:** sign-in · sign-up · reset-request/confirm · error.
+
+### 4.14 Onboarding (`AUTH-06`)
+**Purpose:** land a new user on a populated, good-looking collection. **Skippable.**
+**Must host (guided quick-start):** add a few games (with **empty-state suggestions**) · pick favourite genre(s) · optional **design/adopt a first card** · **invite-a-friend** nudge.
+**States:** step-by-step · skip · complete.
+
+### 4.15 Settings
+**Must host:** account (email/password, **sign out**, **delete account** `AUTH-07`) · **privacy** (friends-only vs limited public, `PROF-03`) · **notification prefs** (`NOTIF-02`) · about/legal.
+
+### 4.16 Report (modal, `MOD-01`)
+**Must host:** pick a **reason** → submit; on a card, catalog entry, or user → feeds the Admin console.
+
+---
+
+*All screens are now specified. This document is ready to hand to Claude Design.*
 
 ---
 
@@ -186,3 +239,4 @@ Two screens are designed **once, with two modes**:
 |---|---|---|
 | 2026-06-08 | 0.1 | Initial draft: global design direction + the 5 tab screens. Detail screens/editors pending. |
 | 2026-06-08 | 0.2 | Added detail screens: Add Game (4.1), adaptive Game page (4.2), Card editor (4.3 — `CARD-01..19`), Admin/Moderator console (4.4). Remaining screens pending (4.5). |
+| 2026-06-08 | 0.3 | Specified all remaining screens (4.5–4.16): Device editor, Compare Hours, Lists/Top-5, Find/Add Friends, Contributor profile, Achievements, Store item detail, Wallet, Auth, Onboarding, Settings, Report. **All screens now specified.** |

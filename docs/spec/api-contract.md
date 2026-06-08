@@ -4,7 +4,7 @@
 > be refined alongside the design-spec, because screens reveal exactly what each call must return.
 > Behavior lives in [`product-spec.md`](product-spec.md); shapes live here. Referenced by ID.
 
-**Version:** 0.4 (draft) · **Last updated:** 2026-06-08 · **Owner:** Claude Code
+**Version:** 0.5 (draft) · **Last updated:** 2026-06-08 · **Owner:** Claude Code
 
 ---
 
@@ -31,6 +31,7 @@
 | POST | `/auth/apple` | `{ identityToken, nonce }` → `{ user, accessToken, refreshToken }` |
 | POST | `/auth/refresh` | `{ refreshToken }` → `{ accessToken, refreshToken }` |
 | POST | `/auth/logout` | `{ refreshToken }` → `{ ok: true }` |
+| DELETE | `/me/account` | Delete account — data deletion/anonymization (AUTH-07) |
 | POST | `/auth/password-reset/request` | `{ email }` → `{ ok: true }` |
 | POST | `/auth/password-reset/confirm` | `{ token, password }` → `{ ok: true }` |
 
@@ -97,7 +98,7 @@
 | POST | `/friends/requests/:id/accept` · `/decline` | Respond |
 | DELETE | `/me/friends/:userId` | Unfriend |
 | GET | `/users/search?username=` | Find people by username (SOC-07) |
-| GET | `/me/compare/:friendId` | Per-game + total hours comparison + leaderboard slice (SOC-03) |
+| GET | `/me/compare/:friendId` | Per-game + total hours, total-games comparison + leaderboard slice (SOC-03) |
 | GET/POST/PATCH/DELETE | `/me/lists` (+ `/:id/items`) | Lists incl. Top-5 (capped) (SOC-04) |
 | POST | `/recommendations` | `{ toUserId, gameId, note }` → recipient's WTP (SOC-05) |
 | GET | `/me/feed` | Low-noise, **aggregated** friend activity (SOC-06) |
@@ -156,3 +157,4 @@
 | 2026-06-07 | 0.2 | Added Achievements endpoints (ACH-). |
 | 2026-06-08 | 0.3 | Reconciliation: publisher field; collection search + friend-view collection; favourite game + showcase fields on profile; single-currency store; username people-search; QR invites; games-only discover search; removed notifications-center endpoint. |
 | 2026-06-08 | 0.4 | Card pipeline (draft/publish-flatten/assets, removed upload-sign); collection `ownedSince` rename; admin endpoints (reports resolve, edit-suggestion review, dedup-merge/restore). |
+| 2026-06-08 | 0.5 | Account deletion; compare adds total-games. |

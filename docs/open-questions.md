@@ -25,6 +25,8 @@
   icons) ship at launch, free vs premium split. (CARD-02/17) [content]
 - OQ-010: **Effect & finish roster** — the launch set of animated effects and finishes, free vs
   premium split. (CARD-12) [content]
+- OQ-011: **Store pricing** — currency-pack tiers/prices (IAP) and currency costs of premium
+  cosmetics. (ECON-01/02/06) [tuning] — pairs with OQ-002.
 - OQ-004: Specific achievement & easter-egg **content** — which milestones, which eggs, their
   triggers and rewards. Dedicated brainstorm when the engine is built (ACH-*). [behavior/content]
 - OQ-005: Hidden easter-egg presentation — fully invisible until unlocked, or shown as a locked

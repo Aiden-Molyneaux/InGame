@@ -4,7 +4,7 @@
 > Screens and visuals are owned by the design-spec; endpoint shapes by the api-contract. This
 > document references those by ID. See [`../00-INDEX.md`](../00-INDEX.md) for the working agreement.
 
-**Version:** 0.6 (draft) · **Last updated:** 2026-06-08 · **Owner:** Claude Code
+**Version:** 0.7 (draft) · **Last updated:** 2026-06-08 · **Owner:** Claude Code
 
 ---
 
@@ -96,6 +96,8 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | AUTH-03 | P0 | **Sign in with Apple** (required by App Store policy once any social/third-party login exists). |
 | AUTH-04 | P0 | Password reset via email. |
 | AUTH-05 | P1 | Logout invalidates the refresh token. |
+| AUTH-06 | P1 | **Guided quick-start onboarding** after signup (skippable): add a few games (with empty-state suggestions), pick favourite genre(s), optionally design/adopt a first card, and an invite-a-friend nudge — lands the user on a populated collection. |
+| AUTH-07 | P0 | **Account deletion** (with data deletion/anonymization) available in Settings. |
 
 ### 5.3 Profile (`PROF-`)
 | ID | Pri | Behavior |
@@ -115,7 +117,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | CAT-04 | P0 | Genres come from a **controlled list** (not free text). |
 | CAT-05 | P0 | The creator of an entry is **credited as its contributor**. |
 | CAT-06 | P1 | Users may **suggest edits** to canonical fields, with attribution; lightweight, not a wiki-war surface. |
-| CAT-07 | P1 | **Contributor profile ("My Contributions")** — a first-class screen listing games you brought to the catalog, fields you added, and cards you designed, with adoption/usage stats. (Contributor persona's home + pride surface.) |
+| CAT-07 | P1 | **Contributor profile ("My Contributions")** — games you brought to the catalog, fields you added, cards you designed, with adoption/usage stats; **friend-viewable** (subject to privacy, PROF-03); **stats + achievement badges, no separate level system**. (Contributor pride surface.) |
 | CAT-08 | P1 | **Upcoming games** exist purely as catalog entries with a future release date (community-entered). |
 
 ### 5.5 Collection (`COL-`)
@@ -162,8 +164,9 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 ### 5.7 Device customization (`DEV-`)
 | ID | Pri | Behavior |
 |---|---|---|
-| DEV-01 | P0 | A **Device editor** customizes the user's shell: colour + stickers (composition). The Device is the "frame" of the profile/showcase. |
+| DEV-01 | P0 | A **Device editor** (lighter than the card editor): **shell colour** + **sticker placement** (place/scale/rotate stickers from the library; free + premium via preview-then-acquire) — *not* the full card vector toolkit. **Personal only** — devices are not published/adopted. |
 | DEV-02 | P1 | Users may own multiple **device models** (cosmetic items) and switch the active one. |
+| DEV-03 | P0 | A free **default device** always renders (no broken shell); device decoration must **never obscure navigation** (the nav-on-plastic model). |
 
 ### 5.8 Cosmetics library (`COSM-`)
 | ID | Pri | Behavior |
@@ -191,7 +194,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 |---|---|---|
 | SOC-01 | P0 | **Mutual friends**: request/accept; a friends list. (Public follow graph is parked, §11.) |
 | SOC-02 | P0 | **Friend profile view** = the friend-view mode of the Profile/Showcase (PROF-05): Device, Top-5 (gateway into their read-only collection, COL-10), stats, Now Playing, achievement teasers; exposes **Add friend / Compare hours**. |
-| SOC-03 | P0 | **Compare hours** with a friend (per-game and total) + friend leaderboards. (Core return-driver.) |
+| SOC-03 | P0 | **Compare** with a friend: per-game + total **hours**, **total games** (collection size), who's ahead, + friend leaderboards. (Core return-driver.) |
 | SOC-04 | P0 | **Top-5 lists** — create and share. (Extensible to other list types later.) |
 | SOC-05 | P1 | **Recommend a game to a friend** — drops into their What-to-Play with a note (`WTP-`). |
 | SOC-06 | P1 | A **gentle activity feed** (on the Friends tab): friend beat/completed a game, published a card, unlocked a notable achievement. **Deliberately low-noise** — events are **aggregated by actor+type** ("Alex added 12 games" as one capped item), the **initial collection import does not flood the feed**, and trivia (minor stat tweaks) is excluded. |
@@ -322,3 +325,4 @@ Recorded so they're conscious choices, not omissions:
 | 2026-06-08 | 0.4 | Tab-walkthrough reconciliation: single-currency economy + user-facing ledger; no notifications center; publisher field; collection search + manual order/ASC-DESC + friend-view collection; favourite game + clout/member-since + two-mode showcase; Game-Card-as-universal-representation; feed aggregation; QR/username find-friends; games-only Discover search; card-publishing rate-limit; achievement anti-farming rule. See decisions 0004–0005. | PROF-01/04/05, CAT-02, COL-07/09/10, CARD-07, DISC-03, SOC-02/06/07, ECON-01/07, NOTIF-03, SYS-05 |
 | 2026-06-08 | 0.5 | Closed OQ-001 (multiple device models, per DEV-02) and OQ-003 (Now Playing = a single pin distinct from the Playing status). | WTP-03 |
 | 2026-06-08 | 0.6 | Card-editor deep dive (3-mindset panel informed): vector-composition art model, no uploads/AI; element management/precision/creative toolkit; effects + separate finish layer; preview-then-acquire reconcile; drafts/lifecycle; flatten/publish pipeline; approachability/a11y; asset library; default-card guarantee; publish integrity. Roles (SYS-08); admin console + dedup-merge + text-screening + entitlement/takedown policy (MOD-04..08). Owned-since relabel (COL-03/07); cosmetics types incl vector packs/finish/fonts. Adoption-only (no remix) + no external sharing — both parked. See decisions 0006–0007. | CARD-01..19, MOD-04..08, SYS-08, COL-03/07, COSM-01 |
+| 2026-06-08 | 0.7 | Remaining-screens walkthrough: device editor lighter + personal-only + default-device/nav-legibility (DEV-01/03); compare adds total-games (SOC-03); contributor profile friend-viewable, no level (CAT-07); guided onboarding + account deletion (AUTH-06/07). See decision 0008. | DEV-01/03, SOC-03, CAT-07, AUTH-06/07 |
