@@ -1,7 +1,7 @@
 # 0001 — Foundational product decisions
 
 - **Date:** 2026-06-07
-- **Status:** accepted
+- **Status:** accepted (D8 later refined by [0006](0006-card-editor-model.md) — vector elements; D11/D12 refined by [0005](0005-economy-single-currency.md) — single currency)
 - **Related IDs:** spans the spec (catalog, cards, social, economy, platform)
 
 The decisions below were made during the initial brainstorming for InGame v2. They are the

@@ -4,7 +4,7 @@
 > be refined alongside the design-spec, because screens reveal exactly what each call must return.
 > Behavior lives in [`product-spec.md`](product-spec.md); shapes live here. Referenced by ID.
 
-**Version:** 0.5 (draft) · **Last updated:** 2026-06-08 · **Owner:** Claude Code
+**Version:** 0.6 (draft) · **Last updated:** 2026-06-08 · **Owner:** Claude Code
 
 ---
 
@@ -57,7 +57,7 @@
 ## Collection (`COL-`)
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/me/collection` | Filter/sort by genre/status/hours/recent + `order=asc\|desc` + manual order; `?q=` searches title/developer/publisher (COL-07/09); paginated |
+| GET | `/me/collection` | Filter by genre/status; **sort by hours / owned-since / title / recently-added** + `order=asc\|desc` + manual order; `?q=` searches title/developer/publisher (COL-07/09); paginated |
 | GET | `/users/:id/collection` | Friend-view, read-only, privacy-gated (COL-10) |
 | POST | `/me/collection` | `{ gameId }` → collection entry |
 | PATCH | `/me/collection/:entryId` | `{ status?, hours?, percentComplete?, ownedSince?, rating?, notes?, platformIds?, activeCardDesignId? }` (COL-02..06) |
@@ -158,3 +158,4 @@
 | 2026-06-08 | 0.3 | Reconciliation: publisher field; collection search + friend-view collection; favourite game + showcase fields on profile; single-currency store; username people-search; QR invites; games-only discover search; removed notifications-center endpoint. |
 | 2026-06-08 | 0.4 | Card pipeline (draft/publish-flatten/assets, removed upload-sign); collection `ownedSince` rename; admin endpoints (reports resolve, edit-suggestion review, dedup-merge/restore). |
 | 2026-06-08 | 0.5 | Account deletion; compare adds total-games. |
+| 2026-06-08 | 0.6 | Consistency: collection sort enumeration (owned-since/title) now matches COL-07. |

@@ -6,7 +6,7 @@
 > "how it looks/feels"). Behavior questions raised while designing go to
 > [`../open-questions.md`](../open-questions.md), not edited into the spec directly.
 
-**Version:** 0.3 · **Last updated:** 2026-06-08 · **Owner:** Claude Code → Claude Design
+**Version:** 0.4 · **Last updated:** 2026-06-08 · **Owner:** Claude Code → Claude Design
 **Status:** **ALL screens specified** (5 tabs + 16 detail screens/flows). Ready to hand to Claude Design. Open design notes live in `open-questions.md` (`OQ-005/006/007`).
 
 ---
@@ -81,7 +81,7 @@ Two screens are designed **once, with two modes**:
 - **Sort & filter:** genre / status / hours / recently-added, with an **ASC/DESC toggle**; plus **manual ordering** (`COL-07`).
 - **Collection search** scoped to your library, matching **title + developer/publisher** (`COL-09`).
 - **Add-game** entry point (→ Add Game).
-- Card **face = art + title only**; tap → Collection Entry Detail.
+- Card **face = art + title only**; tap → **Game page** (owned state, 4.2).
 **Not here:** summary stats (they live on Profile).
 **Modes:** your own (editable) + **friend-view read-only** (`COL-10`).
 **States:** empty (inviting first-add nudge) · populated (must scale gracefully inside the frame) · loading.
@@ -108,7 +108,7 @@ Two screens are designed **once, with two modes**:
 ### 3.4 Store
 **Purpose:** acquire cosmetics + currency (monetization). **Persona:** Curator/spender.
 **Must host:**
-- Featured **Drops** + category sections (Effects · Stickers · Devices · Frames · Currency) (`COSM-01`, `ECON-08`).
+- Featured **Drops** + category sections (Vector packs · Effects · Finishes · Frames · Fonts · Devices · Currency) (`COSM-01`, `ECON-08`).
 - **Single-currency model:** real money buys **Customizer currency**; premium cosmetics are **priced in currency** (`ECON-01`).
 - **Wallet surfaced here:** **balance + earn/spend ledger + buy-currency** (`ECON-07`); the header counter is its entry point elsewhere.
 - **Item detail → purchase**, owned/locked states, **restore purchases** (`ECON-06`).
@@ -162,7 +162,7 @@ Two screens are designed **once, with two modes**:
 - **Premium = preview-then-acquire** + publish reconcile + buy-currency at intent (`CARD-13`).
 - **Drafts/lifecycle:** Draft state, autosave + crash recovery, unsaved-exit guard, duplicate (`CARD-14`).
 - **Save private vs Publish** → flatten to one image + true-preview + thumbnail safe-area (`CARD-04/15`); **publish integrity** (`CARD-19`).
-- **Approachability/a11y:** start-from (remix-a-community-card / template), **auto-design "Surprise me"**, preset kits, coachmarks; **break-out** to max canvas; screen-reader + non-gesture path; reduce-motion (`CARD-16`).
+- **Approachability/a11y:** start-from (template / preset kit / **auto-design "Surprise me"**) — never blank; coachmarks; **break-out** to max canvas; screen-reader + non-gesture path; reduce-motion (`CARD-16`).
 - **Asset library:** searchable/categorized/filtered (free/premium/owned)/favourites; premium preview-on-card (`CARD-17`).
 - **Creator dashboard touch:** adoptions/clout/milestone progress (`CARD-05`).
 **Design notes for you:** on-screen control styling (`OQ-006`); the stylized break-out (`OQ-007`).
@@ -240,3 +240,4 @@ Two screens are designed **once, with two modes**:
 | 2026-06-08 | 0.1 | Initial draft: global design direction + the 5 tab screens. Detail screens/editors pending. |
 | 2026-06-08 | 0.2 | Added detail screens: Add Game (4.1), adaptive Game page (4.2), Card editor (4.3 — `CARD-01..19`), Admin/Moderator console (4.4). Remaining screens pending (4.5). |
 | 2026-06-08 | 0.3 | Specified all remaining screens (4.5–4.16): Device editor, Compare Hours, Lists/Top-5, Find/Add Friends, Contributor profile, Achievements, Store item detail, Wallet, Auth, Onboarding, Settings, Report. **All screens now specified.** |
+| 2026-06-08 | 0.4 | Consistency-audit fixes: Collection tap → Game page (owned state); card-editor start-from = template/preset (not "remix"); store categories aligned to cosmetic taxonomy. |

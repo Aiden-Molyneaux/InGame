@@ -4,7 +4,7 @@
 > Screens and visuals are owned by the design-spec; endpoint shapes by the api-contract. This
 > document references those by ID. See [`../00-INDEX.md`](../00-INDEX.md) for the working agreement.
 
-**Version:** 0.7 (draft) · **Last updated:** 2026-06-08 · **Owner:** Claude Code
+**Version:** 0.8 (draft) · **Last updated:** 2026-06-08 · **Owner:** Claude Code
 
 ---
 
@@ -42,7 +42,7 @@ the store all exist to make a collection worth showing off.
 | **Socializer** 🤝 | Friends — comparing hours, sharing Top-5s, seeing what friends play | Friend activity & comparison notifications |
 | **Contributor** 🏛️ | Being *first* to add a game; filling fields; designing cards others adopt | New/obscure games to catalog; their growing contribution profile |
 | **Casual returner** 🌙 | Dips in occasionally (installed via a friend) | Push: a wishlisted game released; a friend passed their hours |
-| **Artist** 🖌️ *(secondary, partially future)* | Wants to *draw* original card art | Served partially now via layered creation; full drawing suite is parked (§11) |
+| **Artist** 🖌️ *(secondary, partially future)* | Wants to *draw* original card art | Served partially now via layered creation; full drawing suite is parked (§10) |
 
 Most real users are a blend; naming them keeps each feature honest about who it serves.
 
@@ -64,7 +64,7 @@ Most real users are a blend; naming them keeps each feature honest about who it 
 
 - **Catalog entry (canonical game)** — one shared record per real game (`CAT-`). Community-created.
 - **Collection entry** — a game in *your* personal library, with your private stats (`COL-`).
-- **Game Card** — the customizable visual design for a game: art + effects + stickers + colours + frame (`CARD-`).
+- **Game Card** — the customizable visual design for a game: vector elements + effects + finish + colours + frame + title (`CARD-`).
 - **Device** — your customizable shell/container; the "frame" of your profile (`DEV-`).
 - **Adoption** — using another user's published Card design for a game in your collection (`ECON-`/`CARD-`).
 - **Customizer currency** — soft currency spent to adopt premium cards; earned or purchased (`ECON-`).
@@ -156,7 +156,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | CARD-13 | P0 | **Premium-in-editor = preview-then-acquire:** apply premium items to preview live (visibly flagged); at **publish/keep**, a **reconcile step** (acquire all / remove) with the **buy-currency** path surfaced at the point of intent. |
 | CARD-14 | P0 | **Drafts & lifecycle:** an explicit **Draft** state + drafts shelf; **autosave + crash recovery**; **unsaved-exit guard**; **duplicate / save-as-copy**. |
 | CARD-15 | P0 | **Render/publish pipeline:** the editable **composition (JSON)** is **flattened to a static image** (thumbnail + full) on the CDN at save/publish — **viewers download one image, not the layers**; the **effect + finish render as runtime overlays**; **element count is capped** (server-configurable, SYS-04). A **true-to-life preview** (flattened + overlays + thumbnail safe-area) precedes publish. Rendering via react-native-skia. |
-| CARD-16 | P0 | **Approachability & accessibility:** **start-from** (remix a community card / a template) — never a blank canvas — plus **auto-design "Surprise me"**, preset kits, coachmarks; the editor may **break out** to maximal canvas (OQ-007); **screen-reader labels + a non-gesture path**; honor **reduce-motion**. |
+| CARD-16 | P0 | **Approachability & accessibility:** **start-from** (a template / preset kit / **auto-design "Surprise me"**) — never a blank canvas — plus coachmarks; the editor may **break out** to maximal canvas (OQ-007); **screen-reader labels + a non-gesture path**; honor **reduce-motion**. *(Starting from another user's card is "adopt then edit-your-copy," bounded by adoption rules — not remix, which is parked §10.)* |
 | CARD-17 | P1 | **Asset library at scale:** the vector/effect/frame/font browser is **searchable, categorized, tagged**, with **free/premium/owned** filters, recently-used, and favourites; premium items **preview on the actual card**. |
 | CARD-18 | P0 | **Default-card guarantee:** every collection entry **always resolves to a card** — the owner's selected card → else another card they have for that game → else a **system default placeholder**. No game ever renders blank. (Used by new-game add, the card switcher, and moderation-takedown fallback, MOD-08.) |
 | CARD-19 | P0 | **Publish integrity:** publishing is **rate-limited** (SYS-05), **deduped by composition-hash**, and gated by a **minimum-complexity threshold** (drafts/private exempt) — keeps the adoptable pool clean. |
@@ -183,7 +183,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | ECON-02 | P0 | Every user starts with **5 Customizer currency**; earns more via **login bonuses / milestones**; can **purchase** more. (Values server-configurable per SYS-04.) |
 | ECON-03 | P0 | **Adopting a premium card costs 1 Customizer currency.** Adopting a **non-premium** card is **free**. |
 | ECON-04 | P0 | **Scoped adoption rights.** Adopting a premium card grants the right to use **that design for that game only**. It does **not** grant the standalone premium effect for reuse elsewhere (protects effect sales). |
-| ECON-05 | P0 | **Creator reward = clout (v2 choice "A").** When a creator's premium card is adopted, the creator earns **adoption-count, contributor prestige, and cosmetic unlock milestones** (delivered via the achievement system, ACH-04) — *not* currency or money. *(Future toggle "B" — currency kickback — is noted in decisions; real revenue-share is parked, §11.)* |
+| ECON-05 | P0 | **Creator reward = clout (v2 choice "A").** When a creator's premium card is adopted, the creator earns **adoption-count, contributor prestige, and cosmetic unlock milestones** (delivered via the achievement system, ACH-04) — *not* currency or money. *(Future toggle "B" — currency kickback — is noted in decisions; real revenue-share is parked, §10.)* |
 | ECON-05a | P2 | *(reserved)* Currency-kickback to creators — a future-toggle of ECON-05, off in v2. |
 | ECON-06 | P0 | **In-app purchases via Apple/Google IAP** with server-side **receipt validation** and **restore purchases**. Implemented via a cross-platform IAP layer (RevenueCat — see api-contract / decisions). |
 | ECON-07 | P0 | A **wallet** holds the currency balance; a **ledger** records every change (login bonus, purchase, adoption spend, milestone) for auditability **and is shown to the user** as a simple earn/spend history. The wallet (balance + ledger + buy-currency) is **surfaced on the Store screen**; the persistent header counter is its entry point elsewhere. |
@@ -192,10 +192,10 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 ### 5.10 Social (`SOC-`)
 | ID | Pri | Behavior |
 |---|---|---|
-| SOC-01 | P0 | **Mutual friends**: request/accept; a friends list. (Public follow graph is parked, §11.) |
+| SOC-01 | P0 | **Mutual friends**: request/accept; a friends list. (Public follow graph is parked, §10.) |
 | SOC-02 | P0 | **Friend profile view** = the friend-view mode of the Profile/Showcase (PROF-05): Device, Top-5 (gateway into their read-only collection, COL-10), stats, Now Playing, achievement teasers; exposes **Add friend / Compare hours**. |
 | SOC-03 | P0 | **Compare** with a friend: per-game + total **hours**, **total games** (collection size), who's ahead, + friend leaderboards. (Core return-driver.) |
-| SOC-04 | P0 | **Top-5 lists** — create and share. (Extensible to other list types later.) |
+| SOC-04 | P0 | **Top-5 lists** — create; displayed on your (friend-viewable) profile. (Extensible to other list types later. External sharing is parked §10.) |
 | SOC-05 | P1 | **Recommend a game to a friend** — drops into their What-to-Play with a note (`WTP-`). |
 | SOC-06 | P1 | A **gentle activity feed** (on the Friends tab): friend beat/completed a game, published a card, unlocked a notable achievement. **Deliberately low-noise** — events are **aggregated by actor+type** ("Alex added 12 games" as one capped item), the **initial collection import does not flood the feed**, and trivia (minor stat tweaks) is excluded. |
 | SOC-07 | P1 | **Find & invite friends**: search by **username**, a **shareable invite link**, and a **QR code** for in-person adds. (No contacts-matching in v2.) |
@@ -205,7 +205,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 |---|---|---|
 | WTP-01 | P0 | A ranked **"Up Next" queue**, drag-to-reorder, that spans **owned games and unowned games** (a catalog game you don't own = effectively a wishlist item here). |
 | WTP-02 | P0 | Items can be added from your collection, from discovery, or from a friend's recommendation (SOC-05). |
-| WTP-03 | P2 | A single **"Now Playing" pin** — one game you're actively on (distinct from the multi-valued `Playing` status, COL-02); settable from Up Next **or** a collection entry, and surfaced on the Profile (PROF-05). Plus the queue is shareable. |
+| WTP-03 | P2 | A single **"Now Playing" pin** — one game you're actively on (distinct from the multi-valued `Playing` status, COL-02); settable from Up Next **or** a collection entry, and surfaced on the Profile (PROF-05). |
 
 ### 5.12 Discovery (`DISC-`)
 | ID | Pri | Behavior |
@@ -261,7 +261,7 @@ Authoritative field-level shapes live in [`api-contract.md`](api-contract.md); t
 
 - **Identity:** `users` (unique email, password hash, avatar, bio, privacy, **role**, **favourite_game_id**, **created_at** → member-since) · `auth_identities` (Apple/OAuth subs) · `gamertags` (handle + controlled platform)
 - **Catalog:** `games` (name, normalized_name, release_date?, studio?, **publisher?**, created_by, **deleted_at?/deleted_by?** for dedup grace) · `genres` (controlled) · `game_genres`
-- **Collection:** `collection_entries` (user×game: status, hours, hours_source, percent_complete, date_purchased, rating, notes, active_card_design_id) · `collection_platforms` (entry × controlled platform)
+- **Collection:** `collection_entries` (user×game: status, hours, hours_source, percent_complete, owned_since, rating, notes, active_card_design_id) · `collection_platforms` (entry × controlled platform)
 - **Cards:** `card_designs` (game, creator, visibility, **composition JSON (vector elements)**, **rendered_image_url + thumbnail_url**, **effect/finish ids**, is_premium, **composition_hash**, adoption_count, moderation_status) · `card_adoptions` (adopter × design × game, currency_paid)
 - **Device:** `device_configs` (user: active_model, shell_colour, sticker_composition JSON)
 - **Cosmetics:** `cosmetic_items` (type ∈ vector_pack/effect/finish/frame/font/device_skin/device_model, is_premium, price) · `cosmetic_packs` · `user_entitlements` (user × item, source)
@@ -299,7 +299,7 @@ Authoritative field-level shapes live in [`api-contract.md`](api-contract.md); t
 
 - **Client:** Expo / React Native (iOS + Android). Redux Toolkit + **RTK Query** (server cache) + redux-persist (local drafts). expo-router tab navigation. Reanimated for effects. expo-notifications. RevenueCat for IAP.
 - **Server:** Node / Express + TypeScript, layered routes → controllers → services → repositories; zod validation. PostgreSQL via **Drizzle** (typed SQL + migrations).
-- **Storage:** object storage + CDN for uploaded card art and asset previews, with a moderation hook.
+- **Storage:** object storage + CDN for **server-rendered (flattened) card images** + thumbnails and asset previews. (No user image uploads; moderation is report/hide + text screening — MOD-01/02/07.)
 
 ---
 
@@ -326,3 +326,4 @@ Recorded so they're conscious choices, not omissions:
 | 2026-06-08 | 0.5 | Closed OQ-001 (multiple device models, per DEV-02) and OQ-003 (Now Playing = a single pin distinct from the Playing status). | WTP-03 |
 | 2026-06-08 | 0.6 | Card-editor deep dive (3-mindset panel informed): vector-composition art model, no uploads/AI; element management/precision/creative toolkit; effects + separate finish layer; preview-then-acquire reconcile; drafts/lifecycle; flatten/publish pipeline; approachability/a11y; asset library; default-card guarantee; publish integrity. Roles (SYS-08); admin console + dedup-merge + text-screening + entitlement/takedown policy (MOD-04..08). Owned-since relabel (COL-03/07); cosmetics types incl vector packs/finish/fonts. Adoption-only (no remix) + no external sharing — both parked. See decisions 0006–0007. | CARD-01..19, MOD-04..08, SYS-08, COL-03/07, COSM-01 |
 | 2026-06-08 | 0.7 | Remaining-screens walkthrough: device editor lighter + personal-only + default-device/nav-legibility (DEV-01/03); compare adds total-games (SOC-03); contributor profile friend-viewable, no level (CAT-07); guided onboarding + account deletion (AUTH-06/07). See decision 0008. | DEV-01/03, SOC-03, CAT-07, AUTH-06/07 |
+| 2026-06-08 | 0.8 | Consistency-audit fixes (no behavior change): §6 `owned_since` rename; §9 storage = server-rendered (not uploaded) images; glossary → vector elements; §11→§10 cross-refs (×3); CARD-16 "remix"→template start-from; tightened in-app "share" wording (SOC-04, WTP-03). | — |
