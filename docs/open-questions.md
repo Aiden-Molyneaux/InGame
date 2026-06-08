@@ -16,13 +16,9 @@
 
 ## Open
 
-- OQ-001: Device — can a user own and switch between multiple device *models*, or is there one
-  configurable device? (leaning multiple via entitlements; see DEV-02) [behavior]
 - OQ-002: First-pass values for the economy levers — starting balance is 5 (ECON-02), but what are
   the login-bonus amount/cadence and milestone thresholds? (tunable later, but design needs a
   starting number) [behavior]
-- OQ-003: Does "currently playing" (WTP-03) also surface as a status on the collection entry
-  (COL-02), or only in the queue? [undecided]
 - OQ-004: Specific achievement & easter-egg **content** — which milestones, which eggs, their
   triggers and rewards. Dedicated brainstorm when the engine is built (ACH-*). [behavior/content]
 - OQ-005: Hidden easter-egg presentation — fully invisible until unlocked, or shown as a locked
@@ -34,5 +30,9 @@
   the bezel is intentionally thin, so whether/when a screen expands beyond the device frame — and
   how that transition is styled — is a Claude Design decision to consider. [presentation]
 
-## Resolved (moved to decisions/)
-*(none yet — foundational decisions are in `decisions/0001-foundational-product-decisions.md`)*
+## Resolved
+- OQ-001 → **Multiple device models.** A user can own several device models (via entitlements/store)
+  and switch the active one — as DEV-02 states. (2026-06-08)
+- OQ-003 → **"Now Playing" is a single pin**, distinct from the multi-valued `Playing` status
+  (COL-02): one game you pin as "what I'm on now," settable from Up Next or a collection entry,
+  surfaced on the Profile. Clarified in WTP-03. (2026-06-08)

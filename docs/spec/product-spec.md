@@ -4,7 +4,7 @@
 > Screens and visuals are owned by the design-spec; endpoint shapes by the api-contract. This
 > document references those by ID. See [`../00-INDEX.md`](../00-INDEX.md) for the working agreement.
 
-**Version:** 0.4 (draft) · **Last updated:** 2026-06-08 · **Owner:** Claude Code
+**Version:** 0.5 (draft) · **Last updated:** 2026-06-08 · **Owner:** Claude Code
 
 ---
 
@@ -185,7 +185,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 |---|---|---|
 | WTP-01 | P0 | A ranked **"Up Next" queue**, drag-to-reorder, that spans **owned games and unowned games** (a catalog game you don't own = effectively a wishlist item here). |
 | WTP-02 | P0 | Items can be added from your collection, from discovery, or from a friend's recommendation (SOC-05). |
-| WTP-03 | P2 | A **"currently playing" pin** + the queue is shareable. |
+| WTP-03 | P2 | A single **"Now Playing" pin** — one game you're actively on (distinct from the multi-valued `Playing` status, COL-02); settable from Up Next **or** a collection entry, and surfaced on the Profile (PROF-05). Plus the queue is shareable. |
 
 ### 5.12 Discovery (`DISC-`)
 | ID | Pri | Behavior |
@@ -298,3 +298,4 @@ Recorded so they're conscious choices, not omissions:
 | 2026-06-07 | 0.2 | Added testing harness/CI and per-endpoint authorization-test requirements; web clarified as dev/testing-only surface. See `testing-strategy.md` + decision 0002. | SYS-06, SYS-07 |
 | 2026-06-07 | 0.3 | Added Achievements & easter eggs system (data-driven, event-driven, idempotent; mixed rewards incl. achievement-exclusive cosmetics). Reconciled COSM-04/ECON-05 milestone unlocks into it. See decision 0003. | ACH-01..08 |
 | 2026-06-08 | 0.4 | Tab-walkthrough reconciliation: single-currency economy + user-facing ledger; no notifications center; publisher field; collection search + manual order/ASC-DESC + friend-view collection; favourite game + clout/member-since + two-mode showcase; Game-Card-as-universal-representation; feed aggregation; QR/username find-friends; games-only Discover search; card-publishing rate-limit; achievement anti-farming rule. See decisions 0004–0005. | PROF-01/04/05, CAT-02, COL-07/09/10, CARD-07, DISC-03, SOC-02/06/07, ECON-01/07, NOTIF-03, SYS-05 |
+| 2026-06-08 | 0.5 | Closed OQ-001 (multiple device models, per DEV-02) and OQ-003 (Now Playing = a single pin distinct from the Playing status). | WTP-03 |
