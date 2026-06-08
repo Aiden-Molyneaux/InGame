@@ -27,6 +27,12 @@
   triggers and rewards. Dedicated brainstorm when the engine is built (ACH-*). [behavior/content]
 - OQ-005: Hidden easter-egg presentation — fully invisible until unlocked, or shown as a locked
   "???" mystery slot that hints something exists? (ACH-03) [presentation]
+- OQ-006: On-screen control styling — tactile/3D arcade-style buttons may look jarring on-screen
+  vs. conventional flat controls. Nav lives on the device "plastic"; contextual actions live on the
+  "screen." Claude Design decides the on-screen control styling. (raised in Collection nav design) [presentation]
+- OQ-007: A **stylized "break-out"** treatment for space-hungry screens (e.g. the Card editor):
+  the bezel is intentionally thin, so whether/when a screen expands beyond the device frame — and
+  how that transition is styled — is a Claude Design decision to consider. [presentation]
 
 ## Resolved (moved to decisions/)
 *(none yet — foundational decisions are in `decisions/0001-foundational-product-decisions.md`)*
