@@ -4,7 +4,7 @@
 > Screens and visuals are owned by the design-spec; endpoint shapes by the api-contract. This
 > document references those by ID. See [`../00-INDEX.md`](../00-INDEX.md) for the working agreement.
 
-**Version:** 0.5 (draft) · **Last updated:** 2026-06-08 · **Owner:** Claude Code
+**Version:** 0.6 (draft) · **Last updated:** 2026-06-08 · **Owner:** Claude Code
 
 ---
 
@@ -86,6 +86,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | SYS-05 | P1 | Sensitive/abuse-prone endpoints (auth, create-entry, **card publishing**, report) are **rate-limited**. |
 | SYS-06 | P0 | An **automated testing harness + CI** exist from Phase 1 (before feature code). Approach: risk-based, meaningful-tests-first — see [`testing-strategy.md`](testing-strategy.md). |
 | SYS-07 | P0 | **Every mutating endpoint carries a standing authorization test** proving a user cannot read/modify another user's resource (enforces SYS-01). |
+| SYS-08 | P1 | Users have a **role** (user / moderator / admin). Moderator/admin tools (the Admin console, MOD-04) are gated to the role. |
 
 ### 5.2 Authentication & identity (`AUTH-`)
 | ID | Pri | Behavior |
@@ -122,25 +123,41 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 |---|---|---|
 | COL-01 | P0 | Add/remove a catalog game to/from **your** collection. |
 | COL-02 | P0 | Per-game **status**: Backlog · Playing · Beaten · Completed 100% · Dropped · Wishlist. |
-| COL-03 | P0 | Per-game stats: **hours** (manual entry; see SYS/`hours_source` — import-ready), **% complete**, **date purchased**, **personal rating**. |
+| COL-03 | P0 | Per-game stats: **hours played** (manual; `hours_source` import-ready), **% complete**, **owned since** (date acquired), **personal rating**. Hours and owned-since drive the two key Collection sorts (COL-07). |
 | COL-04 | P0 | Per-game **personal platform(s)** — which platform(s) *you* own/play it on (private; pairs with gamertags). |
 | COL-05 | P1 | Per-game **private notes**. |
 | COL-06 | P0 | **Card switcher on a collection entry**: effortlessly flip the displayed Card for a game between (a) cards you created for it, (b) cards you adopted/downloaded for it, and (c) "create new." Your library look is never locked in. |
-| COL-07 | P0 | Collection views: a **Device/shelf view** (cards — the showcase) plus list/grid; sort & filter by genre/status/hours/recently-added, with an **ASC/DESC toggle** and support for **manual ordering** (a user-arranged order). |
+| COL-07 | P0 | Collection views: a **Device/shelf view** (cards) plus list/grid. **Sort** by hours, owned-since (chronological), title, or recently-added — each with an **ASC/DESC toggle**; **filter** by genre/status; plus **manual ordering** (a user-arranged order). |
 | COL-08 | P1 | Collection stats summary (feeds PROF-04). |
 | COL-09 | P1 | **Collection search**: search within *your own* collection, matching **title and developer/publisher**. (Distinct from the global catalog search, CAT-01 / DISC-03.) |
 | COL-10 | P0 | The Collection screen has **two modes**: your own (the editable tab) and a **friend-view** (read-only, privacy-gated) reached from a friend's Profile via their Top-5 (PROF-05). One screen, two modes. |
 
 ### 5.6 Game Card customization (`CARD-`)
+> The Card editor is the heaviest screen and the soul of the Curator experience. Mandate: **dense
+> functionality must feel effortless**. Detailed interaction design is Claude Design's; this lists what
+> it must do.
+
 | ID | Pri | Behavior |
 |---|---|---|
-| CARD-01 | P0 | A **Card editor** composes a card from layers: base art + **effects** (e.g. frost/fire/galaxy/raining-blood) + stickers + colour/title styling + frame template. Model = **curated layering** (not free drawing). |
-| CARD-02 | P0 | Card art sourcing: adopt a community card, or create your own (compose from owned assets; **upload a base image** is supported). |
-| CARD-03 | P0 | Uploaded images pass through a **moderation hook** (manual queue acceptable initially) — the real UGC moderation surface. |
-| CARD-04 | P0 | **Publish a card to the community** and **adopt** others' cards. Cards retain **designer attribution**. |
-| CARD-05 | P1 | A card tracks an **adoption count / popularity** metric (pride; feeds milestones in ECON). |
-| CARD-06 | P0 | A card is **premium** if its composition includes any premium asset/effect (derived flag) — this drives adoption cost (ECON-03). |
-| CARD-07 | P0 | **The Game Card is the universal visual representation of a game** everywhere it appears — collection shelf, Top-5, pinned favourite, friend showcases, recommendations — always rendering the owner's *selected* card for that game (COL-06). |
+| CARD-01 | P0 | A **Card editor**, launched for a specific game, composes the card **front** as layers (the **back is a standardized** auto-stats layout): *optional colour/gradient base → vector elements → one animated effect → finish → frame → title.* Trading-card portrait. |
+| CARD-02 | P0 | Art is **in-app vector composition** — placeable **vector primitives** (shapes, letters, numbers, icons/SVGs; free + premium packs) positioned/scaled/rotated/recoloured/layered, plus an optional colour/gradient base. **No image uploads. No AI art.** ("Stickers" and "art assets" are unified as vector elements.) |
+| CARD-03 | P0 | With no uploads, moderation is **report/hide on published cards** (MOD-01/02) + **text/glyph screening** on user-entered text (MOD-07) — no upload-review pipeline. |
+| CARD-04 | P0 | **Save private** (your collection only) or **Publish** to the community; published cards are **adoptable** and retain **designer attribution**. |
+| CARD-05 | P1 | A card tracks **adoption count / popularity**; the editor surfaces a creator's adoptions, **clout**, and **milestone progress** (ECON-05, ACH) — a lightweight creator dashboard. |
+| CARD-06 | P0 | A card is **premium** if its composition includes any premium asset/effect/finish (derived flag) — drives adoption cost (ECON-03). |
+| CARD-07 | P0 | **The Game Card is the universal visual representation of a game** everywhere — collection shelf, Top-5, pinned favourite, friend showcases, recommendations — always the owner's *selected* card (COL-06). |
+| CARD-08 | P0 | **Element management:** a **layers panel** (reorder z-order, select, rename, lock, hide, duplicate, delete) + stacked-tap disambiguation; **multi-select + group/ungroup**; explicit bring-forward/back. |
+| CARD-09 | P0 | **Precision on a small canvas:** **pan/zoom** the canvas (distinct from scaling an element); **snapping / smart-guides / align / distribute**; **nudge + numeric** transform input; surfaced **undo/redo** + scoped reset. |
+| CARD-10 | P1 | **Per-element creative controls:** opacity, solid/gradient fill, stroke/outline, shadow & glow, flip/mirror, blend modes, corner-radius/parametric shapes. *(Heavy ops — clip-to-shape masking, boolean, pattern/array — parked, §10.)* |
+| CARD-11 | P1 | **Colour & type system:** saved palettes/swatches/recents/favourites + **eyedropper** + curated theme palettes; categorized **fonts** (free + premium) with text-styling parity (spacing/align/case) and **curved/arc text**. |
+| CARD-12 | P0 | **Effects & finish:** **one animated effect** at a time (frost/fire/galaxy/raining-blood…) with intensity/opacity; plus a **separate stackable finish** layer (holo/foil/metallic, optionally tilt-reactive). Both free + premium. |
+| CARD-13 | P0 | **Premium-in-editor = preview-then-acquire:** apply premium items to preview live (visibly flagged); at **publish/keep**, a **reconcile step** (acquire all / remove) with the **buy-currency** path surfaced at the point of intent. |
+| CARD-14 | P0 | **Drafts & lifecycle:** an explicit **Draft** state + drafts shelf; **autosave + crash recovery**; **unsaved-exit guard**; **duplicate / save-as-copy**. |
+| CARD-15 | P0 | **Render/publish pipeline:** the editable **composition (JSON)** is **flattened to a static image** (thumbnail + full) on the CDN at save/publish — **viewers download one image, not the layers**; the **effect + finish render as runtime overlays**; **element count is capped** (server-configurable, SYS-04). A **true-to-life preview** (flattened + overlays + thumbnail safe-area) precedes publish. Rendering via react-native-skia. |
+| CARD-16 | P0 | **Approachability & accessibility:** **start-from** (remix a community card / a template) — never a blank canvas — plus **auto-design "Surprise me"**, preset kits, coachmarks; the editor may **break out** to maximal canvas (OQ-007); **screen-reader labels + a non-gesture path**; honor **reduce-motion**. |
+| CARD-17 | P1 | **Asset library at scale:** the vector/effect/frame/font browser is **searchable, categorized, tagged**, with **free/premium/owned** filters, recently-used, and favourites; premium items **preview on the actual card**. |
+| CARD-18 | P0 | **Default-card guarantee:** every collection entry **always resolves to a card** — the owner's selected card → else another card they have for that game → else a **system default placeholder**. No game ever renders blank. (Used by new-game add, the card switcher, and moderation-takedown fallback, MOD-08.) |
+| CARD-19 | P0 | **Publish integrity:** publishing is **rate-limited** (SYS-05), **deduped by composition-hash**, and gated by a **minimum-complexity threshold** (drafts/private exempt) — keeps the adoptable pool clean. |
 
 ### 5.7 Device customization (`DEV-`)
 | ID | Pri | Behavior |
@@ -151,7 +168,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 ### 5.8 Cosmetics library (`COSM-`)
 | ID | Pri | Behavior |
 |---|---|---|
-| COSM-01 | P0 | A library of cosmetic items typed as: effect · sticker · art asset · frame · device skin · device model. |
+| COSM-01 | P0 | A library of cosmetic items typed as: **vector asset pack** (shapes/letters/numbers/icons) · **effect** · **finish** (holo/foil) · **frame** · **font** · **device skin** · **device model**. (Card "stickers/art assets" are vector packs.) |
 | COSM-02 | P0 | A **free baseline** set is always available so everyone can customize meaningfully. |
 | COSM-03 | P0 | Premium items are gated by **entitlement** (owned via purchase or earned). The store's moat = **things you can't just draw** (animated/dynamic effects, curated packs). |
 | COSM-04 | P1 | Some cosmetics are **earned**, not bought — delivered via the achievement system (ACH-04), including **achievement-exclusive** items that are never purchasable (prestige). |
@@ -203,12 +220,17 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | NOTIF-02 | P0 | Per-type **notification preferences** the user controls. |
 | NOTIF-03 | P1 | **No standalone notifications center.** Each notification has a **contextual in-app home** (requests→Friends, releases→Up Next, adoptions→Profile, drops→Store); push handles real-time delivery. The rare orphan (a moderation outcome) surfaces as a one-off banner / Settings line. |
 
-### 5.14 Moderation (`MOD-`)
+### 5.14 Moderation & admin (`MOD-`)
 | ID | Pri | Behavior |
 |---|---|---|
-| MOD-01 | P0 | **Report/hide** on shared cards and catalog entries — the light-touch safety valve. |
-| MOD-02 | P0 | Reported content can be **soft-hidden** pending review. |
-| MOD-03 | P1 | A minimal review queue (can begin as manual/admin-only). |
+| MOD-01 | P0 | **Report/hide** on published cards and catalog entries (incl. "report duplicate") — the light-touch safety valve. |
+| MOD-02 | P0 | Reported content can be **soft-hidden** pending review (threshold auto-hide). |
+| MOD-03 | P1 | A minimal review queue. |
+| MOD-04 | P1 | An **Admin/Moderator console** (gated to the role, SYS-08) is the home for: the reports queue, edit-suggestion review (MOD-06), and catalog dedup/merge (MOD-05). |
+| MOD-05 | P1 | **Catalog dedup = merge then soft-delete.** A moderator merges a duplicate game into the canonical entry — **re-pointing collection entries + cards** so no user is orphaned — then the empty duplicate is **soft-deleted with a 3-day restore window** before a scheduled purge. |
+| MOD-06 | P1 | **Edit-suggestions** (CAT-06) are approved/rejected in the console. |
+| MOD-07 | P0 | **Text/glyph screening** runs a banned-word pass on all user-entered text — card titles, freeform letters, and game names at creation. |
+| MOD-08 | P0 | **Entitlement-loss / takedown policy:** if a premium asset behind a published card disappears, the **flattened card persists and existing adopters keep their grant**; the asset becomes **non-re-acquirable**. **Exception:** a **moderation/legal pull** actively **hides** affected cards, which then **fall back** per the default-card guarantee (CARD-18). |
 
 ### 5.15 Achievements & easter eggs (`ACH-`)
 > The **system** is specified here; the specific achievement/egg **content** is a later brainstorm (OQ-004).
@@ -234,17 +256,17 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 
 Authoritative field-level shapes live in [`api-contract.md`](api-contract.md); this is the entity map.
 
-- **Identity:** `users` (unique email, password hash, avatar, bio, privacy, **favourite_game_id**, **created_at** → member-since) · `auth_identities` (Apple/OAuth subs) · `gamertags` (handle + controlled platform)
-- **Catalog:** `games` (name, normalized_name, release_date?, studio?, **publisher?**, created_by) · `genres` (controlled) · `game_genres`
+- **Identity:** `users` (unique email, password hash, avatar, bio, privacy, **role**, **favourite_game_id**, **created_at** → member-since) · `auth_identities` (Apple/OAuth subs) · `gamertags` (handle + controlled platform)
+- **Catalog:** `games` (name, normalized_name, release_date?, studio?, **publisher?**, created_by, **deleted_at?/deleted_by?** for dedup grace) · `genres` (controlled) · `game_genres`
 - **Collection:** `collection_entries` (user×game: status, hours, hours_source, percent_complete, date_purchased, rating, notes, active_card_design_id) · `collection_platforms` (entry × controlled platform)
-- **Cards:** `card_designs` (game, creator, visibility, composition JSON, is_premium, adoption_count, moderation_status) · `card_adoptions` (adopter × design × game, currency_paid)
+- **Cards:** `card_designs` (game, creator, visibility, **composition JSON (vector elements)**, **rendered_image_url + thumbnail_url**, **effect/finish ids**, is_premium, **composition_hash**, adoption_count, moderation_status) · `card_adoptions` (adopter × design × game, currency_paid)
 - **Device:** `device_configs` (user: active_model, shell_colour, sticker_composition JSON)
-- **Cosmetics:** `cosmetic_items` (type, is_premium, price) · `cosmetic_packs` · `user_entitlements` (user × item, source)
+- **Cosmetics:** `cosmetic_items` (type ∈ vector_pack/effect/finish/frame/font/device_skin/device_model, is_premium, price) · `cosmetic_packs` · `user_entitlements` (user × item, source)
 - **Economy:** `wallets` (balance) · `currency_ledger` (delta, reason, ref) · `store_products` (IAP product → grant) · `iap_receipts` (validated)
 - **Social:** `friendships` (requester/addressee, status) · `lists` + `list_items` (Top-5 = capped list) · `game_recommendations` · `activity_events`
 - **What to Play:** `play_queue_items` (user × game, position, source, currently_playing)
 - **Engagement:** `notifications` · `notification_prefs` · `device_push_tokens`
-- **Moderation:** `reports` (+ soft-hide flags on cards/entries)
+- **Moderation:** `reports` · `edit_suggestions` (CAT-06) (+ soft-hide flags; game soft-delete for dedup grace)
 - **Achievements:** `achievements` (definition: key, type milestone|egg, condition spec, reward spec, visibility, active — config/seed data) · `user_achievements` (user × achievement, progress, unlocked_at). Achievement-exclusive cosmetics are `cosmetic_items` flagged non-purchasable.
 
 ---
@@ -284,8 +306,8 @@ Recorded so they're conscious choices, not omissions:
 
 - **Real-data integrations:** platform playtime auto-import (Steam/PSN/Xbox), achievement/trophy sync. *(Schema is import-ready via `hours_source`.)*
 - **Creator economy:** card-designer revenue share / payouts; cosmetic trading/marketplace.
-- **Public/social expansion:** public profiles + follow graph + people discovery; web companion / public shareable profile pages; clubs/communities.
-- **Deeper creation:** full from-scratch **drawing suite** (Artist persona); AI-assisted card art.
+- **Public/social expansion:** public profiles + follow graph + people discovery; **external card/collection sharing** (image + deep link) + a public **web card page**; web companion / clubs/communities.
+- **Deeper creation:** full from-scratch **drawing suite** (Artist persona); AI-assisted card art; **heavy editor ops** (clip-to-shape masking, boolean shape ops, pattern/array); **card remix/fork** with attribution chains; **rarity tiers/framing**.
 - **Live-ops:** seasonal events / battle pass beyond simple store drops.
 
 ---
@@ -299,3 +321,4 @@ Recorded so they're conscious choices, not omissions:
 | 2026-06-07 | 0.3 | Added Achievements & easter eggs system (data-driven, event-driven, idempotent; mixed rewards incl. achievement-exclusive cosmetics). Reconciled COSM-04/ECON-05 milestone unlocks into it. See decision 0003. | ACH-01..08 |
 | 2026-06-08 | 0.4 | Tab-walkthrough reconciliation: single-currency economy + user-facing ledger; no notifications center; publisher field; collection search + manual order/ASC-DESC + friend-view collection; favourite game + clout/member-since + two-mode showcase; Game-Card-as-universal-representation; feed aggregation; QR/username find-friends; games-only Discover search; card-publishing rate-limit; achievement anti-farming rule. See decisions 0004–0005. | PROF-01/04/05, CAT-02, COL-07/09/10, CARD-07, DISC-03, SOC-02/06/07, ECON-01/07, NOTIF-03, SYS-05 |
 | 2026-06-08 | 0.5 | Closed OQ-001 (multiple device models, per DEV-02) and OQ-003 (Now Playing = a single pin distinct from the Playing status). | WTP-03 |
+| 2026-06-08 | 0.6 | Card-editor deep dive (3-mindset panel informed): vector-composition art model, no uploads/AI; element management/precision/creative toolkit; effects + separate finish layer; preview-then-acquire reconcile; drafts/lifecycle; flatten/publish pipeline; approachability/a11y; asset library; default-card guarantee; publish integrity. Roles (SYS-08); admin console + dedup-merge + text-screening + entitlement/takedown policy (MOD-04..08). Owned-since relabel (COL-03/07); cosmetics types incl vector packs/finish/fonts. Adoption-only (no remix) + no external sharing — both parked. See decisions 0006–0007. | CARD-01..19, MOD-04..08, SYS-08, COL-03/07, COSM-01 |

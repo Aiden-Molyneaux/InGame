@@ -4,7 +4,7 @@
 > be refined alongside the design-spec, because screens reveal exactly what each call must return.
 > Behavior lives in [`product-spec.md`](product-spec.md); shapes live here. Referenced by ID.
 
-**Version:** 0.3 (draft) · **Last updated:** 2026-06-08 · **Owner:** Claude Code
+**Version:** 0.4 (draft) · **Last updated:** 2026-06-08 · **Owner:** Claude Code
 
 ---
 
@@ -59,7 +59,7 @@
 | GET | `/me/collection` | Filter/sort by genre/status/hours/recent + `order=asc\|desc` + manual order; `?q=` searches title/developer/publisher (COL-07/09); paginated |
 | GET | `/users/:id/collection` | Friend-view, read-only, privacy-gated (COL-10) |
 | POST | `/me/collection` | `{ gameId }` → collection entry |
-| PATCH | `/me/collection/:entryId` | `{ status?, hours?, percentComplete?, datePurchased?, rating?, notes?, platformIds?, activeCardDesignId? }` (COL-02..06) |
+| PATCH | `/me/collection/:entryId` | `{ status?, hours?, percentComplete?, ownedSince?, rating?, notes?, platformIds?, activeCardDesignId? }` (COL-02..06) |
 | DELETE | `/me/collection/:entryId` | Remove from collection |
 | GET | `/me/collection/:entryId/cards` | Cards available for this game to switch among: mine + adopted + (link to create) (COL-06) |
 
@@ -67,11 +67,11 @@
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/games/:gameId/cards` | Published community cards for a game (gallery) |
-| POST | `/cards` | `{ gameId, composition }` → design; `isPremium` derived (CARD-06); upload assets via storage flow (CARD-02/03) |
-| PATCH | `/cards/:id` | Edit own design |
-| POST | `/cards/:id/publish` | Set visibility public (CARD-04) |
+| POST | `/cards` | `{ gameId, composition }` → **Draft** (vector composition JSON); `isPremium` + `compositionHash` derived (CARD-02/06/14) |
+| PATCH | `/cards/:id` | Edit own draft/design (autosave) |
+| POST | `/cards/:id/publish` | Validate (min-complexity, dedup, premium-reconcile), **flatten to image + thumbnail**, set public (CARD-13/15/19) |
 | POST | `/cards/:id/adopt` | Adopt for a game; charges currency if premium (ECON-03/04); increments adoption_count (CARD-05) |
-| POST | `/uploads/sign` | Get a signed URL for a base-image upload (pre-moderation, CARD-03) |
+| GET | `/cards/assets` | Vector/effect/finish/frame/font library; filter type/free/premium/owned; search (CARD-17) |
 
 ## Device (`DEV-`)
 | Method | Path | Notes |
@@ -129,11 +129,14 @@
 
 *(No notifications-list endpoint — NOTIF-03 has no center; events surface in their contextual screens.)*
 
-## Moderation (`MOD-`)
+## Moderation & admin (`MOD-`)
 | Method | Path | Notes |
 |---|---|---|
-| POST | `/reports` | `{ targetType, targetId, reason }` (MOD-01) |
-| *(admin)* | `/admin/reports` (+ resolve/hide) | Minimal review queue (MOD-02/03) |
+| POST | `/reports` | `{ targetType, targetId, reason }` incl. "duplicate" (MOD-01) |
+| GET | `/admin/reports` · POST `/admin/reports/:id/resolve` | Reports queue; hide/restore (MOD-02/03) — role-gated (SYS-08) |
+| GET | `/admin/edit-suggestions` · POST `/admin/edit-suggestions/:id/{approve\|reject}` | Edit-suggestion review (MOD-06) |
+| POST | `/admin/games/:dupId/merge` | `{ canonicalId }` → re-point collections/cards, soft-delete the dup (3-day restore) (MOD-05) |
+| POST | `/admin/games/:id/restore` | Restore a soft-deleted game within the window (MOD-05) |
 
 ## Achievements (`ACH-`)
 | Method | Path | Notes |
@@ -152,3 +155,4 @@
 | 2026-06-07 | 0.1 | Initial draft seam derived from product-spec v0.1. Shapes to be hardened during design. |
 | 2026-06-07 | 0.2 | Added Achievements endpoints (ACH-). |
 | 2026-06-08 | 0.3 | Reconciliation: publisher field; collection search + friend-view collection; favourite game + showcase fields on profile; single-currency store; username people-search; QR invites; games-only discover search; removed notifications-center endpoint. |
+| 2026-06-08 | 0.4 | Card pipeline (draft/publish-flatten/assets, removed upload-sign); collection `ownedSince` rename; admin endpoints (reports resolve, edit-suggestion review, dedup-merge/restore). |

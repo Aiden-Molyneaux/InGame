@@ -19,6 +19,12 @@
 - OQ-002: First-pass values for the economy levers — starting balance is 5 (ECON-02), but what are
   the login-bonus amount/cadence and milestone thresholds? (tunable later, but design needs a
   starting number) [behavior]
+- OQ-008: Card editor **element cap** — the actual maximum element count per card (server-configurable
+  via SYS-04, but design/perf need a starting number). (CARD-15) [behavior/tuning]
+- OQ-009: **Vector-asset library scope** — how many/which starter SVG packs (shapes/letters/numbers/
+  icons) ship at launch, free vs premium split. (CARD-02/17) [content]
+- OQ-010: **Effect & finish roster** — the launch set of animated effects and finishes, free vs
+  premium split. (CARD-12) [content]
 - OQ-004: Specific achievement & easter-egg **content** — which milestones, which eggs, their
   triggers and rewards. Dedicated brainstorm when the engine is built (ACH-*). [behavior/content]
 - OQ-005: Hidden easter-egg presentation — fully invisible until unlocked, or shown as a locked

@@ -6,8 +6,8 @@
 > "how it looks/feels"). Behavior questions raised while designing go to
 > [`../open-questions.md`](../open-questions.md), not edited into the spec directly.
 
-**Version:** 0.1 (in progress) · **Last updated:** 2026-06-08 · **Owner:** Claude Code → Claude Design
-**Status:** the **5 tabs** are specified; the **detail screens & editors** (Part 4) are pending the ongoing walkthrough.
+**Version:** 0.2 (in progress) · **Last updated:** 2026-06-08 · **Owner:** Claude Code → Claude Design
+**Status:** the **5 tabs** + **Add Game, the Game page, the Card editor, and the Admin/Moderator console** are specified; the remaining detail screens (Part 4.5) are pending the ongoing walkthrough.
 
 ---
 
@@ -59,12 +59,15 @@ Two screens are designed **once, with two modes**:
 | 3 | Friends | Tab | feed-first |
 | 4 | Store | Tab | incl. Wallet |
 | 5 | Profile | Tab | + friend-view mode; gateway to Achievements & Contributions |
-| — | Add Game · Game Detail · Collection Entry Detail | Flow/detail | *Part 4 (pending)* |
-| — | Card editor · Card gallery/adopt · Device editor | Editors | *Part 4 (pending)* |
-| — | Compare Hours · Lists/Top-5 editor · Find/Add Friends | Social detail | *Part 4 (pending)* |
-| — | Contributor profile · Achievements | Pride | *Part 4 (pending; reached from Profile)* |
-| — | Store item detail/purchase · Wallet | Commerce | *Part 4 (pending)* |
-| — | Auth · Onboarding · Settings · Report | System | *Part 4 (pending)* |
+| 6 | Add Game | Flow | **specified** (4.1) |
+| 7 | Game page (adaptive) | Detail | shared catalog page; the **owned state folds in** your personal stats + card; card gallery lives here. **Specified** (4.2) |
+| 8 | Card editor | Editor | **specified** (4.3) — the heaviest screen |
+| 9 | Admin/Moderator console | Mod-only | **specified** (4.4) |
+| — | Device editor | Editor | *pending (4.5)* |
+| — | Compare Hours · Lists/Top-5 editor · Find/Add Friends | Social detail | *pending (4.5)* |
+| — | Contributor profile · Achievements | Pride | *pending (4.5; reached from Profile)* |
+| — | Store item detail/purchase · Wallet | Commerce | *pending (4.5)* |
+| — | Auth · Onboarding · Settings · Report | System | *pending (4.5)* |
 
 ---
 
@@ -128,9 +131,53 @@ Two screens are designed **once, with two modes**:
 
 ---
 
-## Part 4 — Detail screens & editors (PENDING walkthrough)
+## Part 4 — Detail screens & editors
 
-To be specified next, in this order: **Add Game → Game Detail → Collection Entry Detail → Card editor (the big one) → Card gallery/adopt → Device editor**, then **Compare Hours · Lists/Top-5 editor · Find/Add Friends · Contributor profile · Achievements · Store item detail/purchase · Wallet · Auth · Onboarding · Settings · Report.**
+### 4.1 Add Game (flow)
+**Purpose:** get a game into your collection (and the catalog when it's new). **Personas:** everyone; Contributor.
+**Must host:**
+- **Search** the community catalog (`CAT-01`); results show **title + release year + developer studio + a representative card + an "in your collection" marker**.
+- **Empty-state suggestions** (recently-added / popular / friends' games) — never a blank box.
+- **Exists →** add with an **all-status picker** (`COL-01/02`), then an **offered (not forced)** card step (else default placeholder, `CARD-18`).
+- **Missing →** **Create canonical entry** (name/genre/studio/publisher/release) with **fuzzy dedup** (`CAT-03`) → "be first to design its card."
+- **Add & continue** (quick multi-add); **Report duplicate** from a result (→ admin dedup, `MOD-01/05`).
+**States:** searching · results · no-results (→ create) · creating (dedup) · added (→ card step).
+
+### 4.2 Game page (adaptive — shared page + owned state)
+**Purpose:** the **shared community page** for a canonical game; when you own it, your personal details take precedence. **One screen, two states** — Collection Entry Detail folds in here.
+**Shared content:** canonical facts + **contributor credit** (`CAT-02/05`); **tappable genre/studio** (`DISC-02`); **community card gallery + adopt** and **design a card** (`CARD-04`, `ECON-03/04`); **add to collection / Up Next** (`WTP-02`); **recommend to a friend** (`SOC-05`); **friends-who-own + hours**; **suggest edit** (`CAT-06`); **report incl. duplicate** (`MOD-01`); **upcoming → notify me** (`DISC-01`, `NOTIF-01`); **community aggregate stats — later phase**.
+**Owned state (takes precedence):** your **hours / % / status / owned-since / rating / notes** (editable) + **selected card + card switcher** (`COL-03/06`); **Now Playing** (`WTP-03`).
+**States:** not-owned vs owned · upcoming · no-cards-yet (be-first) · soft-hidden/reported.
+
+### 4.3 Card editor — the heaviest screen (`CARD-01..19`)
+**Purpose:** design a Game Card for a specific game. **Persona:** Curator (+ Artist). **UX MANDATE: dense functionality must feel effortless** — progressive disclosure; the **three-bucket model** (① add elements · ② edit selected element · ③ card-level settings); direct-manipulation gestures; **start-from never blank**.
+**Must host:**
+- The **layered trading-card front** (back standardized): *base → vector elements → one effect → finish → frame → title* (`CARD-01`).
+- **Vector composition** — placeable shapes/letters/numbers/icons (free + premium packs) + optional colour/gradient base; **no uploads, no AI** (`CARD-02`).
+- **Element management:** layers panel (reorder/select/rename/lock/hide/duplicate/delete) + stacked-tap, multi-select + group, z-order (`CARD-08`).
+- **Precision:** pan/zoom canvas, snapping/smart-guides/align/distribute, nudge/numeric, undo/redo (`CARD-09`).
+- **Per-element controls:** opacity, gradient fill, stroke, shadow/glow, flip, blend, corner-radius (`CARD-10`).
+- **Colour & type:** palettes/eyedropper/curated; fonts + curved text + styling (`CARD-11`).
+- **Effects + separate finish** (holo/foil), one effect at a time (`CARD-12`).
+- **Premium = preview-then-acquire** + publish reconcile + buy-currency at intent (`CARD-13`).
+- **Drafts/lifecycle:** Draft state, autosave + crash recovery, unsaved-exit guard, duplicate (`CARD-14`).
+- **Save private vs Publish** → flatten to one image + true-preview + thumbnail safe-area (`CARD-04/15`); **publish integrity** (`CARD-19`).
+- **Approachability/a11y:** start-from (remix-a-community-card / template), **auto-design "Surprise me"**, preset kits, coachmarks; **break-out** to max canvas; screen-reader + non-gesture path; reduce-motion (`CARD-16`).
+- **Asset library:** searchable/categorized/filtered (free/premium/owned)/favourites; premium preview-on-card (`CARD-17`).
+- **Creator dashboard touch:** adoptions/clout/milestone progress (`CARD-05`).
+**Design notes for you:** on-screen control styling (`OQ-006`); the stylized break-out (`OQ-007`).
+**States:** new (start-from) · editing · premium-reconcile · saving/flattening · publish · error/offline.
+
+### 4.4 Admin/Moderator console (moderator-only, `MOD-04`)
+**Purpose:** the light-touch moderation home. **Gated to the moderator/admin role** (`SYS-08`).
+**Must host:**
+- **Reports queue** — review, hide/restore (`MOD-01/02/03`).
+- **Edit-suggestion review** — approve/reject canonical field changes (`MOD-06`).
+- **Catalog dedup/merge** — merge a duplicate into the canonical (re-point collections/cards), then **soft-delete with a 3-day restore** (`MOD-05`).
+**States:** queues (empty / with items) · item detail + action · restore-window items.
+
+### 4.5 Still pending
+**Device editor**, then **Compare Hours · Lists/Top-5 editor · Find/Add Friends · Contributor profile · Achievements · Store item detail/purchase · Wallet · Auth · Onboarding · Settings · Report.**
 
 ---
 
@@ -138,3 +185,4 @@ To be specified next, in this order: **Add Game → Game Detail → Collection E
 | Date | Version | Change |
 |---|---|---|
 | 2026-06-08 | 0.1 | Initial draft: global design direction + the 5 tab screens. Detail screens/editors pending. |
+| 2026-06-08 | 0.2 | Added detail screens: Add Game (4.1), adaptive Game page (4.2), Card editor (4.3 — `CARD-01..19`), Admin/Moderator console (4.4). Remaining screens pending (4.5). |
