@@ -4,7 +4,7 @@
 > be refined alongside the design-spec, because screens reveal exactly what each call must return.
 > Behavior lives in [`product-spec.md`](product-spec.md); shapes live here. Referenced by ID.
 
-**Version:** 0.1 (draft) · **Last updated:** 2026-06-07 · **Owner:** Claude Code
+**Version:** 0.3 (draft) · **Last updated:** 2026-06-08 · **Owner:** Claude Code
 
 ---
 
@@ -37,16 +37,16 @@
 ## Profile (`PROF-`)
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/me` | Current user: profile + privacy + summary stats (PROF-04) |
-| PATCH | `/me` | `{ username?, avatar?, bio?, favouriteGenreIds?, privacy? }` |
-| GET | `/users/:id` | Public/limited view honoring the target's privacy (PROF-03) |
+| GET | `/me` | Current user: profile, privacy, favourite game/genre, gamertags, summary + clout stats, member-since, now-playing (PROF-01/04/05) |
+| PATCH | `/me` | `{ username?, avatar?, bio?, favouriteGenreIds?, favouriteGameId?, privacy? }` |
+| GET | `/users/:id` | Friend-view showcase honoring privacy (PROF-03/05): device, top-5, now-playing, stats, friend count/mutual, + Add/Compare affordances |
 | GET | `/me/gamertags` · POST · PATCH `/:id` · DELETE `/:id` | Gamertag CRUD (PROF-02) |
 
 ## Catalog & contribution (`CAT-`)
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/catalog/search?q=` | Title search (CAT-01); returns matches + dedup candidates (CAT-03) |
-| POST | `/catalog/games` | `{ name, genreIds[], studio?, releaseDate? }` → created entry, `createdBy = caller` (CAT-02/05); 409 + suggestions on dedup hit |
+| POST | `/catalog/games` | `{ name, genreIds[], studio?, publisher?, releaseDate? }` → created entry, `createdBy = caller` (CAT-02/05); 409 + suggestions on dedup hit |
 | GET | `/catalog/games/:id` | Canonical entry + genres + contributor + card gallery |
 | POST | `/catalog/games/:id/edits` | Suggest field edit (CAT-06) |
 | GET | `/genres` | Controlled genre list (CAT-04) |
@@ -56,7 +56,8 @@
 ## Collection (`COL-`)
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/me/collection` | Filter/sort by genre/status/hours/recent (COL-07); paginated |
+| GET | `/me/collection` | Filter/sort by genre/status/hours/recent + `order=asc\|desc` + manual order; `?q=` searches title/developer/publisher (COL-07/09); paginated |
+| GET | `/users/:id/collection` | Friend-view, read-only, privacy-gated (COL-10) |
 | POST | `/me/collection` | `{ gameId }` → collection entry |
 | PATCH | `/me/collection/:entryId` | `{ status?, hours?, percentComplete?, datePurchased?, rating?, notes?, platformIds?, activeCardDesignId? }` (COL-02..06) |
 | DELETE | `/me/collection/:entryId` | Remove from collection |
@@ -82,7 +83,7 @@
 |---|---|---|
 | GET | `/cosmetics` | Library (free + premium), filterable by type (COSM-01..03) |
 | GET | `/me/entitlements` | What the caller owns (COSM-03) |
-| GET | `/store` | Store front: currency packs + premium effect/asset packs + drops (ECON-01/08) |
+| GET | `/store` | Store front: currency packs (real money) + premium effect/asset packs (priced in currency) + drops (ECON-01/08) |
 | GET | `/me/wallet` | `{ balance }` (ECON-07) |
 | GET | `/me/wallet/ledger` | Paginated transactions (ECON-07) |
 | POST | `/iap/validate` | `{ platform, receipt | rcUserId }` → grants currency/entitlement after server validation (ECON-06) |
@@ -95,12 +96,14 @@
 | POST | `/friends/requests` | `{ toUserId }` send request |
 | POST | `/friends/requests/:id/accept` · `/decline` | Respond |
 | DELETE | `/me/friends/:userId` | Unfriend |
-| GET | `/users/:id/profile-showcase` | Friend's device + collection + cards + stats + top-5 + now-playing (SOC-02) |
+| GET | `/users/search?username=` | Find people by username (SOC-07) |
 | GET | `/me/compare/:friendId` | Per-game + total hours comparison + leaderboard slice (SOC-03) |
 | GET/POST/PATCH/DELETE | `/me/lists` (+ `/:id/items`) | Lists incl. Top-5 (capped) (SOC-04) |
 | POST | `/recommendations` | `{ toUserId, gameId, note }` → recipient's WTP (SOC-05) |
-| GET | `/me/feed` | Low-noise friend activity (SOC-06) |
-| POST | `/me/invites` | Create share link (SOC-07) |
+| GET | `/me/feed` | Low-noise, **aggregated** friend activity (SOC-06) |
+| POST | `/me/invites` | Create a share link / QR invite token (SOC-07) |
+
+*(Friend showcase + read-only collection are served by `/users/:id` and `/users/:id/collection`.)*
 
 ## What to Play (`WTP-`)
 | Method | Path | Notes |
@@ -116,14 +119,15 @@
 |---|---|---|
 | GET | `/discover/browse?genreId=&studio=` | Browse (DISC-02) |
 | GET | `/discover/trending-cards` | Featured/trending cards (DISC-04) |
-| GET | `/search?q=&type=games|people` | Unified search (DISC-03) |
+| GET | `/discover/search?q=` | Games-only catalog search (DISC-03); people-search is `/users/search` (SOC-07) |
 
 ## Notifications (`NOTIF-`)
 | Method | Path | Notes |
 |---|---|---|
 | POST | `/me/push-tokens` · DELETE `/:token` | Register/unregister Expo push token |
-| GET | `/me/notifications` · POST `/:id/read` | Notification center (NOTIF-03) |
 | GET/PATCH | `/me/notification-prefs` | Per-type prefs (NOTIF-02) |
+
+*(No notifications-list endpoint — NOTIF-03 has no center; events surface in their contextual screens.)*
 
 ## Moderation (`MOD-`)
 | Method | Path | Notes |
@@ -147,3 +151,4 @@
 |---|---|---|
 | 2026-06-07 | 0.1 | Initial draft seam derived from product-spec v0.1. Shapes to be hardened during design. |
 | 2026-06-07 | 0.2 | Added Achievements endpoints (ACH-). |
+| 2026-06-08 | 0.3 | Reconciliation: publisher field; collection search + friend-view collection; favourite game + showcase fields on profile; single-currency store; username people-search; QR invites; games-only discover search; removed notifications-center endpoint. |

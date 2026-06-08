@@ -4,7 +4,7 @@
 > Screens and visuals are owned by the design-spec; endpoint shapes by the api-contract. This
 > document references those by ID. See [`../00-INDEX.md`](../00-INDEX.md) for the working agreement.
 
-**Version:** 0.3 (draft) · **Last updated:** 2026-06-07 · **Owner:** Claude Code
+**Version:** 0.4 (draft) · **Last updated:** 2026-06-08 · **Owner:** Claude Code
 
 ---
 
@@ -83,7 +83,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | SYS-02 | P0 | All write requests are **validated** server-side (types, ranges, required fields) before persistence. |
 | SYS-03 | P0 | API base URL and all secrets are **environment-configured**, never hardcoded. |
 | SYS-04 | P0 | Economy and tuning values (starting balance, login bonus, adoption cost, milestone thresholds) are **server-configurable** without an app release. |
-| SYS-05 | P1 | Sensitive/abuse-prone endpoints (auth, create-entry, report) are **rate-limited**. |
+| SYS-05 | P1 | Sensitive/abuse-prone endpoints (auth, create-entry, **card publishing**, report) are **rate-limited**. |
 | SYS-06 | P0 | An **automated testing harness + CI** exist from Phase 1 (before feature code). Approach: risk-based, meaningful-tests-first — see [`testing-strategy.md`](testing-strategy.md). |
 | SYS-07 | P0 | **Every mutating endpoint carries a standing authorization test** proving a user cannot read/modify another user's resource (enforces SYS-01). |
 
@@ -99,16 +99,17 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 ### 5.3 Profile (`PROF-`)
 | ID | Pri | Behavior |
 |---|---|---|
-| PROF-01 | P0 | Profile holds: username (unique), avatar, short bio, favourite genre(s). |
-| PROF-02 | P0 | **Gamertags**: a user lists handles per platform (controlled platform list, e.g. PC/PlayStation/Xbox/Nintendo). |
+| PROF-01 | P0 | Profile holds: username (unique), avatar, short bio, **favourite genre(s)**, and a **pinned favourite game** (shown as its Game Card). |
+| PROF-02 | P0 | **Gamertags**: a user lists handles per platform (controlled platform list, e.g. PC/PlayStation/Xbox/Nintendo). **Managed from the Profile.** |
 | PROF-03 | P0 | **Privacy setting**: friends-only (default) vs. limited public profile. Governs what non-friends can see. |
-| PROF-04 | P1 | Profile shows collection summary stats (total games, total hours, completion rate). |
+| PROF-04 | P1 | Profile shows **collection summary stats** (total games, total hours, completion rate), **headline clout stats** (cards designed, total adoptions received), and a **member-since** date. |
+| PROF-05 | P0 | The Profile is a **showcase with two modes**: your own (editable) and a **friend-view** (read-only, privacy-gated, PROF-03). It surfaces the **Device** (hero), **Top-5** (the gateway into that person's collection, COL-10), **Now Playing** (WTP-03), **friend count + mutual friends**, **Share profile** (SOC-07), and teasers to Achievements (ACH-05) + My Contributions (CAT-07). Friend-view exposes **Add friend / Compare hours** (SOC-03) actions. |
 
 ### 5.4 Catalog & contribution (`CAT-`)
 | ID | Pri | Behavior |
 |---|---|---|
 | CAT-01 | P0 | **Search** the community catalog by title. No external database is used. |
-| CAT-02 | P0 | **Create a canonical entry** when a game is missing: fields are **name (required), genre(s), studio/developer (optional), release date (optional)**. No `platforms` or `description` on the shared entry (avoids edit-wars). |
+| CAT-02 | P0 | **Create a canonical entry** when a game is missing: fields are **name (required), genre(s), studio/developer (optional), publisher (optional), release date (optional)**. No `platforms` or `description` on the shared entry (avoids edit-wars). |
 | CAT-03 | P0 | **Fuzzy dedup at creation**: warn "did you mean *Elden Ring*?" to prevent duplicate canonical entries. |
 | CAT-04 | P0 | Genres come from a **controlled list** (not free text). |
 | CAT-05 | P0 | The creator of an entry is **credited as its contributor**. |
@@ -125,8 +126,10 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | COL-04 | P0 | Per-game **personal platform(s)** — which platform(s) *you* own/play it on (private; pairs with gamertags). |
 | COL-05 | P1 | Per-game **private notes**. |
 | COL-06 | P0 | **Card switcher on a collection entry**: effortlessly flip the displayed Card for a game between (a) cards you created for it, (b) cards you adopted/downloaded for it, and (c) "create new." Your library look is never locked in. |
-| COL-07 | P0 | Collection views: a **Device/shelf view** (cards — the showcase) plus list/grid; sort & filter by genre/status/hours/recently-added. |
+| COL-07 | P0 | Collection views: a **Device/shelf view** (cards — the showcase) plus list/grid; sort & filter by genre/status/hours/recently-added, with an **ASC/DESC toggle** and support for **manual ordering** (a user-arranged order). |
 | COL-08 | P1 | Collection stats summary (feeds PROF-04). |
+| COL-09 | P1 | **Collection search**: search within *your own* collection, matching **title and developer/publisher**. (Distinct from the global catalog search, CAT-01 / DISC-03.) |
+| COL-10 | P0 | The Collection screen has **two modes**: your own (the editable tab) and a **friend-view** (read-only, privacy-gated) reached from a friend's Profile via their Top-5 (PROF-05). One screen, two modes. |
 
 ### 5.6 Game Card customization (`CARD-`)
 | ID | Pri | Behavior |
@@ -137,6 +140,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | CARD-04 | P0 | **Publish a card to the community** and **adopt** others' cards. Cards retain **designer attribution**. |
 | CARD-05 | P1 | A card tracks an **adoption count / popularity** metric (pride; feeds milestones in ECON). |
 | CARD-06 | P0 | A card is **premium** if its composition includes any premium asset/effect (derived flag) — this drives adoption cost (ECON-03). |
+| CARD-07 | P0 | **The Game Card is the universal visual representation of a game** everywhere it appears — collection shelf, Top-5, pinned favourite, friend showcases, recommendations — always rendering the owner's *selected* card for that game (COL-06). |
 
 ### 5.7 Device customization (`DEV-`)
 | ID | Pri | Behavior |
@@ -155,26 +159,26 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 ### 5.9 Economy & store (`ECON-`)
 | ID | Pri | Behavior |
 |---|---|---|
-| ECON-01 | P0 | **Dual economy.** The store sells two things: (a) **Customizer currency** (to *adopt* premium cards) and (b) **premium effects/asset packs** (to *create* premium cards). |
+| ECON-01 | P0 | **Single soft currency, two spend types.** Real money **only ever buys Customizer currency**; premium cosmetics are never sold for real money directly. Currency is then spent on **(a) adopting premium cards** (ECON-03) and **(b) acquiring premium effects/asset packs** to create your own (priced higher). One wallet, one mental model. |
 | ECON-02 | P0 | Every user starts with **5 Customizer currency**; earns more via **login bonuses / milestones**; can **purchase** more. (Values server-configurable per SYS-04.) |
 | ECON-03 | P0 | **Adopting a premium card costs 1 Customizer currency.** Adopting a **non-premium** card is **free**. |
 | ECON-04 | P0 | **Scoped adoption rights.** Adopting a premium card grants the right to use **that design for that game only**. It does **not** grant the standalone premium effect for reuse elsewhere (protects effect sales). |
 | ECON-05 | P0 | **Creator reward = clout (v2 choice "A").** When a creator's premium card is adopted, the creator earns **adoption-count, contributor prestige, and cosmetic unlock milestones** (delivered via the achievement system, ACH-04) — *not* currency or money. *(Future toggle "B" — currency kickback — is noted in decisions; real revenue-share is parked, §11.)* |
 | ECON-05a | P2 | *(reserved)* Currency-kickback to creators — a future-toggle of ECON-05, off in v2. |
 | ECON-06 | P0 | **In-app purchases via Apple/Google IAP** with server-side **receipt validation** and **restore purchases**. Implemented via a cross-platform IAP layer (RevenueCat — see api-contract / decisions). |
-| ECON-07 | P0 | A **wallet** holds the currency balance; a **ledger** records every change (login bonus, purchase, adoption spend, milestone) for auditability. |
+| ECON-07 | P0 | A **wallet** holds the currency balance; a **ledger** records every change (login bonus, purchase, adoption spend, milestone) for auditability **and is shown to the user** as a simple earn/spend history. The wallet (balance + ledger + buy-currency) is **surfaced on the Store screen**; the persistent header counter is its entry point elsewhere. |
 | ECON-08 | P2 | **Limited/seasonal drops** in the store as a return hook. |
 
 ### 5.10 Social (`SOC-`)
 | ID | Pri | Behavior |
 |---|---|---|
 | SOC-01 | P0 | **Mutual friends**: request/accept; a friends list. (Public follow graph is parked, §11.) |
-| SOC-02 | P0 | **Friend profile view**: their Device + collection + cards + stats + Top-5 + currently-playing. |
+| SOC-02 | P0 | **Friend profile view** = the friend-view mode of the Profile/Showcase (PROF-05): Device, Top-5 (gateway into their read-only collection, COL-10), stats, Now Playing, achievement teasers; exposes **Add friend / Compare hours**. |
 | SOC-03 | P0 | **Compare hours** with a friend (per-game and total) + friend leaderboards. (Core return-driver.) |
 | SOC-04 | P0 | **Top-5 lists** — create and share. (Extensible to other list types later.) |
 | SOC-05 | P1 | **Recommend a game to a friend** — drops into their What-to-Play with a note (`WTP-`). |
-| SOC-06 | P1 | A **gentle activity feed**: friend added/beat a game, published a card, hit a milestone. Deliberately low-noise. |
-| SOC-07 | P1 | **Friend invites** via share link / contacts (virality). |
+| SOC-06 | P1 | A **gentle activity feed** (on the Friends tab): friend beat/completed a game, published a card, unlocked a notable achievement. **Deliberately low-noise** — events are **aggregated by actor+type** ("Alex added 12 games" as one capped item), the **initial collection import does not flood the feed**, and trivia (minor stat tweaks) is excluded. |
+| SOC-07 | P1 | **Find & invite friends**: search by **username**, a **shareable invite link**, and a **QR code** for in-person adds. (No contacts-matching in v2.) |
 
 ### 5.11 What to Play (`WTP-`)
 | ID | Pri | Behavior |
@@ -188,7 +192,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 |---|---|---|
 | DISC-01 | P1 | **Upcoming** — browse catalog entries with a future release date. |
 | DISC-02 | P1 | **Browse by genre / studio.** |
-| DISC-03 | P1 | **Search** games and people. |
+| DISC-03 | P1 | **Search games** (global catalog). People-search lives in Social (SOC-07), not here. |
 | DISC-04 | P2 | **Trending / featured community cards** — showcases great Curator work and inspires. |
 | — | — | *(No algorithmic "recommended for you" engine in v2 — explicitly cut.)* |
 
@@ -197,7 +201,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 |---|---|---|
 | NOTIF-01 | P0 | **Push notifications** (Expo push) tuned to each persona's return trigger: friend activity/comparison, wishlisted game released, your card adopted Nx, new store drop. |
 | NOTIF-02 | P0 | Per-type **notification preferences** the user controls. |
-| NOTIF-03 | P1 | An in-app notification center mirrors push events. |
+| NOTIF-03 | P1 | **No standalone notifications center.** Each notification has a **contextual in-app home** (requests→Friends, releases→Up Next, adoptions→Profile, drops→Store); push handles real-time delivery. The rare orphan (a moderation outcome) surfaces as a one-off banner / Settings line. |
 
 ### 5.14 Moderation (`MOD-`)
 | ID | Pri | Behavior |
@@ -209,7 +213,9 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 ### 5.15 Achievements & easter eggs (`ACH-`)
 > The **system** is specified here; the specific achievement/egg **content** is a later brainstorm (OQ-004).
 > Shipping the engine in v2 is deliberate — it avoids retrofitting event plumbing and back-granting
-> retrospective achievements later.
+> retrospective achievements later. **Design rule for content:** prestigious achievements must key off
+> signals a user *can't self-inflate* (others' adoptions, contributions, friendships) — not self-reported
+> status like "beaten" (which mass-marking could farm).
 
 | ID | Pri | Behavior |
 |---|---|---|
@@ -228,8 +234,8 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 
 Authoritative field-level shapes live in [`api-contract.md`](api-contract.md); this is the entity map.
 
-- **Identity:** `users` (unique email, password hash, avatar, bio, privacy) · `auth_identities` (Apple/OAuth subs) · `gamertags` (handle + controlled platform)
-- **Catalog:** `games` (name, normalized_name, release_date?, studio?, created_by) · `genres` (controlled) · `game_genres`
+- **Identity:** `users` (unique email, password hash, avatar, bio, privacy, **favourite_game_id**, **created_at** → member-since) · `auth_identities` (Apple/OAuth subs) · `gamertags` (handle + controlled platform)
+- **Catalog:** `games` (name, normalized_name, release_date?, studio?, **publisher?**, created_by) · `genres` (controlled) · `game_genres`
 - **Collection:** `collection_entries` (user×game: status, hours, hours_source, percent_complete, date_purchased, rating, notes, active_card_design_id) · `collection_platforms` (entry × controlled platform)
 - **Cards:** `card_designs` (game, creator, visibility, composition JSON, is_premium, adoption_count, moderation_status) · `card_adoptions` (adopter × design × game, currency_paid)
 - **Device:** `device_configs` (user: active_model, shell_colour, sticker_composition JSON)
@@ -291,3 +297,4 @@ Recorded so they're conscious choices, not omissions:
 | 2026-06-07 | 0.1 | Initial spec drafted from brainstorming. | All |
 | 2026-06-07 | 0.2 | Added testing harness/CI and per-endpoint authorization-test requirements; web clarified as dev/testing-only surface. See `testing-strategy.md` + decision 0002. | SYS-06, SYS-07 |
 | 2026-06-07 | 0.3 | Added Achievements & easter eggs system (data-driven, event-driven, idempotent; mixed rewards incl. achievement-exclusive cosmetics). Reconciled COSM-04/ECON-05 milestone unlocks into it. See decision 0003. | ACH-01..08 |
+| 2026-06-08 | 0.4 | Tab-walkthrough reconciliation: single-currency economy + user-facing ledger; no notifications center; publisher field; collection search + manual order/ASC-DESC + friend-view collection; favourite game + clout/member-since + two-mode showcase; Game-Card-as-universal-representation; feed aggregation; QR/username find-friends; games-only Discover search; card-publishing rate-limit; achievement anti-farming rule. See decisions 0004–0005. | PROF-01/04/05, CAT-02, COL-07/09/10, CARD-07, DISC-03, SOC-02/06/07, ECON-01/07, NOTIF-03, SYS-05 |
