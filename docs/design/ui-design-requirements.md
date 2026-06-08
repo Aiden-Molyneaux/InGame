@@ -8,6 +8,9 @@
 
 **Version:** 0.4 · **Last updated:** 2026-06-08 · **Owner:** Claude Code → Claude Design
 **Status:** **ALL screens specified** (5 tabs + 16 detail screens/flows). Ready to hand to Claude Design. Open design notes live in `open-questions.md` (`OQ-005/006/007`).
+> **Claude Design — read [`design-process.md`](design-process.md) first.** It defines the phased,
+> reuse-first process: 3 hero-screen (Collection) drafts → extract a named component catalog →
+> Profile → expand. Compose every screen from the catalog so nothing feels disjunct.
 
 ---
 
