@@ -4,7 +4,7 @@
 > be refined alongside the design-spec, because screens reveal exactly what each call must return.
 > Behavior lives in [`product-spec.md`](product-spec.md); shapes live here. Referenced by ID.
 
-**Version:** 0.6 (draft) · **Last updated:** 2026-06-08 · **Owner:** Claude Code
+**Version:** 0.11 (draft) · **Last updated:** 2026-06-11 · **Owner:** Claude Code
 
 ---
 
@@ -17,7 +17,7 @@
   trusts an `id` in a body to identify the actor.
 - **Validation:** all bodies validated server-side (SYS-02); invalid → `422`.
 - **Errors:** `{ error: { code: string, message: string } }`. Codes are stable strings
-  (`AUTH_FAILED`, `NOT_FOUND`, `VALIDATION_ERROR`, `FORBIDDEN`, `RATE_LIMITED`, `SERVER_ERROR`).
+  (`AUTH_FAILED`, `NOT_FOUND`, `VALIDATION_ERROR`, `FORBIDDEN`, `RATE_LIMITED`, `SERVER_ERROR`, `ACCOUNT_SUSPENDED`).
 - **Lists:** cursor pagination → `{ items: [...], nextCursor: string | null }`.
 - **IDs:** UUIDs (string). **Timestamps:** ISO-8601 UTC strings.
 
@@ -26,21 +26,24 @@
 ## Auth (`AUTH-`)
 | Method | Path | Body → Response |
 |---|---|---|
-| POST | `/auth/register` | `{ email, username, password }` → `{ user, accessToken, refreshToken }` |
-| POST | `/auth/login` | `{ email, password }` → `{ user, accessToken, refreshToken }` |
-| POST | `/auth/apple` | `{ identityToken, nonce }` → `{ user, accessToken, refreshToken }` |
-| POST | `/auth/refresh` | `{ refreshToken }` → `{ accessToken, refreshToken }` |
+| POST | `/auth/register` | `{ email, username, password, acceptedTerms }` → `{ user, accessToken, refreshToken }`; sends the verification email (AUTH-08/10) |
+| POST | `/auth/login` | `{ email, password }` → `{ user, accessToken, refreshToken }`; a **suspended** account → `ACCOUNT_SUSPENDED` + `{ reason, until? }` (MOD-09) |
+| POST | `/auth/apple` | `{ identityToken, nonce }` → `{ user, accessToken, refreshToken }`; first sign-in → `user.usernamePending = true`, completed via `PATCH /me { username }`; links to an existing account on verified-email match (AUTH-09) |
+| POST | `/auth/refresh` | `{ refreshToken }` → `{ accessToken, refreshToken }`; suspension invalidates sessions → `ACCOUNT_SUSPENDED` (MOD-09) |
 | POST | `/auth/logout` | `{ refreshToken }` → `{ ok: true }` |
 | DELETE | `/me/account` | Delete account — data deletion/anonymization (AUTH-07) |
 | POST | `/auth/password-reset/request` | `{ email }` → `{ ok: true }` |
 | POST | `/auth/password-reset/confirm` | `{ token, password }` → `{ ok: true }` |
+| POST | `/auth/verify-email/request` | Resend the verification email (AUTH-08) |
+| POST | `/auth/verify-email/confirm` | `{ token }` → `{ ok: true }` (AUTH-08) |
 
 ## Profile (`PROF-`)
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/me` | Current user: profile, privacy, favourite game/genre, gamertags, summary + clout stats, member-since, now-playing (PROF-01/04/05) |
-| PATCH | `/me` | `{ username?, avatar?, bio?, favouriteGenreIds?, favouriteGameId?, privacy? }` |
-| GET | `/users/:id` | Friend-view showcase honoring privacy (PROF-03/05): device, top-5, now-playing, stats, friend count/mutual, + Add/Compare affordances |
+| GET | `/me` | Current user: profile, privacy, favourite game/genre, gamertags, summary + clout stats (+ per-stat **percentile chips** when above the population threshold, PROF-07), member-since, now-playing (PROF-01/04/05) |
+| PATCH | `/me` | `{ username?, bio?, favouriteGenreIds?, favouriteGameId?, privacy? }` — username changes cooldown-limited + screened (PROF-06, MOD-07); avatar changes flow through the avatar pipeline (PROF-08) |
+| POST | `/me/avatar/draft` · `/me/avatar/publish` | Avatar design pipeline (PROF-08) — mirrors the card draft → publish-flatten flow (server-rendered square image); shapes to harden during design |
+| GET | `/users/:id` | Friend-view showcase honoring privacy (PROF-03/05): device, top-5, now-playing, stats (+ percentiles, PROF-07), friend count/mutual, + Add/Compare affordances. **Blocked / suspended / deleted → one generic `NOT_FOUND`-style "unavailable"** (non-disclosure, MOD-09 / SOC-09 / AUTH-07) — never reveals which, nor who blocked whom |
 | GET | `/me/gamertags` · POST · PATCH `/:id` · DELETE `/:id` | Gamertag CRUD (PROF-02) |
 
 ## Catalog & contribution (`CAT-`)
@@ -69,7 +72,10 @@
 |---|---|---|
 | GET | `/games/:gameId/cards` | Published community cards for a game (gallery) |
 | POST | `/cards` | `{ gameId, composition }` → **Draft** (vector composition JSON); `isPremium` + `compositionHash` derived (CARD-02/06/14) |
-| PATCH | `/cards/:id` | Edit own draft/design (autosave) |
+| PATCH | `/cards/:id` | Edit own **draft/private** design (autosave) — published cards are immutable (CARD-20) |
+| GET | `/me/cards` | My designs across games: drafts · private · published (the drafts shelf, CARD-14) |
+| POST | `/cards/:id/unpublish` | Delist own published card; existing adopters keep their grant (CARD-20) |
+| DELETE | `/cards/:id` | Delete a draft/private (or never-adopted published) design; adopted → unpublish instead (CARD-14/20) |
 | POST | `/cards/:id/publish` | Validate (min-complexity, dedup, premium-reconcile), **flatten to image + thumbnail**, set public (CARD-13/15/19) |
 | POST | `/cards/:id/adopt` | Adopt for a game; charges currency if premium (ECON-03/04); increments adoption_count (CARD-05) |
 | GET | `/cards/assets` | Vector/effect/finish/frame/font library; filter type/free/premium/owned; search (CARD-17) |
@@ -77,7 +83,7 @@
 ## Device (`DEV-`)
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/me/device` · PATCH `/me/device` | `{ activeModelId?, shellColour?, stickerComposition? }` (DEV-01/02) |
+| GET | `/me/device` · PATCH `/me/device` | `{ activeModelId?, shellColour?, screenThemeId?, stickerComposition? }` (DEV-01/02/04) |
 
 ## Cosmetics & store & economy (`COSM-`, `ECON-`)
 | Method | Path | Notes |
@@ -89,20 +95,24 @@
 | GET | `/me/wallet/ledger` | Paginated transactions (ECON-07) |
 | POST | `/iap/validate` | `{ platform, receipt | rcUserId }` → grants currency/entitlement after server validation (ECON-06) |
 | POST | `/me/daily-bonus` | Claim login bonus (ECON-02; idempotent per period) |
+| POST | `/iap/webhook` | RevenueCat server notifications: purchase grants + **refund reversals** → wallet/ledger (ECON-06/09); server-to-server, signature-verified |
 
 ## Social (`SOC-`)
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/me/friends` · `/me/friends/requests` | Friends + pending (SOC-01) |
 | POST | `/friends/requests` | `{ toUserId }` send request |
-| POST | `/friends/requests/:id/accept` · `/decline` | Respond |
-| DELETE | `/me/friends/:userId` | Unfriend |
+| POST | `/friends/requests/:id/accept` · `/decline` | Respond; decline is silent, re-request cooldown-limited (SOC-08) |
+| DELETE | `/friends/requests/:id` | Cancel an outgoing request (SOC-08) |
+| DELETE | `/me/friends/:userId` | Unfriend (silent, SOC-08) |
+| GET/POST/DELETE | `/me/blocks` (+ `/:userId`) | Blocked-users list / block `{ userId }` / unblock (SOC-09) |
 | GET | `/users/search?username=` | Find people by username (SOC-07) |
 | GET | `/me/compare/:friendId` | Per-game + total hours, total-games comparison + leaderboard slice (SOC-03) |
 | GET/POST/PATCH/DELETE | `/me/lists` (+ `/:id/items`) | Lists incl. Top-5 (capped) (SOC-04) |
 | POST | `/recommendations` | `{ toUserId, gameId, note }` → recipient's WTP (SOC-05) |
 | GET | `/me/feed` | Low-noise, **aggregated** friend activity (SOC-06) |
 | POST | `/me/invites` | Create a share link / QR invite token (SOC-07) |
+| GET | `/invites/:token` | Resolve an invite → sender summary + prefilled-request affordance (SOC-10) |
 
 *(Friend showcase + read-only collection are served by `/users/:id` and `/users/:id/collection`.)*
 
@@ -133,11 +143,12 @@
 ## Moderation & admin (`MOD-`)
 | Method | Path | Notes |
 |---|---|---|
-| POST | `/reports` | `{ targetType, targetId, reason }` incl. "duplicate" (MOD-01) |
+| POST | `/reports` | `{ targetType: card\|game\|user, targetId, reason }` incl. "duplicate" (MOD-01) |
 | GET | `/admin/reports` · POST `/admin/reports/:id/resolve` | Reports queue; hide/restore (MOD-02/03) — role-gated (SYS-08) |
 | GET | `/admin/edit-suggestions` · POST `/admin/edit-suggestions/:id/{approve\|reject}` | Edit-suggestion review (MOD-06) |
 | POST | `/admin/games/:dupId/merge` | `{ canonicalId }` → re-point collections/cards, soft-delete the dup (3-day restore) (MOD-05) |
 | POST | `/admin/games/:id/restore` | Restore a soft-deleted game within the window (MOD-05) |
+| POST | `/admin/users/:id/suspend` · POST `/admin/users/:id/unsuspend` | `{ until?, reason }` suspend (temp/indefinite) / lift; invalidates the user's sessions; role-gated (SYS-08) (MOD-09) |
 
 ## Achievements (`ACH-`)
 | Method | Path | Notes |
@@ -159,3 +170,8 @@
 | 2026-06-08 | 0.4 | Card pipeline (draft/publish-flatten/assets, removed upload-sign); collection `ownedSince` rename; admin endpoints (reports resolve, edit-suggestion review, dedup-merge/restore). |
 | 2026-06-08 | 0.5 | Account deletion; compare adds total-games. |
 | 2026-06-08 | 0.6 | Consistency: collection sort enumeration (owned-since/title) now matches COL-07. |
+| 2026-06-10 | 0.7 | Gap-review ripple (decision 0010): terms acceptance + email-verification endpoints; SIWA `usernamePending` + linking; cancel-request + blocks; invite resolve; my-cards / unpublish / delete; IAP webhook (refund reversals); report `targetType` gains `user`; username-change note. (AUTH-08/09/10, PROF-06, SOC-08/09/10, CARD-20, ECON-09, MOD-01) |
+| 2026-06-10 | 0.8 | Percentile chips on `/me` + `/users/:id` stats payloads, threshold-gated (PROF-07). |
+| 2026-06-10 | 0.9 | Device config gains `screenThemeId` (DEV-04). |
+| 2026-06-11 | 0.10 | Avatar pipeline (PROF-08): `avatar` leaves `PATCH /me`; draft/publish endpoints mirror the card flatten flow. |
+| 2026-06-11 | 0.11 | Account suspension (MOD-09): admin suspend/unsuspend; `ACCOUNT_SUSPENDED` code on auth login/refresh; `/users/:id` collapses blocked/suspended/deleted into one generic unavailable (non-disclosure). |

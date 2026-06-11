@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InGame · Profile States — Edit · Friend-view · Privacy · Lifecycle (C5 v2)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" /></noscript>
+<style>
+  /* ── tokens: verbatim from h2-underlay-v2-c5-hybrid-ds-enforced.html (Teal shell · Midnight theme) ── */
+  :root {
+    --plastic: #2bb6b0; --plastic-hi: #3ec9c2; --plastic-lo: #1f9a94; --silk: #0d524e;
+    --accent: #ff3d77; --gold: #ffd23f; --cream: #f5f1e4; --navy: #1d2a4a;
+    --bezel: #14122a;
+    --pk: 'Chakra Petch', sans-serif; --shell: 'Paytone One', sans-serif;
+    --scr-bg: #232045; --scr-well: #2c2950; --scr-tools: #1a1733; --scr-accent: #ff9f43;
+    --scr-accent-ink: #2a1430; --scr-head: #f5f1e4; --scr-text: #ffffff; --scr-dim: #9b97c0;
+    --scr-soft: #c9c5e6; --scr-panel: rgba(255,255,255,.065); --scr-hairline: rgba(255,255,255,.08);
+    --scr-grip: #565178; --scr-chip: #f5f1e4; --scr-head-shadow: rgba(0,0,0,.45);
+    --scr-btn: #ffb38a; --scr-btn-ink: #2a1430;
+    --shell-ink: #08433f; --screw-hi: #2aa39d; --screw-lo: #137671; --pip-off: #117672;
+  }
+  /* friend-device overrides (decision 0012 chrome toggle): Grape shell · Berry screen */
+  .shell-grape { --plastic: #8a76e8; --plastic-hi: #9f8df2; --plastic-lo: #7460cc; --silk: #392c7a;
+    --shell-ink: #2d2164; --screw-hi: #7d6cd8; --screw-lo: #5b49b4; --pip-off: #5e4cb8; }
+  .scr-berry { --scr-bg: #2f1733; --scr-well: #3d2042; --scr-tools: #1f0e23; --scr-accent: #ff3d77;
+    --scr-accent-ink: #2a1430; --scr-dim: #b18ab8; --scr-soft: #dcc4e0;
+    --scr-panel: rgba(255,255,255,.06); --scr-hairline: rgba(255,255,255,.09);
+    --scr-grip: #6b4a72; --scr-btn: #ff8aab; --scr-btn-ink: #3d0a1d; }
+  html, body { margin: 0; min-height: 100%; background: #efece6; font-family: var(--pk); }
+  .canvas { max-width: 1348px; margin: 0 auto; padding: 40px 24px 60px; }
+  .canvas-head h1 { font: 700 17px/1.2 var(--pk); letter-spacing: 2.5px; color: #2a2633; margin: 0 0 6px; text-transform: uppercase; }
+  .canvas-head p { font: 500 12.5px/1.5 var(--pk); color: #79748a; margin: 0 0 8px; max-width: 660px; }
+  .stage { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+  .stage-label { font: 700 13px/1 var(--pk); letter-spacing: 2px; color: #2a2633; text-transform: uppercase; margin: 36px 2px 14px; }
+  .stage-label small { display: block; margin-top: 5px; font: 500 11px/1.4 var(--pk); letter-spacing: .3px; color: #79748a; text-transform: none; max-width: 860px; }
+  .take { width: 404px; }
+  .artboard-label { font: 700 11px/1 var(--pk); letter-spacing: 1.5px; color: #8d889c; margin: 0 0 10px 2px; text-transform: uppercase; }
+  .caption { margin-top: 14px; background: #fff; border-radius: 12px; padding: 13px 15px; box-shadow: 0 2px 8px rgba(42,38,51,.08); }
+  .caption h3 { margin: 0 0 5px; font: 700 12.5px var(--pk); letter-spacing: .8px; color: #2a2633; text-transform: uppercase; }
+  .caption h3 em { font-style: normal; color: var(--accent); }
+  .caption p { margin: 0 0 4px; font: 500 11.8px/1.5 var(--pk); color: #5d5870; }
+  .caption p b { color: #2a2633; }
+
+  /* ── device shell (physical — unchanged) ────────────────── */
+  .device { position: relative; width: 404px; height: 884px; border-radius: 30px; overflow: hidden;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.4), inset 0 -4px 0 rgba(0,0,0,.18), 0 18px 40px color-mix(in srgb, var(--shell-ink) 28%, transparent);
+    display: flex; flex-direction: column; padding: 0 14px; box-sizing: border-box; }
+  .screw { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--screw-hi), var(--screw-lo) 75%);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.25); }
+  .screw::after { content: ""; position: absolute; left: 1.5px; right: 1.5px; top: 3.5px; height: 1.5px; background: color-mix(in srgb, var(--shell-ink) 70%, transparent); border-radius: 1px; }
+  .screw.tl { top: 10px; left: 12px; } .screw.tr { top: 10px; right: 12px; }
+  .screw.bl { bottom: 10px; left: 12px; } .screw.br { bottom: 10px; right: 12px; }
+  .top-band { height: 64px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 12px 0; position: relative; }
+  .power { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+  .power .led { width: 9px; height: 9px; border-radius: 50%; background: #ff5a4e; box-shadow: 0 0 7px 2px rgba(255,90,78,.65), inset 0 -1px 1px rgba(0,0,0,.3); }
+  .power .lbl { font: 400 9px var(--shell); letter-spacing: .5px; color: var(--silk); opacity: .75; }
+  .logo { position: absolute; left: 50%; transform: translateX(-50%); font: 400 21px var(--shell); letter-spacing: 7px; text-indent: 7px;
+    color: color-mix(in srgb, var(--shell-ink) 28%, transparent); text-shadow: 0 -1px 0 color-mix(in srgb, var(--shell-ink) 30%, transparent); }
+  .grille { display: flex; gap: 6px; }
+  .grille span { width: 5px; height: 23px; background: color-mix(in srgb, var(--shell-ink) 40%, transparent); border-radius: 2px; transform: skewX(-22deg); box-shadow: inset 0 1px 1px rgba(0,0,0,.3); }
+  .screen-bezel { flex: 1 1 auto; min-height: 0; background: var(--bezel); border-radius: 20px; padding: 9px; box-sizing: border-box; }
+  .nav-band { flex: 0 0 auto; height: 128px; display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 6px 0; }
+  .nav-item { display: flex; flex-direction: column; align-items: center; width: 64px; }
+  .nav-lbl { height: 16px; font: 400 11px var(--shell); letter-spacing: .5px; color: var(--silk); display: flex; align-items: center; }
+  .nav-lbl.big { font-size: 11px; }
+  .nav-btn { width: 54px; height: 54px; border-radius: 15px; background: var(--cream); border: none;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 1px 0 rgba(255,255,255,.85); }
+  .nav-btn.store { background: var(--gold); }
+  .nav-btn.collection { background: var(--accent); }
+  .nav-item.active .nav-btn { transform: translateY(3px); box-shadow: 0 1px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 2px 3px rgba(0,0,0,.18); }
+  .pip { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; background: var(--pip-off);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.25); }
+  .nav-item.active .pip { background: var(--accent); box-shadow: 0 0 9px 2.5px rgba(255,61,119,.85), inset 0 -1px 1px rgba(0,0,0,.25); }
+  .nav-band .nav-item:nth-child(2) .nav-lbl:first-child,
+  .nav-band .nav-item:nth-child(4) .nav-lbl:first-child { transform: translateY(-8px); }
+
+  /* ── shared screen structure ────────────────────────────── */
+  .screen { position: relative; height: 100%; border-radius: 13px; overflow: hidden; display: flex; flex-direction: column; }
+  .screen-head { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 12px; }
+  .scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 12px 14px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .hero { display: flex; gap: 14px; align-items: stretch; padding: 12px; }
+  .hero-meta { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 7px; }
+  .tools { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 8px 10px; }
+  .grip { display: grid; grid-template-columns: repeat(2, 3px); grid-auto-rows: 3px; gap: 2.5px; padding: 6px 5px 6px 2px; }
+  .tools .spacer { flex: 1 1 auto; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; border: none; width: fit-content; }
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chips .chip { padding: 7px 9px; font-size: 10px; }
+  .hint { margin: 8px 1px 0; font: 600 8.5px/1.6 var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .hint b { color: var(--scr-soft); }
+
+  /* ── the Game Card ──────────────────────────────────────── */
+  .gcard { position: relative; border-radius: 11px; box-sizing: border-box; flex: 0 0 auto; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
+  .gcard .art { position: absolute; inset: 7px; border-radius: 5px; overflow: hidden; }
+  .gcard .art svg { width: 100%; height: 100%; display: block; }
+  .gcard .plate { position: absolute; left: 11px; right: 11px; bottom: 3px; border-radius: 4px; padding: 5px 4px 4px;
+    text-align: center; font: 700 10px var(--pk); letter-spacing: .5px; text-transform: uppercase; }
+  .gcard.hero-size { width: 138px; height: 193px; }
+  .gcard.mini-size { width: 100%; aspect-ratio: 63 / 88; border-radius: 6px; }
+  .gcard.mini-size .art { inset: 3px; border-radius: 2.5px; }
+  .gcard.mini-size .plate { left: 4px; right: 4px; bottom: 1.5px; border-radius: 2px; padding: 2px 1px 1.5px; font-size: 4.5px; letter-spacing: 0; }
+  .gcard.thumb { width: 44px; height: 62px; border-radius: 5px; }
+  .gcard.thumb .art { inset: 2.5px; border-radius: 2px; }
+  .gcard.thumb .plate { left: 3.5px; right: 3.5px; bottom: 1px; border-radius: 1.5px; padding: 1.5px 1px 1px; font-size: 3.2px; letter-spacing: 0; }
+  .fr-destiny { background: linear-gradient(160deg, #e8bc52, #c08a2a); }
+  .fr-marathon { background: linear-gradient(160deg, #64789f, #46587e); }
+  .fr-minecraft { background: linear-gradient(160deg, #ff5fae, #e23488); }
+  .fr-ratchet { background: linear-gradient(160deg, #4a3b30, #332821); }
+  .fr-re { background: linear-gradient(160deg, #221e2c, #121017); }
+  .pl-destiny { background: #f0cd6e; color: #3c2a09; }
+  .pl-marathon { background: #3d4f78; color: #e8eefc; }
+  .pl-minecraft { background: #8bd44a; color: #1f3505; }
+  .pl-ratchet { background: #2c2438; color: #f1ecdf; }
+  .pl-re { background: repeating-linear-gradient(45deg, #e8c83d 0 5px, #1c1a22 5px 10px); color: #fff; text-shadow: 0 1px 2px #000, 0 0 3px #000; }
+  .gcard.custom { background: linear-gradient(160deg, #d3e95e, #93b31a); }
+
+  /* ════ S2 base — flat floating panels ════ */
+  .sk2 { background: var(--scr-bg); }
+  .sk2 .screen-head h2 { margin: 0; font: 700 21px/1 var(--pk); letter-spacing: 3px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); }
+  .sk2 .screen-head h2.whose { letter-spacing: 1.5px; }  /* someone else's profile — "PROFILE — <name>", tighter so it fits */
+  .sk2 .well, .sk2 .hero { background: var(--scr-well); border-radius: 12px; }
+  .sk2 .npl { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-accent); }
+  .sk2 .hero-title { font: 700 21px/1.05 var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .sk2 .hero-sub { font: 600 11px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .sk2 .btn { background: var(--scr-btn); color: var(--scr-btn-ink); border-radius: 9px; padding: 9px 13px;
+    font: 700 11px var(--pk); letter-spacing: 1px;
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--scr-btn) 45%, #000), inset 0 1px 0 rgba(255,255,255,.4); }
+  .sk2 .btn.add { background: var(--gold); color: #3c2a09; box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
+    filter: drop-shadow(0 3px 0 color-mix(in srgb, var(--gold) 45%, #000)); }
+  /* stepped non-card action — same geometry as .add, system orange (owner rule: gold+step = makes a card) */
+  .sk2 .btn.act { background: var(--scr-accent); color: var(--scr-accent-ink); box-shadow: inset 0 1px 0 rgba(255,255,255,.45);
+    filter: drop-shadow(0 3px 0 color-mix(in srgb, var(--scr-accent) 45%, #000)); }
+  .sk2 .btn.secondary { background: var(--cream); color: var(--navy);
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .sk2 .chip.active { transform: translateY(2px);
+    box-shadow: 0 0 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 2px 3px rgba(0,0,0,.22); }
+  .sk2 .tools { background: var(--scr-tools); border-top: 1px solid var(--scr-hairline); }
+  .sk2 .chip { position: relative; background: var(--scr-chip); border-radius: 7px; padding: 6px 8px;
+    font: 600 11px var(--pk); letter-spacing: .5px; color: var(--navy);
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .sk2 .chip b { color: var(--navy); font-weight: 700; }
+  .sk2 .chip svg circle, .sk2 .chip svg path { stroke: var(--navy); }
+  .sk2 .chip svg rect { fill: var(--navy); }
+  .sk2 .chip .chip-pip { position: absolute; top: -2.5px; right: -2.5px; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 6px 1.5px rgba(255,61,119,.8); }
+  .sk2 .now-tag { position: absolute; top: 11px; left: 11px; z-index: 2; background: var(--scr-accent); color: var(--scr-accent-ink);
+    border-radius: 4px; padding: 3px 5px; font: 700 9px var(--pk); letter-spacing: .5px; }
+  .sk2 .grip i { background: var(--scr-grip); border-radius: 1px; }
+  .sk2 .tools .btn { padding: 8px 11px; }
+  .chip.dim, .grip.dim { opacity: .45; }
+  .chip.dim { box-shadow: 0 1px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 14px 2px 8px; }
+  .sec h3 { margin: 0; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .sec a { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
+
+  /* ── Profile components (ported verbatim from h2-underlay-v2) ── */
+  .id { padding: 12px; display: flex; flex-direction: column; gap: 9px; }
+  .id-top { display: flex; gap: 12px; align-items: center; }
+  .avatar { position: relative; flex: 0 0 auto; width: 46px; height: 46px; border-radius: 10px; background: var(--scr-accent); color: var(--scr-accent-ink);
+    font: 700 15px var(--pk); display: flex; align-items: center; justify-content: center; }
+  .id-name { font: 700 21px/1.1 var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .id-sub { font: 600 11px var(--pk); letter-spacing: 1px; color: var(--scr-dim); margin-top: 3px; }
+  .bio { font: 500 11px/1.5 var(--pk); color: var(--scr-soft); }
+  .gtags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .gtag { background: var(--scr-panel); border-radius: 6px; padding: 4px 7px; font: 600 9px var(--pk);
+    letter-spacing: .5px; color: var(--scr-soft); display: inline-flex; align-items: center; }
+  .gtag b { color: var(--scr-text); font-weight: 700; margin-right: 4px; }
+  .gtag.add { background: transparent; border: 1px dashed var(--scr-grip); color: var(--scr-dim); }
+  .stats { padding: 12px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat { background: var(--scr-panel); border-radius: 9px; padding: 9px 6px 8px; display: flex; flex-direction: column;
+    gap: 3px; align-items: center; }
+  .stat .v { font: 700 15px/1 var(--pk); color: var(--scr-text); }
+  .stat .l { font: 600 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .pct { margin-top: 2px; background: var(--gold); color: #3c2a09; border-radius: 99px;
+    padding: 2px 6px; font: 600 9px var(--pk); letter-spacing: .5px; }
+  .top5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .rank { position: absolute; top: 4px; left: 4px; z-index: 2; width: 13px; height: 13px; border-radius: 4px;
+    background: var(--scr-chip); color: var(--navy); font: 700 9px/13px var(--pk); text-align: center; }
+  .rank.first { background: var(--gold); color: #3c2a09; }
+  .strip { display: flex; gap: 12px; align-items: center; padding: 10px 12px; }
+  .strip-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .strip-title { font: 700 15px/1.1 var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .chev { margin-left: auto; color: var(--scr-grip); font: 700 15px var(--pk); flex: 0 0 auto; }
+  .dev-row { display: flex; gap: 12px; align-items: center; padding: 10px 12px; }
+  .mini-dev { flex: 0 0 auto; width: 42px; height: 92px; border-radius: 7px; padding: 3px; box-sizing: border-box;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%);
+    display: flex; flex-direction: column; box-shadow: inset 0 1px 0 rgba(255,255,255,.4), inset 0 -1px 0 rgba(0,0,0,.18); }
+  .mini-dev .mscr { flex: 1 1 auto; margin: 5px 2px 3px; background: var(--scr-bg); border: 2px solid var(--bezel); border-radius: 3px; }
+  .mini-dev .mnav { height: 9px; display: flex; gap: 2.5px; align-items: center; justify-content: center; }
+  .mini-dev .mnav i { width: 4px; height: 4px; border-radius: 1.5px; background: var(--cream); }
+  .mini-dev .mnav i.y { background: var(--gold); }
+  .row { display: flex; gap: 10px; align-items: center; padding: 12px; }
+  .row + .row { border-top: 1px solid var(--scr-hairline); }
+  .ric { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 8px; background: var(--scr-chip);
+    display: flex; align-items: center; justify-content: center; }
+  .ric svg path, .ric svg rect, .ric svg circle { stroke: var(--navy); }
+  .rl { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .rv { margin-left: auto; font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .rv + .chev { margin-left: 8px; }
+
+  /* ════ C5 · HYBRID — square chrome · stepped-diagonal cards ════ */
+  .c5 .well, .c5 .hero, .c5 .chip, .c5 .btn, .c5 .count, .c5 .now-tag, .c5 .gtag, .c5 .stat, .c5 .rank, .c5 .ric { border-radius: 0; }
+  .c5 .well, .c5 .hero { border: 1px solid var(--scr-hairline); }
+  .c5 .btn.add, .c5 .btn.act { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+      100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
+      calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
+  .c5 .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
+    clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
+      100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
+      calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
+  .c5 .gcard .art { border-radius: 0;
+    clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+      100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .c5 .gcard .plate { border-radius: 0;
+    clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  .c5 .gcard.mini-size { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+      100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .c5 .gcard.mini-size .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  .c5 .gcard.mini-size .plate { clip-path: polygon(0 1.5px, 1.5px 1.5px, 1.5px 0, 100% 0,
+      100% calc(100% - 1.5px), calc(100% - 1.5px) calc(100% - 1.5px), calc(100% - 1.5px) 100%, 0 100%); }
+  .c5 .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0,
+      100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
+  .c5 .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  .c5 .gcard.thumb .plate { clip-path: polygon(0 1px, 1px 1px, 1px 0, 100% 0,
+      100% calc(100% - 1px), calc(100% - 1px) calc(100% - 1px), calc(100% - 1px) 100%, 0 100%); }
+
+  /* ════ NEW — profile-state components (this file) ════ */
+  /* edit mode */
+  .mode-tag { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-accent); }
+  /* avatar "design" affordance — corner icon badge (method A), punched out with a ring */
+  .cbadge { position: absolute; bottom: -4px; right: -4px; z-index: 3; width: 19px; height: 19px; border-radius: 50%;
+    background: var(--scr-accent); display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 2px var(--scr-well), 0 1px 3px rgba(0,0,0,.5); }
+  .cbadge svg { width: 10px; height: 10px; } .cbadge svg path { stroke: var(--scr-accent-ink); }
+  .pen { flex: 0 0 auto; margin-left: 7px; }
+  .pen path { stroke: var(--scr-accent); }
+  .efield { display: flex; align-items: center; gap: 7px; background: var(--scr-chip); padding: 9px 10px;
+    box-shadow: inset 0 2px 3px rgba(0,0,0,.16); }
+  .efield .tx { font: 600 10.5px/1.4 var(--pk); letter-spacing: .3px; color: var(--navy); min-width: 0; }
+  .efield .caret { flex: 0 0 auto; width: 1.5px; height: 12px; background: var(--accent); }
+  .efield .cnt { margin-left: auto; flex: 0 0 auto; font: 600 9px var(--pk); color: #8d889c; }
+  .gtag .x { margin-left: 6px; color: var(--scr-dim); font: 700 9px/1 var(--pk); font-style: normal; }
+  .grip-badge { position: absolute; top: 3px; right: 3px; z-index: 2; display: grid; grid-template-columns: repeat(2, 2px);
+    grid-auto-rows: 2px; gap: 1.5px; padding: 3.5px; background: rgba(0,0,0,.5); }
+  .grip-badge i { background: var(--scr-chip); }
+  .dimmed { opacity: .45; }
+  .lock-note { margin-left: auto; flex: 0 0 auto; border: 1px solid var(--scr-hairline); color: var(--scr-dim);
+    font: 600 8px var(--pk); letter-spacing: .5px; padding: 2.5px 4px; white-space: nowrap; }
+  .lock-note + .chev { margin-left: 8px; }
+  /* fresh / inviting empties */
+  .ghost-card { position: relative; width: 138px; height: 193px; background: var(--scr-panel); flex: 0 0 auto;
+    clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
+      100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
+      calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
+  .ghost-card::before { content: ""; position: absolute; inset: 8px; border: 2px dashed var(--scr-grip); opacity: .8; }
+  .ghost-card .plus { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font: 700 36px/1 var(--pk); color: var(--scr-grip); }
+  .ghost-mini { position: relative; width: 100%; aspect-ratio: 63 / 88; background: var(--scr-panel);
+    clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+      100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .ghost-mini::before { content: ""; position: absolute; inset: 5px; border: 1.5px dashed var(--scr-grip); opacity: .7; }
+  .ghost-mini .plus { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font: 700 17px/1 var(--pk); color: var(--scr-grip); }
+  .ghost-line { border: 1px dashed var(--scr-grip); padding: 9px 10px; font: 600 9.5px var(--pk);
+    letter-spacing: .5px; color: var(--scr-dim); }
+  /* skeleton (loading) — solid quiet fills; dashes are reserved for invitations */
+  .sk-bar { height: 9px; background: var(--scr-panel); }
+  .sk-av { flex: 0 0 auto; width: 46px; height: 46px; background: var(--scr-panel); }
+  .sk-tile { height: 52px; background: var(--scr-panel); }
+  .sk-card { flex: 0 0 auto; width: 138px; height: 193px; background: var(--scr-panel);
+    clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
+      100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
+      calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
+  .sk-mini { width: 100%; aspect-ratio: 63 / 88; background: var(--scr-panel);
+    clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+      100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .sk-thumb { flex: 0 0 auto; width: 44px; height: 62px; background: var(--scr-panel); }
+  /* friend view */
+  .exit-band { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    background: var(--scr-accent); color: var(--scr-accent-ink); padding: 9px 13px;
+    font: 700 9.5px var(--pk); letter-spacing: 1px; }
+  .ovf { letter-spacing: 2px; font-weight: 700; }
+  /* privacy-limited */
+  .lock-well { margin-top: 12px; border: 1px dashed var(--scr-grip); padding: 18px 14px; display: flex;
+    flex-direction: column; align-items: center; gap: 7px; text-align: center; }
+  .lock-well svg path, .lock-well svg rect { stroke: var(--scr-dim); }
+  .lock-well .lk-t { font: 700 10px var(--pk); letter-spacing: 1.5px; color: var(--scr-soft); }
+  .lock-well .lk-s { font: 500 9.5px/1.5 var(--pk); color: var(--scr-dim); max-width: 250px; }
+  /* load-error */
+  .err-wrap { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 9px; padding: 52px 18px 0; }
+  .err-card { position: relative; width: 96px; height: 134px; background: var(--scr-panel); margin-bottom: 8px;
+    clip-path: polygon(0 6px, 3px 6px, 3px 3px, 6px 3px, 6px 0, 100% 0,
+      100% calc(100% - 6px), calc(100% - 3px) calc(100% - 6px), calc(100% - 3px) calc(100% - 3px),
+      calc(100% - 6px) calc(100% - 3px), calc(100% - 6px) 100%, 0 100%); }
+  .err-card::before { content: ""; position: absolute; inset: 6px; border: 2px dashed var(--scr-grip); opacity: .8; }
+  .err-card .bang { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font: 700 34px/1 var(--pk); color: var(--scr-accent); }
+  .err-title { font: 700 17px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
+  .err-sub { font: 500 10.5px/1.55 var(--pk); color: var(--scr-soft); max-width: 240px; }
+  .err-wrap .ghost-link { margin-top: 6px; font: 600 10px var(--pk); letter-spacing: .8px; color: var(--scr-dim); text-decoration: none; }
+  /* unavailable (terminal) — muted, no alarm: grip-grey glyph, not the accent ! */
+  .err-card .void-ic { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .err-card .void-ic svg { width: 42px; height: 42px; } .err-card .void-ic svg path, .err-card .void-ic svg circle { stroke: var(--scr-grip); }
+  .err-eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  /* offline (SYS-10) — lightweight persistent indicator + a calm notice, never the error alarm */
+  .offline-strip { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; margin: 0 12px 2px; padding: 7px 11px;
+    background: var(--scr-panel); border: 1px solid var(--scr-hairline);
+    font: 700 8.5px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .offline-strip svg { width: 13px; height: 13px; flex: 0 0 auto; } .offline-strip svg path { stroke: var(--scr-dim); }
+  .offline-strip .sync { margin-left: auto; font-weight: 600; letter-spacing: .5px; color: var(--scr-grip); }
+</style>
+</head>
+<body>
+
+<!-- card art symbols (same library as collection-states / the v2 underlay) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="g-dst" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2156"/><stop offset="1" stop-color="#14102e"/></linearGradient>
+    <linearGradient id="g-dst2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#58e0d8"/><stop offset="1" stop-color="#2ba8a0"/></linearGradient>
+    <linearGradient id="g-mar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a4a70"/><stop offset="1" stop-color="#1f2840"/></linearGradient>
+    <linearGradient id="g-mc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff7ab1"/><stop offset="1" stop-color="#e2498e"/></linearGradient>
+    <linearGradient id="g-rat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8973f"/><stop offset="1" stop-color="#a8581b"/></linearGradient>
+    <linearGradient id="g-re" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7f4ec"/><stop offset="1" stop-color="#e3ddcc"/></linearGradient>
+    <clipPath id="c-mar"><circle cx="40" cy="30" r="14"/></clipPath>
+    <symbol id="art-destiny" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-dst)"/>
+      <circle cx="31.5" cy="38" r="17" fill="none" stroke="#d9a93f" stroke-width="1.2" opacity=".5"/>
+      <path d="M31.5 16 L48 38 L31.5 60 L15 38 Z" fill="url(#g-dst2)" stroke="#e8c364" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M31.5 24 L42.5 38 L31.5 52 L20.5 38 Z" fill="rgba(255,255,255,.18)"/>
+      <circle cx="31.5" cy="38" r="4" fill="#f4f9f8"/>
+      <circle cx="31.5" cy="13" r="1.8" fill="#e8c364"/><circle cx="51" cy="38" r="1.8" fill="#e8c364"/>
+      <circle cx="31.5" cy="63" r="1.8" fill="#e8c364"/><circle cx="12" cy="38" r="1.8" fill="#e8c364"/>
+    </symbol>
+    <symbol id="art-marathon" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-mar)"/>
+      <circle cx="40" cy="30" r="14" fill="#dfe6f0"/>
+      <g clip-path="url(#c-mar)"><rect x="24" y="25" width="32" height="7" fill="#35cfe0"/><rect x="24" y="31" width="32" height="2.5" fill="#1f93a6"/></g>
+      <ellipse cx="40" cy="30" rx="21" ry="6.5" fill="none" stroke="#8fa3c8" stroke-width="1" opacity=".7" transform="rotate(-18 40 30)"/>
+      <path d="M14 56 L23 60.5 L14 65 Z" fill="#ff5a4e"/>
+      <rect x="4" y="59.2" width="8" height="2.6" rx="1.3" fill="rgba(255,90,78,.45)"/>
+      <path d="M0 78 Q31.5 68 63 78 L63 88 L0 88 Z" fill="#2c3a5c"/>
+    </symbol>
+    <symbol id="art-minecraft" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-mc)"/>
+      <path d="M0 72 L63 66 L63 88 L0 88 Z" fill="rgba(86,12,46,.30)"/>
+      <rect x="12" y="18" width="39" height="39" rx="3" fill="#ff9cc4"/>
+      <rect x="12" y="18" width="39" height="10" rx="3" fill="#ffb1d2"/>
+      <rect x="17" y="34" width="5" height="7" fill="#471130"/><rect x="41" y="34" width="5" height="7" fill="#471130"/>
+      <rect x="24" y="42" width="15" height="11" rx="2" fill="#d12f72"/>
+      <rect x="27" y="45" width="3" height="5" fill="#6e1437"/><rect x="33" y="45" width="3" height="5" fill="#6e1437"/>
+    </symbol>
+    <symbol id="art-ratchet" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-rat)"/>
+      <path d="M0 76 Q31.5 70 63 76 L63 88 L0 88 Z" fill="rgba(60,26,8,.35)"/>
+      <rect x="18.5" y="27" width="26" height="26" rx="4" fill="#5a3414"/>
+      <rect x="18.5" y="27" width="26" height="26" rx="4" fill="#5a3414" transform="rotate(45 31.5 40)"/>
+      <circle cx="31.5" cy="40" r="11" fill="#f2c489"/>
+      <path d="M31.5 35 L36 37.5 L36 42.5 L31.5 45 L27 42.5 L27 37.5 Z" fill="#3c2410"/>
+    </symbol>
+    <symbol id="art-re" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-re)"/>
+      <g stroke="#2a2326" stroke-width=".7" stroke-linejoin="round">
+        <path d="M31.5 38 L31.5 22 A16 16 0 0 1 42.8 26.7 Z" fill="#d8262c"/>
+        <path d="M31.5 38 L42.8 26.7 A16 16 0 0 1 47.5 38 Z" fill="#f7f5ef"/>
+        <path d="M31.5 38 L47.5 38 A16 16 0 0 1 42.8 49.3 Z" fill="#d8262c"/>
+        <path d="M31.5 38 L42.8 49.3 A16 16 0 0 1 31.5 54 Z" fill="#f7f5ef"/>
+        <path d="M31.5 38 L31.5 54 A16 16 0 0 1 20.2 49.3 Z" fill="#d8262c"/>
+        <path d="M31.5 38 L20.2 49.3 A16 16 0 0 1 15.5 38 Z" fill="#f7f5ef"/>
+        <path d="M31.5 38 L15.5 38 A16 16 0 0 1 20.2 26.7 Z" fill="#d8262c"/>
+        <path d="M31.5 38 L20.2 26.7 A16 16 0 0 1 31.5 22 Z" fill="#f7f5ef"/>
+      </g>
+      <circle cx="31.5" cy="38" r="2" fill="#2a2326"/>
+      <rect x="14" y="64" width="35" height="3.5" fill="#1c1a22"/>
+      <rect x="14" y="70" width="35" height="1.6" fill="#d8262c" opacity=".55"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="canvas">
+  <div class="canvas-head">
+    <h1>Profile States · Edit · Friend-view · Privacy · Lifecycle — C5 v2</h1>
+    <p>Twelve Profile artboards in the C5 v2 language, completing the §3.5 state matrix: <b>base self
+    view · edit mode · friend-view · privacy-limited</b> plus the global lifecycle family (§1.8), the
+    <b>terminal "unavailable"</b> states (blocked · suspended · deleted — MOD-09), and the
+    <b>offline</b> states (SYS-10). Edit mode
+    covers <b>identity + curation only</b> (PROF-01/02/06/08, SOC-04); friend-view splits into
+    <b>your-chrome</b> (default) and the <b>"view in their device" toggle</b> (decision 0012);
+    privacy-limited is the non-friend surface (PROF-03). Standalone file — sample art = built-in SVG
+    symbols; Maverick = self, Riko = friend, Vanta = non-friend.</p>
+  </div>
+
+  <div class="stage-label">Self states <small>base (the populated default view) &middot; edit mode (in-place, per the OQ-034 keycap doctrine) &middot; the fresh profile (inviting empties, &sect;1.7 + PROF-07 chip-less proof)</small></div>
+  <div class="stage">
+
+    <!-- ═══ Profile · Base (populated, view mode) ═══ -->
+    <div class="take">
+      <div class="artboard-label">Profile — base (self, populated)</div>
+      <div class="device" data-screen-label="States · C5 · Profile — Base">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>PROFILE</h2></div>
+            <div class="scroll">
+              <div class="well id">
+                <div class="id-top">
+                  <div class="avatar">MV</div>
+                  <div>
+                    <div class="id-name">MAVERICK</div>
+                    <div class="id-sub">MEMBER SINCE '24 &middot; RPG / SHOOTER</div>
+                  </div>
+                </div>
+                <div class="bio">Couch co-op collector, space-shooter lifer. Designing cards until my queue forgives me.</div>
+                <div class="gtags">
+                  <span class="gtag"><b>PSN</b>MAV_RICK</span>
+                  <span class="gtag"><b>STEAM</b>MAVERICK86</span>
+                  <span class="gtag"><b>XBL</b>MAV86</span>
+                </div>
+              </div>
+              <div class="sec"><h3>STATS</h3></div>
+              <div class="well stats">
+                <div class="stat"><span class="v">48</span><span class="l">GAMES</span></div>
+                <div class="stat"><span class="v">1.2K</span><span class="l">HOURS</span><span class="pct">TOP 25%</span></div>
+                <div class="stat"><span class="v">64%</span><span class="l">COMPLETION</span></div>
+                <div class="stat"><span class="v">12</span><span class="l">CARDS</span></div>
+                <div class="stat"><span class="v">86</span><span class="l">ADOPTIONS</span></div>
+                <div class="stat"><span class="v">9</span><span class="l">FRIENDS</span></div>
+              </div>
+              <div class="sec"><h3>PINNED FAVOURITE</h3></div>
+              <div class="hero">
+                <div class="gcard hero-size fr-destiny">
+                  <div class="art"><svg><use href="#art-destiny"/></svg></div>
+                  <div class="plate pl-destiny">Destiny</div>
+                </div>
+                <div class="hero-meta">
+                  <span class="npl">ALL-TIME PICK</span>
+                  <span class="hero-title">DESTINY</span>
+                  <span class="hero-sub">210 HRS LOGGED</span>
+                  <button class="btn secondary">VIEW GAME</button>
+                </div>
+              </div>
+              <div class="sec"><h3>TOP 5</h3><a href="#">VIEW COLLECTION &rsaquo;</a></div>
+              <div class="top5">
+                <div class="gcard mini-size fr-destiny"><span class="rank first">1</span>
+                  <div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="gcard mini-size fr-minecraft"><span class="rank">2</span>
+                  <div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
+                <div class="gcard mini-size fr-marathon custom"><span class="rank">3</span>
+                  <div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
+                <div class="gcard mini-size fr-ratchet"><span class="rank">4</span>
+                  <div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
+                <div class="gcard mini-size fr-re"><span class="rank">5</span>
+                  <div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div>
+              </div>
+              <div class="sec"><h3>NOW PLAYING</h3></div>
+              <div class="well strip">
+                <div class="gcard thumb fr-marathon custom">
+                  <div class="art"><svg><use href="#art-marathon"/></svg></div>
+                  <div class="plate pl-marathon">Marathon</div>
+                </div>
+                <div class="strip-meta">
+                  <span class="strip-title">MARATHON</span>
+                  <span class="hero-sub">86 HRS LOGGED</span>
+                </div>
+                <span class="chev">&rsaquo;</span>
+              </div>
+              <div class="sec"><h3>MY DEVICE</h3></div>
+              <div class="well dev-row">
+                <div class="mini-dev"><div class="mscr"></div><div class="mnav"><i class="y"></i><i></i><i></i><i></i><i></i></div></div>
+                <div class="strip-meta">
+                  <span class="strip-title">POCKET &middot; TEAL</span>
+                  <span class="hero-sub">MIDNIGHT SCREEN &middot; EDIT</span>
+                </div>
+                <span class="chev">&rsaquo;</span>
+              </div>
+              <div class="well" style="margin-top: 14px;">
+                <div class="row">
+                  <span class="ric"><svg width="15" height="15" viewBox="0 0 15 15"><path d="M7.5 1.6l1.7 3.6 4 .5-2.9 2.7.8 3.9-3.6-2-3.6 2 .8-3.9L1.8 5.7l4-.5 1.7-3.6z" fill="none" stroke-width="1.5" stroke-linejoin="round"/></svg></span>
+                  <span class="rl">ACHIEVEMENTS</span>
+                  <span class="rv">12/40</span><span class="chev">&rsaquo;</span>
+                </div>
+                <div class="row">
+                  <span class="ric"><svg width="14" height="14" viewBox="0 0 14 14"><rect x="1.5" y="1.5" width="4.6" height="4.6" rx="1.2" fill="none" stroke-width="1.5"/><rect x="7.9" y="1.5" width="4.6" height="4.6" rx="1.2" fill="none" stroke-width="1.5"/><rect x="1.5" y="7.9" width="4.6" height="4.6" rx="1.2" fill="none" stroke-width="1.5"/><rect x="7.9" y="7.9" width="4.6" height="4.6" rx="1.2" fill="none" stroke-width="1.5"/></svg></span>
+                  <span class="rl">MY CONTRIBUTIONS</span>
+                  <span class="rv">5</span><span class="chev">&rsaquo;</span>
+                </div>
+              </div>
+            </div>
+            <div class="tools">
+              <div class="grip"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M1.5 10.5v-2L8 2l2 2-6.5 6.5h-2z" fill="none" stroke-width="1.4" stroke-linejoin="round"/></svg><b>EDIT</b></div>
+              <div class="chip"><svg width="12" height="13" viewBox="0 0 12 13"><path d="M6 1v7M3.4 3.2L6 .8l2.6 2.4" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 6.5v5h9v-5" fill="none" stroke-width="1.5" stroke-linejoin="round"/></svg><b>SHARE</b></div>
+              <div class="spacer"></div>
+              <div class="chip"><svg width="13" height="13" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke-width="2" stroke-linejoin="round"/></svg></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Base <em>(your profile — the populated default)</em></h3>
+        <p><b>The canonical self-view</b> every other state derives from: identity (avatar, name, member-since,
+        bio, gamertags) &rarr; <b>stats</b> (with PROF-07 percentile chips) &rarr; <b>pinned favourite</b> &rarr;
+        <b>Top-5</b> (the gateway into your collection) &rarr; Now Playing &rarr; device &rarr; the Achievements +
+        Contributions gateways (PROF-04/05). Tools: <b>EDIT · SHARE · Settings</b>, all live.</p>
+        <p>Edit, fresh, loading, error, offline and friend-view are all transforms of <i>this</i> &mdash; same
+        skeleton, different fill or chrome.</p>
+      </div>
+    </div>
+
+    <!-- ═══ Profile · Edit mode ═══ -->
+    <div class="take">
+      <div class="artboard-label">Profile — edit mode (self, in-place)</div>
+      <div class="device" data-screen-label="States · C5 · Profile — Edit">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>PROFILE</h2><span class="mode-tag">EDITING</span></div>
+            <div class="scroll">
+              <div class="well id">
+                <div class="id-top">
+                  <div class="avatar">MV<span class="cbadge"><svg viewBox="0 0 12 12"><path d="M1.5 10.5v-2L8 2l2 2-6.5 6.5h-2z" fill="none" stroke-width="1.3" stroke-linejoin="round"/></svg></span></div>
+                  <div>
+                    <div class="id-name">MAVERICK<svg class="pen" width="12" height="12" viewBox="0 0 12 12"><path d="M1.5 10.5v-2L8 2l2 2-6.5 6.5h-2z" fill="none" stroke-width="1.4" stroke-linejoin="round"/></svg></div>
+                    <div class="id-sub">USERNAME &middot; NEXT CHANGE OK NOW (1 / 30 DAYS)</div>
+                  </div>
+                </div>
+                <div class="efield"><span class="tx">Couch co-op collector, space-shooter lifer. Designing cards until my queue forgives me.</span><span class="caret"></span><span class="cnt">86/140</span></div>
+                <div class="chips">
+                  <div class="chip active"><b>RPG</b></div>
+                  <div class="chip active"><b>SHOOTER</b></div>
+                  <div class="chip dim"><b>+ GENRE</b></div>
+                </div>
+                <div class="gtags">
+                  <span class="gtag"><b>PSN</b>MAV_RICK<i class="x">&#10005;</i></span>
+                  <span class="gtag"><b>STEAM</b>MAVERICK86<i class="x">&#10005;</i></span>
+                  <span class="gtag"><b>XBL</b>MAV86<i class="x">&#10005;</i></span>
+                  <span class="gtag add">+ ADD TAG</span>
+                </div>
+                <div class="hint">EDITS SAVE AS YOU GO &middot; USERNAME &amp; BIO ARE SCREENED (MOD-07) &middot; AVATAR OPENS THE CARD-STYLE EDITOR (PROF-08)</div>
+              </div>
+              <div class="sec"><h3>PINNED FAVOURITE</h3></div>
+              <div class="hero">
+                <div class="gcard hero-size fr-destiny">
+                  <div class="art"><svg><use href="#art-destiny"/></svg></div>
+                  <div class="plate pl-destiny">Destiny</div>
+                </div>
+                <div class="hero-meta">
+                  <span class="npl">ALL-TIME PICK</span>
+                  <span class="hero-title">DESTINY</span>
+                  <span class="hero-sub">210 HRS LOGGED</span>
+                  <button class="btn secondary">PICK FROM COLLECTION</button>
+                </div>
+              </div>
+              <div class="sec"><h3>TOP 5</h3></div>
+              <div class="top5">
+                <div class="gcard mini-size fr-destiny"><span class="rank first">1</span><span class="grip-badge"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                  <div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="gcard mini-size fr-minecraft"><span class="rank">2</span><span class="grip-badge"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                  <div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
+                <div class="gcard mini-size fr-marathon custom"><span class="rank">3</span><span class="grip-badge"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                  <div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
+                <div class="gcard mini-size fr-ratchet"><span class="rank">4</span><span class="grip-badge"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                  <div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
+                <div class="gcard mini-size fr-re"><span class="rank">5</span><span class="grip-badge"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                  <div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div>
+              </div>
+              <div class="hint"><b>LONG-PRESS &amp; DRAG TO RE-RANK</b> (SAME ARRANGE GESTURE AS THE COLLECTION, OQ-031) &middot; TAP A CARD TO SWAP IT</div>
+              <div class="sec"><h3>NOW PLAYING</h3></div>
+              <div class="well strip dimmed">
+                <div class="gcard thumb fr-marathon custom">
+                  <div class="art"><svg><use href="#art-marathon"/></svg></div>
+                  <div class="plate pl-marathon">Marathon</div>
+                </div>
+                <div class="strip-meta">
+                  <span class="strip-title">MARATHON</span>
+                  <span class="hero-sub">86 HRS LOGGED</span>
+                </div>
+                <span class="lock-note">SET FROM COLLECTION</span>
+              </div>
+              <div class="sec"><h3>MY DEVICE</h3></div>
+              <div class="well dev-row dimmed">
+                <div class="mini-dev"><div class="mscr"></div><div class="mnav"><i class="y"></i><i></i><i></i><i></i><i></i></div></div>
+                <div class="strip-meta">
+                  <span class="strip-title">POCKET &middot; TEAL</span>
+                  <span class="hero-sub">MIDNIGHT SCREEN</span>
+                </div>
+                <span class="lock-note">EDIT IN DEVICE EDITOR</span>
+              </div>
+            </div>
+            <div class="tools">
+              <div class="grip dim"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="chip active"><span class="chip-pip"></span><svg width="12" height="12" viewBox="0 0 12 12"><path d="M1.5 10.5v-2L8 2l2 2-6.5 6.5h-2z" fill="none" stroke-width="1.4" stroke-linejoin="round"/></svg><b>EDIT</b></div>
+              <div class="chip dim"><svg width="12" height="13" viewBox="0 0 12 13"><path d="M6 1v7M3.4 3.2L6 .8l2.6 2.4" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 6.5v5h9v-5" fill="none" stroke-width="1.5" stroke-linejoin="round"/></svg><b>SHARE</b></div>
+              <div class="spacer"></div>
+              <div class="chip dim"><svg width="13" height="13" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke-width="2" stroke-linejoin="round"/></svg></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Edit mode <em>(in-place &mdash; identity + curation only)</em></h3>
+        <p><b>The EDIT keycap presses + lights and the screen edits in place</b> (the OQ-034 doctrine; tap again to
+        exit) &mdash; <b>per-field commit</b>, no giant save. Editable: <b>avatar</b> &rarr; opens the card-style
+        editor via a corner &#9998; badge (PROF-08) &middot; <b>username</b> w/ cooldown microcopy + screening (PROF-06 &mdash;
+        the &sect;1.8 inline-validation showcase) &middot; <b>bio</b> w/ counter &middot; <b>genres</b> from the
+        controlled list (CAT-04, drawer-chip reuse) &middot; <b>gamertags</b> &#10005;/add (PROF-02) &middot;
+        <b>pinned favourite</b> + <b>Top-5</b> swap &amp; re-rank (SOC-04; the OQ-031 ARRANGE gesture, reused).</p>
+        <p><b>Deliberately not editable here:</b> Now Playing (set from Collection, WTP-03), Device (Device editor),
+        stats (derived), privacy (Settings, PROF-03) &mdash; each dimmed row says where it <i>does</i> live, so
+        edit mode teaches the information architecture instead of hiding it.</p>
+      </div>
+    </div>
+
+    <!-- ═══ Profile · Fresh (inviting empties) ═══ -->
+    <div class="take">
+      <div class="artboard-label">Profile — fresh account (inviting empties)</div>
+      <div class="device" data-screen-label="States · C5 · Profile — Fresh">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>PROFILE</h2></div>
+            <div class="scroll">
+              <div class="well id">
+                <div class="id-top">
+                  <div class="avatar">RK</div>
+                  <div>
+                    <div class="id-name">ROOKIE_77</div>
+                    <div class="id-sub">MEMBER SINCE JUNE '26</div>
+                  </div>
+                </div>
+                <div class="ghost-line">+ ADD A BIO &mdash; TELL THEM WHAT YOU PLAY</div>
+                <div class="gtags">
+                  <span class="gtag add">+ ADD A GAMERTAG</span>
+                </div>
+              </div>
+              <div class="sec"><h3>STATS</h3></div>
+              <div class="well stats">
+                <div class="stat"><span class="v">0</span><span class="l">GAMES</span></div>
+                <div class="stat"><span class="v">0</span><span class="l">HOURS</span></div>
+                <div class="stat"><span class="v">&mdash;</span><span class="l">COMPLETION</span></div>
+                <div class="stat"><span class="v">0</span><span class="l">CARDS</span></div>
+                <div class="stat"><span class="v">0</span><span class="l">ADOPTIONS</span></div>
+                <div class="stat"><span class="v">0</span><span class="l">FRIENDS</span></div>
+              </div>
+              <div class="sec"><h3>PINNED FAVOURITE</h3></div>
+              <div class="hero">
+                <div class="ghost-card"><span class="plus">+</span></div>
+                <div class="hero-meta">
+                  <span class="npl">ALL-TIME PICK</span>
+                  <span class="hero-title">SET YOUR PICK</span>
+                  <span class="hero-sub">THE GAME THAT MADE YOU</span>
+                  <button class="btn secondary">PICK FROM COLLECTION</button>
+                </div>
+              </div>
+              <div class="sec"><h3>TOP 5</h3></div>
+              <div class="top5">
+                <div class="ghost-mini"><span class="rank first">1</span><span class="plus">+</span></div>
+                <div class="ghost-mini"><span class="rank">2</span><span class="plus">+</span></div>
+                <div class="ghost-mini"><span class="rank">3</span><span class="plus">+</span></div>
+                <div class="ghost-mini"><span class="rank">4</span><span class="plus">+</span></div>
+                <div class="ghost-mini"><span class="rank">5</span><span class="plus">+</span></div>
+              </div>
+              <div class="hint">RANK THE FIVE THAT DEFINE YOUR SHELF &mdash; FRIENDS TAP THESE TO BROWSE YOUR COLLECTION</div>
+              <div class="sec"><h3>NOW PLAYING</h3></div>
+              <div class="ghost-line">NOTHING PINNED &mdash; SET YOUR NOW PLAYING FROM THE COLLECTION TAB</div>
+              <div class="well" style="margin-top: 14px;">
+                <div class="row">
+                  <span class="ric"><svg width="15" height="15" viewBox="0 0 15 15"><path d="M7.5 1.6l1.7 3.6 4 .5-2.9 2.7.8 3.9-3.6-2-3.6 2 .8-3.9L1.8 5.7l4-.5 1.7-3.6z" fill="none" stroke-width="1.5" stroke-linejoin="round"/></svg></span>
+                  <span class="rl">ACHIEVEMENTS</span>
+                  <span class="rv">0/40</span><span class="chev">&rsaquo;</span>
+                </div>
+                <div class="row">
+                  <span class="ric"><svg width="14" height="14" viewBox="0 0 14 14"><rect x="1.5" y="1.5" width="4.6" height="4.6" rx="1.2" fill="none" stroke-width="1.5"/><rect x="7.9" y="1.5" width="4.6" height="4.6" rx="1.2" fill="none" stroke-width="1.5"/><rect x="1.5" y="7.9" width="4.6" height="4.6" rx="1.2" fill="none" stroke-width="1.5"/><rect x="7.9" y="7.9" width="4.6" height="4.6" rx="1.2" fill="none" stroke-width="1.5"/></svg></span>
+                  <span class="rl">MY CONTRIBUTIONS</span>
+                  <span class="rv">0</span><span class="chev">&rsaquo;</span>
+                </div>
+              </div>
+            </div>
+            <div class="tools">
+              <div class="grip dim"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M1.5 10.5v-2L8 2l2 2-6.5 6.5h-2z" fill="none" stroke-width="1.4" stroke-linejoin="round"/></svg><b>EDIT</b></div>
+              <div class="chip dim"><svg width="12" height="13" viewBox="0 0 12 13"><path d="M6 1v7M3.4 3.2L6 .8l2.6 2.4" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 6.5v5h9v-5" fill="none" stroke-width="1.5" stroke-linejoin="round"/></svg><b>SHARE</b></div>
+              <div class="spacer"></div>
+              <div class="chip"><svg width="13" height="13" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke-width="2" stroke-linejoin="round"/></svg></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Fresh account <em>(every empty names its action)</em></h3>
+        <p><b>The inviting-empties doctrine (&sect;1.7) applied to identity:</b> dashed ghosts for bio, gamertags,
+        pick and Top-5 &mdash; same silhouette language as the Collection's first-add ghost, each one a tappable
+        nudge, never a scold. The default <b>monogram avatar</b> is the PROF-08 guarantee &mdash; you exist before
+        you've designed anything.</p>
+        <p><b>PROF-07 proof:</b> every stat tile renders cleanly <b>without</b> its percentile chip (zeros + an em-dash
+        completion, no fake numbers) &mdash; the chip is enhancement, not structure. SHARE sits dimmed until there's
+        something to show.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-label">Friend-view &amp; privacy <small>your chrome by default &middot; the "view in their device" toggle (decision 0012, closes OQ-012) &middot; the non-friend privacy-limited surface (PROF-03)</small></div>
+  <div class="stage">
+
+    <!-- ═══ Profile · Friend view (your chrome) ═══ -->
+    <div class="take">
+      <div class="artboard-label">Friend view — default (your chrome)</div>
+      <div class="device" data-screen-label="States · C5 · Profile — Friend">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2 class="whose">PROFILE &mdash; RIKO</h2><span class="mode-tag">FRIEND</span></div>
+            <div class="scroll">
+              <div class="well id">
+                <div class="id-top">
+                  <div class="avatar" style="background: #6c4fd8; color: #fff;">RI</div>
+                  <div>
+                    <div class="id-name">RIKO</div>
+                    <div class="id-sub">MEMBER SINCE '25 &middot; HORROR / PLATFORMER</div>
+                  </div>
+                </div>
+                <div class="bio">Survival-horror cartographer. If it has a map, I've 100%ed it.</div>
+                <div class="gtags">
+                  <span class="gtag"><b>PSN</b>RIKO_MAPS</span>
+                  <span class="gtag"><b>SWITCH</b>RIKOPLAYS</span>
+                </div>
+                <div class="id-sub">14 FRIENDS &middot; 3 MUTUAL</div>
+              </div>
+              <div class="sec"><h3>THEIR DEVICE</h3></div>
+              <div class="well dev-row">
+                <div class="mini-dev" style="--plastic: #8a76e8; --plastic-hi: #9f8df2; --plastic-lo: #7460cc; --scr-bg: #2f1733;"><div class="mscr"></div><div class="mnav"><i class="y"></i><i></i><i></i><i></i><i></i></div></div>
+                <div class="strip-meta">
+                  <span class="strip-title">POCKET &middot; GRAPE</span>
+                  <span class="hero-sub">BERRY SCREEN &middot; 4 STICKERS</span>
+                </div>
+                <button class="btn secondary">VIEW IN THEIRS</button>
+              </div>
+              <div class="sec"><h3>STATS</h3></div>
+              <div class="well stats">
+                <div class="stat"><span class="v">86</span><span class="l">GAMES</span></div>
+                <div class="stat"><span class="v">2.4K</span><span class="l">HOURS</span><span class="pct">TOP 10%</span></div>
+                <div class="stat"><span class="v">71%</span><span class="l">COMPLETION</span></div>
+                <div class="stat"><span class="v">31</span><span class="l">CARDS</span></div>
+                <div class="stat"><span class="v">412</span><span class="l">ADOPTIONS</span><span class="pct">TOP 5%</span></div>
+                <div class="stat"><span class="v">14</span><span class="l">FRIENDS</span></div>
+              </div>
+              <div class="sec"><h3>TOP 5</h3><a href="#">VIEW COLLECTION &rsaquo;</a></div>
+              <div class="top5">
+                <div class="gcard mini-size fr-re"><span class="rank first">1</span>
+                  <div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div>
+                <div class="gcard mini-size fr-ratchet"><span class="rank">2</span>
+                  <div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
+                <div class="gcard mini-size fr-minecraft"><span class="rank">3</span>
+                  <div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
+                <div class="gcard mini-size fr-destiny"><span class="rank">4</span>
+                  <div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="gcard mini-size fr-marathon"><span class="rank">5</span>
+                  <div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
+              </div>
+              <div class="sec"><h3>NOW PLAYING</h3></div>
+              <div class="well strip">
+                <div class="gcard thumb fr-re">
+                  <div class="art"><svg><use href="#art-re"/></svg></div>
+                  <div class="plate pl-re">Resident Evil</div>
+                </div>
+                <div class="strip-meta">
+                  <span class="strip-title">RESIDENT EVIL</span>
+                  <span class="hero-sub">24 HRS LOGGED</span>
+                </div>
+                <span class="chev">&rsaquo;</span>
+              </div>
+              <div class="well" style="margin-top: 14px;">
+                <div class="row">
+                  <span class="ric"><svg width="15" height="15" viewBox="0 0 15 15"><path d="M7.5 1.6l1.7 3.6 4 .5-2.9 2.7.8 3.9-3.6-2-3.6 2 .8-3.9L1.8 5.7l4-.5 1.7-3.6z" fill="none" stroke-width="1.5" stroke-linejoin="round"/></svg></span>
+                  <span class="rl">ACHIEVEMENTS</span>
+                  <span class="rv">22/40</span><span class="chev">&rsaquo;</span>
+                </div>
+              </div>
+            </div>
+            <div class="tools">
+              <div class="chip"><svg width="13" height="12" viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg><b>COMPARE</b></div>
+              <div class="chip"><svg width="12" height="13" viewBox="0 0 12 13"><path d="M6 1v7M3.4 3.2L6 .8l2.6 2.4" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 6.5v5h9v-5" fill="none" stroke-width="1.5" stroke-linejoin="round"/></svg><b>SHARE</b></div>
+              <div class="spacer"></div>
+              <div class="chip"><b class="ovf">&#8943;</b></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Friend view <em>(default &mdash; your chrome stays)</em></h3>
+        <p><b>Your device is your constant frame</b> (decision 0012): Riko's profile renders inside <i>your</i> teal
+        shell + Midnight screen; <b>their device appears as an on-screen hero</b> with the explicit
+        <b>VIEW IN THEIRS</b> toggle. The head shows <i>whose</i> profile (RIKO + FRIEND tag); identity adds
+        <b>friend count + mutuals</b>; Top-5 is the <b>gateway into their collection</b> (COL-10, read-only).</p>
+        <p><b>Tools swap for the social job</b> (PROF-05/SOC-02): COMPARE (SOC-03) + SHARE, with <b>Report / Block
+        in the &#8943; overflow</b> (MOD-01, SOC-09) &mdash; present but not foregrounded. No EDIT, no Settings:
+        management chrome belongs to the owner.</p>
+      </div>
+    </div>
+
+    <!-- ═══ Profile · Friend view (their chrome, toggled) ═══ -->
+    <div class="take">
+      <div class="artboard-label">Friend view — "view in their device" (toggled)</div>
+      <div class="device shell-grape" data-screen-label="States · C5 · Profile — Friend toggled">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5 scr-berry">
+            <div class="exit-band"><span>&#9679; VIEWING IN RIKO'S DEVICE</span><span>EXIT &#10005;</span></div>
+            <div class="screen-head"><h2 class="whose">PROFILE &mdash; RIKO</h2><span class="mode-tag">FRIEND</span></div>
+            <div class="scroll">
+              <div class="well id">
+                <div class="id-top">
+                  <div class="avatar" style="background: #6c4fd8; color: #fff;">RI</div>
+                  <div>
+                    <div class="id-name">RIKO</div>
+                    <div class="id-sub">MEMBER SINCE '25 &middot; HORROR / PLATFORMER</div>
+                  </div>
+                </div>
+                <div class="bio">Survival-horror cartographer. If it has a map, I've 100%ed it.</div>
+                <div class="id-sub">14 FRIENDS &middot; 3 MUTUAL</div>
+              </div>
+              <div class="sec"><h3>STATS</h3></div>
+              <div class="well stats">
+                <div class="stat"><span class="v">86</span><span class="l">GAMES</span></div>
+                <div class="stat"><span class="v">2.4K</span><span class="l">HOURS</span><span class="pct">TOP 10%</span></div>
+                <div class="stat"><span class="v">71%</span><span class="l">COMPLETION</span></div>
+                <div class="stat"><span class="v">31</span><span class="l">CARDS</span></div>
+                <div class="stat"><span class="v">412</span><span class="l">ADOPTIONS</span><span class="pct">TOP 5%</span></div>
+                <div class="stat"><span class="v">14</span><span class="l">FRIENDS</span></div>
+              </div>
+              <div class="sec"><h3>TOP 5</h3><a href="#">VIEW COLLECTION &rsaquo;</a></div>
+              <div class="top5">
+                <div class="gcard mini-size fr-re"><span class="rank first">1</span>
+                  <div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div>
+                <div class="gcard mini-size fr-ratchet"><span class="rank">2</span>
+                  <div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
+                <div class="gcard mini-size fr-minecraft"><span class="rank">3</span>
+                  <div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
+                <div class="gcard mini-size fr-destiny"><span class="rank">4</span>
+                  <div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="gcard mini-size fr-marathon"><span class="rank">5</span>
+                  <div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
+              </div>
+              <div class="sec"><h3>NOW PLAYING</h3></div>
+              <div class="well strip">
+                <div class="gcard thumb fr-re">
+                  <div class="art"><svg><use href="#art-re"/></svg></div>
+                  <div class="plate pl-re">Resident Evil</div>
+                </div>
+                <div class="strip-meta">
+                  <span class="strip-title">RESIDENT EVIL</span>
+                  <span class="hero-sub">24 HRS LOGGED</span>
+                </div>
+                <span class="chev">&rsaquo;</span>
+              </div>
+            </div>
+            <div class="tools">
+              <div class="chip"><svg width="13" height="12" viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg><b>COMPARE</b></div>
+              <div class="chip"><svg width="12" height="13" viewBox="0 0 12 13"><path d="M6 1v7M3.4 3.2L6 .8l2.6 2.4" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 6.5v5h9v-5" fill="none" stroke-width="1.5" stroke-linejoin="round"/></svg><b>SHARE</b></div>
+              <div class="spacer"></div>
+              <div class="chip"><b class="ovf">&#8943;</b></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>"View in their device" <em>(the toggle &mdash; try on their setup)</em></h3>
+        <p><b>The showcase payoff as a deliberate act</b> (decision 0012, closes OQ-012): the whole frame swaps to
+        Riko's <b>Grape shell + Berry screen theme</b> (DEV-04 applies &mdash; their theme passes the legibility
+        floor), with a <b>persistent exit band</b> so you never lose your bearings. <b>Nav is unaffected</b>
+        (DEV-03): same five tabs, same functions, just on their plastic.</p>
+        <p>Their-device hero row disappears here &mdash; you're <i>inside</i> it; everything else stays identical, so
+        the toggle reads as a chrome swap, not a navigation.</p>
+      </div>
+    </div>
+
+    <!-- ═══ Profile · Privacy-limited (non-friend) ═══ -->
+    <div class="take">
+      <div class="artboard-label">Privacy-limited — non-friend view</div>
+      <div class="device" data-screen-label="States · C5 · Profile — Limited">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2 class="whose">PROFILE &mdash; VANTA</h2></div>
+            <div class="scroll">
+              <div class="well id">
+                <div class="id-top">
+                  <div class="avatar" style="background: #3a3a42; color: #f5f1e4;">VA</div>
+                  <div>
+                    <div class="id-name">VANTA</div>
+                    <div class="id-sub">MEMBER SINCE '24 &middot; 2 MUTUAL FRIENDS</div>
+                  </div>
+                </div>
+              </div>
+              <div class="lock-well">
+                <svg width="22" height="26" viewBox="0 0 22 26"><rect x="2" y="11" width="18" height="13" rx="2" fill="none" stroke-width="2"/><path d="M6 11V8a5 5 0 0 1 10 0v3" fill="none" stroke-width="2"/></svg>
+                <span class="lk-t">FRIENDS ONLY</span>
+                <span class="lk-s">Vanta shares their shelf with friends. Send a request to see their collection,
+                stats, Top&nbsp;5 and Now&nbsp;Playing.</span>
+                <button class="btn act" style="margin-top: 6px;"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>ADD FRIEND</button>
+              </div>
+              <div class="hint" style="text-align: center; margin-top: 14px;">PROFILES ARE FRIENDS-ONLY BY DEFAULT &mdash; VANTA CHOSE THE LIMITED PUBLIC CARD (PROF-03)</div>
+            </div>
+            <div class="tools">
+              <div class="spacer"></div>
+              <div class="chip"><b class="ovf">&#8943;</b></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Privacy-limited <em>(the non-friend surface)</em></h3>
+        <p><b>PROF-03's limited public card:</b> avatar, username, member-since and <b>mutual-friend count</b> (the
+        trust signal) &mdash; nothing else leaks. The lock-well borrows the inviting-empty bones: it names what
+        unlocks and offers the one action (<b>ADD FRIEND</b>), an invitation rather than a wall.</p>
+        <p><b>Corner-colour rule (owner):</b> ADD FRIEND wears the pixel-step in <b>system orange</b>, not gold &mdash;
+        gold + step is reserved for <b>card-creating</b> actions (the Collection's ADD-game), so a stepped button
+        that isn't card-related takes orange and never falsely reads as "makes a card."</p>
+        <p><b>Safety stays reachable:</b> Report / Block live in the &#8943; overflow even at this visibility level
+        (MOD-01, SOC-09) &mdash; you never need to befriend someone to report them.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-label">Lifecycle <small>the global &sect;1.8 family on this screen: skeleton loading (solid quiet fills &mdash; dashes stay reserved for invitations) &middot; the named load-error with retry</small></div>
+  <div class="stage">
+
+    <!-- ═══ Profile · Loading (skeleton) ═══ -->
+    <div class="take">
+      <div class="artboard-label">Profile — loading (skeleton)</div>
+      <div class="device" data-screen-label="States · C5 · Profile — Loading">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>PROFILE</h2></div>
+            <div class="scroll">
+              <div class="well id">
+                <div class="id-top">
+                  <div class="sk-av"></div>
+                  <div style="flex: 1 1 auto; display: flex; flex-direction: column; gap: 8px;">
+                    <div class="sk-bar" style="width: 55%; height: 13px;"></div>
+                    <div class="sk-bar" style="width: 80%;"></div>
+                  </div>
+                </div>
+                <div class="sk-bar" style="width: 92%;"></div>
+                <div class="sk-bar" style="width: 64%;"></div>
+              </div>
+              <div class="sec"><h3>STATS</h3></div>
+              <div class="well stats">
+                <div class="sk-tile"></div><div class="sk-tile"></div><div class="sk-tile"></div>
+                <div class="sk-tile"></div><div class="sk-tile"></div><div class="sk-tile"></div>
+              </div>
+              <div class="sec"><h3>PINNED FAVOURITE</h3></div>
+              <div class="hero">
+                <div class="sk-card"></div>
+                <div class="hero-meta">
+                  <div class="sk-bar" style="width: 45%;"></div>
+                  <div class="sk-bar" style="width: 75%; height: 15px;"></div>
+                  <div class="sk-bar" style="width: 58%;"></div>
+                </div>
+              </div>
+              <div class="sec"><h3>TOP 5</h3></div>
+              <div class="top5">
+                <div class="sk-mini"></div><div class="sk-mini"></div><div class="sk-mini"></div>
+                <div class="sk-mini"></div><div class="sk-mini"></div>
+              </div>
+              <div class="sec"><h3>NOW PLAYING</h3></div>
+              <div class="well strip">
+                <div class="sk-thumb"></div>
+                <div class="strip-meta" style="flex: 1 1 auto;">
+                  <div class="sk-bar" style="width: 50%; height: 11px;"></div>
+                  <div class="sk-bar" style="width: 35%;"></div>
+                </div>
+              </div>
+            </div>
+            <div class="tools">
+              <div class="grip dim"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="chip dim"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M1.5 10.5v-2L8 2l2 2-6.5 6.5h-2z" fill="none" stroke-width="1.4" stroke-linejoin="round"/></svg><b>EDIT</b></div>
+              <div class="chip dim"><svg width="12" height="13" viewBox="0 0 12 13"><path d="M6 1v7M3.4 3.2L6 .8l2.6 2.4" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 6.5v5h9v-5" fill="none" stroke-width="1.5" stroke-linejoin="round"/></svg><b>SHARE</b></div>
+              <div class="spacer"></div>
+              <div class="chip dim"><svg width="13" height="13" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke-width="2" stroke-linejoin="round"/></svg></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Loading <em>(skeleton &mdash; the silhouettes hold the layout)</em></h3>
+        <p><b>Solid quiet fills in the exact silhouettes of the loaded screen</b> &mdash; section headers stay, card
+        shapes keep their stepped corners, nothing shifts when data lands. No spinners. <b>Dashed = invitation,
+        solid = loading</b>: the two ghost languages never share a costume, so a skeleton can't be misread as an
+        empty state.</p>
+        <p>Tools sit dimmed until data lands. (OQ-015 idea: the shell's <b>power LED could pulse</b> while
+        loading &mdash; the device "thinking.") Offline is <i>not</i> this state and not an error: SYS-10 keeps your
+        own shelf readable from cache.</p>
+      </div>
+    </div>
+
+    <!-- ═══ Profile · Load-error + retry ═══ -->
+    <div class="take">
+      <div class="artboard-label">Profile — load-error + retry</div>
+      <div class="device" data-screen-label="States · C5 · Profile — Error">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>PROFILE</h2></div>
+            <div class="scroll">
+              <div class="err-wrap">
+                <div class="err-card"><span class="bang">!</span></div>
+                <span class="npl">SIGNAL LOST</span>
+                <span class="err-title">COULDN'T LOAD THIS PROFILE</span>
+                <span class="err-sub">Check your connection and try again &mdash; your own shelf is always available
+                offline.</span>
+                <button class="btn act" style="margin-top: 8px;"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M10.5 6a4.5 4.5 0 1 1-1.4-3.3M9.5 1v2.2H7.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>RETRY</button>
+                <a class="ghost-link" href="#">&lsaquo; GO BACK</a>
+              </div>
+            </div>
+            <div class="tools">
+              <div class="grip dim"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="chip dim"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M1.5 10.5v-2L8 2l2 2-6.5 6.5h-2z" fill="none" stroke-width="1.4" stroke-linejoin="round"/></svg><b>EDIT</b></div>
+              <div class="chip dim"><svg width="12" height="13" viewBox="0 0 12 13"><path d="M6 1v7M3.4 3.2L6 .8l2.6 2.4" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 6.5v5h9v-5" fill="none" stroke-width="1.5" stroke-linejoin="round"/></svg><b>SHARE</b></div>
+              <div class="spacer"></div>
+              <div class="chip dim"><svg width="13" height="13" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke-width="2" stroke-linejoin="round"/></svg></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Load-error <em>(named state, always a retry)</em></h3>
+        <p><b>The &sect;1.8 load-error family:</b> same bones as the inviting empties (stepped card silhouette,
+        eyebrow, one loud action) but the dashed card carries a <b>!</b> and the action is <b>RETRY</b> &mdash;
+        recovery, not invitation &mdash; <b>RETRY is orange + step</b> (a non-card action, the corner-colour rule).
+        GO BACK is the quiet second exit.</p>
+        <p><b>Boundaries:</b> this state is for <i>load</i> failures only &mdash; action failures get a toast/banner
+        + retry in place; <b>offline is not an error</b> (SYS-10): your own profile renders from cache, and this
+        screen appears only when a fetch genuinely fails.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-label">Unavailable (terminal) <small>the non-retryable &sect;1.8 member: blocked (either direction) &middot; suspended (MOD-09) &middot; deleted (AUTH-07) collapse into one generic mask (non-disclosure) &mdash; only your <i>own</i> block names itself</small></div>
+  <div class="stage">
+
+    <!-- ═══ Profile · Unavailable (generic terminal) ═══ -->
+    <div class="take">
+      <div class="artboard-label">Profile — unavailable (blocked · suspended · deleted)</div>
+      <div class="device" data-screen-label="States · C5 · Profile — Unavailable">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>PROFILE</h2></div>
+            <div class="scroll">
+              <div class="err-wrap">
+                <div class="err-card"><span class="void-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.6" fill="none" stroke-width="1.8"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg></span></div>
+                <span class="err-eyebrow">NOT AVAILABLE</span>
+                <span class="err-title">PROFILE UNAVAILABLE</span>
+                <span class="err-sub">This profile can't be shown right now.</span>
+                <a class="ghost-link" href="#">&lsaquo; GO BACK</a>
+              </div>
+            </div>
+            <div class="tools"><div class="spacer"></div></div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Profile unavailable <em>(the terminal state — one mask, many causes)</em></h3>
+        <p><b>The non-retryable twin of "Signal Lost."</b> Blocked (either direction), suspended (MOD-09) and
+        deleted (AUTH-07) accounts all land here, <b>deliberately identical</b> &mdash; the app never reveals which,
+        nor who blocked whom (the non-disclosure rule). No identity, no stats, <b>no RETRY</b> (retry can't fix a
+        permanent condition); <b>GO BACK</b> is the in-content exit, and the nav band still works.</p>
+        <p>Muted by design: the dashed card holds a quiet person-glyph in <b>grip-grey, not the accent &#33;</b> of
+        an error &mdash; this reads as <i>absence</i>, not failure, so it's never mistaken for a retryable Signal Lost.</p>
+      </div>
+    </div>
+
+    <!-- ═══ Profile · Unavailable — your own block (Unblock) ═══ -->
+    <div class="take">
+      <div class="artboard-label">Profile — unavailable (your own block · Unblock)</div>
+      <div class="device" data-screen-label="States · C5 · Profile — Blocked-by-you">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2 class="whose">PROFILE &mdash; VANTA</h2></div>
+            <div class="scroll">
+              <div class="err-wrap">
+                <div class="err-card"><span class="void-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.6" fill="none" stroke-width="1.8"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg></span></div>
+                <span class="err-eyebrow">BLOCKED</span>
+                <span class="err-title">YOU BLOCKED VANTA</span>
+                <span class="err-sub">You won't see each other's profiles, collections, or activity while this is on.</span>
+                <button class="btn secondary" style="margin-top: 6px;">UNBLOCK</button>
+                <a class="ghost-link" href="#">&lsaquo; GO BACK</a>
+              </div>
+            </div>
+            <div class="tools"><div class="spacer"></div><div class="chip"><b class="ovf">&#8943;</b></div></div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>&hellip; except your own block <em>(the lone disclosed case)</em></h3>
+        <p><b>The one terminal case that names itself.</b> When <i>you</i> are the blocker you already hold the
+        knowledge, so this variant is explicit &mdash; it shows the handle and offers <b>UNBLOCK</b> (calm cream,
+        not a loud invite; unblocking is a considered act, not a celebration). Report stays in the &#8943; overflow.</p>
+        <p><b>Same shell as the generic state</b> &mdash; the only deltas are the named title and the Unblock
+        action. That minimal difference <i>is</i> the safety argument made visible: strip those two and "you blocked
+        them" becomes "they blocked you" becomes "deleted," all indistinguishable.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-label">Offline (SYS-10) <small>offline is <i>not</i> an error: your own profile renders from cache (read-only, with a lightweight indicator); a friend you can't reach gets a calm notice &mdash; never the Signal Lost alarm, never a dead end</small></div>
+  <div class="stage">
+
+    <!-- ═══ Profile · Offline — your profile from cache ═══ -->
+    <div class="take">
+      <div class="artboard-label">Offline — your profile (from cache, read-only)</div>
+      <div class="device" data-screen-label="States · C5 · Profile — Offline (self)">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>PROFILE</h2></div>
+            <div class="offline-strip"><svg viewBox="0 0 24 24"><path d="M2.5 8.5a15 15 0 0 1 19 0M6 12a10 10 0 0 1 12 0M9.5 15.3a5 5 0 0 1 5 0M3 3.5l18 17" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg>OFFLINE &middot; SHOWING LAST SYNCED<span class="sync">2H AGO</span></div>
+            <div class="scroll">
+              <div class="well id">
+                <div class="id-top">
+                  <div class="avatar">MV</div>
+                  <div>
+                    <div class="id-name">MAVERICK</div>
+                    <div class="id-sub">MEMBER SINCE '24 &middot; RPG / SHOOTER</div>
+                  </div>
+                </div>
+                <div class="bio">Couch co-op collector, space-shooter lifer. Designing cards until my queue forgives me.</div>
+                <div class="gtags">
+                  <span class="gtag"><b>PSN</b>MAV_RICK</span>
+                  <span class="gtag"><b>STEAM</b>MAVERICK86</span>
+                  <span class="gtag"><b>XBL</b>MAV86</span>
+                </div>
+              </div>
+              <div class="sec"><h3>STATS</h3></div>
+              <div class="well stats">
+                <div class="stat"><span class="v">48</span><span class="l">GAMES</span></div>
+                <div class="stat"><span class="v">1.2K</span><span class="l">HOURS</span><span class="pct">TOP 25%</span></div>
+                <div class="stat"><span class="v">64%</span><span class="l">COMPLETION</span></div>
+                <div class="stat"><span class="v">12</span><span class="l">CARDS</span></div>
+                <div class="stat"><span class="v">86</span><span class="l">ADOPTIONS</span></div>
+                <div class="stat"><span class="v">9</span><span class="l">FRIENDS</span></div>
+              </div>
+              <div class="sec"><h3>PINNED FAVOURITE</h3></div>
+              <div class="hero">
+                <div class="gcard hero-size fr-destiny">
+                  <div class="art"><svg><use href="#art-destiny"/></svg></div>
+                  <div class="plate pl-destiny">Destiny</div>
+                </div>
+                <div class="hero-meta">
+                  <span class="npl">ALL-TIME PICK</span>
+                  <span class="hero-title">DESTINY</span>
+                  <span class="hero-sub">210 HRS LOGGED</span>
+                  <button class="btn secondary">VIEW GAME</button>
+                </div>
+              </div>
+              <div class="sec"><h3>TOP 5</h3></div>
+              <div class="top5">
+                <div class="gcard mini-size fr-destiny"><span class="rank first">1</span>
+                  <div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="gcard mini-size fr-minecraft"><span class="rank">2</span>
+                  <div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
+                <div class="gcard mini-size fr-marathon custom"><span class="rank">3</span>
+                  <div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
+                <div class="gcard mini-size fr-ratchet"><span class="rank">4</span>
+                  <div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
+                <div class="gcard mini-size fr-re"><span class="rank">5</span>
+                  <div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div>
+              </div>
+              <div class="sec"><h3>NOW PLAYING</h3></div>
+              <div class="well strip">
+                <div class="gcard thumb fr-marathon custom">
+                  <div class="art"><svg><use href="#art-marathon"/></svg></div>
+                  <div class="plate pl-marathon">Marathon</div>
+                </div>
+                <div class="strip-meta">
+                  <span class="strip-title">MARATHON</span>
+                  <span class="hero-sub">86 HRS LOGGED</span>
+                </div>
+                <span class="chev">&rsaquo;</span>
+              </div>
+            </div>
+            <div class="tools">
+              <div class="grip dim"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="chip dim"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M1.5 10.5v-2L8 2l2 2-6.5 6.5h-2z" fill="none" stroke-width="1.4" stroke-linejoin="round"/></svg><b>EDIT</b></div>
+              <div class="chip dim"><svg width="12" height="13" viewBox="0 0 12 13"><path d="M6 1v7M3.4 3.2L6 .8l2.6 2.4" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 6.5v5h9v-5" fill="none" stroke-width="1.5" stroke-linejoin="round"/></svg><b>SHARE</b></div>
+              <div class="spacer"></div>
+              <div class="chip"><svg width="13" height="13" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke-width="2" stroke-linejoin="round"/></svg></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Offline &mdash; your profile <em>(SYS-10: opens usefully)</em></h3>
+        <p><b>No blank screen, no error.</b> Your last-synced profile renders <b>from cache</b>, read-only, under a
+        <b>lightweight offline strip</b> (muted, with a <b>last-synced</b> stamp &mdash; calm, not alarm). The whole
+        thing stays browsable; only <b>writes</b> are gated &mdash; <b>EDIT &amp; SHARE sit dimmed</b> (they need
+        connectivity), Settings stays reachable.</p>
+        <p>The strip is the <b>reusable offline indicator</b> (same on Collection, etc.). The power LED could echo it
+        (OQ-015). This is the SYS-10 promise made visible: a bad connection never costs you your own shelf.</p>
+      </div>
+    </div>
+
+    <!-- ═══ Profile · Offline — friend, can't reach ═══ -->
+    <div class="take">
+      <div class="artboard-label">Offline — a friend you can't reach</div>
+      <div class="device" data-screen-label="States · C5 · Profile — Offline (friend)">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2 class="whose">PROFILE &mdash; RIKO</h2></div>
+            <div class="scroll">
+              <div class="err-wrap">
+                <div class="err-card"><span class="void-ic"><svg viewBox="0 0 24 24"><path d="M2.5 8.5a15 15 0 0 1 19 0M6 12a10 10 0 0 1 12 0M9.5 15.3a5 5 0 0 1 5 0M3 3.5l18 17" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg></span></div>
+                <span class="err-eyebrow">OFFLINE</span>
+                <span class="err-title">YOU'RE OFFLINE</span>
+                <span class="err-sub">This profile loads when you're back online. Your own shelf works offline anytime.</span>
+                <a class="ghost-link" href="#">&lsaquo; GO BACK</a>
+              </div>
+            </div>
+            <div class="tools"><div class="spacer"></div></div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Offline &mdash; a friend you can't reach <em>(calm, not Signal Lost)</em></h3>
+        <p><b>The friend case I flagged.</b> A friend's profile needs a live, privacy-gated fetch &mdash; offline with
+        nothing cached, you can't show it. But <b>offline &ne; error</b> (SYS-10): same wifi-off glyph in grip-grey
+        (not the accent <b>!</b>), <b>"YOU'RE OFFLINE"</b> not "couldn't load," and <b>no loud RETRY</b> &mdash; it
+        loads itself on reconnect. The sub points you to what <i>does</i> work (your own shelf), so it's never a dead end.</p>
+        <p><b>Three calm-vs-alarm cousins, now distinct:</b> <b>Signal Lost</b> (accent !, orange RETRY &mdash; transient
+        fetch failure) &middot; <b>Unavailable</b> (person glyph, GO BACK only &mdash; permanent) &middot; <b>Offline</b>
+        (wifi-off, auto-recovers &mdash; transient connectivity). A recently-viewed friend may instead render read-only
+        from cache like the self view &mdash; the exact cache scope is a SYS-10 detail (OQ-037).</p>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; min-height: 100%; background: #efece6; }
+</style>
+</helmet>
+<div style="font-family: 'Chakra Petch', sans-serif; max-width: 1600px; margin: 0 auto; padding: 40px 24px 60px;">
+  <h1 style="font: 700 17px/1.2 'Chakra Petch', sans-serif; letter-spacing: 2.5px; color: #2a2633; margin: 0 0 6px; text-transform: uppercase;">In-App Buttons &middot; 3 Drafts</h1>
+  <p style="font: 500 12.5px/1.5 'Chakra Petch', sans-serif; color: #79748a; margin: 0 0 32px; max-width: 620px;">Three button languages for the in-app screens, shown on the Midnight theme. Each covers the full vocabulary &mdash; primary / secondary / destructive actions, tool chips (search, sort, filter, view), tertiary links &mdash; plus the Collection tools bar rebuilt in that language. ADD keeps its 2/4 TL+BR card-step in every take.</p>
+
+  <div style="display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-start;">
+
+    <!-- ═══ TAKE A — KEYCAP ═══ -->
+    <div style="width: 480px; display: flex; flex-direction: column; gap: 10px;" data-screen-label="Buttons · Take A · Keycap">
+      <div style="font: 700 11px/1 'Chakra Petch', sans-serif; letter-spacing: 1.5px; color: #8d889c; text-transform: uppercase;">Take A &mdash; Keycap</div>
+      <div style="background: #ffffff; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(42,38,51,.08); display: flex; flex-direction: column; gap: 12px;">
+        <div style="background: #232045; border: 1px solid rgba(255,255,255,.09); padding: 18px; display: flex; flex-direction: column; gap: 18px;">
+
+          <div>
+            <div style="font: 700 9px 'Chakra Petch', sans-serif; letter-spacing: 2px; color: #9b97c0;">ACTIONS</div>
+            <div style="display: flex; gap: 14px; align-items: flex-start; margin-top: 10px;">
+              <div style="display: flex; flex-direction: column; gap: 7px; align-items: center;">
+                <button style="display: inline-flex; align-items: center; gap: 6px; border: none; padding: 10px 15px; background: #ff9f43; color: #2a1430; font: 700 11px 'Chakra Petch', sans-serif; letter-spacing: 1px; box-shadow: inset 0 1px 0 rgba(255,255,255,.45); filter: drop-shadow(0 3px 0 #b3661c); clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px), calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%);"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>ADD</button>
+                <span style="font: 600 9px 'Chakra Petch', sans-serif; letter-spacing: 1px; color: #565178;">PRIMARY</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 7px; align-items: center;">
+                <button style="display: inline-flex; align-items: center; gap: 6px; border: none; padding: 10px 15px; background: #f5f1e4; color: #1d2a4a; font: 700 11px 'Chakra Petch', sans-serif; letter-spacing: 1px; box-shadow: 0 3px 0 #a39b82, inset 0 1px 0 rgba(255,255,255,.85);"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M1.5 10.5l.8-2.8 6.2-6.2 2 2-6.2 6.2-2.8.8z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg>EDIT</button>
+                <span style="font: 600 9px 'Chakra Petch', sans-serif; letter-spacing: 1px; color: #565178;">SECONDARY</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 7px; align-items: center;">
+                <button style="display: inline-flex; align-items: center; gap: 6px; border: none; padding: 10px 15px; background: #e3414e; color: #ffffff; font: 700 11px 'Chakra Petch', sans-serif; letter-spacing: 1px; box-shadow: 0 3px 0 #8e1f29, inset 0 1px 0 rgba(255,255,255,.3);"><svg width="12" height="13" viewBox="0 0 12 13"><path d="M1 3h10M4 3V1.5h4V3M2.5 3l.7 8.5h5.6L9.5 3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>DELETE</button>
+                <span style="font: 600 9px 'Chakra Petch', sans-serif; letter-spacing: 1px; color: #565178;">DESTRUCTIVE</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 7px; align-items: center;">
+                <button style="display: inline-flex; align-items: center; gap: 6px; border: none; padding: 10px 15px; background: #f5f1e4; color: #1d2a4a; font: 700 11px 'Chakra Petch', sans-serif; letter-spacing: 1px; transform: translateY(2px); box-shadow: 0 1px 0 #a39b82, inset 0 2px 3px rgba(0,0,0,.2);">EDIT</button>
+                <span style="font: 600 9px 'Chakra Petch', sans-serif; letter-spacing: 1px; color: #565178;">PRESSED</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div style="font: 700 9px 'Chakra Petch', sans-serif; letter-spacing: 2px; color: #9b97c0;">TOOLS</div>
+            <div style="display: flex; gap: 10px; align-items: flex-start; margin-top: 10px;">
+              <button style="width: 32px; height: 32px; border: none; display: flex; align-items: center; justify-content: center; background: #f5f1e4; color: #1d2a4a; box-shadow: 0 2px 0 #a39b82, inset 0 1px 0 rgba(255,255,255,.85);"><svg width="13" height="13" viewBox="0 0 13 13"><circle cx="5.5" cy="5.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.6"></circle><path d="M8.5 8.5L12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg></button>
+              <div style="display: flex; flex-direction: column; gap: 6px; align-items: center;">
+                <button style="position: relative; width: 32px; height: 32px; border: none; display: flex; align-items: center; justify-content: center; background: #f5f1e4; color: #1d2a4a; transform: translateY(2px); box-shadow: 0 0 0 #a39b82, inset 0 2px 3px rgba(0,0,0,.22);"><svg width="11" height="12" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg><span style="position: absolute; top: -2.5px; right: -2.5px; width: 7px; height: 7px; border-radius: 50%; background: #ff3d77; box-shadow: 0 0 6px 1.5px rgba(255,61,119,.8);"></span></button>
+                <span style="font: 600 9px 'Chakra Petch', sans-serif; letter-spacing: 1px; color: #565178;">ACTIVE</span>
+              </div>
+              <button style="width: 32px; height: 32px; border: none; display: flex; align-items: center; justify-content: center; background: #f5f1e4; color: #1d2a4a; box-shadow: 0 2px 0 #a39b82, inset 0 1px 0 rgba(255,255,255,.85);"><svg width="12" height="11" viewBox="0 0 12 11"><path d="M1 1.5h10L7.5 6v3.4L4.5 10V6L1 1.5z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg></button>
+              <button style="width: 32px; height: 32px; border: none; display: flex; align-items: center; justify-content: center; background: #f5f1e4; color: #1d2a4a; box-shadow: 0 2px 0 #a39b82, inset 0 1px 0 rgba(255,255,255,.85);"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="4.4" height="4.4" rx="1" fill="currentColor"></rect><rect x="6.6" y="1" width="4.4" height="4.4" rx="1" fill="currentColor"></rect><rect x="1" y="6.6" width="4.4" height="4.4" rx="1" fill="currentColor"></rect><rect x="6.6" y="6.6" width="4.4" height="4.4" rx="1" fill="currentColor"></rect></svg></button>
+            </div>
+          </div>
+
+          <div>
+            <div style="font: 700 9px 'Chakra Petch', sans-serif; letter-spacing: 2px; color: #9b97c0;">TERTIARY</div>
+            <div style="display: flex; gap: 18px; align-items: center; margin-top: 10px;">
+              <a href="#" style="font: 600 11px 'Chakra Petch', sans-serif; letter-spacing: .5px; color: #ff9f43; text-decoration: none;">VIEW COLLECTION &rsaquo;</a>
+              <a href="#" style="font: 600 11px 'Chakra Petch', sans-serif; letter-spacing: .5px; color: #9b97c0; text-decoration: none;">CANCEL</a>
+            </div>
+          </div>
+
+          <div>
+            <div style="font: 700 9px 'Chakra Petch', sans-serif; letter-spacing: 2px; color: #9b97c0;">IN CONTEXT &mdash; TOOLS BAR</div>
+            <div style="margin-top: 10px; background: #1a1733; border-top: 1px solid rgba(255,255,255,.08); padding: 9px 10px; display: flex; align-items: center; gap: 8px;">
+              <div style="display: grid; grid-template-columns: repeat(2, 3px); grid-auto-rows: 3px; gap: 2.5px; padding: 0 4px 0 1px;"><span style="background: #565178;"></span><span style="background: #565178;"></span><span style="background: #565178;"></span><span style="background: #565178;"></span><span style="background: #565178;"></span><span style="background: #565178;"></span></div>
+              <button style="width: 28px; height: 28px; border: none; display: flex; align-items: center; justify-content: center; background: #f5f1e4; color: #1d2a4a; box-shadow: 0 2px 0 #a39b82, inset 0 1px 0 rgba(255,255,255,.85);"><svg width="12" height="12" viewBox="0 0 13 13"><circle cx="5.5" cy="5.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.6"></circle><path d="M8.5 8.5L12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg></button>
+              <button style="height: 28px; border: none; display: inline-flex; align-items: center; gap: 5px; padding: 0 9px; background: #f5f1e4; color: #1d2a4a; font: 700 10px 'Chakra Petch', sans-serif; box-shadow: 0 2px 0 #a39b82, inset 0 1px 0 rgba(255,255,255,.85);"><svg width="10" height="11" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>A&ndash;Z &#8593;</button>
+              <div style="flex: 1 1 auto;"></div>
+              <button style="display: inline-flex; align-items: center; gap: 5px; border: none; padding: 8px 12px; background: #ff9f43; color: #2a1430; font: 700 11px 'Chakra Petch', sans-serif; letter-spacing: 1px; box-shadow: inset 0 1px 0 rgba(255,255,255,.45); filter: drop-shadow(0 3px 0 #b3661c); clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px), calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%);"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>ADD</button>
+            </div>
+          </div>
+
+        </div>
+        <p style="margin: 0; font: 500 11.8px/1.5 'Chakra Petch', sans-serif; color: #5d5870;"><b style="color: #2a2633;">The shell's key language, on screen.</b> Buttons are plastic keycaps: solid fill, hard 3px drop edge, top highlight; pressing travels down. Hierarchy by plastic color &mdash; accent / cream / alert red. Active tools stay pressed-in with a lit pip. Loudest physicality, very InGame.</p>
+      </div>
+    </div>
+
+    <!-- ═══ TAKE B — HUD HAIRLINE ═══ -->
+    <div style="width: 480px; display: flex; flex-direction: column; gap: 10px;" data-screen-label="Buttons · Take B · HUD Hairline">
+      <div style="font: 700 11px/1 'Chakra Petch', sans-serif; letter-spacing: 1.5px; color: #8d889c; text-transform: uppercase;">Take B &mdash; HUD Hairline</div>
+      <div style="background: #ffffff; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(42,38,51,.08); display: flex; flex-direction: column; gap: 12px;">
+        <div style="background: #232045; border: 1px solid rgba(255,255,255,.09); padding: 18px; display: flex; flex-direction: column; gap: 18px;">
+
+          <div>
+            <div style="font: 700 9px 'Chakra Petch', sans-serif; letter-spacing: 2px; color: #9b97c0;">ACTIONS</div>
+            <div style="display: flex; gap: 14px; align-items: flex-start; margin-top: 10px;">
+              <div style="display: flex; flex-direction: column; gap: 7px; align-items: center;">
+                <button style="position: relative; display: inline-flex; align-items: center; gap: 6px; padding: 10px 15px; background: rgba(255,159,67,.14); border: 1px solid #ff9f43; color: #ff9f43; font: 700 11px 'Chakra Petch', sans-serif; letter-spacing: 1.5px; clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px), calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%);"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>ADD</button>
+                <span style="font: 600 9px 'Chakra Petch', sans-serif; letter-spacing: 1px; color: #565178;">PRIMARY</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 7px; align-items: center;">
+                <button style="position: relative; display: inline-flex; align-items: center; gap: 6px; padding: 10px 15px; background: transparent; border: 1px solid rgba(255,255,255,.28); color: #ffffff; font: 600 11px 'Chakra Petch', sans-serif; letter-spacing: 1.5px;" style-before="content: ''; position: absolute; top: -1px; left: -1px; width: 6px; height: 6px; border-top: 2px solid #9b97c0; border-left: 2px solid #9b97c0;" style-after="content: ''; position: absolute; bottom: -1px; right: -1px; width: 6px; height: 6px; border-bottom: 2px solid #9b97c0; border-right: 2px solid #9b97c0;"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M1.5 10.5l.8-2.8 6.2-6.2 2 2-6.2 6.2-2.8.8z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg>EDIT</button>
+                <span style="font: 600 9px 'Chakra Petch', sans-serif; letter-spacing: 1px; color: #565178;">SECONDARY</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 7px; align-items: center;">
+                <button style="position: relative; display: inline-flex; align-items: center; gap: 6px; padding: 10px 15px; background: rgba(255,90,90,.08); border: 1px solid #ff5a5a; color: #ff5a5a; font: 600 11px 'Chakra Petch', sans-serif; letter-spacing: 1.5px;" style-before="content: ''; position: absolute; top: -1px; left: -1px; width: 6px; height: 6px; border-top: 2px solid #ff5a5a; border-left: 2px solid #ff5a5a;" style-after="content: ''; position: absolute; bottom: -1px; right: -1px; width: 6px; height: 6px; border-bottom: 2px solid #ff5a5a; border-right: 2px solid #ff5a5a;"><svg width="12" height="13" viewBox="0 0 12 13"><path d="M1 3h10M4 3V1.5h4V3M2.5 3l.7 8.5h5.6L9.5 3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>DELETE</button>
+                <span style="font: 600 9px 'Chakra Petch', sans-serif; letter-spacing: 1px; color: #565178;">DESTRUCTIVE</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 7px; align-items: center;">
+                <button style="position: relative; display: inline-flex; align-items: center; gap: 6px; padding: 10px 15px; background: rgba(255,255,255,.1); border: 1px solid #ffffff; color: #ffffff; font: 600 11px 'Chakra Petch', sans-serif; letter-spacing: 1.5px;">EDIT</button>
+                <span style="font: 600 9px 'Chakra Petch', sans-serif; letter-spacing: 1px; color: #565178;">PRESSED</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div style="font: 700 9px 'Chakra Petch', sans-serif; letter-spacing: 2px; color: #9b97c0;">TOOLS</div>
+            <div style="display: flex; gap: 10px; align-items: flex-start; margin-top: 10px;">
+              <button style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid rgba(255,255,255,.22); color: #9b97c0;"><svg width="13" height="13" viewBox="0 0 13 13"><circle cx="5.5" cy="5.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.6"></circle><path d="M8.5 8.5L12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg></button>
+              <div style="display: flex; flex-direction: column; gap: 6px; align-items: center;">
+                <button style="position: relative; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: rgba(255,159,67,.14); border: 1px solid #ff9f43; color: #ff9f43;"><svg width="11" height="12" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+                <span style="font: 600 9px 'Chakra Petch', sans-serif; letter-spacing: 1px; color: #565178;">ACTIVE</span>
+              </div>
+              <button style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid rgba(255,255,255,.22); color: #9b97c0;"><svg width="12" height="11" viewBox="0 0 12 11"><path d="M1 1.5h10L7.5 6v3.4L4.5 10V6L1 1.5z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg></button>
+              <button style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid rgba(255,255,255,.22); color: #9b97c0;"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="4.4" height="4.4" rx="1" fill="currentColor"></rect><rect x="6.6" y="1" width="4.4" height="4.4" rx="1" fill="currentColor"></rect><rect x="1" y="6.6" width="4.4" height="4.4" rx="1" fill="currentColor"></rect><rect x="6.6" y="6.6" width="4.4" height="4.4" rx="1" fill="currentColor"></rect></svg></button>
+            </div>
+          </div>
+
+          <div>
+            <div style="font: 700 9px 'Chakra Petch', sans-serif; letter-spacing: 2px; color: #9b97c0;">TERTIARY</div>
+            <div style="display: flex; gap: 18px; align-items: center; margin-top: 10px;">
+              <a href="#" style="font: 400 9px Silkscreen, monospace; color: #ff9f43; text-decoration: none;">&#9654; VIEW COLLECTION</a>
+              <a href="#" style="font: 400 9px Silkscreen, monospace; color: #9b97c0; text-decoration: none;">CANCEL</a>
+            </div>
+          </div>
+
+          <div>
+            <div style="font: 700 9px 'Chakra Petch', sans-serif; letter-spacing: 2px; color: #9b97c0;">IN CONTEXT &mdash; TOOLS BAR</div>
+            <div style="margin-top: 10px; background: #1a1733; border-top: 1px solid rgba(255,255,255,.08); padding: 9px 10px; display: flex; align-items: center; gap: 8px;">
+              <div style="display: grid; grid-template-columns: repeat(2, 3px); grid-auto-rows: 3px; gap: 2.5px; padding: 0 4px 0 1px;"><span style="background: #565178;"></span><span style="background: #565178;"></span><span style="background: #565178;"></span><span style="background: #565178;"></span><span style="background: #565178;"></span><span style="background: #565178;"></span></div>
+              <button style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid rgba(255,255,255,.22); color: #9b97c0;"><svg width="12" height="12" viewBox="0 0 13 13"><circle cx="5.5" cy="5.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.6"></circle><path d="M8.5 8.5L12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg></button>
+              <button style="height: 28px; display: inline-flex; align-items: center; gap: 5px; padding: 0 9px; background: rgba(255,159,67,.14); border: 1px solid #ff9f43; color: #ff9f43; font: 700 10px 'Chakra Petch', sans-serif;"><svg width="10" height="11" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>A&ndash;Z &#8593;</button>
+              <div style="flex: 1 1 auto;"></div>
+              <button style="display: inline-flex; align-items: center; gap: 5px; padding: 8px 12px; background: rgba(255,159,67,.14); border: 1px solid #ff9f43; color: #ff9f43; font: 700 11px 'Chakra Petch', sans-serif; letter-spacing: 1.5px; clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px), calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%);"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>ADD</button>
+            </div>
+          </div>
+
+        </div>
+        <p style="margin: 0; font: 500 11.8px/1.5 'Chakra Petch', sans-serif; color: #5d5870;"><b style="color: #2a2633;">Quiet technical HUD.</b> Hairline wells with corner brackets; hierarchy by line color and a translucent accent fill on primary. Tools sit silent until active (accent line + tint). Lightest ink on screen &mdash; GameCards stay the only solid, colorful objects. Tertiary links go pixel-font.</p>
+      </div>
+    </div>
+
+    <!-- ═══ TAKE C — PRINTED PLATE ═══ -->
+    <div style="width: 480px; display: flex; flex-direction: column; gap: 10px;" data-screen-label="Buttons · Take C · Printed Plate">
+      <div style="font: 700 11px/1 'Chakra Petch', sans-serif; letter-spacing: 1.5px; color: #8d889c; text-transform: uppercase;">Take C &mdash; Printed Plate</div>
+      <div style="background: #ffffff; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(42,38,51,.08); display: flex; flex-direction: column; gap: 12px;">
+        <div style="background: #232045; border: 1px solid rgba(255,255,255,.09); padding: 18px; display: flex; flex-direction: column; gap: 18px;">
+
+          <div>
+            <div style="font: 700 9px 'Chakra Petch', sans-serif; letter-spacing: 2px; color: #9b97c0;">ACTIONS</div>
+            <div style="display: flex; gap: 16px; align-items: flex-start; margin-top: 10px;">
+              <div style="display: flex; flex-direction: column; gap: 7px; align-items: center;">
+                <button style="display: inline-flex; align-items: center; gap: 6px; border: none; padding: 9px 13px; background: #ff9f43; color: #2a1430; font: 400 9px Silkscreen, monospace; filter: drop-shadow(3px 3px 0 rgba(0,0,0,.5)); clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px), calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%);"><svg width="9" height="9" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path></svg>ADD</button>
+                <span style="font: 600 9px 'Chakra Petch', sans-serif; letter-spacing: 1px; color: #565178;">PRIMARY</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 7px; align-items: center;">
+                <button style="display: inline-flex; align-items: center; gap: 6px; border: none; padding: 9px 13px; background: #3d4f78; color: #e8eefc; font: 400 9px Silkscreen, monospace; box-shadow: 3px 3px 0 rgba(0,0,0,.5);"><svg width="10" height="10" viewBox="0 0 12 12"><path d="M1.5 10.5l.8-2.8 6.2-6.2 2 2-6.2 6.2-2.8.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path></svg>EDIT</button>
+                <span style="font: 600 9px 'Chakra Petch', sans-serif; letter-spacing: 1px; color: #565178;">SECONDARY</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 7px; align-items: center;">
+                <button style="border: none; padding: 3px; background: repeating-linear-gradient(45deg, #e8c83d 0 5px, #1c1a22 5px 10px); box-shadow: 3px 3px 0 rgba(0,0,0,.5); display: inline-flex;"><span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; background: #1c1a22; color: #ffffff; font: 400 9px Silkscreen, monospace;"><svg width="10" height="11" viewBox="0 0 12 13"><path d="M1 3h10M4 3V1.5h4V3M2.5 3l.7 8.5h5.6L9.5 3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>DELETE</span></button>
+                <span style="font: 600 9px 'Chakra Petch', sans-serif; letter-spacing: 1px; color: #565178;">DESTRUCTIVE</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 7px; align-items: center;">
+                <button style="display: inline-flex; align-items: center; gap: 6px; border: none; padding: 9px 13px; background: #3d4f78; color: #e8eefc; font: 400 9px Silkscreen, monospace; transform: translate(2px, 2px); box-shadow: 1px 1px 0 rgba(0,0,0,.5);">EDIT</button>
+                <span style="font: 600 9px 'Chakra Petch', sans-serif; letter-spacing: 1px; color: #565178;">PRESSED</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div style="font: 700 9px 'Chakra Petch', sans-serif; letter-spacing: 2px; color: #9b97c0;">TOOLS</div>
+            <div style="display: flex; gap: 12px; align-items: flex-start; margin-top: 10px;">
+              <button style="width: 32px; height: 32px; border: none; display: flex; align-items: center; justify-content: center; background: #2c2950; color: #f5f1e4; box-shadow: 2px 2px 0 rgba(0,0,0,.5);"><svg width="13" height="13" viewBox="0 0 13 13"><circle cx="5.5" cy="5.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.6"></circle><path d="M8.5 8.5L12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg></button>
+              <div style="display: flex; flex-direction: column; gap: 6px; align-items: center;">
+                <button style="width: 32px; height: 32px; border: none; display: flex; align-items: center; justify-content: center; background: #ff3d77; color: #2a1430; box-shadow: 2px 2px 0 rgba(0,0,0,.5);"><svg width="11" height="12" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+                <span style="font: 600 9px 'Chakra Petch', sans-serif; letter-spacing: 1px; color: #565178;">ACTIVE</span>
+              </div>
+              <button style="width: 32px; height: 32px; border: none; display: flex; align-items: center; justify-content: center; background: #2c2950; color: #f5f1e4; box-shadow: 2px 2px 0 rgba(0,0,0,.5);"><svg width="12" height="11" viewBox="0 0 12 11"><path d="M1 1.5h10L7.5 6v3.4L4.5 10V6L1 1.5z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg></button>
+              <button style="width: 32px; height: 32px; border: none; display: flex; align-items: center; justify-content: center; background: #2c2950; color: #f5f1e4; box-shadow: 2px 2px 0 rgba(0,0,0,.5);"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="4.4" height="4.4" rx="1" fill="currentColor"></rect><rect x="6.6" y="1" width="4.4" height="4.4" rx="1" fill="currentColor"></rect><rect x="1" y="6.6" width="4.4" height="4.4" rx="1" fill="currentColor"></rect><rect x="6.6" y="6.6" width="4.4" height="4.4" rx="1" fill="currentColor"></rect></svg></button>
+            </div>
+          </div>
+
+          <div>
+            <div style="font: 700 9px 'Chakra Petch', sans-serif; letter-spacing: 2px; color: #9b97c0;">TERTIARY</div>
+            <div style="display: flex; gap: 18px; align-items: center; margin-top: 10px;">
+              <a href="#" style="font: 400 9px Silkscreen, monospace; color: #ffd23f; text-decoration: none; border-bottom: 2px solid rgba(255,210,63,.4); padding-bottom: 2px;">VIEW COLLECTION</a>
+              <a href="#" style="font: 400 9px Silkscreen, monospace; color: #9b97c0; text-decoration: none;">CANCEL</a>
+            </div>
+          </div>
+
+          <div>
+            <div style="font: 700 9px 'Chakra Petch', sans-serif; letter-spacing: 2px; color: #9b97c0;">IN CONTEXT &mdash; TOOLS BAR</div>
+            <div style="margin-top: 10px; background: #1a1733; border-top: 1px solid rgba(255,255,255,.08); padding: 9px 10px; display: flex; align-items: center; gap: 9px;">
+              <div style="display: grid; grid-template-columns: repeat(2, 3px); grid-auto-rows: 3px; gap: 2.5px; padding: 0 4px 0 1px;"><span style="background: #565178;"></span><span style="background: #565178;"></span><span style="background: #565178;"></span><span style="background: #565178;"></span><span style="background: #565178;"></span><span style="background: #565178;"></span></div>
+              <button style="width: 28px; height: 28px; border: none; display: flex; align-items: center; justify-content: center; background: #2c2950; color: #f5f1e4; box-shadow: 2px 2px 0 rgba(0,0,0,.5);"><svg width="12" height="12" viewBox="0 0 13 13"><circle cx="5.5" cy="5.5" r="3.8" fill="none" stroke="currentColor" stroke-width="1.6"></circle><path d="M8.5 8.5L12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg></button>
+              <button style="height: 28px; border: none; display: inline-flex; align-items: center; gap: 5px; padding: 0 9px; background: #2c2950; color: #f5f1e4; font: 400 8px Silkscreen, monospace; box-shadow: 2px 2px 0 rgba(0,0,0,.5);"><svg width="10" height="11" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>A&ndash;Z&#8593;</button>
+              <div style="flex: 1 1 auto;"></div>
+              <button style="display: inline-flex; align-items: center; gap: 5px; border: none; padding: 8px 11px; background: #ff9f43; color: #2a1430; font: 400 9px Silkscreen, monospace; filter: drop-shadow(3px 3px 0 rgba(0,0,0,.5)); clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px), calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%);"><svg width="9" height="9" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path></svg>ADD</button>
+            </div>
+          </div>
+
+        </div>
+        <p style="margin: 0; font: 500 11.8px/1.5 'Chakra Petch', sans-serif; color: #5d5870;"><b style="color: #2a2633;">Buttons as card print.</b> Borrows the GameCard title-plate: Silkscreen pixel type, flat ink, hard offset shadow like a sticker lifted off the card. DELETE wears the hazard tape from the Resident Evil plate. Pressing flattens the sticker to the surface. Most collectible-feeling; labels must stay short.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

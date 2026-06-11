@@ -1,0 +1,16 @@
+# Design mockups (working artboards)
+
+Standalone HTML artboards from the Claude Design iteration, checked in for review + git history.
+**Requirements truth stays in [`../ui-design-requirements.md`](../ui-design-requirements.md)** —
+these are drafts feeding the eventual `design-spec.md`, not a source of truth.
+
+| File | What it is |
+|---|---|
+| `button-system-drafts.dc.html` | Three in-app button languages (Keycap / HUD Hairline / Printed Plate) on the Midnight theme, each with the full vocabulary + the Collection tools bar rebuilt in that language. *Claude Design export — references a `support.js` runtime that isn't checked in; renders fine standalone except Take B's decorative corner brackets.* |
+| `h2-underlay-v2-c5-hybrid-ds-enforced.html` | **Collection + Profile** artboards, corner system C5 hybrid (square chrome, stepped-diagonal cards; Destiny = All-Time Pick, 210 hrs everywhere). **Updated 2026-06-10 per decisions 0011/0012:** privacy chip removed from the Profile header (`PROF-03` lives in Settings) and the theme-changer slot is now the **Settings gear** (screen theming moved to the Device editor, `DEV-04`). Has the tweaks-panel runtime (shell colors + screen themes). |
+| `collection-states.html` | **Collection states + view modes** (standalone, built-in SVG art): the first-run empty (`AUTH-06`), the pulled-up sort/filter drawer (`COL-07`/`COL-09` + the OQ-031 manual-order and OQ-034 keycap-interaction proposals), **the in-place search state** (keyboard up — `COL-09` live-filter; OQ-035 keyboard treatment), and **the three COL-07 view modes made explicit** — shelf (hero rows w/ stats — pending formalization, OQ-033) / grid (2-wide faces, the h2-underlay layout) / list (strip rows, hours/status scan) — with the Now-Playing hero persistent in all three. **Now at Profile parity (2026-06-11):** **friend's Collection** ×2 (`COL-10` — your chrome + the "view in their device" toggle, decision 0012) · **Now-Playing-unset nudge** (§3.1) · the §1.8 **lifecycle** (skeleton · load-error+retry) · **terminal "unavailable"** (`MOD-09` non-disclosure) · **offline** ×2 (own from cache, read-only · a friend you can't reach — `SYS-10`). |
+| `profile-states.html` | **Profile state matrix** (standalone, built-in SVG art) — the §3.5 set: **edit mode** (in-place; identity + curation per `PROF-01/02/06/08`, Top-5 re-rank via the OQ-031 gesture), **fresh account** (inviting empties + `PROF-07` chip-less tiles), **friend view** ×2 (your chrome default + the "view in their device" toggle, decision 0012), **privacy-limited** (`PROF-03` non-friend card), the §1.8 lifecycle pair (skeleton loading · load-error + retry), and the **terminal "unavailable"** states (blocked/suspended/deleted → one generic mask + the Unblock exception, `MOD-09`), and the **offline** states (own profile from cache, read-only + lightweight indicator · a friend you can't reach gets a calm notice — `SYS-10`). Maverick = self, Riko = friend, Vanta = non-friend (2026-06-11). |
+| `ratchet-art.png` | Low-poly card-art asset used by the h2-underlay artboards (the Marathon PNG is still missing from the export — Marathon falls back to its built-in SVG symbol). |
+
+View: open in a browser, or render headless:
+`msedge --headless=new --screenshot=out.png --window-size=1140,1280 <file>`

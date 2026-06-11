@@ -4,7 +4,7 @@
 > Screens and visuals are owned by the design-spec; endpoint shapes by the api-contract. This
 > document references those by ID. See [`../00-INDEX.md`](../00-INDEX.md) for the working agreement.
 
-**Version:** 0.8 (draft) · **Last updated:** 2026-06-08 · **Owner:** Claude Code
+**Version:** 0.13 (draft) · **Last updated:** 2026-06-11 · **Owner:** Claude Code
 
 ---
 
@@ -87,17 +87,22 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | SYS-06 | P0 | An **automated testing harness + CI** exist from Phase 1 (before feature code). Approach: risk-based, meaningful-tests-first — see [`testing-strategy.md`](testing-strategy.md). |
 | SYS-07 | P0 | **Every mutating endpoint carries a standing authorization test** proving a user cannot read/modify another user's resource (enforces SYS-01). |
 | SYS-08 | P1 | Users have a **role** (user / moderator / admin). Moderator/admin tools (the Admin console, MOD-04) are gated to the role. |
+| SYS-09 | P1 | An in-app **Help/Contact channel** (a Settings entry → support email or form). Pairs with report/block for App Store UGC compliance (Guideline 1.2 expects published contact info), and gives IAP/account problems a destination. |
+| SYS-10 | P1 | **Offline baseline:** the app opens usefully with no connectivity — last-synced collection/profile render from local cache, **read-only with a lightweight offline indicator**; writes require connectivity, **except** card-editor drafts which autosave locally (CARD-14). No blank screens or dead ends on a bad connection. |
 
 ### 5.2 Authentication & identity (`AUTH-`)
 | ID | Pri | Behavior |
 |---|---|---|
 | AUTH-01 | P0 | Email + password registration; **email is required and unique**; passwords are required and hashed (argon2/bcrypt). |
 | AUTH-02 | P0 | Login returns a short-lived **access token** + a **refresh token**; the client silently refreshes. (Fixes the prototype's 1-hour hard expiry.) |
-| AUTH-03 | P0 | **Sign in with Apple** (required by App Store policy once any social/third-party login exists). |
+| AUTH-03 | P0 | **Sign in with Apple** on iOS, offered as a low-friction option. (App Store policy would *mandate* it only if another third-party login existed — none does in v2. Android registers via email+password; Google Sign-In is parked, §10.) |
 | AUTH-04 | P0 | Password reset via email. |
 | AUTH-05 | P1 | Logout invalidates the refresh token. |
 | AUTH-06 | P1 | **Guided quick-start onboarding** after signup (skippable): add a few games (with empty-state suggestions), pick favourite genre(s), optionally design/adopt a first card, and an invite-a-friend nudge — lands the user on a populated collection. |
-| AUTH-07 | P0 | **Account deletion** (with data deletion/anonymization) available in Settings. |
+| AUTH-07 | P0 | **Account deletion** (with data deletion/anonymization) available in Settings. **Deletion ripple:** private data (collection, queue, wallet, gamertags, recommendations, push tokens, friendships) is hard-deleted; **community-owned contributions persist anonymized** — catalog entries keep their fields with contributor credit anonymized (CAT-05), and **published cards are unpublished** (no new adoptions) while **existing adopters keep their flattened card + grant** (the MOD-08 pattern) with designer attribution anonymized; the user's feed events are removed. |
+| AUTH-08 | P1 | **Email verification (soft):** a verification email is sent at registration; the account is **immediately usable** (no hard gate — protects onboarding momentum). Unverified state + a **resend** action surface in Settings, plus a non-blocking post-signup notice. Verification gates nothing in v2; its job is making password reset (AUTH-04) reach a real, owned inbox. |
+| AUTH-09 | P0 | **Sign-in-with-Apple completion + linking:** a first Apple sign-in must **choose a unique username** (screened, MOD-07) before entering the app; if Apple's (Apple-verified) email matches an existing account, the Apple identity is **linked to that account** (one user, two login methods) instead of creating a duplicate; **private-relay emails** are accepted as the account email. |
+| AUTH-10 | P0 | Registration requires **acceptance of the Terms of Service + Privacy Policy** (inline links at signup; re-acceptance on material change). InGame's **minimum age is 13**, stated in the ToS (no birth-date collection in v2). The same documents live under Settings → about/legal. |
 
 ### 5.3 Profile (`PROF-`)
 | ID | Pri | Behavior |
@@ -106,7 +111,10 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | PROF-02 | P0 | **Gamertags**: a user lists handles per platform (controlled platform list, e.g. PC/PlayStation/Xbox/Nintendo). **Managed from the Profile.** |
 | PROF-03 | P0 | **Privacy setting**: friends-only (default) vs. limited public profile. Governs what non-friends can see. |
 | PROF-04 | P1 | Profile shows **collection summary stats** (total games, total hours, completion rate), **headline clout stats** (cards designed, total adoptions received), and a **member-since** date. |
-| PROF-05 | P0 | The Profile is a **showcase with two modes**: your own (editable) and a **friend-view** (read-only, privacy-gated, PROF-03). It surfaces the **Device** (hero), **Top-5** (the gateway into that person's collection, COL-10), **Now Playing** (WTP-03), **friend count + mutual friends**, **Share profile** (SOC-07), and teasers to Achievements (ACH-05) + My Contributions (CAT-07). Friend-view exposes **Add friend / Compare hours** (SOC-03) actions. |
+| PROF-05 | P0 | The Profile is a **showcase with two modes**: your own (editable) and a **friend-view** (read-only, privacy-gated, PROF-03). It surfaces the **Device** (hero), **Top-5** (the gateway into that person's collection, COL-10), **Now Playing** (WTP-03), **friend count + mutual friends**, **Share profile** (SOC-07), and teasers to Achievements (ACH-05) + My Contributions (CAT-07). Friend-view exposes **Add friend / Compare hours** (SOC-03) actions, plus **Report / Block** (MOD-01, SOC-09) in an overflow. |
+| PROF-06 | P1 | **Username changes are allowed but cooldown-limited** (server-configurable, SYS-04 — e.g. once per 30 days), uniqueness-enforced and screened (MOD-07). References are ID-based, so friendships/adoptions/credits survive a rename; the freed handle is immediately claimable. Changed from Edit profile. |
+| PROF-07 | P2 | **Community percentile stats:** profile stat tiles may carry a **percentile chip** (e.g. "top 25% hours played"), **server-computed** against the community. Shown **only above a minimum-population threshold** (server-configurable, SYS-04) so cold-start numbers aren't nonsense; attaches only to stats the viewer can already see (PROF-03). **Design rule: every stat tile must render cleanly without its chip** — the chip is enhancement, not structure. |
+| PROF-08 | P1 | **The avatar is a designed composition**: created/edited in the **same vector-composition editor and asset system as Game Cards** (CARD-01/15 rules apply — vector elements, no uploads, no AI) on a **square avatar canvas**, published through the same **flatten pipeline** (§9: server-rendered image). A **default monogram avatar** (initials + accent) is guaranteed before any design exists (cf. the default-card guarantee). Avatars are user-visible content: **screened + reportable** (MOD-01 `user` target, MOD-07). |
 
 ### 5.4 Catalog & contribution (`CAT-`)
 | ID | Pri | Behavior |
@@ -160,6 +168,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | CARD-17 | P1 | **Asset library at scale:** the vector/effect/frame/font browser is **searchable, categorized, tagged**, with **free/premium/owned** filters, recently-used, and favourites; premium items **preview on the actual card**. |
 | CARD-18 | P0 | **Default-card guarantee:** every collection entry **always resolves to a card** — the owner's selected card → else another card they have for that game → else a **system default placeholder**. No game ever renders blank. (Used by new-game add, the card switcher, and moderation-takedown fallback, MOD-08.) |
 | CARD-19 | P0 | **Publish integrity:** publishing is **rate-limited** (SYS-05), **deduped by composition-hash**, and gated by a **minimum-complexity threshold** (drafts/private exempt) — keeps the adoptable pool clean. |
+| CARD-20 | P1 | **Published-card lifecycle (creator-initiated):** published cards are **immutable** — "editing" one = **duplicate to a new draft** (CARD-14) and publish separately. A creator may **unpublish** (delisted from galleries, no new adoptions; **existing adopters keep their flattened card + grant**, MOD-08 pattern; adoption count freezes). **Drafts/private cards are deletable**; a never-adopted published card may be deleted, an adopted one can only be unpublished. |
 
 ### 5.7 Device customization (`DEV-`)
 | ID | Pri | Behavior |
@@ -167,11 +176,12 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | DEV-01 | P0 | A **Device editor** (lighter than the card editor): **shell colour** + **sticker placement** (place/scale/rotate stickers from the library; free + premium via preview-then-acquire) — *not* the full card vector toolkit. **Personal only** — devices are not published/adopted. |
 | DEV-02 | P1 | Users may own multiple **device models** (cosmetic items) and switch the active one. |
 | DEV-03 | P0 | A free **default device** always renders (no broken shell); device decoration must **never obscure navigation** (the nav-on-plastic model). |
+| DEV-04 | P1 | **In-app screen theme:** the content-area ("screen") appearance inside the frame is customizable — chosen in the **Device editor** alongside shell colour/stickers (a free baseline always; premium themes via preview-then-acquire, COSM-03). A theme restyles screen background/surface tones but must **preserve content legibility** (contrast floor — the screen-side companion to DEV-03's nav rule). Personal-only, like the rest of the device. |
 
 ### 5.8 Cosmetics library (`COSM-`)
 | ID | Pri | Behavior |
 |---|---|---|
-| COSM-01 | P0 | A library of cosmetic items typed as: **vector asset pack** (shapes/letters/numbers/icons) · **effect** · **finish** (holo/foil) · **frame** · **font** · **device skin** · **device model**. (Card "stickers/art assets" are vector packs.) |
+| COSM-01 | P0 | A library of cosmetic items typed as: **vector asset pack** (shapes/letters/numbers/icons) · **effect** · **finish** (holo/foil) · **frame** · **font** · **device skin** · **screen theme** (DEV-04) · **device model**. (Card "stickers/art assets" are vector packs.) |
 | COSM-02 | P0 | A **free baseline** set is always available so everyone can customize meaningfully. |
 | COSM-03 | P0 | Premium items are gated by **entitlement** (owned via purchase or earned). The store's moat = **things you can't just draw** (animated/dynamic effects, curated packs). |
 | COSM-04 | P1 | Some cosmetics are **earned**, not bought — delivered via the achievement system (ACH-04), including **achievement-exclusive** items that are never purchasable (prestige). |
@@ -188,6 +198,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | ECON-06 | P0 | **In-app purchases via Apple/Google IAP** with server-side **receipt validation** and **restore purchases**. Implemented via a cross-platform IAP layer (RevenueCat — see api-contract / decisions). |
 | ECON-07 | P0 | A **wallet** holds the currency balance; a **ledger** records every change (login bonus, purchase, adoption spend, milestone) for auditability **and is shown to the user** as a simple earn/spend history. The wallet (balance + ledger + buy-currency) is **surfaced on the Store screen**; the persistent header counter is its entry point elsewhere. |
 | ECON-08 | P2 | **Limited/seasonal drops** in the store as a return hook. |
+| ECON-09 | P1 | **IAP refunds:** platform refund notifications (RevenueCat webhook) **reverse the granted currency**; the wallet **may go negative** (floor server-configurable, SYS-04) and recovers from future earns/purchases; cosmetics/adoptions already bought with that currency are **not clawed back** in v2. Every reversal is a ledger entry (ECON-07). |
 
 ### 5.10 Social (`SOC-`)
 | ID | Pri | Behavior |
@@ -199,13 +210,16 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | SOC-05 | P1 | **Recommend a game to a friend** — drops into their What-to-Play with a note (`WTP-`). |
 | SOC-06 | P1 | A **gentle activity feed** (on the Friends tab): friend beat/completed a game, published a card, unlocked a notable achievement. **Deliberately low-noise** — events are **aggregated by actor+type** ("Alex added 12 games" as one capped item), the **initial collection import does not flood the feed**, and trivia (minor stat tweaks) is excluded. |
 | SOC-07 | P1 | **Find & invite friends**: search by **username**, a **shareable invite link**, and a **QR code** for in-person adds. (No contacts-matching in v2.) |
+| SOC-08 | P0 | **Request lifecycle:** incoming requests can be **accepted or declined** (decline is **silent** — the sender isn't notified); outgoing requests can be **cancelled**; friends can be **unfriended** (also silent). Re-requesting after a decline/cancel is **cooldown-limited** (server-configurable, SYS-04) so requests can't be used to pester; blocking (SOC-09) handles persistent cases. |
+| SOC-09 | P0 | **Block a user:** blocking severs any friendship and pending requests, prevents new requests/recommendations from the blocked user, and makes the two users **mutually invisible** (profile, search results, card galleries, feed events, compare). Blocks are **silent** (never notified) and managed from a **blocked-users list in Settings**; block actions live on user profiles and inside the report flow (MOD-01). *(With report, satisfies App Store Guideline 1.2 for UGC/social apps.)* |
+| SOC-10 | P1 | **Invite-link redemption:** an opened invite link/QR (SOC-07) resolves in-app to the **sender's profile with a prefilled, one-tap friend request**. Without the app installed, the link routes to the **store listing**; deferred post-install attribution is parked (§10). |
 
 ### 5.11 What to Play (`WTP-`)
 | ID | Pri | Behavior |
 |---|---|---|
 | WTP-01 | P0 | A ranked **"Up Next" queue**, drag-to-reorder, that spans **owned games and unowned games** (a catalog game you don't own = effectively a wishlist item here). |
 | WTP-02 | P0 | Items can be added from your collection, from discovery, or from a friend's recommendation (SOC-05). |
-| WTP-03 | P2 | A single **"Now Playing" pin** — one game you're actively on (distinct from the multi-valued `Playing` status, COL-02); settable from Up Next **or** a collection entry, and surfaced on the Profile (PROF-05). |
+| WTP-03 | P1 | A single **"Now Playing" pin** — one game you're actively on (distinct from the multi-valued `Playing` status, COL-02); settable from Up Next **or** a collection entry. Surfaced on the **Profile** (PROF-05) **and as the Collection hero**, where it pairs with a **quick log-hours action** (COL-03); with no pin set, the Collection hero becomes an inviting **"set your Now Playing" nudge** (pick from your collection). *(P2→P1: the Collection hero depends on it — decision 0011.)* |
 
 ### 5.12 Discovery (`DISC-`)
 | ID | Pri | Behavior |
@@ -222,18 +236,20 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | NOTIF-01 | P0 | **Push notifications** (Expo push) tuned to each persona's return trigger: friend activity/comparison, wishlisted game released, your card adopted Nx, new store drop. |
 | NOTIF-02 | P0 | Per-type **notification preferences** the user controls. |
 | NOTIF-03 | P1 | **No standalone notifications center.** Each notification has a **contextual in-app home** (requests→Friends, releases→Up Next, adoptions→Profile, drops→Store); push handles real-time delivery. The rare orphan (a moderation outcome) surfaces as a one-off banner / Settings line. |
+| NOTIF-04 | P1 | **Push-permission priming:** the OS permission prompt is **never fired cold at launch**. It's requested through an in-app **pre-prompt** at a high-intent moment — the close of onboarding (AUTH-06), the first "notify me" on an upcoming game (DISC-01), or the first friend action — stating the concrete payoff. Declining the pre-prompt re-offers later (cadence server-configurable, SYS-04); a declined **OS** prompt gets recovery guidance in Settings (NOTIF-02). For a low-frequency app, push is the return mechanism — the one-shot ask is treated as precious. |
 
 ### 5.14 Moderation & admin (`MOD-`)
 | ID | Pri | Behavior |
 |---|---|---|
-| MOD-01 | P0 | **Report/hide** on published cards and catalog entries (incl. "report duplicate") — the light-touch safety valve. |
+| MOD-01 | P0 | **Report/hide** on published cards, catalog entries (incl. "report duplicate"), **and users** — the light-touch safety valve. Reporting a user offers **Block** (SOC-09) alongside; user reports land in the same queue (MOD-03). |
 | MOD-02 | P0 | Reported content can be **soft-hidden** pending review (threshold auto-hide). |
 | MOD-03 | P1 | A minimal review queue. |
 | MOD-04 | P1 | An **Admin/Moderator console** (gated to the role, SYS-08) is the home for: the reports queue, edit-suggestion review (MOD-06), and catalog dedup/merge (MOD-05). |
 | MOD-05 | P1 | **Catalog dedup = merge then soft-delete.** A moderator merges a duplicate game into the canonical entry — **re-pointing collection entries + cards** so no user is orphaned — then the empty duplicate is **soft-deleted with a 3-day restore window** before a scheduled purge. |
 | MOD-06 | P1 | **Edit-suggestions** (CAT-06) are approved/rejected in the console. |
-| MOD-07 | P0 | **Text/glyph screening** runs a banned-word pass on all user-entered text — card titles, freeform letters, and game names at creation. |
+| MOD-07 | P0 | **Text/glyph screening** runs a banned-word pass on **all user-entered text rendered to other users** — usernames (registration + change), bios, gamertag handles, card titles, freeform letters, game names + studio/publisher fields at creation (CAT-02), recommendation notes (SOC-05), and edit-suggestion text (CAT-06). |
 | MOD-08 | P0 | **Entitlement-loss / takedown policy:** if a premium asset behind a published card disappears, the **flattened card persists and existing adopters keep their grant**; the asset becomes **non-re-acquirable**. **Exception:** a **moderation/legal pull** actively **hides** affected cards, which then **fall back** per the default-card guarantee (CARD-18). |
+| MOD-09 | P1 | **Account suspension (abuse response):** a moderator/admin (SYS-08) can **suspend** a user — **temporary** (until a date) or **indefinite** — for abuse/ToS violation. A suspended user **cannot sign in or write** (sessions invalidated); on opening the app they get a **suspension notice** with the reason + the **Help/Contact** appeal channel (SYS-09). Suspension is **reversible** and **logged** (actor, reason, start/end). **Non-disclosure rule:** to a viewer, a **suspended**, **blocked** (SOC-09 — *either* direction) or **deleted** (AUTH-07) account all render as one **generic "profile unavailable"** state — deliberately indistinguishable, so the app never reveals that a block/suspension exists or who set it. **Lone exception:** your *own* block shows an **Unblock** action (you already hold that knowledge). |
 
 ### 5.15 Achievements & easter eggs (`ACH-`)
 > The **system** is specified here; the specific achievement/egg **content** is a later brainstorm (OQ-004).
@@ -259,17 +275,17 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 
 Authoritative field-level shapes live in [`api-contract.md`](api-contract.md); this is the entity map.
 
-- **Identity:** `users` (unique email, password hash, avatar, bio, privacy, **role**, **favourite_game_id**, **created_at** → member-since) · `auth_identities` (Apple/OAuth subs) · `gamertags` (handle + controlled platform)
+- **Identity:** `users` (unique email + `email_verified_at`, password hash, avatar, bio, privacy, **role**, **favourite_game_id**, **created_at** → member-since) · `auth_identities` (Apple/OAuth subs, linked by verified email — AUTH-09) · `gamertags` (handle + controlled platform)
 - **Catalog:** `games` (name, normalized_name, release_date?, studio?, **publisher?**, created_by, **deleted_at?/deleted_by?** for dedup grace) · `genres` (controlled) · `game_genres`
 - **Collection:** `collection_entries` (user×game: status, hours, hours_source, percent_complete, owned_since, rating, notes, active_card_design_id) · `collection_platforms` (entry × controlled platform)
 - **Cards:** `card_designs` (game, creator, visibility, **composition JSON (vector elements)**, **rendered_image_url + thumbnail_url**, **effect/finish ids**, is_premium, **composition_hash**, adoption_count, moderation_status) · `card_adoptions` (adopter × design × game, currency_paid)
-- **Device:** `device_configs` (user: active_model, shell_colour, sticker_composition JSON)
-- **Cosmetics:** `cosmetic_items` (type ∈ vector_pack/effect/finish/frame/font/device_skin/device_model, is_premium, price) · `cosmetic_packs` · `user_entitlements` (user × item, source)
+- **Device:** `device_configs` (user: active_model, shell_colour, **screen_theme**, sticker_composition JSON)
+- **Cosmetics:** `cosmetic_items` (type ∈ vector_pack/effect/finish/frame/font/device_skin/screen_theme/device_model, is_premium, price) · `cosmetic_packs` · `user_entitlements` (user × item, source)
 - **Economy:** `wallets` (balance) · `currency_ledger` (delta, reason, ref) · `store_products` (IAP product → grant) · `iap_receipts` (validated)
-- **Social:** `friendships` (requester/addressee, status) · `lists` + `list_items` (Top-5 = capped list) · `game_recommendations` · `activity_events`
+- **Social:** `friendships` (requester/addressee, status) · `user_blocks` (blocker × blocked — SOC-09) · `invite_tokens` (SOC-07/10) · `lists` + `list_items` (Top-5 = capped list) · `game_recommendations` · `activity_events`
 - **What to Play:** `play_queue_items` (user × game, position, source, currently_playing)
 - **Engagement:** `notifications` · `notification_prefs` · `device_push_tokens`
-- **Moderation:** `reports` · `edit_suggestions` (CAT-06) (+ soft-hide flags; game soft-delete for dedup grace)
+- **Moderation:** `reports` · `edit_suggestions` (CAT-06) · `user_suspensions` (subject × actor, reason, starts_at, ends_at?, lifted_at? — MOD-09) (+ soft-hide flags; game soft-delete for dedup grace)
 - **Achievements:** `achievements` (definition: key, type milestone|egg, condition spec, reward spec, visibility, active — config/seed data) · `user_achievements` (user × achievement, progress, unlocked_at). Achievement-exclusive cosmetics are `cosmetic_items` flagged non-purchasable.
 
 ---
@@ -312,6 +328,7 @@ Recorded so they're conscious choices, not omissions:
 - **Public/social expansion:** public profiles + follow graph + people discovery; **external card/collection sharing** (image + deep link) + a public **web card page**; web companion / clubs/communities.
 - **Deeper creation:** full from-scratch **drawing suite** (Artist persona); AI-assisted card art; **heavy editor ops** (clip-to-shape masking, boolean shape ops, pattern/array); **card remix/fork** with attribution chains; **rarity tiers/framing**.
 - **Live-ops:** seasonal events / battle pass beyond simple store drops.
+- **Auth & growth plumbing:** **Google Sign-In** (Android social login — v2 Android registers via email+password, AUTH-03); **deferred post-install invite attribution** (install-referrer deep links — v2 invite links route to the store listing without attribution, SOC-10).
 
 ---
 
@@ -327,3 +344,8 @@ Recorded so they're conscious choices, not omissions:
 | 2026-06-08 | 0.6 | Card-editor deep dive (3-mindset panel informed): vector-composition art model, no uploads/AI; element management/precision/creative toolkit; effects + separate finish layer; preview-then-acquire reconcile; drafts/lifecycle; flatten/publish pipeline; approachability/a11y; asset library; default-card guarantee; publish integrity. Roles (SYS-08); admin console + dedup-merge + text-screening + entitlement/takedown policy (MOD-04..08). Owned-since relabel (COL-03/07); cosmetics types incl vector packs/finish/fonts. Adoption-only (no remix) + no external sharing — both parked. See decisions 0006–0007. | CARD-01..19, MOD-04..08, SYS-08, COL-03/07, COSM-01 |
 | 2026-06-08 | 0.7 | Remaining-screens walkthrough: device editor lighter + personal-only + default-device/nav-legibility (DEV-01/03); compare adds total-games (SOC-03); contributor profile friend-viewable, no level (CAT-07); guided onboarding + account deletion (AUTH-06/07). See decision 0008. | DEV-01/03, SOC-03, CAT-07, AUTH-06/07 |
 | 2026-06-08 | 0.8 | Consistency-audit fixes (no behavior change): §6 `owned_since` rename; §9 storage = server-rendered (not uploaded) images; glossary → vector elements; §11→§10 cross-refs (×3); CARD-16 "remix"→template start-from; tightened in-app "share" wording (SOC-04, WTP-03). | — |
+| 2026-06-10 | 0.9 | **Gap-review formalization** (OQ-016..030; see decision 0010): block + report-user + full request lifecycle; ToS/privacy acceptance + age 13; soft email verification; SIWA username-completion + account linking (Android = email-only, Google parked §10); account-deletion ripple on community content; username-change policy; broadened text screening; published-card lifecycle (immutable/unpublish/delete); IAP refund reversals; invite-link redemption; push-permission priming; in-app Help/Contact; offline baseline. | SYS-09/10, AUTH-03/07/08/09/10, PROF-05/06, CARD-20, ECON-09, SOC-08/09/10, NOTIF-04, MOD-01/07 |
+| 2026-06-10 | 0.10 | **Mockup-review formalization** (decision 0011): Now Playing becomes the **Collection hero** with quick log-hours + a set-your-pin nudge (priority P2→P1); **community percentile chips** added (threshold-gated, chip-optional tiles) — closes OQ-013. | WTP-03, PROF-07 |
+| 2026-06-10 | 0.11 | **In-app screen theme** (decision 0012): the device's content-area theme is customizable from the **Device editor** (free baseline + premium; legibility floor); cosmetic taxonomy + `device_configs` gain `screen_theme`. Closes OQ-032. | DEV-04, COSM-01 |
+| 2026-06-11 | 0.12 | **Avatar = designed composition** (owner direction during profile-states mockups): avatar creation reuses the Card editor + flatten/publish pipeline on a square canvas; default monogram guaranteed; screened/reportable as user content. Ripples api-contract (avatar draft/publish). | PROF-08 |
+| 2026-06-11 | 0.13 | **Account suspension** (owner direction during profile-states mockups): moderator can temporarily/indefinitely suspend an abusive account (reversible, logged); suspended users get a notice + appeal channel (SYS-09); **suspended/blocked/deleted accounts render to viewers as one generic "unavailable" state** (non-disclosure), Unblock the lone exception. Ripples api-contract (admin suspend, `ACCOUNT_SUSPENDED`, `/users/:id` collapse). | MOD-09 |
