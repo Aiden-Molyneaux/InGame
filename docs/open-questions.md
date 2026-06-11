@@ -34,8 +34,14 @@
 - OQ-007: A **stylized "break-out"** treatment for space-hungry screens (e.g. the Card editor):
   the bezel is intentionally thin, so whether/when a screen expands beyond the device frame — and
   how that transition is styled — is a Claude Design decision to consider. [presentation]
+  **Rescoped (decision 0014):** owed specifically for the **Card editor's Canvas posture** (stage 3
+  of the Add Game arc); Add Game + the Styler stay in-frame (the takeover tier).
 - OQ-038: **Offline cache scope** — what renders read-only when offline: your own profile/collection
   only, or also recently-viewed friends? (split from OQ-037 during the design-spec sync; SYS-10) [behavior]
+- OQ-039: **Nameplate/overlay as cosmetic types?** The closed-attribute set (decision 0014) may want
+  **plate styles** ("nameplates") and/or **overlays** as distinct swappable COSM-01 types — today the
+  title is a card *layer* and finish is the overlay-like type. Decide during Styler design (stage 2);
+  if yes, a COSM-01 ripple + a store category. (from the Add Game brainstorm, 2026-06-11) [behavior]
 
 ## Resolved
 - OQ-001 → **Multiple device models.** A user can own several device models (via entitlements/store)

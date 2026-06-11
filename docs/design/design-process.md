@@ -54,6 +54,18 @@ Design Profile composed from the catalog — this proves the system and shakes o
 Assemble the remaining screens from the catalog. The **Card editor** (the heaviest, with
 editor-specific controls) gets its **own focused iteration**.
 
+> **Phase D opening order (locked — decision 0014):** ① the **Add Game flow** (in-frame takeover;
+> card step = adopt · quick-style · skip) → ② the Card editor's **Styler posture** (in-frame,
+> closed attributes; completes the card step) → ③ the **Canvas posture** (the breakout + the
+> editor's own focused iteration; `OQ-007` resolved there). Architecture, contracts, and the
+> spatial tiers (sheet · takeover · breakout) are in `decisions/0014`.
+
+> **Multi-draft divergence (owner rule, 2026-06-11):** before designing a **novel page or asset**,
+> ask the owner whether to draft **multiple distinct iterations (typically 3)** before converging —
+> distinct *interaction/layout models*, not reskins. Standing: Add Game ×3; the Styler includes
+> **≥1 carousel treatment** (persistent card hero, attribute sections swiping beneath, section
+> chips to jump).
+
 **Pick the next screen by what it surfaces, not by importance alone.** Maintain a
 **component-coverage checklist** (every Phase-B catalog item × designed/pending) and choose screens
 that close the biggest gaps — e.g. **Add Game** surfaces text fields, the search bar + results list,
@@ -87,7 +99,9 @@ a silent design override: drop it in [`../open-questions.md`](../open-questions.
 Claude Code session — the spec is patched via the change protocol ([`../00-INDEX.md`](../00-INDEX.md) §4),
 versioned, and you re-sync.
 
-## Locked process decisions (see `decisions/0009`)
+## Locked process decisions (see `decisions/0009`, `0014`)
 - **Hero-screen-first** (extract the system from a real screen), not system-first-in-the-abstract.
 - Start with **Collection (home) — 3 drafts**, then **Profile**, then expand.
 - The **component catalog** is the single source of visual truth; reuse is mandatory.
+- **Phase D opens:** Add Game → Styler posture → Canvas posture (0014); **novel surfaces get the
+  multi-draft divergence prompt** (typically 3 distinct treatments) before converging.
