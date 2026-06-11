@@ -29,6 +29,8 @@
   cosmetics. (ECON-01/02/06) [tuning] — pairs with OQ-002.
 - OQ-004: Specific achievement & easter-egg **content** — which milestones, which eggs, their
   triggers and rewards. Dedicated brainstorm when the engine is built (ACH-*). [behavior/content]
+  **Steering (decision 0015):** creation milestones — first card created / first publish / adoption
+  milestones, with cosmetic rewards — must be on that brainstorm's list (closes the create→earn loop).
 - OQ-005: Hidden easter-egg presentation — fully invisible until unlocked, or shown as a locked
   "???" mystery slot that hints something exists? (ACH-03) [presentation]
 - OQ-007: A **stylized "break-out"** treatment for space-hungry screens (e.g. the Card editor):
@@ -42,6 +44,16 @@
   **plate styles** ("nameplates") and/or **overlays** as distinct swappable COSM-01 types — today the
   title is a card *layer* and finish is the overlay-like type. Decide during Styler design (stage 2);
   if yes, a COSM-01 ripple + a store category. (from the Add Game brainstorm, 2026-06-11) [behavior]
+- OQ-040: **The "moments layer" — reveal ritual + celebration tiering** (decision 0015): the
+  canvas-completion **"first print" ritual** — client-rendered flatten-as-anticipation (never
+  network-bound) · **layer-assembly replay** from the composition JSON · gallery-staged full-fidelity
+  reveal (chrome dims, effects/finish live, haptics; reduce-motion variant) — **tiered** so it stays
+  special (full: first-ever card · canvas completions · publishes; light beat: Styler keeps), with
+  post-reveal **routing** (card slots into the shelf · publish-at-peak · primed adoption
+  notification + the NOTIF-04 post-publish pre-prompt · share image, CARD-21). Plus the small beats:
+  contributor first-credit (CAT-05) · adopter-side designer credit (ECON-05) · mid-edit
+  **hold-to-preview** (CARD-15). Design-spec patterns owed across stages 1–3 of the 0014 arc.
+  (from the engagement review, 2026-06-11) [presentation]
 
 ## Resolved
 - OQ-001 → **Multiple device models.** A user can own several device models (via entitlements/store)

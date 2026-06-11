@@ -4,7 +4,7 @@
 > be refined alongside the design-spec, because screens reveal exactly what each call must return.
 > Behavior lives in [`product-spec.md`](product-spec.md); shapes live here. Referenced by ID.
 
-**Version:** 0.11 (draft) · **Last updated:** 2026-06-11 · **Owner:** Claude Code
+**Version:** 0.12 (draft) · **Last updated:** 2026-06-11 · **Owner:** Claude Code
 
 ---
 
@@ -79,6 +79,7 @@
 | POST | `/cards/:id/publish` | Validate (min-complexity, dedup, premium-reconcile), **flatten to image + thumbnail**, set public (CARD-13/15/19) |
 | POST | `/cards/:id/adopt` | Adopt for a game; charges currency if premium (ECON-03/04); increments adoption_count (CARD-05) |
 | GET | `/cards/assets` | Vector/effect/finish/frame/font library; filter type/free/premium/owned; search (CARD-17) |
+| GET | `/cards/:id/share-image` | **Share variant** of the flattened render — "made in InGame" mark + designer attribution composited server-side, CDN-cached; unavailable while moderation-hidden (CARD-21) |
 
 ## Device (`DEV-`)
 | Method | Path | Notes |
@@ -175,3 +176,4 @@
 | 2026-06-10 | 0.9 | Device config gains `screenThemeId` (DEV-04). |
 | 2026-06-11 | 0.10 | Avatar pipeline (PROF-08): `avatar` leaves `PATCH /me`; draft/publish endpoints mirror the card flatten flow. |
 | 2026-06-11 | 0.11 | Account suspension (MOD-09): admin suspend/unsuspend; `ACCOUNT_SUSPENDED` code on auth login/refresh; `/users/:id` collapses blocked/suspended/deleted into one generic unavailable (non-disclosure). |
+| 2026-06-11 | 0.12 | Engagement-moments ripple (decision 0015): `GET /cards/:id/share-image` — watermarked share variant of the flattened render (CARD-21). |

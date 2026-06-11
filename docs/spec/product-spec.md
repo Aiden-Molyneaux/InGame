@@ -4,7 +4,7 @@
 > Screens and visuals are owned by the design-spec; endpoint shapes by the api-contract. This
 > document references those by ID. See [`../00-INDEX.md`](../00-INDEX.md) for the working agreement.
 
-**Version:** 0.13 (draft) · **Last updated:** 2026-06-11 · **Owner:** Claude Code
+**Version:** 0.14 (draft) · **Last updated:** 2026-06-11 · **Owner:** Claude Code
 
 ---
 
@@ -149,7 +149,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 
 | ID | Pri | Behavior |
 |---|---|---|
-| CARD-01 | P0 | A **Card editor**, launched for a specific game, composes the card **front** as layers (the **back is a standardized** auto-stats layout): *optional colour/gradient base → vector elements → one animated effect → finish → frame → title.* Trading-card portrait. |
+| CARD-01 | P0 | A **Card editor**, launched for a specific game, composes the card **front** as layers (the **back is a standardized** auto-stats layout **incl. printed provenance — designer attribution + adoption count**, decision 0015): *optional colour/gradient base → vector elements → one animated effect → finish → frame → title.* Trading-card portrait. |
 | CARD-02 | P0 | Art is **in-app vector composition** — placeable **vector primitives** (shapes, letters, numbers, icons/SVGs; free + premium packs) positioned/scaled/rotated/recoloured/layered, plus an optional colour/gradient base. **No image uploads. No AI art.** ("Stickers" and "art assets" are unified as vector elements.) |
 | CARD-03 | P0 | With no uploads, moderation is **report/hide on published cards** (MOD-01/02) + **text/glyph screening** on user-entered text (MOD-07) — no upload-review pipeline. |
 | CARD-04 | P0 | **Save private** (your collection only) or **Publish** to the community; published cards are **adoptable** and retain **designer attribution**. |
@@ -169,6 +169,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | CARD-18 | P0 | **Default-card guarantee:** every collection entry **always resolves to a card** — the owner's selected card → else another card they have for that game → else a **system default placeholder**. No game ever renders blank. (Used by new-game add, the card switcher, and moderation-takedown fallback, MOD-08.) |
 | CARD-19 | P0 | **Publish integrity:** publishing is **rate-limited** (SYS-05), **deduped by composition-hash**, and gated by a **minimum-complexity threshold** (drafts/private exempt) — keeps the adoptable pool clean. |
 | CARD-20 | P1 | **Published-card lifecycle (creator-initiated):** published cards are **immutable** — "editing" one = **duplicate to a new draft** (CARD-14) and publish separately. A creator may **unpublish** (delisted from galleries, no new adoptions; **existing adopters keep their flattened card + grant**, MOD-08 pattern; adoption count freezes). **Drafts/private cards are deletable**; a never-adopted published card may be deleted, an adopted one can only be unpublished. |
+| CARD-21 | P1 | **External image-share:** any card in your collection (or that you designed) can be shared via the **native share sheet** as an **image** — a server-composited **share variant** of the flattened render (CARD-15) carrying a "made in InGame" mark + **designer attribution** (CARD-04). **Image-only:** deep links + the public web card page **remain parked** (§10). Moderation-hidden cards aren't shareable (MOD-02/08). *(Un-parked by decision 0015 — screenshots already exfiltrate cards, only worse and unattributed.)* |
 
 ### 5.7 Device customization (`DEV-`)
 | ID | Pri | Behavior |
@@ -236,7 +237,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | NOTIF-01 | P0 | **Push notifications** (Expo push) tuned to each persona's return trigger: friend activity/comparison, wishlisted game released, your card adopted Nx, new store drop. |
 | NOTIF-02 | P0 | Per-type **notification preferences** the user controls. |
 | NOTIF-03 | P1 | **No standalone notifications center.** Each notification has a **contextual in-app home** (requests→Friends, releases→Up Next, adoptions→Profile, drops→Store); push handles real-time delivery. The rare orphan (a moderation outcome) surfaces as a one-off banner / Settings line. |
-| NOTIF-04 | P1 | **Push-permission priming:** the OS permission prompt is **never fired cold at launch**. It's requested through an in-app **pre-prompt** at a high-intent moment — the close of onboarding (AUTH-06), the first "notify me" on an upcoming game (DISC-01), or the first friend action — stating the concrete payoff. Declining the pre-prompt re-offers later (cadence server-configurable, SYS-04); a declined **OS** prompt gets recovery guidance in Settings (NOTIF-02). For a low-frequency app, push is the return mechanism — the one-shot ask is treated as precious. |
+| NOTIF-04 | P1 | **Push-permission priming:** the OS permission prompt is **never fired cold at launch**. It's requested through an in-app **pre-prompt** at a high-intent moment — the close of onboarding (AUTH-06), the first "notify me" on an upcoming game (DISC-01), the first friend action, or **just after publishing a card** ("know when someone adopts it" — the highest-intent moment of all, decision 0015) — stating the concrete payoff. Declining the pre-prompt re-offers later (cadence server-configurable, SYS-04); a declined **OS** prompt gets recovery guidance in Settings (NOTIF-02). For a low-frequency app, push is the return mechanism — the one-shot ask is treated as precious. |
 
 ### 5.14 Moderation & admin (`MOD-`)
 | ID | Pri | Behavior |
@@ -325,7 +326,7 @@ Recorded so they're conscious choices, not omissions:
 
 - **Real-data integrations:** platform playtime auto-import (Steam/PSN/Xbox), achievement/trophy sync. *(Schema is import-ready via `hours_source`.)*
 - **Creator economy:** card-designer revenue share / payouts; cosmetic trading/marketplace.
-- **Public/social expansion:** public profiles + follow graph + people discovery; **external card/collection sharing** (image + deep link) + a public **web card page**; web companion / clubs/communities.
+- **Public/social expansion:** public profiles + follow graph + people discovery; **external sharing beyond the card image** — deep links, a public **web card page**, and collection sharing (the **image-only card share is IN v2** — CARD-21, decision 0015); web companion / clubs/communities.
 - **Deeper creation:** full from-scratch **drawing suite** (Artist persona); AI-assisted card art; **heavy editor ops** (clip-to-shape masking, boolean shape ops, pattern/array); **card remix/fork** with attribution chains; **rarity tiers/framing**.
 - **Live-ops:** seasonal events / battle pass beyond simple store drops.
 - **Auth & growth plumbing:** **Google Sign-In** (Android social login — v2 Android registers via email+password, AUTH-03); **deferred post-install invite attribution** (install-referrer deep links — v2 invite links route to the store listing without attribution, SOC-10).
@@ -349,3 +350,4 @@ Recorded so they're conscious choices, not omissions:
 | 2026-06-10 | 0.11 | **In-app screen theme** (decision 0012): the device's content-area theme is customizable from the **Device editor** (free baseline + premium; legibility floor); cosmetic taxonomy + `device_configs` gain `screen_theme`. Closes OQ-032. | DEV-04, COSM-01 |
 | 2026-06-11 | 0.12 | **Avatar = designed composition** (owner direction during profile-states mockups): avatar creation reuses the Card editor + flatten/publish pipeline on a square canvas; default monogram guaranteed; screened/reportable as user content. Ripples api-contract (avatar draft/publish). | PROF-08 |
 | 2026-06-11 | 0.13 | **Account suspension** (owner direction during profile-states mockups): moderator can temporarily/indefinitely suspend an abusive account (reversible, logged); suspended users get a notice + appeal channel (SYS-09); **suspended/blocked/deleted accounts render to viewers as one generic "unavailable" state** (non-disclosure), Unblock the lone exception. Ripples api-contract (admin suspend, `ACCOUNT_SUSPENDED`, `/users/:id` collapse). | MOD-09 |
+| 2026-06-11 | 0.14 | **Engagement-moments batch** (decision 0015): **CARD-21 external image-share un-parked** (image-only — deep links/web page stay §10); NOTIF-04 gains the **post-publish** pre-prompt moment; CARD-01's back gains **printed provenance** (designer + adoption count). Ripples api-contract (share variant) + design-req. | CARD-01/21, NOTIF-04 |

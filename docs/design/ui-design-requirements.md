@@ -6,7 +6,7 @@
 > "how it looks/feels"). Behavior questions raised while designing go to
 > [`../open-questions.md`](../open-questions.md), not edited into the spec directly.
 
-**Version:** 0.9 · **Last updated:** 2026-06-11 · **Owner:** Claude Code → Claude Design
+**Version:** 0.10 · **Last updated:** 2026-06-11 · **Owner:** Claude Code → Claude Design
 **Status:** **ALL screens specified** (5 tabs + 16 detail screens/flows). Ready to hand to Claude Design. Open design notes live in `open-questions.md` (`OQ-005/007`).
 > **Claude Design — read [`design-process.md`](design-process.md) first.** It defines the phased,
 > reuse-first process: 3 hero-screen (Collection) drafts → extract a named component catalog →
@@ -166,7 +166,7 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 ### 4.2 Game page (adaptive — shared page + owned state)
 **Purpose:** the **shared community page** for a canonical game; when you own it, your personal details take precedence. **One screen, two states** — Collection Entry Detail folds in here.
 **Shared content:** canonical facts + **contributor credit** (`CAT-02/05`); **tappable genre/studio** (`DISC-02`); **community card gallery + adopt** and **design a card** (`CARD-04`, `ECON-03/04`); **add to collection / Up Next** (`WTP-02`); **recommend to a friend** (`SOC-05`); **friends-who-own + hours**; **suggest edit** (`CAT-06`); **report incl. duplicate** (`MOD-01`); **upcoming → notify me** (`DISC-01`, `NOTIF-01`); **community aggregate stats — later phase**.
-**Owned state (takes precedence):** your **hours / % / status / owned-since / rating / notes** (editable) + **selected card + card switcher** (`COL-03/06`); **Now Playing** (`WTP-03`).
+**Owned state (takes precedence):** your **hours / % / status / owned-since / rating / notes** (editable) + **selected card + card switcher** (`COL-03/06`); **Now Playing** (`WTP-03`); **share card image** (`CARD-21`).
 **States:** not-owned vs owned · upcoming · no-cards-yet (be-first) · soft-hidden/reported.
 
 ### 4.3 Card editor — the heaviest screen (`CARD-01..19`)
@@ -181,7 +181,7 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 - **Effects + separate finish** (holo/foil), one effect at a time (`CARD-12`).
 - **Premium = preview-then-acquire** + publish reconcile + buy-currency at intent (`CARD-13`).
 - **Drafts/lifecycle:** Draft state, autosave + crash recovery, unsaved-exit guard, duplicate (`CARD-14`); **unpublish / delete** your own cards — published cards are immutable, so "edit" = duplicate-to-draft (`CARD-20`).
-- **Save private vs Publish** → flatten to one image + true-preview + thumbnail safe-area (`CARD-04/15`); **publish integrity** (`CARD-19`).
+- **Save private vs Publish** → flatten to one image + true-preview + thumbnail safe-area (`CARD-04/15`); **publish integrity** (`CARD-19`); **share image** at the reveal (`CARD-21`; the reveal/celebration pattern itself is `OQ-040`).
 - **Approachability/a11y:** start-from (template / preset kit / **auto-design "Surprise me"**) — never blank; coachmarks; **break-out** to max canvas; screen-reader + non-gesture path; reduce-motion (`CARD-16`).
 - **Asset library:** searchable/categorized/filtered (free/premium/owned)/favourites; premium preview-on-card (`CARD-17`).
 - **Creator dashboard touch:** adoptions/clout/milestone progress (`CARD-05`).
@@ -272,3 +272,4 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 | 2026-06-10 | 0.7 | Mockup-review formalization (decision 0011): Collection gains the **Now Playing hero** (+ log-hours, + unset nudge state) per WTP-03; manual-ordering interaction flagged as `OQ-031`; Profile stats gain optional **percentile chips** (`PROF-07`, chip-optional tiles). |
 | 2026-06-10 | 0.8 | Decision 0012 ripple: Collection **view-mode definitions** (shelf / compact grid / dense list); new §1.8 **feedback & error-surfacing pattern**; §1.6 **friend-chrome toggle** (OQ-012 resolved — default own chrome, opt-in swap); Device editor gains **screen theme** (`DEV-04`) + Settings "Not here." |
 | 2026-06-11 | 0.9 | Decision 0013 ripple: §3.1 **shelf** mode carries a per-game stats eyebrow (`OQ-033`), so the dense-list rationale shifts from "only mode with stats" to "densest scan." |
+| 2026-06-11 | 0.10 | Decision 0015 ripple: **share card image** (`CARD-21`) on the Game page owned state (4.2) and at the card-editor reveal (4.3); reveal/celebration pattern tracked as `OQ-040`. |
