@@ -176,3 +176,21 @@ Meta: **no PNG deliverables** — the html files are what the owner reviews; ren
 3. **P3b selection = accent border, not sunken** → generalized: **F-09 "no sunken containers"** added
    to design-spec (v0.9) — flat planes; selection = accent border + pip; pressed keycaps and text
    inputs the named exceptions (also formalizes the 2026-06-10 flat-panels ruling).
+
+### Owner pass 5 (C-v5 review — recorded 2026-06-12) → C-v6 + `report-sheet-drafts.html`
+1. **Report rework (P3b + a reusable component):** INCORRECT INFO requires a **details prompt**
+   ("what's incorrect?" — `TextField/area` debuts; MOD-01 amended + api `details`, spec 0.16/api 0.14) ·
+   **selection highlight = orange** (`scr.accent` — F-09 refined: selection borders are theme-accent,
+   pink stays the pip/LED voice) · **SUBMIT = red** (`/destructive`). **Three variations** of the
+   report pop-up drafted in `report-sheet-drafts.html` (the multi-draft rule applied to a component),
+   each shown on a game entry AND a user target (user adds BLOCK, SOC-09) — adaptable app-wide;
+   C-v6's P3b carries the baseline (drawer form) pending the variation ruling.
+2. **P7/P7b consistency:** variant details (EquipReadout + credit) sit in ONE position across picker
+   states — above the cards in both; CleanPeek dims the top readout (no second dimmed copy below).
+3. **P8 = a celebration, not a shelf:** the horizontal shelf strip is cut (distracting); the moment
+   focuses on the filed card itself — landed, lit — + count tick + first-credit + ADD & CONTINUE.
+4. **Never-blank variant rail drawn at last** (owner caught CARD-16/18 unexpressed): the picker's
+   be-first state always offers **a default face + a system template + "SURPRISE ME"** — never a
+   lone card, never blank.
+5. **Library: "bronze" buttons → orange** (`KeycapButton/primary` = `scr.accent`; `scr.btn` retired —
+   design-spec 0.10); VIEW MATCH / NEXT et al. swept on the board.

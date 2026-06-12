@@ -4,7 +4,7 @@
 > be refined alongside the design-spec, because screens reveal exactly what each call must return.
 > Behavior lives in [`product-spec.md`](product-spec.md); shapes live here. Referenced by ID.
 
-**Version:** 0.13 (draft) · **Last updated:** 2026-06-12 · **Owner:** Claude Code
+**Version:** 0.14 (draft) · **Last updated:** 2026-06-12 · **Owner:** Claude Code
 
 ---
 
@@ -144,7 +144,7 @@
 ## Moderation & admin (`MOD-`)
 | Method | Path | Notes |
 |---|---|---|
-| POST | `/reports` | `{ targetType: card\|game\|user, targetId, reason }` incl. "duplicate" (MOD-01) |
+| POST | `/reports` | `{ targetType: card\|game\|user, targetId, reason, details? }` incl. "duplicate"; `details` **required** when the reason demands specifics (e.g. `incorrect_info`) — moderator-facing only (MOD-01) |
 | GET | `/admin/reports` · POST `/admin/reports/:id/resolve` | Reports queue; hide/restore (MOD-02/03) — role-gated (SYS-08) |
 | GET | `/admin/edit-suggestions` · POST `/admin/edit-suggestions/:id/{approve\|reject}` | Edit-suggestion review (MOD-06) |
 | POST | `/admin/games/:dupId/merge` | `{ canonicalId }` → re-point collections/cards, soft-delete the dup (3-day restore) (MOD-05) |
@@ -178,3 +178,4 @@
 | 2026-06-11 | 0.11 | Account suspension (MOD-09): admin suspend/unsuspend; `ACCOUNT_SUSPENDED` code on auth login/refresh; `/users/:id` collapses blocked/suspended/deleted into one generic unavailable (non-disclosure). |
 | 2026-06-11 | 0.12 | Engagement-moments ripple (decision 0015): `GET /cards/:id/share-image` — watermarked share variant of the flattened render (CARD-21). |
 | 2026-06-12 | 0.13 | CAT-09 ripple (decision 0016): `collectionsCount` + `friendsHaveCount` on catalog search results + the game payload. |
+| 2026-06-12 | 0.14 | MOD-01 ripple: `details?` on `POST /reports`, required for reasons needing specifics (`incorrect_info`). |
