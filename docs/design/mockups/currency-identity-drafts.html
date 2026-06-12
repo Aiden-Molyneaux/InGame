@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InGame · Customizer Currency — Identity Drafts ×3 (name + mark)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" /></noscript>
+<style>
+  /* ── tokens: verbatim from collection-states.html (Teal shell · Midnight theme) ── */
+  :root {
+    --plastic: #2bb6b0; --plastic-hi: #3ec9c2; --plastic-lo: #1f9a94; --silk: #0d524e;
+    --accent: #ff3d77; --gold: #ffd23f; --cream: #f5f1e4; --navy: #1d2a4a;
+    --bezel: #14122a; --alert: #e3414e;
+    --pk: 'Chakra Petch', sans-serif; --shell: 'Paytone One', sans-serif;
+    --scr-bg: #232045; --scr-well: #2c2950; --scr-tools: #1a1733; --scr-accent: #ff9f43;
+    --scr-accent-ink: #2a1430; --scr-head: #f5f1e4; --scr-text: #ffffff; --scr-dim: #9b97c0;
+    --scr-soft: #c9c5e6; --scr-panel: rgba(255,255,255,.065); --scr-hairline: rgba(255,255,255,.08);
+    --scr-grip: #565178; --scr-chip: #f5f1e4; --scr-head-shadow: rgba(0,0,0,.45);
+    --scr-btn: #ffb38a; --scr-btn-ink: #2a1430;
+    --shell-ink: #08433f; --screw-hi: #2aa39d; --screw-lo: #137671; --pip-off: #117672;
+  }
+  html, body { margin: 0; min-height: 100%; background: #efece6; font-family: var(--pk); }
+  .canvas { max-width: 1348px; margin: 0 auto; padding: 40px 24px 60px; }
+  .canvas-head h1 { font: 700 17px/1.2 var(--pk); letter-spacing: 2.5px; color: #2a2633; margin: 0 0 6px; text-transform: uppercase; }
+  .canvas-head p { font: 500 12.5px/1.5 var(--pk); color: #79748a; margin: 0 0 32px; max-width: 640px; }
+  .stage { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+  .take { width: 404px; }
+  .artboard-label { font: 700 11px/1 var(--pk); letter-spacing: 1.5px; color: #8d889c; margin: 0 0 10px 2px; text-transform: uppercase; }
+  .caption { margin-top: 14px; background: #fff; border-radius: 12px; padding: 13px 15px; box-shadow: 0 2px 8px rgba(42,38,51,.08); }
+  .caption h3 { margin: 0 0 5px; font: 700 12.5px var(--pk); letter-spacing: .8px; color: #2a2633; text-transform: uppercase; }
+  .caption h3 em { font-style: normal; color: var(--accent); }
+  .caption p { margin: 0 0 4px; font: 500 11.8px/1.5 var(--pk); color: #5d5870; }
+  .caption p b { color: #2a2633; }
+
+  /* ── specimen panel (on the Midnight screen surface) ── */
+  .spec { background: var(--scr-bg); border: 5px solid var(--bezel); border-radius: 8px; padding: 16px 14px 14px; }
+  .spec-hero { display: flex; align-items: center; gap: 14px; padding: 4px 2px 14px; border-bottom: 1px solid var(--scr-hairline); }
+  .spec-hero .big-ic { flex: 0 0 auto; width: 52px; height: 52px; }
+  .spec-hero .sh-meta { display: flex; flex-direction: column; gap: 4px; }
+  .spec-hero .sh-name { font: 700 21px/1 var(--pk); letter-spacing: 2.5px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); }
+  .spec-hero .sh-tag { font: 600 9.5px/1.5 var(--pk); letter-spacing: .5px; color: var(--scr-soft); }
+  .spec-hero .sh-tick { font: 700 8px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
+  .srow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 2px; border-bottom: 1px solid var(--scr-hairline); }
+  .srow:last-child { border-bottom: none; }
+  .slbl { flex: 0 0 92px; font: 700 8px/1.4 var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
+  /* chrome mocks */
+  .ccount { display: inline-flex; align-items: center; gap: 4px; background: var(--gold); color: #3c2a09;
+    border: none; padding: 5px 8px; font: 700 11px/1 var(--pk); letter-spacing: .5px;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--gold) 45%, #000), inset 0 1px 0 rgba(255,255,255,.5); }
+  .ccount svg { display: block; }
+  .ccount.neg { background: var(--alert); color: #fff;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--alert) 45%, #000), inset 0 1px 0 rgba(255,255,255,.3); }
+  .price-chip { display: inline-flex; align-items: center; gap: 3px; background: var(--gold); color: #3c2a09;
+    font: 700 9px/1 var(--pk); padding: 3px 5px; white-space: nowrap; }
+  .price-chip svg { display: block; }
+  .arrow { color: var(--scr-grip); font: 700 11px var(--pk); }
+  .old-chip { display: inline-flex; align-items: center; gap: 2.5px; background: var(--scr-panel); border: 1px dashed var(--scr-grip);
+    color: var(--scr-dim); font: 700 9px/1 var(--pk); padding: 3px 5px; white-space: nowrap; }
+  /* pack mini */
+  .pack { position: relative; display: inline-flex; flex-direction: column; align-items: center; gap: 5px; padding: 10px 14px 9px;
+    background: var(--scr-well); border: 1px solid color-mix(in srgb, var(--gold) 38%, transparent); }
+  .pack .amt { display: inline-flex; align-items: center; gap: 5px; font: 700 15px/1 var(--pk); color: var(--gold); letter-spacing: 1px; text-shadow: 0 0 9px rgba(255,210,63,.3); }
+  .pack .plbl { font: 700 7.5px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
+  .usd-chip { display: inline-flex; align-items: center; background: var(--cream); color: var(--navy);
+    font: 700 9px/1 var(--pk); padding: 3.5px 6px; white-space: nowrap;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  /* ledger (draft C's form — the owner's pick) */
+  .ledger { flex: 1 1 100%; background: var(--scr-well); border: 1px solid var(--scr-hairline); }
+  .lrow { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-bottom: 1px solid var(--scr-hairline); }
+  .lrow:last-child { border-bottom: none; }
+  .lrow .lsig { flex: 0 0 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center;
+    font: 700 10px/1 var(--pk); background: var(--scr-panel); }
+  .lrow .lwhat { font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-text); min-width: 0; }
+  .lrow .lamt { margin-left: auto; display: inline-flex; align-items: center; gap: 3px; font: 700 10px var(--pk); white-space: nowrap; }
+  .lrow.earn .lsig, .lrow.earn .lamt { color: #7fe0c3; }
+  .lrow.spend .lsig, .lrow.spend .lamt { color: var(--scr-soft); }
+  .lrow.rev .lsig, .lrow.rev .lamt, .lrow.rev .lwhat { color: #ff8a93; }
+  /* voice lines */
+  .voice { flex: 1 1 100%; display: flex; flex-direction: column; gap: 5px; }
+  .voice span { font: 600 9px/1.5 var(--pk); letter-spacing: .8px; color: var(--scr-dim); }
+  .voice span b { color: var(--scr-soft); }
+  .voice span i { color: var(--gold); font-style: normal; }
+  .gram { flex: 1 1 100%; font: 600 8.5px/1.6 var(--pk); letter-spacing: .5px; color: var(--scr-grip); }
+  .gram b { color: var(--scr-dim); }
+  /* header-context strip */
+  .ctx { background: var(--scr-bg); border: 5px solid var(--bezel); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: space-between; }
+  .ctx h2 { margin: 0; font: 700 21px/1 var(--pk); letter-spacing: 3px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- A · CREDIT — milled gold token, stepped punch-out (the card-step square, machined) -->
+    <symbol id="ic-credit" viewBox="0 0 40 40">
+      <circle cx="20" cy="20" r="17" fill="var(--gold)"/>
+      <circle cx="20" cy="20" r="16.2" fill="none" stroke="#3c2a09" stroke-width="1.5" opacity=".5"/>
+      <circle cx="20" cy="20" r="13.2" fill="none" stroke="#3c2a09" stroke-width="1.1" stroke-dasharray="2.1 2.3" opacity=".4"/>
+      <path d="M14 18 L16 18 L16 16 L18 16 L18 14 L26 14 L26 22 L24 22 L24 24 L22 24 L22 26 L14 26 Z" fill="#3c2a09"/>
+      <path d="M12.5 12 a11.5 11.5 0 0 1 6 -3.4" fill="none" stroke="#fff" stroke-width="2" opacity=".35" stroke-linecap="round"/>
+    </symbol>
+    <!-- B · INK — the gold drop (what cards are printed with) -->
+    <symbol id="ic-ink" viewBox="0 0 40 40">
+      <path d="M20 5.5 C20 5.5 9.5 19 9.5 26 a10.5 10.5 0 0 0 21 0 C30.5 19 20 5.5 20 5.5 Z" fill="var(--gold)"/>
+      <path d="M20 5.5 C20 5.5 9.5 19 9.5 26 a10.5 10.5 0 0 0 21 0 C30.5 19 20 5.5 20 5.5 Z" fill="none" stroke="#3c2a09" stroke-width="1.3" opacity=".45"/>
+      <path d="M14.5 25 a6.5 7.5 0 0 0 3.2 6" fill="none" stroke="#fff" stroke-width="2.1" opacity=".5" stroke-linecap="round"/>
+      <path d="M31.5 8.5 L33 11 L31.5 13.5 L30 11 Z" fill="var(--gold)" opacity=".85"/>
+    </symbol>
+    <!-- C · VOLT — the charge cell (square chrome, F-07) + bolt; self-contained contrast like the token -->
+    <symbol id="ic-volt" viewBox="0 0 40 40">
+      <circle cx="20" cy="21.5" r="14.5" fill="rgba(255,210,63,.16)"/>
+      <rect x="16" y="5" width="8" height="4.5" fill="var(--gold)" stroke="#3c2a09" stroke-width="1.2" stroke-opacity=".55"/>
+      <rect x="9.5" y="9.5" width="21" height="23.5" fill="var(--gold)" stroke="#3c2a09" stroke-width="1.6" stroke-opacity=".55"/>
+      <path d="M22.5 12.5 L14.5 23 L19.2 23 L17.5 30.5 L25.5 20 L20.8 20 Z" fill="#3c2a09"/>
+      <path d="M11.5 12 v-1 h4" fill="none" stroke="#fff" stroke-width="1.8" opacity=".4" stroke-linecap="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="canvas">
+  <div class="canvas-head">
+    <h1>Customizer Currency &mdash; Identity Drafts &times;3 (name + mark)</h1>
+    <p>Three in-app identities for the <b>single soft currency</b> (spec term &ldquo;Customizer currency&rdquo;,
+    ECON-01/02 &mdash; unchanged; this is its <b>display face</b>). Each take = a name, a mark, and the mark
+    living in every slot the chrome owns: <b>CurrencyCounter &middot; PriceChip &middot; the Add Game
+    1-&#9672; adopt chip &middot; PackTile &middot; LedgerRow</b> (draft C's ledger form, per the gate ruling)
+    + the ECON-09 negative counter. The winner <b>replaces the &#9672; placeholder app-wide</b>; the in-app
+    name ripples ECON microcopy at formalization (spec-owner batch). Mark stays <b>brand.gold</b> in chrome
+    (gold = value, F-02). <i>Amounts illustrative (OQ-002/OQ-011).</i></p>
+  </div>
+
+  <div class="stage">
+
+    <!-- ═══ A · CREDITS ═══ -->
+    <div class="take">
+      <div class="artboard-label">Identity A &middot; CREDITS &mdash; the cabinet's own word</div>
+      <div class="ctx">
+        <h2>STORE</h2>
+        <button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-credit"/></svg>5</button>
+      </div>
+      <div class="spec">
+        <div class="spec-hero">
+          <svg class="big-ic" viewBox="0 0 40 40"><use href="#ic-credit"/></svg>
+          <div class="sh-meta">
+            <span class="sh-name">CREDITS</span>
+            <span class="sh-tag">The arcade's word for &ldquo;you may play.&rdquo; A milled gold token,
+            punched with the card-step square.</span>
+            <span class="sh-tick">TICKER &middot; CR &middot; SINGULAR &ldquo;1 CREDIT&rdquo;</span>
+          </div>
+        </div>
+        <div class="srow">
+          <span class="slbl">COUNTER &rarr; WALLET</span>
+          <button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-credit"/></svg>5</button>
+          <button class="ccount neg"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-credit"/></svg>&minus;3</button>
+          <span class="gram" style="flex:1 1 auto;">NEGATIVE (ECON-09) WEARS ALERT RED</span>
+        </div>
+        <div class="srow">
+          <span class="slbl">PRICECHIP + ADOPT</span>
+          <span class="old-chip">8 &#9672;</span><span class="arrow">&#10142;</span>
+          <span class="price-chip">8 <svg width="11" height="11" viewBox="0 0 40 40"><use href="#ic-credit"/></svg></span>
+          <span class="price-chip">ADOPT &middot; 1 <svg width="11" height="11" viewBox="0 0 40 40"><use href="#ic-credit"/></svg></span>
+        </div>
+        <div class="srow">
+          <span class="slbl">PACKTILE</span>
+          <div class="pack"><span class="amt">30 <svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-credit"/></svg></span><span class="plbl">CREDIT PACK</span><button class="usd-chip">$4.99</button></div>
+          <div class="voice" style="flex:1;">
+            <span><i>+1 CREDIT</i> DAILY LOGIN</span>
+            <span>BRIDGE: <b>SHORT 3 CREDITS</b></span>
+            <span>IAP: <b>30 CREDITS &middot; $4.99</b></span>
+          </div>
+        </div>
+        <div class="srow">
+          <span class="slbl">LEDGERROW (C FORM)</span>
+          <div class="ledger">
+            <div class="lrow earn"><span class="lsig">+</span><span class="lwhat">CREDIT PACK &middot; 30</span><span class="lamt">+30 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-credit"/></svg></span></div>
+            <div class="lrow spend"><span class="lsig">&minus;</span><span class="lwhat">EMBER &middot; EFFECT</span><span class="lamt">&minus;8 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-credit"/></svg></span></div>
+            <div class="lrow rev"><span class="lsig">&#8856;</span><span class="lwhat">REFUND REVERSAL</span><span class="lamt">&minus;30 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-credit"/></svg></span></div>
+          </div>
+        </div>
+        <div class="srow">
+          <span class="gram"><b>GRAMMAR:</b> COUNTABLE &mdash; 1 CREDIT &middot; 8 CREDITS &middot; TICKER &ldquo;CR&rdquo;
+          WHERE SPACE IS TIGHT. THE HUD LINEAGE IS LITERAL: <b>&ldquo;CREDIT 05&rdquo;</b> IS WHAT CABINETS PRINTED.</span>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>A &mdash; CREDITS <em>(insert coin, but ours)</em></h3>
+        <p><b>The fantasy:</b> the device is an arcade machine, and this is its money &mdash; &ldquo;INSERT
+        CREDIT&rdquo; is the most load-bearing word in arcade history. Zero learning curve: every user already
+        knows what a credit is and that it's spendable (&sect;1.1's conventional pole, applied to vocabulary).
+        The mark is a <b>milled token</b> punched with the GameCard's stepped square &mdash; the coin is
+        literally minted from the card system.</p>
+        <p><b>Risks:</b> the least ownable of the three (&ldquo;credits&rdquo; is genericised across gaming);
+        no material/craft tie to <i>customization</i> specifically. <b>Strength:</b> instant legibility at
+        every size; the word carries the retro thesis on its own.</p>
+      </div>
+    </div>
+
+    <!-- ═══ B · INK ═══ -->
+    <div class="take">
+      <div class="artboard-label">Identity B &middot; INK &mdash; the print-shop material</div>
+      <div class="ctx">
+        <h2>STORE</h2>
+        <button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-ink"/></svg>5</button>
+      </div>
+      <div class="spec">
+        <div class="spec-hero">
+          <svg class="big-ic" viewBox="0 0 40 40"><use href="#ic-ink"/></svg>
+          <div class="sh-meta">
+            <span class="sh-name">INK</span>
+            <span class="sh-tag">What cards are printed with. You don't buy cosmetics &mdash; you buy the
+            gold ink they're pressed in.</span>
+            <span class="sh-tick">TICKER &middot; INK &middot; MASS NOUN &ldquo;8 INK&rdquo;</span>
+          </div>
+        </div>
+        <div class="srow">
+          <span class="slbl">COUNTER &rarr; WALLET</span>
+          <button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-ink"/></svg>5</button>
+          <button class="ccount neg"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-ink"/></svg>&minus;3</button>
+          <span class="gram" style="flex:1 1 auto;">RUNNING DRY READS PHYSICALLY &mdash; &ldquo;OUT OF INK&rdquo;</span>
+        </div>
+        <div class="srow">
+          <span class="slbl">PRICECHIP + ADOPT</span>
+          <span class="old-chip">8 &#9672;</span><span class="arrow">&#10142;</span>
+          <span class="price-chip">8 <svg width="11" height="11" viewBox="0 0 40 40"><use href="#ic-ink"/></svg></span>
+          <span class="price-chip">ADOPT &middot; 1 <svg width="11" height="11" viewBox="0 0 40 40"><use href="#ic-ink"/></svg></span>
+        </div>
+        <div class="srow">
+          <span class="slbl">PACKTILE</span>
+          <div class="pack"><span class="amt">30 <svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-ink"/></svg></span><span class="plbl">INK REFILL</span><button class="usd-chip">$4.99</button></div>
+          <div class="voice" style="flex:1;">
+            <span><i>+1 INK</i> DAILY LOGIN</span>
+            <span>BRIDGE: <b>SHORT 3 INK</b></span>
+            <span>IAP: <b>30 INK &middot; $4.99 REFILL</b></span>
+          </div>
+        </div>
+        <div class="srow">
+          <span class="slbl">LEDGERROW (C FORM)</span>
+          <div class="ledger">
+            <div class="lrow earn"><span class="lsig">+</span><span class="lwhat">INK REFILL &middot; 30</span><span class="lamt">+30 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-ink"/></svg></span></div>
+            <div class="lrow spend"><span class="lsig">&minus;</span><span class="lwhat">EMBER &middot; EFFECT</span><span class="lamt">&minus;8 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-ink"/></svg></span></div>
+            <div class="lrow rev"><span class="lsig">&#8856;</span><span class="lwhat">REFUND REVERSAL</span><span class="lamt">&minus;30 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-ink"/></svg></span></div>
+          </div>
+        </div>
+        <div class="srow">
+          <span class="gram"><b>GRAMMAR:</b> MASS NOUN &mdash; 8 INK, NEVER &ldquo;INKS&rdquo;; PACKS BECOME
+          <b>REFILLS</b>. THE ADOPT CHIP READS &ldquo;1 INK&rdquo; (HUD GRAMMAR &mdash; FINE ON A CHIP, PROSE
+          SAYS &ldquo;1 ink&rdquo;).</span>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>B &mdash; INK <em>(you buy the material, not the menu)</em></h3>
+        <p><b>The fantasy:</b> cards are <i>printed</i> objects &mdash; the editor's reveal is already a
+        &ldquo;first print&rdquo; ritual (OQ-040), so the currency becomes the shop's material: gold ink.
+        Spending it on an effect feels like consuming real stuff, not clearing a paywall; packs become
+        <b>refills</b>; the daily login is a slow drip. Strongest <i>craft</i> tie of the three &mdash; the
+        whole economy speaks the card-making language.</p>
+        <p><b>Note:</b> &ldquo;FOIL&rdquo; was considered for this slot and rejected &mdash; it collides with
+        the <b>foil finish type</b> (COSM-01/CARD-12; a finish named CLASSIC FOIL costing &ldquo;6 foil&rdquo;
+        is nonsense). INK has no collision. <b>Risks:</b> mass-noun chip grammar (&ldquo;1 INK&rdquo;) is
+        slightly odd; ink implies printers more than arcades &mdash; it leans craft over retro.</p>
+      </div>
+    </div>
+
+    <!-- ═══ C · VOLTS ═══ -->
+    <div class="take">
+      <div class="artboard-label">Identity C &middot; VOLTS &mdash; the device's charge</div>
+      <div class="ctx">
+        <h2>STORE</h2>
+        <button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-volt"/></svg>5</button>
+      </div>
+      <div class="spec">
+        <div class="spec-hero">
+          <svg class="big-ic" viewBox="0 0 40 40"><use href="#ic-volt"/></svg>
+          <div class="sh-meta">
+            <span class="sh-name">VOLTS</span>
+            <span class="sh-tag">The juice your device runs on. Customization draws charge; the login
+            bonus is a trickle.</span>
+            <span class="sh-tick">TICKER &middot; V &middot; SINGULAR &ldquo;1 VOLT&rdquo;</span>
+          </div>
+        </div>
+        <div class="srow">
+          <span class="slbl">COUNTER &rarr; WALLET</span>
+          <button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-volt"/></svg>5</button>
+          <button class="ccount neg"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-volt"/></svg>&minus;3</button>
+          <span class="gram" style="flex:1 1 auto;">THE CELL GLOWS LIKE A PIP &mdash; LED LANGUAGE (F-05 KIN)</span>
+        </div>
+        <div class="srow">
+          <span class="slbl">PRICECHIP + ADOPT</span>
+          <span class="old-chip">8 &#9672;</span><span class="arrow">&#10142;</span>
+          <span class="price-chip">8 <svg width="11" height="11" viewBox="0 0 40 40"><use href="#ic-volt"/></svg></span>
+          <span class="price-chip">ADOPT &middot; 1 <svg width="11" height="11" viewBox="0 0 40 40"><use href="#ic-volt"/></svg></span>
+        </div>
+        <div class="srow">
+          <span class="slbl">PACKTILE</span>
+          <div class="pack"><span class="amt">30 <svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-volt"/></svg></span><span class="plbl">VOLT PACK</span><button class="usd-chip">$4.99</button></div>
+          <div class="voice" style="flex:1;">
+            <span><i>+1 VOLT</i> DAILY &middot; TRICKLE CHARGE</span>
+            <span>BRIDGE: <b>SHORT 3 VOLTS</b></span>
+            <span>IAP: <b>30 VOLTS &middot; $4.99</b></span>
+          </div>
+        </div>
+        <div class="srow">
+          <span class="slbl">LEDGERROW (C FORM)</span>
+          <div class="ledger">
+            <div class="lrow earn"><span class="lsig">+</span><span class="lwhat">VOLT PACK &middot; 30</span><span class="lamt">+30 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-volt"/></svg></span></div>
+            <div class="lrow spend"><span class="lsig">&minus;</span><span class="lwhat">EMBER &middot; EFFECT</span><span class="lamt">&minus;8 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-volt"/></svg></span></div>
+            <div class="lrow rev"><span class="lsig">&#8856;</span><span class="lwhat">REFUND REVERSAL</span><span class="lamt">&minus;30 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-volt"/></svg></span></div>
+          </div>
+        </div>
+        <div class="srow">
+          <span class="gram"><b>GRAMMAR:</b> COUNTABLE &mdash; 1 VOLT &middot; 8 VOLTS &middot; TICKER
+          &ldquo;V&rdquo; (&ldquo;8V&rdquo; IS THE TIGHTEST CHIP OF ALL THREE). THE CELL ICON IS SQUARE
+          CHROME (F-07) WITH A GOLD GLOW.</span>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>C &mdash; VOLTS <em>(the device runs on it)</em></h3>
+        <p><b>The fantasy:</b> currency as the handheld's power &mdash; the counter is a charge cell, the
+        login bonus is a <i>trickle charge</i>, and going negative (ECON-09) reads as a drained cell. It's
+        the most <b>device-native</b> identity: the mark belongs to the same family as the LED pips and the
+        power light, and &ldquo;8V&rdquo; makes the smallest possible price chip.</p>
+        <p><b>Risks:</b> energy currencies in games usually <i>regenerate</i> &mdash; &ldquo;volts&rdquo;
+        may set an auto-refill expectation the economy doesn't honour (the +1 login bonus softens but doesn't
+        erase this); spending charge on <i>cosmetics</i> is a half-step metaphor stretch. <b>Strength:</b>
+        tightest visual integration with the shell's light language.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
