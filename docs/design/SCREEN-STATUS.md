@@ -10,7 +10,7 @@
 
 ## Up next (the queue)
 1. **Add Game — converge** (draft C v5 awaiting owner review → converged board: P9–P10 + the ◈→PIXELS swap).
-2. **Card editor · Styler posture** (0014 stage 2 — closed attributes; ≥1 carousel treatment mandated; answers OQ-039).
+2. **Card editor · Styler posture** (0014 stage 2 — **3 drafts at the owner gate**: A carousel · B drawer rack · C workbench; OQ-039 exhibit drawn; converge → `styler-states.html`).
 3. **Card editor · Canvas posture** (0014 stage 3 — the breakout; resolves OQ-007; the OQ-040 reveal ritual).
 4. *Coverage-driven after that* (design-process): **Discover** (surfaces the segmented control) and **Settings** (rows · toggles · destructive confirm) are the named gap-closers; **Device editor** carries the OQ-045 debt.
 
@@ -28,7 +28,7 @@
 | 3.5 | Profile | ✅ converged | `profile-states.html` (per 0011–0013) | ✅ (edit, friend-view, privacy, terminal, offline) | 🔶 | — |
 | 4.1 | Add Game (flow) | 🔶 in pass | `add-game-draft-c5-cardled.html` (v5, awaiting review) | ⬜ (deferred to converge: P9–P10) | ✅ (0016 + MOD-01 ripples) | Converge = queue #1; swap ◈→PIXELS |
 | 4.2 | Game page (adaptive) | ⬜ | — (`CardDetail` slice exists in Add Game c5) | — | 🔶 (CAT-09 fields landed) | Owned-state fold-in; card gallery |
-| 4.3 | Card editor — Styler | 🔶 in pass | drafts A/B/C in progress (styler track) | — | 🔶 | Closed attributes; OQ-039 answered here |
+| 4.3 | Card editor — Styler | 🔶 in pass | `styler-draft-{a,b,c}` (carousel · drawer rack · workbench) — **at owner gate** | ⬜ (lifecycle → converge) | 🔶 | OQ-039 exhibited (reco: adopt nameplate, defer overlay); +OQ-048/049; acquire/reconcile rides 0017's `POST /cosmetics/:id/acquire` |
 | 4.3 | Card editor — Canvas | 🔜 queued (#3) | — | — | 🔶 | Breakout (OQ-007); OQ-040 reveal ritual |
 | 4.4 | Admin / Moderator console | ⬜ | — | — | 🔶 | Mod-only (MOD-04) |
 | 4.5 | Device editor | ⬜ | — | — | 🔶 | Owes OQ-045; shells per 0017 |
