@@ -35,6 +35,16 @@ summary below is convenience; **00-INDEX wins**.
 4. **Reference behavior by ID** (e.g. `CARD-01`, `ECON-03`) — don't restate it.
 5. **Commit messages name the IDs touched**, e.g. `spec: add CARD-12 (spoiler blur); ripple api-contract`.
 
+## Design-phase workflow (owner directives, 2026-06-12)
+1. **HTML deliverables only — never PNGs.** The owner reviews mockups by opening the HTML files
+   directly. Headless-Edge screenshots are for self-verification only and must be **deleted before
+   the turn ends** — no `_gate-*.png` or other image artifacts left in the repo.
+2. **After every draft pass, update `docs/design/SCREEN-STATUS.md`** — the per-screen dashboard
+   (design state · queue order · mockup version · states board? · **api-contract current for that
+   page?**) — and surface the changed rows + UP NEXT to the owner in the wrap-up. The API column is
+   the tripwire: functionality drawn on a page must reach the contract (or the inbox) before the
+   row reads ✅.
+
 ## Git identity (important — personal project)
 Use the **personal** GitHub account **`Aiden-Molyneaux`** — **NOT** the work account
 `VTM-Aiden-Molyneaux`. The repo's local identity is already set to

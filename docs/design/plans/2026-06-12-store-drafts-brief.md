@@ -246,3 +246,25 @@ Commerce section + gaps pruned) · **design-spec → 0.10** (§1.5 Currency & Co
 PIXELS mark; §1.6 `Toast` designed; §1.4 +`motion.holdToBuy`/`counterTick`; new **§2.3 Store**
 composition + full state matrix, old §2.3 → §2.4; header/source-mockups/changelog) · README rows
 (catalog gains its missing row; store-states row marked formalized). **Store track closed.**
+
+### Ruling #7 — the spec batch, audit, tracker & workflow rules (2026-06-12)
+
+> All right, I'll go ahead and have you do that work. Additionally, I'd like you to create or add to
+> the cloud.MD a couple of things, including:
+> - During design, I only ever need HTML files. I don't need PNGs.
+> - After a draft pass, I'd like to be given a table that captures all the pages of the application,
+>   their current state. [...] Each page should also give an indication of the version it's on and if
+>   a states file has been created for it. [...] This can be stored in a file so it's easy to update
+>   and surface for me.
+> - How do you think we should do that document?
+> - We should also capture whether the API contract is fully up to date with all the functionality
+>   captured on that page.
+
+**Disposition:** executed as **decision 0017** (product-spec 0.17 · api-contract 0.15 ·
+ui-design-requirements 0.12 · OQ-041..044/046/047 resolved, OQ-045 open) + the **cross-doc audit**
+(findings fixed: catalog missing F-09 · api-contract missing the cosmetic **acquire** endpoint ·
+§3.4's stale category list incl. missing screen themes · OQ-001 supersession note · SYS-04
+daily-bonus wording; Collection/Profile trails verified clean) + **`docs/design/SCREEN-STATUS.md`**
+(the per-screen dashboard: state/queue/version/states-board/API columns, UP-NEXT queue, update
+protocol) + **CLAUDE.md design-phase rules** (HTML-only deliverables — no PNGs; update the tracker
+after every pass). All `_gate-*.png` artifacts deleted per the new rule.
