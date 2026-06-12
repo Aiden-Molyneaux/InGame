@@ -54,6 +54,10 @@
   contributor first-credit (CAT-05) · adopter-side designer credit (ECON-05) · mid-edit
   **hold-to-preview** (CARD-15). Design-spec patterns owed across stages 1–3 of the 0014 arc.
   (from the engagement review, 2026-06-11) [presentation]
+- OQ-041: **Restore-purchases semantics for consumable packs** — currency packs are IAP *consumables*;
+  what exactly does "Restore purchases" re-validate/re-grant (account entitlement re-sync vs.
+  unfinished-transaction recovery — it must not double-grant)? (ECON-06/07; surfaced designing the
+  Store purchase states, store track 2026-06-12) [behavior]
 
 ## Resolved
 - OQ-001 → **Multiple device models.** A user can own several device models (via entitlements/store)

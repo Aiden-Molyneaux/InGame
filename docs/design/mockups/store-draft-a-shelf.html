@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InGame · Store — Draft A "Arcade Shelf" · S1–S8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" /></noscript>
+<style>
+  /* ── tokens: verbatim from collection-states.html (Teal shell · Midnight theme) ── */
+  :root {
+    --plastic: #2bb6b0; --plastic-hi: #3ec9c2; --plastic-lo: #1f9a94; --silk: #0d524e;
+    --accent: #ff3d77; --gold: #ffd23f; --cream: #f5f1e4; --navy: #1d2a4a;
+    --bezel: #14122a; --alert: #e3414e;
+    --pk: 'Chakra Petch', sans-serif; --shell: 'Paytone One', sans-serif;
+    --scr-bg: #232045; --scr-well: #2c2950; --scr-tools: #1a1733; --scr-accent: #ff9f43;
+    --scr-accent-ink: #2a1430; --scr-head: #f5f1e4; --scr-text: #ffffff; --scr-dim: #9b97c0;
+    --scr-soft: #c9c5e6; --scr-panel: rgba(255,255,255,.065); --scr-hairline: rgba(255,255,255,.08);
+    --scr-grip: #565178; --scr-chip: #f5f1e4; --scr-head-shadow: rgba(0,0,0,.45);
+    --scr-btn: #ffb38a; --scr-btn-ink: #2a1430;
+    --shell-ink: #08433f; --screw-hi: #2aa39d; --screw-lo: #137671; --pip-off: #117672;
+  }
+  html, body { margin: 0; min-height: 100%; background: #efece6; font-family: var(--pk); }
+  .canvas { max-width: 1348px; margin: 0 auto; padding: 40px 24px 60px; }
+  .canvas-head h1 { font: 700 17px/1.2 var(--pk); letter-spacing: 2.5px; color: #2a2633; margin: 0 0 6px; text-transform: uppercase; }
+  .canvas-head p { font: 500 12.5px/1.5 var(--pk); color: #79748a; margin: 0 0 32px; max-width: 640px; }
+  .stage { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+  .take { width: 404px; }
+  .artboard-label { font: 700 11px/1 var(--pk); letter-spacing: 1.5px; color: #8d889c; margin: 0 0 10px 2px; text-transform: uppercase; }
+  .caption { margin-top: 14px; background: #fff; border-radius: 12px; padding: 13px 15px; box-shadow: 0 2px 8px rgba(42,38,51,.08); }
+  .caption h3 { margin: 0 0 5px; font: 700 12.5px var(--pk); letter-spacing: .8px; color: #2a2633; text-transform: uppercase; }
+  .caption h3 em { font-style: normal; color: var(--accent); }
+  .caption p { margin: 0 0 4px; font: 500 11.8px/1.5 var(--pk); color: #5d5870; }
+  .caption p b { color: #2a2633; }
+  .stage-label { font: 700 13px/1 var(--pk); letter-spacing: 2px; color: #2a2633; text-transform: uppercase; margin: 36px 2px 14px; }
+  .stage-label small { display: block; margin-top: 5px; font: 500 11px/1.4 var(--pk); letter-spacing: .3px; color: #79748a; text-transform: none; }
+
+  /* ── device shell (physical — unchanged) ────────────────── */
+  .device { position: relative; width: 404px; height: 884px; border-radius: 30px; overflow: hidden;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.4), inset 0 -4px 0 rgba(0,0,0,.18), 0 18px 40px color-mix(in srgb, var(--shell-ink) 28%, transparent);
+    display: flex; flex-direction: column; padding: 0 14px; box-sizing: border-box; }
+  .screw { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--screw-hi), var(--screw-lo) 75%);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.25); }
+  .screw::after { content: ""; position: absolute; left: 1.5px; right: 1.5px; top: 3.5px; height: 1.5px; background: color-mix(in srgb, var(--shell-ink) 70%, transparent); border-radius: 1px; }
+  .screw.tl { top: 10px; left: 12px; } .screw.tr { top: 10px; right: 12px; }
+  .screw.bl { bottom: 10px; left: 12px; } .screw.br { bottom: 10px; right: 12px; }
+  .top-band { height: 64px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 12px 0; position: relative; }
+  .power { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+  .power .led { width: 9px; height: 9px; border-radius: 50%; background: #ff5a4e; box-shadow: 0 0 7px 2px rgba(255,90,78,.65), inset 0 -1px 1px rgba(0,0,0,.3); }
+  .power .lbl { font: 400 9px var(--shell); letter-spacing: .5px; color: var(--silk); opacity: .75; }
+  .logo { position: absolute; left: 50%; transform: translateX(-50%); font: 400 21px var(--shell); letter-spacing: 7px; text-indent: 7px;
+    color: color-mix(in srgb, var(--shell-ink) 28%, transparent); text-shadow: 0 -1px 0 color-mix(in srgb, var(--shell-ink) 30%, transparent); }
+  .grille { display: flex; gap: 6px; }
+  .grille span { width: 5px; height: 23px; background: color-mix(in srgb, var(--shell-ink) 40%, transparent); border-radius: 2px; transform: skewX(-22deg); box-shadow: inset 0 1px 1px rgba(0,0,0,.3); }
+  .screen-bezel { flex: 1 1 auto; min-height: 0; background: var(--bezel); border-radius: 20px; padding: 9px; box-sizing: border-box; }
+  .nav-band { flex: 0 0 auto; height: 128px; display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 6px 0; }
+  .nav-item { display: flex; flex-direction: column; align-items: center; width: 64px; }
+  .nav-lbl { height: 16px; font: 400 11px var(--shell); letter-spacing: .5px; color: var(--silk); display: flex; align-items: center; }
+  .nav-lbl.big { font-size: 11px; }
+  .nav-btn { width: 54px; height: 54px; border-radius: 15px; background: var(--cream); border: none;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 1px 0 rgba(255,255,255,.85); }
+  .nav-btn.store { background: var(--gold); }
+  .nav-btn.collection { background: var(--accent); }
+  .nav-item.active .nav-btn { transform: translateY(3px); box-shadow: 0 1px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 2px 3px rgba(0,0,0,.18); }
+  .pip { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; background: var(--pip-off);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.25); }
+  .nav-item.active .pip { background: var(--accent); box-shadow: 0 0 9px 2.5px rgba(255,61,119,.85), inset 0 -1px 1px rgba(0,0,0,.25); }
+  .nav-band .nav-item:nth-child(2) .nav-lbl:first-child,
+  .nav-band .nav-item:nth-child(4) .nav-lbl:first-child { transform: translateY(-8px); }
+
+  /* ── shared screen structure ────────────────────────────── */
+  .screen { position: relative; height: 100%; border-radius: 13px; overflow: hidden; display: flex; flex-direction: column; }
+  .screen-head { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 12px; }
+  .scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 12px 14px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; border: none; width: fit-content; }
+  .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 11px 2px 7px; }
+  .sec h3 { margin: 0; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .sec a { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
+
+  /* ── the Game Card ──────────────────────────────────────── */
+  .gcard { position: relative; border-radius: 11px; box-sizing: border-box; flex: 0 0 auto; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
+  .gcard .art { position: absolute; inset: 7px; border-radius: 5px; overflow: hidden; }
+  .gcard .art svg { width: 100%; height: 100%; display: block; }
+  .gcard .plate { position: absolute; left: 11px; right: 11px; bottom: 3px; border-radius: 4px; padding: 5px 4px 4px;
+    text-align: center; font: 700 10px var(--pk); letter-spacing: .5px; text-transform: uppercase; z-index: 2; }
+  .gcard.hero-size { width: 138px; height: 193px; }
+  .gcard.fan-size { width: 84px; height: 117px; }
+  .gcard.fan-size .art { inset: 4px; }
+  .gcard.fan-size .plate { left: 5.5px; right: 5.5px; bottom: 1.5px; padding: 2.5px 1px 2px; font-size: 4.5px; letter-spacing: 0; }
+  .gcard.pick-size { width: 96px; height: 134px; }
+  .gcard.pick-size .art { inset: 4.5px; }
+  .gcard.pick-size .plate { left: 7px; right: 7px; bottom: 2px; padding: 3px 2px 2.5px; font-size: 6px; letter-spacing: .2px; }
+  .fr-destiny { background: linear-gradient(160deg, #e8bc52, #c08a2a); }
+  .pl-destiny { background: #f0cd6e; color: #3c2a09; }
+  .fr-marathon { background: linear-gradient(160deg, #64789f, #46587e); }
+  .pl-marathon { background: #3d4f78; color: #e8eefc; }
+  .fr-neutral { background: linear-gradient(160deg, #4a4677, #322e58); }
+  .pl-neutral { background: #d9d4ee; color: #2a2633; }
+
+  /* ════ S2 base — flat floating panels ════ */
+  .sk2 { background: var(--scr-bg); }
+  .sk2 .screen-head h2 { margin: 0; font: 700 21px/1 var(--pk); letter-spacing: 3px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); }
+  .sk2 .well { background: var(--scr-well); border-radius: 12px; }
+  .sk2 .npl { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-accent); }
+  .sk2 .hero-title { font: 700 21px/1.05 var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .sk2 .hero-sub { font: 600 11px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .sk2 .btn { background: var(--scr-btn); color: var(--scr-btn-ink); border-radius: 9px; padding: 9px 13px;
+    font: 700 11px var(--pk); letter-spacing: 1px; white-space: nowrap;
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--scr-btn) 45%, #000), inset 0 1px 0 rgba(255,255,255,.4); }
+  .sk2 .btn.secondary { background: var(--cream); color: var(--navy);
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .sk2 .btn.act { background: var(--scr-accent); color: var(--scr-accent-ink); box-shadow: inset 0 1px 0 rgba(255,255,255,.45);
+    filter: drop-shadow(0 3px 0 color-mix(in srgb, var(--scr-accent) 45%, #000)); }
+  .sk2 .btn.buy { background: var(--gold); color: #3c2a09;
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--gold) 45%, #000), inset 0 1px 0 rgba(255,255,255,.5); }
+  .sk2 .btn.disabled { opacity: .4; box-shadow: 0 1px 0 color-mix(in srgb, var(--scr-btn) 45%, #000); }
+  .sk2 .chip { position: relative; background: var(--scr-chip); border-radius: 7px; padding: 6px 8px;
+    font: 600 11px var(--pk); letter-spacing: .5px; color: var(--navy);
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .sk2 .chip b { color: var(--navy); font-weight: 700; }
+  .tert { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
+  .tert.dim { color: var(--scr-dim); }
+  .hint { margin: 8px 1px 0; font: 600 9px/1.6 var(--pk); letter-spacing: .5px; color: var(--scr-dim); text-align: center; }
+  .hint b { color: var(--scr-soft); }
+
+  /* ════ C5 · HYBRID — square chrome · stepped-diagonal cards ════ */
+  .c5 .well, .c5 .chip, .c5 .btn { border-radius: 0; }
+  .c5 .well { border: 1px solid var(--scr-hairline); }
+  .c5 .btn.act { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+      100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
+      calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
+  .c5 .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
+    clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
+      100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
+      calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
+  .c5 .gcard .art { border-radius: 0;
+    clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+      100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .c5 .gcard .plate { border-radius: 0;
+    clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  .c5 .gcard.fan-size, .c5 .gcard.pick-size { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+      100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .c5 .gcard.fan-size .art, .c5 .gcard.pick-size .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  .c5 .gcard.fan-size .plate, .c5 .gcard.pick-size .plate { clip-path: polygon(0 1.5px, 1.5px 1.5px, 1.5px 0, 100% 0,
+      100% calc(100% - 1.5px), calc(100% - 1.5px) calc(100% - 1.5px), calc(100% - 1.5px) 100%, 0 100%); }
+
+  /* ════ Store-shared components (locked names — FORM is draft A's) ════ */
+  /* CurrencyCounter — gold header keycap, tappable → Wallet (ECON-07, §1.5) */
+  .ccount { display: inline-flex; align-items: center; gap: 4px; background: var(--gold); color: #3c2a09;
+    border: none; padding: 5px 9px; font: 700 11px/1 var(--pk); letter-spacing: .5px;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--gold) 45%, #000), inset 0 1px 0 rgba(255,255,255,.5); }
+  .ccount .dia { font-size: 12px; }
+  .ccount.neg { background: var(--alert); color: #fff;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--alert) 45%, #000), inset 0 1px 0 rgba(255,255,255,.3); }
+  .tick-chip { display: inline-flex; align-items: center; background: rgba(255,210,63,.14); border: 1px solid color-mix(in srgb, var(--gold) 60%, transparent);
+    color: var(--gold); font: 700 9px/1 var(--pk); padding: 3px 5px; margin-right: 6px;
+    box-shadow: 0 0 9px rgba(255,210,63,.35); }
+  /* PriceChip — the gold ◈ chip (same grammar as Add Game's cost chip) */
+  .price-chip { display: inline-flex; align-items: center; gap: 2.5px; background: var(--gold); color: #3c2a09;
+    font: 700 9px/1 var(--pk); padding: 2.5px 5px; white-space: nowrap; }
+  .price-chip.big { font-size: 13px; padding: 4px 8px; gap: 4px; }
+  /* dollar chip — real money exists ONLY on currency packs (ECON-01) */
+  .usd-chip { display: inline-flex; align-items: center; background: var(--cream); color: var(--navy);
+    font: 700 10px/1 var(--pk); padding: 4px 7px;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  /* Owned / Locked / EarnedOnly tags */
+  .tag-owned { display: inline-flex; align-items: center; gap: 3px; background: var(--cream); color: var(--navy);
+    font: 700 8px/1 var(--pk); letter-spacing: .5px; padding: 2.5px 5px; }
+  .tag-locked { display: inline-flex; align-items: center; gap: 3px; background: rgba(13,11,30,.72); color: var(--scr-soft);
+    border: 1px solid var(--scr-hairline); font: 700 8px/1 var(--pk); letter-spacing: .5px; padding: 2.5px 5px; }
+  .tag-earned { display: inline-flex; align-items: center; gap: 4px; background: rgba(255,210,63,.1);
+    border: 1px solid color-mix(in srgb, var(--gold) 65%, transparent); color: var(--gold);
+    font: 700 8px/1 var(--pk); letter-spacing: 1px; padding: 3px 6px; }
+  /* item swatches — every cosmetic type previews as an object (cards stay full-face, F-01) */
+  .sw-theme { width: 56px; height: 56px; border: 1px solid var(--scr-hairline); padding: 5px; box-sizing: border-box;
+    display: flex; flex-direction: column; gap: 3px; }
+  .sw-theme i { display: block; height: 8px; }
+  .sw-vec { width: 72px; height: 72px; display: flex; align-items: center; justify-content: center;
+    background: var(--scr-panel); border: 1px solid var(--scr-hairline); }
+  .sw-font { width: 72px; height: 72px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    background: var(--scr-panel); border: 1px solid var(--scr-hairline); color: var(--scr-text); }
+  .sw-font .aa { font: 700 21px/1 var(--pk); }
+  .sw-font.f-pix .aa { letter-spacing: 2px; text-shadow: 2px 2px 0 rgba(255,61,119,.55); }
+  .sw-font.f-chr .aa { font-style: italic; letter-spacing: 1px; text-shadow: 0 0 7px rgba(88,224,216,.8); }
+  .sw-cur { width: 72px; height: 72px; display: flex; align-items: center; justify-content: center;
+    background: rgba(255,210,63,.08); border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent);
+    color: var(--gold); font: 700 26px/1 var(--pk); text-shadow: 0 0 11px rgba(255,210,63,.55); }
+  /* effect / finish overlays — ride a FULL card face */
+  .fx-ember::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: screen;
+    background: radial-gradient(circle at 50% 88%, rgba(255,122,40,.75) 0%, rgba(255,61,40,.3) 38%, transparent 62%),
+      radial-gradient(circle at 24% 64%, rgba(255,180,60,.5) 0%, transparent 18%),
+      radial-gradient(circle at 76% 56%, rgba(255,150,50,.45) 0%, transparent 14%),
+      radial-gradient(circle at 60% 38%, rgba(255,210,90,.35) 0%, transparent 10%); }
+  .fx-volt::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: screen;
+    background: linear-gradient(64deg, transparent 42%, rgba(88,224,255,.55) 47%, transparent 52%),
+      linear-gradient(118deg, transparent 60%, rgba(160,240,255,.4) 65%, transparent 70%); }
+  .fx-ghost::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(circle at 50% 42%, rgba(235,240,255,.34) 0%, transparent 58%); }
+  .fin-holo::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: screen;
+    background: linear-gradient(115deg, transparent 26%, rgba(255,90,90,.3) 36%, rgba(255,220,90,.32) 44%,
+      rgba(90,255,160,.3) 52%, rgba(90,170,255,.32) 60%, rgba(200,90,255,.3) 68%, transparent 78%); }
+  .fin-cinder::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: screen;
+    background: linear-gradient(115deg, transparent 30%, rgba(255,140,70,.42) 46%, rgba(255,80,40,.25) 54%, transparent 68%); }
+  .foil-band { position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.34) 42%, rgba(140,235,255,.28) 50%, transparent 64%); }
+  /* frame swatches — the frame IS the product: blank face, fancy border */
+  .fr-gilt { background: linear-gradient(160deg, #e8c364, #8a6418); }
+  .fr-gilt .art { box-shadow: inset 0 0 0 2px rgba(255,230,140,.65); }
+  .fr-scan { background: repeating-linear-gradient(0deg, #3a3654 0 3px, #232045 3px 6px); }
+  .fr-crown { background: linear-gradient(160deg, #f0d57a, #b8901f); }
+  /* MiniDevice (ported) + the CRT MINI model variant */
+  .mini-dev { flex: 0 0 auto; width: 42px; height: 92px; border-radius: 7px; padding: 3px; box-sizing: border-box;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%);
+    display: flex; flex-direction: column; box-shadow: inset 0 1px 0 rgba(255,255,255,.4), inset 0 -1px 0 rgba(0,0,0,.18); }
+  .mini-dev .mscr { flex: 1 1 auto; margin: 5px 2px 3px; background: var(--scr-bg); border: 2px solid var(--bezel); border-radius: 3px; }
+  .mini-dev .mnav { height: 9px; display: flex; gap: 2.5px; align-items: center; justify-content: center; }
+  .mini-dev .mnav i { width: 4px; height: 4px; border-radius: 1.5px; background: var(--cream); }
+  .mini-dev .mnav i.y { background: var(--gold); }
+  .mini-dev.crt { width: 74px; height: 92px; border-radius: 5px; position: relative; }
+  .mini-dev.crt::before, .mini-dev.crt::after { content: ""; position: absolute; top: -9px; width: 2.5px; height: 10px;
+    background: var(--plastic-lo); border-radius: 2px; }
+  .mini-dev.crt::before { left: 22px; transform: rotate(-24deg); }
+  .mini-dev.crt::after { right: 22px; transform: rotate(24deg); }
+  .mini-dev.crt .mscr { margin: 4px 3px 3px; border-radius: 6px; }
+  .mini-dev.big { width: 104px; height: 126px; }
+  .mini-dev.big .mnav { height: 12px; gap: 3.5px; }
+  .mini-dev.big .mnav i { width: 5.5px; height: 5.5px; }
+  /* BuyBar — the detail purchase row (conventional pole: square keycaps, no step) */
+  .buybar { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 11px 12px;
+    background: var(--scr-tools); border: 1px solid var(--scr-hairline); }
+  .buybar .bb-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .buybar .bb-have { font: 600 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .buybar .spacer { flex: 1 1 auto; }
+  /* PackTile — IAP currency tier (◈ amount + the only dollars in the app) */
+  .packs { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .pack { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 13px 8px 11px;
+    background: var(--scr-well); border: 1px solid color-mix(in srgb, var(--gold) 38%, transparent); }
+  .pack .amt { font: 700 21px/1 var(--pk); color: var(--gold); letter-spacing: 1px; text-shadow: 0 0 9px rgba(255,210,63,.3); }
+  .pack .plbl { font: 700 8px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
+  .pack .flash { position: absolute; top: -7px; right: 7px; background: var(--gold); color: #3c2a09;
+    font: 700 8px/1 var(--pk); letter-spacing: .5px; padding: 2.5px 5px; }
+  .pack.mini { padding: 9px 6px 8px; gap: 4px; }
+  .pack.mini .amt { font-size: 15px; }
+  /* LedgerRow — wallet history on the till receipt */
+  .receipt { background: var(--cream); color: var(--navy); padding: 11px 12px 9px; position: relative; }
+  .receipt::after { content: ""; position: absolute; left: 0; right: 0; bottom: -5px; height: 5px;
+    background: linear-gradient(-45deg, transparent 33.33%, var(--cream) 33.33%, var(--cream) 66.66%, transparent 66.66%),
+      linear-gradient(45deg, transparent 33.33%, var(--cream) 33.33%, var(--cream) 66.66%, transparent 66.66%);
+    background-size: 9px 9px; background-position: 0 0; }
+  .receipt .r-head { font: 700 9px var(--pk); letter-spacing: 2px; color: #8a8270; margin-bottom: 7px; }
+  .led-row { display: flex; align-items: baseline; gap: 7px; padding: 5.5px 0; border-bottom: 1.5px dashed rgba(29,42,74,.18); }
+  .led-row:last-child { border-bottom: none; }
+  .led-row .sign { flex: 0 0 14px; font: 700 11px var(--pk); }
+  .led-row .what { font: 700 10px var(--pk); letter-spacing: .5px; min-width: 0; }
+  .led-row .when { margin-left: auto; font: 600 8px var(--pk); letter-spacing: .5px; color: #8a8270; white-space: nowrap; }
+  .led-row .amt { flex: 0 0 44px; text-align: right; font: 700 11px var(--pk); white-space: nowrap; }
+  .led-row.earn .sign, .led-row.earn .amt { color: #117662; }
+  .led-row.spend .sign, .led-row.spend .amt { color: var(--navy); }
+  .led-row.rev .sign, .led-row.rev .amt { color: var(--alert); }
+  .led-row.rev .what { color: var(--alert); }
+  /* Toast — §1.8 transient failure; draft A form: the service-bell strip under the header */
+  .toast { position: absolute; left: 10px; right: 10px; top: 54px; z-index: 6; display: flex; align-items: center; gap: 9px;
+    background: var(--scr-tools); border: 1px solid color-mix(in srgb, var(--scr-accent) 65%, transparent);
+    padding: 9px 11px; box-shadow: 0 6px 14px rgba(0,0,0,.45); }
+  .toast .bell { flex: 0 0 auto; color: var(--scr-accent); font: 700 14px/1 var(--pk); }
+  .toast .t-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .toast .t-t { font: 700 10px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .toast .t-s { font: 600 8.5px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .toast .btn { margin-left: auto; padding: 6px 8px; font-size: 9px; }
+
+  /* ════ Draft A — the shop interior ════ */
+  /* marquee — the lit DROPS display case (ECON-08) */
+  .marquee { position: relative; margin-top: 4px; background: linear-gradient(180deg, #141128, #1d1a38);
+    border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent); padding: 10px 12px 9px; overflow: hidden; }
+  .marquee::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent); box-shadow: 0 0 14px 3px rgba(255,210,63,.45); }
+  .marquee .mq-row { display: flex; align-items: center; gap: 12px; }
+  .marquee .mq-meta { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .marquee .mq-items { display: flex; gap: 10px; margin-left: auto; align-items: center; }
+  .countdown { display: inline-flex; align-items: center; gap: 4px; background: rgba(255,210,63,.12);
+    border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent); color: var(--gold);
+    font: 700 9px/1 var(--pk); letter-spacing: 1px; padding: 3.5px 6px; width: fit-content; }
+  /* shelf — a category section: items standing on a plank (ItemTile/A) */
+  .shelf { margin-top: 4px; }
+  .shf-items { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; align-items: end; padding: 0 4px; }
+  .shf-item { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+  .shf-item .price-chip, .shf-item .tag-owned, .shf-item .tag-locked { position: absolute; top: -5px; right: 2px; z-index: 3; }
+  .plank { height: 9px; margin-top: -2px; background: linear-gradient(180deg, #3d3963, #2c2950 55%, #211e40);
+    box-shadow: 0 2px 0 rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.14); }
+  .shf-names { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 3px 4px 0; }
+  .shf-names span { text-align: center; font: 700 8px/1.3 var(--pk); letter-spacing: .5px; color: var(--scr-soft); text-transform: uppercase; }
+  .shf-names span i { font: 600 7.5px var(--pk); letter-spacing: .5px; color: var(--scr-dim); font-style: normal; }
+  .shf-names span i::before { content: " · "; }
+  .shelf.tall .shf-names span i { display: block; letter-spacing: 1px; }
+  .shelf.tall .shf-names span i::before { content: none; }
+  /* aisle directory — the categories that didn't get a full shelf */
+  .aisles { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+  .aisle { display: flex; align-items: center; gap: 6px; padding: 5px 8px; background: var(--scr-panel);
+    border: 1px solid var(--scr-hairline); font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-soft); }
+  .aisle .n { margin-left: auto; font: 600 8.5px var(--pk); color: var(--scr-dim); letter-spacing: .5px; }
+  .aisle .gl { color: var(--scr-accent); font-size: 11px; }
+  /* the COSM-02 shop sign */
+  .free-sign { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 6px 10px;
+    background: var(--scr-panel); border: 1px dashed var(--scr-grip); font: 600 8.5px/1.45 var(--pk);
+    letter-spacing: .5px; color: var(--scr-dim); }
+  /* counter-inspection overlay — detail = the item lifted off the shelf onto the counter mat */
+  .scrim { position: absolute; inset: 0; z-index: 4; background: rgba(13,11,30,.62); }
+  .inspect { position: absolute; left: 9px; right: 9px; top: 50%; transform: translateY(-50%); z-index: 5;
+    background: var(--scr-tools); border: 1px solid var(--scr-hairline); padding: 12px; box-shadow: 0 14px 30px rgba(0,0,0,.55); }
+  .inspect .close { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; border: none;
+    background: var(--scr-chip); color: var(--navy); font: 700 11px/1 var(--pk);
+    display: inline-flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  /* PreviewStage — preview-on-YOUR-stuff (the counter mat) */
+  .pstage { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    padding: 14px 10px 12px; background: radial-gradient(circle at 50% 36%, rgba(255,210,63,.1) 0%, transparent 60%), var(--scr-well);
+    border: 1px solid var(--scr-hairline); }
+  .pstage .ps-lbl { font: 700 8px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .pstage .swap { display: inline-flex; align-items: center; gap: 5px; font: 600 9px var(--pk);
+    letter-spacing: .5px; color: var(--scr-accent); }
+  .it-titlerow { display: flex; align-items: center; gap: 8px; margin-top: 11px; }
+  .it-name { font: 700 15px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .it-type { font: 600 8.5px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
+  .short-strip { display: flex; align-items: center; gap: 8px; margin-top: 11px; padding: 8px 11px;
+    background: rgba(227,65,78,.1); border: 1px solid color-mix(in srgb, var(--alert) 55%, transparent);
+    font: 700 10px var(--pk); letter-spacing: 1px; color: #ff8a93; }
+  .ok-strip { display: flex; align-items: center; gap: 9px; margin-top: 0; padding: 9px 11px;
+    background: rgba(255,210,63,.09); border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent); }
+  .ok-strip .ok-ic { flex: 0 0 auto; color: var(--gold); font: 700 14px/1 var(--pk); }
+  .ok-strip .ok-tx { display: flex; flex-direction: column; gap: 2px; }
+  .ok-strip .ok-t { font: 700 10.5px var(--pk); letter-spacing: 1px; color: var(--gold); }
+  .ok-strip .ok-s { font: 600 8.5px/1.5 var(--pk); letter-spacing: .5px; color: var(--scr-soft); }
+  /* the till — wallet balance readout */
+  .till { display: flex; flex-direction: column; gap: 9px; padding: 13px 12px; background: var(--scr-well); border: 1px solid var(--scr-hairline); }
+  .till .t-lbl { font: 700 8px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .till .readout { display: flex; align-items: baseline; gap: 7px; padding: 10px 12px; background: #0e0c20;
+    border: 1px solid var(--scr-hairline); box-shadow: inset 0 2px 5px rgba(0,0,0,.5); }
+  .till .readout .bal { font: 700 21px/1 var(--pk); letter-spacing: 1px; color: var(--gold); text-shadow: 0 0 11px rgba(255,210,63,.45); }
+  .till .readout .unit { font: 700 11px var(--pk); color: var(--scr-dim); letter-spacing: 1.5px; }
+  .till .readout.neg .bal { color: var(--alert); text-shadow: 0 0 11px rgba(227,65,78,.5); }
+  .till .t-acts { display: flex; align-items: center; gap: 9px; }
+  /* earned-only — the glass display case (COSM-04 prestige) */
+  .case { position: relative; margin-top: 4px; padding: 13px 10px 12px;
+    background: linear-gradient(165deg, rgba(255,255,255,.045), rgba(255,255,255,.015)), #1d1a38;
+    border: 2px solid color-mix(in srgb, var(--gold) 60%, transparent); overflow: hidden; }
+  .case::after { content: ""; position: absolute; top: -40%; left: -22%; width: 38%; height: 190%;
+    background: linear-gradient(105deg, transparent, rgba(255,255,255,.07), transparent); transform: rotate(12deg); pointer-events: none; }
+  .case .case-row { display: flex; gap: 14px; justify-content: center; align-items: end; }
+  .case .case-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .case .ach-hint { font: 600 8px/1.4 var(--pk); letter-spacing: .5px; color: var(--scr-dim); text-align: center; }
+  /* half-panel — a screen fragment under the device (sub-states) */
+  .half-panel { margin-top: 14px; background: var(--scr-bg); border: 5px solid var(--bezel); border-radius: 8px; padding: 13px 14px; position: relative; }
+  .half-panel .hp-row { display: flex; gap: 13px; align-items: center; }
+  .half-panel .hp-meta { display: flex; flex-direction: column; gap: 6px; min-width: 0; align-items: flex-start; }
+  .half-panel .btn { padding: 7px 10px; font-size: 9px; }
+  .dimmed { opacity: .45; }
+</style>
+</head>
+<body>
+
+<!-- card art symbols (roster continuity: Destiny = your card; neutral = store sample face) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="g-dst" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2156"/><stop offset="1" stop-color="#14102e"/></linearGradient>
+    <linearGradient id="g-dst2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#58e0d8"/><stop offset="1" stop-color="#2ba8a0"/></linearGradient>
+    <linearGradient id="g-mar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a4a70"/><stop offset="1" stop-color="#1f2840"/></linearGradient>
+    <clipPath id="c-mar"><circle cx="40" cy="30" r="14"/></clipPath>
+    <symbol id="art-destiny" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-dst)"/>
+      <circle cx="31.5" cy="38" r="17" fill="none" stroke="#d9a93f" stroke-width="1.2" opacity=".5"/>
+      <path d="M31.5 16 L48 38 L31.5 60 L15 38 Z" fill="url(#g-dst2)" stroke="#e8c364" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M31.5 24 L42.5 38 L31.5 52 L20.5 38 Z" fill="rgba(255,255,255,.18)"/>
+      <circle cx="31.5" cy="38" r="4" fill="#f4f9f8"/>
+      <circle cx="31.5" cy="13" r="1.8" fill="#e8c364"/><circle cx="51" cy="38" r="1.8" fill="#e8c364"/>
+      <circle cx="31.5" cy="63" r="1.8" fill="#e8c364"/><circle cx="12" cy="38" r="1.8" fill="#e8c364"/>
+    </symbol>
+    <symbol id="art-marathon" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-mar)"/>
+      <circle cx="40" cy="30" r="14" fill="#dfe6f0"/>
+      <g clip-path="url(#c-mar)"><rect x="24" y="25" width="32" height="7" fill="#35cfe0"/><rect x="24" y="31" width="32" height="2.5" fill="#1f93a6"/></g>
+      <ellipse cx="40" cy="30" rx="21" ry="6.5" fill="none" stroke="#8fa3c8" stroke-width="1" opacity=".7" transform="rotate(-18 40 30)"/>
+      <path d="M14 56 L23 60.5 L14 65 Z" fill="#ff5a4e"/>
+      <rect x="4" y="59.2" width="8" height="2.6" rx="1.3" fill="rgba(255,90,78,.45)"/>
+      <path d="M0 78 Q31.5 68 63 78 L63 88 L0 88 Z" fill="#2c3a5c"/>
+    </symbol>
+    <symbol id="art-neutral" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="#262243"/>
+      <path d="M31.5 26 L43 40 L31.5 54 L20 40 Z" fill="none" stroke="#565178" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="31.5" cy="40" r="2.5" fill="#565178"/>
+      <path d="M0 74 L63 70 L63 88 L0 88 Z" fill="rgba(0,0,0,.25)"/>
+    </symbol>
+    <symbol id="art-vecpack" viewBox="0 0 40 40">
+      <path d="M11 7 L14.5 13.5 L21.5 14.5 L16.2 19.5 L17.5 26.5 L11 23 L4.5 26.5 L5.8 19.5 L.5 14.5 L7.5 13.5 Z" fill="#ffd23f" transform="translate(4 1)"/>
+      <path d="M28 22 L34 22 L30 30 L36 30 L26 40 L29 32 L24 32 Z" fill="#58e0d8" transform="translate(-1 -3)"/>
+      <circle cx="31" cy="11" r="5" fill="none" stroke="#ff3d77" stroke-width="2.5"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="canvas">
+  <div class="canvas-head">
+    <h1>Store &mdash; Draft A &ldquo;Arcade Shelf&rdquo; &middot; S1&ndash;S8</h1>
+    <p>The Store as a <b>stocked shop interior</b>: categories are physical <b>shelf planks</b> the aisle scrolls past,
+    the seasonal drop is a <b>lit marquee case</b>, tapping an item <b>lifts it onto the counter</b> (an inspection
+    overlay &mdash; browse never navigates away), and the Wallet is the shop <b>till</b> with a paper-receipt ledger.
+    Bold in presentation, conventional at checkout (design-req &sect;1.1). All prices/values are
+    <b>illustrative &mdash; OQ-002/OQ-011 open</b>. Lifecycle states (skeleton &middot; load-error &middot; offline)
+    are deferred to the converged board. Standalone file &mdash; built-in SVG art.</p>
+  </div>
+
+  <div class="stage-label">Browse &amp; detail <small>S1 shelves + marquee &middot; S2 finish on YOUR card &middot; S3 device model on YOUR device</small></div>
+  <div class="stage">
+
+    <!-- ═══ S1 · Browse — the shop floor ═══ -->
+    <div class="take">
+      <div class="artboard-label">S1 &middot; Browse &mdash; marquee drop + category shelves</div>
+      <div class="device" data-screen-label="Store A · S1 — Browse">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head" style="padding:12px 16px 8px;"><h2>STORE</h2><button class="ccount"><span class="dia">&#9672;</span>5</button></div>
+            <div class="scroll" style="padding-bottom:6px;">
+              <div class="marquee">
+                <div class="mq-row">
+                  <div class="mq-meta">
+                    <span class="npl">SEASONAL DROP</span>
+                    <span class="hero-title" style="font-size:15px;">EMBER SERIES</span>
+                    <span class="countdown">&#9202; ENDS IN 4D 12H</span>
+                    <a class="tert" href="#" style="font-size:9px; margin-top:2px;">SEE THE DROP &rsaquo;</a>
+                  </div>
+                  <div class="mq-items">
+                    <div class="gcard fan-size fr-neutral fx-ember" style="width:72px; height:100px;"><span class="price-chip">8 &#9672;</span>
+                      <div class="art"><svg><use href="#art-neutral"/></svg></div>
+                      <div class="plate pl-neutral" style="font-size:4px;">Ember</div></div>
+                    <div class="gcard fan-size fr-neutral fin-cinder" style="width:72px; height:100px;"><span class="price-chip">8 &#9672;</span>
+                      <div class="art"><svg><use href="#art-neutral"/></svg></div>
+                      <div class="plate pl-neutral" style="font-size:4px;">Cinder</div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="sec"><h3>EFFECTS</h3><a href="#">ALL 14 &rsaquo;</a></div>
+              <div class="shelf">
+                <div class="shf-items">
+                  <div class="shf-item"><span class="price-chip">8 &#9672;</span>
+                    <div class="gcard fan-size fr-neutral fx-ember" style="width:72px; height:100px;"><div class="art"><svg><use href="#art-neutral"/></svg></div><div class="plate pl-neutral" style="font-size:4px;">Sample</div></div></div>
+                  <div class="shf-item"><span class="price-chip">6 &#9672;</span>
+                    <div class="gcard fan-size fr-neutral fx-volt" style="width:72px; height:100px;"><div class="art"><svg><use href="#art-neutral"/></svg></div><div class="plate pl-neutral" style="font-size:4px;">Sample</div></div></div>
+                  <div class="shf-item"><span class="price-chip">10 &#9672;</span>
+                    <div class="gcard fan-size fr-neutral fx-ghost" style="width:72px; height:100px;"><div class="art"><svg><use href="#art-neutral"/></svg></div><div class="plate pl-neutral" style="font-size:4px;">Sample</div></div></div>
+                </div>
+                <div class="plank"></div>
+                <div class="shf-names">
+                  <span>EMBER<i>EFFECT</i></span><span>VOLT<i>EFFECT</i></span><span>GHOST<i>EFFECT</i></span>
+                </div>
+              </div>
+              <div class="sec"><h3>VECTOR PACKS &middot; FONTS &middot; SCREEN THEMES</h3><a href="#">MORE &rsaquo;</a></div>
+              <div class="shelf">
+                <div class="shf-items">
+                  <div class="shf-item"><span class="price-chip">4 &#9672;</span>
+                    <div class="sw-vec"><svg width="40" height="40" viewBox="0 0 40 40"><use href="#art-vecpack"/></svg></div></div>
+                  <div class="shf-item"><span class="price-chip">2 &#9672;</span>
+                    <div class="sw-font f-pix"><span class="aa">Aa</span></div></div>
+                  <div class="shf-item"><span class="price-chip">4 &#9672;</span>
+                    <div class="sw-theme" style="background:#0f2e2b;"><i style="background:#173d38;"></i><i style="background:#ffd23f;"></i><i style="background:#0a1f1d;"></i></div></div>
+                </div>
+                <div class="plank"></div>
+                <div class="shf-names">
+                  <span>ARCADE GLYPHS<i>VECTOR PACK</i></span><span>PIXELLA<i>FONT</i></span><span>DEEP SEA<i>SCREEN THEME</i></span>
+                </div>
+              </div>
+              <div class="sec"><h3>ALL AISLES</h3></div>
+              <div class="aisles">
+                <div class="aisle"><span class="gl">&#9670;</span>VECTOR PACKS<span class="n">12 &rsaquo;</span></div>
+                <div class="aisle"><span class="gl">&#10022;</span>EFFECTS<span class="n">14 &rsaquo;</span></div>
+                <div class="aisle"><span class="gl">&#9686;</span>FINISHES<span class="n">9 &rsaquo;</span></div>
+                <div class="aisle"><span class="gl">&#9633;</span>FRAMES<span class="n">11 &rsaquo;</span></div>
+                <div class="aisle"><span class="gl">A</span>FONTS<span class="n">8 &rsaquo;</span></div>
+                <div class="aisle"><span class="gl">&#9646;</span>DEVICES + SKINS<span class="n">7 &rsaquo;</span></div>
+                <div class="aisle"><span class="gl">&#9640;</span>SCREEN THEMES<span class="n">6 &rsaquo;</span></div>
+                <div class="aisle"><span class="gl">&#9672;</span>CURRENCY<span class="n">4 &rsaquo;</span></div>
+              </div>
+              <div class="free-sign">&#9655; THE FREE BASELINE ISN'T SOLD HERE &mdash; baseline shapes, fonts &amp; themes live in the editors (COSM-02).</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>S1 &mdash; Browse <em>(the shop floor)</em></h3>
+        <p><b>The Store is an interior:</b> the <b>marquee case</b> holds the seasonal drop (ECON-08, P2 &mdash; one
+        sample drop with a countdown), then <b>category shelves</b> &mdash; items literally stand on planks, each
+        wearing its gold <b>PriceChip</b> (the Add Game cost-chip grammar, ECON-01: cosmetics priced in &#9672; only).
+        <b>ItemTile/A</b> = object on plank + name silkscreened on the shelf edge. Effect/finish samples ride
+        <b>full neutral card faces</b> (F-01), never crops.</p>
+        <p>The full COSM-01 taxonomy is walkable: two stocked shelves + the <b>ALL AISLES</b> directory (vector
+        packs &middot; effects &middot; finishes &middot; frames &middot; fonts &middot; devices+skins &middot; screen
+        themes &middot; currency). The dashed <b>shop sign</b> states COSM-02: the free baseline lives in the editors,
+        not here. <b>CurrencyCounter</b> (gold keycap, 5 &#9672;) is persistent and taps through to the Wallet
+        (ECON-07). Store nav keycap: permanently gold, pressed + lit pip. <i>Prices illustrative (OQ-002/OQ-011);
+        skeleton/load-error/offline deferred to converge.</i></p>
+      </div>
+    </div>
+
+    <!-- ═══ S2 · Item detail — finish on YOUR card ═══ -->
+    <div class="take">
+      <div class="artboard-label">S2 &middot; Item detail &mdash; HOLO finish on YOUR card</div>
+      <div class="device" data-screen-label="Store A · S2 — Detail (finish)">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>STORE</h2><button class="ccount"><span class="dia">&#9672;</span>5</button></div>
+            <div class="scroll dimmed">
+              <div class="marquee">
+                <div class="mq-row">
+                  <div class="mq-meta">
+                    <span class="npl">SEASONAL DROP</span>
+                    <span class="hero-title" style="font-size:15px;">EMBER SERIES</span>
+                    <span class="countdown">&#9202; ENDS IN 4D 12H</span>
+                  </div>
+                </div>
+              </div>
+              <div class="sec"><h3>FINISHES</h3></div>
+              <div class="shelf">
+                <div class="shf-items">
+                  <div class="shf-item"><div class="gcard fan-size fr-neutral fin-holo"><div class="art"><svg><use href="#art-neutral"/></svg></div><div class="plate pl-neutral">Sample</div></div></div>
+                  <div class="shf-item"><div class="gcard fan-size fr-neutral"><span class="foil-band"></span><div class="art"><svg><use href="#art-neutral"/></svg></div><div class="plate pl-neutral">Sample</div></div></div>
+                  <div class="shf-item"><div class="gcard fan-size fr-neutral fin-cinder"><div class="art"><svg><use href="#art-neutral"/></svg></div><div class="plate pl-neutral">Sample</div></div></div>
+                </div>
+                <div class="plank"></div>
+              </div>
+            </div>
+            <div class="scrim"></div>
+            <div class="inspect">
+              <button class="close">&#10005;</button>
+              <span class="npl">ON THE COUNTER</span>
+              <div class="pstage" style="margin-top:8px;">
+                <span class="ps-lbl">PREVIEWED ON YOUR CARD</span>
+                <div class="gcard hero-size fr-destiny fin-holo">
+                  <div class="art"><svg><use href="#art-destiny"/></svg></div>
+                  <div class="plate pl-destiny">Destiny</div>
+                </div>
+                <span class="swap">&#8644; TRY ANOTHER OF YOUR CARDS</span>
+              </div>
+              <div class="it-titlerow">
+                <span class="it-name">HOLO</span>
+                <span class="it-type">FINISH &middot; CATALOG</span>
+                <span class="price-chip big" style="margin-left:auto;">4 &#9672;</span>
+              </div>
+              <div class="buybar">
+                <div class="bb-meta"><span class="bb-have">YOU HAVE 5 &#9672;</span><span class="bb-have" style="color:var(--scr-grip);">SPENDS INSTANTLY &mdash; NO REAL MONEY</span></div>
+                <div class="spacer"></div>
+                <button class="btn buy">BUY &middot; 4 &#9672;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>S2 &mdash; Item detail <em>(the counter inspection)</em></h3>
+        <p><b>Tap an item and it lifts off the shelf onto the counter</b> &mdash; an overlay, so browsing never
+        navigates away. <b>PreviewStage</b> = the counter mat: the HOLO finish rendered live on <b>your own
+        Destiny card</b> (&sect;4.11 &mdash; full face, F-01), with <b>&#8644; try another of your cards</b>.
+        Title row: name &middot; type &middot; the large <b>PriceChip</b>.</p>
+        <p><b>BuyBar</b> = the conventional pole (&sect;1.1): square gold <b>BUY keycap</b> (gold = value marker;
+        the step corner stays reserved for card-creating actions, F-02), plus the plain-language facts &mdash;
+        your balance, and that cosmetics <b>spend &#9672; instantly, never dollars</b> (ECON-01). Affordable here:
+        5 &#9672; &ge; 4 &#9672;. The &#10005; keycap drops the item back on its shelf.</p>
+      </div>
+    </div>
+
+    <!-- ═══ S3 · Item detail — device model on YOUR device ═══ -->
+    <div class="take">
+      <div class="artboard-label">S3 &middot; Item detail &mdash; CRT MINI on YOUR device</div>
+      <div class="device" data-screen-label="Store A · S3 — Detail (device model)">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>STORE</h2><button class="ccount"><span class="dia">&#9672;</span>27</button></div>
+            <div class="scroll dimmed">
+              <div class="sec"><h3>DEVICES + SKINS</h3></div>
+              <div class="shelf">
+                <div class="shf-items">
+                  <div class="shf-item"><div class="mini-dev"><div class="mscr"></div><div class="mnav"><i class="y"></i><i></i><i></i><i></i><i></i></div></div></div>
+                  <div class="shf-item"><div class="mini-dev crt"><div class="mscr"></div><div class="mnav"><i class="y"></i><i></i><i></i><i></i><i></i></div></div></div>
+                  <div class="shf-item"><div class="mini-dev" style="--plastic:#3a3a42; --plastic-hi:#4a4a54; --plastic-lo:#2c2c33;"><div class="mscr"></div><div class="mnav"><i class="y"></i><i></i><i></i><i></i><i></i></div></div></div>
+                </div>
+                <div class="plank"></div>
+                <div class="shf-names"><span>POCKET<i>OWNED</i></span><span>CRT MINI<i>MODEL</i></span><span>SLATE<i>MODEL</i></span></div>
+              </div>
+            </div>
+            <div class="scrim"></div>
+            <div class="inspect">
+              <button class="close">&#10005;</button>
+              <span class="npl">ON THE COUNTER</span>
+              <div class="pstage" style="margin-top:8px; padding-bottom:20px;">
+                <span class="ps-lbl">YOUR SHELL COLOUR &middot; YOUR SCREEN &middot; NEW BODY</span>
+                <div style="display:flex; align-items:center; gap:26px; padding:24px 0 10px;">
+                  <div style="display:flex; flex-direction:column; align-items:center; gap:7px;">
+                    <div class="mini-dev"><div class="mscr"></div><div class="mnav"><i class="y"></i><i></i><i></i><i></i><i></i></div></div>
+                    <span class="ps-lbl">NOW</span>
+                  </div>
+                  <span style="color:var(--scr-accent); font:700 15px var(--pk);">&#10142;</span>
+                  <div style="display:flex; flex-direction:column; align-items:center; gap:14px;">
+                    <div class="mini-dev crt big"><div class="mscr"></div><div class="mnav"><i class="y"></i><i></i><i></i><i></i><i></i></div></div>
+                    <span class="ps-lbl" style="color:var(--gold);">CRT MINI</span>
+                  </div>
+                </div>
+                <span class="swap">YOUR TEAL + STICKERS RIDE ALONG &middot; SWITCH BACK ANY TIME</span>
+              </div>
+              <div class="it-titlerow">
+                <span class="it-name">CRT MINI</span>
+                <span class="it-type">DEVICE MODEL</span>
+                <span class="price-chip big" style="margin-left:auto;">16 &#9672;</span>
+              </div>
+              <div class="buybar">
+                <div class="bb-meta"><span class="bb-have">YOU HAVE 27 &#9672;</span><span class="bb-have" style="color:var(--scr-grip);">OWN MANY MODELS &mdash; SWITCH IN THE DEVICE EDITOR</span></div>
+                <div class="spacer"></div>
+                <button class="btn buy">BUY &middot; 16 &#9672;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>S3 &mdash; Item detail <em>(device model, previewed on YOUR device)</em></h3>
+        <p><b>PreviewStage for hardware:</b> a before&nbsp;&#10142;&nbsp;after pair &mdash; your current Pocket model
+        beside the <b>CRT MINI wearing your own teal shell + screen theme</b> (&sect;4.11's "preview on your stuff",
+        scoped to what you already own; DEV-02 lets you own several models and switch in the Device editor &mdash;
+        the BuyBar says so in plain words). The devices shelf behind mixes <b>models and skins</b> (COSM-01), with
+        your owned Pocket left on the shelf.</p>
+        <p>Balance is 27 &#9672; here &mdash; this panel sits <b>after</b> the S5/S6 top-up in the session's
+        timeline, so the buy is comfortably affordable. <i>16 &#9672; is an illustrative model price
+        (OQ-011: bands 12&ndash;20 &#9672;).</i></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-label">The money path <small>S4 short-by-3 bridge &middot; S5 the currency till &middot; S6 success / failure toast / restore</small></div>
+  <div class="stage">
+
+    <!-- ═══ S4 · Can't afford → bridge ═══ -->
+    <div class="take">
+      <div class="artboard-label">S4 &middot; Can't afford &mdash; the buy-currency bridge</div>
+      <div class="device" data-screen-label="Store A · S4 — Bridge">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>STORE</h2><button class="ccount"><span class="dia">&#9672;</span>5</button></div>
+            <div class="scroll dimmed">
+              <div class="marquee">
+                <div class="mq-row">
+                  <div class="mq-meta">
+                    <span class="npl">SEASONAL DROP</span>
+                    <span class="hero-title" style="font-size:15px;">EMBER SERIES</span>
+                    <span class="countdown">&#9202; ENDS IN 4D 12H</span>
+                  </div>
+                </div>
+              </div>
+              <div class="sec"><h3>EFFECTS</h3></div>
+              <div class="shelf">
+                <div class="shf-items">
+                  <div class="shf-item"><div class="gcard fan-size fr-neutral fx-ember"><div class="art"><svg><use href="#art-neutral"/></svg></div><div class="plate pl-neutral">Sample</div></div></div>
+                  <div class="shf-item"><div class="gcard fan-size fr-neutral fx-volt"><div class="art"><svg><use href="#art-neutral"/></svg></div><div class="plate pl-neutral">Sample</div></div></div>
+                  <div class="shf-item"><div class="gcard fan-size fr-neutral fx-ghost"><div class="art"><svg><use href="#art-neutral"/></svg></div><div class="plate pl-neutral">Sample</div></div></div>
+                </div>
+                <div class="plank"></div>
+              </div>
+            </div>
+            <div class="scrim"></div>
+            <div class="inspect">
+              <button class="close">&#10005;</button>
+              <span class="npl">ON THE COUNTER</span>
+              <div class="pstage" style="margin-top:8px;">
+                <span class="ps-lbl">PREVIEWED ON YOUR CARD</span>
+                <div class="gcard hero-size fr-destiny fx-ember">
+                  <div class="art"><svg><use href="#art-destiny"/></svg></div>
+                  <div class="plate pl-destiny">Destiny</div>
+                </div>
+              </div>
+              <div class="it-titlerow">
+                <span class="it-name">EMBER</span>
+                <span class="it-type">EFFECT &middot; EMBER SERIES DROP</span>
+                <span class="price-chip big" style="margin-left:auto;">8 &#9672;</span>
+              </div>
+              <div class="short-strip">&#9888; SHORT 3 &#9672; &mdash; YOU HAVE 5</div>
+              <div class="sec"><h3>TOP UP AT THE COUNTER</h3><a href="#">ALL PACKS &rsaquo;</a></div>
+              <div class="packs">
+                <div class="pack mini"><span class="flash">COVERS IT</span><span class="amt">10 &#9672;</span><span class="plbl">CURRENCY PACK</span><button class="usd-chip">$1.99</button></div>
+                <div class="pack mini"><span class="amt">30 &#9672;</span><span class="plbl">CURRENCY PACK</span><button class="usd-chip">$4.99</button></div>
+              </div>
+              <div class="buybar" style="margin-top:9px;">
+                <div class="bb-meta"><span class="bb-have">PACKS ARE THE ONLY REAL-MONEY ITEM</span></div>
+                <div class="spacer"></div>
+                <button class="btn buy disabled">BUY &middot; 8 &#9672;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>S4 &mdash; Can't afford <em>(the bridge, at the point of intent)</em></h3>
+        <p>EMBER costs 8 &#9672;; you hold 5. The inspection panel doesn't dead-end: BUY goes quiet (pressed-flat,
+        dimmed), a <b>SHORT 3 &#9672;</b> strip says exactly how short, and <b>TOP UP AT THE COUNTER</b> surfaces
+        the two smallest <b>PackTiles</b> right there (&sect;3.4/&sect;4.11) &mdash; the 10 &#9672; pack flagged
+        <b>COVERS IT</b>. Dollar chips appear <b>only</b> on packs (ECON-01: real money buys currency, never
+        cosmetics). ALL PACKS &rsaquo; jumps to the S5 till.</p>
+        <p><i>Bridge copy never shames; it states the gap and the way across. Prices illustrative
+        (OQ-002/OQ-011).</i></p>
+      </div>
+    </div>
+
+    <!-- ═══ S5 · Currency till ═══ -->
+    <div class="take">
+      <div class="artboard-label">S5 &middot; Currency packs &mdash; the till shelf</div>
+      <div class="device" data-screen-label="Store A · S5 — Currency packs">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>STORE</h2><button class="ccount"><span class="dia">&#9672;</span>5</button></div>
+            <div class="scroll">
+              <div class="sec"><h3>CURRENCY &mdash; THE TILL</h3><a href="#">WALLET &rsaquo;</a></div>
+              <div class="till">
+                <span class="t-lbl">YOUR BALANCE</span>
+                <div class="readout"><span class="bal">5 &#9672;</span><span class="unit">CUSTOMIZER CURRENCY</span></div>
+              </div>
+              <div class="sec"><h3>PACKS &mdash; REAL MONEY BUYS &#9672; ONLY</h3></div>
+              <div class="packs">
+                <div class="pack"><span class="flash">STARTER</span><span class="amt">10 &#9672;</span><span class="plbl">CURRENCY PACK</span><button class="usd-chip">$1.99</button></div>
+                <div class="pack"><span class="amt">30 &#9672;</span><span class="plbl">CURRENCY PACK</span><button class="usd-chip">$4.99</button></div>
+                <div class="pack"><span class="amt">65 &#9672;</span><span class="plbl">CURRENCY PACK</span><button class="usd-chip">$9.99</button></div>
+                <div class="pack"><span class="flash">BEST RATE</span><span class="amt">140 &#9672;</span><span class="plbl">CURRENCY PACK</span><button class="usd-chip">$19.99</button></div>
+              </div>
+              <div class="hint">A PACK OPENS YOUR PHONE'S PAYMENT SHEET &middot; THE GRANT LANDS AFTER RECEIPT CHECK (ECON-06)</div>
+              <div class="free-sign" style="margin-top:10px;">&#9655; EARN &#9672; FREE &mdash; +1 LOGIN BONUS &middot; MILESTONE GRANTS (ECON-02). PACKS ARE THE SHORTCUT, NOT THE GATE.</div>
+              <div style="display:flex; justify-content:center; margin-top:13px;"><a class="tert dim" href="#">&#8635; RESTORE PURCHASES</a></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>S5 &mdash; Currency packs <em>(the till shelf)</em></h3>
+        <p>The CURRENCY aisle is the only place dollars exist: four <b>PackTiles</b> &mdash; &#9672; amount big and
+        gold, the <b>dollar price on a cream keycap</b> (deliberately <i>not</i> gold: gold marks &#9672; value,
+        cream marks the IAP doorway). STARTER and BEST-RATE flashes carry the tier story. Tapping a dollar keycap
+        opens the <b>native payment sheet</b>; the grant lands after server receipt validation (ECON-06/RevenueCat),
+        and <b>&#8635; RESTORE PURCHASES</b> sits quiet at the bottom.</p>
+        <p>The dashed sign keeps the economy honest: <b>&#9672; is earnable free</b> (+1 login bonus, milestones,
+        ECON-02) &mdash; packs are a shortcut, not a paywall. <i>Tiers/prices illustrative (OQ-002/OQ-011).</i></p>
+      </div>
+    </div>
+
+    <!-- ═══ S6 · Purchase states ═══ -->
+    <div class="take">
+      <div class="artboard-label">S6 &middot; Purchase states &mdash; success / failure toast / restore</div>
+      <div class="device" data-screen-label="Store A · S6 — Purchase states">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>STORE</h2><span style="display:inline-flex; align-items:center;"><span class="tick-chip">+30</span><button class="ccount" style="box-shadow: 0 2px 0 color-mix(in srgb, var(--gold) 45%, #000), 0 0 13px rgba(255,210,63,.55), inset 0 1px 0 rgba(255,255,255,.5);"><span class="dia">&#9672;</span>35</button></span></div>
+            <div class="scroll">
+              <div class="ok-strip" style="margin-top:6px;">
+                <span class="ok-ic">&#10003;</span>
+                <div class="ok-tx">
+                  <span class="ok-t">PACK LANDED &mdash; +30 &#9672;</span>
+                  <span class="ok-s">RECEIPT VERIFIED &middot; THE COUNTER TICKED 5 &#10142; 35 &middot; LOGGED IN YOUR WALLET LEDGER</span>
+                </div>
+              </div>
+              <div class="sec"><h3>PACKS</h3></div>
+              <div class="packs">
+                <div class="pack"><span class="flash">STARTER</span><span class="amt">10 &#9672;</span><span class="plbl">CURRENCY PACK</span><button class="usd-chip">$1.99</button></div>
+                <div class="pack" style="border-color: color-mix(in srgb, var(--gold) 80%, transparent); box-shadow: 0 0 13px rgba(255,210,63,.25);"><span class="flash">&#10003; JUST BOUGHT</span><span class="amt">30 &#9672;</span><span class="plbl">CURRENCY PACK</span><button class="usd-chip">$4.99</button></div>
+                <div class="pack"><span class="amt">65 &#9672;</span><span class="plbl">CURRENCY PACK</span><button class="usd-chip">$9.99</button></div>
+                <div class="pack"><span class="flash">BEST RATE</span><span class="amt">140 &#9672;</span><span class="plbl">CURRENCY PACK</span><button class="usd-chip">$19.99</button></div>
+              </div>
+              <div class="hint">SUCCESS IS QUIET &mdash; THE TICKING COUNTER IS THE CELEBRATION. BIG RITUALS STAY RESERVED FOR CARDS (OQ-040).</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="half-panel sk2 c5">
+        <div class="toast" style="position:static; margin:0;">
+          <span class="bell">&#9888;</span>
+          <div class="t-tx">
+            <span class="t-t">COULDN'T REACH THE STORE</span>
+            <span class="t-s">NOTHING WAS CHARGED &mdash; YOUR &#9672; ARE SAFE</span>
+          </div>
+          <button class="btn act">RETRY</button>
+        </div>
+        <div class="hint" style="text-align:left; margin-top:9px;"><b>FAILURE &rarr; Toast</b> (&sect;1.8): the service-bell strip slides under the header &mdash; non-blocking, plain-language, RETRY in system orange (safe to repeat; F-02's non-card prominent action).</div>
+      </div>
+      <div class="half-panel sk2 c5">
+        <div class="hp-row">
+          <div class="hp-meta">
+            <span class="npl">RESTORE PURCHASES</span>
+            <span class="hero-sub">RECEIPTS RE-CHECKED WITH THE APP STORE &middot; ENTITLEMENTS RE-SYNCED TO THIS DEVICE</span>
+            <span class="hero-sub" style="color:var(--scr-soft);">&#10003; ALL CAUGHT UP &mdash; YOUR BALANCE &amp; ITEMS MATCH YOUR ACCOUNT</span>
+          </div>
+        </div>
+        <div class="hint" style="text-align:left; margin-top:8px;"><b>RESTORE</b> (ECON-06): a quiet confirmation, never a celebration &mdash; restore re-validates receipts and re-syncs account entitlements. <i>Exact re-grant semantics for consumable packs &rarr; flagged to open-questions.</i></div>
+      </div>
+      <div class="caption">
+        <h3>S6 &mdash; Purchase states <em>(success &middot; failure Toast &middot; restore)</em></h3>
+        <p><b>Success:</b> the IAP sheet closes and the shop answers in its own voice &mdash; a gold <b>+30 tick chip</b>
+        beside the glowing <b>CurrencyCounter</b> (5 &#10142; 35), a &#10003; strip naming the receipt check, the bought
+        pack stamped on its tile. Deliberately quiet (&sect;1.1 conventional commerce; the OQ-040 ritual stays with
+        cards).</p>
+        <p><b>Failure</b> proposes the catalog's missing <b>Toast</b>: a service-bell strip under the header &mdash;
+        what failed, the reassurance ("nothing charged"), and an orange <b>RETRY</b> keycap. <b>Restore</b> is the
+        third fragment: re-check receipts, re-sync entitlements, state "all caught up."</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-label">Wallet &amp; ownership <small>S7 the till + receipt ledger + the ECON-09 negative variant &middot; S8 owned / locked / earned-only</small></div>
+  <div class="stage">
+
+    <!-- ═══ S7 · Wallet ═══ -->
+    <div class="take">
+      <div class="artboard-label">S7 &middot; Wallet &mdash; till readout + receipt ledger</div>
+      <div class="device" data-screen-label="Store A · S7 — Wallet">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head" style="justify-content:flex-start;"><button class="close" style="position:static; width:28px; height:28px; margin-right:11px; border:none; background:var(--scr-chip); color:var(--navy); font:700 13px/1 var(--pk); display:inline-flex; align-items:center; justify-content:center; box-shadow:0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85);">&#9666;</button><h2>WALLET</h2></div>
+            <div class="scroll">
+              <div class="till">
+                <span class="t-lbl">YOUR BALANCE</span>
+                <div class="readout"><span class="bal">27 &#9672;</span><span class="unit">CUSTOMIZER CURRENCY</span></div>
+                <div class="t-acts">
+                  <button class="btn buy">BUY &#9672;</button>
+                  <span class="hint" style="margin:0; text-align:left;">ONE WALLET &middot; ADOPTIONS COST 1 &#9672; &middot; ASSETS COST MORE (ECON-01)</span>
+                </div>
+              </div>
+              <div class="sec"><h3>EVERY EARN &amp; SPEND &mdash; THE RECEIPT</h3></div>
+              <div class="receipt">
+                <div class="r-head">INGAME &middot; CUSTOMIZER LEDGER &middot; MAVERICK</div>
+                <div class="led-row spend"><span class="sign">&minus;</span><span class="what">EMBER &middot; EFFECT</span><span class="when">TODAY 14:12</span><span class="amt">&minus;8 &#9672;</span></div>
+                <div class="led-row earn"><span class="sign">+</span><span class="what">CURRENCY PACK &middot; 30</span><span class="when">TODAY 14:09</span><span class="amt">+30 &#9672;</span></div>
+                <div class="led-row spend"><span class="sign">&minus;</span><span class="what">ADOPTED &ldquo;DESTINY&rdquo; BY RIKO</span><span class="when">TUE 19:40</span><span class="amt">&minus;1 &#9672;</span></div>
+                <div class="led-row earn"><span class="sign">+</span><span class="what">LOGIN BONUS</span><span class="when">TUE 19:31</span><span class="amt">+1 &#9672;</span></div>
+                <div class="led-row earn"><span class="sign">+</span><span class="what">STARTING GRANT</span><span class="when">JUN 02</span><span class="amt">+5 &#9672;</span></div>
+              </div>
+              <div class="free-sign" style="margin-top:12px;">&#9655; &#9672; IS EARNABLE FREE &mdash; +1 EVERY DAILY LOGIN &middot; MILESTONES GRANT MORE (ECON-02).</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="half-panel sk2 c5">
+        <div class="till">
+          <span class="t-lbl">YOUR BALANCE</span>
+          <div class="readout neg"><span class="bal">&minus;3 &#9672;</span><span class="unit">CUSTOMIZER CURRENCY</span></div>
+          <div class="t-acts">
+            <button class="btn buy">BUY &#9672;</button>
+            <span class="hint" style="margin:0; text-align:left;">FUTURE EARNS &amp; PACKS RECOVER IT &mdash; NOTHING YOU OWN IS TAKEN BACK</span>
+          </div>
+        </div>
+        <div class="receipt" style="margin-top:10px;">
+          <div class="led-row rev"><span class="sign">&#8856;</span><span class="what">REFUND REVERSAL &middot; PACK 30</span><span class="when">TODAY 16:02</span><span class="amt">&minus;30 &#9672;</span></div>
+          <div class="led-row spend"><span class="sign">&minus;</span><span class="what">EMBER &middot; EFFECT</span><span class="when">TODAY 14:12</span><span class="amt">&minus;8 &#9672;</span></div>
+        </div>
+        <div class="hint" style="text-align:left; margin-top:8px;"><b>NEGATIVE VARIANT</b> (ECON-09): the readout goes alert-red &mdash; honest, not alarming. The reversal is one more ledger line (&#8856;), the explainer strips the fear out, BUY &#9672; is the way back up. The header CurrencyCounter wears the same red while negative.</div>
+      </div>
+      <div class="caption">
+        <h3>S7 &mdash; Wallet <em>(the till + the receipt, incl. the negative variant)</em></h3>
+        <p>The Wallet is the shop's <b>till</b>: a dark <b>readout plate</b> with the balance in gold at display
+        scale (21px &mdash; F-06's ceiling, prominence without breaking the type law), BUY &#9672; beside the
+        one-wallet explainer (ECON-01's two spend types in one line). The ledger is a <b>cream paper receipt</b>
+        with perforated edges &mdash; <b>LedgerRow</b> = sign &middot; what &middot; when &middot; amount, newest
+        first: the full ECON-07 narrative (+5 grant &middot; +1 login &middot; &minus;1 adoption &middot; +30 pack
+        &middot; &minus;8 EMBER).</p>
+        <p>The fragment is the <b>ECON-09 negative variant</b>: a refund reversed 30 &#9672; &rarr;
+        <b>&minus;3 &#9672;</b> in alert red, the &#8856; reversal row, plain-words recovery copy, and BUY &#9672;
+        as the bridge back. Reached from every screen via the header counter; on the Wallet itself the counter
+        yields to the readout (no double display).</p>
+      </div>
+    </div>
+
+    <!-- ═══ S8 · Ownership treatments ═══ -->
+    <div class="take">
+      <div class="artboard-label">S8 &middot; Ownership &mdash; owned / locked / the earned-only case</div>
+      <div class="device" data-screen-label="Store A · S8 — Ownership">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>STORE</h2><button class="ccount"><span class="dia">&#9672;</span>27</button></div>
+            <div class="scroll">
+              <div class="sec"><h3>EFFECTS &mdash; YOUR SHELF NOW</h3></div>
+              <div class="shelf tall">
+                <div class="shf-items">
+                  <div class="shf-item"><span class="tag-owned">&#10003; OWNED</span>
+                    <div class="gcard fan-size fr-neutral fx-ember"><div class="art"><svg><use href="#art-neutral"/></svg></div><div class="plate pl-neutral">Sample</div></div></div>
+                  <div class="shf-item"><span class="price-chip">6 &#9672;</span>
+                    <div class="gcard fan-size fr-neutral fx-volt"><div class="art"><svg><use href="#art-neutral"/></svg></div><div class="plate pl-neutral">Sample</div></div></div>
+                  <div class="shf-item"><span class="tag-locked">&#128274; NEXT DROP</span>
+                    <div class="gcard fan-size fr-neutral fx-ghost" style="filter:saturate(.35) brightness(.7);"><div class="art"><svg><use href="#art-neutral"/></svg></div><div class="plate pl-neutral">Sample</div></div></div>
+                </div>
+                <div class="plank"></div>
+                <div class="shf-names">
+                  <span>EMBER<i>YOURS &mdash; IN THE EDITOR</i></span><span>VOLT<i>EFFECT</i></span><span>SOLSTICE<i>RETURNS WITH ITS DROP</i></span>
+                </div>
+              </div>
+              <div class="hint">OWNED ITEMS DROP THEIR PRICE FOREVER &middot; LOCKED ITEMS KEEP A DATE, NOT A PRICE</div>
+              <div class="sec"><h3>EARNED ONLY &mdash; THE TROPHY CASE</h3></div>
+              <div class="case">
+                <div class="case-row">
+                  <div class="case-item">
+                    <div class="gcard pick-size fr-crown"><div class="art"><svg><use href="#art-neutral"/></svg></div><div class="plate pl-neutral">Sample</div></div>
+                    <span class="tag-earned">&#127942; EARNED ONLY</span>
+                    <span class="ach-hint">PIXEL CROWN &middot; FRAME<br/>COMPLETE 100 GAMES</span>
+                  </div>
+                  <div class="case-item">
+                    <div class="gcard pick-size fr-neutral fin-holo" style="filter:saturate(1.1);"><span class="foil-band"></span><div class="art"><svg><use href="#art-neutral"/></svg></div><div class="plate pl-neutral">Sample</div></div>
+                    <span class="tag-earned">&#127942; EARNED ONLY</span>
+                    <span class="ach-hint">GILDED TURBO &middot; FINISH<br/>ADOPTED 50 TIMES</span>
+                  </div>
+                </div>
+                <div class="hint" style="margin-top:10px;">NEVER PRICED &middot; NEVER SOLD &mdash; WON THROUGH ACHIEVEMENTS (COSM-04)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>S8 &mdash; Ownership <em>(owned &middot; locked &middot; the trophy case)</em></h3>
+        <p>Three entitlement states on one shelf: <b>OwnedTag</b> (cream keycap &#10003; &mdash; the price chip is
+        gone for good; the shelf-edge label points to the editors where owned items are used) &middot; a normal
+        priced neighbour &middot; <b>LockedTag</b> (padlock + &ldquo;NEXT DROP&rdquo; &mdash; desaturated, keeps a
+        date, never a price; the ECON-08 return hook).</p>
+        <p><b>EARNED ONLY = the glass trophy case</b> (COSM-04): gold-bordered, glass-sheen, items sit on plinths
+        with <b>EarnedOnlyTag</b> (gold-bordered, gold type &mdash; outlined, never gold-filled, so it can't be
+        misread as a price) and the achievement that wins them. Visible, coveted, <b>never purchasable</b> &mdash;
+        flagged at the gate as the owner-default treatment.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
