@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InGame · Store — Draft B "Drops-led Editorial" · S1–S8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" /></noscript>
+<style>
+  /* ── tokens: verbatim from collection-states.html (Teal shell · Midnight theme) ── */
+  :root {
+    --plastic: #2bb6b0; --plastic-hi: #3ec9c2; --plastic-lo: #1f9a94; --silk: #0d524e;
+    --accent: #ff3d77; --gold: #ffd23f; --cream: #f5f1e4; --navy: #1d2a4a;
+    --bezel: #14122a; --alert: #e3414e;
+    --pk: 'Chakra Petch', sans-serif; --shell: 'Paytone One', sans-serif;
+    --scr-bg: #232045; --scr-well: #2c2950; --scr-tools: #1a1733; --scr-accent: #ff9f43;
+    --scr-accent-ink: #2a1430; --scr-head: #f5f1e4; --scr-text: #ffffff; --scr-dim: #9b97c0;
+    --scr-soft: #c9c5e6; --scr-panel: rgba(255,255,255,.065); --scr-hairline: rgba(255,255,255,.08);
+    --scr-grip: #565178; --scr-chip: #f5f1e4; --scr-head-shadow: rgba(0,0,0,.45);
+    --scr-btn: #ffb38a; --scr-btn-ink: #2a1430;
+    --shell-ink: #08433f; --screw-hi: #2aa39d; --screw-lo: #137671; --pip-off: #117672;
+  }
+  html, body { margin: 0; min-height: 100%; background: #efece6; font-family: var(--pk); }
+  .canvas { max-width: 1348px; margin: 0 auto; padding: 40px 24px 60px; }
+  .canvas-head h1 { font: 700 17px/1.2 var(--pk); letter-spacing: 2.5px; color: #2a2633; margin: 0 0 6px; text-transform: uppercase; }
+  .canvas-head p { font: 500 12.5px/1.5 var(--pk); color: #79748a; margin: 0 0 32px; max-width: 640px; }
+  .stage { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+  .take { width: 404px; }
+  .artboard-label { font: 700 11px/1 var(--pk); letter-spacing: 1.5px; color: #8d889c; margin: 0 0 10px 2px; text-transform: uppercase; }
+  .caption { margin-top: 14px; background: #fff; border-radius: 12px; padding: 13px 15px; box-shadow: 0 2px 8px rgba(42,38,51,.08); }
+  .caption h3 { margin: 0 0 5px; font: 700 12.5px var(--pk); letter-spacing: .8px; color: #2a2633; text-transform: uppercase; }
+  .caption h3 em { font-style: normal; color: var(--accent); }
+  .caption p { margin: 0 0 4px; font: 500 11.8px/1.5 var(--pk); color: #5d5870; }
+  .caption p b { color: #2a2633; }
+  .stage-label { font: 700 13px/1 var(--pk); letter-spacing: 2px; color: #2a2633; text-transform: uppercase; margin: 36px 2px 14px; }
+  .stage-label small { display: block; margin-top: 5px; font: 500 11px/1.4 var(--pk); letter-spacing: .3px; color: #79748a; text-transform: none; }
+
+  /* ── device shell (physical — unchanged) ────────────────── */
+  .device { position: relative; width: 404px; height: 884px; border-radius: 30px; overflow: hidden;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.4), inset 0 -4px 0 rgba(0,0,0,.18), 0 18px 40px color-mix(in srgb, var(--shell-ink) 28%, transparent);
+    display: flex; flex-direction: column; padding: 0 14px; box-sizing: border-box; }
+  .screw { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--screw-hi), var(--screw-lo) 75%);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.25); }
+  .screw::after { content: ""; position: absolute; left: 1.5px; right: 1.5px; top: 3.5px; height: 1.5px; background: color-mix(in srgb, var(--shell-ink) 70%, transparent); border-radius: 1px; }
+  .screw.tl { top: 10px; left: 12px; } .screw.tr { top: 10px; right: 12px; }
+  .screw.bl { bottom: 10px; left: 12px; } .screw.br { bottom: 10px; right: 12px; }
+  .top-band { height: 64px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 12px 0; position: relative; }
+  .power { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+  .power .led { width: 9px; height: 9px; border-radius: 50%; background: #ff5a4e; box-shadow: 0 0 7px 2px rgba(255,90,78,.65), inset 0 -1px 1px rgba(0,0,0,.3); }
+  .power .lbl { font: 400 9px var(--shell); letter-spacing: .5px; color: var(--silk); opacity: .75; }
+  .logo { position: absolute; left: 50%; transform: translateX(-50%); font: 400 21px var(--shell); letter-spacing: 7px; text-indent: 7px;
+    color: color-mix(in srgb, var(--shell-ink) 28%, transparent); text-shadow: 0 -1px 0 color-mix(in srgb, var(--shell-ink) 30%, transparent); }
+  .grille { display: flex; gap: 6px; }
+  .grille span { width: 5px; height: 23px; background: color-mix(in srgb, var(--shell-ink) 40%, transparent); border-radius: 2px; transform: skewX(-22deg); box-shadow: inset 0 1px 1px rgba(0,0,0,.3); }
+  .screen-bezel { flex: 1 1 auto; min-height: 0; background: var(--bezel); border-radius: 20px; padding: 9px; box-sizing: border-box; }
+  .nav-band { flex: 0 0 auto; height: 128px; display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 6px 0; }
+  .nav-item { display: flex; flex-direction: column; align-items: center; width: 64px; }
+  .nav-lbl { height: 16px; font: 400 11px var(--shell); letter-spacing: .5px; color: var(--silk); display: flex; align-items: center; }
+  .nav-lbl.big { font-size: 11px; }
+  .nav-btn { width: 54px; height: 54px; border-radius: 15px; background: var(--cream); border: none;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 1px 0 rgba(255,255,255,.85); }
+  .nav-btn.store { background: var(--gold); }
+  .nav-btn.collection { background: var(--accent); }
+  .nav-item.active .nav-btn { transform: translateY(3px); box-shadow: 0 1px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 2px 3px rgba(0,0,0,.18); }
+  .pip { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; background: var(--pip-off);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.25); }
+  .nav-item.active .pip { background: var(--accent); box-shadow: 0 0 9px 2.5px rgba(255,61,119,.85), inset 0 -1px 1px rgba(0,0,0,.25); }
+  .nav-band .nav-item:nth-child(2) .nav-lbl:first-child,
+  .nav-band .nav-item:nth-child(4) .nav-lbl:first-child { transform: translateY(-8px); }
+
+  /* ── shared screen structure ────────────────────────────── */
+  .screen { position: relative; height: 100%; border-radius: 13px; overflow: hidden; display: flex; flex-direction: column; }
+  .screen-head { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; }
+  .scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 12px 10px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; border: none; width: fit-content; }
+  .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 12px 2px 7px; }
+  .sec h3 { margin: 0; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .sec a { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
+  .fh-key { flex: 0 0 auto; width: 28px; height: 28px; border: none; background: var(--scr-chip); color: var(--navy);
+    font: 700 13px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; margin-right: 11px;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .flow-head { justify-content: flex-start; }
+  .flow-head .fh-spacer { flex: 1 1 auto; }
+
+  /* ── the Game Card ──────────────────────────────────────── */
+  .gcard { position: relative; border-radius: 11px; box-sizing: border-box; flex: 0 0 auto; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
+  .gcard .art { position: absolute; inset: 7px; border-radius: 5px; overflow: hidden; }
+  .gcard .art svg { width: 100%; height: 100%; display: block; }
+  .gcard .plate { position: absolute; left: 11px; right: 11px; bottom: 3px; border-radius: 4px; padding: 5px 4px 4px;
+    text-align: center; font: 700 10px var(--pk); letter-spacing: .5px; text-transform: uppercase; z-index: 2; }
+  .gcard.hero-size { width: 138px; height: 193px; }
+  .gcard.fan-size { width: 84px; height: 117px; }
+  .gcard.fan-size .art { inset: 4px; }
+  .gcard.fan-size .plate { left: 5.5px; right: 5.5px; bottom: 1.5px; padding: 2.5px 1px 2px; font-size: 4.5px; letter-spacing: 0; }
+  .gcard.pick-size { width: 96px; height: 134px; }
+  .gcard.pick-size .art { inset: 4.5px; }
+  .gcard.pick-size .plate { left: 7px; right: 7px; bottom: 2px; padding: 3px 2px 2.5px; font-size: 6px; letter-spacing: .2px; }
+  .gcard.thumb { width: 44px; height: 62px; }
+  .gcard.thumb .art { inset: 2.5px; }
+  .gcard.thumb .plate { left: 3.5px; right: 3.5px; bottom: 1px; padding: 1.5px 1px 1px; font-size: 3.2px; letter-spacing: 0; }
+  .fr-destiny { background: linear-gradient(160deg, #e8bc52, #c08a2a); }
+  .pl-destiny { background: #f0cd6e; color: #3c2a09; }
+  .fr-marathon { background: linear-gradient(160deg, #64789f, #46587e); }
+  .pl-marathon { background: #3d4f78; color: #e8eefc; }
+  .fr-neutral { background: linear-gradient(160deg, #4a4677, #322e58); }
+  .pl-neutral { background: #d9d4ee; color: #2a2633; }
+
+  /* ════ S2 base — flat floating panels ════ */
+  .sk2 { background: var(--scr-bg); }
+  .sk2 .screen-head h2 { margin: 0; font: 700 21px/1 var(--pk); letter-spacing: 3px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); }
+  .sk2 .well { background: var(--scr-well); border-radius: 12px; }
+  .sk2 .npl { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-accent); }
+  .sk2 .hero-title { font: 700 21px/1.05 var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .sk2 .hero-sub { font: 600 11px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .sk2 .btn { background: var(--scr-btn); color: var(--scr-btn-ink); border-radius: 9px; padding: 9px 13px;
+    font: 700 11px var(--pk); letter-spacing: 1px; white-space: nowrap;
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--scr-btn) 45%, #000), inset 0 1px 0 rgba(255,255,255,.4); }
+  .sk2 .btn.secondary { background: var(--cream); color: var(--navy);
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .sk2 .btn.act { background: var(--scr-accent); color: var(--scr-accent-ink); box-shadow: inset 0 1px 0 rgba(255,255,255,.45);
+    filter: drop-shadow(0 3px 0 color-mix(in srgb, var(--scr-accent) 45%, #000)); }
+  .sk2 .btn.buy { background: var(--gold); color: #3c2a09;
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--gold) 45%, #000), inset 0 1px 0 rgba(255,255,255,.5); }
+  .sk2 .btn.disabled { opacity: .4; box-shadow: 0 1px 0 color-mix(in srgb, var(--scr-btn) 45%, #000); }
+  .sk2 .chip { position: relative; background: var(--scr-chip); border-radius: 7px; padding: 6px 8px;
+    font: 600 11px var(--pk); letter-spacing: .5px; color: var(--navy);
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .tert { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
+  .tert.dim { color: var(--scr-dim); }
+  .hint { margin: 8px 1px 0; font: 600 9px/1.6 var(--pk); letter-spacing: .5px; color: var(--scr-dim); text-align: center; }
+  .hint b { color: var(--scr-soft); }
+
+  /* ════ C5 · HYBRID — square chrome · stepped-diagonal cards ════ */
+  .c5 .well, .c5 .chip, .c5 .btn { border-radius: 0; }
+  .c5 .well { border: 1px solid var(--scr-hairline); }
+  .c5 .btn.act { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+      100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
+      calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
+  .c5 .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
+    clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
+      100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
+      calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
+  .c5 .gcard .art { border-radius: 0;
+    clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+      100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .c5 .gcard .plate { border-radius: 0;
+    clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  .c5 .gcard.fan-size, .c5 .gcard.pick-size { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+      100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .c5 .gcard.fan-size .art, .c5 .gcard.pick-size .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  .c5 .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0,
+      100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
+  .c5 .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+
+  /* ════ Store-shared components (locked names — FORM is draft B's) ════ */
+  /* CurrencyCounter */
+  .ccount { display: inline-flex; align-items: center; gap: 4px; background: var(--gold); color: #3c2a09;
+    border: none; padding: 5px 9px; font: 700 11px/1 var(--pk); letter-spacing: .5px;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--gold) 45%, #000), inset 0 1px 0 rgba(255,255,255,.5); }
+  .ccount .dia { font-size: 12px; }
+  .tick-chip { display: inline-flex; align-items: center; background: rgba(255,210,63,.14); border: 1px solid color-mix(in srgb, var(--gold) 60%, transparent);
+    color: var(--gold); font: 700 9px/1 var(--pk); padding: 3px 5px; margin-right: 6px;
+    box-shadow: 0 0 9px rgba(255,210,63,.35); }
+  /* PriceChip + dollar chip */
+  .price-chip { display: inline-flex; align-items: center; gap: 2.5px; background: var(--gold); color: #3c2a09;
+    font: 700 9px/1 var(--pk); padding: 2.5px 5px; white-space: nowrap; }
+  .price-chip.big { font-size: 13px; padding: 4px 8px; gap: 4px; }
+  .usd-chip { display: inline-flex; align-items: center; background: var(--cream); color: var(--navy);
+    font: 700 10px/1 var(--pk); padding: 4px 7px; white-space: nowrap;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  /* tags */
+  .tag-owned { display: inline-flex; align-items: center; gap: 3px; background: var(--cream); color: var(--navy);
+    font: 700 8px/1 var(--pk); letter-spacing: .5px; padding: 2.5px 5px; white-space: nowrap; }
+  .tag-locked { display: inline-flex; align-items: center; gap: 3px; background: rgba(13,11,30,.72); color: var(--scr-soft);
+    border: 1px solid var(--scr-hairline); font: 700 8px/1 var(--pk); letter-spacing: .5px; padding: 2.5px 5px; white-space: nowrap; }
+  .tag-earned { display: inline-flex; align-items: center; gap: 4px; background: rgba(255,210,63,.1);
+    border: 1px solid color-mix(in srgb, var(--gold) 65%, transparent); color: var(--gold);
+    font: 700 8px/1 var(--pk); letter-spacing: 1px; padding: 3px 6px; white-space: nowrap; }
+  /* effect / finish overlays */
+  .fx-ember::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: screen;
+    background: radial-gradient(circle at 50% 88%, rgba(255,122,40,.75) 0%, rgba(255,61,40,.3) 38%, transparent 62%),
+      radial-gradient(circle at 24% 64%, rgba(255,180,60,.5) 0%, transparent 18%),
+      radial-gradient(circle at 76% 56%, rgba(255,150,50,.45) 0%, transparent 14%),
+      radial-gradient(circle at 60% 38%, rgba(255,210,90,.35) 0%, transparent 10%); }
+  .fx-volt::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: screen;
+    background: linear-gradient(64deg, transparent 42%, rgba(88,224,255,.55) 47%, transparent 52%),
+      linear-gradient(118deg, transparent 60%, rgba(160,240,255,.4) 65%, transparent 70%); }
+  .fx-ghost::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(circle at 50% 42%, rgba(235,240,255,.34) 0%, transparent 58%); }
+  .fin-holo::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: screen;
+    background: linear-gradient(115deg, transparent 26%, rgba(255,90,90,.3) 36%, rgba(255,220,90,.32) 44%,
+      rgba(90,255,160,.3) 52%, rgba(90,170,255,.32) 60%, rgba(200,90,255,.3) 68%, transparent 78%); }
+  .fin-cinder::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: screen;
+    background: linear-gradient(115deg, transparent 30%, rgba(255,140,70,.42) 46%, rgba(255,80,40,.25) 54%, transparent 68%); }
+  .foil-band { position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.34) 42%, rgba(140,235,255,.28) 50%, transparent 64%); }
+  .fr-crown { background: linear-gradient(160deg, #f0d57a, #b8901f); }
+  /* MiniDevice */
+  .mini-dev { flex: 0 0 auto; width: 42px; height: 92px; border-radius: 7px; padding: 3px; box-sizing: border-box;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%);
+    display: flex; flex-direction: column; box-shadow: inset 0 1px 0 rgba(255,255,255,.4), inset 0 -1px 0 rgba(0,0,0,.18); }
+  .mini-dev .mscr { flex: 1 1 auto; margin: 5px 2px 3px; background: var(--scr-bg); border: 2px solid var(--bezel); border-radius: 3px; }
+  .mini-dev .mnav { height: 9px; display: flex; gap: 2.5px; align-items: center; justify-content: center; }
+  .mini-dev .mnav i { width: 4px; height: 4px; border-radius: 1.5px; background: var(--cream); }
+  .mini-dev .mnav i.y { background: var(--gold); }
+  /* theme swatch */
+  .sw-theme { width: 56px; height: 56px; border: 1px solid var(--scr-hairline); padding: 5px; box-sizing: border-box;
+    display: flex; flex-direction: column; gap: 3px; }
+  .sw-theme i { display: block; height: 8px; }
+  .sw-font { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center;
+    background: var(--scr-panel); border: 1px solid var(--scr-hairline); color: var(--scr-text); }
+  .sw-font .aa { font: 700 21px/1 var(--pk); letter-spacing: 2px; text-shadow: 2px 2px 0 rgba(255,61,119,.55); }
+  .sw-vec { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center;
+    background: var(--scr-panel); border: 1px solid var(--scr-hairline); }
+
+  /* ════ Draft B — the editorial magazine ════ */
+  /* the COVER — the drop as cover story (ECON-08) */
+  .cover { position: relative; margin-top: 2px; padding: 16px 14px 14px; overflow: hidden;
+    background: radial-gradient(circle at 78% 80%, rgba(255,110,40,.5) 0%, rgba(160,40,30,.28) 38%, transparent 70%),
+      radial-gradient(circle at 22% 22%, rgba(255,200,80,.18) 0%, transparent 45%), #19142e;
+    border: 1px solid var(--scr-hairline); }
+  .cover .spark { position: absolute; border-radius: 50%; background: #ffcf7a; box-shadow: 0 0 7px 2px rgba(255,170,60,.6); }
+  .cover .cv-eyebrow { display: flex; align-items: center; gap: 8px; }
+  .cover .cv-title { font: 700 21px/1.05 var(--pk); letter-spacing: 2px; color: var(--scr-head); text-shadow: 0 2px 0 rgba(0,0,0,.5); margin: 7px 0 6px; }
+  .cover .cv-stand { font: 600 9.5px/1.6 var(--pk); letter-spacing: .5px; color: var(--scr-soft); max-width: 170px; position: relative; z-index: 2; }
+  .cover .cv-cards { position: absolute; right: 8px; bottom: 12px; display: flex; }
+  .cover .cv-cards .gcard { box-shadow: 0 8px 16px rgba(0,0,0,.5); }
+  .cover .cv-cards > div:first-child { transform: rotate(-8deg) translate(14px, 6px); }
+  .cover .cv-cards > div:last-child { transform: rotate(7deg); }
+  .cover .cv-foot { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 11px; max-width: 175px; position: relative; z-index: 2; }
+  .countdown { display: inline-flex; align-items: center; gap: 4px; background: rgba(255,210,63,.12);
+    border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent); color: var(--gold);
+    font: 700 9px/1 var(--pk); letter-spacing: 1px; padding: 3.5px 6px; width: fit-content; }
+  /* editorial modules */
+  .mod { margin-top: 4px; background: var(--scr-well); border: 1px solid var(--scr-hairline); padding: 10px 11px; }
+  .mod-row { display: flex; align-items: center; gap: 11px; }
+  .mod-row + .mod-row { margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--scr-hairline); }
+  .mod-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1 1 auto; }
+  .mod-name { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .mod-type { font: 600 8px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
+  .mod-blurb { font: 500 9px/1.5 var(--pk); color: var(--scr-soft); }
+  .mod-end { margin-left: auto; flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+  /* the index — ALL AISLES at the back of the magazine */
+  .index { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+  .idx { display: flex; align-items: center; gap: 6px; padding: 7px 8px; background: var(--scr-panel);
+    border: 1px solid var(--scr-hairline); font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-soft); }
+  .idx .gl { color: var(--scr-accent); font-size: 11px; }
+  .idx .n { margin-left: auto; font: 600 8.5px var(--pk); color: var(--scr-dim); letter-spacing: .5px; }
+  /* PreviewStage — editorial full-bleed spread */
+  .pstage { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    padding: 16px 10px 13px; margin: 2px 0 0;
+    background: radial-gradient(circle at 50% 30%, rgba(255,210,63,.09) 0%, transparent 62%), var(--scr-well);
+    border: 1px solid var(--scr-hairline); }
+  .pstage .ps-lbl { font: 700 8px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .pstage .swap { display: inline-flex; align-items: center; gap: 5px; font: 600 9px var(--pk);
+    letter-spacing: .5px; color: var(--scr-accent); }
+  .spread-title { display: flex; align-items: baseline; gap: 9px; margin: 12px 2px 0; }
+  .spread-title .name { font: 700 21px/1 var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
+  .spread-title .type { font: 600 8.5px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
+  .standfirst { margin: 7px 2px 0; font: 500 10px/1.6 var(--pk); color: var(--scr-soft); }
+  .spec-row { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 2px 0; }
+  .spec { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--scr-hairline);
+    color: var(--scr-dim); font: 600 8px var(--pk); letter-spacing: 1px; padding: 3px 6px; }
+  /* BuyBar — PINNED to the screen bottom (the conventional checkout rail) */
+  .buybar-pin { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    background: var(--scr-tools); border-top: 1px solid var(--scr-hairline); }
+  .buybar-pin .bb-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .buybar-pin .bb-have { font: 600 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); white-space: nowrap; }
+  .buybar-pin .spacer { flex: 1 1 auto; }
+  .short-strip { display: flex; align-items: center; gap: 8px; margin: 10px 2px 0; padding: 8px 11px;
+    background: rgba(227,65,78,.1); border: 1px solid color-mix(in srgb, var(--alert) 55%, transparent);
+    font: 700 10px var(--pk); letter-spacing: 1px; color: #ff8a93; }
+  /* PackTile — B form: App-Store-style price LIST rows */
+  .pack-list { display: flex; flex-direction: column; gap: 7px; }
+  .packrow { position: relative; display: flex; align-items: center; gap: 10px; padding: 10px 11px;
+    background: var(--scr-well); border: 1px solid color-mix(in srgb, var(--gold) 32%, transparent); }
+  .packrow .amt { font: 700 15px/1 var(--pk); color: var(--gold); letter-spacing: 1px; min-width: 52px; text-shadow: 0 0 9px rgba(255,210,63,.25); }
+  .packrow .plbl { font: 700 8px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
+  .packrow .flash { background: var(--gold); color: #3c2a09; font: 700 8px/1 var(--pk); letter-spacing: .5px; padding: 2.5px 5px; }
+  .packrow .usd-chip { margin-left: auto; }
+  /* LedgerRow — B form: the bank statement */
+  .stmt { background: var(--scr-well); border: 1px solid var(--scr-hairline); padding: 4px 12px 6px; }
+  .stmt .led-row { display: flex; align-items: baseline; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--scr-hairline); }
+  .stmt .led-row:last-child { border-bottom: none; }
+  .stmt .what { font: 700 10px var(--pk); letter-spacing: .5px; color: var(--scr-text); min-width: 0; }
+  .stmt .when { font: 600 8px var(--pk); letter-spacing: .5px; color: var(--scr-dim); white-space: nowrap; }
+  .stmt .amt { margin-left: auto; font: 700 11px var(--pk); white-space: nowrap; }
+  .stmt .earn .amt { color: #7fe0c3; }
+  .stmt .spend .amt { color: var(--scr-soft); }
+  .stmt .rev .amt, .stmt .rev .what { color: #ff8a93; }
+  .bal-hero { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 12px 16px;
+    background: var(--scr-well); border: 1px solid var(--scr-hairline); }
+  .bal-hero .bal { font: 700 21px/1 var(--pk); letter-spacing: 1px; color: var(--gold); text-shadow: 0 0 12px rgba(255,210,63,.45); }
+  .bal-hero.neg .bal { color: var(--alert); text-shadow: 0 0 12px rgba(227,65,78,.5); }
+  .bal-hero .bl { font: 700 8px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  /* Toast — B form: the full-bleed banner sliding under the header */
+  .toastb { display: flex; align-items: center; gap: 9px; margin: 0 -12px; padding: 10px 14px;
+    background: color-mix(in srgb, var(--scr-accent) 14%, var(--scr-tools));
+    border-top: 2px solid var(--scr-accent); border-bottom: 1px solid var(--scr-hairline); }
+  .toastb .bang { flex: 0 0 auto; color: var(--scr-accent); font: 700 14px/1 var(--pk); }
+  .toastb .t-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .toastb .t-t { font: 700 10px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .toastb .t-s { font: 600 8.5px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .toastb .btn { margin-left: auto; padding: 6px 8px; font-size: 9px; }
+  /* success moment */
+  .moment { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 30px 14px 4px; }
+  .moment .big-dia { font: 700 21px/1 var(--pk); color: var(--gold); letter-spacing: 1px; text-shadow: 0 0 14px rgba(255,210,63,.6); }
+  .moment .from-to { font: 700 11px var(--pk); letter-spacing: 2px; color: var(--scr-soft); }
+  .moment .from-to b { color: var(--gold); }
+  .gold-rule { height: 2px; margin: 12px 30px 0; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+  /* trophy module (earned-only, editorial) */
+  .trophy { margin-top: 4px; padding: 12px 11px; background: linear-gradient(180deg, rgba(255,210,63,.07), transparent 55%), var(--scr-well);
+    border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent); border-top-width: 3px; }
+  .trophy .tr-row { display: flex; gap: 12px; align-items: center; }
+  .trophy .tr-row + .tr-row { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--scr-hairline); }
+  .ach-hint { font: 600 8px/1.5 var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  /* state list rows (S8) */
+  .itemrow { display: flex; align-items: center; gap: 11px; padding: 8px 10px; background: var(--scr-well); border: 1px solid var(--scr-hairline); }
+  .itemrow + .itemrow { margin-top: 7px; }
+  .itemrow.lkd { opacity: .8; }
+  .itemrow.lkd .gcard { filter: saturate(.35) brightness(.7) drop-shadow(0 4px 7px rgba(0,0,0,.35)); }
+  /* ── Deep Sea screen-theme override (S3's live preview IS the page) ── */
+  .scr-deepsea { --scr-bg: #0f2e2b; --scr-well: #173d38; --scr-tools: #0a1f1d; --scr-accent: #ffd23f;
+    --scr-accent-ink: #3c2a09; --scr-dim: #84aaa2; --scr-soft: #bcd6cf;
+    --scr-panel: rgba(255,255,255,.06); --scr-hairline: rgba(255,255,255,.08);
+    --scr-grip: #3f655d; --scr-btn: #ffe27a; --scr-btn-ink: #3c2a09; }
+  .preview-strip { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; padding: 8px 13px;
+    background: var(--gold); color: #3c2a09; font: 700 9.5px var(--pk); letter-spacing: 1px; }
+  .preview-strip .x { margin-left: auto; font: 700 11px var(--pk); letter-spacing: .5px; }
+  /* half-panel — a screen fragment under the device */
+  .half-panel { margin-top: 14px; background: var(--scr-bg); border: 5px solid var(--bezel); border-radius: 8px; padding: 13px 14px; position: relative; }
+  .half-panel .hp-row { display: flex; gap: 13px; align-items: center; }
+  .half-panel .hp-meta { display: flex; flex-direction: column; gap: 6px; min-width: 0; align-items: flex-start; }
+  .half-panel .btn { padding: 7px 10px; font-size: 9px; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="g-dst" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2156"/><stop offset="1" stop-color="#14102e"/></linearGradient>
+    <linearGradient id="g-dst2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#58e0d8"/><stop offset="1" stop-color="#2ba8a0"/></linearGradient>
+    <symbol id="art-destiny" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-dst)"/>
+      <circle cx="31.5" cy="38" r="17" fill="none" stroke="#d9a93f" stroke-width="1.2" opacity=".5"/>
+      <path d="M31.5 16 L48 38 L31.5 60 L15 38 Z" fill="url(#g-dst2)" stroke="#e8c364" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M31.5 24 L42.5 38 L31.5 52 L20.5 38 Z" fill="rgba(255,255,255,.18)"/>
+      <circle cx="31.5" cy="38" r="4" fill="#f4f9f8"/>
+      <circle cx="31.5" cy="13" r="1.8" fill="#e8c364"/><circle cx="51" cy="38" r="1.8" fill="#e8c364"/>
+      <circle cx="31.5" cy="63" r="1.8" fill="#e8c364"/><circle cx="12" cy="38" r="1.8" fill="#e8c364"/>
+    </symbol>
+    <symbol id="art-neutral" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="#262243"/>
+      <path d="M31.5 26 L43 40 L31.5 54 L20 40 Z" fill="none" stroke="#565178" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="31.5" cy="40" r="2.5" fill="#565178"/>
+      <path d="M0 74 L63 70 L63 88 L0 88 Z" fill="rgba(0,0,0,.25)"/>
+    </symbol>
+    <symbol id="art-vecpack" viewBox="0 0 40 40">
+      <path d="M11 7 L14.5 13.5 L21.5 14.5 L16.2 19.5 L17.5 26.5 L11 23 L4.5 26.5 L5.8 19.5 L.5 14.5 L7.5 13.5 Z" fill="#ffd23f" transform="translate(4 1)"/>
+      <path d="M28 22 L34 22 L30 30 L36 30 L26 40 L29 32 L24 32 Z" fill="#58e0d8" transform="translate(-1 -3)"/>
+      <circle cx="31" cy="11" r="5" fill="none" stroke="#ff3d77" stroke-width="2.5"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="canvas">
+  <div class="canvas-head">
+    <h1>Store &mdash; Draft B &ldquo;Drops-led Editorial&rdquo; &middot; S1&ndash;S8</h1>
+    <p>The Store as a <b>magazine you check, not a warehouse you search</b>: the seasonal drop is the
+    <b>cover story</b> (the ECON-08 return hook leads), curated modules follow, and the full category taxonomy
+    is <b>the index at the back</b>. Item detail is a <b>full-page takeover spread</b> with a pinned checkout
+    rail; a screen-theme detail <b>re-themes the whole page</b> (the preview IS the page). Wallet = a clean
+    statement. All prices/values <b>illustrative &mdash; OQ-002/OQ-011 open</b>; lifecycle states (skeleton
+    &middot; load-error &middot; offline) deferred to the converged board. Standalone &mdash; built-in SVG.</p>
+  </div>
+
+  <div class="stage-label">Browse &amp; detail <small>S1 cover + modules + index &middot; S2 takeover spread (finish on YOUR card) &middot; S3 whole-screen theme preview</small></div>
+  <div class="stage">
+
+    <!-- ═══ S1 · Browse — the cover ═══ -->
+    <div class="take">
+      <div class="artboard-label">S1 &middot; Browse &mdash; cover story + modules + the index</div>
+      <div class="device" data-screen-label="Store B · S1 — Browse">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head" style="padding-bottom:8px;"><h2>STORE</h2><button class="ccount"><span class="dia">&#9672;</span>5</button></div>
+            <div class="scroll" style="padding-bottom:6px;">
+              <div class="cover">
+                <span class="spark" style="width:4px;height:4px;left:58%;top:24%;"></span>
+                <span class="spark" style="width:3px;height:3px;left:70%;top:14%;"></span>
+                <span class="spark" style="width:2.5px;height:2.5px;left:50%;top:38%;"></span>
+                <div class="cv-eyebrow"><span class="npl">SEASONAL DROP &middot; ISSUE 04</span></div>
+                <div class="cv-title">EMBER<br/>SERIES</div>
+                <span class="cv-stand">One effect, one finish, two weeks &mdash; then the case closes.</span>
+                <div class="cv-foot">
+                  <span class="countdown">&#9202; 4D 12H LEFT</span>
+                  <button class="btn secondary" style="padding:7px 10px; font-size:9px;">READ THE DROP</button>
+                </div>
+                <div class="cv-cards">
+                  <div><div class="gcard fan-size fr-neutral fx-ember"><span class="price-chip">8 &#9672;</span>
+                    <div class="art"><svg><use href="#art-neutral"/></svg></div>
+                    <div class="plate pl-neutral">Ember</div></div></div>
+                  <div><div class="gcard fan-size fr-neutral fin-cinder"><span class="price-chip">8 &#9672;</span>
+                    <div class="art"><svg><use href="#art-neutral"/></svg></div>
+                    <div class="plate pl-neutral">Cinder</div></div></div>
+                </div>
+              </div>
+              <div class="sec"><h3>EDITOR'S PICKS &mdash; THIS WEEK</h3><a href="#">MORE &rsaquo;</a></div>
+              <div class="mod">
+                <div class="mod-row">
+                  <div class="gcard thumb fr-neutral fx-volt"><div class="art"><svg><use href="#art-neutral"/></svg></div><div class="plate pl-neutral">Sample</div></div>
+                  <div class="mod-meta">
+                    <span class="mod-name">VOLT</span>
+                    <span class="mod-type">EFFECT</span>
+                    <span class="mod-blurb">Twin arcs that snap across the face.</span>
+                  </div>
+                  <div class="mod-end"><span class="price-chip">6 &#9672;</span></div>
+                </div>
+                <div class="mod-row">
+                  <div class="sw-font"><span class="aa">Aa</span></div>
+                  <div class="mod-meta">
+                    <span class="mod-name">PIXELLA</span>
+                    <span class="mod-type">FONT</span>
+                    <span class="mod-blurb">Chunky pixel title plates, CRT shadow.</span>
+                  </div>
+                  <div class="mod-end"><span class="price-chip">2 &#9672;</span></div>
+                </div>
+              </div>
+              <div class="sec"><h3>THE INDEX &mdash; ALL AISLES</h3></div>
+              <div class="index">
+                <div class="idx"><span class="gl">&#9670;</span>VECTOR PACKS<span class="n">12 &rsaquo;</span></div>
+                <div class="idx"><span class="gl">&#10022;</span>EFFECTS<span class="n">14 &rsaquo;</span></div>
+                <div class="idx"><span class="gl">&#9686;</span>FINISHES<span class="n">9 &rsaquo;</span></div>
+                <div class="idx"><span class="gl">&#9633;</span>FRAMES<span class="n">11 &rsaquo;</span></div>
+                <div class="idx"><span class="gl">A</span>FONTS<span class="n">8 &rsaquo;</span></div>
+                <div class="idx"><span class="gl">&#9646;</span>DEVICES + SKINS<span class="n">7 &rsaquo;</span></div>
+                <div class="idx"><span class="gl">&#9640;</span>SCREEN THEMES<span class="n">6 &rsaquo;</span></div>
+                <div class="idx"><span class="gl">&#9672;</span>CURRENCY<span class="n">4 &rsaquo;</span></div>
+              </div>
+              <div class="hint" style="margin-top:9px;">THE FREE BASELINE ISN'T IN THE MAGAZINE &mdash; IT LIVES IN THE EDITORS (COSM-02)</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>S1 &mdash; Browse <em>(the cover, the picks, the index)</em></h3>
+        <p><b>Drops lead</b> (ECON-08): the seasonal drop is the <b>cover story</b> &mdash; full-bleed art, issue
+        eyebrow, countdown, the two drop items leaning into frame wearing their <b>PriceChips</b> (full faces,
+        F-01). Below, <b>editorial modules</b> (<b>ItemTile/B</b> = preview + name/type + one-line blurb + chip)
+        curate a few items; the complete COSM-01 taxonomy is <b>THE INDEX</b> at the back &mdash; all eight
+        aisles, one tap deep, so the magazine never hides the warehouse.</p>
+        <p>The thesis: a <b>low-frequency app gets a reason to peek weekly</b> &mdash; the cover changes, the
+        index doesn't. <b>CurrencyCounter</b> persists in the head (&rarr; Wallet, ECON-07); COSM-02 stated at
+        the fold. <i>Prices illustrative (OQ-002/OQ-011); lifecycle deferred.</i></p>
+      </div>
+    </div>
+
+    <!-- ═══ S2 · Item detail — takeover spread ═══ -->
+    <div class="take">
+      <div class="artboard-label">S2 &middot; Item detail &mdash; the takeover spread (HOLO)</div>
+      <div class="device" data-screen-label="Store B · S2 — Detail (finish)">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>STORE</h2><span class="fh-spacer"></span><button class="ccount"><span class="dia">&#9672;</span>5</button></div>
+            <div class="scroll">
+              <div class="pstage">
+                <span class="ps-lbl">PREVIEWED ON YOUR CARD &mdash; LIVE</span>
+                <div class="gcard hero-size fr-destiny fin-holo">
+                  <div class="art"><svg><use href="#art-destiny"/></svg></div>
+                  <div class="plate pl-destiny">Destiny</div>
+                </div>
+                <span class="swap">&#8644; TRY ANOTHER OF YOUR CARDS</span>
+              </div>
+              <div class="spread-title"><span class="name">HOLO</span><span class="type">FINISH &middot; CATALOG</span></div>
+              <div class="standfirst">A slow rainbow band that lives in the lacquer &mdash; the classic. Sits over any
+              effect; one finish per card (CARD-12).</div>
+              <div class="spec-row">
+                <span class="spec">TYPE &middot; FINISH</span>
+                <span class="spec">WORKS IN &middot; CARD EDITOR</span>
+                <span class="spec">YOURS FOREVER &middot; ALL CARDS</span>
+              </div>
+            </div>
+            <div class="buybar-pin">
+              <div class="bb-meta"><span class="bb-have">YOU HAVE 5 &#9672;</span><span class="bb-have" style="color:var(--scr-grip);">SPENDS &#9672; INSTANTLY &mdash; NEVER DOLLARS</span></div>
+              <div class="spacer"></div>
+              <span class="price-chip big">4 &#9672;</span>
+              <button class="btn buy">BUY</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>S2 &mdash; Item detail <em>(a full-page spread, checkout pinned)</em></h3>
+        <p>Detail is a <b>takeover page</b> (decision 0014's tier: the frame stays, the flow owns the screen
+        &mdash; FlowHeader &#9666; returns to the cover). The spread: <b>PreviewStage</b> hero with the HOLO
+        finish live on <b>your Destiny card</b> + the swap line, a display-size name, an editorial
+        <b>standfirst</b>, and spec chips (type &middot; where it works &middot; scope).</p>
+        <p><b>BuyBar = a rail pinned to the screen bottom</b> &mdash; the conventional checkout pole (&sect;1.1):
+        balance facts left, the big <b>PriceChip</b> + square gold <b>BUY keycap</b> right (gold = value, square =
+        not card-creating, F-02). It stays put while the spread scrolls.</p>
+      </div>
+    </div>
+
+    <!-- ═══ S3 · Screen theme — the page re-themes ═══ -->
+    <div class="take">
+      <div class="artboard-label">S3 &middot; Item detail &mdash; DEEP SEA theme, the page IS the preview</div>
+      <div class="device" data-screen-label="Store B · S3 — Detail (screen theme)">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5 scr-deepsea">
+            <div class="preview-strip">&#9686; PREVIEWING &mdash; DEEP SEA<span class="x">EXIT &#10005;</span></div>
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>STORE</h2><span class="fh-spacer"></span><button class="ccount"><span class="dia">&#9672;</span>27</button></div>
+            <div class="scroll">
+              <div class="pstage">
+                <span class="ps-lbl">YOUR WHOLE SCREEN, RESTYLED &mdash; THIS PAGE IS THE PREVIEW</span>
+                <div style="display:flex; gap:10px; align-items:center; padding:6px 0 2px;">
+                  <div class="sw-theme" style="background:#0f2e2b; width:64px; height:64px;"><i style="background:#173d38;"></i><i style="background:#ffd23f;"></i><i style="background:#0a1f1d;"></i></div>
+                  <div style="display:flex; flex-direction:column; gap:5px;">
+                    <span class="hero-sub" style="color:var(--scr-soft);">WELLS &middot; ACCENTS &middot; TOOLS &mdash; ALL SWAPPED LIVE</span>
+                    <span class="hero-sub" style="font-size:9px;">LEGIBILITY FLOOR GUARANTEED (DEV-04) &middot; YOUR SHELL STAYS TEAL</span>
+                  </div>
+                </div>
+              </div>
+              <div class="spread-title"><span class="name">DEEP SEA</span><span class="type">SCREEN THEME</span></div>
+              <div class="standfirst">Abyss greens, one gold accent. Applies in the Device editor; the free baseline
+              themes stay free (COSM-02).</div>
+              <div class="spec-row">
+                <span class="spec">TYPE &middot; SCREEN THEME</span>
+                <span class="spec">APPLIES IN &middot; DEVICE EDITOR</span>
+                <span class="spec">DECISION 0012</span>
+              </div>
+            </div>
+            <div class="buybar-pin">
+              <div class="bb-meta"><span class="bb-have">YOU HAVE 27 &#9672;</span><span class="bb-have" style="color:var(--scr-grip);">PREVIEW FREE &mdash; KEEP IT WITH BUY</span></div>
+              <div class="spacer"></div>
+              <span class="price-chip big">4 &#9672;</span>
+              <button class="btn buy">BUY</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>S3 &mdash; Screen theme <em>(the page is the preview)</em></h3>
+        <p>Draft B's showpiece: open DEEP SEA and <b>the entire screen re-themes live</b> &mdash; wells, accents,
+        tools, the works (the &sect;4.11 "preview on your screen" read literally). A gold <b>PREVIEWING strip</b>
+        anchors the state with an obvious EXIT; the shell stays your teal (themes are screen-side, DEV-04, with
+        its legibility floor named on the stage).</p>
+        <p>The BuyBar reads <b>preview free &mdash; keep it with BUY</b> (COSM-03 preview-then-acquire). Balance
+        is 27 &#9672; (post-top-up timeline). The nav band is untouched plastic throughout &mdash; F-04. <i>4 &#9672;
+        illustrative (OQ-011).</i></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-label">The money path <small>S4 the rail flips to a bridge &middot; S5 top-up price list + IAP sheet &middot; S6 the +30 moment / Toast / restore</small></div>
+  <div class="stage">
+
+    <!-- ═══ S4 · Can't afford — the rail becomes the bridge ═══ -->
+    <div class="take">
+      <div class="artboard-label">S4 &middot; Can't afford &mdash; the checkout rail flips to a bridge</div>
+      <div class="device" data-screen-label="Store B · S4 — Bridge">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>STORE</h2><span class="fh-spacer"></span><button class="ccount"><span class="dia">&#9672;</span>5</button></div>
+            <div class="scroll">
+              <div class="pstage" style="padding-top:12px;">
+                <span class="ps-lbl">PREVIEWED ON YOUR CARD &mdash; LIVE</span>
+                <div class="gcard hero-size fr-destiny fx-ember">
+                  <div class="art"><svg><use href="#art-destiny"/></svg></div>
+                  <div class="plate pl-destiny">Destiny</div>
+                </div>
+              </div>
+              <div class="spread-title"><span class="name">EMBER</span><span class="type">EFFECT &middot; EMBER SERIES DROP</span></div>
+              <div class="standfirst">Coals under the art, sparks over it. Drops close &mdash; the effect stays yours
+              forever once bought.</div>
+              <div class="short-strip">&#9888; SHORT 3 &#9672; &mdash; YOU HAVE 5, THIS COSTS 8</div>
+              <div class="sec"><h3>TOP UP TO FINISH</h3><a href="#">ALL PACKS &rsaquo;</a></div>
+              <div class="pack-list">
+                <div class="packrow"><span class="amt">10 &#9672;</span><span class="plbl">CURRENCY PACK</span><span class="flash">COVERS IT</span><button class="usd-chip">$1.99</button></div>
+                <div class="packrow"><span class="amt">30 &#9672;</span><span class="plbl">CURRENCY PACK</span><button class="usd-chip">$4.99</button></div>
+              </div>
+            </div>
+            <div class="buybar-pin">
+              <div class="bb-meta"><span class="bb-have">DOLLARS BUY &#9672; ONLY (ECON-01)</span></div>
+              <div class="spacer"></div>
+              <span class="price-chip big" style="opacity:.45;">8 &#9672;</span>
+              <button class="btn buy disabled">BUY</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>S4 &mdash; Can't afford <em>(the bridge lives in the spread)</em></h3>
+        <p>Same spread, short 3 &#9672;: the pinned rail's BUY goes quiet and the page grows a <b>bridge
+        section</b> right under the standfirst &mdash; the <b>SHORT 3 &#9672;</b> strip plus the two smallest
+        <b>PackTile/B rows</b> (10 &#9672; flagged COVERS IT). Top-up happens <b>at the point of intent</b>
+        (&sect;3.4/&sect;4.11) without leaving the item; the rail itself states the ECON-01 law &mdash;
+        dollars buy &#9672; only.</p>
+        <p><i>After the pack lands the page snaps back to S2's shape with BUY hot &mdash; the +30 moment is
+        S6's panel. Prices illustrative (OQ-002/OQ-011).</i></p>
+      </div>
+    </div>
+
+    <!-- ═══ S5 · Currency — the top-up page ═══ -->
+    <div class="take">
+      <div class="artboard-label">S5 &middot; Currency packs &mdash; price list + the native IAP sheet</div>
+      <div class="device" data-screen-label="Store B · S5 — Currency packs">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>TOP UP</h2><span class="fh-spacer"></span><button class="ccount"><span class="dia">&#9672;</span>5</button></div>
+            <div class="scroll" style="display:flex; flex-direction:column;">
+              <div class="sec" style="margin-top:4px;"><h3>CURRENCY PACKS &mdash; THE ONLY DOLLARS IN THE APP</h3></div>
+              <div class="pack-list">
+                <div class="packrow"><span class="amt">10 &#9672;</span><span class="plbl">CURRENCY PACK</span><span class="flash">STARTER</span><button class="usd-chip">$1.99</button></div>
+                <div class="packrow" style="border-color: color-mix(in srgb, var(--gold) 75%, transparent); box-shadow: 0 0 11px rgba(255,210,63,.2);"><span class="amt">30 &#9672;</span><span class="plbl">CURRENCY PACK</span><button class="usd-chip">$4.99</button></div>
+                <div class="packrow"><span class="amt">65 &#9672;</span><span class="plbl">CURRENCY PACK</span><button class="usd-chip">$9.99</button></div>
+                <div class="packrow"><span class="amt">140 &#9672;</span><span class="plbl">CURRENCY PACK</span><span class="flash">BEST RATE</span><button class="usd-chip">$19.99</button></div>
+              </div>
+              <div class="hint">&#9672; IS EARNABLE FREE &mdash; +1 DAILY LOGIN &middot; MILESTONES (ECON-02). PACKS SKIP THE WAIT.</div>
+              <div style="display:flex; justify-content:center; margin-top:8px;"><a class="tert dim" href="#">&#8635; RESTORE PURCHASES</a></div>
+              <!-- the native IAP sheet, half-raised: checkout stays the platform's -->
+              <div style="margin: 14px -12px -10px; margin-top:auto; background:#1b1b1f; border-top:1px solid rgba(255,255,255,.14); padding: 11px 16px 13px;">
+                <div style="display:flex; align-items:center; gap:9px;">
+                  <div style="width:26px; height:26px; border-radius:6px; background:linear-gradient(160deg, var(--plastic-hi), var(--plastic-lo)); display:flex; align-items:center; justify-content:center; font:700 10px var(--pk); color:#fff;">IG</div>
+                  <div style="display:flex; flex-direction:column; gap:1px;">
+                    <span style="font:600 11px -apple-system,'Segoe UI',sans-serif; color:#fff;">30 Customizer Currency</span>
+                    <span style="font:500 9.5px -apple-system,'Segoe UI',sans-serif; color:#9a9aa2;">InGame &middot; In-App Purchase</span>
+                  </div>
+                  <span style="margin-left:auto; font:600 13px -apple-system,'Segoe UI',sans-serif; color:#fff;">$4.99</span>
+                </div>
+                <div style="margin-top:11px; display:flex; align-items:center; justify-content:center; gap:7px; background:#0a84ff; border-radius:7px; padding:9px;">
+                  <span style="font:600 11.5px -apple-system,'Segoe UI',sans-serif; color:#fff;">Confirm with Face ID</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>S5 &mdash; Currency packs <em>(price list + the platform's own sheet)</em></h3>
+        <p><b>PackTile/B = price-list rows</b> (the App-Store grammar shoppers already know): &#9672; amount in
+        gold, tier label, the <b>dollar price on a cream keycap</b> &mdash; deliberately not gold, dollars are the
+        doorway, &#9672; is the value. STARTER / BEST-RATE flashes; the free-earning line (ECON-02) keeps packs a
+        shortcut, not a gate; <b>&#8635; RESTORE PURCHASES</b> beneath.</p>
+        <p>The bottom shows the moment of truth: <b>the native IAP sheet</b> half-raised &mdash; checkout is the
+        platform's, receipt validation server-side (ECON-06/RevenueCat). Maximum-conventional where money moves
+        (&sect;1.1). <i>Tiers illustrative (OQ-011, pairs OQ-002).</i></p>
+      </div>
+    </div>
+
+    <!-- ═══ S6 · Purchase states ═══ -->
+    <div class="take">
+      <div class="artboard-label">S6 &middot; Purchase states &mdash; the +30 moment / Toast / restore</div>
+      <div class="device" data-screen-label="Store B · S6 — Purchase states">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>TOP UP</h2><span class="fh-spacer"></span><span style="display:inline-flex; align-items:center;"><span class="tick-chip">+30</span><button class="ccount" style="box-shadow: 0 2px 0 color-mix(in srgb, var(--gold) 45%, #000), 0 0 13px rgba(255,210,63,.55), inset 0 1px 0 rgba(255,255,255,.5);"><span class="dia">&#9672;</span>35</button></span></div>
+            <div class="scroll">
+              <div class="moment">
+                <span class="npl">PACK LANDED &middot; RECEIPT VERIFIED</span>
+                <span class="big-dia">+30 &#9672;</span>
+                <span class="from-to">5 &#10142; <b>35</b></span>
+                <div class="gold-rule" style="align-self:stretch;"></div>
+                <span class="hint" style="margin-top:10px;">LOGGED IN YOUR WALLET LEDGER (ECON-07) &middot; THE COUNTER DID THE CELEBRATING &mdash; BIG RITUALS STAY WITH CARDS (OQ-040)</span>
+                <div style="display:flex; gap:10px; margin-top:12px;">
+                  <button class="btn secondary">BACK TO EMBER</button>
+                  <a class="tert" href="#" style="align-self:center;">VIEW WALLET &rsaquo;</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="half-panel sk2 c5" style="padding-left:0; padding-right:0; padding-top:0;">
+        <div class="toastb" style="margin:0;">
+          <span class="bang">&#9888;</span>
+          <div class="t-tx">
+            <span class="t-t">PURCHASE DIDN'T GO THROUGH</span>
+            <span class="t-s">NOTHING WAS CHARGED &mdash; YOUR &#9672; ARE SAFE</span>
+          </div>
+          <button class="btn act">RETRY</button>
+        </div>
+        <div class="hint" style="text-align:left; margin:9px 14px 0;"><b>FAILURE &rarr; Toast/B</b> (&sect;1.8): a full-bleed banner slides under the header &mdash; edge-to-edge so it reads as the page speaking, not a floating widget. Plain words + orange RETRY (safe to repeat).</div>
+      </div>
+      <div class="half-panel sk2 c5">
+        <div class="hp-row">
+          <div class="hp-meta">
+            <span class="npl">RESTORE PURCHASES</span>
+            <span class="hero-sub">RECEIPTS RE-CHECKED &middot; ENTITLEMENTS RE-SYNCED TO THIS DEVICE</span>
+            <span class="hero-sub" style="color:var(--scr-soft);">&#10003; ALL CAUGHT UP &mdash; BALANCE &amp; ITEMS MATCH YOUR ACCOUNT</span>
+          </div>
+        </div>
+        <div class="hint" style="text-align:left; margin-top:8px;"><b>RESTORE</b> (ECON-06): quiet, factual, no celebration. <i>Consumable-pack restore semantics &rarr; OQ-041.</i></div>
+      </div>
+      <div class="caption">
+        <h3>S6 &mdash; Purchase states <em>(the moment &middot; the banner &middot; the re-sync)</em></h3>
+        <p><b>Success gets one editorial beat:</b> a centered <b>+30 &#9672;</b> at display scale, the 5 &#10142; 35
+        arithmetic spelled out, the header counter glowing with its <b>+30 tick chip</b> &mdash; then straight back
+        to what you were buying (BACK TO EMBER). One gold rule, no confetti; the OQ-040 rituals belong to cards.</p>
+        <p><b>Failure</b> is Toast/B &mdash; the full-bleed under-header banner with RETRY; <b>restore</b> is a
+        quiet factual re-sync. All three name their truth in plain language first, arcade flavour second
+        (&sect;1.8).</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-label">Wallet &amp; ownership <small>S7 the statement + negative variant &middot; S8 owned / locked / the trophy shelf</small></div>
+  <div class="stage">
+
+    <!-- ═══ S7 · Wallet — the statement ═══ -->
+    <div class="take">
+      <div class="artboard-label">S7 &middot; Wallet &mdash; statement + the ECON-09 negative variant</div>
+      <div class="device" data-screen-label="Store B · S7 — Wallet">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>WALLET</h2></div>
+            <div class="scroll">
+              <div class="bal-hero">
+                <span class="bl">YOUR BALANCE</span>
+                <span class="bal">27 &#9672;</span>
+                <span class="hint" style="margin:2px 0 0;">ONE WALLET &middot; CARDS COST 1 &#9672; TO ADOPT &middot; ASSETS COST MORE (ECON-01)</span>
+                <button class="btn buy" style="margin-top:8px;">BUY &#9672;</button>
+              </div>
+              <div class="sec"><h3>TODAY</h3></div>
+              <div class="stmt">
+                <div class="led-row spend"><span class="what">EMBER &middot; EFFECT</span><span class="when">14:12</span><span class="amt">&minus;8 &#9672;</span></div>
+                <div class="led-row earn"><span class="what">CURRENCY PACK &middot; 30</span><span class="when">14:09</span><span class="amt">+30 &#9672;</span></div>
+              </div>
+              <div class="sec"><h3>EARLIER</h3></div>
+              <div class="stmt">
+                <div class="led-row spend"><span class="what">ADOPTED &ldquo;DESTINY&rdquo; BY RIKO</span><span class="when">TUE</span><span class="amt">&minus;1 &#9672;</span></div>
+                <div class="led-row earn"><span class="what">LOGIN BONUS</span><span class="when">TUE</span><span class="amt">+1 &#9672;</span></div>
+                <div class="led-row earn"><span class="what">STARTING GRANT</span><span class="when">JUN 02</span><span class="amt">+5 &#9672;</span></div>
+              </div>
+              <div class="hint">EVERY EARN &amp; SPEND IS A LINE &mdash; AUDITABLE AND YOURS TO READ (ECON-07)</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="half-panel sk2 c5">
+        <div class="bal-hero neg">
+          <span class="bl">YOUR BALANCE</span>
+          <span class="bal">&minus;3 &#9672;</span>
+          <span class="hint" style="margin:2px 0 0; color:var(--scr-soft);">A REFUND REVERSED 30 &#9672; (ECON-09). FUTURE EARNS &amp; PACKS RECOVER IT &mdash; NOTHING YOU OWN IS TAKEN BACK.</span>
+          <button class="btn buy" style="margin-top:8px;">BUY &#9672;</button>
+        </div>
+        <div class="stmt" style="margin-top:9px;">
+          <div class="led-row rev"><span class="what">&#8856; REFUND REVERSAL &middot; PACK 30</span><span class="when">16:02</span><span class="amt">&minus;30 &#9672;</span></div>
+        </div>
+        <div class="hint" style="text-align:left; margin-top:8px;"><b>NEGATIVE VARIANT:</b> the hero goes alert-red (the header counter wears the same red elsewhere); the reversal is one honest statement line; recovery copy + BUY &#9672; point the way back up.</div>
+      </div>
+      <div class="caption">
+        <h3>S7 &mdash; Wallet <em>(a statement, not a slot machine)</em></h3>
+        <p>The Wallet is Draft B's most conventional page on purpose: a centered <b>balance hero</b> (display-21
+        gold &mdash; F-06's ceiling), the ECON-01 one-liner, BUY &#9672;, then the ledger as a <b>bank statement</b>
+        grouped TODAY / EARLIER &mdash; <b>LedgerRow/B</b> = what &middot; when &middot; signed amount. The full
+        ECON-07 narrative reads top to bottom: &minus;8 EMBER &middot; +30 pack &middot; &minus;1 adoption &middot;
+        +1 login &middot; +5 grant.</p>
+        <p>The fragment is the <b>ECON-09 negative variant</b>: &minus;3 &#9672; in alert red, the &#8856; reversal
+        line, no-clawback reassurance, BUY &#9672; as the bridge. Reached from any screen via the
+        <b>CurrencyCounter</b>; the Wallet header drops the counter (the hero IS the number).</p>
+      </div>
+    </div>
+
+    <!-- ═══ S8 · Ownership — category page + trophy shelf ═══ -->
+    <div class="take">
+      <div class="artboard-label">S8 &middot; Ownership &mdash; owned / locked / the trophy shelf</div>
+      <div class="device" data-screen-label="Store B · S8 — Ownership">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>EFFECTS</h2><span class="fh-spacer"></span><button class="ccount"><span class="dia">&#9672;</span>27</button></div>
+            <div class="scroll">
+              <div class="sec" style="margin-top:2px;"><h3>FROM THE INDEX &mdash; 14 EFFECTS</h3></div>
+              <div class="itemrow">
+                <div class="gcard thumb fr-neutral fx-ember"><div class="art"><svg><use href="#art-neutral"/></svg></div><div class="plate pl-neutral">Sample</div></div>
+                <div class="mod-meta">
+                  <span class="mod-name">EMBER</span>
+                  <span class="mod-type">EFFECT &middot; EMBER SERIES</span>
+                </div>
+                <div class="mod-end"><span class="tag-owned">&#10003; OWNED</span><span class="ach-hint">IN YOUR EDITOR</span></div>
+              </div>
+              <div class="itemrow">
+                <div class="gcard thumb fr-neutral fx-volt"><div class="art"><svg><use href="#art-neutral"/></svg></div><div class="plate pl-neutral">Sample</div></div>
+                <div class="mod-meta">
+                  <span class="mod-name">VOLT</span>
+                  <span class="mod-type">EFFECT</span>
+                </div>
+                <div class="mod-end"><span class="price-chip">6 &#9672;</span></div>
+              </div>
+              <div class="itemrow lkd">
+                <div class="gcard thumb fr-neutral fx-ghost"><div class="art"><svg><use href="#art-neutral"/></svg></div><div class="plate pl-neutral">Sample</div></div>
+                <div class="mod-meta">
+                  <span class="mod-name">SOLSTICE</span>
+                  <span class="mod-type">EFFECT &middot; WINTER DROP</span>
+                </div>
+                <div class="mod-end"><span class="tag-locked">&#128274; RETURNS WITH ITS DROP</span></div>
+              </div>
+              <div class="sec"><h3>THE TROPHY SHELF &mdash; EARNED ONLY</h3></div>
+              <div class="trophy">
+                <div class="tr-row">
+                  <div class="gcard thumb fr-crown"><div class="art"><svg><use href="#art-neutral"/></svg></div><div class="plate pl-neutral">Sample</div></div>
+                  <div class="mod-meta">
+                    <span class="mod-name">PIXEL CROWN</span>
+                    <span class="mod-type">FRAME &middot; ACHIEVEMENT EXCLUSIVE</span>
+                    <span class="ach-hint">COMPLETE 100 GAMES &mdash; THEN IT'S YOURS</span>
+                  </div>
+                  <div class="mod-end"><span class="tag-earned">&#127942; EARNED ONLY</span></div>
+                </div>
+                <div class="tr-row">
+                  <div class="gcard thumb fr-neutral fin-holo"><span class="foil-band"></span><div class="art"><svg><use href="#art-neutral"/></svg></div><div class="plate pl-neutral">Sample</div></div>
+                  <div class="mod-meta">
+                    <span class="mod-name">GILDED TURBO</span>
+                    <span class="mod-type">FINISH &middot; ACHIEVEMENT EXCLUSIVE</span>
+                    <span class="ach-hint">YOUR CARDS ADOPTED 50 TIMES</span>
+                  </div>
+                  <div class="mod-end"><span class="tag-earned">&#127942; EARNED ONLY</span></div>
+                </div>
+                <div class="hint" style="margin-top:9px;">NEVER PRICED &middot; NEVER SOLD &mdash; WON THROUGH ACHIEVEMENTS (COSM-04)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>S8 &mdash; Ownership <em>(a category page wearing its states)</em></h3>
+        <p>An index category page (EFFECTS) carrying all the entitlement states inline: <b>OwnedTag</b> (cream
+        &#10003;, price gone for good, "in your editor" pointer) &middot; a normal <b>PriceChip</b> row &middot;
+        <b>LockedTag</b> (padlock, desaturated, "returns with its drop" &mdash; a date, never a price; the ECON-08
+        hook).</p>
+        <p><b>THE TROPHY SHELF</b> is an editorial module with a gold rule: achievement exclusives shown with
+        <b>EarnedOnlyTag</b> (gold-bordered, gold type &mdash; outlined, never gold-filled, so it can't be misread
+        as a price) and the achievement that wins each. Visible and coveted, <b>never purchasable</b> (COSM-04
+        &mdash; the owner-default treatment, flagged at the gate).</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
