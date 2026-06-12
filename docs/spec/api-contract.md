@@ -4,7 +4,7 @@
 > be refined alongside the design-spec, because screens reveal exactly what each call must return.
 > Behavior lives in [`product-spec.md`](product-spec.md); shapes live here. Referenced by ID.
 
-**Version:** 0.12 (draft) · **Last updated:** 2026-06-11 · **Owner:** Claude Code
+**Version:** 0.13 (draft) · **Last updated:** 2026-06-12 · **Owner:** Claude Code
 
 ---
 
@@ -49,9 +49,9 @@
 ## Catalog & contribution (`CAT-`)
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/catalog/search?q=` | Title search (CAT-01); returns matches + dedup candidates (CAT-03) |
+| GET | `/catalog/search?q=` | Title search (CAT-01); returns matches + dedup candidates (CAT-03); each result carries `collectionsCount` + `friendsHaveCount` (CAT-09) |
 | POST | `/catalog/games` | `{ name, genreIds[], studio?, publisher?, releaseDate? }` → created entry, `createdBy = caller` (CAT-02/05); 409 + suggestions on dedup hit |
-| GET | `/catalog/games/:id` | Canonical entry + genres + contributor + card gallery |
+| GET | `/catalog/games/:id` | Canonical entry + genres + contributor + card gallery + `collectionsCount`/`friendsHaveCount` (CAT-09) |
 | POST | `/catalog/games/:id/edits` | Suggest field edit (CAT-06) |
 | GET | `/genres` | Controlled genre list (CAT-04) |
 | GET | `/users/:id/contributions` | Contributor profile data (CAT-07) |
@@ -177,3 +177,4 @@
 | 2026-06-11 | 0.10 | Avatar pipeline (PROF-08): `avatar` leaves `PATCH /me`; draft/publish endpoints mirror the card flatten flow. |
 | 2026-06-11 | 0.11 | Account suspension (MOD-09): admin suspend/unsuspend; `ACCOUNT_SUSPENDED` code on auth login/refresh; `/users/:id` collapses blocked/suspended/deleted into one generic unavailable (non-disclosure). |
 | 2026-06-11 | 0.12 | Engagement-moments ripple (decision 0015): `GET /cards/:id/share-image` — watermarked share variant of the flattened render (CARD-21). |
+| 2026-06-12 | 0.13 | CAT-09 ripple (decision 0016): `collectionsCount` + `friendsHaveCount` on catalog search results + the game payload. |

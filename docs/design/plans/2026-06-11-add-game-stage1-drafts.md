@@ -149,3 +149,19 @@ C-v2 "looks really good"; fine-tuning:
 6. **P7 credit eyebrow: "DESIGNED BY <name>"** (was "HELD · BY").
 7. **Meta-above-the-card** for swipeable views (owner proposal, controller endorsed): EquipReadout/credit/meta sit ABOVE the fan; the cards drop into the thumb zone (more salient + swipeable). Applied to P3, P7, P7b; **P6 deliberately exempt** (chips are the touch target → they keep the thumb zone); P1's rails already lead with headers.
 Meta: **no PNG deliverables** — the html files are what the owner reviews; renders are internal verification only.
+
+### Owner pass 3 (C-v3 review — recorded 2026-06-12) → C-v4 (`add-game-draft-c4-cardled.html`)
+1. **Search bar bottom-docked** (the Collection in-place pattern): results populate **above** it, the
+   **focused card's info just above the field**, field at the screen bottom. Applies to P1/P2/P3 (+P4's
+   search context). *Supersedes pass-2 note 7 for P3 only* (search meta now sits below the fan, above
+   the field); P7/P7b keep meta-above. Bonus coherence: bottom-docked = literally OQ-035's
+   "field rides above the keyboard" when typing.
+2. **Report drawer gets two buttons — SUBMIT + CANCEL** (reasons become a selectable list; SUBMIT =
+   orange action-alt keycap; trim the stray last-row hairline while in there).
+3. **P7 uses more of the screen** — bigger fan, meta block sitting higher. *Controller additions
+   (owner-invited):* per-face **adoption count** ("ADOPTED 214×", CARD-05) + a **"2 / 7" position
+   count** beside the dots.
+4. **CAT-09 presence stats on P3/P3b** (behavior — decision 0016, spec'd this pass): focused-card
+   meta gains "IN N COLLECTIONS · N FRIENDS HAVE IT"; CardDetail gains the same as meta rows.
+5. **P8 count tick:** the floating "+1" chip is replaced by a **contrasting inset box INSIDE the gold
+   "49 GAMES" CountKeycap** reading "+1" one font step down.

@@ -6,7 +6,7 @@
 > "how it looks/feels"). Behavior questions raised while designing go to
 > [`../open-questions.md`](../open-questions.md), not edited into the spec directly.
 
-**Version:** 0.10 · **Last updated:** 2026-06-11 · **Owner:** Claude Code → Claude Design
+**Version:** 0.11 · **Last updated:** 2026-06-12 · **Owner:** Claude Code → Claude Design
 **Status:** **ALL screens specified** (5 tabs + 16 detail screens/flows). Ready to hand to Claude Design. Open design notes live in `open-questions.md` (`OQ-005/007`).
 > **Claude Design — read [`design-process.md`](design-process.md) first.** It defines the phased,
 > reuse-first process: 3 hero-screen (Collection) drafts → extract a named component catalog →
@@ -156,7 +156,7 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 ### 4.1 Add Game (flow)
 **Purpose:** get a game into your collection (and the catalog when it's new). **Personas:** everyone; Contributor.
 **Must host:**
-- **Search** the community catalog (`CAT-01`); results show **title + release year + developer studio + a representative card + an "in your collection" marker**.
+- **Search** the community catalog (`CAT-01`); results show **title + release year + developer studio + a representative card + an "in your collection" marker** + **community presence** (in-N-collections · friends-have-it, `CAT-09`).
 - **Empty-state suggestions** (recently-added / popular / friends' games) — never a blank box.
 - **Exists →** add with an **all-status picker** (`COL-01/02`), then an **offered (not forced)** card step (else default placeholder, `CARD-18`).
 - **Missing →** **Create canonical entry** (name/genre/studio/publisher/release) with **fuzzy dedup** (`CAT-03`) → "be first to design its card."
@@ -165,7 +165,7 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 
 ### 4.2 Game page (adaptive — shared page + owned state)
 **Purpose:** the **shared community page** for a canonical game; when you own it, your personal details take precedence. **One screen, two states** — Collection Entry Detail folds in here.
-**Shared content:** canonical facts + **contributor credit** (`CAT-02/05`); **tappable genre/studio** (`DISC-02`); **community card gallery + adopt** and **design a card** (`CARD-04`, `ECON-03/04`); **add to collection / Up Next** (`WTP-02`); **recommend to a friend** (`SOC-05`); **friends-who-own + hours**; **suggest edit** (`CAT-06`); **report incl. duplicate** (`MOD-01`); **upcoming → notify me** (`DISC-01`, `NOTIF-01`); **community aggregate stats — later phase**.
+**Shared content:** canonical facts + **contributor credit** (`CAT-02/05`); **tappable genre/studio** (`DISC-02`); **community card gallery + adopt** and **design a card** (`CARD-04`, `ECON-03/04`); **add to collection / Up Next** (`WTP-02`); **recommend to a friend** (`SOC-05`); **friends-who-own + hours**; **suggest edit** (`CAT-06`); **report incl. duplicate** (`MOD-01`); **upcoming → notify me** (`DISC-01`, `NOTIF-01`); **community presence stats** (in-N-collections · friends-have-it, `CAT-09`); **richer aggregates (avg hours, completion) — later phase**.
 **Owned state (takes precedence):** your **hours / % / status / owned-since / rating / notes** (editable) + **selected card + card switcher** (`COL-03/06`); **Now Playing** (`WTP-03`); **share card image** (`CARD-21`).
 **States:** not-owned vs owned · upcoming · no-cards-yet (be-first) · soft-hidden/reported.
 
@@ -273,3 +273,4 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 | 2026-06-10 | 0.8 | Decision 0012 ripple: Collection **view-mode definitions** (shelf / compact grid / dense list); new §1.8 **feedback & error-surfacing pattern**; §1.6 **friend-chrome toggle** (OQ-012 resolved — default own chrome, opt-in swap); Device editor gains **screen theme** (`DEV-04`) + Settings "Not here." |
 | 2026-06-11 | 0.9 | Decision 0013 ripple: §3.1 **shelf** mode carries a per-game stats eyebrow (`OQ-033`), so the dense-list rationale shifts from "only mode with stats" to "densest scan." |
 | 2026-06-11 | 0.10 | Decision 0015 ripple: **share card image** (`CARD-21`) on the Game page owned state (4.2) and at the card-editor reveal (4.3); reveal/celebration pattern tracked as `OQ-040`. |
+| 2026-06-12 | 0.11 | Decision 0016 ripple: **community presence stats** (`CAT-09`) in search results (4.1) + on the Game page (4.2 — presence pulled forward; richer aggregates stay later-phase). |

@@ -4,7 +4,7 @@
 > Screens and visuals are owned by the design-spec; endpoint shapes by the api-contract. This
 > document references those by ID. See [`../00-INDEX.md`](../00-INDEX.md) for the working agreement.
 
-**Version:** 0.14 (draft) · **Last updated:** 2026-06-11 · **Owner:** Claude Code
+**Version:** 0.15 (draft) · **Last updated:** 2026-06-12 · **Owner:** Claude Code
 
 ---
 
@@ -127,6 +127,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | CAT-06 | P1 | Users may **suggest edits** to canonical fields, with attribution; lightweight, not a wiki-war surface. |
 | CAT-07 | P1 | **Contributor profile ("My Contributions")** — games you brought to the catalog, fields you added, cards you designed, with adoption/usage stats; **friend-viewable** (subject to privacy, PROF-03); **stats + achievement badges, no separate level system**. (Contributor pride surface.) |
 | CAT-08 | P1 | **Upcoming games** exist purely as catalog entries with a future release date (community-entered). |
+| CAT-09 | P1 | **Community presence stats** on every catalog entry: **(a) collections count** — how many users' collections contain the game (anonymous aggregate, honest at any size — no threshold gating needed, unlike PROF-07's percentiles); **(b) friends-have-it count** — how many of *the viewer's* friends have it (derives from existing friend visibility, PROF-03/COL-10; blocks sever friendships, so SOC-09 needs no special-casing). Surfaced in **catalog search results** (the add flow's focused-card meta + card detail) and on the **Game page**. *(Pulls the presence counts forward from the Game page's "community aggregate stats — later phase"; richer aggregates — average hours, completion rates — stay parked for later.)* |
 
 ### 5.5 Collection (`COL-`)
 | ID | Pri | Behavior |
@@ -351,3 +352,4 @@ Recorded so they're conscious choices, not omissions:
 | 2026-06-11 | 0.12 | **Avatar = designed composition** (owner direction during profile-states mockups): avatar creation reuses the Card editor + flatten/publish pipeline on a square canvas; default monogram guaranteed; screened/reportable as user content. Ripples api-contract (avatar draft/publish). | PROF-08 |
 | 2026-06-11 | 0.13 | **Account suspension** (owner direction during profile-states mockups): moderator can temporarily/indefinitely suspend an abusive account (reversible, logged); suspended users get a notice + appeal channel (SYS-09); **suspended/blocked/deleted accounts render to viewers as one generic "unavailable" state** (non-disclosure), Unblock the lone exception. Ripples api-contract (admin suspend, `ACCOUNT_SUSPENDED`, `/users/:id` collapse). | MOD-09 |
 | 2026-06-11 | 0.14 | **Engagement-moments batch** (decision 0015): **CARD-21 external image-share un-parked** (image-only — deep links/web page stay §10); NOTIF-04 gains the **post-publish** pre-prompt moment; CARD-01's back gains **printed provenance** (designer + adoption count). Ripples api-contract (share variant) + design-req. | CARD-01/21, NOTIF-04 |
+| 2026-06-12 | 0.15 | **CAT-09 community presence stats** (decision 0016, owner direction during Add Game pass 3): collections-count + friends-have-it on every catalog entry, surfaced in search + the Game page — the presence half of the Game page's "aggregate stats" pulled forward from later-phase. Ripples api-contract (search/game payload fields) + design-req 4.1/4.2. | CAT-09 |
