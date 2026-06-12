@@ -4,7 +4,7 @@
 > be refined alongside the design-spec, because screens reveal exactly what each call must return.
 > Behavior lives in [`product-spec.md`](product-spec.md); shapes live here. Referenced by ID.
 
-**Version:** 0.16 (draft) · **Last updated:** 2026-06-12 · **Owner:** Claude Code
+**Version:** 0.17 (draft) · **Last updated:** 2026-06-12 · **Owner:** Claude Code
 
 ---
 
@@ -40,10 +40,10 @@
 ## Profile (`PROF-`)
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/me` | Current user: profile, privacy, favourite game/genre, gamertags, summary + clout stats (+ per-stat **percentile chips** when above the population threshold, PROF-07), member-since, now-playing (PROF-01/04/05) |
+| GET | `/me` | Current user — **the Profile self-view renders from this one call**: identity `{ username, avatarUrl }` (**`avatarUrl: null` ⇒ the default monogram**, PROF-08), `bio`, `memberSince`, favourite genres, privacy, gamertags (PROF-01/02/03); **`usernameNextChangeAt`** — the edit-mode cooldown microcopy ("NEXT CHANGE OK NOW · 1/30 DAYS", PROF-06); **`stats { games, hours, completionPct, cardsDesigned, adoptionsReceived, friends }`**, each with an optional **`percentile`** (threshold-gated, PROF-07); **`favouriteGame`** + **`nowPlaying`** each expanded `{ gameId, entryId?, title, hours, card }` (PROF-01/04/05, WTP-03; `card` = the owner's selected render, CARD-07/18); **`top5: [{ rank, gameId, title, card }]`** (SOC-04); teaser counts **`achievements { unlocked, total }`** (ACH-02) · **`contributionsCount`** (CAT-07) |
 | PATCH | `/me` | `{ username?, bio?, favouriteGenreIds?, favouriteGameId?, privacy? }` — username changes cooldown-limited + screened (PROF-06, MOD-07); avatar changes flow through the avatar pipeline (PROF-08) |
 | POST | `/me/avatar/draft` · `/me/avatar/publish` | Avatar design pipeline (PROF-08) — mirrors the card draft → publish-flatten flow (server-rendered square image); shapes to harden during design |
-| GET | `/users/:id` | Friend-view showcase honoring privacy (PROF-03/05): device, top-5, now-playing, stats (+ percentiles, PROF-07), friend count/mutual, + Add/Compare affordances. **Blocked / suspended / deleted → one generic `NOT_FOUND`-style "unavailable"** (non-disclosure, MOD-09 / SOC-09 / AUTH-07) — never reveals which, nor who blocked whom |
+| GET | `/users/:id` | **Two privacy-gated shapes** (PROF-03). **Friend / full** (PROF-05): identity (username, avatarUrl, memberSince, bio, favourite genres, **gamertags** — PROF-02), **`device { shellId, screenThemeId, stickerComposition }`** (the THEIR-DEVICE row + the "view in their device" chrome toggle, DEV-02/04 / decision 0012), stats + percentiles (PROF-07), top5, now-playing (+ hours), **`friendsCount` + `mutualFriendsCount`**, achievements teaser (ACH-05). **Non-friend / limited**: `{ username, avatarUrl, memberSince, mutualFriendsCount }` — nothing else leaks. Both carry **`relationship`** (`none · outgoing · incoming · friend`) driving the ADD FRIEND / FRIEND-tag chrome (SOC-01/08). **Blocked / suspended / deleted → one generic `NOT_FOUND`-style "unavailable"** (non-disclosure, MOD-09 / SOC-09 / AUTH-07) — never reveals which, nor who blocked whom |
 | GET | `/me/gamertags` · POST · PATCH `/:id` · DELETE `/:id` | Gamertag CRUD (PROF-02) |
 
 ## Catalog & contribution (`CAT-`)
@@ -56,12 +56,14 @@
 | GET | `/genres` | Controlled genre list (CAT-04) |
 | GET | `/users/:id/contributions` | Contributor profile data (CAT-07) |
 | GET | `/catalog/upcoming` | Entries with `releaseDate` in the future (CAT-08) |
+| GET | `/catalog/popular` | **Empty-state / onboarding suggestion rail** — the empty Collection's "POPULAR FIRST ADDS" + AUTH-06's add-a-few-games step: entries in the search-result shape incl. `collectionsCount`/`friendsHaveCount` (CAT-09). **Selection/ranking rule is unspecified → OQ-051** |
 
 ## Collection (`COL-`)
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/me/collection` | Filter by genre/status; **sort by hours / owned-since / title / recently-added** + `order=asc\|desc` + manual order; `?q=` searches title/developer/publisher (COL-07/09); paginated |
-| GET | `/users/:id/collection` | Friend-view, read-only, privacy-gated (COL-10) |
+| GET | `/me/collection` | Filter by genre/status; **sort by hours / owned-since / title / recently-added** + `order=asc\|desc` + manual order; `?q=` searches title/developer/publisher (COL-07/09); paginated. Response `{ items, nextCursor, total, collectionTotal }` — **`total`** counts the current query, **`collectionTotal`** the whole shelf (the count keycap's "2 OF 48"). Items: `{ entryId, gameId, title, developer, publisher, releaseYear, genres, hours, status, ownedSince, nowPlaying, card { id, imageUrl, thumbUrl, isCustom, isPremium } }` — `nowPlaying` = the ▶ NOW tag (WTP-03); `card` always resolves (CARD-07/18) and `isCustom`/`isPremium` drive the ★ FOIL-style tags (CARD-06) |
+| PATCH | `/me/collection/reorder` | `{ orderedEntryIds[] }` — saves **manual order** (COL-07), the MY-ORDER sort's ARRANGE write (OQ-031; long-press-drag); mirrors `/me/queue/reorder` |
+| GET | `/users/:id/collection` | Friend-view, read-only, privacy-gated (COL-10): items mirror `/me/collection`'s shelf fields (title · catalog line · hours · status · card + the `nowPlaying` flag for their hero) **minus the personal-only fields** (platforms COL-04 · notes COL-05 · rating); no q/sort/count tools. Owner blocked/suspended/deleted → the **same generic "unavailable" collapse** as `/users/:id` (MOD-09 / SOC-09 / AUTH-07 non-disclosure) |
 | POST | `/me/collection` | `{ gameId }` → collection entry |
 | PATCH | `/me/collection/:entryId` | `{ status?, hours?, percentComplete?, ownedSince?, rating?, notes?, platformIds?, activeCardDesignId? }` (COL-02..06) |
 | DELETE | `/me/collection/:entryId` | Remove from collection |
@@ -114,10 +116,10 @@
 | GET/POST/DELETE | `/me/blocks` (+ `/:userId`) | Blocked-users list / block `{ userId }` / unblock (SOC-09) |
 | GET | `/users/search?username=` | Find people by username (SOC-07) |
 | GET | `/me/compare/:friendId` | Per-game + total hours, total-games comparison + leaderboard slice (SOC-03) |
-| GET/POST/PATCH/DELETE | `/me/lists` (+ `/:id/items`) | Lists incl. Top-5 (capped) (SOC-04) |
+| GET/POST/PATCH/DELETE | `/me/lists` (+ `/:id/items`) | Lists incl. Top-5 (capped) (SOC-04); **Top-5 swap / re-rank** = `PATCH /me/lists/:id { orderedGameIds[] }` (the Profile edit-mode ARRANGE gesture) |
 | POST | `/recommendations` | `{ toUserId, gameId, note }` → recipient's WTP (SOC-05) |
 | GET | `/me/feed` | Low-noise, **aggregated** friend activity (SOC-06) |
-| POST | `/me/invites` | Create a share link / QR invite token (SOC-07) |
+| POST | `/me/invites` | Create a share link / QR invite token (SOC-07) — the **self-Profile SHARE** chip (PROF-05's "Share profile"). *Friend-profile SHARE has no backing (deep links parked §10) → OQ-052* |
 | GET | `/invites/:token` | Resolve an invite → sender summary + prefilled-request affordance (SOC-10) |
 
 *(Friend showcase + read-only collection are served by `/users/:id` and `/users/:id/collection`.)*
@@ -128,7 +130,7 @@
 | GET | `/me/queue` | Ordered; each item flags owned vs unowned (WTP-01) |
 | POST | `/me/queue` | `{ gameId, source }` add |
 | PATCH | `/me/queue/reorder` | `{ orderedItemIds[] }` (WTP-01) |
-| PATCH | `/me/queue/:id` | `{ currentlyPlaying? }` (WTP-03) |
+| PUT | `/me/now-playing` | `{ gameId \| null }` — set/clear the single **Now-Playing pin** (WTP-03), settable from Up Next **or** a collection entry (the Collection hero + SET-NOW-PLAYING nudge); read back via `/me.nowPlaying` + the collection items' `nowPlaying` flag. *(Replaces `PATCH /me/queue/:id { currentlyPlaying }` — one pin, one write path.)* |
 | DELETE | `/me/queue/:id` | Remove |
 
 ## Discovery (`DISC-`)
@@ -186,3 +188,4 @@
 | 2026-06-12 | 0.14 | MOD-01 ripple: `details?` on `POST /reports`, required for reasons needing specifics (`incorrect_info`). |
 | 2026-06-12 | 0.15 | Store-economy ripple (decision 0017): **+`POST /cosmetics/:id/acquire`** (the spend-currency purchase call — Store BUY + editor reconcile; was missing entirely) · `/me/wallet` gains `dailyBonus { available, amount, nextResetAt }` · `/me/daily-bonus` = the Store-claimed daily (lapses) · `/store` pack shapes incl. the one-time Starter Pack (`oneTime/purchased`, ECON-10) + drop shape · ledger `type` enum · `/me/device` → `activeShellId` · `/cosmetics` type enum (shell_sticker_pack · device_shell). |
 | 2026-06-12 | 0.16 | **Styler sync** (the converged board's page audit, styler track): **+`GET /games/:gameId/card-bases`** + **`POST /games/:gameId/card-bases/surprise`** — the `BaseRail` start-from sources + the auto-design deal (CARD-16/18, COSM-02; **resolves OQ-050**) · **+`POST /cards/:id/save-private`** — the missing draft→private finalize (reconcile gate + flatten, CARD-04/13/15; KEEP = save-private + the COL-06 `activeCardDesignId` patch) · **+`POST /cosmetics/acquire-batch`** — the ReconcileSheet's atomic ACQUIRE ALL (CARD-13, ECON-01/07; `shortBy` against the total) · `/cosmetics` + `/cards/assets` type enums gain **`nameplate`** (the styler gate ruling 2026-06-12; COSM-01 wording ripple stays with OQ-039's spec batch) · adopt note: the received-base charge rides the keep-reconcile (ECON-03). |
+| 2026-06-12 | 0.17 | **Collection + Profile page-audit** (the two converged boards, SCREEN-STATUS 3.1/3.5 → API ✅): `/me/collection` response gains `total`/`collectionTotal` + a full **item enumeration** (catalog line, hours/status/ownedSince, `nowPlaying` flag, `card { isCustom, isPremium }` — COL-02..07/09, CARD-06/07/18, WTP-03) · **+`PATCH /me/collection/reorder`** — the MY-ORDER/ARRANGE write (COL-07, OQ-031) · **+`PUT /me/now-playing`** — the one pin write-path, settable from Up Next or a collection entry (WTP-03; replaces the queue-item `currentlyPlaying` patch) · `/users/:id/collection` — friend field subset + the MOD-09 "unavailable" collapse extended to it · **+`GET /catalog/popular`** — the empty-state/onboarding suggestion rail (AUTH-06, CAT-09; ranking rule → **OQ-051**) · `/me` enumerated field-level (stats six-pack + percentiles, `usernameNextChangeAt` PROF-06, favouriteGame/nowPlaying/top5 expansions, achievements + contributions teasers, nullable-avatar monogram PROF-08) · `/users/:id` — **friend/full vs non-friend/limited** shapes + `relationship` + `device { shellId, screenThemeId, stickerComposition }` + gamertags (PROF-02/03/05, DEV-02/04, decision 0012) · `/me/lists` Top-5 re-rank shape (SOC-04) · `/me/invites` = the self-Profile SHARE (PROF-05/SOC-07; friend-profile SHARE → **OQ-052**). |

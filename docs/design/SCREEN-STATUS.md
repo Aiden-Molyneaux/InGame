@@ -9,12 +9,11 @@
 > **per-page subfolders** under [`mockups/`](mockups/) (file map: its README); the catalog
 > stays at the mockups root.
 
-**Last updated:** 2026-06-12 (styler track — Styler converged + **api-contract 0.16 styler sync**; design-spec formalization batch owed)
+**Last updated:** 2026-06-12 (spec owner — **both tracks formalized**: design-spec **0.12/0.13** (§2.4 Add Game · §2.5 Styler · Forms & Flow + editor sets) · catalog **v0.4** · **OQ-039 ruled** (nameplate in, overlay cut — decision 0018, product-spec 0.18)) · api track: **Collection + Profile page-audited** — contract 0.17, API ✅ for 3.1/3.5, +OQ-051/052
 
 ## Up next (the queue)
 1. **Card editor · Canvas posture** (0014 stage 3 — the breakout; resolves OQ-007; the OQ-040 reveal ritual; receives the composition from the converged Styler).
-2. *Formalization batches owed:* the **Styler converge set** (design-spec §2.x + catalog — `AttributeSection` · `SectionChips` · `BaseRail` · `IntensitySlider` · `ReconcileSheet` · `KeepBeat`) and the **OQ-039 spec ruling** (COSM-01 +nameplate · TITLE→font+ink · store aisle) + OQ-048/049. *(API already synced — contract 0.16.)*
-3. *Coverage-driven after that* (design-process): **Discover** (surfaces the segmented control) and **Settings** (rows · toggles · destructive confirm) are the named gap-closers; **Device editor** carries the OQ-045 debt.
+2. *Coverage-driven after that* (design-process): **Discover** (surfaces the segmented control) and **Settings** (rows · toggles · destructive confirm) are the named gap-closers; **Device editor** carries the OQ-045 debt. *(Inbox for next triage: OQ-048/049 · OQ-038.)*
 
 ## Legend
 **State:** ✅ converged · 🔶 in pass / partial · 🔜 queued (#n) · ⬜ not started ·
@@ -25,15 +24,15 @@
 
 | § | Screen | State | Mockup (version) | Implements from | States board | Design-spec | API | Notes / next |
 |---|---|---|---|---|---|---|---|---|
-| 3.1 | Collection (home) | ✅ converged | `h2-underlay-v2` + `collection-states.html` (per 0011–0013) | `collection/collection-states.html` + `collection/h2-underlay-v2-c5-hybrid-ds-enforced.html` | ✅ (incl. friend-view, lifecycle, offline) | ✅ (§2.1; synced 0.8/0013) | 🔶 | — |
+| 3.1 | Collection (home) | ✅ converged | `h2-underlay-v2` + `collection-states.html` (per 0011–0013) | `collection/collection-states.html` + `collection/h2-underlay-v2-c5-hybrid-ds-enforced.html` | ✅ (incl. friend-view, lifecycle, offline) | ✅ (§2.1; synced 0.8/0013) | ✅ (page-audited, 0.17) | 0.17 audit: list totals + item shape · `/me/collection/reorder` · the now-playing pin · `/catalog/popular` (its ranking rule rides OQ-051) |
 | 3.2 | Discover | 🔜 queued (#4) | — | — | — | — | 🔶 | First surface for the segmented control |
 | 3.3 | Friends | ⬜ | — | — | — | — | 🔶 | Feed-first landing (SOC-06) |
 | 3.4 | Store (incl. 4.11/4.12) | ✅ converged | `store-states.html` (5 rulings + 0017) | `store/store-states.html` | ✅ (incl. lifecycle, writes-gated offline) | ✅ (§2.3; 0.10) | ✅ | OQ-045 sticker preview → Device editor pass |
-| 3.5 | Profile | ✅ converged | `profile-states.html` (per 0011–0013) | `profile/profile-states.html` (+ the h2-underlay board's Profile artboard) | ✅ (edit, friend-view, privacy, terminal, offline) | ✅ (§2.2; synced 0.8/0013) | 🔶 | — |
+| 3.5 | Profile | ✅ converged | `profile-states.html` (per 0011–0013) | `profile/profile-states.html` (+ the h2-underlay board's Profile artboard) | ✅ (edit, friend-view, privacy, terminal, offline) | ✅ (§2.2; synced 0.8/0013) | ✅ (page-audited, 0.17) | 0.17 audit: `/me` + `/users/:id` enumerated field-level (cooldown · device payload · limited card · `relationship`); friend-view SHARE rides OQ-052 |
 | 4.1 | Add Game (flow) | ✅ converged | `add-game/add-game-states.html` (c6 + P9–P10 + PIXELS + `ReportSheet/drawer`) | `add-game/add-game-states.html` | ✅ (P1–P10 + P3b/P7b; lifecycle + writes-gated offline) | ✅ (§2.4; 0.12 + catalog v0.4) | ✅ (0016 + MOD-01 ripples) | — |
 | 4.2 | Game page (adaptive) | ⬜ | — (`CardDetail` slice exists in Add Game c5) | — | — | — | 🔶 (CAT-09 fields landed) | Owned-state fold-in; card gallery |
-| 4.3 | Card editor — Styler | ✅ converged | `styler/styler-states.html` (carousel; gate ruling 2026-06-12 — **+NAMEPLATE, overlay cut**) | `styler/styler-states.html` | ✅ (skeleton · load-error · offline draft-safe, writes gated) | ⬜ (formalization batch owed: §2.x + `AttributeSection`/`SectionChips`/`BaseRail`/`IntensitySlider`/`ReconcileSheet`/`KeepBeat`) | ✅ (**0.16 styler sync**: card-bases + surprise · save-private · acquire-batch · `nameplate` enums; OQ-050 resolved) | OQ-039 ruling rides the inbox → spec batch (COSM-01 +nameplate · TITLE→font+ink · store aisle); OQ-048/049 open |
-| 4.3 | Card editor — Canvas | 🔜 queued (#3) | — | — | — | — | 🔶 | Breakout (OQ-007); OQ-040 reveal ritual |
+| 4.3 | Card editor — Styler | ✅ converged | `styler/styler-states.html` (carousel; gate ruling 2026-06-12 — **+NAMEPLATE, overlay cut**) | `styler/styler-states.html` | ✅ (skeleton · load-error · offline draft-safe, writes gated) | ✅ (§2.5; 0.13 + catalog v0.4) | ✅ (**0.16 styler sync**: card-bases + surprise · save-private · acquire-batch · `nameplate` enums; OQ-050 resolved) | **OQ-039 ruled** (decision 0018: COSM-01 +nameplate · TITLE→font+ink · Nameplates aisle); OQ-048/049 open |
+| 4.3 | Card editor — Canvas | 🔶 in pass | canvas drafts A/B/C in progress (canvas track) | — | — | — | 🔶 | Breakout (OQ-007 = the divergence axis); OQ-040 full ritual; element cap 30 (OQ-008 ruling) |
 | 4.4 | Admin / Moderator console | ⬜ | — | — | — | — | 🔶 | Mod-only (MOD-04) |
 | 4.5 | Device editor | ⬜ | — | — | — | — | 🔶 | Owes OQ-045; shells per 0017 |
 | 4.6 | Compare Hours | ⬜ | — | — | — | — | 🔶 | — |
