@@ -58,6 +58,10 @@
   what exactly does "Restore purchases" re-validate/re-grant (account entitlement re-sync vs.
   unfinished-transaction recovery — it must not double-grant)? (ECON-06/07; surfaced designing the
   Store purchase states, store track 2026-06-12) [behavior]
+- OQ-042: **Device "models" vs shells** — owner gate note (store track, 2026-06-12): device shells are
+  *customization of the one pocket/handheld device*, not different devices. Does DEV-02/COSM-01
+  "device model" mean shell/skin variants only (no distinct body shapes), collapsing "model" into
+  "skin"? Affects the Store's Devices category + the Device editor's model switch. [behavior]
 
 ## Resolved
 - OQ-001 → **Multiple device models.** A user can own several device models (via entitlements/store)

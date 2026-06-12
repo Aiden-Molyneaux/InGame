@@ -101,3 +101,42 @@ Deferred to converge: loading skeleton · load-error + RETRY · offline (browse-
    STOP. Do not edit `design-spec.md`, the catalog HTML, product-spec, api-contract, or any
    `add-game-*` / `2026-06-11-add-game-*` file. New behavior questions → APPEND one-liners to
    `docs/open-questions.md` (the inbox is the only shared file you may append to).
+
+---
+
+## Owner gate ruling — 2026-06-12 (verbatim)
+
+> Great work. Here is my feedback to create one new draft with:
+>
+> * I like Draft B the most, however we likely want to show more items that was is previewed
+> * I like Draft B's S1 The Index element
+> * Draft B's preview of Previewing themes is excellent
+> * Draft C's S2 with the drawer is great, take that.
+> * I also like Draft C's inline currency reocmmendation.
+> * So we need a Top Up page
+> * Note that device shells are not different devices, just customization on the pocket/handheld device.
+> * Is clicking on your wallet currency in the top left the best way to get to the Buy Currency page besides the prompt when you don;t have enough for a specific item?
+> * Does clicking on currency pack from the item page take you to the store, or do you do the transaction inline?
+> * I like the currency landing page from Draft B
+> * I like the ledger from Draft C the most
+>
+> Before drafting this next version, can we iterate on what the customizer currency looks like and what
+> we call it in-app. Generate three drafts of the name and icon for a currency
+
+### Track disposition (recorded 2026-06-12)
+- **Converge = one new draft, B-led hybrid:** Draft B base with a **denser S1** (more items visible,
+  not just curated previews) · keep **THE INDEX** · keep the **whole-page theme preview** · detail =
+  **C's bottom sheet/drawer** · bridge = **C's inline pack recommendation at intent** · a dedicated
+  **Top Up page** (B's currency landing) · Wallet ledger = **C's dense LedgerRow form**.
+- **Devices category redrawn:** shells/skins are customization of the ONE pocket/handheld — no distinct
+  body shapes (CRT-MINI-style bodies out). Spec wording tension with DEV-02/COSM-01 "device model"
+  logged as **OQ-042**.
+- **Q (entry to Buy Currency):** recommendation — three honest doors: header CurrencyCounter → Wallet
+  (balance/ledger, BUY → Top Up one tap deeper) · INDEX "CURRENCY" → Top Up directly · the can't-afford
+  bridge at intent. The counter stays a *wallet* door, not a buy door.
+- **Q (pack tap from item detail):** **inline** — the pack tile fires the native IAP sheet in place
+  (RevenueCat → server receipt validation → grant lands → BUY re-arms); no navigation away.
+- **Interlude before the converged draft:** iterate the currency identity — **three drafts of the
+  in-app name + mark** (spec term "Customizer currency", ECON-01/02, unchanged; the chosen mark
+  replaces the ◈ placeholder app-wide incl. the Add Game cost chip). → `currency-identity-drafts.html`,
+  awaiting its own ruling; the converged `store-states.html` lands after it, carrying the winner.
