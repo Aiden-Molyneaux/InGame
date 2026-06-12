@@ -28,7 +28,7 @@
 | 3.5 | Profile | ✅ converged | `profile-states.html` (per 0011–0013) | ✅ (edit, friend-view, privacy, terminal, offline) | 🔶 | — |
 | 4.1 | Add Game (flow) | 🔶 in pass | `add-game-draft-c5-cardled.html` (v5, awaiting review) | ⬜ (deferred to converge: P9–P10) | ✅ (0016 + MOD-01 ripples) | Converge = queue #1; swap ◈→PIXELS |
 | 4.2 | Game page (adaptive) | ⬜ | — (`CardDetail` slice exists in Add Game c5) | — | 🔶 (CAT-09 fields landed) | Owned-state fold-in; card gallery |
-| 4.3 | Card editor — Styler | 🔜 queued (#2) | — | — | 🔶 | Closed attributes; OQ-039 answered here |
+| 4.3 | Card editor — Styler | 🔶 in pass | drafts A/B/C in progress (styler track) | — | 🔶 | Closed attributes; OQ-039 answered here |
 | 4.3 | Card editor — Canvas | 🔜 queued (#3) | — | — | 🔶 | Breakout (OQ-007); OQ-040 reveal ritual |
 | 4.4 | Admin / Moderator console | ⬜ | — | — | 🔶 | Mod-only (MOD-04) |
 | 4.5 | Device editor | ⬜ | — | — | 🔶 | Owes OQ-045; shells per 0017 |
