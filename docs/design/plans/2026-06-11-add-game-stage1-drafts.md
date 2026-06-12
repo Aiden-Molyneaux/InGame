@@ -121,3 +121,20 @@ Every draft renders panels **P1–P8**; lifecycle panels **P9–P10** are conver
 1. **Spec coverage:** every 4.1 must-host appears in a panel (search✓P1-3 · suggestions✓P1 · exists-path✓P6-7 · missing-path✓P4-5 · dedup✓P5 · card step✓P7 · multi-add✓P8 · report-duplicate✓P3 overflow); OQ-035✓P2; OQ-040 stage-1 beats✓P8; takeover tier✓FlowTakeover; CARD-18✓P7 SKIP.
 2. **No placeholders:** every step names exact files, exact panels, exact commands.
 3. **Name consistency:** the locked name-set is used identically in Tasks 1–3 specs and Task 6 formalization.
+
+---
+
+## Gate ruling (Task 4 Step 3 — recorded 2026-06-12)
+
+**Direction: Draft C advances** ("feels the most special"), with fine-tuning via a **C-v2 iteration board** (`add-game-draft-c2-cardled.html`) for owner review before the converged P1–P10 board (Task 5):
+
+1. **Fan cards must never obscure each other's title plates** — the forefront card renders fully (face + plate); **swipe left/right rotates the fan** with a visible affordance (edge peeks + dots/chevrons + hint).
+2. **No status stamp over the card art** — P6's inked-on-face stamp is rejected; status chips live **off-card** (OptionSheet chip form beneath the held card; selection = pressed + pip + an off-card status eyebrow).
+3. **Equipped customizations must be well afforded** — the forefront variant in the CardPicker carries an **equipment readout** (`EquipReadout`: effect / finish / frame chips) + designer credit + cost.
+4. **Tapping a fan card in search opens a detail state** (`CardDetail`): release date · developer studio · publisher · genre(s) · contributor credit, with **ADD TO COLLECTION** from there.
+5. Search-result fan faces carry **no per-card year/studio plates**; *controller pushback adopted:* the **forefront card shows an off-card year·studio meta line** (same-named-entry disambiguation; keeps 4.1's fields surfaced) — back cards stay clean.
+6. **Overlays must be dismissible pre-decision** (`CleanPeek`): press-and-hold fades cost chips / FOIL tags / markers to show the bare art; visible hint.
+7. **Report-duplicate stays reachable from search** — relocated to the CardDetail overflow (MOD-01).
+8. **New visuals required:** the search-tap detail state, and the variant-forefront state in the CardPicker incl. the clean peek.
+
+Sanctioned name-set additions for c2 (feed Task 6): `CardFan` · `CardDetail` · `EquipReadout` · `CleanPeek`. C's dedup InlineBanner adopts the **thumb-bearing** form (gate reviewer note). The stamp ruling supersedes the queued 13px stamp-ink question; gold+step CREATE stands unobjected.
