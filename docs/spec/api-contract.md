@@ -4,7 +4,7 @@
 > be refined alongside the design-spec, because screens reveal exactly what each call must return.
 > Behavior lives in [`product-spec.md`](product-spec.md); shapes live here. Referenced by ID.
 
-**Version:** 0.14 (draft) · **Last updated:** 2026-06-12 · **Owner:** Claude Code
+**Version:** 0.15 (draft) · **Last updated:** 2026-06-12 · **Owner:** Claude Code
 
 ---
 
@@ -84,18 +84,19 @@
 ## Device (`DEV-`)
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/me/device` · PATCH `/me/device` | `{ activeModelId?, shellColour?, screenThemeId?, stickerComposition? }` (DEV-01/02/04) |
+| GET | `/me/device` · PATCH `/me/device` | `{ activeShellId?, screenThemeId?, stickerComposition? }` (DEV-01/02/04; **shells replace models + skins** — one handheld body, decision 0017) |
 
 ## Cosmetics & store & economy (`COSM-`, `ECON-`)
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/cosmetics` | Library (free + premium), filterable by type (COSM-01..03) |
+| GET | `/cosmetics` | Library (free + premium), filterable by type (COSM-01..03; types: `shell_sticker_pack` · `effect` · `finish` · `frame` · `font` · `device_shell` · `screen_theme` — decision 0017) |
 | GET | `/me/entitlements` | What the caller owns (COSM-03) |
-| GET | `/store` | Store front: currency packs (real money) + premium effect/asset packs (priced in currency) + drops (ECON-01/08) |
-| GET | `/me/wallet` | `{ balance }` (ECON-07) |
-| GET | `/me/wallet/ledger` | Paginated transactions (ECON-07) |
+| POST | `/cosmetics/:id/acquire` | **Spend currency on a premium cosmetic** (the Store BUY + the editor reconcile, ECON-01/COSM-03); idempotent; 402-style `INSUFFICIENT_BALANCE` with `{ shortBy }` for the bridge → entitlement + ledger entry |
+| GET | `/store` | Store front: currency packs (real money; each `{ productId, pixels, oneTime?, purchased? }` — the one-time Starter Pack rides `oneTime` + per-account eligibility, ECON-10) + premium cosmetics (priced in currency) + drops `{ id, name, endsAt, itemIds }` (ECON-01/08/10) |
+| GET | `/me/wallet` | `{ balance, dailyBonus: { available, amount, nextResetAt } }` (ECON-02/07 — the Store's claim bar reads this) |
+| GET | `/me/wallet/ledger` | Paginated transactions (ECON-07); `type` ∈ grant · daily_claim · pack_purchase · adoption · acquire · milestone · refund_reversal |
 | POST | `/iap/validate` | `{ platform, receipt | rcUserId }` → grants currency/entitlement after server validation (ECON-06) |
-| POST | `/me/daily-bonus` | Claim login bonus (ECON-02; idempotent per period) |
+| POST | `/me/daily-bonus` | **Claim the daily bonus from the Store screen** (ECON-02; idempotent per day; unclaimed days lapse — decision 0017) → `{ granted, balance, nextResetAt }` |
 | POST | `/iap/webhook` | RevenueCat server notifications: purchase grants + **refund reversals** → wallet/ledger (ECON-06/09); server-to-server, signature-verified |
 
 ## Social (`SOC-`)
@@ -179,3 +180,4 @@
 | 2026-06-11 | 0.12 | Engagement-moments ripple (decision 0015): `GET /cards/:id/share-image` — watermarked share variant of the flattened render (CARD-21). |
 | 2026-06-12 | 0.13 | CAT-09 ripple (decision 0016): `collectionsCount` + `friendsHaveCount` on catalog search results + the game payload. |
 | 2026-06-12 | 0.14 | MOD-01 ripple: `details?` on `POST /reports`, required for reasons needing specifics (`incorrect_info`). |
+| 2026-06-12 | 0.15 | Store-economy ripple (decision 0017): **+`POST /cosmetics/:id/acquire`** (the spend-currency purchase call — Store BUY + editor reconcile; was missing entirely) · `/me/wallet` gains `dailyBonus { available, amount, nextResetAt }` · `/me/daily-bonus` = the Store-claimed daily (lapses) · `/store` pack shapes incl. the one-time Starter Pack (`oneTime/purchased`, ECON-10) + drop shape · ledger `type` enum · `/me/device` → `activeShellId` · `/cosmetics` type enum (shell_sticker_pack · device_shell). |

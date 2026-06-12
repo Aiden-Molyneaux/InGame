@@ -4,7 +4,7 @@
 > Screens and visuals are owned by the design-spec; endpoint shapes by the api-contract. This
 > document references those by ID. See [`../00-INDEX.md`](../00-INDEX.md) for the working agreement.
 
-**Version:** 0.16 (draft) · **Last updated:** 2026-06-12 · **Owner:** Claude Code
+**Version:** 0.17 (draft) · **Last updated:** 2026-06-12 · **Owner:** Claude Code
 
 ---
 
@@ -82,7 +82,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | SYS-01 | P0 | All data access is **ownership-scoped**: a user can only read/modify their own collection, profile, device, wallet, and private cards. (Fixes the prototype's cross-user vulnerability.) |
 | SYS-02 | P0 | All write requests are **validated** server-side (types, ranges, required fields) before persistence. |
 | SYS-03 | P0 | API base URL and all secrets are **environment-configured**, never hardcoded. |
-| SYS-04 | P0 | Economy and tuning values (starting balance, login bonus, adoption cost, milestone thresholds) are **server-configurable** without an app release. |
+| SYS-04 | P0 | Economy and tuning values (starting balance, daily-bonus amount/cadence, adoption cost, milestone thresholds) are **server-configurable** without an app release. |
 | SYS-05 | P1 | Sensitive/abuse-prone endpoints (auth, create-entry, **card publishing**, report) are **rate-limited**. |
 | SYS-06 | P0 | An **automated testing harness + CI** exist from Phase 1 (before feature code). Approach: risk-based, meaningful-tests-first — see [`testing-strategy.md`](testing-strategy.md). |
 | SYS-07 | P0 | **Every mutating endpoint carries a standing authorization test** proving a user cannot read/modify another user's resource (enforces SYS-01). |
@@ -151,7 +151,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | ID | Pri | Behavior |
 |---|---|---|
 | CARD-01 | P0 | A **Card editor**, launched for a specific game, composes the card **front** as layers (the **back is a standardized** auto-stats layout **incl. printed provenance — designer attribution + adoption count**, decision 0015): *optional colour/gradient base → vector elements → one animated effect → finish → frame → title.* Trading-card portrait. |
-| CARD-02 | P0 | Art is **in-app vector composition** — placeable **vector primitives** (shapes, letters, numbers, icons/SVGs; free + premium packs) positioned/scaled/rotated/recoloured/layered, plus an optional colour/gradient base. **No image uploads. No AI art.** ("Stickers" and "art assets" are unified as vector elements.) |
+| CARD-02 | P0 | Art is **in-app vector composition** — placeable **vector primitives** (shapes, letters, numbers, icons/SVGs — **the free baseline; premium vector packs are rescoped to shell stickers**, decision 0017/OQ-047) positioned/scaled/rotated/recoloured/layered, plus an optional colour/gradient base. **No image uploads. No AI art.** ("Stickers" and "art assets" on cards are unified as vector elements; purchasable sticker packs belong to the shell.) |
 | CARD-03 | P0 | With no uploads, moderation is **report/hide on published cards** (MOD-01/02) + **text/glyph screening** on user-entered text (MOD-07) — no upload-review pipeline. |
 | CARD-04 | P0 | **Save private** (your collection only) or **Publish** to the community; published cards are **adoptable** and retain **designer attribution**. |
 | CARD-05 | P1 | A card tracks **adoption count / popularity**; the editor surfaces a creator's adoptions, **clout**, and **milestone progress** (ECON-05, ACH) — a lightweight creator dashboard. |
@@ -166,7 +166,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | CARD-14 | P0 | **Drafts & lifecycle:** an explicit **Draft** state + drafts shelf; **autosave + crash recovery**; **unsaved-exit guard**; **duplicate / save-as-copy**. |
 | CARD-15 | P0 | **Render/publish pipeline:** the editable **composition (JSON)** is **flattened to a static image** (thumbnail + full) on the CDN at save/publish — **viewers download one image, not the layers**; the **effect + finish render as runtime overlays**; **element count is capped** (server-configurable, SYS-04). A **true-to-life preview** (flattened + overlays + thumbnail safe-area) precedes publish. Rendering via react-native-skia. |
 | CARD-16 | P0 | **Approachability & accessibility:** **start-from** (a template / preset kit / **auto-design "Surprise me"**) — never a blank canvas — plus coachmarks; the editor may **break out** to maximal canvas (OQ-007); **screen-reader labels + a non-gesture path**; honor **reduce-motion**. *(Starting from another user's card is "adopt then edit-your-copy," bounded by adoption rules — not remix, which is parked §10.)* |
-| CARD-17 | P1 | **Asset library at scale:** the vector/effect/frame/font browser is **searchable, categorized, tagged**, with **free/premium/owned** filters, recently-used, and favourites; premium items **preview on the actual card**. |
+| CARD-17 | P1 | **Asset library at scale:** the vector/effect/frame/font browser is **searchable, categorized, tagged**, with **free/premium/owned** filters, recently-used, and favourites; premium items **preview on the actual card**. (**Vector elements are all free** — decision 0017; premium/owned filtering applies to effects/finishes/frames/fonts, the closed attributes.) |
 | CARD-18 | P0 | **Default-card guarantee:** every collection entry **always resolves to a card** — the owner's selected card → else another card they have for that game → else a **system default placeholder**. No game ever renders blank. (Used by new-game add, the card switcher, and moderation-takedown fallback, MOD-08.) |
 | CARD-19 | P0 | **Publish integrity:** publishing is **rate-limited** (SYS-05), **deduped by composition-hash**, and gated by a **minimum-complexity threshold** (drafts/private exempt) — keeps the adoptable pool clean. |
 | CARD-20 | P1 | **Published-card lifecycle (creator-initiated):** published cards are **immutable** — "editing" one = **duplicate to a new draft** (CARD-14) and publish separately. A creator may **unpublish** (delisted from galleries, no new adoptions; **existing adopters keep their flattened card + grant**, MOD-08 pattern; adoption count freezes). **Drafts/private cards are deletable**; a never-adopted published card may be deleted, an adopted one can only be unpublished. |
@@ -176,14 +176,14 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | ID | Pri | Behavior |
 |---|---|---|
 | DEV-01 | P0 | A **Device editor** (lighter than the card editor): **shell colour** + **sticker placement** (place/scale/rotate stickers from the library; free + premium via preview-then-acquire) — *not* the full card vector toolkit. **Personal only** — devices are not published/adopted. |
-| DEV-02 | P1 | Users may own multiple **device models** (cosmetic items) and switch the active one. |
+| DEV-02 | P1 | Users may own multiple **device shells** (colourways/wraps — cosmetic items) and switch the active one. **v2 has one handheld body** — shells dress it; no alternate device shapes (decision 0017/OQ-042). |
 | DEV-03 | P0 | A free **default device** always renders (no broken shell); device decoration must **never obscure navigation** (the nav-on-plastic model). |
 | DEV-04 | P1 | **In-app screen theme:** the content-area ("screen") appearance inside the frame is customizable — chosen in the **Device editor** alongside shell colour/stickers (a free baseline always; premium themes via preview-then-acquire, COSM-03). A theme restyles screen background/surface tones but must **preserve content legibility** (contrast floor — the screen-side companion to DEV-03's nav rule). Personal-only, like the rest of the device. |
 
 ### 5.8 Cosmetics library (`COSM-`)
 | ID | Pri | Behavior |
 |---|---|---|
-| COSM-01 | P0 | A library of cosmetic items typed as: **vector asset pack** (shapes/letters/numbers/icons) · **effect** · **finish** (holo/foil) · **frame** · **font** · **device skin** · **screen theme** (DEV-04) · **device model**. (Card "stickers/art assets" are vector packs.) |
+| COSM-01 | P0 | A library of cosmetic items typed as: **shell sticker pack** (shapes/letters/icons placed on the device shell, DEV-01) · **effect** · **finish** (holo/foil) · **frame** · **font** · **device shell** (colourways/wraps for the one handheld — replaces the former "device skin" + "device model" pair) · **screen theme** (DEV-04). (The card canvas sells nothing: card vector elements are the free baseline, CARD-02 — decision 0017.) |
 | COSM-02 | P0 | A **free baseline** set is always available so everyone can customize meaningfully. |
 | COSM-03 | P0 | Premium items are gated by **entitlement** (owned via purchase or earned). The store's moat = **things you can't just draw** (animated/dynamic effects, curated packs). |
 | COSM-04 | P1 | Some cosmetics are **earned**, not bought — delivered via the achievement system (ACH-04), including **achievement-exclusive** items that are never purchasable (prestige). |
@@ -191,16 +191,17 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 ### 5.9 Economy & store (`ECON-`)
 | ID | Pri | Behavior |
 |---|---|---|
-| ECON-01 | P0 | **Single soft currency, two spend types.** Real money **only ever buys Customizer currency**; premium cosmetics are never sold for real money directly. Currency is then spent on **(a) adopting premium cards** (ECON-03) and **(b) acquiring premium effects/asset packs** to create your own (priced higher). One wallet, one mental model. |
-| ECON-02 | P0 | Every user starts with **5 Customizer currency**; earns more via **login bonuses / milestones**; can **purchase** more. (Values server-configurable per SYS-04.) |
+| ECON-01 | P0 | **Single soft currency, two spend types.** Real money **only ever buys Customizer currency**; premium cosmetics are never sold for real money directly. Currency is then spent on **(a) adopting premium cards** (ECON-03) and **(b) acquiring premium cosmetics** (effects/finishes/frames/fonts/shell items — priced higher). One wallet, one mental model. **In-app identity: "Pixels"** (1 Pixel · ticker PX · the pixel-gem mark — design-spec); "Customizer currency" stays the system/config term. Instant currency spends confirm via a **deliberate hold** on BUY (no dialogs; accessible alternative required — decision 0017). |
+| ECON-02 | P0 | Every user starts with **5 Customizer currency**; earns more via a **daily bonus claimed on the Store screen** (+1/day default; idempotent per day; **unclaimed days lapse** — no banking, no streaks in v2) and **milestones**; can **purchase** more. The claim lives in the Store deliberately — a daily return hook beside the drops (ECON-08). (Values/cadence server-configurable per SYS-04; decision 0017.) |
 | ECON-03 | P0 | **Adopting a premium card costs 1 Customizer currency.** Adopting a **non-premium** card is **free**. |
 | ECON-04 | P0 | **Scoped adoption rights.** Adopting a premium card grants the right to use **that design for that game only**. It does **not** grant the standalone premium effect for reuse elsewhere (protects effect sales). |
 | ECON-05 | P0 | **Creator reward = clout (v2 choice "A").** When a creator's premium card is adopted, the creator earns **adoption-count, contributor prestige, and cosmetic unlock milestones** (delivered via the achievement system, ACH-04) — *not* currency or money. *(Future toggle "B" — currency kickback — is noted in decisions; real revenue-share is parked, §10.)* |
 | ECON-05a | P2 | *(reserved)* Currency-kickback to creators — a future-toggle of ECON-05, off in v2. |
-| ECON-06 | P0 | **In-app purchases via Apple/Google IAP** with server-side **receipt validation** and **restore purchases**. Implemented via a cross-platform IAP layer (RevenueCat — see api-contract / decisions). |
-| ECON-07 | P0 | A **wallet** holds the currency balance; a **ledger** records every change (login bonus, purchase, adoption spend, milestone) for auditability **and is shown to the user** as a simple earn/spend history. The wallet (balance + ledger + buy-currency) is **surfaced on the Store screen**; the persistent header counter is its entry point elsewhere. |
+| ECON-06 | P0 | **In-app purchases via Apple/Google IAP** with server-side **receipt validation** and **restore purchases**. Implemented via a cross-platform IAP layer (RevenueCat — see api-contract / decisions). **Restore semantics:** restore = receipt re-validation + account-entitlement re-sync + completion of interrupted transactions; **consumable currency packs are never re-granted** by restore (the balance is account state, not receipt state — decision 0017). |
+| ECON-07 | P0 | A **wallet** holds the currency balance; a **ledger** records every change (starting grant, daily-bonus claim, pack purchase, adoption spend, cosmetic acquire, milestone, refund reversal) for auditability **and is shown to the user** as a simple earn/spend history. The wallet (balance + ledger + buy-currency) is **surfaced on the Store screen**; the persistent header counter is its entry point elsewhere. |
 | ECON-08 | P2 | **Limited/seasonal drops** in the store as a return hook. |
 | ECON-09 | P1 | **IAP refunds:** platform refund notifications (RevenueCat webhook) **reverse the granted currency**; the wallet **may go negative** (floor server-configurable, SYS-04) and recovers from future earns/purchases; cosmetics/adoptions already bought with that currency are **not clawed back** in v2. Every reversal is a ledger entry (ECON-07). |
+| ECON-10 | P1 | **One-time Starter Pack:** a single cheap IAP tier with **outsized currency value** (~2–2.5× the base PX-per-$ rate), purchasable **once per account, ever**; flagged as first-purchase-only and hidden/marked purchased afterwards. Tier values per OQ-011/SYS-04. (Decision 0017.) |
 
 ### 5.10 Social (`SOC-`)
 | ID | Pri | Behavior |
@@ -354,3 +355,4 @@ Recorded so they're conscious choices, not omissions:
 | 2026-06-11 | 0.14 | **Engagement-moments batch** (decision 0015): **CARD-21 external image-share un-parked** (image-only — deep links/web page stay §10); NOTIF-04 gains the **post-publish** pre-prompt moment; CARD-01's back gains **printed provenance** (designer + adoption count). Ripples api-contract (share variant) + design-req. | CARD-01/21, NOTIF-04 |
 | 2026-06-12 | 0.15 | **CAT-09 community presence stats** (decision 0016, owner direction during Add Game pass 3): collections-count + friends-have-it on every catalog entry, surfaced in search + the Game page — the presence half of the Game page's "aggregate stats" pulled forward from later-phase. Ripples api-contract (search/game payload fields) + design-req 4.1/4.2. | CAT-09 |
 | 2026-06-12 | 0.16 | **MOD-01: reports gain a required details note** for reasons needing specifics (incorrect info) — moderator-facing only, outside MOD-07 scope (owner direction, Add Game pass 5). Ripples api-contract (`details` on POST /reports). | MOD-01 |
+| 2026-06-12 | 0.17 | **Store-economy batch** (decision 0017, the store track's five owner rulings): currency's in-app identity = **Pixels** + **hold-to-buy** spend confirm (ECON-01) · daily bonus becomes a **Store-claimed daily** (lapses, no streaks v2; ECON-02) · **restore never re-grants consumables** (ECON-06) · ledger entry list refreshed (ECON-07) · **+ECON-10 one-time Starter Pack** · **COSM-01 retyped**: shell sticker packs + device shell (skin+model collapsed; the card canvas sells nothing) · DEV-02 → shells of the one handheld · CARD-02/17 vector elements all free. Resolves OQ-041..044/046/047. Ripples api-contract + design-req. | ECON-01/02/06/07/10, COSM-01, DEV-02, CARD-02/17 |

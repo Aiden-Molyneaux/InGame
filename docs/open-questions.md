@@ -54,39 +54,12 @@
   contributor first-credit (CAT-05) · adopter-side designer credit (ECON-05) · mid-edit
   **hold-to-preview** (CARD-15). Design-spec patterns owed across stages 1–3 of the 0014 arc.
   (from the engagement review, 2026-06-11) [presentation]
-- OQ-041: **Restore-purchases semantics for consumable packs** — currency packs are IAP *consumables*;
-  what exactly does "Restore purchases" re-validate/re-grant (account entitlement re-sync vs.
-  unfinished-transaction recovery — it must not double-grant)? (ECON-06/07; surfaced designing the
-  Store purchase states, store track 2026-06-12) [behavior]
-- OQ-042: **Device "models" vs shells** — owner gate note (store track, 2026-06-12): device shells are
-  *customization of the one pocket/handheld device*, not different devices. Does DEV-02/COSM-01
-  "device model" mean shell/skin variants only (no distinct body shapes), collapsing "model" into
-  "skin"? Affects the Store's Devices category + the Device editor's model switch. [behavior]
-- OQ-043: **Daily login bonus is CLAIMED on the Store screen** (owner direction, store track
-  2026-06-12) — ECON-02 currently reads as an automatic login bonus; needs spec wording for the
-  claim model (does an unclaimed day lapse? streaks? notification hook?). The Store gains a second
-  return hook beside drops. [behavior]
-- OQ-044: **One-time STARTER PACK IAP tier** (owner direction, store track 2026-06-12) — a cheap,
-  outsized-value first purchase (drafted $0.99 → 12 PX, ~2.4× the base rate). Needs ECON wording:
-  eligibility (once per account?), store-listing behavior after purchase, and pricing (pairs
-  OQ-011/OQ-002). [behavior]
-- OQ-045: **Sticker preview-on-device deferred** (owner, store track 2026-06-12) — §4.11's "sticker
-  shown placed" case is NOT drawn in the converged Store board; design it later (likely with the
-  Device editor pass, DEV-01). [presentation]
-- OQ-046: **Press-and-hold BUY = the spend-confirmation model** for instant PX purchases (owner
-  direction, store track 2026-06-12) — cosmetics confirm by holding the BUY keycap (no dialogs);
-  IAP packs keep the platform's native confirm. Needs spec wording + an accessible non-hold
-  alternative (switch-control/assistive-touch users; reduce-motion variant). (ECON-01/§4.11/§1.8)
-  [behavior]
-- OQ-047: **Vector/glyph packs are SHELL STICKER packs, not card assets** (owner direction, store
-  track 2026-06-12) — the card canvas already covers freeform vector art (CARD-02), so curated
-  glyph packs sell for the DEVICE SHELL (DEV-01 stickers). Ripples: COSM-01's "(Card 'stickers/art
-  assets' are vector packs.)" parenthetical · CARD-02/CARD-17's "free + premium packs" in the card
-  asset library · CARD-13 premium-on-card scope — what (if anything) remains a purchasable CARD
-  canvas asset vs. the closed attributes (effects/finishes/frames/fonts, decision 0014)? [behavior]
+- OQ-045: **Sticker placed-on-shell preview** (owner deferral, store track 2026-06-12) — §4.11's
+  sticker-preview case is NOT drawn on the converged Store board; design it with the **Device editor
+  pass** (DEV-01). [presentation]
 
 ## Resolved
-- OQ-001 → **Multiple device models.** A user can own several device models (via entitlements/store)
+- OQ-001 → **Multiple device models.** *(Superseded by OQ-042/decision 0017 — one handheld body; users own multiple **shells**, not models.)* A user can own several device models (via entitlements/store)
   and switch the active one — as DEV-02 states. (2026-06-08)
 - OQ-003 → **"Now Playing" is a single pin**, distinct from the multi-valued `Playing` status
   (COL-02): one game you pin as "what I'm on now," settable from Up Next or a collection entry,
@@ -131,3 +104,20 @@
 - OQ-037 → **§1.8 error family formalized (visual side).** Retryable "Signal Lost"+RETRY · terminal
   `Unavailable` (no retry; MOD-09 collapse; Unblock the lone exception) · calm `Offline`; solid
   `Skeleton`. design-spec §1.6. **Residual:** offline cache scope → OQ-038. Decision 0013. (2026-06-11)
+- OQ-041 → **Restore never re-grants consumables.** Restore = receipt re-validation + entitlement
+  re-sync + completion of interrupted transactions; the balance is account state. ECON-06.
+  Decision 0017. (2026-06-12)
+- OQ-042 → **One handheld; shells, not models.** "Device model" + "device skin" collapse into
+  **device shell** (colourways/wraps of the one pocket body); DEV-02 + COSM-01 edited; api-contract
+  `activeShellId`. Decision 0017. (2026-06-12)
+- OQ-043 → **The daily bonus is claimed on the Store** (+1 PX/day default, idempotent per day,
+  unclaimed days lapse, no streaks in v2; values SYS-04). ECON-02; `/me/wallet.dailyBonus` +
+  `/me/daily-bonus`. Decision 0017. (2026-06-12)
+- OQ-044 → **One-time Starter Pack = ECON-10** (~2–2.5× base rate, once per account, flagged then
+  hidden/marked purchased; values OQ-011/SYS-04). Decision 0017. (2026-06-12)
+- OQ-046 → **Hold-to-buy is the spend confirm** for instant Pixel purchases (no dialogs; IAP keeps
+  the native confirm). ECON-01 + design-spec `motion.holdToBuy`. **Residual:** the accessible
+  non-hold alternative — named in the design-spec gap list. Decision 0017. (2026-06-12)
+- OQ-047 → **Sticker packs are SHELL items; the card canvas sells nothing.** COSM-01 retyped
+  (shell sticker pack); CARD-02/17 vector elements all free; premium-on-card stays the closed
+  attributes (decision 0014). Decision 0017. (2026-06-12)
