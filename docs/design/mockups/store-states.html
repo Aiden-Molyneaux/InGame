@@ -175,9 +175,28 @@
     font: 700 9px/1 var(--pk); padding: 3px 5px; white-space: nowrap; }
   .price-chip svg { display: block; }
   .price-chip.big { font-size: 13px; padding: 4px 7px; gap: 4px; }
-  .usd-chip { display: inline-flex; align-items: center; background: var(--cream); color: var(--navy);
-    font: 700 10px/1 var(--pk); padding: 4px 7px; white-space: nowrap;
-    box-shadow: 0 2px 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  /* dollar buttons = the regular white alternate keycap (KeycapButton/secondary), sized for tiles */
+  .btn.usd { padding: 7px 10px; font-size: 10px; letter-spacing: .5px; }
+  /* the DAILY BONUS claim bar — the Store's second return hook (OQ-043) */
+  .daily { display: flex; align-items: center; gap: 8px; margin-top: 2px; padding: 6px 9px;
+    background: rgba(255,210,63,.09); border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent); }
+  .daily .d-tx { display: flex; flex-direction: column; gap: 1.5px; min-width: 0; }
+  .daily .d-t { font: 700 9.5px var(--pk); letter-spacing: 1px; color: var(--gold); }
+  .daily .d-s { font: 600 8px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .daily .btn { margin-left: auto; padding: 6px 9px; font-size: 9px; }
+  .daily.claimed { background: var(--scr-panel); border-color: var(--scr-hairline); }
+  .daily.claimed .d-t { color: var(--scr-soft); }
+  /* PackTile value math + the one-time starter product */
+  .pack .val { font: 600 7.5px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .pack .val b { color: #58e0ff; font-weight: 700; }
+  .pack.starter { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 12px;
+    padding: 11px 12px; text-align: left;
+    border: 1.5px solid color-mix(in srgb, var(--gold) 75%, transparent); box-shadow: 0 0 13px rgba(255,210,63,.18);
+    background: linear-gradient(90deg, rgba(255,210,63,.1), transparent 60%), var(--scr-well); }
+  .pack.starter .st-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .pack.starter .st-name { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--gold); }
+  .pack.starter .amt { margin-left: auto; }
+  .pack.starter .flash { top: -8px; left: 9px; right: auto; }
   .tag-owned { display: inline-flex; align-items: center; gap: 3px; background: var(--cream); color: var(--navy);
     font: 700 8px/1 var(--pk); letter-spacing: .5px; padding: 2.5px 5px; white-space: nowrap; }
   .tag-locked { display: inline-flex; align-items: center; gap: 3px; background: rgba(13,11,30,.72); color: var(--scr-soft);
@@ -220,7 +239,7 @@
     background: var(--scr-panel); border: 1px solid var(--scr-hairline); }
 
   /* the COVER (B) — tightened */
-  .cover { position: relative; margin-top: 2px; padding: 13px 13px 12px; overflow: hidden;
+  .cover { position: relative; margin-top: 6px; padding: 11px 13px 10px; overflow: hidden;
     background: radial-gradient(circle at 78% 80%, rgba(255,110,40,.5) 0%, rgba(160,40,30,.28) 38%, transparent 70%),
       radial-gradient(circle at 22% 22%, rgba(255,200,80,.18) 0%, transparent 45%), #19142e;
     border: 1px solid var(--scr-hairline); }
@@ -236,14 +255,14 @@
     font: 700 9px/1 var(--pk); letter-spacing: 1px; padding: 3.5px 6px; width: fit-content; }
   /* dense browse grid (per ruling: "show more items") — ItemTile converged form */
   .rack3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-  .rtile { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 9px 6px 8px;
+  .rtile { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 7px 6px 7px;
     background: var(--scr-well); border: 1px solid var(--scr-hairline); }
   .rtile .rt-name { font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-text); text-align: center; }
   .rtile .rt-type { font: 600 7px var(--pk); letter-spacing: 1px; color: var(--scr-dim); margin-top: -2px; }
   .rtile.lkd .gcard { filter: saturate(.35) brightness(.7) drop-shadow(0 4px 7px rgba(0,0,0,.35)); }
   /* THE INDEX (B) */
   .index { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-  .idx { display: flex; align-items: center; gap: 6px; padding: 5.5px 8px; background: var(--scr-panel);
+  .idx { display: flex; align-items: center; gap: 6px; padding: 4.5px 8px; background: var(--scr-panel);
     border: 1px solid var(--scr-hairline); font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-soft); }
   .idx .gl { color: var(--scr-accent); font-size: 11px; }
   .idx .n { margin-left: auto; font: 600 8.5px var(--pk); color: var(--scr-dim); letter-spacing: .5px; }
@@ -390,19 +409,18 @@
       <path d="M28 22 L34 22 L30 30 L36 30 L26 40 L29 32 L24 32 Z" fill="#58e0d8" transform="translate(-1 -3)"/>
       <circle cx="31" cy="11" r="5" fill="none" stroke="#ff3d77" stroke-width="2.5"/>
     </symbol>
-    <!-- PIXELS — the ruled currency mark (currency ruling #2): pixel-cut gem, gold, blue glints -->
-    <clipPath id="clip-pix"><path d="M18 5 L22 5 L22 9 L26 9 L26 13 L30 13 L30 17 L34 17 L34 23 L30 23 L30 27 L26 27 L26 31 L22 31 L22 35 L18 35 L18 31 L14 31 L14 27 L10 27 L10 23 L6 23 L6 17 L10 17 L10 13 L14 13 L14 9 L18 9 Z"/></clipPath>
+    <!-- PIXELS mark v3 (ruling #3): same stepped-gem shape, FLAT PIXEL-ART texture —
+         solid quadrant facets, opaque ink outline, solid blue glint pixels. Reads on gold. -->
     <symbol id="ic-pix" viewBox="0 0 40 40">
-      <path d="M18 5 L22 5 L22 9 L26 9 L26 13 L30 13 L30 17 L34 17 L34 23 L30 23 L30 27 L26 27 L26 31 L22 31 L22 35 L18 35 L18 31 L14 31 L14 27 L10 27 L10 23 L6 23 L6 17 L10 17 L10 13 L14 13 L14 9 L18 9 Z" fill="var(--gold)"/>
-      <g clip-path="url(#clip-pix)">
-        <path d="M5 20 L20 5 L20 20 Z" fill="#fff" opacity=".22"/>
-        <path d="M35 20 L20 35 L20 20 Z" fill="#3c2a09" opacity=".22"/>
-        <rect x="22" y="13" width="4" height="4" fill="#58e0ff" opacity=".95"/>
-        <rect x="26" y="17" width="4" height="4" fill="#4a90ff" opacity=".75"/>
-        <rect x="14" y="23" width="4" height="4" fill="#58e0ff" opacity=".45"/>
-      </g>
-      <path d="M22 5 L22 9 L26 9 L26 13 L30 13 L30 17 L34 17" fill="none" stroke="#58e0ff" stroke-width="1.8" opacity=".9"/>
-      <path d="M18 5 L22 5 L22 9 L26 9 L26 13 L30 13 L30 17 L34 17 L34 23 L30 23 L30 27 L26 27 L26 31 L22 31 L22 35 L18 35 L18 31 L14 31 L14 27 L10 27 L10 23 L6 23 L6 17 L10 17 L10 13 L14 13 L14 9 L18 9 Z" fill="none" stroke="#3c2a09" stroke-width="1.2" stroke-opacity=".45"/>
+      <path d="M20 5 L18 5 L18 9 L14 9 L14 13 L10 13 L10 17 L6 17 L6 20 L20 20 Z" fill="#ffe9a3"/>
+      <path d="M20 5 L22 5 L22 9 L26 9 L26 13 L30 13 L30 17 L34 17 L34 20 L20 20 Z" fill="var(--gold)"/>
+      <path d="M6 20 L6 23 L10 23 L10 27 L14 27 L14 31 L18 31 L18 35 L20 35 L20 20 Z" fill="#f0bf32"/>
+      <path d="M34 20 L34 23 L30 23 L30 27 L26 27 L26 31 L22 31 L22 35 L20 35 L20 20 Z" fill="#c8922a"/>
+      <rect x="15" y="11" width="3.5" height="3.5" fill="#fff"/>
+      <rect x="23" y="13" width="4" height="4" fill="#58e0ff"/>
+      <rect x="27" y="17" width="4" height="4" fill="#4a90ff"/>
+      <rect x="14" y="24" width="3.5" height="3.5" fill="#4a90ff"/>
+      <path d="M18 5 L22 5 L22 9 L26 9 L26 13 L30 13 L30 17 L34 17 L34 23 L30 23 L30 27 L26 27 L26 31 L22 31 L22 35 L18 35 L18 31 L14 31 L14 27 L10 27 L10 23 L6 23 L6 17 L10 17 L10 13 L14 13 L14 9 L18 9 Z" fill="none" stroke="#3c2a09" stroke-width="2.2"/>
     </symbol>
   </defs>
 </svg>
@@ -439,6 +457,13 @@
           <div class="screen sk2 c5">
             <div class="screen-head"><h2>STORE</h2><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button></div>
             <div class="scroll" style="padding-bottom:6px;">
+              <div class="daily">
+                <svg width="16" height="16" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>
+                <div class="d-tx">
+                  <span class="d-t">DAILY BONUS READY &mdash; +1 PX</span>
+                </div>
+                <button class="btn buy">CLAIM +1</button>
+              </div>
               <div class="cover">
                 <span class="spark" style="width:4px;height:4px;left:58%;top:22%;"></span>
                 <span class="spark" style="width:3px;height:3px;left:70%;top:12%;"></span>
@@ -513,17 +538,28 @@
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
         </div>
       </div>
+      <div class="half-panel sk2 c5">
+        <div class="daily claimed">
+          <svg width="17" height="17" viewBox="0 0 40 40" style="opacity:.55;"><use href="#ic-pix"/></svg>
+          <div class="d-tx">
+            <span class="d-t">&#10003; CLAIMED &mdash; BACK TOMORROW</span>
+            <span class="d-s">+1 PX LANDED IN YOUR WALLET LEDGER</span>
+          </div>
+          <span style="margin-left:auto; display:inline-flex; align-items:center;"><span class="tick-chip">+1</span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>6</button></span>
+        </div>
+        <div class="hint" style="text-align:left; margin-top:9px;"><b>CLAIMED STATE:</b> the bar goes quiet, the counter ticks +1. The bonus is picked up <b>here</b> &mdash; the Store owns the daily ritual (OQ-043; the rest of the board stays on the pre-claim 5-PX timeline).</div>
+      </div>
       <div class="caption">
-        <h3>P1 &mdash; Browse <em>(the ruling applied: B's frame, denser stock)</em></h3>
-        <p>The cover keeps the drop leading (ECON-08) but is tightened; below it the ruling's &ldquo;show more
-        items&rdquo; lands as a <b>3-up dense grid</b> &mdash; six <b>ItemTiles</b> spanning six categories
-        (effect &middot; finish &middot; frame &middot; vector pack &middot; font &middot; screen theme), every
-        tile wearing its <b>PIXELS PriceChip</b>. <b>THE INDEX</b> closes the page with all aisles &mdash;
-        DEVICE SHELLS replaces &ldquo;devices&rdquo; (OQ-042) and the currency entry is now <b>PIXELS &rarr;
-        TOP UP</b>, the browse-path door to buying currency.</p>
-        <p>Eight items visible before any scroll (two on the cover, six racked) vs draft B's two.
-        <b>CurrencyCounter</b> wears the gem; COSM-02 named at the fold. <i>Values illustrative
-        (OQ-002/OQ-011).</i></p>
+        <h3>P1 &mdash; Browse <em>(the ruling applied: B's frame, denser stock + the daily ritual)</em></h3>
+        <p>New at the top: the <b>DAILY BONUS bar</b> &mdash; +1 PX, <b>claimed on the Store screen</b> (your
+        direction; ECON-02's wording ripple logged as OQ-043), giving the Store a daily ritual beside the
+        drop's weekly one. The cover keeps the drop leading (ECON-08); the &ldquo;show more items&rdquo; ruling
+        lands as the <b>3-up dense grid</b> &mdash; six <b>ItemTiles</b> across six categories, every tile
+        wearing its <b>PIXELS PriceChip</b> (mark v3: flat pixel-art facets). <b>THE INDEX</b> closes the page
+        &mdash; DEVICE SHELLS (OQ-042) and <b>PIXELS &rarr; TOP UP</b>.</p>
+        <p>The fragment shows the <b>claimed state</b>: bar quiet, counter ticked 5 &#10142; 6. Eight items
+        visible before any scroll; the COSM-02 free-baseline line sits one scroll-tick past the INDEX.
+        <i>Values illustrative (OQ-002/OQ-011).</i></p>
       </div>
     </div>
 
@@ -806,8 +842,8 @@
               <div class="short-strip">&#9888; SHORT 3 PIXELS &mdash; YOU HAVE 5</div>
               <div class="sec" style="margin:10px 1px 6px;"><h3>TOP UP RIGHT HERE &mdash; INLINE</h3><a href="#">ALL PACKS &rsaquo;</a></div>
               <div class="packs">
-                <div class="pack"><span class="flash">COVERS IT</span><span class="amt">10 <svg width="13" height="13" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="plbl">PIXEL PACK</span><button class="usd-chip">$1.99</button></div>
-                <div class="pack"><span class="amt">30 <svg width="13" height="13" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="plbl">PIXEL PACK</span><button class="usd-chip">$4.99</button></div>
+                <div class="pack"><span class="flash">COVERS IT</span><span class="amt">10 <svg width="13" height="13" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="plbl">PIXEL PACK</span><button class="btn secondary usd">$1.99</button></div>
+                <div class="pack"><span class="amt">30 <svg width="13" height="13" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="plbl">PIXEL PACK</span><button class="btn secondary usd">$4.99</button></div>
               </div>
               <div class="buybar" style="margin-top:9px;">
                 <div class="bb-meta"><span class="bb-have">PACKS PAY INLINE &mdash; NATIVE SHEET</span><span class="bb-have" style="color:var(--scr-grip);">BUY RE-ARMS AFTER THE GRANT</span></div>
@@ -851,13 +887,22 @@
             <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>TOP UP</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button></div>
             <div class="scroll" style="display:flex; flex-direction:column;">
               <div class="sec" style="margin-top:4px;"><h3>PIXEL PACKS &mdash; THE ONLY DOLLARS IN THE APP</h3></div>
-              <div class="pack-list">
-                <div class="packrow"><span class="amt">10 <svg width="13" height="13" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="plbl">PIXEL PACK</span><span class="flash">STARTER</span><button class="usd-chip">$1.99</button></div>
-                <div class="packrow" style="border-color: color-mix(in srgb, var(--gold) 75%, transparent); box-shadow: 0 0 11px rgba(255,210,63,.2);"><span class="amt">30 <svg width="13" height="13" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="plbl">PIXEL PACK</span><button class="usd-chip">$4.99</button></div>
-                <div class="packrow"><span class="amt">65 <svg width="13" height="13" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="plbl">PIXEL PACK</span><button class="usd-chip">$9.99</button></div>
-                <div class="packrow"><span class="amt">140 <svg width="13" height="13" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="plbl">PIXEL PACK</span><span class="flash">BEST RATE</span><button class="usd-chip">$19.99</button></div>
+              <div class="packs">
+                <div class="pack starter">
+                  <span class="flash">FIRST PURCHASE ONLY</span>
+                  <div class="st-meta">
+                    <span class="st-name">STARTER PACK</span>
+                    <span class="val">&#8776; 12.1 PX PER $ &mdash; <b>2.4&times; THE BASE RATE</b>, ONCE EVER</span>
+                  </div>
+                  <span class="amt">12 <svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span>
+                  <button class="btn secondary usd">$0.99</button>
+                </div>
+                <div class="pack"><span class="amt">10 <svg width="13" height="13" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="plbl">PIXEL PACK</span><span class="val">BASE &middot; &#8776; 5.0 PX/$</span><button class="btn secondary usd">$1.99</button></div>
+                <div class="pack"><span class="amt">30 <svg width="13" height="13" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="plbl">PIXEL PACK</span><span class="val"><b>+20%</b> MORE PX/$</span><button class="btn secondary usd">$4.99</button></div>
+                <div class="pack"><span class="amt">65 <svg width="13" height="13" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="plbl">PIXEL PACK</span><span class="val"><b>+29%</b> MORE PX/$</span><button class="btn secondary usd">$9.99</button></div>
+                <div class="pack"><span class="flash">BEST RATE</span><span class="amt">140 <svg width="13" height="13" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="plbl">PIXEL PACK</span><span class="val"><b>+39%</b> MORE PX/$</span><button class="btn secondary usd">$19.99</button></div>
               </div>
-              <div class="hint">PIXELS ARE EARNABLE FREE &mdash; +1 DAILY LOGIN &middot; MILESTONES (ECON-02). PACKS SKIP THE WAIT.</div>
+              <div class="hint">PIXELS ARE EARNABLE FREE &mdash; +1 DAILY CLAIM &middot; MILESTONES (ECON-02). PACKS SKIP THE WAIT.</div>
               <div style="display:flex; justify-content:center; margin-top:8px;"><a class="tert dim" href="#">&#8635; RESTORE PURCHASES</a></div>
               <div style="margin: 14px -12px -8px; margin-top:auto; background:#1b1b1f; border-top:1px solid rgba(255,255,255,.14); padding: 11px 16px 13px;">
                 <div style="display:flex; align-items:center; gap:9px;">
@@ -884,14 +929,16 @@
         </div>
       </div>
       <div class="caption">
-        <h3>P6 &mdash; Top Up <em>(the ruled landing, three doors in)</em></h3>
-        <p>The dedicated Top Up page you asked for &mdash; B's landing, kept: <b>PackTile price-list rows</b>
-        (PIXELS gold, the <b>dollar on a cream keycap</b> &mdash; the only dollars in the app, ECON-01), the
-        earn-free line (ECON-02), <b>&#8635; RESTORE PURCHASES</b> (ECON-06; semantics &rarr; OQ-041), and the
-        <b>native IAP sheet</b> anchored where checkout actually happens (&ldquo;30 Pixels&rdquo;).</p>
-        <p><b>Three doors in</b> (your first question, answered in-design): the header counter &rarr; Wallet
-        &rarr; BUY PIXELS &middot; THE INDEX's PIXELS row &rarr; here directly &middot; the bridge's ALL PACKS.
-        The counter itself stays a wallet door, never a buy button.</p>
+        <h3>P6 &mdash; Top Up <em>(2&times;2 grid &middot; the real starter &middot; the math done for you)</em></h3>
+        <p>Reworked per ruling #3: packs sit in the <b>2&times;2 PackTile grid</b>, dollar prices on the
+        <b>regular white alternate keycap</b> (KeycapButton/secondary), and every tile <b>does the math</b>
+        &mdash; the 10-pack states the base rate, the bigger tiers state <b>+20% / +29% / +39% more PX per
+        dollar</b> (blue = the mark's accent doing the talking). Above them, the <b>STARTER PACK is a real
+        product</b>: $0.99 &rarr; 12 PX, &#8776;2.4&times; the base rate, <b>first purchase only</b>
+        (OQ-044 holds the eligibility wording).</p>
+        <p>Still the only dollars in the app (ECON-01); &#8635; restore (OQ-041) + the native sheet at the
+        bottom. Three doors in: counter &rarr; Wallet &middot; INDEX &middot; the bridge. <i>All rates
+        illustrative (OQ-002/OQ-011).</i></p>
       </div>
     </div>
   </div>
@@ -920,10 +967,18 @@
                   <span class="ok-s">RECEIPT VERIFIED &middot; 5 &#10142; 35 &middot; LOGGED IN YOUR WALLET LEDGER (ECON-07)</span>
                 </div>
               </div>
-              <div class="pack-list" style="margin-top:9px;">
-                <div class="packrow"><span class="amt">10 <svg width="13" height="13" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="plbl">PIXEL PACK</span><span class="flash">STARTER</span><button class="usd-chip">$1.99</button></div>
-                <div class="packrow" style="border-color: color-mix(in srgb, var(--gold) 80%, transparent); box-shadow: 0 0 13px rgba(255,210,63,.25);"><span class="amt">30 <svg width="13" height="13" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="plbl">PIXEL PACK</span><span class="flash">&#10003; JUST BOUGHT</span><button class="usd-chip">$4.99</button></div>
-                <div class="packrow"><span class="amt">65 <svg width="13" height="13" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="plbl">PIXEL PACK</span><button class="usd-chip">$9.99</button></div>
+              <div class="packs" style="margin-top:9px;">
+                <div class="pack starter">
+                  <span class="flash">FIRST PURCHASE ONLY</span>
+                  <div class="st-meta">
+                    <span class="st-name">STARTER PACK</span>
+                    <span class="val">&#8776; 12.1 PX PER $ &mdash; <b>2.4&times; BASE</b>, ONCE EVER</span>
+                  </div>
+                  <span class="amt">12 <svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span>
+                  <button class="btn secondary usd">$0.99</button>
+                </div>
+                <div class="pack"><span class="amt">10 <svg width="13" height="13" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="plbl">PIXEL PACK</span><span class="val">BASE &middot; &#8776; 5.0 PX/$</span><button class="btn secondary usd">$1.99</button></div>
+                <div class="pack" style="border-color: color-mix(in srgb, var(--gold) 80%, transparent); box-shadow: 0 0 13px rgba(255,210,63,.25);"><span class="flash">&#10003; JUST BOUGHT</span><span class="amt">30 <svg width="13" height="13" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="plbl">PIXEL PACK</span><span class="val"><b>+20%</b> MORE PX/$</span><button class="btn secondary usd">$4.99</button></div>
               </div>
               <div class="hint">THE TICKING COUNTER IS THE CELEBRATION &mdash; RITUALS STAY WITH CARDS (OQ-040)</div>
               <div style="display:flex; gap:10px; margin-top:12px; justify-content:center;">
@@ -998,7 +1053,7 @@
                 <div class="lrow spend"><span class="lsig">&minus;</span><span class="lwhat">EMBER &middot; EFFECT</span><span class="lwhen">TODAY 14:12</span><span class="lamt">&minus;8 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></div>
                 <div class="lrow earn"><span class="lsig">+</span><span class="lwhat">PIXEL PACK &middot; 30</span><span class="lwhen">TODAY 14:09</span><span class="lamt">+30 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></div>
                 <div class="lrow spend"><span class="lsig">&minus;</span><span class="lwhat">ADOPTED &ldquo;DESTINY&rdquo; BY RIKO</span><span class="lwhen">TUE 19:40</span><span class="lamt">&minus;1 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></div>
-                <div class="lrow earn"><span class="lsig">+</span><span class="lwhat">LOGIN BONUS</span><span class="lwhen">TUE 19:31</span><span class="lamt">+1 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></div>
+                <div class="lrow earn"><span class="lsig">+</span><span class="lwhat">DAILY BONUS &middot; CLAIMED IN STORE</span><span class="lwhen">TUE 19:31</span><span class="lamt">+1 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></div>
                 <div class="lrow earn"><span class="lsig">+</span><span class="lwhat">STARTING GRANT</span><span class="lwhen">JUN 02</span><span class="lamt">+5 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></div>
               </div>
               <div class="hint">REACHED FROM ANY SCREEN VIA THE GEM COUNTER &middot; HERE, THE HERO IS THE COUNTER</div>

@@ -169,3 +169,28 @@ bridge = the three Buy-Pixels doors; full matrix **incl. the deferred lifecycle 
 load-error+RETRY · offline browse-from-cache with writes gated). Formalization into
 design-spec/catalog stays with the spec-owner session (one-editor rule). **Store track stage-1 ends
 here per the brief (converge → STOP).**
+
+### Converged-board ruling #3 — 2026-06-12 (verbatim)
+
+> a couple of things:
+> 1. I wanted the top-up page to show pixel pack entries in a 2x2 grid, like one of your other drafts.
+> 2. The buttons to buy on those elements should just use the regular white alternate button instead
+>    of this button with a black border.
+>
+> This is really good. Can you think of any other pieces of UI that we're missing?  One thing we could
+> definitely add is that we had the concept of a daily sign-in bonus being pixels. Can you work that
+> into the store screen so that users have to go to the store screen to pick up their daily bonus?  On
+> the top-up page, let's factor in providing/doin' the math for the user and showing them why bigger
+> packs are better deals.  Also, in P6, you have the notion of a starter pack, but we should really
+> have an actual starter pack that's cheap and very rewarding. Add that to the UI as well. Another
+> quick note. I think that we need to do another iteration on the pixel icon. The shape is good, but
+> the texture itself is off.  It doesn't feel like it matches the game aesthetic, and it's hard to
+> read against the yellow background.
+
+**Disposition (applied in place to `store-states.html`):** Top Up packs → **2×2 PackTile grid** (the
+A/C tile form) · pack dollar buttons → **KeycapButton/secondary** (the white/cream alternate keycap) ·
+**DAILY BONUS claim bar on the Store browse** (+1 PX, claimed in-store — ECON-02 ripple logged as
+OQ-043) + claimed-state fragment · Top Up **value math** per tile (PX-per-$ + %-better-than-the-10-pack)
+· an actual **STARTER PACK** product (one-time, $0.99 → 12 PX, outsized rate — OQ-044) · **PIXELS mark
+v3**: same stepped-gem shape, texture re-cut as **flat pixel-art** (solid quadrant facets, opaque ink
+outline, solid blue glint pixels — no translucent overlays) for aesthetic fit + legibility on gold.
