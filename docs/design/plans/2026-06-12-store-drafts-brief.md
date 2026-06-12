@@ -234,3 +234,15 @@ the glyph-on-card stage is removed and the on-shell preview stays deferred per r
 placement happens in the Device editor. Browse + INDEX renamed **STICKER PACKS**. Spec ripple logged
 as **OQ-047** (COSM-01's "card stickers/art assets are vector packs" parenthetical + CARD-02/13/17
 "premium packs" framing need rescoping; what, if anything, stays premium on the card canvas).
+
+### Ruling #6 — formalization (2026-06-12, verbatim)
+
+> Excellent. Can you update InGame Design System Catalog.dc.html and other appropriate files
+
+**Disposition:** the owner moves design-side formalization into this track (supersedes the brief's
+"do NOT formalize" line for the design-spec/catalog pair; product-spec/api-contract stay with the
+spec owner via OQ-041..047). Applied: **catalog HTML → v0.3** (the PIXELS mark section + the Store &
+Commerce section + gaps pruned) · **design-spec → 0.10** (§1.5 Currency & Commerce set incl. the
+PIXELS mark; §1.6 `Toast` designed; §1.4 +`motion.holdToBuy`/`counterTick`; new **§2.3 Store**
+composition + full state matrix, old §2.3 → §2.4; header/source-mockups/changelog) · README rows
+(catalog gains its missing row; store-states row marked formalized). **Store track closed.**
