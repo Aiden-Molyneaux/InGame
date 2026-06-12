@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InGame · Add Game — Draft A · Stepped Wizard (C5 v2)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" /></noscript>
+<style>
+  /* ── tokens: verbatim from collection-states.html (Teal shell · Midnight theme) ── */
+  :root {
+    --plastic: #2bb6b0; --plastic-hi: #3ec9c2; --plastic-lo: #1f9a94; --silk: #0d524e;
+    --accent: #ff3d77; --gold: #ffd23f; --cream: #f5f1e4; --navy: #1d2a4a;
+    --bezel: #14122a;
+    --pk: 'Chakra Petch', sans-serif; --shell: 'Paytone One', sans-serif;
+    --scr-bg: #232045; --scr-well: #2c2950; --scr-tools: #1a1733; --scr-accent: #ff9f43;
+    --scr-accent-ink: #2a1430; --scr-head: #f5f1e4; --scr-text: #ffffff; --scr-dim: #9b97c0;
+    --scr-soft: #c9c5e6; --scr-panel: rgba(255,255,255,.065); --scr-hairline: rgba(255,255,255,.08);
+    --scr-grip: #565178; --scr-chip: #f5f1e4; --scr-head-shadow: rgba(0,0,0,.45);
+    --scr-btn: #ffb38a; --scr-btn-ink: #2a1430;
+    --shell-ink: #08433f; --screw-hi: #2aa39d; --screw-lo: #137671; --pip-off: #117672;
+  }
+  html, body { margin: 0; min-height: 100%; background: #efece6; font-family: var(--pk); }
+  .canvas { max-width: 1348px; margin: 0 auto; padding: 40px 24px 60px; }
+  .canvas-head h1 { font: 700 17px/1.2 var(--pk); letter-spacing: 2.5px; color: #2a2633; margin: 0 0 6px; text-transform: uppercase; }
+  .canvas-head p { font: 500 12.5px/1.5 var(--pk); color: #79748a; margin: 0 0 32px; max-width: 640px; }
+  .stage { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+  .take { width: 404px; }
+  .artboard-label { font: 700 11px/1 var(--pk); letter-spacing: 1.5px; color: #8d889c; margin: 0 0 10px 2px; text-transform: uppercase; }
+  .caption { margin-top: 14px; background: #fff; border-radius: 12px; padding: 13px 15px; box-shadow: 0 2px 8px rgba(42,38,51,.08); }
+  .caption h3 { margin: 0 0 5px; font: 700 12.5px var(--pk); letter-spacing: .8px; color: #2a2633; text-transform: uppercase; }
+  .caption h3 em { font-style: normal; color: var(--accent); }
+  .caption p { margin: 0 0 4px; font: 500 11.8px/1.5 var(--pk); color: #5d5870; }
+  .caption p b { color: #2a2633; }
+  .stage-label { font: 700 13px/1 var(--pk); letter-spacing: 2px; color: #2a2633; text-transform: uppercase; margin: 36px 2px 14px; }
+  .stage-label small { display: block; margin-top: 5px; font: 500 11px/1.4 var(--pk); letter-spacing: .3px; color: #79748a; text-transform: none; max-width: 860px; }
+
+  /* ── device shell (physical — unchanged) ────────────────── */
+  .device { position: relative; width: 404px; height: 884px; border-radius: 30px; overflow: hidden;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.4), inset 0 -4px 0 rgba(0,0,0,.18), 0 18px 40px color-mix(in srgb, var(--shell-ink) 28%, transparent);
+    display: flex; flex-direction: column; padding: 0 14px; box-sizing: border-box; }
+  .screw { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--screw-hi), var(--screw-lo) 75%);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.25); }
+  .screw::after { content: ""; position: absolute; left: 1.5px; right: 1.5px; top: 3.5px; height: 1.5px; background: color-mix(in srgb, var(--shell-ink) 70%, transparent); border-radius: 1px; }
+  .screw.tl { top: 10px; left: 12px; } .screw.tr { top: 10px; right: 12px; }
+  .screw.bl { bottom: 10px; left: 12px; } .screw.br { bottom: 10px; right: 12px; }
+  .top-band { height: 64px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 12px 0; position: relative; }
+  .power { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+  .power .led { width: 9px; height: 9px; border-radius: 50%; background: #ff5a4e; box-shadow: 0 0 7px 2px rgba(255,90,78,.65), inset 0 -1px 1px rgba(0,0,0,.3); }
+  .power .lbl { font: 400 9px var(--shell); letter-spacing: .5px; color: var(--silk); opacity: .75; }
+  .logo { position: absolute; left: 50%; transform: translateX(-50%); font: 400 21px var(--shell); letter-spacing: 7px; text-indent: 7px;
+    color: color-mix(in srgb, var(--shell-ink) 28%, transparent); text-shadow: 0 -1px 0 color-mix(in srgb, var(--shell-ink) 30%, transparent); }
+  .grille { display: flex; gap: 6px; }
+  .grille span { width: 5px; height: 23px; background: color-mix(in srgb, var(--shell-ink) 40%, transparent); border-radius: 2px; transform: skewX(-22deg); box-shadow: inset 0 1px 1px rgba(0,0,0,.3); }
+  .screen-bezel { flex: 1 1 auto; min-height: 0; background: var(--bezel); border-radius: 20px; padding: 9px; box-sizing: border-box; }
+  .nav-band { flex: 0 0 auto; height: 128px; display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 6px 0; }
+  .nav-item { display: flex; flex-direction: column; align-items: center; width: 64px; }
+  .nav-lbl { height: 16px; font: 400 11px var(--shell); letter-spacing: .5px; color: var(--silk); display: flex; align-items: center; }
+  .nav-lbl.big { font-size: 11px; }
+  .nav-btn { width: 54px; height: 54px; border-radius: 15px; background: var(--cream); border: none;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 1px 0 rgba(255,255,255,.85); }
+  .nav-btn.store { background: var(--gold); }
+  .nav-btn.collection { background: var(--accent); }
+  .nav-item.active .nav-btn { transform: translateY(3px); box-shadow: 0 1px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 2px 3px rgba(0,0,0,.18); }
+  .pip { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; background: var(--pip-off);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.25); }
+  .nav-item.active .pip { background: var(--accent); box-shadow: 0 0 9px 2.5px rgba(255,61,119,.85), inset 0 -1px 1px rgba(0,0,0,.25); }
+  .nav-band .nav-item:nth-child(2) .nav-lbl:first-child,
+  .nav-band .nav-item:nth-child(4) .nav-lbl:first-child { transform: translateY(-8px); }
+
+  /* ── shared screen structure ────────────────────────────── */
+  .screen { position: relative; height: 100%; border-radius: 13px; overflow: hidden; display: flex; flex-direction: column; }
+  .scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 12px 14px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; border: none; width: fit-content; }
+  .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 14px 2px 8px; }
+  .sec h3 { margin: 0; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .sec a { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
+
+  /* ── the Game Card ──────────────────────────────────────── */
+  .gcard { position: relative; border-radius: 11px; box-sizing: border-box; flex: 0 0 auto; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
+  .gcard .art { position: absolute; inset: 7px; border-radius: 5px; overflow: hidden; }
+  .gcard .art svg { width: 100%; height: 100%; display: block; }
+  .gcard .plate { position: absolute; left: 11px; right: 11px; bottom: 3px; border-radius: 4px; padding: 5px 4px 4px;
+    text-align: center; font: 700 10px var(--pk); letter-spacing: .5px; text-transform: uppercase; }
+  .gcard.grid-size { width: 100%; aspect-ratio: 63 / 88; }
+  .gcard.mini-size { width: 100%; aspect-ratio: 63 / 88; border-radius: 6px; }
+  .gcard.mini-size .art { inset: 3px; border-radius: 2.5px; }
+  .gcard.mini-size .plate { left: 4px; right: 4px; bottom: 1.5px; border-radius: 2px; padding: 2px 1px 1.5px; font-size: 4.5px; letter-spacing: 0; }
+  .gcard.thumb { width: 44px; height: 62px; border-radius: 5px; }
+  .gcard.thumb .art { inset: 2.5px; border-radius: 2px; }
+  .gcard.thumb .plate { left: 3.5px; right: 3.5px; bottom: 1px; border-radius: 1.5px; padding: 1.5px 1px 1px; font-size: 3.2px; letter-spacing: 0; }
+  .fr-destiny { background: linear-gradient(160deg, #e8bc52, #c08a2a); }
+  .fr-marathon { background: linear-gradient(160deg, #64789f, #46587e); }
+  .fr-minecraft { background: linear-gradient(160deg, #ff5fae, #e23488); }
+  .fr-ratchet { background: linear-gradient(160deg, #4a3b30, #332821); }
+  .fr-re { background: linear-gradient(160deg, #221e2c, #121017); }
+  .fr-elden { background: linear-gradient(160deg, #4a4370, #2c2750); }
+  .fr-sote { background: linear-gradient(160deg, #6a5ca8, #463a80); }
+  .fr-night { background: linear-gradient(160deg, #8c2730, #561119); }
+  .pl-destiny { background: #f0cd6e; color: #3c2a09; }
+  .pl-marathon { background: #3d4f78; color: #e8eefc; }
+  .pl-minecraft { background: #8bd44a; color: #1f3505; }
+  .pl-ratchet { background: #2c2438; color: #f1ecdf; }
+  .pl-re { background: repeating-linear-gradient(45deg, #e8c83d 0 5px, #1c1a22 5px 10px); color: #fff; text-shadow: 0 1px 2px #000, 0 0 3px #000; }
+  .pl-elden { background: #e8c364; color: #3a2a05; }
+  .pl-sote { background: #2a2348; color: #e8defc; }
+  .pl-night { background: #1c1726; color: #f2dde1; }
+  .gcard.custom { background: linear-gradient(160deg, #d3e95e, #93b31a); }
+  .custom-tag { position: absolute; top: 11px; right: 11px; z-index: 2; background: #d3e95e; color: #2a3505;
+    border-radius: 4px; padding: 3px 5px; font: 700 9px var(--pk); letter-spacing: .5px; }
+  .mini-size .custom-tag { top: 5px; right: 5px; font-size: 6px; padding: 2px 3px; }
+  .c5 .custom-tag { border-radius: 0; }
+
+  /* ════ S2 base — flat floating panels ════ */
+  .sk2 { background: var(--scr-bg); }
+  .sk2 .well { background: var(--scr-well); border-radius: 12px; }
+  .sk2 .npl { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-accent); }
+  .sk2 .hero-title { font: 700 21px/1.05 var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .sk2 .hero-sub { font: 600 11px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .sk2 .btn { background: var(--scr-btn); color: var(--scr-btn-ink); border-radius: 9px; padding: 9px 13px;
+    font: 700 11px var(--pk); letter-spacing: 1px;
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--scr-btn) 45%, #000), inset 0 1px 0 rgba(255,255,255,.4); }
+  .sk2 .btn.add { background: var(--gold); color: #3c2a09; box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
+    filter: drop-shadow(0 3px 0 color-mix(in srgb, var(--gold) 45%, #000)); }
+  .sk2 .btn.secondary { background: var(--cream); color: var(--navy);
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .sk2 .btn.mini { padding: 6px 9px; font-size: 9px; letter-spacing: .8px; }
+  .sk2 .chip { position: relative; background: var(--scr-chip); border-radius: 7px; padding: 6px 8px;
+    font: 600 11px var(--pk); letter-spacing: .5px; color: var(--navy);
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .sk2 .chip b { color: var(--navy); font-weight: 700; }
+  .sk2 .chip.active { transform: translateY(2px);
+    box-shadow: 0 0 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 2px 3px rgba(0,0,0,.22); }
+  .sk2 .chip .chip-pip { position: absolute; top: -2.5px; right: -2.5px; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 6px 1.5px rgba(255,61,119,.8); }
+  .sk2 .count { background: var(--gold); color: #3c2a09; border-radius: 6px; padding: 4px 8px;
+    font: 700 11px/1 var(--pk); }
+
+  /* ════ C5 · HYBRID — square chrome · stepped-diagonal cards ════ */
+  .c5 .well, .c5 .chip, .c5 .btn, .c5 .count { border-radius: 0; }
+  .c5 .well { border: 1px solid var(--scr-hairline); }
+  .c5 .btn.add { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+      100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
+      calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
+  .c5 .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
+    clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
+      100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
+      calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
+  .c5 .gcard .art { border-radius: 0;
+    clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+      100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .c5 .gcard .plate { border-radius: 0;
+    clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  .c5 .gcard.mini-size { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+      100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .c5 .gcard.mini-size .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  .c5 .gcard.mini-size .plate { clip-path: polygon(0 1.5px, 1.5px 1.5px, 1.5px 0, 100% 0,
+      100% calc(100% - 1.5px), calc(100% - 1.5px) calc(100% - 1.5px), calc(100% - 1.5px) 100%, 0 100%); }
+  .c5 .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0,
+      100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
+  .c5 .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  .c5 .gcard.thumb .plate { clip-path: polygon(0 1px, 1px 1px, 1px 0, 100% 0,
+      100% calc(100% - 1px), calc(100% - 1px) calc(100% - 1px), calc(100% - 1px) 100%, 0 100%); }
+
+  /* ── strips, fields, sheet, keyboard (ported) ───────────── */
+  .strip { display: flex; gap: 12px; align-items: center; padding: 10px 12px; }
+  .strip-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .strip-title { font: 700 15px/1.1 var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .field { display: flex; align-items: center; gap: 7px; background: var(--scr-chip); padding: 9px 10px;
+    box-shadow: inset 0 2px 3px rgba(0,0,0,.16); }
+  .field svg circle, .field svg path { stroke: var(--navy); }
+  .field span.ph { font: 600 11px var(--pk); letter-spacing: 1px; color: #8d889c; }
+  .field .q { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--navy); margin-left: 2px; }
+  .field .caret { width: 1.5px; height: 13px; background: var(--accent); margin-left: 1.5px; }
+  .field .clear { margin-left: auto; display: flex; }
+  .hook { display: block; text-align: center; margin: 18px 0 4px; font: 600 11px var(--pk); letter-spacing: .8px;
+    color: var(--scr-accent); text-decoration: none; }
+  .empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 20px 14px 0; }
+  .ghost-card { position: relative; width: 138px; height: 193px; margin-bottom: 10px; background: var(--scr-panel);
+    clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
+      100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
+      calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
+  .ghost-card::before { content: ""; position: absolute; inset: 8px; border: 2px dashed var(--scr-grip); opacity: .8; }
+  .ghost-card .plus { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font: 700 36px/1 var(--pk); color: var(--scr-grip); }
+  .empty-sub { font: 500 11px/1.55 var(--pk); color: var(--scr-soft); max-width: 270px; }
+  .scrim { position: absolute; inset: 0; z-index: 4; background: rgba(13,11,30,.62); }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 5; background: var(--scr-tools);
+    border-top: 1px solid var(--scr-hairline); padding: 7px 12px 13px; }
+  .sheet .handle { width: 38px; height: 4px; background: var(--scr-grip); margin: 2px auto 9px; }
+  .sheet .sec { margin: 12px 1px 7px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chips .chip { padding: 7px 9px; }
+  .hint { margin: 8px 1px 0; font: 600 9px/1.6 var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .hint b { color: var(--scr-soft); }
+  .sheet-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; }
+  .sheet-foot a { font: 600 11px var(--pk); letter-spacing: 1px; color: var(--scr-dim); text-decoration: none; }
+  .kbd-mode .screw.bl, .kbd-mode .screw.br { display: none; }
+  .search-bar .field { flex: 1 1 auto; display: flex; align-items: center; }
+  .tools { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 8px 10px; }
+  .sk2 .tools { background: var(--scr-tools); border-top: 1px solid var(--scr-hairline); }
+  .oskbd { flex: 0 0 auto; margin: 0 -14px; background: #1b1b1f; padding: 9px 7px 16px; }
+  .oskbd .sugg { display: flex; align-items: center; justify-content: space-around; padding: 0 6px 9px; }
+  .oskbd .sugg span { font: 500 12px -apple-system, 'Segoe UI', sans-serif; color: #d8d8dc; }
+  .oskbd .sugg i { width: 1px; height: 17px; background: rgba(255,255,255,.16); }
+  .krow { display: flex; justify-content: center; gap: 5px; margin-bottom: 7px; }
+  .krow:last-child { margin-bottom: 0; }
+  .key { flex: 0 0 31px; height: 39px; border-radius: 5px; background: #434349; color: #fff;
+    font: 400 15px -apple-system, 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 1px 0 #0c0c0e; }
+  .key.alt { background: #2c2c31; color: #e8e8ec; }
+  .key.w44 { flex: 0 0 44px; font-size: 13px; }
+  .key.w52 { flex: 0 0 52px; font-size: 11.5px; letter-spacing: .3px; }
+  .key.space { flex: 1 1 auto; }
+  .key.go { flex: 0 0 84px; background: #0a84ff; font-size: 12.5px; font-weight: 600; }
+
+  /* ════ NEW — Add Game wizard components (this file) ════ */
+  /* FlowHeader — takeover chrome: ✕ keycap · flow title · step dots (the wizard's context device) */
+  .flow-head { flex: 0 0 auto; display: flex; align-items: center; gap: 11px; padding: 14px 14px 4px; }
+  .flow-head .x { width: 28px; height: 28px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
+    background: var(--scr-chip); color: var(--navy); font: 700 12px/1 var(--pk);
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .flow-head h2 { margin: 0; font: 700 21px/1 var(--pk); letter-spacing: 2.5px; color: var(--scr-head);
+    text-shadow: 0 2px 0 var(--scr-head-shadow); }
+  .flow-head .dots { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--scr-grip); box-shadow: inset 0 1px 2px rgba(0,0,0,.5); }
+  .dot.done { background: var(--scr-soft); box-shadow: inset 0 1px 1px rgba(0,0,0,.25); }
+  .dot.on { background: var(--scr-accent); box-shadow: 0 0 8px 2px rgba(255,159,67,.65), inset 0 -1px 1px rgba(0,0,0,.25); }
+  .flow-sub { flex: 0 0 auto; padding: 3px 16px 10px; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .flow-sub b { color: var(--scr-accent); }
+  /* wizard footer — explicit BACK / NEXT keycaps */
+  .flow-foot { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+    background: var(--scr-tools); border-top: 1px solid var(--scr-hairline); }
+  .flow-foot .spacer { flex: 1 1 auto; }
+  .foot-note { font: 600 9px var(--pk); letter-spacing: .8px; color: var(--scr-dim); text-decoration: none; }
+  .btn.dormant { opacity: .45; }
+  /* TextField / SelectField */
+  .f-label { display: block; margin: 13px 2px 5px; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .tfield { display: flex; align-items: center; gap: 7px; background: var(--scr-chip); padding: 10px;
+    box-shadow: inset 0 2px 3px rgba(0,0,0,.16); }
+  .tfield .v { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--navy); }
+  .tfield .ph { font: 600 11px var(--pk); letter-spacing: 1px; color: #8d889c; }
+  .tfield .caret { width: 1.5px; height: 13px; background: var(--accent); }
+  .tfield .dd { margin-left: auto; color: #8d889c; font: 700 11px/1 var(--pk); }
+  /* InlineBanner — the fuzzy-dedup warning (accent hairline panel, inline in the form) */
+  .ibanner { display: flex; gap: 10px; align-items: center; margin: 9px 0 0; padding: 9px 10px;
+    background: var(--scr-panel); border: 1px solid var(--scr-accent); }
+  .ibanner .meta { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .ibanner .q2 { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .ibanner .q2 b { color: var(--gold); }
+  .ibanner .why { font: 600 9px var(--pk); letter-spacing: .8px; color: var(--scr-dim); }
+  .ibanner .acts { display: flex; align-items: center; gap: 10px; margin-top: 3px; }
+  .ghost-link { font: 600 9px var(--pk); letter-spacing: .8px; color: var(--scr-dim); text-decoration: none; }
+  /* ResultRow — catalog search hit */
+  .rrow .tail { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+  .rrow .ovf { color: var(--scr-grip); font: 700 15px/1 var(--pk); letter-spacing: 0; }
+  .rrow.sel { border-color: var(--scr-accent); box-shadow: inset 0 0 0 1px var(--scr-accent); }
+  .own-chip { background: var(--gold); color: #3c2a09; padding: 3px 5px; font: 700 9px var(--pk); letter-spacing: .5px; }
+  .list-stack { display: flex; flex-direction: column; gap: 9px; }
+  /* suggestion rails (mini card rows) */
+  .rail { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+  /* CardPicker — adopt gallery · STYLE IT door · SKIP */
+  .adopt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .adopt { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .adopt .credit { text-align: center; font: 600 9px var(--pk); letter-spacing: .8px; color: var(--scr-dim); }
+  .adopt.sel .credit { color: var(--scr-accent); }
+  .c5 .adopt.sel .gcard { filter: drop-shadow(0 4px 7px rgba(0,0,0,.35)) drop-shadow(0 0 4px rgba(255,159,67,.95)) drop-shadow(0 0 10px rgba(255,159,67,.5)); }
+  .cost-chip { position: absolute; top: 11px; left: 11px; z-index: 2; background: var(--gold); color: #3c2a09;
+    padding: 3px 5px; font: 700 9px var(--pk); letter-spacing: .5px; }
+  .picker-acts { display: flex; align-items: center; justify-content: space-between; margin: 12px 2px 2px; }
+  .skip-link { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-dim); text-decoration: none; }
+  .alt-divider { display: flex; align-items: center; gap: 8px; margin: 14px -12px; padding: 6px 16px;
+    background: var(--scr-tools); border-top: 1px dashed var(--scr-hairline); border-bottom: 1px dashed var(--scr-hairline);
+    font: 700 9px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
+  .be-first { display: flex; gap: 14px; align-items: center; padding: 4px 2px 0; }
+  .ghost-card.sm { width: 84px; height: 118px; margin: 0; flex: 0 0 auto; }
+  .ghost-card.sm::before { inset: 6px; }
+  .ghost-card.sm .plus { font-size: 26px; }
+  .bf-meta { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  /* P8 — the shelf-slot beat + contributor credit */
+  .added-block { display: flex; flex-direction: column; gap: 6px; padding: 8px 2px 2px; }
+  .shelf-wrap { padding: 10px 10px 6px; }
+  .shelf-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .slot { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .slot .sl-lbl { height: 11px; text-align: center; font: 700 9px/1.2 var(--pk); letter-spacing: 1px; color: var(--gold); }
+  .c5 .gcard.lit { filter: drop-shadow(0 4px 7px rgba(0,0,0,.35)) drop-shadow(0 0 4px rgba(255,210,63,.95)) drop-shadow(0 0 11px rgba(255,210,63,.55)); }
+  .tick { display: inline-block; margin-left: 6px; background: var(--scr-accent); color: var(--scr-accent-ink); padding: 3px 5px; font: 700 9px/1 var(--pk); }
+  .credit-strip { display: flex; gap: 10px; align-items: center; padding: 10px 11px;
+    background: var(--scr-panel); border: 1px solid var(--scr-hairline); }
+  .fc-chip { flex: 0 0 auto; background: var(--gold); color: #3c2a09; padding: 3px 5px; font: 700 9px var(--pk); letter-spacing: .5px; }
+  .cs-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .cs-title { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .cs-sub { font: 600 9px/1.5 var(--pk); letter-spacing: .6px; color: var(--scr-dim); }
+</style>
+</head>
+<body>
+
+<!-- card art symbols (the collection-states library + three ELDEN-family additions) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="g-dst" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2156"/><stop offset="1" stop-color="#14102e"/></linearGradient>
+    <linearGradient id="g-dst2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#58e0d8"/><stop offset="1" stop-color="#2ba8a0"/></linearGradient>
+    <linearGradient id="g-mar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a4a70"/><stop offset="1" stop-color="#1f2840"/></linearGradient>
+    <linearGradient id="g-mc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff7ab1"/><stop offset="1" stop-color="#e2498e"/></linearGradient>
+    <linearGradient id="g-rat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8973f"/><stop offset="1" stop-color="#a8581b"/></linearGradient>
+    <linearGradient id="g-re" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7f4ec"/><stop offset="1" stop-color="#e3ddcc"/></linearGradient>
+    <linearGradient id="g-eld" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b2452"/><stop offset="1" stop-color="#161130"/></linearGradient>
+    <linearGradient id="g-sot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2f63"/><stop offset="1" stop-color="#1c1738"/></linearGradient>
+    <linearGradient id="g-ngt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#232033"/><stop offset="1" stop-color="#0d0b16"/></linearGradient>
+    <clipPath id="c-mar"><circle cx="40" cy="30" r="14"/></clipPath>
+    <symbol id="art-destiny" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-dst)"/>
+      <circle cx="31.5" cy="38" r="17" fill="none" stroke="#d9a93f" stroke-width="1.2" opacity=".5"/>
+      <path d="M31.5 16 L48 38 L31.5 60 L15 38 Z" fill="url(#g-dst2)" stroke="#e8c364" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M31.5 24 L42.5 38 L31.5 52 L20.5 38 Z" fill="rgba(255,255,255,.18)"/>
+      <circle cx="31.5" cy="38" r="4" fill="#f4f9f8"/>
+      <circle cx="31.5" cy="13" r="1.8" fill="#e8c364"/><circle cx="51" cy="38" r="1.8" fill="#e8c364"/>
+      <circle cx="31.5" cy="63" r="1.8" fill="#e8c364"/><circle cx="12" cy="38" r="1.8" fill="#e8c364"/>
+    </symbol>
+    <symbol id="art-marathon" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-mar)"/>
+      <circle cx="40" cy="30" r="14" fill="#dfe6f0"/>
+      <g clip-path="url(#c-mar)"><rect x="24" y="25" width="32" height="7" fill="#35cfe0"/><rect x="24" y="31" width="32" height="2.5" fill="#1f93a6"/></g>
+      <ellipse cx="40" cy="30" rx="21" ry="6.5" fill="none" stroke="#8fa3c8" stroke-width="1" opacity=".7" transform="rotate(-18 40 30)"/>
+      <path d="M14 56 L23 60.5 L14 65 Z" fill="#ff5a4e"/>
+      <rect x="4" y="59.2" width="8" height="2.6" rx="1.3" fill="rgba(255,90,78,.45)"/>
+      <path d="M0 78 Q31.5 68 63 78 L63 88 L0 88 Z" fill="#2c3a5c"/>
+    </symbol>
+    <symbol id="art-minecraft" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-mc)"/>
+      <path d="M0 72 L63 66 L63 88 L0 88 Z" fill="rgba(86,12,46,.30)"/>
+      <rect x="12" y="18" width="39" height="39" rx="3" fill="#ff9cc4"/>
+      <rect x="12" y="18" width="39" height="10" rx="3" fill="#ffb1d2"/>
+      <rect x="17" y="34" width="5" height="7" fill="#471130"/><rect x="41" y="34" width="5" height="7" fill="#471130"/>
+      <rect x="24" y="42" width="15" height="11" rx="2" fill="#d12f72"/>
+      <rect x="27" y="45" width="3" height="5" fill="#6e1437"/><rect x="33" y="45" width="3" height="5" fill="#6e1437"/>
+    </symbol>
+    <symbol id="art-ratchet" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-rat)"/>
+      <path d="M0 76 Q31.5 70 63 76 L63 88 L0 88 Z" fill="rgba(60,26,8,.35)"/>
+      <rect x="18.5" y="27" width="26" height="26" rx="4" fill="#5a3414"/>
+      <rect x="18.5" y="27" width="26" height="26" rx="4" fill="#5a3414" transform="rotate(45 31.5 40)"/>
+      <circle cx="31.5" cy="40" r="11" fill="#f2c489"/>
+      <path d="M31.5 35 L36 37.5 L36 42.5 L31.5 45 L27 42.5 L27 37.5 Z" fill="#3c2410"/>
+    </symbol>
+    <symbol id="art-re" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-re)"/>
+      <g stroke="#2a2326" stroke-width=".7" stroke-linejoin="round">
+        <path d="M31.5 38 L31.5 22 A16 16 0 0 1 42.8 26.7 Z" fill="#d8262c"/>
+        <path d="M31.5 38 L42.8 26.7 A16 16 0 0 1 47.5 38 Z" fill="#f7f5ef"/>
+        <path d="M31.5 38 L47.5 38 A16 16 0 0 1 42.8 49.3 Z" fill="#d8262c"/>
+        <path d="M31.5 38 L42.8 49.3 A16 16 0 0 1 31.5 54 Z" fill="#f7f5ef"/>
+        <path d="M31.5 38 L31.5 54 A16 16 0 0 1 20.2 49.3 Z" fill="#d8262c"/>
+        <path d="M31.5 38 L20.2 49.3 A16 16 0 0 1 15.5 38 Z" fill="#f7f5ef"/>
+        <path d="M31.5 38 L15.5 38 A16 16 0 0 1 20.2 26.7 Z" fill="#d8262c"/>
+        <path d="M31.5 38 L20.2 26.7 A16 16 0 0 1 31.5 22 Z" fill="#f7f5ef"/>
+      </g>
+      <circle cx="31.5" cy="38" r="2" fill="#2a2326"/>
+      <rect x="14" y="64" width="35" height="3.5" fill="#1c1a22"/>
+      <rect x="14" y="70" width="35" height="1.6" fill="#d8262c" opacity=".55"/>
+    </symbol>
+    <symbol id="art-elden" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-eld)"/>
+      <circle cx="31.5" cy="36" r="9" fill="rgba(255,220,120,.16)"/>
+      <circle cx="31.5" cy="36" r="17" fill="none" stroke="#e8c364" stroke-width="2.2" opacity=".9"/>
+      <path d="M31.5 54 L31.5 30" stroke="#f4d77a" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M31.5 36 Q24 31 20.5 23 M31.5 33 Q39 28 43 21 M31.5 41 Q25.5 39 22 34 M31.5 39 Q38 36 41.5 31"
+        stroke="#f4d77a" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+      <circle cx="20.5" cy="22" r="1.5" fill="#ffe9a3"/><circle cx="43" cy="20.5" r="1.5" fill="#ffe9a3"/>
+      <circle cx="22" cy="33.5" r="1.1" fill="#ffe9a3"/><circle cx="41.5" cy="30.5" r="1.1" fill="#ffe9a3"/>
+      <path d="M0 78 Q31.5 70 63 78 L63 88 L0 88 Z" fill="#1a142e"/>
+    </symbol>
+    <symbol id="art-sote" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-sot)"/>
+      <circle cx="31.5" cy="33" r="15" fill="#e8c364"/>
+      <circle cx="36.5" cy="30" r="14" fill="#241d44"/>
+      <path d="M31.5 12.5 L31.5 7 M48 19 L52 15 M51.5 33 L57 33 M14 19 L10 15 M11.5 33 L6 33"
+        stroke="#e8c364" stroke-width="1.6" stroke-linecap="round" opacity=".75"/>
+      <path d="M27.5 78 L29.5 50 L33.5 50 L35.5 78 Z" fill="#0f0b22"/>
+      <path d="M26 53 L37 53" stroke="#0f0b22" stroke-width="2.4"/>
+      <path d="M0 79 Q31.5 72 63 79 L63 88 L0 88 Z" fill="#140f2c"/>
+    </symbol>
+    <symbol id="art-night" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-ngt)"/>
+      <circle cx="31.5" cy="34" r="16" fill="none" stroke="#d8262c" stroke-width="2"/>
+      <circle cx="31.5" cy="34" r="8.5" fill="#1c1726" stroke="#7a4a8f" stroke-width="1.1"/>
+      <circle cx="15" cy="15" r="1.3" fill="#cfc6ec"/><circle cx="49" cy="12" r="1.6" fill="#cfc6ec"/>
+      <circle cx="54" cy="46" r="1.1" fill="#cfc6ec"/><circle cx="10" cy="50" r="1.2" fill="#cfc6ec"/>
+      <path d="M0 72 L14 58 L26 70 L40 56 L52 68 L63 60 L63 88 L0 88 Z" fill="#15101f"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="canvas">
+  <div class="canvas-head">
+    <h1>Add Game &middot; Draft A &mdash; Stepped Wizard (C5 v2)</h1>
+    <p>Draft A models Add Game (4.1) as <b>discrete sequential pages &mdash; SEARCH &rarr; DETAILS &rarr; CARD</b> &mdash;
+    inside a <b>FlowTakeover</b>: the device frame + NavBand stay untouched while a <b>FlowHeader</b> (&#10005; &middot;
+    flow title &middot; step dots) and explicit <b>BACK / NEXT keycaps</b> carry the wizard. One decision per screen;
+    forms stay conventional (the design-req &sect;1.1 pole). Multi-add returns to step 1 with a shelf-count tick.
+    Standalone file &mdash; sample art = built-in SVG symbols; roster continuous with collection-states.html.
+    Lifecycle &amp; offline panels (P9&ndash;P10: skeleton &middot; load-error + RETRY &middot; offline writes-gate)
+    are <b>deferred to the converged artboard</b> per the stage-1 draft contract.</p>
+  </div>
+
+  <div class="stage-label">Step 1 &middot; Search <small>the FlowTakeover keeps the device + NavBand in every panel
+  (Collection keycap pressed + lit pip) &middot; FlowHeader = &#10005; / ADD GAME / step dots &#9679;&#9675;&#9675; &middot;
+  explicit BACK / NEXT keycaps live in the wizard footer &mdash; one decision per screen, Draft A's "maximum convention" pole</small></div>
+  <div class="stage">
+
+    <!-- ═══ P1 · Entry / suggestions ═══ -->
+    <div class="take">
+      <div class="artboard-label">P1 &mdash; entry / suggestions (step 1 &middot; &#9679;&#9675;&#9675;)</div>
+      <div class="device" data-screen-label="Add Game A · C5 · P1 — Entry">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="flow-head">
+              <span class="x">&#10005;</span>
+              <h2>ADD GAME</h2>
+              <div class="dots"><span class="dot on"></span><span class="dot"></span><span class="dot"></span></div>
+            </div>
+            <div class="flow-sub">STEP 1 OF 3 &middot; <b>SEARCH THE CATALOG</b></div>
+            <div class="scroll">
+              <div class="field">
+                <svg width="12" height="12" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.4" fill="none" stroke-width="1.6"/><path d="M7.8 7.8L11 11" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <span class="caret"></span><span class="ph">TITLE&hellip;</span>
+              </div>
+              <div class="sec"><h3>RECENTLY ADDED</h3></div>
+              <div class="rail">
+                <div class="gcard mini-size fr-marathon"><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
+                <div class="gcard mini-size fr-re"><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div>
+                <div class="gcard mini-size fr-night"><div class="art"><svg><use href="#art-night"/></svg></div><div class="plate pl-night">ER: Nightreign</div></div>
+                <div class="gcard mini-size fr-ratchet"><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
+              </div>
+              <div class="sec"><h3>POPULAR</h3></div>
+              <div class="rail">
+                <div class="gcard mini-size fr-destiny"><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="gcard mini-size fr-elden"><div class="art"><svg><use href="#art-elden"/></svg></div><div class="plate pl-elden">Elden Ring</div></div>
+                <div class="gcard mini-size fr-minecraft"><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
+                <div class="gcard mini-size fr-re"><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div>
+              </div>
+              <div class="sec"><h3>FRIENDS ARE PLAYING</h3></div>
+              <div class="rail">
+                <div class="gcard mini-size fr-elden"><div class="art"><svg><use href="#art-elden"/></svg></div><div class="plate pl-elden">Elden Ring</div></div>
+                <div class="gcard mini-size fr-marathon"><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
+                <div class="gcard mini-size fr-sote"><div class="art"><svg><use href="#art-sote"/></svg></div><div class="plate pl-sote">ER: Erdtree</div></div>
+                <div class="gcard mini-size fr-destiny"><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+              </div>
+            </div>
+            <div class="flow-foot">
+              <a class="foot-note" href="#">CAN'T FIND IT? BE FIRST TO ADD IT &rsaquo;</a>
+              <div class="spacer"></div>
+              <button class="btn dormant">NEXT &#9656;</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P1 &middot; Entry &mdash; suggestions <em>(never a blank box)</em></h3>
+        <p><b>FlowTakeover:</b> the flow owns the screen content only &mdash; <b>DeviceShell + NavBand</b> stay untouched,
+        Collection keycap pressed + lit pip. The <b>FlowHeader</b> carries the &#10005; ToolKeycap, ADD GAME in type.display,
+        and the <b>step dots &#9679;&#9675;&#9675;</b> (this model's context device) over a micro step line.</p>
+        <p>The <b>SearchField</b> arrives focused-empty (live caret) but the screen never blanks: three <b>GameCard/mini</b>
+        rails &mdash; RECENTLY ADDED &middot; POPULAR &middot; FRIENDS ARE PLAYING (4.1's empty-state suggestions) &mdash; are
+        tappable shortcuts past typing entirely. Wizard footer: <b>KeycapButton/primary NEXT</b> sits dormant until something
+        is picked; the dim <b>TertiaryLink</b> hook is the Contributor door (&rarr; P4).</p>
+      </div>
+    </div>
+
+    <!-- ═══ P2 · Searching (keyboard up) ═══ -->
+    <div class="take">
+      <div class="artboard-label">P2 &mdash; searching, keyboard up (step 1 &middot; live filter)</div>
+      <div class="device kbd-mode" data-screen-label="Add Game A · C5 · P2 — Searching">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="flow-head">
+              <span class="x">&#10005;</span>
+              <h2>ADD GAME</h2>
+              <div class="dots"><span class="dot on"></span><span class="dot"></span><span class="dot"></span></div>
+            </div>
+            <div class="flow-sub">STEP 1 OF 3 &middot; <b>SEARCHING&hellip;</b></div>
+            <div class="scroll">
+              <div class="sec"><h3>MATCHING &ldquo;ELDEN&rdquo; &mdash; TITLE ONLY</h3></div>
+              <div class="list-stack">
+                <div class="well strip rrow">
+                  <div class="gcard thumb fr-elden"><div class="art"><svg><use href="#art-elden"/></svg></div><div class="plate pl-elden">Elden Ring</div></div>
+                  <div class="strip-meta">
+                    <span class="strip-title">ELDEN RING</span>
+                    <span class="hero-sub">2022 &middot; FROMSOFTWARE</span>
+                  </div>
+                  <div class="tail"><span class="ovf">&#8942;</span></div>
+                </div>
+                <div class="well strip rrow">
+                  <div class="gcard thumb fr-sote"><div class="art"><svg><use href="#art-sote"/></svg></div><div class="plate pl-sote">ER: Erdtree</div></div>
+                  <div class="strip-meta">
+                    <span class="strip-title">ELDEN RING: SHADOW OF THE ERDTREE</span>
+                    <span class="hero-sub">2024 &middot; FROMSOFTWARE</span>
+                  </div>
+                  <div class="tail"><span class="ovf">&#8942;</span></div>
+                </div>
+                <div class="well strip rrow">
+                  <div class="gcard thumb fr-night"><div class="art"><svg><use href="#art-night"/></svg></div><div class="plate pl-night">ER: Nightreign</div></div>
+                  <div class="strip-meta">
+                    <span class="strip-title">ELDEN RING: NIGHTREIGN</span>
+                    <span class="hero-sub">2025 &middot; FROMSOFTWARE</span>
+                  </div>
+                  <div class="tail"><span class="own-chip">&#10003; ON SHELF</span><span class="ovf">&#8942;</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="tools search-bar">
+              <div class="field">
+                <svg width="12" height="12" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.4" fill="none" stroke-width="1.6"/><path d="M7.8 7.8L11 11" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <span class="q">ELDEN</span><span class="caret"></span>
+                <span class="clear"><svg width="13" height="13" viewBox="0 0 13 13"><circle cx="6.5" cy="6.5" r="5.5" fill="none" stroke-width="1.4"/><path d="M4.4 4.4l4.2 4.2M8.6 4.4L4.4 8.6" stroke-width="1.4" stroke-linecap="round"/></svg></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="oskbd">
+          <div class="sugg"><span>&ldquo;ELDEN&rdquo;</span><i></i><span><b>Elden</b></span><i></i><span>elder</span></div>
+          <div class="krow"><span class="key">Q</span><span class="key">W</span><span class="key">E</span><span class="key">R</span><span class="key">T</span><span class="key">Y</span><span class="key">U</span><span class="key">I</span><span class="key">O</span><span class="key">P</span></div>
+          <div class="krow"><span class="key">A</span><span class="key">S</span><span class="key">D</span><span class="key">F</span><span class="key">G</span><span class="key">H</span><span class="key">J</span><span class="key">K</span><span class="key">L</span></div>
+          <div class="krow"><span class="key alt w44">&#8679;</span><span class="key">Z</span><span class="key">X</span><span class="key">C</span><span class="key">V</span><span class="key">B</span><span class="key">N</span><span class="key">M</span><span class="key alt w44">&#9003;</span></div>
+          <div class="krow"><span class="key alt w52">123</span><span class="key space"></span><span class="key go">SEARCH</span></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P2 &middot; Searching &mdash; keyboard up <em>(the system keyboard, theme-matched)</em></h3>
+        <p><b>The drawn system keyboard</b> (OQ-035 / spec &sect;1.7): dark <i>keyboardAppearance</i> to match Midnight,
+        with the <b>SearchField riding directly above it</b> &mdash; same construction as Collection's in-place search.
+        While typing, the keyboard occludes the NavBand and the BACK/NEXT footer &mdash; accepted as a focused sub-task;
+        keyboard SEARCH dismisses and restores the wizard chrome.</p>
+        <p><b>&ldquo;ELDEN&rdquo; live-filters as you type</b> &mdash; three <b>ResultRow</b>s already: full-face
+        <b>GameCard/thumb</b> (F-01) + title in type.emphasis + year &middot; studio + the gold <b>&#10003; ON SHELF</b>
+        in-collection marker (Nightreign) + the &#8942; overflow (Report duplicate).</p>
+      </div>
+    </div>
+
+    <!-- ═══ P3 · Results ═══ -->
+    <div class="take">
+      <div class="artboard-label">P3 &mdash; results, one picked (step 1 &middot; &#9679;&#9675;&#9675;)</div>
+      <div class="device" data-screen-label="Add Game A · C5 · P3 — Results">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="flow-head">
+              <span class="x">&#10005;</span>
+              <h2>ADD GAME</h2>
+              <div class="dots"><span class="dot on"></span><span class="dot"></span><span class="dot"></span></div>
+            </div>
+            <div class="flow-sub">STEP 1 OF 3 &middot; <b>PICK YOUR GAME</b></div>
+            <div class="scroll">
+              <div class="field">
+                <svg width="12" height="12" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.4" fill="none" stroke-width="1.6"/><path d="M7.8 7.8L11 11" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <span class="q">ELDEN</span>
+                <span class="clear"><svg width="13" height="13" viewBox="0 0 13 13"><circle cx="6.5" cy="6.5" r="5.5" fill="none" stroke-width="1.4"/><path d="M4.4 4.4l4.2 4.2M8.6 4.4L4.4 8.6" stroke-width="1.4" stroke-linecap="round"/></svg></span>
+              </div>
+              <div class="sec"><h3>3 MATCHES &mdash; TITLE ONLY</h3></div>
+              <div class="list-stack">
+                <div class="well strip rrow sel">
+                  <div class="gcard thumb fr-elden"><div class="art"><svg><use href="#art-elden"/></svg></div><div class="plate pl-elden">Elden Ring</div></div>
+                  <div class="strip-meta">
+                    <span class="strip-title">ELDEN RING</span>
+                    <span class="hero-sub">2022 &middot; FROMSOFTWARE</span>
+                  </div>
+                  <div class="tail"><span class="npl">&#9654; PICKED</span><span class="ovf">&#8942;</span></div>
+                </div>
+                <div class="well strip rrow">
+                  <div class="gcard thumb fr-sote"><div class="art"><svg><use href="#art-sote"/></svg></div><div class="plate pl-sote">ER: Erdtree</div></div>
+                  <div class="strip-meta">
+                    <span class="strip-title">ELDEN RING: SHADOW OF THE ERDTREE</span>
+                    <span class="hero-sub">2024 &middot; FROMSOFTWARE</span>
+                  </div>
+                  <div class="tail"><span class="ovf">&#8942;</span></div>
+                </div>
+                <div class="well strip rrow">
+                  <div class="gcard thumb fr-night"><div class="art"><svg><use href="#art-night"/></svg></div><div class="plate pl-night">ER: Nightreign</div></div>
+                  <div class="strip-meta">
+                    <span class="strip-title">ELDEN RING: NIGHTREIGN</span>
+                    <span class="hero-sub">2025 &middot; FROMSOFTWARE</span>
+                  </div>
+                  <div class="tail"><span class="own-chip">&#10003; ON SHELF</span><span class="ovf">&#8942;</span></div>
+                </div>
+              </div>
+              <a class="hook" href="#">NONE OF THESE? BE FIRST TO ADD A NEW GAME &rsaquo;</a>
+            </div>
+            <div class="flow-foot">
+              <button class="btn secondary">&#9666; BACK</button>
+              <div class="spacer"></div>
+              <button class="btn">NEXT &#9656;</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P3 &middot; Results <em>(tap to pick &mdash; NEXT wakes)</em></h3>
+        <p>Three <b>ResultRow</b>s for &ldquo;ELDEN&rdquo;: catalog search is <b>title-match only</b> (CAT-01) &mdash; no
+        MatchTag here, unlike Collection's scoped in-place search. Tapping a row picks it (accent hairline + &#9654; PICKED)
+        and the footer <b>NEXT keycap wakes</b>. <b>NIGHTREIGN already wears the gold &#10003; ON SHELF marker</b> &mdash;
+        an owned row can't double-add; tapping it exits to its Game page (4.2).</p>
+        <p>The <b>&#8942; overflow</b> on every row holds REPORT DUPLICATE (&rarr; admin dedup, MOD-01/05). The
+        <b>TertiaryLink</b> hook keeps the create door open even when results exist &mdash; near-misses shouldn't force
+        a wrong match.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-label">The fork &middot; found vs missing <small>no hits &rarr; the Contributor create form (step 2,
+  with CAT-03 fuzzy dedup inline &mdash; never a toast) &middot; an existing pick &rarr; the all-status OptionSheet
+  (COL-01/02) on the same DETAILS step</small></div>
+  <div class="stage">
+
+    <!-- ═══ P4 · No results → create ═══ -->
+    <div class="take">
+      <div class="artboard-label">P4 &mdash; no results &rarr; create (step 1 &middot; the contributor hook)</div>
+      <div class="device" data-screen-label="Add Game A · C5 · P4 — No results">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="flow-head">
+              <span class="x">&#10005;</span>
+              <h2>ADD GAME</h2>
+              <div class="dots"><span class="dot on"></span><span class="dot"></span><span class="dot"></span></div>
+            </div>
+            <div class="flow-sub">STEP 1 OF 3 &middot; <b>NO MATCHES</b></div>
+            <div class="scroll">
+              <div class="field">
+                <svg width="12" height="12" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.4" fill="none" stroke-width="1.6"/><path d="M7.8 7.8L11 11" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <span class="q">ELDIN RING II</span>
+                <span class="clear"><svg width="13" height="13" viewBox="0 0 13 13"><circle cx="6.5" cy="6.5" r="5.5" fill="none" stroke-width="1.4"/><path d="M4.4 4.4l4.2 4.2M8.6 4.4L4.4 8.6" stroke-width="1.4" stroke-linecap="round"/></svg></span>
+              </div>
+              <div class="empty">
+                <div class="ghost-card"><span class="plus">+</span></div>
+                <span class="npl">NOT IN THE CATALOG YET</span>
+                <span class="hero-title">BE FIRST TO ADD IT</span>
+                <span class="empty-sub">&ldquo;ELDIN RING II&rdquo; has no entry. Create it and every collector after you
+                inherits your work &mdash; credited to you, permanently.</span>
+                <button class="btn add"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>CREATE &ldquo;ELDIN RING II&rdquo;</button>
+              </div>
+            </div>
+            <div class="flow-foot">
+              <span class="foot-note">OR REFINE YOUR SEARCH</span>
+              <div class="spacer"></div>
+              <button class="btn dormant">NEXT &#9656;</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P4 &middot; No results &rarr; create <em>(an empty that invites)</em></h3>
+        <p><b>EmptyState/inviting</b> in the dashed stepped-card silhouette (&sect;1.6 kinship): &ldquo;ELDIN RING II&rdquo;
+        misses, so the screen turns the miss into the <b>Contributor hook</b> &mdash; BE FIRST TO ADD IT, with the
+        permanent-credit promise up front (CAT-02). The CTA is a <b>gold + step KeycapButton</b> (F-02: creating the entry
+        is the first stroke of a card-creating path) and advances straight into the step-2 create form (P5).</p>
+        <p>Footer NEXT stays dormant &mdash; on this page the gold CTA <i>is</i> the advance; the foot-note nudges a
+        spelling retry first.</p>
+      </div>
+    </div>
+
+    <!-- ═══ P5 · Create + dedup ═══ -->
+    <div class="take">
+      <div class="artboard-label">P5 &mdash; create form + fuzzy dedup (step 2 &middot; &#9675;&#9679;&#9675;)</div>
+      <div class="device" data-screen-label="Add Game A · C5 · P5 — Create + dedup">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="flow-head">
+              <span class="x">&#10005;</span>
+              <h2>ADD GAME</h2>
+              <div class="dots"><span class="dot done"></span><span class="dot on"></span><span class="dot"></span></div>
+            </div>
+            <div class="flow-sub">STEP 2 OF 3 &middot; <b>DETAILS</b> &mdash; NEW CATALOG ENTRY</div>
+            <div class="scroll">
+              <span class="f-label">NAME</span>
+              <div class="tfield"><span class="v">ELDIN RING II</span><span class="caret"></span></div>
+              <div class="ibanner">
+                <div class="gcard thumb fr-elden"><div class="art"><svg><use href="#art-elden"/></svg></div><div class="plate pl-elden">Elden Ring</div></div>
+                <div class="meta">
+                  <span class="q2">DID YOU MEAN <b>ELDEN RING</b>?</span>
+                  <span class="why">2022 &middot; FROMSOFTWARE &mdash; ALREADY IN THE CATALOG</span>
+                  <div class="acts">
+                    <button class="btn secondary mini">VIEW MATCH</button>
+                    <a class="ghost-link" href="#">CREATE ANYWAY</a>
+                  </div>
+                </div>
+              </div>
+              <span class="f-label">GENRE(S)</span>
+              <div class="tfield"><span class="v">RPG &middot; SOULSLIKE</span><span class="dd">&#9662;</span></div>
+              <span class="f-label">STUDIO</span>
+              <div class="tfield"><span class="ph">SELECT STUDIO&hellip;</span><span class="dd">&#9662;</span></div>
+              <span class="f-label">PUBLISHER</span>
+              <div class="tfield"><span class="ph">SELECT PUBLISHER&hellip;</span><span class="dd">&#9662;</span></div>
+              <span class="f-label">RELEASE DATE</span>
+              <div class="tfield"><span class="ph">SELECT RELEASE DATE&hellip;</span><span class="dd">&#9662;</span></div>
+            </div>
+            <div class="flow-foot">
+              <button class="btn secondary">&#9666; BACK</button>
+              <div class="spacer"></div>
+              <button class="btn dormant">NEXT &#9656;</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P5 &middot; Create + dedup <em>(CAT-03 &mdash; inline, never a toast)</em></h3>
+        <p>The create form, one field per decision: <b>TextField</b> NAME (cream inset, navy ink, live caret) prefilled
+        &ldquo;ELDIN RING II&rdquo;; <b>SelectField</b>s for GENRE(S) / STUDIO / PUBLISHER / RELEASE DATE &mdash; filled and
+        placeholder states shown; each opens an <b>OptionSheet</b> (P6's pattern).</p>
+        <p><b>InlineBanner = the fuzzy-dedup warning</b> (CAT-03), an accent-hairline panel <i>directly under the offending
+        field</i> per the &sect;1.8 inline-validation rule: the full-face match thumb (F-01), &ldquo;DID YOU MEAN
+        <b>ELDEN RING</b>?&rdquo;, then <b>VIEW MATCH</b> (KeycapButton/secondary &mdash; jumps to the existing game's add
+        path) vs <b>CREATE ANYWAY</b> (TertiaryLink/dim). <b>NEXT stays dormant until the banner is answered</b> &mdash; the
+        wizard's gate makes dedup unskippable without being modal.</p>
+      </div>
+    </div>
+
+    <!-- ═══ P6 · Status pick (OptionSheet) ═══ -->
+    <div class="take">
+      <div class="artboard-label">P6 &mdash; status pick, OptionSheet (step 2 &middot; &#9675;&#9679;&#9675;)</div>
+      <div class="device" data-screen-label="Add Game A · C5 · P6 — Status">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="flow-head">
+              <span class="x">&#10005;</span>
+              <h2>ADD GAME</h2>
+              <div class="dots"><span class="dot done"></span><span class="dot on"></span><span class="dot"></span></div>
+            </div>
+            <div class="flow-sub">STEP 2 OF 3 &middot; <b>DETAILS</b> &mdash; YOUR SHELF ENTRY</div>
+            <div class="scroll">
+              <div class="well strip">
+                <div class="gcard thumb fr-elden"><div class="art"><svg><use href="#art-elden"/></svg></div><div class="plate pl-elden">Elden Ring</div></div>
+                <div class="strip-meta">
+                  <span class="strip-title">ELDEN RING</span>
+                  <span class="hero-sub">2022 &middot; FROMSOFTWARE</span>
+                </div>
+              </div>
+              <span class="f-label">STATUS</span>
+              <div class="tfield"><span class="v">PLAYING</span><span class="dd">&#9662;</span></div>
+            </div>
+            <div class="flow-foot">
+              <button class="btn secondary">&#9666; BACK</button>
+              <div class="spacer"></div>
+              <button class="btn">NEXT &#9656;</button>
+            </div>
+            <div class="scrim"></div>
+            <div class="sheet">
+              <div class="handle"></div>
+              <div class="sec"><h3>STATUS &mdash; WHERE DOES IT SIT ON YOUR SHELF?</h3></div>
+              <div class="chips">
+                <div class="chip"><b>BACKLOG</b></div>
+                <div class="chip active"><span class="chip-pip"></span><b>PLAYING</b></div>
+                <div class="chip"><b>BEATEN</b></div>
+                <div class="chip"><b>COMPLETED 100%</b></div>
+                <div class="chip"><b>DROPPED</b></div>
+                <div class="chip"><b>WISHLIST</b></div>
+              </div>
+              <div class="hint">ONE PICK &middot; CHANGE IT ANYTIME FROM THE GAME PAGE (COL-01/02)</div>
+              <div class="sheet-foot"><a href="#">CANCEL</a><button class="btn">DONE</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P6 &middot; Status pick <em>(the all-status OptionSheet)</em></h3>
+        <p>The DETAILS step for an <b>existing</b> pick is one decision: status. The <b>SelectField</b> (label + current
+        value + chevron) opens an <b>OptionSheet</b> &mdash; the same pulled-up family as Collection's sort/filter drawer
+        (handle &middot; SectionHeader &middot; keycap chips): <b>BACKLOG &middot; PLAYING &middot; BEATEN &middot;
+        COMPLETED 100% &middot; DROPPED &middot; WISHLIST</b> (COL-01/02's all-status promise) &mdash; PLAYING sits pressed
+        + pip. DONE commits, CANCEL dims away.</p>
+        <p>The same sheet serves the create path after its form &mdash; one status component, both forks. Behind it the
+        chosen game rides as a full-face <b>GameCard/thumb</b> strip &mdash; the wizard never loses sight of what you're adding.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-label">Step 3 &middot; Card &rarr; on the shelf <small>CardPicker = adopt a community face /
+  STYLE IT (the gold door to the future Styler) / SKIP to the CARD-18 placeholder &middot; the commit is gold + step
+  (F-02) &middot; ADD &amp; CONTINUE loops to step 1 with the shelf-count tick</small></div>
+  <div class="stage">
+
+    <!-- ═══ P7 · Card step — CardPicker, both populations ═══ -->
+    <div class="take">
+      <div class="artboard-label">P7 &mdash; card step, both populations (step 3 &middot; &#9675;&#9675;&#9679;)</div>
+      <div class="device" data-screen-label="Add Game A · C5 · P7 — Card step">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="flow-head">
+              <span class="x">&#10005;</span>
+              <h2>ADD GAME</h2>
+              <div class="dots"><span class="dot done"></span><span class="dot done"></span><span class="dot on"></span></div>
+            </div>
+            <div class="flow-sub">STEP 3 OF 3 &middot; <b>THE CARD</b> &mdash; OFFERED, NEVER FORCED</div>
+            <div class="scroll">
+              <div class="sec"><h3>ADOPT A COMMUNITY CARD &mdash; ELDEN RING</h3></div>
+              <div class="adopt-grid">
+                <div class="adopt sel">
+                  <div class="gcard grid-size fr-elden"><div class="art"><svg><use href="#art-elden"/></svg></div><div class="plate pl-elden">Elden Ring</div></div>
+                  <span class="credit">BY MAVERICK</span>
+                </div>
+                <div class="adopt">
+                  <div class="gcard grid-size custom"><span class="custom-tag">&#9733; FOIL</span><span class="cost-chip">1 &#9672;</span>
+                    <div class="art"><svg><use href="#art-elden"/></svg></div><div class="plate pl-minecraft">Elden Ring</div></div>
+                  <span class="credit">BY RIKO &middot; 1 &#9672;</span>
+                </div>
+                <div class="adopt">
+                  <div class="gcard grid-size fr-night"><div class="art"><svg><use href="#art-elden"/></svg></div><div class="plate pl-night">Elden Ring</div></div>
+                  <span class="credit">BY VANTA</span>
+                </div>
+              </div>
+              <div class="picker-acts">
+                <button class="btn add"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1L9.5 5.5L5.5 10L1.5 5.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>STYLE IT</button>
+                <a class="skip-link" href="#">SKIP &mdash; USE THE PLACEHOLDER</a>
+              </div>
+              <div class="alt-divider">ALT POPULATION &mdash; NO CARDS YET (THE P5 CREATE PATH)</div>
+              <div class="sec"><h3>ELDIN RING II &mdash; NO CARDS YET</h3></div>
+              <div class="be-first">
+                <div class="ghost-card sm"><span class="plus">+</span></div>
+                <div class="bf-meta">
+                  <span class="npl">FRESH ENTRY</span>
+                  <span class="strip-title">BE ITS FIRST DESIGNER</span>
+                  <span class="hero-sub">EVERY FUTURE ADOPT CREDITS YOU</span>
+                </div>
+              </div>
+              <div class="picker-acts">
+                <button class="btn add"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1L9.5 5.5L5.5 10L1.5 5.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>STYLE IT</button>
+                <a class="skip-link" href="#">SKIP &mdash; USE THE PLACEHOLDER</a>
+              </div>
+            </div>
+            <div class="flow-foot">
+              <button class="btn secondary">&#9666; BACK</button>
+              <div class="spacer"></div>
+              <button class="btn add"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>ADD TO SHELF</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P7 &middot; Card step <em>(CardPicker &mdash; both populations in one frame)</em></h3>
+        <p><b>CardPicker, populated:</b> the adopt gallery renders three community <b>GameCard/grid full faces</b> (F-01)
+        with micro designer credits; RIKO's foil wears the <b>1 &#9672; premium cost chip</b> (ECON-03/04 &mdash; charged at
+        commit, preview free). Selection = accent glow + lit credit. <b>STYLE IT</b> is the <b>gold + step door</b> to the
+        future Styler (stubbed); <b>SKIP</b> is a dim tertiary &mdash; skipping lands the CARD-18 default placeholder.
+        The card step is offered, never forced (4.1).</p>
+        <p><b>Below the divider, the same component empty:</b> a fresh create-path entry has no gallery &mdash; the dashed
+        ghost invites you to be its <b>first designer</b> (every future adopt credits you). Same three doors. Footer commit:
+        <b>ADD TO SHELF</b>, gold + step &mdash; the card-creating action (F-02).</p>
+      </div>
+    </div>
+
+    <!-- ═══ P8 · Added + continue ═══ -->
+    <div class="take">
+      <div class="artboard-label">P8 &mdash; added &middot; the shelf-slot beat (&#9679;&#9679;&#9679; complete)</div>
+      <div class="device" data-screen-label="Add Game A · C5 · P8 — Added">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="flow-head">
+              <span class="x">&#10005;</span>
+              <h2>ADD GAME</h2>
+              <div class="dots"><span class="dot done"></span><span class="dot done"></span><span class="dot done"></span></div>
+            </div>
+            <div class="flow-sub">COMPLETE &middot; <b>CARD ON SHELF</b></div>
+            <div class="scroll">
+              <div class="added-block">
+                <span class="npl">ADDED &#10003;</span>
+                <span class="hero-title">ELDEN RING</span>
+                <span class="hero-sub">PLAYING &middot; 2022 &middot; CARD BY MAVERICK</span>
+              </div>
+              <div class="sec"><h3>ON YOUR SHELF</h3><span><span class="count">49 GAMES</span><span class="tick">+1</span></span></div>
+              <div class="well shelf-wrap">
+                <div class="shelf-strip">
+                  <div class="slot">
+                    <div class="gcard mini-size fr-destiny"><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                    <span class="sl-lbl"></span>
+                  </div>
+                  <div class="slot">
+                    <div class="gcard mini-size fr-elden lit"><div class="art"><svg><use href="#art-elden"/></svg></div><div class="plate pl-elden">Elden Ring</div></div>
+                    <span class="sl-lbl">&#9670; NEW</span>
+                  </div>
+                  <div class="slot">
+                    <div class="gcard mini-size fr-marathon custom"><span class="custom-tag">&#9733; FOIL</span><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
+                    <span class="sl-lbl"></span>
+                  </div>
+                  <div class="slot">
+                    <div class="gcard mini-size fr-minecraft"><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
+                    <span class="sl-lbl"></span>
+                  </div>
+                  <div class="slot">
+                    <div class="gcard mini-size fr-ratchet"><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
+                    <span class="sl-lbl"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="hint">THE NEW CARD SLOTS IN LIT FOR A BEAT &mdash; THEN SETTLES TO MATCH ITS NEIGHBOURS</div>
+              <div class="alt-divider">VARIANT &mdash; IF YOU CREATED THE ENTRY (THE P5 PATH)</div>
+              <div class="credit-strip">
+                <span class="fc-chip">&#10022; FIRST</span>
+                <div class="cs-meta">
+                  <span class="cs-title">YOU BROUGHT THIS GAME TO INGAME</span>
+                  <span class="cs-sub">PERMANENTLY CREDITED ON ITS GAME PAGE &mdash; EVERY SHELF IT REACHES TRACES BACK TO YOU</span>
+                </div>
+              </div>
+            </div>
+            <div class="flow-foot">
+              <button class="btn secondary">DONE</button>
+              <div class="spacer"></div>
+              <button class="btn add"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>ADD &amp; CONTINUE</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P8 &middot; Added <em>(the shelf-slot beat + the multi-add loop)</em></h3>
+        <p><b>The payoff is spatial:</b> the new <b>GameCard/mini</b> slots into a live strip of your shelf
+        (alphabetical neighbours from the Collection roster), <b>lit gold for a beat</b> before settling; the
+        <b>CountKeycap ticks 48 &rarr; 49</b> with a +1 chip. <b>DONE</b> (KeycapButton/secondary) closes the takeover;
+        <b>ADD &amp; CONTINUE</b> (gold + step &mdash; it mints the next card) <b>loops to step 1</b> with the count
+        still ticking: 4.1's quick multi-add.</p>
+        <p><b>Variant below the divider:</b> when the entry came through the P5 create path, the confirmation adds the
+        <b>contributor first-credit strip</b> &mdash; &ldquo;you brought this game to InGame &mdash; permanently
+        credited&rdquo; (CAT-02/05): the Contributor persona's trophy moment.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
