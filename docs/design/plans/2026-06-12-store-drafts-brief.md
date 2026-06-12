@@ -194,3 +194,29 @@ OQ-043) + claimed-state fragment · Top Up **value math** per tile (PX-per-$ + %
 · an actual **STARTER PACK** product (one-time, $0.99 → 12 PX, outsized rate — OQ-044) · **PIXELS mark
 v3**: same stepped-gem shape, texture re-cut as **flat pixel-art** (solid quadrant facets, opaque ink
 outline, solid blue glint pixels — no translucent overlays) for aesthetic fit + legibility on gold.
+
+### Converged-board ruling #4 — 2026-06-12 (verbatim)
+
+> The Drop Page could be a drawer.
+>
+> Add the multi-item pack content view
+>
+> We won't have a preview sticker on device for now.  Note it for later.
+>
+> Let's do press and hold buy.
+>
+> Let's not do My Stuff for now.
+>
+> Notes on your last draft:
+>
+> * In P7 I feel like the page got a little mangled with the Pack Landed. We lost pack options. Also
+>   we were supposed to do the "Pack Landed" feature like S6 in store-draft-b-drops.html
+
+**Disposition (applied in place):** new **P1b — the drop drawer** (the EMBER SERIES page as a bottom
+sheet over browse; same sheet grammar as item detail) · new **P2b — multi-item pack contents** (ARCADE
+GLYPHS sheet: glyph-on-YOUR-card stage + WHAT'S-INSIDE grid; debuts **press-and-hold BUY**) ·
+**hold-to-buy** is the spend-confirmation model for instant PX purchases (HOLD TO BUY labels on all
+cosmetic BuyBars; IAP keeps the platform's own confirm; a11y tap-alternative owed — OQ-046) · sticker
+preview-on-device **deferred, noted** (OQ-045) · My Stuff **dropped** · **P7 remade as draft B's S6
+moment verbatim** (centered +30, 5 ➞ 35 arithmetic, one gold rule, BACK TO EMBER + VIEW WALLET — no
+half-grid; the full pack options live on P6).

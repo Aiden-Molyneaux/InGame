@@ -70,6 +70,14 @@
   outsized-value first purchase (drafted $0.99 → 12 PX, ~2.4× the base rate). Needs ECON wording:
   eligibility (once per account?), store-listing behavior after purchase, and pricing (pairs
   OQ-011/OQ-002). [behavior]
+- OQ-045: **Sticker preview-on-device deferred** (owner, store track 2026-06-12) — §4.11's "sticker
+  shown placed" case is NOT drawn in the converged Store board; design it later (likely with the
+  Device editor pass, DEV-01). [presentation]
+- OQ-046: **Press-and-hold BUY = the spend-confirmation model** for instant PX purchases (owner
+  direction, store track 2026-06-12) — cosmetics confirm by holding the BUY keycap (no dialogs);
+  IAP packs keep the platform's native confirm. Needs spec wording + an accessible non-hold
+  alternative (switch-control/assistive-touch users; reduce-motion variant). (ECON-01/§4.11/§1.8)
+  [behavior]
 
 ## Resolved
 - OQ-001 → **Multiple device models.** A user can own several device models (via entitlements/store)
