@@ -4,7 +4,7 @@
 > be refined alongside the design-spec, because screens reveal exactly what each call must return.
 > Behavior lives in [`product-spec.md`](product-spec.md); shapes live here. Referenced by ID.
 
-**Version:** 0.15 (draft) · **Last updated:** 2026-06-12 · **Owner:** Claude Code
+**Version:** 0.16 (draft) · **Last updated:** 2026-06-12 · **Owner:** Claude Code
 
 ---
 
@@ -77,8 +77,11 @@
 | POST | `/cards/:id/unpublish` | Delist own published card; existing adopters keep their grant (CARD-20) |
 | DELETE | `/cards/:id` | Delete a draft/private (or never-adopted published) design; adopted → unpublish instead (CARD-14/20) |
 | POST | `/cards/:id/publish` | Validate (min-complexity, dedup, premium-reconcile), **flatten to image + thumbnail**, set public (CARD-13/15/19) |
-| POST | `/cards/:id/adopt` | Adopt for a game; charges currency if premium (ECON-03/04); increments adoption_count (CARD-05) |
-| GET | `/cards/assets` | Vector/effect/finish/frame/font library; filter type/free/premium/owned; search (CARD-17) |
+| POST | `/cards/:id/save-private` | Finalize a draft as a **private** card (CARD-04): premium-reconcile gate (CARD-13) + **flatten** (CARD-15), never listed in galleries. The Styler's SAVE PRIVATE; its **KEEP** = this + `PATCH /me/collection/:entryId { activeCardDesignId }` (COL-06) |
+| POST | `/cards/:id/adopt` | Adopt for a game; charges currency if premium (ECON-03/04); increments adoption_count (CARD-05). The Styler's received-base (adopt-then-edit) charge rides the keep-reconcile via this call |
+| GET | `/games/:gameId/card-bases` | **Start-from sources** for the editor's `BaseRail` (CARD-16; system-supplied, never community-dependent): `{ default, templates: [{ id, name, composition, previewUrl }], kits: [{ id, name, composition, cosmeticIds[], previewUrl }] }` — `default` = the CARD-18 placeholder face; kits bundle free-baseline closed attributes (COSM-02). *(Resolves OQ-050)* |
+| POST | `/games/:gameId/card-bases/surprise` | **"Surprise me"** — deals a fresh server-composed start from the free baseline (CARD-16) → `{ composition }`; non-idempotent by design (each call = a new deal) |
+| GET | `/cards/assets` | Vector/effect/finish/frame/**nameplate**/font library; filter type/free/premium/owned; search (CARD-17; nameplate per the styler gate ruling 2026-06-12 — COSM-01 wording ripple rides OQ-039's spec batch) |
 | GET | `/cards/:id/share-image` | **Share variant** of the flattened render — "made in InGame" mark + designer attribution composited server-side, CDN-cached; unavailable while moderation-hidden (CARD-21) |
 
 ## Device (`DEV-`)
@@ -89,9 +92,10 @@
 ## Cosmetics & store & economy (`COSM-`, `ECON-`)
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/cosmetics` | Library (free + premium), filterable by type (COSM-01..03; types: `shell_sticker_pack` · `effect` · `finish` · `frame` · `font` · `device_shell` · `screen_theme` — decision 0017) |
+| GET | `/cosmetics` | Library (free + premium), filterable by type (COSM-01..03; types: `shell_sticker_pack` · `effect` · `finish` · `frame` · `nameplate` · `font` · `device_shell` · `screen_theme` — decision 0017; **`nameplate` per the styler gate ruling 2026-06-12**, COSM-01 wording ripple = OQ-039's spec batch) |
 | GET | `/me/entitlements` | What the caller owns (COSM-03) |
-| POST | `/cosmetics/:id/acquire` | **Spend currency on a premium cosmetic** (the Store BUY + the editor reconcile, ECON-01/COSM-03); idempotent; 402-style `INSUFFICIENT_BALANCE` with `{ shortBy }` for the bridge → entitlement + ledger entry |
+| POST | `/cosmetics/:id/acquire` | **Spend currency on a premium cosmetic** (the Store BUY, ECON-01/COSM-03); idempotent; 402-style `INSUFFICIENT_BALANCE` with `{ shortBy }` for the bridge → entitlement + ledger entry |
+| POST | `/cosmetics/acquire-batch` | `{ cosmeticIds[] }` — the editor **ReconcileSheet's ACQUIRE ALL** (CARD-13): **atomic, all-or-nothing** spend of the summed price; already-owned ids are no-ops; `INSUFFICIENT_BALANCE` + `{ shortBy }` against the total (the in-context bridge); → entitlements + one `acquire` ledger entry per item (ECON-07) |
 | GET | `/store` | Store front: currency packs (real money; each `{ productId, pixels, oneTime?, purchased? }` — the one-time Starter Pack rides `oneTime` + per-account eligibility, ECON-10) + premium cosmetics (priced in currency) + drops `{ id, name, endsAt, itemIds }` (ECON-01/08/10) |
 | GET | `/me/wallet` | `{ balance, dailyBonus: { available, amount, nextResetAt } }` (ECON-02/07 — the Store's claim bar reads this) |
 | GET | `/me/wallet/ledger` | Paginated transactions (ECON-07); `type` ∈ grant · daily_claim · pack_purchase · adoption · acquire · milestone · refund_reversal |
@@ -181,3 +185,4 @@
 | 2026-06-12 | 0.13 | CAT-09 ripple (decision 0016): `collectionsCount` + `friendsHaveCount` on catalog search results + the game payload. |
 | 2026-06-12 | 0.14 | MOD-01 ripple: `details?` on `POST /reports`, required for reasons needing specifics (`incorrect_info`). |
 | 2026-06-12 | 0.15 | Store-economy ripple (decision 0017): **+`POST /cosmetics/:id/acquire`** (the spend-currency purchase call — Store BUY + editor reconcile; was missing entirely) · `/me/wallet` gains `dailyBonus { available, amount, nextResetAt }` · `/me/daily-bonus` = the Store-claimed daily (lapses) · `/store` pack shapes incl. the one-time Starter Pack (`oneTime/purchased`, ECON-10) + drop shape · ledger `type` enum · `/me/device` → `activeShellId` · `/cosmetics` type enum (shell_sticker_pack · device_shell). |
+| 2026-06-12 | 0.16 | **Styler sync** (the converged board's page audit, styler track): **+`GET /games/:gameId/card-bases`** + **`POST /games/:gameId/card-bases/surprise`** — the `BaseRail` start-from sources + the auto-design deal (CARD-16/18, COSM-02; **resolves OQ-050**) · **+`POST /cards/:id/save-private`** — the missing draft→private finalize (reconcile gate + flatten, CARD-04/13/15; KEEP = save-private + the COL-06 `activeCardDesignId` patch) · **+`POST /cosmetics/acquire-batch`** — the ReconcileSheet's atomic ACQUIRE ALL (CARD-13, ECON-01/07; `shortBy` against the total) · `/cosmetics` + `/cards/assets` type enums gain **`nameplate`** (the styler gate ruling 2026-06-12; COSM-01 wording ripple stays with OQ-039's spec batch) · adopt note: the received-base charge rides the keep-reconcile (ECON-03). |

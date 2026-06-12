@@ -63,9 +63,6 @@
 - OQ-049: **Save-private landing spot** — a Styler SAVE PRIVATE (CARD-04/14) leaves the card
   un-equipped: does it surface only in the game's **card switcher** (COL-06), or also on a drafts
   shelf? (styler track, 2026-06-12) [behavior]
-- OQ-050: **Start-from sources in the contract** — the Styler's `BaseRail` (CARD-16) needs
-  api-contract shapes for the **system bases list** (templates · preset kits) and the **"Surprise
-  me" auto-compose deal**; nothing covers them today. (styler track, 2026-06-12) [behavior/contract]
 
 ## Resolved
 - OQ-001 → **Multiple device models.** *(Superseded by OQ-042/decision 0017 — one handheld body; users own multiple **shells**, not models.)* A user can own several device models (via entitlements/store)
@@ -130,3 +127,7 @@
 - OQ-047 → **Sticker packs are SHELL items; the card canvas sells nothing.** COSM-01 retyped
   (shell sticker pack); CARD-02/17 vector elements all free; premium-on-card stays the closed
   attributes (decision 0014). Decision 0017. (2026-06-12)
+- OQ-050 → **Start-from sources landed in the contract** (api-contract 0.16, styler sync):
+  `GET /games/:gameId/card-bases` (default · templates · kits, CARD-16/18/COSM-02) +
+  `POST /games/:gameId/card-bases/surprise` (the server-dealt auto-design; non-idempotent —
+  each call deals fresh). (2026-06-12)
