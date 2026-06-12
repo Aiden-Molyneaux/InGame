@@ -153,3 +153,19 @@ with **blue streak/emphasis**; three distinct stepped silhouettes + three new na
 pixel-cut diamond gem w/ blue glints · **SPARKS** ascending step-cubes w/ blue motion trails). Blue =
 a mark-internal accent from the cyan family — not a new chrome token; gold stays THE value marker
 (F-02). v1 (CREDITS / INK / VOLTS) superseded, kept for history. Awaiting ruling #2.
+
+### Currency ruling #2 + converge order — 2026-06-12 (verbatim)
+
+> Let's do pixels, the way you designed them. Take my notes and redraft the Store screen once
+
+**Disposition:** **PIXELS** (ticker PX; the pixel-cut gem, as drawn in v2 take B) is the Customizer
+currency's in-app identity — the mark replaces the ◈ placeholder app-wide (CurrencyCounter, PriceChip,
+adopt chip, PackTile, LedgerRow; the Add Game track's cost chip adopts it at its next pass). Converged
+board built per the gate ruling → **`store-states.html`**: B-led hybrid (cover-story drop · denser
+browse · THE INDEX · whole-page theme PREVIEWING · B's Top Up landing + under-header banner Toast)
++ C's sheet detail, in-sheet bridge at intent, and dense LedgerRows; devices drawn as **shells/skins
+on the one pocket handheld** (OQ-042); inline IAP at the bridge; counter→Wallet / INDEX→Top Up /
+bridge = the three Buy-Pixels doors; full matrix **incl. the deferred lifecycle cells** (skeleton ·
+load-error+RETRY · offline browse-from-cache with writes gated). Formalization into
+design-spec/catalog stays with the spec-owner session (one-editor rule). **Store track stage-1 ends
+here per the brief (converge → STOP).**
