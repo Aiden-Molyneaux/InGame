@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InGame · Customizer Currency — Identity Drafts v2 ×3 (stepped gold marks, blue emphasis)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" /></noscript>
+<style>
+  /* ── tokens: verbatim from collection-states.html (Teal shell · Midnight theme) ── */
+  :root {
+    --plastic: #2bb6b0; --plastic-hi: #3ec9c2; --plastic-lo: #1f9a94; --silk: #0d524e;
+    --accent: #ff3d77; --gold: #ffd23f; --cream: #f5f1e4; --navy: #1d2a4a;
+    --bezel: #14122a; --alert: #e3414e;
+    --pk: 'Chakra Petch', sans-serif; --shell: 'Paytone One', sans-serif;
+    --scr-bg: #232045; --scr-well: #2c2950; --scr-tools: #1a1733; --scr-accent: #ff9f43;
+    --scr-accent-ink: #2a1430; --scr-head: #f5f1e4; --scr-text: #ffffff; --scr-dim: #9b97c0;
+    --scr-soft: #c9c5e6; --scr-panel: rgba(255,255,255,.065); --scr-hairline: rgba(255,255,255,.08);
+    --scr-grip: #565178; --scr-chip: #f5f1e4; --scr-head-shadow: rgba(0,0,0,.45);
+    --scr-btn: #ffb38a; --scr-btn-ink: #2a1430;
+    --shell-ink: #08433f; --screw-hi: #2aa39d; --screw-lo: #137671; --pip-off: #117672;
+  }
+  html, body { margin: 0; min-height: 100%; background: #efece6; font-family: var(--pk); }
+  .canvas { max-width: 1348px; margin: 0 auto; padding: 40px 24px 60px; }
+  .canvas-head h1 { font: 700 17px/1.2 var(--pk); letter-spacing: 2.5px; color: #2a2633; margin: 0 0 6px; text-transform: uppercase; }
+  .canvas-head p { font: 500 12.5px/1.5 var(--pk); color: #79748a; margin: 0 0 32px; max-width: 640px; }
+  .stage { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+  .take { width: 404px; }
+  .artboard-label { font: 700 11px/1 var(--pk); letter-spacing: 1.5px; color: #8d889c; margin: 0 0 10px 2px; text-transform: uppercase; }
+  .caption { margin-top: 14px; background: #fff; border-radius: 12px; padding: 13px 15px; box-shadow: 0 2px 8px rgba(42,38,51,.08); }
+  .caption h3 { margin: 0 0 5px; font: 700 12.5px var(--pk); letter-spacing: .8px; color: #2a2633; text-transform: uppercase; }
+  .caption h3 em { font-style: normal; color: var(--accent); }
+  .caption p { margin: 0 0 4px; font: 500 11.8px/1.5 var(--pk); color: #5d5870; }
+  .caption p b { color: #2a2633; }
+
+  /* ── specimen panel ── */
+  .spec { background: var(--scr-bg); border: 5px solid var(--bezel); border-radius: 8px; padding: 16px 14px 14px; }
+  .spec-hero { display: flex; align-items: center; gap: 14px; padding: 4px 2px 14px; border-bottom: 1px solid var(--scr-hairline); }
+  .spec-hero .big-ic { flex: 0 0 auto; width: 52px; height: 52px; }
+  .spec-hero .sh-meta { display: flex; flex-direction: column; gap: 4px; }
+  .spec-hero .sh-name { font: 700 21px/1 var(--pk); letter-spacing: 2.5px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); }
+  .spec-hero .sh-tag { font: 600 9.5px/1.5 var(--pk); letter-spacing: .5px; color: var(--scr-soft); }
+  .spec-hero .sh-tick { font: 700 8px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
+  .srow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 2px; border-bottom: 1px solid var(--scr-hairline); }
+  .srow:last-child { border-bottom: none; }
+  .slbl { flex: 0 0 92px; font: 700 8px/1.4 var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
+  /* chrome mocks */
+  .ccount { display: inline-flex; align-items: center; gap: 4px; background: var(--gold); color: #3c2a09;
+    border: none; padding: 5px 8px; font: 700 11px/1 var(--pk); letter-spacing: .5px;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--gold) 45%, #000), inset 0 1px 0 rgba(255,255,255,.5); }
+  .ccount svg { display: block; }
+  .ccount.neg { background: var(--alert); color: #fff;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--alert) 45%, #000), inset 0 1px 0 rgba(255,255,255,.3); }
+  .price-chip { display: inline-flex; align-items: center; gap: 3px; background: var(--gold); color: #3c2a09;
+    font: 700 9px/1 var(--pk); padding: 3px 5px; white-space: nowrap; }
+  .price-chip svg { display: block; }
+  .arrow { color: var(--scr-grip); font: 700 11px var(--pk); }
+  .old-chip { display: inline-flex; align-items: center; gap: 2.5px; background: var(--scr-panel); border: 1px dashed var(--scr-grip);
+    color: var(--scr-dim); font: 700 9px/1 var(--pk); padding: 3px 5px; white-space: nowrap; }
+  /* pack mini */
+  .pack { position: relative; display: inline-flex; flex-direction: column; align-items: center; gap: 5px; padding: 10px 14px 9px;
+    background: var(--scr-well); border: 1px solid color-mix(in srgb, var(--gold) 38%, transparent); }
+  .pack .amt { display: inline-flex; align-items: center; gap: 5px; font: 700 15px/1 var(--pk); color: var(--gold); letter-spacing: 1px; text-shadow: 0 0 9px rgba(255,210,63,.3); }
+  .pack .plbl { font: 700 7.5px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
+  .usd-chip { display: inline-flex; align-items: center; background: var(--cream); color: var(--navy);
+    font: 700 9px/1 var(--pk); padding: 3.5px 6px; white-space: nowrap;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  /* ledger (draft C's form) */
+  .ledger { flex: 1 1 100%; background: var(--scr-well); border: 1px solid var(--scr-hairline); }
+  .lrow { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-bottom: 1px solid var(--scr-hairline); }
+  .lrow:last-child { border-bottom: none; }
+  .lrow .lsig { flex: 0 0 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center;
+    font: 700 10px/1 var(--pk); background: var(--scr-panel); }
+  .lrow .lwhat { font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-text); min-width: 0; }
+  .lrow .lamt { margin-left: auto; display: inline-flex; align-items: center; gap: 3px; font: 700 10px var(--pk); white-space: nowrap; }
+  .lrow.earn .lsig, .lrow.earn .lamt { color: #7fe0c3; }
+  .lrow.spend .lsig, .lrow.spend .lamt { color: var(--scr-soft); }
+  .lrow.rev .lsig, .lrow.rev .lamt, .lrow.rev .lwhat { color: #ff8a93; }
+  /* voice lines */
+  .voice { flex: 1 1 auto; display: flex; flex-direction: column; gap: 5px; }
+  .voice span { font: 600 9px/1.5 var(--pk); letter-spacing: .8px; color: var(--scr-dim); }
+  .voice span b { color: var(--scr-soft); }
+  .voice span i { color: var(--gold); font-style: normal; }
+  .gram { flex: 1 1 100%; font: 600 8.5px/1.6 var(--pk); letter-spacing: .5px; color: var(--scr-grip); }
+  .gram b { color: var(--scr-dim); }
+  /* header-context strip */
+  .ctx { background: var(--scr-bg); border: 5px solid var(--bezel); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: space-between; }
+  .ctx h2 { margin: 0; font: 700 21px/1 var(--pk); letter-spacing: 3px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- A · BIT — the card-cut: the GameCard's stepped silhouette as the unit itself; blue foil slash -->
+    <clipPath id="clip-bit"><path d="M7 13 L10 13 L10 10 L13 10 L13 7 L33 7 L33 27 L30 27 L30 30 L27 30 L27 33 L7 33 Z"/></clipPath>
+    <symbol id="ic-bit" viewBox="0 0 40 40">
+      <path d="M7 13 L10 13 L10 10 L13 10 L13 7 L33 7 L33 27 L30 27 L30 30 L27 30 L27 33 L7 33 Z" fill="var(--gold)"/>
+      <g clip-path="url(#clip-bit)">
+        <path d="M1 31 L31 1 L37 1 L7 31 Z" fill="#58e0ff" opacity=".85"/>
+        <path d="M12 39 L42 9 L45 9 L15 39 Z" fill="#4a90ff" opacity=".6"/>
+      </g>
+      <path d="M7 13 L10 13 L10 10 L13 10 L13 7 L33 7 L33 27 L30 27 L30 30 L27 30 L27 33 L7 33 Z" fill="none" stroke="#3c2a09" stroke-width="1.4" stroke-opacity=".5"/>
+      <path d="M9 16 L9 13 L12 13 L12 10 L15 10" fill="none" stroke="#fff" stroke-width="1.6" opacity=".55"/>
+    </symbol>
+    <!-- B · PIXEL — the pixel-cut gem: the ◈ diamond rebuilt from 4px blocks; blue glint pixels -->
+    <clipPath id="clip-pix"><path d="M18 5 L22 5 L22 9 L26 9 L26 13 L30 13 L30 17 L34 17 L34 23 L30 23 L30 27 L26 27 L26 31 L22 31 L22 35 L18 35 L18 31 L14 31 L14 27 L10 27 L10 23 L6 23 L6 17 L10 17 L10 13 L14 13 L14 9 L18 9 Z"/></clipPath>
+    <symbol id="ic-pix" viewBox="0 0 40 40">
+      <path d="M18 5 L22 5 L22 9 L26 9 L26 13 L30 13 L30 17 L34 17 L34 23 L30 23 L30 27 L26 27 L26 31 L22 31 L22 35 L18 35 L18 31 L14 31 L14 27 L10 27 L10 23 L6 23 L6 17 L10 17 L10 13 L14 13 L14 9 L18 9 Z" fill="var(--gold)"/>
+      <g clip-path="url(#clip-pix)">
+        <path d="M5 20 L20 5 L20 20 Z" fill="#fff" opacity=".22"/>
+        <path d="M35 20 L20 35 L20 20 Z" fill="#3c2a09" opacity=".22"/>
+        <rect x="22" y="13" width="4" height="4" fill="#58e0ff" opacity=".95"/>
+        <rect x="26" y="17" width="4" height="4" fill="#4a90ff" opacity=".75"/>
+        <rect x="14" y="23" width="4" height="4" fill="#58e0ff" opacity=".45"/>
+      </g>
+      <path d="M22 5 L22 9 L26 9 L26 13 L30 13 L30 17 L34 17" fill="none" stroke="#58e0ff" stroke-width="1.8" opacity=".9"/>
+      <path d="M18 5 L22 5 L22 9 L26 9 L26 13 L30 13 L30 17 L34 17 L34 23 L30 23 L30 27 L26 27 L26 31 L22 31 L22 35 L18 35 L18 31 L14 31 L14 27 L10 27 L10 23 L6 23 L6 17 L10 17 L10 13 L14 13 L14 9 L18 9 Z" fill="none" stroke="#3c2a09" stroke-width="1.2" stroke-opacity=".45"/>
+    </symbol>
+    <!-- C · SPARK — a gold spark climbing its own staircase; blue motion trails -->
+    <symbol id="ic-spark" viewBox="0 0 40 40">
+      <path d="M4 31.5 L13 31.5" stroke="#58e0ff" stroke-width="2.6" opacity=".8" stroke-linecap="round"/>
+      <path d="M2 28.5 L8 28.5" stroke="#4a90ff" stroke-width="2" opacity=".55" stroke-linecap="round"/>
+      <path d="M11 21.5 L20 21.5" stroke="#58e0ff" stroke-width="2.6" opacity=".8" stroke-linecap="round"/>
+      <path d="M9 18.5 L15 18.5" stroke="#4a90ff" stroke-width="2" opacity=".55" stroke-linecap="round"/>
+      <path d="M18 11.5 L27 11.5" stroke="#58e0ff" stroke-width="2.6" opacity=".8" stroke-linecap="round"/>
+      <path d="M16 8.5 L22 8.5" stroke="#4a90ff" stroke-width="2" opacity=".55" stroke-linecap="round"/>
+      <rect x="13" y="25" width="8.5" height="8.5" fill="var(--gold)" stroke="#3c2a09" stroke-width="1.2" stroke-opacity=".5"/>
+      <rect x="20" y="15" width="8.5" height="8.5" fill="var(--gold)" stroke="#3c2a09" stroke-width="1.2" stroke-opacity=".5"/>
+      <rect x="27" y="5" width="8.5" height="8.5" fill="var(--gold)" stroke="#3c2a09" stroke-width="1.2" stroke-opacity=".5"/>
+      <path d="M28.5 6.5 L32 6.5" stroke="#fff" stroke-width="1.6" opacity=".6"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="canvas">
+  <div class="canvas-head">
+    <h1>Customizer Currency &mdash; Identity Drafts v2 &times;3 (stepped gold, blue emphasis)</h1>
+    <p><b>v2 per the owner's ruling (2026-06-12):</b> the pixel-stepped shape comes <b>out of the coin</b>
+    &mdash; the mark IS the stepped form, <b>gold with blue streaks/emphasis</b>, in three distinct cuts with
+    three new names. Blue is a <b>mark-internal accent</b> (the system's cyan family) &mdash; gold remains THE
+    value marker (F-02); blue never becomes chrome. Each identity is shown in every slot the mark must
+    survive: <b>CurrencyCounter</b> (+ ECON-09 negative) &middot; <b>PriceChip</b> &middot; the Add Game adopt
+    chip (&#9672; &#10142; mark) &middot; <b>PackTile</b> &middot; <b>LedgerRow</b> (draft C's form, per the
+    store gate ruling). Spec term &ldquo;Customizer currency&rdquo; (ECON-01/02) unchanged; v1
+    (CREDITS / INK / VOLTS) superseded, kept for history. <i>Amounts illustrative (OQ-002/OQ-011).</i></p>
+  </div>
+
+  <div class="stage">
+
+    <!-- ═══ A · BITS ═══ -->
+    <div class="take">
+      <div class="artboard-label">Identity A &middot; BITS &mdash; the card-cut, slashed blue</div>
+      <div class="ctx">
+        <h2>STORE</h2>
+        <button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-bit"/></svg>5</button>
+      </div>
+      <div class="spec">
+        <div class="spec-hero">
+          <svg class="big-ic" viewBox="0 0 40 40"><use href="#ic-bit"/></svg>
+          <div class="sh-meta">
+            <span class="sh-name">BITS</span>
+            <span class="sh-tag">The system's smallest unit &mdash; the GameCard's own stepped cut,
+            struck in gold, slashed with blue foil.</span>
+            <span class="sh-tick">TICKER &middot; B &middot; SINGULAR &ldquo;1 BIT&rdquo;</span>
+          </div>
+        </div>
+        <div class="srow">
+          <span class="slbl">COUNTER &rarr; WALLET</span>
+          <button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-bit"/></svg>5</button>
+          <button class="ccount neg"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-bit"/></svg>&minus;3</button>
+          <span class="gram" style="flex:1 1 auto;">NEGATIVE (ECON-09) WEARS ALERT RED</span>
+        </div>
+        <div class="srow">
+          <span class="slbl">PRICECHIP + ADOPT</span>
+          <span class="old-chip">8 &#9672;</span><span class="arrow">&#10142;</span>
+          <span class="price-chip">8 <svg width="11" height="11" viewBox="0 0 40 40"><use href="#ic-bit"/></svg></span>
+          <span class="price-chip">ADOPT &middot; 1 <svg width="11" height="11" viewBox="0 0 40 40"><use href="#ic-bit"/></svg></span>
+        </div>
+        <div class="srow">
+          <span class="slbl">PACKTILE</span>
+          <div class="pack"><span class="amt">30 <svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-bit"/></svg></span><span class="plbl">BIT PACK</span><button class="usd-chip">$4.99</button></div>
+          <div class="voice">
+            <span><i>+1 BIT</i> DAILY LOGIN</span>
+            <span>BRIDGE: <b>SHORT 3 BITS</b></span>
+            <span>EFFECT: <b>COSTS 8 BITS</b> (YES.)</span>
+          </div>
+        </div>
+        <div class="srow">
+          <span class="slbl">LEDGERROW (C FORM)</span>
+          <div class="ledger">
+            <div class="lrow earn"><span class="lsig">+</span><span class="lwhat">BIT PACK &middot; 30</span><span class="lamt">+30 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-bit"/></svg></span></div>
+            <div class="lrow spend"><span class="lsig">&minus;</span><span class="lwhat">EMBER &middot; EFFECT</span><span class="lamt">&minus;8 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-bit"/></svg></span></div>
+            <div class="lrow rev"><span class="lsig">&#8856;</span><span class="lwhat">REFUND REVERSAL</span><span class="lamt">&minus;30 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-bit"/></svg></span></div>
+          </div>
+        </div>
+        <div class="srow">
+          <span class="gram"><b>GRAMMAR:</b> COUNTABLE &mdash; 1 BIT &middot; 8 BITS &middot; TICKER &ldquo;B&rdquo;.
+          PACK TIERS COULD FLAVOUR AS POWERS OF TWO (8 / 16 / 32 / 64 / 128 BITS) &mdash; VALUES STAY OQ-002/OQ-011.</span>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>A &mdash; BITS <em>(&ldquo;costs 8 bits&rdquo; names the whole aesthetic)</em></h3>
+        <p><b>The fantasy:</b> the smallest piece the system is built from. The mark is the <b>GameCard's
+        stepped silhouette itself</b> (F-02's signature cut, promoted to money) &mdash; struck in gold, with a
+        <b>blue foil slash riding the step diagonal</b>, kin to the cards' foil sweep. Every price is a pun
+        the app earns: an 8-BIT effect <i>is</i> 8-bit.</p>
+        <p><b>Risks:</b> &ldquo;Bits&rdquo; has prior art as Twitch's tipping currency (different context,
+        worth knowing); the slash must stay coarse at 10px or it reads as dirt. <b>Strength:</b> the deepest
+        system tie of the three &mdash; the money is literally cut from the card.</p>
+      </div>
+    </div>
+
+    <!-- ═══ B · PIXELS ═══ -->
+    <div class="take">
+      <div class="artboard-label">Identity B &middot; PIXELS &mdash; the pixel-cut gem</div>
+      <div class="ctx">
+        <h2>STORE</h2>
+        <button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button>
+      </div>
+      <div class="spec">
+        <div class="spec-hero">
+          <svg class="big-ic" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>
+          <div class="sh-meta">
+            <span class="sh-name">PIXELS</span>
+            <span class="sh-tag">The picture element, cut as a gem &mdash; the old &#9672; diamond rebuilt
+            from pixel steps, blue glints in the facets.</span>
+            <span class="sh-tick">TICKER &middot; PX &middot; SINGULAR &ldquo;1 PIXEL&rdquo;</span>
+          </div>
+        </div>
+        <div class="srow">
+          <span class="slbl">COUNTER &rarr; WALLET</span>
+          <button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button>
+          <button class="ccount neg"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>&minus;3</button>
+          <span class="gram" style="flex:1 1 auto;">THE GEM READS AS THE &#9672; HEIR &mdash; CONTINUITY FOR FREE</span>
+        </div>
+        <div class="srow">
+          <span class="slbl">PRICECHIP + ADOPT</span>
+          <span class="old-chip">8 &#9672;</span><span class="arrow">&#10142;</span>
+          <span class="price-chip">8 <svg width="11" height="11" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span>
+          <span class="price-chip">ADOPT &middot; 1 <svg width="11" height="11" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span>
+        </div>
+        <div class="srow">
+          <span class="slbl">PACKTILE</span>
+          <div class="pack"><span class="amt">30 <svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="plbl">PIXEL PACK</span><button class="usd-chip">$4.99</button></div>
+          <div class="voice">
+            <span><i>+1 PIXEL</i> DAILY LOGIN</span>
+            <span>BRIDGE: <b>SHORT 3 PIXELS</b></span>
+            <span>TIGHTEST CHIP: <b>8 PX</b></span>
+          </div>
+        </div>
+        <div class="srow">
+          <span class="slbl">LEDGERROW (C FORM)</span>
+          <div class="ledger">
+            <div class="lrow earn"><span class="lsig">+</span><span class="lwhat">PIXEL PACK &middot; 30</span><span class="lamt">+30 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></div>
+            <div class="lrow spend"><span class="lsig">&minus;</span><span class="lwhat">EMBER &middot; EFFECT</span><span class="lamt">&minus;8 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></div>
+            <div class="lrow rev"><span class="lsig">&#8856;</span><span class="lwhat">REFUND REVERSAL</span><span class="lamt">&minus;30 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></div>
+          </div>
+        </div>
+        <div class="srow">
+          <span class="gram"><b>GRAMMAR:</b> COUNTABLE &mdash; 1 PIXEL &middot; 8 PIXELS &middot; TICKER
+          &ldquo;PX&rdquo; (8 PX) WHERE SPACE IS TIGHT. CUSTOMIZING A CARD = BUYING ITS PIXELS.</span>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>B &mdash; PIXELS <em>(the &#9672; heir, cut from 4px blocks)</em></h3>
+        <p><b>The fantasy:</b> you're buying the stuff pictures are made of &mdash; effects, finishes and fonts
+        are all, in the end, pixels on your card. The mark <b>rebuilds the &#9672; placeholder as a pixel-cut
+        gem</b>: stepped facets, light top-left, ink bottom-right, <b>blue glint pixels + a blue-lit stair
+        edge</b>. Of the three it's the only one that inherits the diamond's silhouette &mdash; everything
+        already shipped with &#9672; reads as the same coin.</p>
+        <p><b>Risks:</b> &ldquo;pixels&rdquo; can feel small/cheap as a unit name; PX is developer jargon
+        (here, arguably a feature). <b>Strength:</b> visual continuity with every existing mock + the
+        tightest chip in the set (8 PX).</p>
+      </div>
+    </div>
+
+    <!-- ═══ C · SPARKS ═══ -->
+    <div class="take">
+      <div class="artboard-label">Identity C &middot; SPARKS &mdash; the step-climber</div>
+      <div class="ctx">
+        <h2>STORE</h2>
+        <button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-spark"/></svg>5</button>
+      </div>
+      <div class="spec">
+        <div class="spec-hero">
+          <svg class="big-ic" viewBox="0 0 40 40"><use href="#ic-spark"/></svg>
+          <div class="sh-meta">
+            <span class="sh-name">SPARKS</span>
+            <span class="sh-tag">A gold spark climbing its own staircase &mdash; the step motif in motion,
+            blue trails streaming off each rise.</span>
+            <span class="sh-tick">TICKER &middot; SPK &middot; SINGULAR &ldquo;1 SPARK&rdquo;</span>
+          </div>
+        </div>
+        <div class="srow">
+          <span class="slbl">COUNTER &rarr; WALLET</span>
+          <button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-spark"/></svg>5</button>
+          <button class="ccount neg"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-spark"/></svg>&minus;3</button>
+          <span class="gram" style="flex:1 1 auto;">THE ONLY MARK WITH BUILT-IN MOTION &mdash; IT WANTS TO TICK</span>
+        </div>
+        <div class="srow">
+          <span class="slbl">PRICECHIP + ADOPT</span>
+          <span class="old-chip">8 &#9672;</span><span class="arrow">&#10142;</span>
+          <span class="price-chip">8 <svg width="11" height="11" viewBox="0 0 40 40"><use href="#ic-spark"/></svg></span>
+          <span class="price-chip">ADOPT &middot; 1 <svg width="11" height="11" viewBox="0 0 40 40"><use href="#ic-spark"/></svg></span>
+        </div>
+        <div class="srow">
+          <span class="slbl">PACKTILE</span>
+          <div class="pack"><span class="amt">30 <svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-spark"/></svg></span><span class="plbl">SPARK PACK</span><button class="usd-chip">$4.99</button></div>
+          <div class="voice">
+            <span><i>+1 SPARK</i> DAILY LOGIN</span>
+            <span>BRIDGE: <b>SHORT 3 SPARKS</b></span>
+            <span>IAP: <b>30 SPARKS &middot; $4.99</b></span>
+          </div>
+        </div>
+        <div class="srow">
+          <span class="slbl">LEDGERROW (C FORM)</span>
+          <div class="ledger">
+            <div class="lrow earn"><span class="lsig">+</span><span class="lwhat">SPARK PACK &middot; 30</span><span class="lamt">+30 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-spark"/></svg></span></div>
+            <div class="lrow spend"><span class="lsig">&minus;</span><span class="lwhat">EMBER &middot; EFFECT</span><span class="lamt">&minus;8 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-spark"/></svg></span></div>
+            <div class="lrow rev"><span class="lsig">&#8856;</span><span class="lwhat">REFUND REVERSAL</span><span class="lamt">&minus;30 <svg width="10" height="10" viewBox="0 0 40 40"><use href="#ic-spark"/></svg></span></div>
+          </div>
+        </div>
+        <div class="srow">
+          <span class="gram"><b>GRAMMAR:</b> COUNTABLE &mdash; 1 SPARK &middot; 8 SPARKS &middot; TICKER
+          &ldquo;SPK&rdquo;. THE VOICE WRITES ITSELF: <b>&ldquo;SPEND A SPARK, START A FIRE.&rdquo;</b></span>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>C &mdash; SPARKS <em>(the step motif, set in motion)</em></h3>
+        <p><b>The fantasy:</b> the jolt of making something &mdash; a gold spark <b>climbing the card's own
+        staircase</b>, blue motion trails streaming off each step. Spending one ignites an effect; the daily
+        +1 is a little inspiration arriving. It's the most kinetic mark of the three and the natural fit for
+        the counter's tick moment (the trails are pre-drawn motion).</p>
+        <p><b>Risks:</b> three small cubes + trails is the busiest geometry at 10px (the trails carry it, but
+        it's the first to blur); &ldquo;sparks&rdquo; carries a faint energy/regen connotation (much weaker
+        than VOLTS, since sparks are discrete things you collect). <b>Strength:</b> motion, voice, and the
+        step motif without borrowing the card's whole silhouette.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

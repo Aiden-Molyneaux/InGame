@@ -140,3 +140,16 @@ Deferred to converge: loading skeleton · load-error + RETRY · offline (browse-
   in-app name + mark** (spec term "Customizer currency", ECON-01/02, unchanged; the chosen mark
   replaces the ◈ placeholder app-wide incl. the Add Game cost chip). → `currency-identity-drafts.html`,
   awaiting its own ruling; the converged `store-states.html` lands after it, carrying the winner.
+
+### Currency ruling #1 — 2026-06-12 (verbatim)
+
+> Can you taken the pixel-stepped icon out of the middle of the credit coin, to create something new.
+> Have the credit be that shape, gold, with some blue streaks/emphasis. Draft three distinct currencies
+> that use what I described. Draft new names for them too
+
+**Disposition:** v2 iteration — the mark IS the pixel-stepped shape itself (no coin around it), gold,
+with **blue streak/emphasis**; three distinct stepped silhouettes + three new names →
+`currency-identity-drafts-v2.html` (**BITS** card-cut stepped square w/ blue foil slash · **PIXELS**
+pixel-cut diamond gem w/ blue glints · **SPARKS** ascending step-cubes w/ blue motion trails). Blue =
+a mark-internal accent from the cyan family — not a new chrome token; gold stays THE value marker
+(F-02). v1 (CREDITS / INK / VOLTS) superseded, kept for history. Awaiting ruling #2.
