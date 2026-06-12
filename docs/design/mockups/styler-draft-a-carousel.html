@@ -199,6 +199,8 @@
     box-shadow: 0 0 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 2px 3px rgba(0,0,0,.22); }
   .sk2 .chip .chip-pip { position: absolute; top: -2.5px; right: -2.5px; width: 7px; height: 7px; border-radius: 50%;
     background: var(--accent); box-shadow: 0 0 6px 1.5px rgba(255,61,119,.8); }
+  /* C5 square-chrome reset re-asserted AFTER the S2 base (cascade order — F-07) */
+  .c5 .well, .c5 .chip, .c5 .btn, .c5 .field { border-radius: 0; }
   .tert { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
   .tert.dim { color: var(--scr-dim); }
   .hint { margin: 8px 1px 0; font: 600 9px/1.6 var(--pk); letter-spacing: .5px; color: var(--scr-dim); text-align: center; }
