@@ -16,7 +16,7 @@
 2. `docs/design/ui-design-requirements.md` **§4.1 Add Game** (the musts) + §1.8 (errors) + §1.2/1.3 (device/nav model).
 3. `docs/decisions/0014-add-game-design-arc.md` — the arc, the card-step junction contract, the **takeover** tier.
 4. `docs/decisions/0015-engagement-moments.md` + OQ-040 — the stage-1 beats (shelf-slot, contributor first-credit).
-5. `docs/design/mockups/collection-states.html` + `profile-states.html` — the established artboard format (panel grid, caption style, drawn keyboard, §1.8 panels) and the visual bar to match.
+5. `docs/design/mockups/collection/collection-states.html` + `profile/profile-states.html` — the established artboard format (panel grid, caption style, drawn keyboard, §1.8 panels) and the visual bar to match.
 6. `docs/design/mockups/README.md` — the file-table convention you must extend.
 
 ## Token quick-reference (Midnight ★ / Teal ★ — full set in design-spec §1.1)
@@ -55,10 +55,10 @@ Every draft renders panels **P1–P8**; lifecycle panels **P9–P10** are conver
 **Per-panel acceptance (applies to every panel):** composed only from catalog v0.2 components + the locked name-set above (any extra net-new component is a plan deviation — stop and flag) · F-rules hold (F-01 cards never cropped; F-02 step/colour grammar — gold step = card-creating ADD/STYLE IT, orange step = non-card actions like RETRY; F-06 type scale; F-07 square chrome) · NavBand untouched and legible (F-04) · caption strip under each panel naming components used (the established mockup convention).
 
 ## File structure
-- Create: `docs/design/mockups/add-game-draft-a-wizard.html`
-- Create: `docs/design/mockups/add-game-draft-b-inline.html`
-- Create: `docs/design/mockups/add-game-draft-c-cardled.html`
-- Create (Task 6): `docs/design/mockups/add-game-states.html` (converged + full matrix)
+- Create: `docs/design/mockups/add-game/add-game-draft-a-wizard.html`
+- Create: `docs/design/mockups/add-game/add-game-draft-b-inline.html`
+- Create: `docs/design/mockups/add-game/add-game-draft-c-cardled.html`
+- Create (Task 6): `docs/design/mockups/add-game/add-game-states.html` (converged + full matrix)
 - Modify: `docs/design/mockups/README.md` (one table row per file, as you go)
 - Modify (Task 7): `docs/design/design-spec.md` (§1.5 components · new §2.4 · changelog v0.9) and `docs/design/mockups/InGame Design System Catalog.dc.html` (v0.3 — forms family + FlowTakeover + CardPicker)
 
@@ -66,18 +66,18 @@ Every draft renders panels **P1–P8**; lifecycle panels **P9–P10** are conver
 
 ### Task 1: Draft A — "Stepped wizard"
 **Model:** the flow as discrete pages — SEARCH → DETAILS → CARD — with `FlowHeader` step dots ●●○ and explicit BACK/NEXT keycaps. Maximum legibility/convention (§1.1's "forms stay conventional" pole). One decision per screen; multi-add returns to step 1 with a "shelf count" tick.
-**Files:** Create `docs/design/mockups/add-game-draft-a-wizard.html` · Modify `docs/design/mockups/README.md`
+**Files:** Create `docs/design/mockups/add-game/add-game-draft-a-wizard.html` · Modify `docs/design/mockups/README.md`
 
 - [ ] **Step 1: Scaffold.** Copy the head block (fonts/meta/body bg `#efece6`) and artboard-grid CSS from `collection-states.html`; define the token set above as CSS vars; build one reusable device-frame wrapper (Teal shell, bezel, NavBand with Collection keycap active+pip) sized per the existing mockups (~390px screens).
 - [ ] **Step 2: Compose P1–P3** (entry/suggestions · keyboard-up search · results) as wizard step 1. P2's keyboard: reuse collection-states' drawn-keyboard block, `keyboardAppearance` dark.
 - [ ] **Step 3: Compose P4–P6** as wizard step 2 (DETAILS): create-form page with `InlineBanner` dedup panel variant + status via `OptionSheet` panel.
 - [ ] **Step 4: Compose P7–P8** as wizard step 3 (CARD) + the added beat: `CardPicker` both variants; P8 shows the shelf-slot beat + ADD & CONTINUE + the first-credit variant.
-- [ ] **Step 5: Verify render.** Run: `msedge --headless=new --screenshot=docs/design/mockups/_verify-a.png --window-size=1180,2600 "docs/design/mockups/add-game-draft-a-wizard.html"` → Read the png. Expected: all 8 panels render, no blank frames, captions present; walk each panel's acceptance list. Fix and re-render until clean; delete `_verify-a.png`.
-- [ ] **Step 6: README + commit.** Add the README table row (file · model description · panel coverage · "draft — pre-gate"). Run: `git add docs/design/mockups/add-game-draft-a-wizard.html docs/design/mockups/README.md && git commit -m "design: Add Game draft A (stepped wizard) — P1-P8 (0014 stage 1)"`
+- [ ] **Step 5: Verify render.** Run: `msedge --headless=new --screenshot=docs/design/mockups/_verify-a.png --window-size=1180,2600 "docs/design/mockups/add-game/add-game-draft-a-wizard.html"` → Read the png. Expected: all 8 panels render, no blank frames, captions present; walk each panel's acceptance list. Fix and re-render until clean; delete `_verify-a.png`.
+- [ ] **Step 6: README + commit.** Add the README table row (file · model description · panel coverage · "draft — pre-gate"). Run: `git add docs/design/mockups/add-game/add-game-draft-a-wizard.html docs/design/mockups/README.md && git commit -m "design: Add Game draft A (stepped wizard) — P1-P8 (0014 stage 1)"`
 
 ### Task 2: Draft B — "One surface, progressive disclosure"
 **Model:** a single anchored screen — the search field is permanent at top; results, the add form, and the card step **expand inline beneath the chosen game** (accordion rhythm; no page transitions). Optimized for fast repeat adds: the multi-add loop is just "field clears, focus returns." `FlowHeader` carries no steps — context lives in the disclosure state.
-**Files:** Create `docs/design/mockups/add-game-draft-b-inline.html` · Modify `docs/design/mockups/README.md`
+**Files:** Create `docs/design/mockups/add-game/add-game-draft-b-inline.html` · Modify `docs/design/mockups/README.md`
 **Steps:** identical step structure to Task 1 (scaffold may be copied from Draft A's file — these stay standalone, duplication is the convention) with these model-specific differences:
 
 - [ ] **Step 1: Scaffold** (copy from draft A; retitle).
@@ -85,18 +85,18 @@ Every draft renders panels **P1–P8**; lifecycle panels **P9–P10** are conver
 - [ ] **Step 3: P4–P6** — "be first" expands the create form **inline under the query**; dedup `InlineBanner` pushes content, doesn't overlay; status = a chip-row disclosure (this draft's native alternative to `OptionSheet` — same name, sheet-less form).
 - [ ] **Step 4: P7–P8** — `CardPicker` as an inline rail under the added game; P8: the row collapses into a "✓ on your shelf" strip (the shelf-slot beat in-place) + field refocus for the next add.
 - [ ] **Step 5: Verify.** Same command, output `_verify-b.png`, same acceptance walk; delete after.
-- [ ] **Step 6: README + commit:** `git add docs/design/mockups/add-game-draft-b-inline.html docs/design/mockups/README.md && git commit -m "design: Add Game draft B (single-surface disclosure) — P1-P8 (0014 stage 1)"`
+- [ ] **Step 6: README + commit:** `git add docs/design/mockups/add-game/add-game-draft-b-inline.html docs/design/mockups/README.md && git commit -m "design: Add Game draft B (single-surface disclosure) — P1-P8 (0014 stage 1)"`
 
 ### Task 3: Draft C — "Card-led"
 **Model:** the card object is the protagonist from the first keystroke — results are a **fanned rail of full card faces** (F-01: full faces, never cropped), choosing one "picks the card up" (it enlarges to `GameCard/hero` and stays in hand), and details/status/styling attach *around the held card*; the add is framed as **filing the card into your shelf**. The most metaphor-forward take; P8's shelf-slot beat is this model's climax rather than a confirmation.
-**Files:** Create `docs/design/mockups/add-game-draft-c-cardled.html` · Modify `docs/design/mockups/README.md`
+**Files:** Create `docs/design/mockups/add-game/add-game-draft-c-cardled.html` · Modify `docs/design/mockups/README.md`
 
 - [ ] **Step 1: Scaffold** (copy; retitle).
 - [ ] **Step 2: P1–P3** — P1: suggestion games as a card fan; P2: keyboard up, fan parts to keep cards visible above it; P3: result cards carry a small title/year/studio plate + in-collection ✓ (the ResultRow contract worn card-shaped — same name, card form).
 - [ ] **Step 3: P4–P6** — "be first" materializes a **blank-plate card** that fills as you type the name (the form writes onto the object); dedup `InlineBanner` slides under the held card; status = stamps applied to the card (chip set, COL-02 ×6).
 - [ ] **Step 4: P7–P8** — `CardPicker` as alternate faces fanned behind the held card (adopt = swap face; STYLE IT = gold step door; SKIP = keep default face); P8: the held card flies to its shelf slot (lit), counter ticks, ADD & CONTINUE deals the next blank.
 - [ ] **Step 5: Verify.** Same command, `_verify-c.png`; acceptance walk **plus** an explicit F-01 sweep (this model is the crop-risk one); delete after.
-- [ ] **Step 6: README + commit:** `git add docs/design/mockups/add-game-draft-c-cardled.html docs/design/mockups/README.md && git commit -m "design: Add Game draft C (card-led) — P1-P8 (0014 stage 1)"`
+- [ ] **Step 6: README + commit:** `git add docs/design/mockups/add-game/add-game-draft-c-cardled.html docs/design/mockups/README.md && git commit -m "design: Add Game draft C (card-led) — P1-P8 (0014 stage 1)"`
 
 ### Task 4: Owner gate (STOP — do not proceed past this without direction)
 - [ ] **Step 1:** Render all three at full height (`_gate-a/b/c.png`, same command) and send the three screenshots to the owner with a one-paragraph model summary each.
@@ -104,10 +104,10 @@ Every draft renders panels **P1–P8**; lifecycle panels **P9–P10** are conver
 - [ ] **Step 3:** Collect direction — pick one / mix (Phase-A precedent: the owner may splice models per flow segment). Record the ruling verbatim as a dated note appended to this plan file, and capture any new behavior asks into `docs/open-questions.md`.
 
 ### Task 5: Converged artboard — full matrix
-**Files:** Create `docs/design/mockups/add-game-states.html` · Modify `docs/design/mockups/README.md`
+**Files:** Create `docs/design/mockups/add-game/add-game-states.html` · Modify `docs/design/mockups/README.md`
 - [ ] **Step 1:** Build the converged flow per the Task-4 ruling: P1–P8 in the chosen/mixed model, plus **P9 (Skeleton · LoadError+RETRY)** and **P10 (OfflineStrip + writes-gated notice, SYS-10)** — the full definition-of-done matrix (decision 0011).
 - [ ] **Step 2:** Verify render (same command, `_verify-states.png`; every P1–P10 panel against its acceptance list; delete after).
-- [ ] **Step 3:** README row ("Add Game states — converged, full matrix") + retitle the three draft rows "superseded by add-game-states.html (kept for history)". Commit: `git add docs/design/mockups/add-game-states.html docs/design/mockups/README.md && git commit -m "design: Add Game converged states — full P1-P10 matrix (0014 stage 1)"`
+- [ ] **Step 3:** README row ("Add Game states — converged, full matrix") + retitle the three draft rows "superseded by add-game-states.html (kept for history)". Commit: `git add docs/design/mockups/add-game/add-game-states.html docs/design/mockups/README.md && git commit -m "design: Add Game converged states — full P1-P10 matrix (0014 stage 1)"`
 
 ### Task 6: Formalize into design-spec + catalog
 **Files:** Modify `docs/design/design-spec.md` · Modify `docs/design/mockups/InGame Design System Catalog.dc.html` · Modify `docs/open-questions.md` (only if Task 4/5 raised items)
@@ -194,3 +194,13 @@ Meta: **no PNG deliverables** — the html files are what the owner reviews; ren
    lone card, never blank.
 5. **Library: "bronze" buttons → orange** (`KeycapButton/primary` = `scr.accent`; `scr.btn` retired —
    design-spec 0.10); VIEW MATCH / NEXT et al. swept on the board.
+
+### Owner pass 6 (report-variation pick + converge greenlight — recorded 2026-06-12)
+- **ReportSheet = Variation A (`/drawer`)** app-wide (B `/modal` and C `/takeover` kept for history).
+  Cross-file drift normalized at converge: commit label **"SUBMIT REPORT"** · one details-area recipe ·
+  one required-marker voice; `TextField/area`'s debut credited to the report board.
+- **Converged board greenlit** → `add-game-states.html` (Task 5): C-v6 carried + **P9 lifecycle**
+  (Skeleton · "Signal Lost" + orange RETRY) + **P10 offline** (OfflineStrip + writes-gated calm
+  notice, SYS-10) + **◈ → the PIXELS mark** (store-track ruling, pixel-gem v3) + the polish backlog
+  (P3 balance + hint orphan trim · `.cfan.pick` unification · shared plate-band recipe · drawer-pip
+  centering · dead `.well` cleanup).
