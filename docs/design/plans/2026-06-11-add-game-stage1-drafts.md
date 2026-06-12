@@ -165,3 +165,14 @@ Meta: **no PNG deliverables** — the html files are what the owner reviews; ren
    meta gains "IN N COLLECTIONS · N FRIENDS HAVE IT"; CardDetail gains the same as meta rows.
 5. **P8 count tick:** the floating "+1" chip is replaced by a **contrasting inset box INSIDE the gold
    "49 GAMES" CountKeycap** reading "+1" one font step down.
+
+### Owner pass 4 (C-v4 review — recorded 2026-06-12) → C-v5 (`add-game-draft-c5-cardled.html`)
+1. Owner questioned P8's **DONE** button; controller answered (the explicit flow exit) and recommended
+   **cutting it** (redundant — the FlowHeader ✕ and the always-present NavBand are the exits; one
+   earned action per moment). Cut in v5; restorable in one line if the owner disagrees.
+2. **P2/P3 restack:** the **game name/meta sits ABOVE the cards**, the **cards sit just above the
+   search bar**, and beneath the cards: the **swipe detail (dots), then NONE OF THESE**, then the
+   docked field. (Refines pass-3's "focused card's info above the field.")
+3. **P3b selection = accent border, not sunken** → generalized: **F-09 "no sunken containers"** added
+   to design-spec (v0.9) — flat planes; selection = accent border + pip; pressed keycaps and text
+   inputs the named exceptions (also formalizes the 2026-06-10 flat-panels ruling).

@@ -4,7 +4,7 @@
 > **Part 2 (Screens)** composes from the catalog by name. Mirrors the product-spec's shape per
 > [`design-process.md`](design-process.md). No net-new component without adding it here first.
 
-**Version:** 0.8 (Phase B + state passes) · **Last updated:** 2026-06-11 · **Owner:** Claude Design
+**Version:** 0.9 (Phase B + state passes) · **Last updated:** 2026-06-12 · **Owner:** Claude Design
 **Source mockups:** `H2 Underlay — Corner System C5 Hybrid` (Collection + Profile + shell, Phase A direction) · `Button System Drafts` (OQ-006 exploration) · `Collection States` + `Profile States` (state matrices) · `Design System Catalog` v0.2
 **Canonical baseline:** **Teal shell + Midnight screen theme** (all token values below are Midnight unless noted).
 
@@ -24,6 +24,7 @@
 | **F-06** | **The 4-step type scale is law on screen** (21/15/11/9). Card plates are *print on the card object* and scale with the card instead. |
 | **F-07** | **Radius lives on plastic.** Rounded corners exist only on the physical shell (device, bezel, keycaps). On-screen chrome is square (C5). |
 | **F-08** | **One font per surface.** Chakra Petch is THE screen font (every text on the app screen, incl. card plates, buttons, tags, links); Paytone One is THE plastic font (silkscreened shell labels). No third voice. |
+| **F-09** | **No sunken containers.** Panels, wells, tiles, rows, and selection states never render inset/"carved-in" — surfaces are flat planes one step lighter than their background; **selection = an accent border (+ `ChipPip`)**, never an inset shadow or a darkened recess. *Exceptions by name:* **pressed/active keycaps** (they physically travel — that's F-03's metaphor) and **text inputs** (the cream inset field). (Owner rulings: "flat panels — not something Game Boy had," 2026-06-10; the report-drawer selection, 2026-06-12.) |
 
 ### 1.1 Colour tokens
 
@@ -142,3 +143,4 @@ Text entry uses the **system keyboard** — `keyboardAppearance` matched to the 
 | 2026-06-11 | 0.6 | **Brand constants pruned:** `brand.hazard` retired (was Printed-Plate destructive only). **Shell palettes:** Bone removed; **Pink** + **Carbon** added (5 colourways; Carbon flips `shell.silk` light). Tweaks + catalog updated. |
 | 2026-06-11 | 0.7 | **ADD keycap → `brand.gold`** (gold = acquire/value actions). Applied in both H2 mockups + catalog. |
 | 2026-06-11 | 0.8 | **Synced to the Collection-states + Profile-states passes** (decision 0013): added the **States & feedback** family + **§1.6**, **§1.7 Inputs & keyboard** (OQ-035 system keyboard), `KeycapButton/action-alt` (orange non-card step) + **F-02 colour-disambiguation** (OQ-036), in-place `SearchField`+`MatchTag`, `Avatar`+`DesignBadge` (PROF-08). Recomposed Collection (3 view modes, tools-bar model, Arrange, friend-chrome) + Profile (Settings gear not privacy; friend-view; state matrices). Fixed stale OQ-012 ("open"→resolved) + header version. | OQ-006/012/014/031/033/034/035/036/037 |
+| 2026-06-12 | 0.9 | **F-09: no sunken containers** — flat planes; selection = accent border + pip; pressed keycaps + text inputs the named exceptions. Formalizes the 2026-06-10 flat-panels ruling + the Add Game pass-4 report-drawer ruling. |
