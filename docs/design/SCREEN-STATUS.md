@@ -9,13 +9,12 @@
 > **per-page subfolders** under [`mockups/`](mockups/) (file map: its README); the catalog
 > stays at the mockups root.
 
-**Last updated:** 2026-06-12 (add-game track — **converged board landed** (`add-game/add-game-states.html`); ReportSheet **variation A ruled** · dashboard gains the **Implements-from + Design-spec columns**)
+**Last updated:** 2026-06-12 (styler track — **Styler converged**: carousel + the nameplate ruling; formalization batch owed)
 
 ## Up next (the queue)
-1. **Card editor · Styler posture** (0014 stage 2 — **3 drafts at the owner gate**: A carousel · B drawer rack · C workbench; OQ-039 exhibit drawn; converge → `styler-states.html`).
-2. **Add Game — formalize** (spec-owner batch: design-spec §2.x Add Game composition + state matrix; catalog v0.4 gains the Forms & Flow set — `CardFan`/`CardDetail`/`EquipReadout`/`CleanPeek`/`ReportSheet`/`TextField(/area)`/`SelectField`/`InlineBanner`/`FlowTakeover`/`FlowHeader` + the plate-legibility floor).
-3. **Card editor · Canvas posture** (0014 stage 3 — the breakout; resolves OQ-007; the OQ-040 reveal ritual).
-4. *Coverage-driven after that* (design-process): **Discover** (surfaces the segmented control) and **Settings** (rows · toggles · destructive confirm) are the named gap-closers; **Device editor** carries the OQ-045 debt.
+1. **Card editor · Canvas posture** (0014 stage 3 — the breakout; resolves OQ-007; the OQ-040 reveal ritual; receives the composition from the converged Styler).
+2. *Formalization batches owed:* the **Styler converge set** (design-spec §2.x + catalog — `AttributeSection` · `SectionChips` · `BaseRail` · `IntensitySlider` · `ReconcileSheet` · `KeepBeat`) and the **OQ-039 spec ruling** (COSM-01 +nameplate · TITLE→font+ink · store aisle) + OQ-048/049/050.
+3. *Coverage-driven after that* (design-process): **Discover** (surfaces the segmented control) and **Settings** (rows · toggles · destructive confirm) are the named gap-closers; **Device editor** carries the OQ-045 debt.
 
 ## Legend
 **State:** ✅ converged · 🔶 in pass / partial · 🔜 queued (#n) · ⬜ not started ·
@@ -31,9 +30,9 @@
 | 3.3 | Friends | ⬜ | — | — | — | — | 🔶 | Feed-first landing (SOC-06) |
 | 3.4 | Store (incl. 4.11/4.12) | ✅ converged | `store-states.html` (5 rulings + 0017) | `store/store-states.html` | ✅ (incl. lifecycle, writes-gated offline) | ✅ (§2.3; 0.10) | ✅ | OQ-045 sticker preview → Device editor pass |
 | 3.5 | Profile | ✅ converged | `profile-states.html` (per 0011–0013) | `profile/profile-states.html` (+ the h2-underlay board's Profile artboard) | ✅ (edit, friend-view, privacy, terminal, offline) | ✅ (§2.2; synced 0.8/0013) | 🔶 | — |
-| 4.1 | Add Game (flow) | ✅ converged | `add-game/add-game-states.html` (c6 + P9–P10 + PIXELS + `ReportSheet/drawer`) | `add-game/add-game-states.html` | ✅ (P1–P10 + P3b/P7b; lifecycle + writes-gated offline) | ⬜ (formalize = queue #2) | ✅ (0016 + MOD-01 ripples) | Formalize = queue #2 (design-spec §2.x + catalog v0.4) |
+| 4.1 | Add Game (flow) | ✅ converged | `add-game/add-game-states.html` (c6 + P9–P10 + PIXELS + `ReportSheet/drawer`) | `add-game/add-game-states.html` | ✅ (P1–P10 + P3b/P7b; lifecycle + writes-gated offline) | ✅ (§2.4; 0.12 + catalog v0.4) | ✅ (0016 + MOD-01 ripples) | — |
 | 4.2 | Game page (adaptive) | ⬜ | — (`CardDetail` slice exists in Add Game c5) | — | — | — | 🔶 (CAT-09 fields landed) | Owned-state fold-in; card gallery |
-| 4.3 | Card editor — Styler | 🔶 in pass | `styler-draft-{a,b,c}` (carousel · drawer rack · workbench) — **at owner gate** | — (converge → `styler/styler-states.html`) | ⬜ (lifecycle → converge) | ⬜ (owed at converge) | 🔶 | OQ-039 exhibited (reco: adopt nameplate, defer overlay); +OQ-048/049; acquire/reconcile rides 0017's `POST /cosmetics/:id/acquire` |
+| 4.3 | Card editor — Styler | ✅ converged | `styler/styler-states.html` (carousel; gate ruling 2026-06-12 — **+NAMEPLATE, overlay cut**) | `styler/styler-states.html` | ✅ (skeleton · load-error · offline draft-safe, writes gated) | ⬜ (formalization batch owed: §2.x + `AttributeSection`/`SectionChips`/`BaseRail`/`IntensitySlider`/`ReconcileSheet`/`KeepBeat`) | 🔶 | OQ-039 ruling rides the inbox → spec batch (COSM-01 +nameplate · TITLE→font+ink · store aisle); +OQ-048/049/**050** (start-from bases endpoint); acquire = 0017's `POST /cosmetics/:id/acquire` |
 | 4.3 | Card editor — Canvas | 🔜 queued (#3) | — | — | — | — | 🔶 | Breakout (OQ-007); OQ-040 reveal ritual |
 | 4.4 | Admin / Moderator console | ⬜ | — | — | — | — | 🔶 | Mod-only (MOD-04) |
 | 4.5 | Device editor | ⬜ | — | — | — | — | 🔶 | Owes OQ-045; shells per 0017 |
@@ -47,7 +46,7 @@
 | 4.13 | Welcome & Auth | ⬜ | — | — | — | — | 🔶 | Logged-out root (AUTH) |
 | 4.14 | Onboarding | ⬜ | — | — | — | — | 🔶 | NOTIF-04 pre-prompt close |
 | 4.15 | Settings | 🔜 queued (#5) | — | — | — | — | 🔶 | Rows · toggles · destructive confirm |
-| 4.16 | Report (modal) | ✅ pattern ruled | `report-sheet/report-sheet-drafts.html` (**A `/drawer` won**; B/C history) + normalized in `add-game-states.html` P3b | `report-sheet/report-sheet-drafts.html` (**A** `/drawer`) + `add-game/add-game-states.html` P3b (the normalized form) | — (rides each host screen's board) | ⬜ (`ReportSheet` rides the queue-#2 catalog batch) | ✅ (MOD-01 `details`, 0.14) | Entry + **user contexts drawn** (block handoff incl., SOC-09); per-surface integration rides each screen's pass |
+| 4.16 | Report (modal) | ✅ pattern ruled | `report-sheet/report-sheet-drafts.html` (**A `/drawer` won**; B/C history) + normalized in `add-game-states.html` P3b | `report-sheet/report-sheet-drafts.html` (**A** `/drawer`) + `add-game/add-game-states.html` P3b (the normalized form) | — (rides each host screen's board) | ✅ (`ReportSheet` in §1.5, 0.12 + catalog v0.4) | ✅ (MOD-01 `details`, 0.14) | Entry + **user contexts drawn** (block handoff incl., SOC-09); per-surface integration rides each screen's pass |
 
 ## How to update (the protocol)
 At the end of **every draft pass**: update your screen's row (state · mockup version · states board ·
