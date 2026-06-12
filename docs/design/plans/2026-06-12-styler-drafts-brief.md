@@ -135,3 +135,18 @@ Decoded and applied:
 Converge target: `styler/styler-states.html` — carousel grammar, FIVE sections (FRAME · EFFECT ·
 FINISH · NAMEPLATE · TITLE), full matrix incl. the deferred lifecycle cells (skeleton ·
 load-error+RETRY · offline draft-safe, writes gated per SYS-10/CARD-14).
+
+---
+
+## Pre-stage-3 follow-up rulings — 2026-06-12
+
+Asked which open questions were pressing before stage 3; the owner took the recommendation on all
+three ("1. Your recommendation 2. Your recommendation 3. Your recommendation"):
+1. **OQ-008 — element cap: start at 30** (server-configurable, SYS-04); stage 3 draws the layers
+   panel + at-cap state against it.
+2. **OQ-048 — intensity: effects only in v2**; the value persists in the composition (CARD-15).
+3. **OQ-049 — save-private lands in BOTH** the game's card switcher (COL-06) and the My-designs
+   shelf (`/me/cards`).
+Rulings recorded on the inbox entries for the next spec triage. (The OQ-039 batch had already
+landed in parallel: decision 0018 · product-spec 0.18 · design-spec 0.13 §2.5 · catalog v0.4 —
+the Styler row is fully formalized.)

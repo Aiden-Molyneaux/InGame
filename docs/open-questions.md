@@ -21,6 +21,9 @@
   starting number) [behavior]
 - OQ-008: Card editor **element cap** — the actual maximum element count per card (server-configurable
   via SYS-04, but design/perf need a starting number). (CARD-15) [behavior/tuning]
+  **RULED (owner, styler-track follow-up 2026-06-12): start at 30 elements** — server-configurable
+  stays (SYS-04); stage-3 design draws the layers panel + the at-cap state against 30. Spec encode
+  (CARD-15 starting value) = next triage.
 - OQ-009: **Vector-asset library scope** — how many/which starter SVG packs (shapes/letters/numbers/
   icons) ship at launch, free vs premium split. (CARD-02/17) [content]
 - OQ-010: **Effect & finish roster** — the launch set of animated effects and finishes, free vs
@@ -40,10 +43,6 @@
   of the Add Game arc); Add Game + the Styler stay in-frame (the takeover tier).
 - OQ-038: **Offline cache scope** — what renders read-only when offline: your own profile/collection
   only, or also recently-viewed friends? (split from OQ-037 during the design-spec sync; SYS-10) [behavior]
-- OQ-039: **Nameplate/overlay as cosmetic types?** The closed-attribute set (decision 0014) may want
-  **plate styles** ("nameplates") and/or **overlays** as distinct swappable COSM-01 types — today the
-  title is a card *layer* and finish is the overlay-like type. Decide during Styler design (stage 2);
-  if yes, a COSM-01 ripple + a store category. (from the Add Game brainstorm, 2026-06-11) [behavior]
 - OQ-040: **The "moments layer" — reveal ritual + celebration tiering** (decision 0015): the
   canvas-completion **"first print" ritual** — client-rendered flatten-as-anticipation (never
   network-bound) · **layer-assembly replay** from the composition JSON · gallery-staged full-fidelity
@@ -60,9 +59,23 @@
 - OQ-048: **Effect-intensity scope** — the Styler's `IntensitySlider` (CARD-12's intensity/opacity)
   is drawn for effects; does intensity apply to **finishes** too, and does the value persist in the
   composition (CARD-15 JSON)? (styler track, 2026-06-12) [behavior]
+  **RULED (owner, 2026-06-12): effects only in v2** — finishes stay binary surface materials, no
+  second slider; the chosen intensity **persists in the composition** (CARD-15 JSON — the converged
+  board's "EFFECT · 70%" reconcile row is canonical). Spec encode (CARD-12 wording) = next triage.
 - OQ-049: **Save-private landing spot** — a Styler SAVE PRIVATE (CARD-04/14) leaves the card
   un-equipped: does it surface only in the game's **card switcher** (COL-06), or also on a drafts
   shelf? (styler track, 2026-06-12) [behavior]
+  **RULED (owner, 2026-06-12): both** — the game's card switcher (COL-06) **and** the My-designs
+  shelf (`GET /me/cards`: drafts · private · published, CARD-14); no new surface. Spec encode
+  (CARD-04/14 wording) = next triage.
+- OQ-051: **"Popular first adds" selection rule** — the empty-Collection suggestion rail + AUTH-06's
+  add-a-few-games step now have a contract shape (`GET /catalog/popular`, api-contract 0.17), but
+  *what ranks it* is unspecified: CAT-09 collections-count? recency-weighted? curated? And how many
+  items / does "SEE MORE" page it? (Collection page-audit, 2026-06-12) [behavior/tuning]
+- OQ-052: **Friend-profile SHARE semantics** — the converged Profile friend-view draws a SHARE tool
+  (profile-states board). Self-profile SHARE = the SOC-07 invite link, but sharing *someone else's*
+  profile has no spec backing (profile deep links are parked, §10). Cut the chip on friend-view, or
+  spec a share-a-friend's-profile behavior? (Profile page-audit, 2026-06-12) [behavior]
 
 ## Resolved
 - OQ-001 → **Multiple device models.** *(Superseded by OQ-042/decision 0017 — one handheld body; users own multiple **shells**, not models.)* A user can own several device models (via entitlements/store)
@@ -131,3 +144,8 @@
   `GET /games/:gameId/card-bases` (default · templates · kits, CARD-16/18/COSM-02) +
   `POST /games/:gameId/card-bases/surprise` (the server-dealt auto-design; non-idempotent —
   each call deals fresh). (2026-06-12)
+- OQ-039 → **NAMEPLATE adopted as a COSM-01 cosmetic type; OVERLAY cut** (the styler gate ruling:
+  *"add nameplate remove overlay"*). The nameplate = the title-plate **object** (SLAB · RIBBON ·
+  BEVEL · premium HOLO PLATE); the card layer stack gains it and **TITLE rescopes to font + ink**
+  (CARD-01/11); the store gains a Nameplates aisle (design-req 3.4); api was pre-synced (0.16).
+  See decision [0018](decisions/0018-styler-formalization-nameplate.md). (2026-06-12)
