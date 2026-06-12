@@ -57,6 +57,12 @@
 - OQ-045: **Sticker placed-on-shell preview** (owner deferral, store track 2026-06-12) — §4.11's
   sticker-preview case is NOT drawn on the converged Store board; design it with the **Device editor
   pass** (DEV-01). [presentation]
+- OQ-048: **Effect-intensity scope** — the Styler's `IntensitySlider` (CARD-12's intensity/opacity)
+  is drawn for effects; does intensity apply to **finishes** too, and does the value persist in the
+  composition (CARD-15 JSON)? (styler track, 2026-06-12) [behavior]
+- OQ-049: **Save-private landing spot** — a Styler SAVE PRIVATE (CARD-04/14) leaves the card
+  un-equipped: does it surface only in the game's **card switcher** (COL-06), or also on a drafts
+  shelf? (styler track, 2026-06-12) [behavior]
 
 ## Resolved
 - OQ-001 → **Multiple device models.** *(Superseded by OQ-042/decision 0017 — one handheld body; users own multiple **shells**, not models.)* A user can own several device models (via entitlements/store)
