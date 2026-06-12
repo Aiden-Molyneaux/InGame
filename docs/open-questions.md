@@ -78,6 +78,12 @@
   IAP packs keep the platform's native confirm. Needs spec wording + an accessible non-hold
   alternative (switch-control/assistive-touch users; reduce-motion variant). (ECON-01/§4.11/§1.8)
   [behavior]
+- OQ-047: **Vector/glyph packs are SHELL STICKER packs, not card assets** (owner direction, store
+  track 2026-06-12) — the card canvas already covers freeform vector art (CARD-02), so curated
+  glyph packs sell for the DEVICE SHELL (DEV-01 stickers). Ripples: COSM-01's "(Card 'stickers/art
+  assets' are vector packs.)" parenthetical · CARD-02/CARD-17's "free + premium packs" in the card
+  asset library · CARD-13 premium-on-card scope — what (if anything) remains a purchasable CARD
+  canvas asset vs. the closed attributes (effects/finishes/frames/fonts, decision 0014)? [behavior]
 
 ## Resolved
 - OQ-001 → **Multiple device models.** A user can own several device models (via entitlements/store)

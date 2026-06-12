@@ -345,7 +345,7 @@
   .glyphs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
   .gcell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
     background: var(--scr-panel); border: 1px solid var(--scr-hairline); }
-  .gcell svg { width: 17px; height: 17px; fill: var(--gold); }
+  .gcell svg { width: 20px; height: 20px; fill: var(--gold); }
   .gcell.more { font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
   .placed { position: absolute; z-index: 2; fill: var(--gold); stroke: #3c2a09; stroke-width: 1;
     filter: drop-shadow(0 1.5px 0 rgba(0,0,0,.35)); }
@@ -447,6 +447,12 @@
     <symbol id="gl-heart" viewBox="0 0 20 20"><path d="M10 18 C3 12 1 8 3.5 5 C5.5 2.8 9 3.5 10 6 C11 3.5 14.5 2.8 16.5 5 C19 8 17 12 10 18 Z"/></symbol>
     <symbol id="gl-diamond" viewBox="0 0 20 20"><path d="M10 1 L17.5 10 L10 19 L2.5 10 Z"/></symbol>
     <symbol id="gl-arrow" viewBox="0 0 20 20"><path d="M3.5 8 L10.5 8 L10.5 3.5 L17 10 L10.5 16.5 L10.5 12 L3.5 12 Z"/></symbol>
+    <symbol id="gl-ring" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2 a8 8 0 1 0 .02 0 Z M10 5.6 a4.4 4.4 0 1 1 -.02 0 Z"/></symbol>
+    <symbol id="gl-plus" viewBox="0 0 20 20"><path d="M7.5 2 L12.5 2 L12.5 7.5 L18 7.5 L18 12.5 L12.5 12.5 L12.5 18 L7.5 18 L7.5 12.5 L2 12.5 L2 7.5 L7.5 7.5 Z"/></symbol>
+    <symbol id="gl-moon" viewBox="0 0 20 20"><path d="M12.5 2 A8.5 8.5 0 1 0 18 13.5 A7 7 0 0 1 12.5 2 Z"/></symbol>
+    <symbol id="gl-flag" viewBox="0 0 20 20"><path d="M4 2 L6 2 L6 18 L4 18 Z M6.5 3 L16.5 3 L13.5 6.5 L16.5 10 L6.5 10 Z"/></symbol>
+    <symbol id="gl-x" viewBox="0 0 20 20"><path d="M4 6 L6 4 L10 8 L14 4 L16 6 L12 10 L16 14 L14 16 L10 12 L6 16 L4 14 L8 10 Z"/></symbol>
+    <symbol id="gl-invader" viewBox="0 0 20 20"><path d="M5 4 L7 4 L7 6 L13 6 L13 4 L15 4 L15 6 L17 6 L17 12 L15 12 L15 14 L13 14 L13 16 L11 16 L11 14 L9 14 L9 16 L7 16 L7 14 L5 14 L5 12 L3 12 L3 6 L5 6 Z M7 8 L7 10 L9 10 L9 8 Z M11 8 L11 10 L13 10 L13 8 Z" fill-rule="evenodd"/></symbol>
   </defs>
 </svg>
 
@@ -526,7 +532,7 @@
                 </div>
                 <div class="rtile">
                   <div class="sw-vec" style="width:56px;height:56px;"><svg width="34" height="34" viewBox="0 0 40 40"><use href="#art-vecpack"/></svg></div>
-                  <span class="rt-name">ARCADE GLYPHS</span><span class="rt-type">VECTOR PACK</span>
+                  <span class="rt-name">ARCADE GLYPHS</span><span class="rt-type">STICKER PACK</span>
                   <span class="price-chip">4 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span>
                 </div>
                 <div class="rtile">
@@ -542,7 +548,7 @@
               </div>
               <div class="sec"><h3>THE INDEX &mdash; ALL AISLES</h3></div>
               <div class="index">
-                <div class="idx"><span class="gl">&#9670;</span>VECTOR PACKS<span class="n">12 &rsaquo;</span></div>
+                <div class="idx"><span class="gl">&#9670;</span>STICKER PACKS<span class="n">12 &rsaquo;</span></div>
                 <div class="idx"><span class="gl">&#10022;</span>EFFECTS<span class="n">14 &rsaquo;</span></div>
                 <div class="idx"><span class="gl">&#9686;</span>FINISHES<span class="n">9 &rsaquo;</span></div>
                 <div class="idx"><span class="gl">&#9633;</span>FRAMES<span class="n">11 &rsaquo;</span></div>
@@ -579,9 +585,11 @@
         <p>New at the top: the <b>DAILY BONUS bar</b> &mdash; +1 PX, <b>claimed on the Store screen</b> (your
         direction; ECON-02's wording ripple logged as OQ-043), giving the Store a daily ritual beside the
         drop's weekly one. The cover keeps the drop leading (ECON-08); the &ldquo;show more items&rdquo; ruling
-        lands as the <b>3-up dense grid</b> &mdash; six <b>ItemTiles</b> across six categories, every tile
-        wearing its <b>PIXELS PriceChip</b> (mark v3: flat pixel-art facets). <b>THE INDEX</b> closes the page
-        &mdash; DEVICE SHELLS (OQ-042) and <b>PIXELS &rarr; TOP UP</b>.</p>
+        lands as the <b>3-up dense grid</b> &mdash; six <b>ItemTiles</b> across six categories (effect &middot;
+        finish &middot; frame &middot; <b>sticker pack</b> &middot; font &middot; screen theme &mdash; sticker
+        packs sell for the SHELL, ruling #5/OQ-047), every tile wearing its <b>PIXELS PriceChip</b> (mark v3:
+        flat pixel-art facets). <b>THE INDEX</b> closes the page &mdash; DEVICE SHELLS (OQ-042) and
+        <b>PIXELS &rarr; TOP UP</b>.</p>
         <p>The fragment shows the <b>claimed state</b>: bar quiet, counter ticked 5 &#10142; 6. Eight items
         visible before any scroll; the COSM-02 free-baseline line sits one scroll-tick past the INDEX.
         <i>Values illustrative (OQ-002/OQ-011).</i></p>
@@ -738,7 +746,7 @@
 
   </div>
 
-  <div class="stage-label">Inside the sheet <small>P2b multi-item pack contents + hold-to-buy &middot; P3 whole-page theme preview &middot; P4 device shell (one body, OQ-042)</small></div>
+  <div class="stage-label">Inside the sheet <small>P2b sticker-pack contents + hold-to-buy &middot; P3 whole-page theme preview &middot; P4 device shell (one body, OQ-042)</small></div>
   <div class="stage">
 
     <!-- ═══ P2b · Pack contents (multi-item) ═══ -->
@@ -755,20 +763,20 @@
           <div class="screen sk2 c5">
             <div class="screen-head"><h2>STORE</h2><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button></div>
             <div class="scroll dimmed" style="padding-bottom:6px;">
-              <div class="sec" style="margin-top:2px;"><h3>VECTOR PACKS &mdash; FROM THE INDEX</h3></div>
+              <div class="sec" style="margin-top:2px;"><h3>STICKER PACKS &mdash; FROM THE INDEX</h3></div>
               <div class="rack3">
                 <div class="rtile" style="border-color: color-mix(in srgb, var(--gold) 55%, transparent);">
                   <div class="sw-vec" style="width:56px;height:56px;"><svg width="34" height="34" viewBox="0 0 40 40"><use href="#art-vecpack"/></svg></div>
-                  <span class="rt-name">ARCADE GLYPHS</span><span class="rt-type">VECTOR PACK</span>
+                  <span class="rt-name">ARCADE GLYPHS</span><span class="rt-type">STICKER PACK</span>
                 </div>
                 <div class="rtile">
                   <div class="sw-vec" style="width:56px;height:56px;"><svg width="30" height="30" viewBox="0 0 40 40"><circle cx="16" cy="18" r="9" fill="none" stroke="#ff3d77" stroke-width="2.5"/><path d="M24 10 L31 14 L24 18" fill="none" stroke="#58e0d8" stroke-width="2.5" stroke-linejoin="round"/><circle cx="29" cy="27" r="3.5" fill="#ffd23f"/></svg></div>
-                  <span class="rt-name">NEON ZOO</span><span class="rt-type">VECTOR PACK</span>
+                  <span class="rt-name">NEON ZOO</span><span class="rt-type">STICKER PACK</span>
                   <span class="price-chip">6 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span>
                 </div>
                 <div class="rtile">
                   <div class="sw-vec" style="width:56px;height:56px;"><svg width="30" height="30" viewBox="0 0 40 40"><path d="M12 8 L13.5 12 L17.5 12.5 L14.5 15 L15.5 19 L12 16.8 L8.5 19 L9.5 15 L6.5 12.5 L10.5 12 Z" fill="#f5f1e4"/><circle cx="27" cy="13" r="1.8" fill="#ffd23f"/><circle cx="31" cy="24" r="1.4" fill="#58e0d8"/><circle cx="20" cy="29" r="1.6" fill="#9b97c0"/></svg></div>
-                  <span class="rt-name">STARFIELD</span><span class="rt-type">VECTOR PACK</span>
+                  <span class="rt-name">STARFIELD</span><span class="rt-type">STICKER PACK</span>
                   <span class="price-chip">3 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span>
                 </div>
               </div>
@@ -776,29 +784,25 @@
             <div class="scrim"></div>
             <div class="sheet">
               <div class="handle"></div>
-              <div class="pstage" style="padding-bottom:9px;">
-                <span class="ps-lbl">TRY ONE ON YOUR CARD &mdash; LIVE</span>
-                <div style="position:relative;">
-                  <div class="gcard hero-size fr-destiny">
-                    <div class="art"><svg><use href="#art-destiny"/></svg></div>
-                    <div class="plate pl-destiny">Destiny</div>
-                  </div>
-                  <svg class="placed" style="top:18px; left:16px; width:30px; height:30px;" viewBox="0 0 20 20"><use href="#gl-star"/></svg>
-                </div>
-                <span class="swap">&#8644; TRY A DIFFERENT GLYPH</span>
-              </div>
-              <div class="sec" style="margin:9px 1px 6px;"><h3>WHAT'S INSIDE &mdash; 12 GLYPHS</h3></div>
+              <div class="sec" style="margin:2px 1px 7px;"><h3>WHAT'S INSIDE &mdash; ALL 12 STICKERS</h3></div>
               <div class="glyphs">
                 <div class="gcell"><svg viewBox="0 0 20 20"><use href="#gl-star"/></svg></div>
                 <div class="gcell"><svg viewBox="0 0 20 20"><use href="#gl-bolt"/></svg></div>
                 <div class="gcell"><svg viewBox="0 0 20 20"><use href="#gl-crown"/></svg></div>
                 <div class="gcell"><svg viewBox="0 0 20 20"><use href="#gl-heart"/></svg></div>
                 <div class="gcell"><svg viewBox="0 0 20 20"><use href="#gl-diamond"/></svg></div>
-                <div class="gcell more">+7</div>
+                <div class="gcell"><svg viewBox="0 0 20 20"><use href="#gl-arrow"/></svg></div>
+                <div class="gcell"><svg viewBox="0 0 20 20"><use href="#gl-ring"/></svg></div>
+                <div class="gcell"><svg viewBox="0 0 20 20"><use href="#gl-plus"/></svg></div>
+                <div class="gcell"><svg viewBox="0 0 20 20"><use href="#gl-moon"/></svg></div>
+                <div class="gcell"><svg viewBox="0 0 20 20"><use href="#gl-flag"/></svg></div>
+                <div class="gcell"><svg viewBox="0 0 20 20"><use href="#gl-x"/></svg></div>
+                <div class="gcell"><svg viewBox="0 0 20 20"><use href="#gl-invader"/></svg></div>
               </div>
+              <div class="hint" style="margin-top:9px;">PLACE &middot; SCALE &middot; ROTATE ON YOUR SHELL IN THE DEVICE EDITOR (DEV-01) &middot; ON-SHELL PREVIEW COMING LATER (OQ-045)</div>
               <div class="it-titlerow">
                 <span class="it-name">ARCADE GLYPHS</span>
-                <span class="it-type">VECTOR PACK &middot; 12 PIECES</span>
+                <span class="it-type">SHELL STICKER PACK</span>
                 <span class="price-chip big" style="margin-left:auto;">4 <svg width="12" height="12" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span>
               </div>
               <div class="buybar">
@@ -818,11 +822,14 @@
         </div>
       </div>
       <div class="caption">
-        <h3>P2b &mdash; Pack contents <em>(multi-item detail + the hold)</em></h3>
-        <p>Multi-item types (vector packs &middot; fonts) get a <b>WHAT'S INSIDE</b> section in the same sheet:
-        the 12 glyphs as a contents grid (+7 overflow cell), with the <b>PreviewStage</b> showing one glyph
-        <b>placed on your Destiny card</b> and a swap line &mdash; &sect;4.11's preview promise extended to
-        packs. Same skeleton as every other sheet: stage &rarr; contents &rarr; title &rarr; BuyBar.</p>
+        <h3>P2b &mdash; Pack contents <em>(sticker packs are for the shell)</em></h3>
+        <p>Per ruling #5: curated glyph packs make no sense for <i>cards</i> &mdash; the card canvas already
+        lets you draw all of this (CARD-02) &mdash; so ARCADE GLYPHS is a <b>STICKER PACK for your shell</b>
+        (DEV-01). The sheet leads with the multi-item view: <b>WHAT'S INSIDE, all 12 stickers</b> in one
+        grid. Placement (place &middot; scale &middot; rotate) happens in the Device editor; the
+        placed-on-shell preview stays deferred per ruling #4 (<b>OQ-045</b>), and the spec ripple
+        (COSM-01's card-sticker parenthetical, CARD-02/13/17's premium-pack framing) is logged as
+        <b>OQ-047</b>.</p>
         <p><b>Press-and-hold BUY debuts here</b> (ruling #4): the keycap sits pressed while a darker fill
         sweeps it &mdash; release early and nothing is spent. All instant-PX BuyBars now read <b>HOLD TO
         BUY</b>; IAP packs keep the platform's own confirm. Spec wording + an accessible non-hold alternative

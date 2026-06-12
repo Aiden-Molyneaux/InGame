@@ -220,3 +220,17 @@ cosmetic BuyBars; IAP keeps the platform's own confirm; a11y tap-alternative owe
 preview-on-device **deferred, noted** (OQ-045) · My Stuff **dropped** · **P7 remade as draft B's S6
 moment verbatim** (centered +30, 5 ➞ 35 arithmetic, one gold rule, BACK TO EMBER + VIEW WALLET — no
 half-grid; the full pack options live on P6).
+
+### Converged-board ruling #5 — 2026-06-12 (verbatim)
+
+> Only one note - we won't have something such as "Arcade glyphs" for cards, since users can already
+> do this with the svg-based card canvas tool. We would have these types of cosmetics/stickers for
+> the shell itself.
+
+**Disposition (applied in place):** glyph/vector packs are **SHELL STICKER PACKS** (DEV-01), not card
+assets — the card canvas (CARD-02) already covers freeform vector art. P2b reworked: ARCADE GLYPHS is
+a **STICKER PACK · FOR YOUR SHELL**, the sheet leads with the full **WHAT'S-INSIDE grid (all 12)**;
+the glyph-on-card stage is removed and the on-shell preview stays deferred per ruling #4 (OQ-045) —
+placement happens in the Device editor. Browse + INDEX renamed **STICKER PACKS**. Spec ripple logged
+as **OQ-047** (COSM-01's "card stickers/art assets are vector packs" parenthetical + CARD-02/13/17
+"premium packs" framing need rescoping; what, if anything, stays premium on the card canvas).
