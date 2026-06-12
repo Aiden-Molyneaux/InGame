@@ -138,3 +138,14 @@ Every draft renders panels **P1–P8**; lifecycle panels **P9–P10** are conver
 8. **New visuals required:** the search-tap detail state, and the variant-forefront state in the CardPicker incl. the clean peek.
 
 Sanctioned name-set additions for c2 (feed Task 6): `CardFan` · `CardDetail` · `EquipReadout` · `CleanPeek`. C's dedup InlineBanner adopts the **thumb-bearing** form (gate reviewer note). The stamp ruling supersedes the queued 13px stamp-ink question; gold+step CREATE stands unobjected.
+
+### Owner pass 2 (C-v2 review — recorded 2026-06-12) → C-v3 (`add-game-draft-c3-cardled.html`)
+C-v2 "looks really good"; fine-tuning:
+1. **3-up fans: all three nameplates legible** — one forefront in center, neighbors genuinely visible (no plate occlusion at all); **plate type floor raised** (controller agreed, owner-invited): ≥10px forefront / ≥9px neighbors in interactive fan/picker contexts, plate band grows to fit; deep-mini (shelf strips) exempt — context carries identity. *Task-6 ripple: design-spec §1.2 card-print scale gains the legibility floor + an editor min plate-band ratio note (baked plates, CARD-01/15).*
+2. **P1 drops the "can't find your game" / be-first hook** — premature pre-query; the create path enters at P3 (none-of-these) and P4 (no-results).
+3. **Spacing:** more gap between fan bottom and the dots/index row (all fans); P3's title/meta line gets breathing room.
+4. **Menus = bottom drawer:** P3b's report menu becomes an in-screen **bottom drawer** (OptionSheet family, summoned by ⋮, **no permanent handle**, scrim) — the page's only Report access point. Replaces the dropdown.
+5. **P7b peek hint simplified** — one short label ("CLEAN VIEW"), redundant HOLDING labels dropped.
+6. **P7 credit eyebrow: "DESIGNED BY <name>"** (was "HELD · BY").
+7. **Meta-above-the-card** for swipeable views (owner proposal, controller endorsed): EquipReadout/credit/meta sit ABOVE the fan; the cards drop into the thumb zone (more salient + swipeable). Applied to P3, P7, P7b; **P6 deliberately exempt** (chips are the touch target → they keep the thumb zone); P1's rails already lead with headers.
+Meta: **no PNG deliverables** — the html files are what the owner reviews; renders are internal verification only.
