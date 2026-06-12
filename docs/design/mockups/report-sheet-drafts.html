@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InGame · Report Sheet Drafts — 3 models · drawer / modal / takeover (C5 v2)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" /></noscript>
+<style>
+  /* ── tokens: from add-game-draft-c5 (Teal shell · Midnight theme) — v0.11 pass applied:
+     `scr.btn` RETIRED (no bronze anywhere on this board; primary action colour = scr.accent),
+     `brand.alert` joins the kit (KeycapButton/destructive = the report SUBMIT). ── */
+  :root {
+    --plastic: #2bb6b0; --plastic-hi: #3ec9c2; --plastic-lo: #1f9a94; --silk: #0d524e;
+    --accent: #ff3d77; --gold: #ffd23f; --cream: #f5f1e4; --navy: #1d2a4a;
+    --bezel: #14122a; --alert: #e3414e;
+    --pk: 'Chakra Petch', sans-serif; --shell: 'Paytone One', sans-serif;
+    --scr-bg: #232045; --scr-well: #2c2950; --scr-tools: #1a1733; --scr-accent: #ff9f43;
+    --scr-accent-ink: #2a1430; --scr-head: #f5f1e4; --scr-text: #ffffff; --scr-dim: #9b97c0;
+    --scr-soft: #c9c5e6; --scr-panel: rgba(255,255,255,.065); --scr-hairline: rgba(255,255,255,.08);
+    --scr-grip: #565178; --scr-chip: #f5f1e4; --scr-head-shadow: rgba(0,0,0,.45);
+    --shell-ink: #08433f; --screw-hi: #2aa39d; --screw-lo: #137671; --pip-off: #117672;
+  }
+  html, body { margin: 0; min-height: 100%; background: #efece6; font-family: var(--pk); }
+  .canvas { max-width: 1348px; margin: 0 auto; padding: 40px 24px 60px; }
+  .canvas-head h1 { font: 700 17px/1.2 var(--pk); letter-spacing: 2.5px; color: #2a2633; margin: 0 0 6px; text-transform: uppercase; }
+  .canvas-head p { font: 500 12.5px/1.5 var(--pk); color: #79748a; margin: 0 0 32px; max-width: 620px; }
+  .canvas-head p b { color: #2a2633; }
+  .stage { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+  .take { width: 404px; }
+  .artboard-label { font: 700 11px/1 var(--pk); letter-spacing: 1.5px; color: #8d889c; margin: 0 0 10px 2px; text-transform: uppercase; }
+  .caption { margin-top: 14px; background: #fff; border-radius: 12px; padding: 13px 15px; box-shadow: 0 2px 8px rgba(42,38,51,.08); }
+  .caption h3 { margin: 0 0 5px; font: 700 12.5px var(--pk); letter-spacing: .8px; color: #2a2633; text-transform: uppercase; }
+  .caption h3 em { font-style: normal; color: var(--accent); }
+  .caption p { margin: 0 0 4px; font: 500 11.8px/1.5 var(--pk); color: #5d5870; }
+  .caption p b { color: #2a2633; }
+  .stage-label { font: 700 13px/1 var(--pk); letter-spacing: 2px; color: #2a2633; text-transform: uppercase; margin: 36px 2px 14px; }
+  .stage-label small { display: block; margin-top: 5px; font: 500 11px/1.4 var(--pk); letter-spacing: .3px; color: #79748a; text-transform: none; max-width: 860px; }
+
+  /* ── device shell (physical — verbatim from c5) ────────────────── */
+  .device { position: relative; width: 404px; height: 884px; border-radius: 30px; overflow: hidden;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.4), inset 0 -4px 0 rgba(0,0,0,.18), 0 18px 40px color-mix(in srgb, var(--shell-ink) 28%, transparent);
+    display: flex; flex-direction: column; padding: 0 14px; box-sizing: border-box; }
+  .screw { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--screw-hi), var(--screw-lo) 75%);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.25); }
+  .screw::after { content: ""; position: absolute; left: 1.5px; right: 1.5px; top: 3.5px; height: 1.5px; background: color-mix(in srgb, var(--shell-ink) 70%, transparent); border-radius: 1px; }
+  .screw.tl { top: 10px; left: 12px; } .screw.tr { top: 10px; right: 12px; }
+  .screw.bl { bottom: 10px; left: 12px; } .screw.br { bottom: 10px; right: 12px; }
+  .top-band { height: 64px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 12px 0; position: relative; }
+  .power { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+  .power .led { width: 9px; height: 9px; border-radius: 50%; background: #ff5a4e; box-shadow: 0 0 7px 2px rgba(255,90,78,.65), inset 0 -1px 1px rgba(0,0,0,.3); }
+  .power .lbl { font: 400 9px var(--shell); letter-spacing: .5px; color: var(--silk); opacity: .75; }
+  .logo { position: absolute; left: 50%; transform: translateX(-50%); font: 400 21px var(--shell); letter-spacing: 7px; text-indent: 7px;
+    color: color-mix(in srgb, var(--shell-ink) 28%, transparent); text-shadow: 0 -1px 0 color-mix(in srgb, var(--shell-ink) 30%, transparent); }
+  .grille { display: flex; gap: 6px; }
+  .grille span { width: 5px; height: 23px; background: color-mix(in srgb, var(--shell-ink) 40%, transparent); border-radius: 2px; transform: skewX(-22deg); box-shadow: inset 0 1px 1px rgba(0,0,0,.3); }
+  .screen-bezel { flex: 1 1 auto; min-height: 0; background: var(--bezel); border-radius: 20px; padding: 9px; box-sizing: border-box; }
+  .nav-band { flex: 0 0 auto; height: 128px; display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 6px 0; }
+  .nav-item { display: flex; flex-direction: column; align-items: center; width: 64px; }
+  .nav-lbl { height: 16px; font: 400 11px var(--shell); letter-spacing: .5px; color: var(--silk); display: flex; align-items: center; }
+  .nav-lbl.big { font-size: 11px; }
+  .nav-btn { width: 54px; height: 54px; border-radius: 15px; background: var(--cream); border: none;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 1px 0 rgba(255,255,255,.85); }
+  .nav-btn.store { background: var(--gold); }
+  .nav-btn.collection { background: var(--accent); }
+  .nav-item.active .nav-btn { transform: translateY(3px); box-shadow: 0 1px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 2px 3px rgba(0,0,0,.18); }
+  .pip { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; background: var(--pip-off);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.25); }
+  .nav-item.active .pip { background: var(--accent); box-shadow: 0 0 9px 2.5px rgba(255,61,119,.85), inset 0 -1px 1px rgba(0,0,0,.25); }
+  .nav-band .nav-item:nth-child(2) .nav-lbl:first-child,
+  .nav-band .nav-item:nth-child(4) .nav-lbl:first-child { transform: translateY(-8px); }
+
+  /* ── shared screen structure ────────────────────────────── */
+  .screen { position: relative; height: 100%; border-radius: 13px; overflow: hidden; display: flex; flex-direction: column; }
+  .screen-head { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 12px; }
+  .scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 12px 14px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; border: none; width: fit-content; }
+  .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 14px 2px 8px; }
+  .sec.tight { margin: 7px 2px 4px; }
+  .sec h3 { margin: 0; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+
+  /* ── the Game Card (hero + thumb only — backdrops, not the subject) ── */
+  .gcard { position: relative; border-radius: 11px; box-sizing: border-box; flex: 0 0 auto; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
+  .gcard .art { position: absolute; inset: 7px; border-radius: 5px; overflow: hidden; }
+  .gcard .art svg { width: 100%; height: 100%; display: block; }
+  .gcard .plate { position: absolute; left: 11px; right: 11px; bottom: 3px; border-radius: 4px; padding: 5px 4px 4px;
+    text-align: center; font: 700 10px/1.15 var(--pk); letter-spacing: .5px; text-transform: uppercase; }
+  .gcard.hero-size { width: 138px; height: 193px; }
+  .gcard.thumb { width: 44px; height: 62px; }
+  .gcard.thumb .art { inset: 2.5px; }
+  .gcard.thumb .plate { left: 3.5px; right: 3.5px; bottom: 1px; padding: 1.5px 1px 1px; font-size: 3.2px; letter-spacing: 0; }
+  .fr-eld { background: linear-gradient(160deg, #d8c478, #9c7e34); }
+  .pl-eld { background: #1c1f2e; color: #e8c364; }
+
+  /* ════ S2 base — flat floating panels ════ */
+  .sk2 { background: var(--scr-bg); }
+  .sk2 .screen-head h2 { margin: 0; font: 700 21px/1 var(--pk); letter-spacing: 3px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); }
+  .sk2 .well { background: var(--scr-well); border-radius: 12px; }
+  .sk2 .btn.add { background: var(--gold); color: #3c2a09; padding: 9px 13px; font: 700 11px var(--pk); letter-spacing: 1px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
+    filter: drop-shadow(0 3px 0 color-mix(in srgb, var(--gold) 45%, #000)); }
+
+  /* ════ C5 · HYBRID — square chrome · stepped-diagonal cards ════ */
+  .c5 .well, .c5 .btn { border-radius: 0; }
+  .c5 .well { border: 1px solid var(--scr-hairline); }
+  .c5 .btn.add { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+      100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
+      calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
+  .c5 .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
+    clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
+      100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
+      calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
+  .c5 .gcard .art { border-radius: 0;
+    clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+      100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .c5 .gcard .plate { border-radius: 0;
+    clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  .c5 .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0,
+      100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
+  .c5 .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  .c5 .gcard.thumb .plate { clip-path: polygon(0 1px, 1px 1px, 1px 0, 100% 0,
+      100% calc(100% - 1px), calc(100% - 1px) calc(100% - 1px), calc(100% - 1px) 100%, 0 100%); }
+
+  /* ── FlowHeader + keycaps (c5 chrome) ── */
+  .fh-key { flex: 0 0 auto; width: 28px; height: 28px; border: none; background: var(--scr-chip); color: var(--navy);
+    font: 700 13px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; margin-right: 11px;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .flow-head { justify-content: flex-start; }
+  .ovf-key { width: 30px; height: 30px; border: none; background: var(--scr-chip); color: var(--navy);
+    font: 700 13px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .ovf-key.open { transform: translateY(2px); box-shadow: 0 0 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 2px 3px rgba(0,0,0,.22); }
+  .tert { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
+  .tert.dim { color: var(--scr-dim); }
+
+  /* ── backdrop A — catalog GameDetail (card + meta ledger, from c5 P3b) ── */
+  .inspect { display: flex; justify-content: center; padding: 2px 0 0; }
+  .inspect .gcard { filter: drop-shadow(0 10px 13px rgba(0,0,0,.5)); }
+  .meta-block { margin: 8px 2px 0; border: 1px solid var(--scr-hairline); background: var(--scr-panel); padding: 2px 11px; }
+  .meta-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 4.5px 0;
+    border-bottom: 1px solid var(--scr-hairline); }
+  .meta-row:last-child { border-bottom: none; }
+  .meta-row .ml { font: 700 9px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); flex: 0 0 auto; }
+  .meta-row .mv { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); text-align: right; }
+  .detail-credit { display: flex; justify-content: center; padding: 2px 0 0; }
+  .credit { display: inline-flex; align-items: center; gap: 4px; background: var(--scr-panel); border: 1px solid var(--scr-hairline);
+    padding: 2.5px 5px; font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-soft); white-space: nowrap; }
+  .credit b { color: var(--scr-text); }
+  .detail-actions { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 8px; }
+
+  /* ── backdrop B — profile (avatar + identity, from profile-states; squared per C5) ── */
+  .id { padding: 12px; display: flex; flex-direction: column; gap: 9px; }
+  .id-top { display: flex; gap: 12px; align-items: center; }
+  .avatar { position: relative; flex: 0 0 auto; width: 46px; height: 46px; background: var(--scr-accent); color: var(--scr-accent-ink);
+    font: 700 15px var(--pk); display: flex; align-items: center; justify-content: center; }
+  .id-name { font: 700 21px/1.1 var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .id-sub { font: 600 11px var(--pk); letter-spacing: 1px; color: var(--scr-dim); margin-top: 3px; }
+  .gtags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .gtag { background: var(--scr-panel); padding: 4px 7px; font: 600 9px var(--pk);
+    letter-spacing: .5px; color: var(--scr-soft); display: inline-flex; align-items: center; }
+  .gtag b { color: var(--scr-text); font-weight: 700; margin-right: 4px; }
+  .stats { padding: 12px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat { background: var(--scr-panel); padding: 9px 6px 8px; display: flex; flex-direction: column; gap: 3px; align-items: center; }
+  .stat .v { font: 700 15px/1 var(--pk); color: var(--scr-text); }
+  .stat .l { font: 600 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .strip { display: flex; gap: 12px; align-items: center; padding: 10px 12px; }
+  .strip-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .strip-title { font: 700 15px/1.1 var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .strip-sub { font: 600 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .chev { margin-left: auto; color: var(--scr-grip); font: 700 15px var(--pk); flex: 0 0 auto; }
+
+  /* ════ ReportSheet — the shared report grammar (all three variants) ════
+     One vocabulary everywhere: reason rows are FLAT planes split by hairlines (F-09 — no sunken
+     containers); the SELECTED reason wears a 1.5px `scr.accent` ORANGE border over a faint orange
+     tint (≤8%) + the pink ChipPip (v0.11: selection borders = scr.accent; pink stays the LED/pip
+     voice) · the details note = `TextField/area` (DEBUT) — the cream inset, F-09's named text-input
+     exception: ~3 rows, 11px navy ink, pink caret · SUBMIT = `KeycapButton/destructive` (brand.alert
+     red, white ink) — DORMANT (flush, no travel, muted fill) until a reason needing specifics has
+     its note (MOD-01) · CANCEL = cream keycap (or the dim TertiaryLink in the takeover) · BLOCK
+     (user targets only, SOC-09) = an OUTLINED alert strip — deliberately NOT a keycap (no 3D edge =
+     not the commit action) and NOT a listed reason (it sits past an OR divider): blocking files
+     nothing, it just severs. */
+  .scrim { position: absolute; inset: 0; z-index: 5; background: rgba(13,11,32,.52); }
+  .scrim.heavy { background: rgba(13,11,32,.68); }
+
+  /* rows */
+  .dw-i { position: relative; display: flex; align-items: center; gap: 8px; padding: 9px 7px;
+    font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-text);
+    border-bottom: 1px solid var(--scr-hairline); }
+  .dw-i:has(+ :not(.dw-i)) { border-bottom: none; }
+  .dw-i.sel { border: 1.5px solid var(--scr-accent); padding: 7.5px 5.5px;
+    background: rgba(255,159,67,.07); }
+  .dw-i .dw-pip { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 6px 1.5px rgba(255,61,119,.8); }
+  .dw-i .oi { color: var(--scr-accent); font-weight: 700; }
+  /* radio ring — variant B's conventional affordance (the modal is the "legible pole"); the ring
+     fills scr.accent when picked, but selection still speaks F-09: border + pip do the real work */
+  .radio { flex: 0 0 auto; width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--scr-grip);
+    box-sizing: border-box; position: relative; }
+  .dw-i.sel .radio { border-color: var(--scr-accent); }
+  .dw-i.sel .radio::after { content: ""; position: absolute; inset: 2px; border-radius: 50%; background: var(--scr-accent); }
+
+  /* TextField/area — the cream inset (F-09 named exception), ~3 rows */
+  .tarea { display: flex; flex-direction: column; gap: 4px; margin: 9px 1px 0; }
+  .tarea .flabel { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .tarea .box { background: var(--scr-chip); box-shadow: inset 0 2px 3px rgba(0,0,0,.16);
+    padding: 8px 10px; min-height: 46px; font: 600 11px/1.5 var(--pk); letter-spacing: .5px; color: var(--navy); }
+  .tarea .box .ph { color: #8d889c; }
+  .tarea .box .caret { display: inline-block; width: 1.5px; height: 12px; background: var(--accent);
+    vertical-align: -2px; margin-left: 1px; }
+  .req-hint { margin: 6px 1px 0; font: 600 9px/1.5 var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .req-hint b { color: var(--scr-soft); }
+
+  /* commit row — SUBMIT (KeycapButton/destructive) + CANCEL (cream) */
+  .dw-btns { display: flex; gap: 8px; margin-top: 10px; }
+  .dw-btns button { flex: 1 1 0; border: none; font: 700 11px var(--pk); letter-spacing: 1px;
+    padding: 9px 0; text-align: center; }
+  .dw-submit { background: var(--alert); color: #fff;
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--alert) 45%, #000), inset 0 1px 0 rgba(255,255,255,.25); }
+  .dw-submit.dormant { background: color-mix(in srgb, var(--alert) 30%, var(--scr-tools));
+    color: rgba(255,255,255,.4); box-shadow: none; }
+  .dw-cancel { background: var(--scr-chip); color: var(--navy);
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+
+  /* the OR divider + BLOCK strip (SOC-09 — an exit, not a reason, not the commit) */
+  .or-div { display: flex; align-items: center; gap: 8px; margin: 10px 0 8px; }
+  .or-div::before, .or-div::after { content: ""; flex: 1 1 auto; height: 1px; background: var(--scr-hairline); }
+  .or-div span { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .block-row { display: flex; align-items: center; gap: 9px; padding: 8px 10px;
+    border: 1px solid color-mix(in srgb, var(--alert) 55%, transparent); background: rgba(227,65,78,.06); }
+  .block-row .bk-g { flex: 0 0 auto; display: flex; }
+  .block-row .bk-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .block-row .bk-t { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--alert); }
+  .block-row .bk-s { font: 600 9px/1.4 var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .block-row .chev { color: color-mix(in srgb, var(--alert) 65%, transparent); }
+
+  /* ── Variation A — ReportSheet/drawer (the OptionSheet family; summoned, no handle) ── */
+  .drawer { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--scr-tools);
+    border-top: 1px solid var(--scr-hairline); box-shadow: 0 -12px 26px rgba(0,0,0,.55); padding: 9px 14px 12px; }
+  .drawer .dw-h { padding: 0 1px 6px; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim);
+    border-bottom: 1px solid var(--scr-hairline); }
+
+  /* ── Variation B — ReportSheet/modal (centered dialog over the heavy scrim) ── */
+  .modal-wrap { position: absolute; inset: 0; z-index: 6; display: flex; align-items: center; justify-content: center;
+    padding: 0 13px; box-sizing: border-box; }
+  .modal { width: 100%; background: var(--scr-tools); border: 1px solid var(--scr-hairline);
+    box-shadow: 0 18px 34px rgba(0,0,0,.6); padding: 12px 13px 13px; box-sizing: border-box; }
+  .modal .mo-h { font: 700 15px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
+  .modal .mo-sub { font: 600 9px/1.5 var(--pk); letter-spacing: .5px; color: var(--scr-dim);
+    padding: 4px 0 8px; border-bottom: 1px solid var(--scr-hairline); margin-bottom: 2px; }
+
+  /* ── Variation C — ReportSheet/takeover (FlowHeader flow; one decision per zone) ── */
+  .tk .sec { margin: 18px 2px 8px; }
+  .tk .dw-i { padding: 12px 9px; }
+  .tk .dw-i.sel { padding: 10.5px 7.5px; }
+  .tk .tarea { margin: 0 1px; }
+  .tk .tarea .box { min-height: 56px; }
+  .target { display: flex; gap: 11px; align-items: center; margin: 4px 1px 0; padding: 9px 11px;
+    background: var(--scr-panel); border: 1px solid var(--scr-hairline); }
+  .target .t-tx { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .target .t-eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .target .t-name { font: 700 15px/1.1 var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .tk-foot { display: flex; flex-direction: column; align-items: stretch; gap: 10px; margin-top: 16px; }
+  .tk-foot .dw-submit { border: none; font: 700 11px var(--pk); letter-spacing: 1px; padding: 11px 0; text-align: center; }
+  .tk-foot .tert { text-align: center; }
+</style>
+</head>
+<body>
+
+<!-- card art symbols (only the Elden face rides this board — backdrops, not the subject) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="g-eld" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2e3146"/><stop offset="1" stop-color="#14121f"/></linearGradient>
+    <symbol id="art-elden" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-eld)"/>
+      <circle cx="31.5" cy="36" r="16.5" fill="none" stroke="#e8c364" stroke-width="2.6" opacity=".92"/>
+      <circle cx="31.5" cy="36" r="16.5" fill="none" stroke="#fff0c0" stroke-width=".8" opacity=".4"/>
+      <path d="M31.5 16.5 L29 27 L31.5 36 L34.5 26 Z" fill="#1c1f2e" stroke="#e8c364" stroke-width="1" stroke-linejoin="round"/>
+      <circle cx="31.5" cy="36" r="2.2" fill="#f5e6b0"/>
+      <circle cx="14" cy="17" r="1.2" fill="#e8c364" opacity=".7"/><circle cx="50" cy="22" r="1" fill="#e8c364" opacity=".55"/>
+      <path d="M0 66 L14 58 L26 64 L40 56 L52 63 L63 58 L63 88 L0 88 Z" fill="#11131d"/>
+      <path d="M0 70 Q31.5 62 63 70 L63 88 L0 88 Z" fill="#0a0b12" opacity=".8"/>
+    </symbol>
+    <symbol id="ic-block" viewBox="0 0 14 14">
+      <circle cx="7" cy="7" r="5.4" fill="none" stroke="#e3414e" stroke-width="1.8"/>
+      <path d="M3.2 10.8 L10.8 3.2" stroke="#e3414e" stroke-width="1.8" stroke-linecap="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="canvas">
+  <div class="canvas-head">
+    <h1>Report Sheet Drafts — one pattern, every report surface · 3 models &times; 2 targets (C5 v2)</h1>
+    <p><b>`ReportSheet`</b> — the reusable report pop-up for everywhere reports happen: <b>published cards,
+    catalog entries, and users (MOD-01)</b>. Three genuinely different interaction models — <b>/drawer</b>
+    (the OptionSheet family, refined) · <b>/modal</b> (the conventional centered dialog — &sect;1.1's legible
+    pole) · <b>/takeover</b> (a brief FlowHeader flow, one decision per zone) — each shown carrying both
+    target shapes: a <b>catalog entry</b> (DUPLICATE &middot; INCORRECT INFO; the latter selected with its
+    <b>required details note</b> revealed) and a <b>user</b> (ABUSIVE PROFILE &middot; IMPERSONATION &middot;
+    SPAM <b>+ the BLOCK offer in the same flow, SOC-09</b>). The v0.11 rulings are baked in everywhere:
+    <b>selection = a 1.5px `scr.accent` orange border + the pink `ChipPip`</b> on flat rows (F-09 — no sunken
+    selection; pink stays the LED voice) &middot; <b>SUBMIT = `KeycapButton/destructive`</b> (alert red — it
+    files a moderation report) and sits <b>dormant — flush, no travel — until a reason needing specifics has
+    its note</b> (MOD-01; the note is moderator-facing only, never shown to users) &middot; the note rides
+    <b>`TextField/area`</b>, debuting here: the cream inset (F-09's named text-input exception), ~3 rows,
+    11px navy ink &middot; CANCEL stays cream/dim and a scrim tap (or &#10005;) backs out — <b>destructive-adjacent
+    actions always confirm (&sect;1.8)</b>. <b>BLOCK is never a reason and never the commit:</b> an outlined
+    alert strip past an OR divider — instant, silent, files nothing (SOC-09).</p>
+  </div>
+
+  <div class="stage-label">Variation A — `ReportSheet/drawer` <small>the current family, refined: summoned by the &#8942; keycap (pressed beneath the scrim), rising from the screen bottom — <b>no handle, summoned not pulled</b> &middot; the details note <b>discloses inline, directly beneath the selected reason</b> &middot; left: catalog target, required note still empty &rarr; <b>SUBMIT dormant</b> &middot; right: user target, note written &rarr; SUBMIT armed, <b>BLOCK past the OR divider</b> (SOC-09)</small></div>
+  <div class="stage">
+
+    <!-- ═══ A1 · drawer · catalog entry — required note empty, SUBMIT dormant ═══ -->
+    <div class="take">
+      <div class="artboard-label">A1 · drawer over a catalog game entry — submit dormant</div>
+      <div class="device" data-screen-label="ReportSheet · A1 — drawer / catalog">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>GAME DETAIL</h2></div>
+            <div class="scroll">
+              <div class="sec tight"><h3>CATALOG ENTRY</h3></div>
+              <div class="inspect">
+                <div class="gcard hero-size fr-eld">
+                  <div class="art"><svg><use href="#art-elden"/></svg></div>
+                  <div class="plate pl-eld">Elden Ring</div>
+                </div>
+              </div>
+              <div class="meta-block">
+                <div class="meta-row"><span class="ml">RELEASE DATE</span><span class="mv">FEB 25 2022</span></div>
+                <div class="meta-row"><span class="ml">DEVELOPER STUDIO</span><span class="mv">FROMSOFTWARE</span></div>
+                <div class="meta-row"><span class="ml">GENRE(S)</span><span class="mv">RPG &middot; SOULSLIKE</span></div>
+                <div class="meta-row"><span class="ml">IN COLLECTIONS</span><span class="mv">214</span></div>
+              </div>
+              <div class="detail-credit"><span class="credit">ADDED BY <b>VANTA</b> &middot; COMMUNITY CONTRIBUTOR</span></div>
+              <div class="detail-actions">
+                <button class="btn add"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1L9.5 5.5L5.5 10L1.5 5.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>ADD TO COLLECTION</button>
+                <button class="ovf-key open">&#8942;</button>
+              </div>
+            </div>
+            <div class="scrim"></div>
+            <div class="drawer">
+              <div class="dw-h">REPORT THIS ENTRY &mdash; PICK A REASON</div>
+              <div class="dw-i"><span class="oi">&#9046;</span>DUPLICATE</div>
+              <div class="dw-i sel"><span class="oi">!</span>INCORRECT INFO<span class="dw-pip"></span></div>
+              <div class="tarea">
+                <span class="flabel">DETAILS &mdash; REQUIRED FOR THIS REASON</span>
+                <div class="box"><span class="caret"></span><span class="ph">WHAT&rsquo;S WRONG WITH THIS ENTRY?</span></div>
+              </div>
+              <div class="req-hint">MODERATORS NEED SPECIFICS FOR THIS ONE &mdash; <b>SUBMIT UNLOCKS WHEN A NOTE IS ADDED</b></div>
+              <div class="dw-btns">
+                <button class="dw-submit dormant">SUBMIT REPORT</button>
+                <button class="dw-cancel">CANCEL</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>A1 &mdash; ReportSheet/drawer &middot; catalog entry <em>(required note empty &rarr; SUBMIT dormant)</em></h3>
+        <p>The <b>OptionSheet family grown into the report job</b>: the &#8942; keycap (pressed beneath the
+        scrim &mdash; keycaps keep F-09's pressed exemption) summons the drawer from the screen bottom over a
+        dim scrim &mdash; <b>no grab handle: summoned, not pulled</b>. Reasons are flat hairline rows;
+        <b>INCORRECT INFO wears the selection &mdash; a 1.5px `scr.accent` orange border + the pink `ChipPip`
+        over a &le;8% tint (F-09: never an inset, never a darkening)</b> &mdash; and <b>`TextField/area`
+        discloses INLINE, directly beneath the selected reason</b>: the cream inset (the named F-09 exception),
+        ~3 rows, caret blinking on the placeholder.</p>
+        <p><b>The MOD-01 rule, visible:</b> incorrect-info needs specifics, so with the note empty the red
+        <b>`KeycapButton/destructive` SUBMIT sits dormant &mdash; flush, no drop edge, no travel</b> (a key
+        with no travel can't be pressed); the hint line says why. CANCEL (cream) or a scrim tap backs out
+        &mdash; <b>destructive-adjacent actions always confirm (&sect;1.8)</b>. The note is moderator-facing
+        only &mdash; never rendered to other users.</p>
+      </div>
+    </div>
+
+    <!-- ═══ A2 · drawer · user profile — note written, SUBMIT armed, BLOCK below ═══ -->
+    <div class="take">
+      <div class="artboard-label">A2 · drawer over a user profile — submit armed + block</div>
+      <div class="device" data-screen-label="ReportSheet · A2 — drawer / user">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>PROFILE</h2><button class="ovf-key open">&#8942;</button></div>
+            <div class="scroll">
+              <div class="well id">
+                <div class="id-top">
+                  <div class="avatar">RK</div>
+                  <div><div class="id-name">RIKO</div><div class="id-sub">MEMBER SINCE 2025 &middot; 38 GAMES</div></div>
+                </div>
+                <div class="gtags"><span class="gtag"><b>PSN</b> RIKO_PLAYS</span><span class="gtag"><b>SWITCH</b> SW-RIKO</span></div>
+              </div>
+              <div class="sec"><h3>STATS</h3></div>
+              <div class="well stats">
+                <div class="stat"><span class="v">38</span><span class="l">GAMES</span></div>
+                <div class="stat"><span class="v">412</span><span class="l">HOURS</span></div>
+                <div class="stat"><span class="v">12</span><span class="l">FRIENDS</span></div>
+              </div>
+              <div class="sec"><h3>NOW PLAYING</h3></div>
+              <div class="well strip">
+                <div class="gcard thumb fr-eld"><div class="art"><svg><use href="#art-elden"/></svg></div><div class="plate pl-eld">Elden Ring</div></div>
+                <div class="strip-meta"><span class="strip-title">ELDEN RING</span><span class="strip-sub">84H LOGGED</span></div>
+                <span class="chev">&rsaquo;</span>
+              </div>
+            </div>
+            <div class="scrim"></div>
+            <div class="drawer">
+              <div class="dw-h">REPORT THIS USER &mdash; PICK A REASON</div>
+              <div class="dw-i"><span class="oi">!</span>ABUSIVE PROFILE</div>
+              <div class="dw-i sel"><span class="oi">&#8800;</span>IMPERSONATION<span class="dw-pip"></span></div>
+              <div class="tarea">
+                <span class="flabel">DETAILS &mdash; REQUIRED FOR THIS REASON</span>
+                <div class="box">BIO + AVATAR COPY @MOSSBONE&rsquo;S &mdash; POSTING TRADE LINKS AS THEM.<span class="caret"></span></div>
+              </div>
+              <div class="dw-i"><span class="oi">@</span>SPAM</div>
+              <div class="dw-btns">
+                <button class="dw-submit">SUBMIT REPORT</button>
+                <button class="dw-cancel">CANCEL</button>
+              </div>
+              <div class="or-div"><span>OR &mdash; WITHOUT FILING A REPORT</span></div>
+              <div class="block-row">
+                <span class="bk-g"><svg width="14" height="14"><use href="#ic-block"/></svg></span>
+                <span class="bk-tx"><span class="bk-t">BLOCK RIKO</span><span class="bk-s">INSTANT &amp; SILENT &mdash; THEY&rsquo;RE NEVER NOTIFIED &middot; MANAGED IN SETTINGS</span></span>
+                <span class="chev">&rsaquo;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>A2 &mdash; ReportSheet/drawer &middot; user <em>(note written &rarr; armed &middot; BLOCK is not a reason)</em></h3>
+        <p>The same drawer worn by a <b>user target</b> (a friend profile's overflow, Friends tab active).
+        User reasons ride the same flat rows; <b>IMPERSONATION selected (orange border + pink pip, F-09)</b>
+        and the inline `TextField/area` <b>already carries its note &rarr; the red SUBMIT is armed</b> — full
+        keycap edge, ready to travel. <b>SPAM stays a flat row below the disclosure</b>: the field tucks
+        beneath whichever reason is picked, so the list never jumps.</p>
+        <p><b>BLOCK sits past the commit row AND an OR divider (&ldquo;without filing a report&rdquo;)</b> —
+        an <b>outlined alert strip, deliberately NOT a keycap</b> (no 3D edge = not the commit) <b>and NOT a
+        listed reason</b> (no radio, no border-select): blocking files nothing — it&rsquo;s <b>instant +
+        silent</b>, severs the friendship, makes the two of you mutually invisible, and is managed from the
+        Settings blocked list (SOC-09). One flow, two exits, zero ambiguity.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-label">Variation B — `ReportSheet/modal` <small>the conventional pole (&sect;1.1 — forms stay legible): a centered dialog over a <b>heavier scrim</b>, the device + NavBand fully visible around it &middot; compact <b>radio-list</b> (the ring is the conventional affordance — selection still speaks F-09: orange border + pink pip) &middot; the details slot is FIXED under the list &middot; left: note written &rarr; SUBMIT armed &middot; right: user target, required note empty &rarr; <b>SUBMIT dormant</b>, BLOCK in the dialog&rsquo;s basement (SOC-09)</small></div>
+  <div class="stage">
+
+    <!-- ═══ B1 · modal · catalog entry — note written, SUBMIT armed ═══ -->
+    <div class="take">
+      <div class="artboard-label">B1 · centered modal over a catalog game entry — submit armed</div>
+      <div class="device" data-screen-label="ReportSheet · B1 — modal / catalog">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>GAME DETAIL</h2></div>
+            <div class="scroll">
+              <div class="sec tight"><h3>CATALOG ENTRY</h3></div>
+              <div class="inspect">
+                <div class="gcard hero-size fr-eld">
+                  <div class="art"><svg><use href="#art-elden"/></svg></div>
+                  <div class="plate pl-eld">Elden Ring</div>
+                </div>
+              </div>
+              <div class="meta-block">
+                <div class="meta-row"><span class="ml">RELEASE DATE</span><span class="mv">FEB 25 2022</span></div>
+                <div class="meta-row"><span class="ml">DEVELOPER STUDIO</span><span class="mv">FROMSOFTWARE</span></div>
+                <div class="meta-row"><span class="ml">GENRE(S)</span><span class="mv">RPG &middot; SOULSLIKE</span></div>
+                <div class="meta-row"><span class="ml">IN COLLECTIONS</span><span class="mv">214</span></div>
+              </div>
+              <div class="detail-credit"><span class="credit">ADDED BY <b>VANTA</b> &middot; COMMUNITY CONTRIBUTOR</span></div>
+              <div class="detail-actions">
+                <button class="btn add"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1L9.5 5.5L5.5 10L1.5 5.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>ADD TO COLLECTION</button>
+                <button class="ovf-key open">&#8942;</button>
+              </div>
+            </div>
+            <div class="scrim heavy"></div>
+            <div class="modal-wrap">
+              <div class="modal">
+                <div class="mo-h">REPORT THIS ENTRY</div>
+                <div class="mo-sub">GOES TO THE MOD QUEUE &mdash; YOUR NOTE IS NEVER SHOWN TO OTHER USERS</div>
+                <div class="dw-i"><span class="radio"></span>DUPLICATE</div>
+                <div class="dw-i sel"><span class="radio"></span>INCORRECT INFO<span class="dw-pip"></span></div>
+                <div class="tarea">
+                  <span class="flabel">DETAILS &mdash; REQUIRED FOR THIS REASON</span>
+                  <div class="box">RELEASE YEAR IS WRONG &mdash; IT&rsquo;S FEB 25 2022, NOT 2020.<span class="caret"></span></div>
+                </div>
+                <div class="dw-btns">
+                  <button class="dw-submit">SUBMIT REPORT</button>
+                  <button class="dw-cancel">CANCEL</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>B1 &mdash; ReportSheet/modal &middot; catalog entry <em>(conventional pole &middot; note written &rarr; armed)</em></h3>
+        <p><b>A centered dialog over the heavy scrim</b> — the &ldquo;stay conventional where forms live&rdquo;
+        half of the art direction (&sect;1.1): device frame + NavBand fully visible around it, the dimmed game
+        detail behind. Square C5 chrome on `scr.tools` with a hairline and a real title (15px) + a plain-words
+        subline — <b>your note goes to moderators only (MOD-01)</b>. The reason list compacts to a
+        <b>radio-list</b>: the ring is the conventional affordance, but <b>selection still speaks the F-09
+        voice — orange `scr.accent` border + pink `ChipPip` on a flat row</b> (the ring fills orange; pips
+        stay lights, F-05).</p>
+        <p>The `TextField/area` is a <b>fixed slot under the list</b> (the dialog never reflows) — here the
+        note is written, so <b>SUBMIT (`KeycapButton/destructive`) is armed</b> beside the cream CANCEL; a
+        scrim tap also backs out (<b>&sect;1.8 — destructive-adjacent actions always confirm</b>).</p>
+      </div>
+    </div>
+
+    <!-- ═══ B2 · modal · user profile — required note empty, SUBMIT dormant + BLOCK ═══ -->
+    <div class="take">
+      <div class="artboard-label">B2 · centered modal over a user profile — submit dormant + block</div>
+      <div class="device" data-screen-label="ReportSheet · B2 — modal / user">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>PROFILE</h2><button class="ovf-key open">&#8942;</button></div>
+            <div class="scroll">
+              <div class="well id">
+                <div class="id-top">
+                  <div class="avatar">RK</div>
+                  <div><div class="id-name">RIKO</div><div class="id-sub">MEMBER SINCE 2025 &middot; 38 GAMES</div></div>
+                </div>
+                <div class="gtags"><span class="gtag"><b>PSN</b> RIKO_PLAYS</span><span class="gtag"><b>SWITCH</b> SW-RIKO</span></div>
+              </div>
+              <div class="sec"><h3>STATS</h3></div>
+              <div class="well stats">
+                <div class="stat"><span class="v">38</span><span class="l">GAMES</span></div>
+                <div class="stat"><span class="v">412</span><span class="l">HOURS</span></div>
+                <div class="stat"><span class="v">12</span><span class="l">FRIENDS</span></div>
+              </div>
+              <div class="sec"><h3>NOW PLAYING</h3></div>
+              <div class="well strip">
+                <div class="gcard thumb fr-eld"><div class="art"><svg><use href="#art-elden"/></svg></div><div class="plate pl-eld">Elden Ring</div></div>
+                <div class="strip-meta"><span class="strip-title">ELDEN RING</span><span class="strip-sub">84H LOGGED</span></div>
+                <span class="chev">&rsaquo;</span>
+              </div>
+            </div>
+            <div class="scrim heavy"></div>
+            <div class="modal-wrap">
+              <div class="modal">
+                <div class="mo-h">REPORT THIS USER</div>
+                <div class="mo-sub">FILES TO THE SAME MOD QUEUE &mdash; OR BLOCK BELOW, WHICH FILES NOTHING</div>
+                <div class="dw-i"><span class="radio"></span>ABUSIVE PROFILE</div>
+                <div class="dw-i sel"><span class="radio"></span>IMPERSONATION<span class="dw-pip"></span></div>
+                <div class="dw-i"><span class="radio"></span>SPAM</div>
+                <div class="tarea">
+                  <span class="flabel">DETAILS &mdash; REQUIRED FOR THIS REASON</span>
+                  <div class="box"><span class="caret"></span><span class="ph">WHO ARE THEY IMPERSONATING?</span></div>
+                </div>
+                <div class="req-hint"><b>SUBMIT UNLOCKS WHEN A NOTE IS ADDED</b> &mdash; THIS REASON NEEDS SPECIFICS</div>
+                <div class="dw-btns">
+                  <button class="dw-submit dormant">SUBMIT REPORT</button>
+                  <button class="dw-cancel">CANCEL</button>
+                </div>
+                <div class="or-div"><span>OR &mdash; WITHOUT FILING A REPORT</span></div>
+                <div class="block-row">
+                  <span class="bk-g"><svg width="14" height="14"><use href="#ic-block"/></svg></span>
+                  <span class="bk-tx"><span class="bk-t">BLOCK RIKO</span><span class="bk-s">INSTANT &amp; SILENT &mdash; THEY&rsquo;RE NEVER NOTIFIED</span></span>
+                  <span class="chev">&rsaquo;</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>B2 &mdash; ReportSheet/modal &middot; user <em>(required note empty &rarr; dormant &middot; BLOCK in the basement)</em></h3>
+        <p>The same dialog re-targeted at a user: three radio rows, <b>IMPERSONATION selected</b> — and because
+        impersonation needs specifics, the empty `TextField/area` keeps the red <b>SUBMIT dormant (flush, no
+        travel)</b> with the unlock hint beneath the field: <b>the MOD-01 required-details rule rides every
+        target shape unchanged</b>. The subline says where reports go — and that block is different.</p>
+        <p><b>BLOCK lives in the dialog&rsquo;s basement</b> — below the commit row, past the OR divider: the
+        outlined alert strip again (no keycap edge, no radio ring), so it can&rsquo;t be misread as either a
+        fourth reason or the red commit. <b>Blocking is instant + silent (SOC-09)</b>: severs friendship,
+        mutual invisibility, managed later from Settings — and it works even while SUBMIT is dormant, because
+        it isn&rsquo;t a report.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-label">Variation C — `ReportSheet/takeover` <small>the report as a <b>brief focused flow</b> occupying the screen content (FlowHeader &#10005; + REPORT — the page yields, &#10005; returns to it) &middot; <b>one decision per zone</b>: the target strip names what you&rsquo;re reporting &rarr; reason zone &rarr; details zone &rarr; a footer with the red SUBMIT &middot; left: catalog target, note written &middot; right: user target — <b>BLOCK gets its own zone</b> (&ldquo;or block them instead — silent, instant&rdquo;, SOC-09), and an optional-details reason keeps SUBMIT armed while empty (MOD-01 asymmetry)</small></div>
+  <div class="stage">
+
+    <!-- ═══ C1 · takeover · catalog entry — note written, SUBMIT armed ═══ -->
+    <div class="take">
+      <div class="artboard-label">C1 · full takeover — catalog game entry, submit armed</div>
+      <div class="device" data-screen-label="ReportSheet · C1 — takeover / catalog">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5 tk">
+            <div class="screen-head flow-head"><button class="fh-key">&#10005;</button><h2>REPORT</h2></div>
+            <div class="scroll">
+              <div class="target">
+                <div class="gcard thumb fr-eld"><div class="art"><svg><use href="#art-elden"/></svg></div><div class="plate pl-eld">Elden Ring</div></div>
+                <div class="t-tx"><span class="t-eyebrow">YOU&rsquo;RE REPORTING</span><span class="t-name">ELDEN RING</span><span class="t-eyebrow">CATALOG ENTRY</span></div>
+              </div>
+              <div class="sec"><h3>1 &middot; WHAT&rsquo;S WRONG?</h3></div>
+              <div class="dw-i"><span class="oi">&#9046;</span>DUPLICATE</div>
+              <div class="dw-i sel"><span class="oi">!</span>INCORRECT INFO<span class="dw-pip"></span></div>
+              <div class="sec"><h3>2 &middot; ADD THE DETAILS</h3></div>
+              <div class="tarea">
+                <span class="flabel">REQUIRED FOR INCORRECT INFO &mdash; MODERATORS ONLY</span>
+                <div class="box">WRONG DEVELOPER LISTED &mdash; IT&rsquo;S FROMSOFTWARE; BANDAI NAMCO IS THE PUBLISHER.<span class="caret"></span></div>
+              </div>
+              <div class="tk-foot">
+                <button class="dw-submit">SUBMIT REPORT</button>
+                <a class="tert dim" href="#">CANCEL &mdash; NOTHING IS FILED</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>C1 &mdash; ReportSheet/takeover &middot; catalog entry <em>(one decision per zone &middot; armed)</em></h3>
+        <p><b>The report as a brief focused flow</b>: `FlowHeader` (&#10005; + REPORT) takes the screen content
+        — no scrim, the page yields and &#10005; returns to it; NavBand stays put. The most form-like of the
+        three, with generous spacing and <b>one decision per zone</b>: the <b>target strip</b> names what
+        you&rsquo;re reporting (the thumb face + ELDEN RING &middot; CATALOG ENTRY — context the backdrop
+        carried in A/B), then <b>1 &middot; the reason zone</b> (flat rows; INCORRECT INFO selected — orange
+        `scr.accent` border + pink `ChipPip`, F-09), then <b>2 &middot; the details zone</b>.</p>
+        <p>The `TextField/area` runs wider and taller here (~4 rows) — the takeover is the writing-friendliest
+        model; the label carries both MOD-01 facts: <b>required for this reason &middot; moderators only</b>.
+        The footer holds the flow&rsquo;s <b>only commit — full-width red SUBMIT (`KeycapButton/destructive`),
+        armed</b> — and CANCEL drops to a dim `TertiaryLink` that says what it means: nothing is filed
+        (<b>&sect;1.8 — destructive-adjacent actions always confirm</b>).</p>
+      </div>
+    </div>
+
+    <!-- ═══ C2 · takeover · user — optional note, SUBMIT armed, BLOCK zone ═══ -->
+    <div class="take">
+      <div class="artboard-label">C2 · full takeover — user, block gets its own zone</div>
+      <div class="device" data-screen-label="ReportSheet · C2 — takeover / user">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5 tk">
+            <div class="screen-head flow-head"><button class="fh-key">&#10005;</button><h2>REPORT</h2></div>
+            <div class="scroll">
+              <div class="target">
+                <div class="avatar">RK</div>
+                <div class="t-tx"><span class="t-eyebrow">YOU&rsquo;RE REPORTING</span><span class="t-name">RIKO</span><span class="t-eyebrow">USER</span></div>
+              </div>
+              <div class="sec"><h3>1 &middot; WHAT&rsquo;S WRONG?</h3></div>
+              <div class="dw-i sel"><span class="oi">!</span>ABUSIVE PROFILE<span class="dw-pip"></span></div>
+              <div class="dw-i"><span class="oi">&#8800;</span>IMPERSONATION</div>
+              <div class="dw-i"><span class="oi">@</span>SPAM</div>
+              <div class="sec"><h3>2 &middot; ADD THE DETAILS</h3></div>
+              <div class="tarea">
+                <span class="flabel">OPTIONAL FOR THIS REASON &mdash; MODERATORS ONLY</span>
+                <div class="box"><span class="caret"></span><span class="ph">ANYTHING THAT HELPS THE MODS&hellip;</span></div>
+              </div>
+              <div class="tk-foot">
+                <button class="dw-submit">SUBMIT REPORT</button>
+                <a class="tert dim" href="#">CANCEL &mdash; NOTHING IS FILED</a>
+              </div>
+              <div class="or-div"><span>OR BLOCK THEM INSTEAD</span></div>
+              <div class="block-row">
+                <span class="bk-g"><svg width="14" height="14"><use href="#ic-block"/></svg></span>
+                <span class="bk-tx"><span class="bk-t">BLOCK RIKO</span><span class="bk-s">SILENT &amp; INSTANT &mdash; SEVERS FRIENDSHIP &middot; MUTUALLY INVISIBLE &middot; NO REPORT FILED</span></span>
+                <span class="chev">&rsaquo;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>C2 &mdash; ReportSheet/takeover &middot; user <em>(BLOCK as its own zone &middot; optional note &rarr; still armed)</em></h3>
+        <p>The user takeover: the target strip swaps the thumb for the <b>Avatar + RIKO &middot; USER</b>;
+        same zones. <b>ABUSIVE PROFILE is selected — a reason that doesn&rsquo;t need specifics — so the note
+        is labeled OPTIONAL and the red SUBMIT stays armed with the field empty</b>: the MOD-01 asymmetry made
+        visible (contrast A1/B2, where INCORRECT INFO / IMPERSONATION hold SUBMIT dormant until a note exists).</p>
+        <p><b>BLOCK earns a whole zone — &ldquo;OR BLOCK THEM INSTEAD&rdquo;</b> — after the commit footer:
+        the outlined alert strip with the plain-words consequences spelled out — <b>silent &amp; instant,
+        severs the friendship, mutually invisible, no report filed</b> (SOC-09; managed later from
+        Settings&rsquo; blocked list). A separate zone, a separate verb, zero chance it reads as reason
+        number four — and the &sect;1.8 confirm still holds: nothing here fires without this screen.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
