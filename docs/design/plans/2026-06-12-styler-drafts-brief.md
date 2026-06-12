@@ -28,10 +28,10 @@ sessions are live) — it is your plan file; append the owner's gate rulings to 
    border + pip in `scr.accent`, never pink) · §1.1–1.4 tokens · §1.5 catalog **including the new
    Currency & Commerce set** (CurrencyCounter · PriceChip · BuyBar/hold-to-buy · Toast · tags ·
    PreviewStrip — REUSE these, the Store already designed the economy UI) · §1.6/§1.7 · §2.3 Store.
-6. Mockups: `docs/design/mockups/README.md` · `store-states.html` (the commerce patterns + the
-   PIXELS gem mark — copy its `ic-pix` symbol; ◈ is dead) · the latest `add-game-draft-c*.html`
+6. Mockups: `docs/design/mockups/README.md` · `store/store-states.html` (the commerce patterns + the
+   PIXELS gem mark — copy its `ic-pix` symbol; ◈ is dead) · the latest `add-game/add-game-draft-c*.html`
    (the junction you receive from; sibling conventions: bottom-docked fields, report drawer,
-   F-09 selection) · `collection-states.html` (drawer/tools grammar + the shared :root tokens).
+   F-09 selection) · `collection/collection-states.html` (drawer/tools grammar + the shared :root tokens).
 7. `docs/spec/product-spec.md` §5.6 (CARD-01/02/06/11/12/13/14/16/17/18) + §5.8/§5.9 (COSM/ECON,
    post-0017) · `docs/decisions/0015` (the moments layer: **Styler keeps get a LIGHT beat**, never
    the full ritual) + `0017` (PIXELS · hold-to-buy · sticker packs are SHELL items — the card
@@ -101,7 +101,7 @@ Deferred to converge: loading skeleton · load-error+RETRY · offline (draft-saf
    (0014 standing mandate: persistent card hero, attribute sections swiping beneath, `SectionChips`
    to jump). The other two are yours — e.g. a **drawer rack** (attributes as the app's one
    bottom-sheet grammar) · a **tools-tray workbench** (a persistent `ToolsBar`-style attribute rail,
-   Collection's keycap grammar). Files: `docs/design/mockups/styler-draft-{a,b,c}-<model>.html`.
+   Collection's keycap grammar). Files: `docs/design/mockups/styler/styler-draft-{a,b,c}-<model>.html`.
 2. Per draft: verify headless (then delete the screenshots) · append a README row at the END of the
    table · commit (`design: Styler draft A (<model>) — P1-P8 (styler track)` + the Co-Authored-By
    Claude line) · `git pull --rebase` · push.
@@ -111,3 +111,27 @@ Deferred to converge: loading skeleton · load-error+RETRY · offline (draft-saf
 4. Converge per the ruling into `styler-states.html` (full matrix incl. the deferred lifecycle
    cells) → update `SCREEN-STATUS.md` (your row + UP NEXT) and surface the changed rows → STOP.
    OQ-039's ruling is a spec matter — leave it in the inbox for the spec-owner batch.y
+
+---
+
+## Owner gate ruling — 2026-06-12 (verbatim)
+
+> "Excellent job. I'll take carousel, only note is add nameplate remove overlay"
+
+Decoded and applied:
+1. **Model: Draft A "Carousel" wins** — persistent card hero, `AttributeSection` pages swiping
+   beneath, `SectionChips` to jump. Drafts B (drawer rack) and C (workbench) retire, kept for
+   history.
+2. **OQ-039: NAMEPLATE adopted · OVERLAY cut** — the exhibit's recommendation accepted as-is.
+   The plate *object* (shape/material) becomes its own closed-attribute type; TITLE STYLING keeps
+   font + ink. Overlay is rejected (FINISH owns the overlay slot; static textures stay free canvas
+   territory per 0017). **Spec matter:** the COSM-01 type ripple + store aisle land with the
+   spec-owner batch — OQ-039 stays in the inbox until then; the converged board draws NAMEPLATE
+   as a section, caption-flagged as ruling-pending-formalization.
+3. Judgment calls 1–5 (no-scrim attribute surfaces vs. the scrimmed ReconcileSheet · the
+   model-invariant ReconcileSheet · adopt-charge riding the reconcile · gold+step KEEP ·
+   IntensitySlider form) — no objections; carried into the converged board.
+
+Converge target: `styler/styler-states.html` — carousel grammar, FIVE sections (FRAME · EFFECT ·
+FINISH · NAMEPLATE · TITLE), full matrix incl. the deferred lifecycle cells (skeleton ·
+load-error+RETRY · offline draft-safe, writes gated per SYS-10/CARD-14).
