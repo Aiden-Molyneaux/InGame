@@ -40,10 +40,11 @@ summary below is convenience; **00-INDEX wins**.
    directly. Headless-Edge screenshots are for self-verification only and must be **deleted before
    the turn ends** — no `_gate-*.png` or other image artifacts left in the repo.
 2. **After every draft pass, update `docs/design/SCREEN-STATUS.md`** — the per-screen dashboard
-   (design state · queue order · mockup version · states board? · **api-contract current for that
-   page?**) — and surface the changed rows + UP NEXT to the owner in the wrap-up. The API column is
-   the tripwire: functionality drawn on a page must reach the contract (or the inbox) before the
-   row reads ✅.
+   (design state · queue order · mockup version · **implements-from file** · states board? ·
+   **design-spec current for that board?** · **api-contract current for that page?**) — and surface
+   the changed rows + UP NEXT to the owner in the wrap-up. The Design-spec and API columns are the
+   tripwires: a converged board must be formalized into design-spec, and functionality drawn on a
+   page must reach the contract (or the inbox), before those columns read ✅.
 
 ## Git identity (important — personal project)
 Use the **personal** GitHub account **`Aiden-Molyneaux`** — **NOT** the work account

@@ -16,9 +16,9 @@ gate ruling to it later.
    Store + §4.11 Item detail + §4.12 Wallet.
 3. `docs/design/design-spec.md` — tokens §1.1–1.4 (Teal shell + Midnight canonical), component catalog
    §1.5, states family §1.6, F-01..F-08.
-4. `docs/design/mockups/README.md` + siblings: `collection-states.html`, `profile-states.html` (format
-   reference: artboard grid, caption strips, device frame), `InGame Design System Catalog.dc.html`,
-   and `add-game-draft-c-cardled.html` (the in-flight track — note its gold "1 ◈" cost chip).
+4. `docs/design/mockups/README.md` + `collection/collection-states.html`, `profile/profile-states.html`
+   (format reference: artboard grid, caption strips, device frame), `InGame Design System Catalog.dc.html`,
+   and `add-game/add-game-draft-c-cardled.html` (the in-flight track — note its gold "1 ◈" cost chip).
 5. `docs/spec/product-spec.md` §5.8 (COSM-) + §5.9 (ECON-) — the behavior truth. `docs/decisions/0014`
    + `0015` for current context. `docs/open-questions.md` (OQ-002/OQ-011 are open — see Values below).
 
@@ -86,7 +86,7 @@ Deferred to converge: loading skeleton · load-error + RETRY · offline (browse-
 ## Process
 1. **Three distinct drafts** — genuinely different browse/interaction MODELS (not reskins), e.g.
    arcade-cabinet shelf browse · drops-led editorial · category rack. Files:
-   `docs/design/mockups/store-draft-{a,b,c}-<model>.html`.
+   `docs/design/mockups/store/store-draft-{a,b,c}-<model>.html`.
 2. Verify each via headless Edge before calling it done:
    `& "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --headless=new
    --screenshot=<abs _verify png> --window-size=1400,<height> <abs html>` — read the png, walk every
