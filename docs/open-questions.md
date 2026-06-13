@@ -105,6 +105,13 @@
   `/me/cards` (shelf) + `GET /me/collection/:entryId/cards` (switcher) cover the gallery. **Drives
   the #3 Game-page card-gallery drafts** (3 distinct interfaces, owner-initiated). (from the
   save-model brainstorm, 2026-06-13) [behavior]
+- OQ-057: **Browse-By (genre/studio browse, DISC-02) removed from Discover for now** — owner ruling at
+  the Discover converge (2026-06-13): *"The Browse By filter should be removed for now."* The converged
+  §3.2 board (`discover-states.html`) drops the genre/studio chips + the browse drill-down; Discover is
+  pared to **Upcoming · Friend recs · Trending** + games-search. DISC-02 is a spec behavior — confirm
+  whether it is **parked** (re-add to Discover later), **relocated** (e.g. tappable genre/studio on the
+  Game page 4.2, which already specs it; or a filter inside search), or **cut** for v2. (Discover
+  converge) [behavior]
 
 ## Resolved
 - OQ-001 → **Multiple device models.** *(Superseded by OQ-042/decision 0017 — one handheld body; users own multiple **shells**, not models.)* A user can own several device models (via entitlements/store)

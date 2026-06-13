@@ -150,6 +150,36 @@ Folder: `docs/design/mockups/discover/` — drafts a/b/c as named above (README 
 
 ---
 
-## Owner gate ruling — 2026-06-?? (verbatim)
+## Owner gate ruling — 2026-06-13 (verbatim)
 
-> _(pending — appended after the owner rules)_
+> "I think we're going to go with Two rooms, though I'd like you to bring the SegmentedKeycap to the
+> bottom of the screen and make it a bit smaller. Give the screen a standard Header, indicating if the
+> user is on the the Up Next or Discover page. Additionally, please go over the sample game entries and
+> make them real games. The Browse By filter should be removed for now. Let's keep the Discovery page
+> relatively simple - upcoming games (able to be browsed and added to), friend recommendationss, and
+> trending games. The Up Next page should also be relatively simple, as you just control it by adding
+> games from your collection."
+
+**Decoded → applied to `discover-states.html` (converge):**
+1. **Model: Draft A "Two rooms" wins** (hard-binary toggle). Drafts B (feed) + C (arcade) retire, kept for history.
+2. **`SegmentedKeycap` → bottom-docked + smaller** — moves out of the header to a compact footer bar
+   inside the screen (above the plastic NavBand), active segment still pressed + pink PipLight (F-03).
+3. **Standard header** — a `ScreenHead` `h2` names the active page (**UP NEXT** / **DISCOVER**). *This
+   reverses the draft's "no h2" proposal and **resolves the labeling nuance**: the header names the
+   sub-page, the bottom toggle switches, the plastic keycap is the tab. `EXPLORE` fallback dropped.*
+4. **Real games** — the sample roster is replaced with real titles (Elden Ring · Hades · Hollow Knight
+   · Celeste · Stardew Valley · Outer Wilds · Disco Elysium; upcoming: GTA VI · Fable · The Witcher IV;
+   FromSoftware search set). Values still illustrative (OQ-002/011).
+5. **Browse-By removed** — the genre/studio chips + the P4 browse drill-down are **cut** (DISC-02
+   parked for now; flag: DISC-02 is no longer surfaced on Discover → a behavior/scope note for the spec
+   owner, logged OQ-057).
+6. **Discover simplified** to three sections — **Upcoming** (browse + add + notify) · **Friend
+   recommendations** (SOC-05, surfaced as a Discover section) · **Trending** (DISC-04). Games-only
+   **search** (DISC-03) kept as a header action (it's a hard §3.2 requirement; cutting it would be a
+   spec change — flagged, not cut).
+7. **Up Next simplified** — Now-Playing pin + the ranked queue + a primary **ADD FROM COLLECTION**
+   control. One unowned item retained (a friend-rec'd Wishlist entry) to honor WTP-01's owned+unowned
+   span + SOC-05; flagged.
+
+Converge target: `discover/discover-states.html` — A's two-rooms grammar + the seven changes, full
+matrix incl. lifecycle (Skeleton · Signal-Lost+RETRY · Offline writes-gated, SYS-10).
