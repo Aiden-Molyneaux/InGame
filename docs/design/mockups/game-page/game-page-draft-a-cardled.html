@@ -93,13 +93,18 @@
     font: 700 11px var(--pk); letter-spacing: 1px; white-space: nowrap;
     box-shadow: 0 3px 0 color-mix(in srgb, var(--scr-btn) 45%, #000), inset 0 1px 0 rgba(255,255,255,.4); }
   .btn.gold { background: var(--gold); color: #3c2a09; box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
-    filter: drop-shadow(0 3px 0 color-mix(in srgb, var(--gold) 45%, #000));
+    filter: drop-shadow(0 2px 0 color-mix(in srgb, var(--gold) 45%, #000));
     clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
       100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
       calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
   .btn.sec { background: var(--cream); color: var(--navy);
-    box-shadow: 0 3px 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
-  .btn.mini { padding: 6px 9px; font-size: 9px; }
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  /* button scale tightened to the Add Game / editor reference (owner note, 2026-06-13):
+     mini = the dense-action default; the gold/cream raised edge dropped 3px→2px so colour buttons
+     read lighter; reserve gold for ONE primary per band, cream/tertiary for the rest. */
+  .btn.mini { padding: 5px 8px; font-size: 9px; box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-btn) 45%, #000), inset 0 1px 0 rgba(255,255,255,.4); }
+  .btn.gold.mini { filter: drop-shadow(0 2px 0 color-mix(in srgb, var(--gold) 45%, #000)); }
+  .btn svg { flex: 0 0 auto; }
   .btn.block { width: 100%; justify-content: center; box-sizing: border-box; }
   .tert { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
   .tert.dim { color: var(--scr-dim); }
@@ -293,6 +298,33 @@
   .ghost-card::before { content: ""; position: absolute; inset: 7px; border: 2px dashed var(--scr-grip); opacity: .8; }
   .ghost-card .plus { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 700 30px/1 var(--pk); color: var(--scr-grip); }
 
+  /* ── the sheet/drawer family (the app's one bottom-sheet grammar) — the CardDetail inspect + the
+     overflow menu; the in-between UIs (owner note 2026-06-13) ── */
+  .scrim { position: absolute; inset: 0; z-index: 5; background: rgba(13,11,32,.6); }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--scr-tools);
+    border-top: 1px solid var(--scr-hairline); box-shadow: 0 -12px 26px rgba(0,0,0,.55); padding: 7px 13px 13px; }
+  .sheet .handle { width: 38px; height: 4px; background: var(--scr-grip); margin: 2px auto 9px; }
+  .sheet .sh-h { display: flex; align-items: center; gap: 8px; padding-bottom: 7px; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .sheet .sh-h .x { margin-left: auto; color: var(--scr-dim); font: 700 13px var(--pk); }
+  .detail-card { display: flex; justify-content: center; padding: 4px 0 2px; }
+  .adoptbar { display: flex; align-items: center; gap: 10px; margin-top: 11px; padding: 9px 11px; background: var(--scr-bg); border: 1px solid var(--scr-hairline); }
+  .adoptbar .ab-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .adoptbar .ab-have { font: 600 8.5px var(--pk); letter-spacing: .8px; color: var(--scr-dim); }
+  .ovf-menu { position: absolute; right: 12px; top: 52px; z-index: 6; min-width: 190px; background: var(--scr-tools);
+    border: 1px solid var(--scr-hairline); box-shadow: 0 12px 28px rgba(0,0,0,.55); }
+  .ovf-menu .mrow { display: flex; align-items: center; gap: 9px; padding: 10px 12px; font: 700 10px var(--pk); letter-spacing: .5px; color: var(--scr-soft); border-bottom: 1px solid var(--scr-hairline); }
+  .ovf-menu .mrow:last-child { border-bottom: none; }
+  .ovf-menu .mrow.danger { color: #ff8a93; }
+  .ovf-menu .mrow svg { width: 14px; height: 14px; flex: 0 0 auto; } .ovf-menu .mrow svg path, .ovf-menu .mrow svg circle, .ovf-menu .mrow svg rect { stroke: currentColor; }
+  /* confirmation toast (adopt / equip result) */
+  .ctoast { display: flex; align-items: center; gap: 9px; padding: 9px 11px; background: rgba(255,210,63,.1); border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent); }
+  .ctoast.equip { background: rgba(255,159,67,.1); border-color: color-mix(in srgb, var(--scr-accent) 55%, transparent); }
+  .ctoast .ci { flex: 0 0 auto; color: var(--gold); font: 700 14px/1 var(--pk); }
+  .ctoast.equip .ci { color: var(--scr-accent); }
+  .ctoast .ct { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .ctoast .ct .t1 { font: 700 10px var(--pk); letter-spacing: .8px; color: var(--scr-text); }
+  .ctoast .ct .t2 { font: 600 8.5px/1.5 var(--pk); letter-spacing: .3px; color: var(--scr-soft); }
+
   .half-panel { margin-top: 14px; background: var(--scr-bg); border: 5px solid var(--bezel); border-radius: 8px; padding: 13px 14px; position: relative; }
   .half-panel .hp-row { display: flex; gap: 13px; align-items: center; }
   .half-panel .hp-meta { display: flex; flex-direction: column; gap: 6px; min-width: 0; align-items: flex-start; }
@@ -325,6 +357,11 @@
       <path d="M18 5 L22 5 L22 9 L26 9 L26 13 L30 13 L30 17 L34 17 L34 23 L30 23 L30 27 L26 27 L26 31 L22 31 L22 35 L18 35 L18 31 L14 31 L14 27 L10 27 L10 23 L6 23 L6 17 L10 17 L10 13 L14 13 L14 9 L18 9 Z" fill="none" stroke="#3c2a09" stroke-width="2.2"/>
     </symbol>
     <symbol id="ic-pen" viewBox="0 0 12 12"><path d="M8.5 1.5 L10.5 3.5 L4 10 L1.5 10.5 L2 8 Z" fill="none" stroke-width="1.2" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-bell" viewBox="0 0 16 16"><path d="M8 2.2 V1.2 M4.5 7 a3.5 3.5 0 0 1 7 0 c0 3 1.3 4 1.3 4 H3.2 S4.5 10 4.5 7 Z M6.4 13 a1.6 1.6 0 0 0 3.2 0" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-share" viewBox="0 0 16 16"><path d="M8 10 V2 M5 5 L8 2 L11 5 M3.5 8.5 V13 h9 V8.5" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-flag" viewBox="0 0 16 16"><path d="M4 14 V2 M4 2.5 h8.5 L10 5.5 l2.5 3 H4" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-edit2" viewBox="0 0 16 16"><path d="M11 2.5 L13.5 5 L6 12.5 L3 13 L3.5 10 Z M9.5 4 L12 6.5" fill="none" stroke-width="1.4" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-lock" viewBox="0 0 16 16"><rect x="3.5" y="7" width="9" height="6.5" rx="1" fill="none" stroke-width="1.4"/><path d="M5.5 7 V5 a2.5 2.5 0 0 1 5 0 v2" fill="none" stroke-width="1.4"/></symbol>
   </defs>
 </svg>
 
@@ -338,6 +375,11 @@
     <b>friend-view</b> (their `EquipReadout` + ADOPT, SOC-11). Card-centric, everything-visible &mdash; the
     InGame-native pole. Hosts the <b>community gallery + adopt</b> (atomic, ECON-03/04) and the <b>card
     switcher</b> (the OQ-056 customizations view: your cards for this game + design-new → Styler).
+    <b style="color:#2a2633;">Rev 2 (owner notes, 2026-06-13):</b> button scale/weight tightened (gold reserved
+    for one primary per band; emoji→SVG); <b>P5 re-cut</b> into the gallery grid + a rising `CardDetail`
+    inspect sheet; <b>rating</b> de-emphasized + flagged PENDING (OQ-058), pulled off the card-back (no card
+    rating); the duplicate &ldquo;design new&rdquo; removed; and the <b>in-between UIs</b> added &mdash; the
+    &#8943; overflow menu (P2), switch→equip (P4), adopt-confirm (P5).
     <i>Lifecycle cells (soft-hidden · loading · offline) deferred to converge. Sample: Destiny, 210 hrs;
     Maverick = you · Riko/Vanta = friends. Numbers illustrative (OQ-002/011).</i></p>
   </div>
@@ -379,10 +421,10 @@
               <div class="band neutral">
                 <div class="npl">NOT IN YOUR COLLECTION</div>
                 <div class="hint" style="text-align:left; margin-top:5px;">ADD IT TO TRACK YOUR HOURS &amp; PICK A CARD &mdash; OR ADOPT A COMMUNITY FACE BELOW</div>
-                <div class="band-actions">
+                <div class="band-actions" style="align-items:center;">
                   <button class="btn gold mini">&#43; ADD TO COLLECTION</button>
                   <button class="btn sec mini">&#43; UP NEXT</button>
-                  <button class="btn mini">RECOMMEND</button>
+                  <a class="tert dim" href="#" style="margin-left:2px; font-size:10px;">RECOMMEND</a>
                 </div>
               </div>
               <div class="sec"><h3>COMMUNITY CARDS &mdash; ADOPT OR DESIGN</h3><a href="#">ALL 41 &rsaquo;</a></div>
@@ -473,14 +515,14 @@
                   <div class="pstat-cell wide"><span class="pen"><svg viewBox="0 0 12 12"><use href="#ic-pen"/></svg></span><span class="l">STATUS</span>
                     <div class="status-row"><span class="schip on">PLAYING</span><span class="schip">BEATEN</span><span class="schip">COMPLETED</span><span class="schip">SHELVED</span></div>
                   </div>
-                  <div class="pstat-cell"><span class="pen"><svg viewBox="0 0 12 12"><use href="#ic-pen"/></svg></span><span class="l">OWNED SINCE</span><span class="v" style="font-size:11px;">SEP 2014</span></div>
-                  <div class="pstat-cell"><span class="pen"><svg viewBox="0 0 12 12"><use href="#ic-pen"/></svg></span><span class="l">RATING</span><span class="stars">&#9733;&#9733;&#9733;&#9733;<span class="off">&#9733;</span></span></div>
+                  <div class="pstat-cell wide"><span class="pen"><svg viewBox="0 0 12 12"><use href="#ic-pen"/></svg></span><span class="l">OWNED SINCE</span><span class="v" style="font-size:11px;">SEP 2014</span></div>
+                  <div class="pstat-cell wide" style="opacity:.55;"><span class="l">RATING <span style="color:var(--scr-grip); letter-spacing:0; font-weight:600;">&mdash; PENDING (OQ-058)</span></span><span class="stars" style="font-size:12px;">&#9733;&#9733;&#9733;&#9733;<span class="off">&#9733;</span></span></div>
                   <div class="pstat-cell wide"><span class="pen"><svg viewBox="0 0 12 12"><use href="#ic-pen"/></svg></span><span class="l">NOTES</span><span class="v" style="font:600 10px/1.4 var(--pk); color:var(--scr-soft);">&ldquo;Back for the new season &mdash; chasing the raid title.&rdquo;</span></div>
                 </div>
                 <div class="band-actions">
-                  <button class="btn gold mini">&#9998; EDIT THIS CARD</button>
+                  <button class="btn gold mini"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-edit2"/></svg>EDIT THIS CARD</button>
                   <button class="btn sec mini">&#8645; SWITCH CARD</button>
-                  <button class="btn mini">SHARE &#8599;</button>
+                  <button class="btn sec mini"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-share"/></svg>SHARE</button>
                 </div>
               </div>
               <div class="sec"><h3>YOUR CARDS FOR DESTINY</h3><a href="#">MANAGE &rsaquo;</a></div>
@@ -502,15 +544,32 @@
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
         </div>
       </div>
+      <div class="half-panel">
+        <div style="display:flex; align-items:flex-start; gap:13px;">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:5px; flex:0 0 auto;">
+            <button class="ovf-key" style="transform:translateY(2px); box-shadow:0 0 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 2px 3px rgba(0,0,0,.22);">&#8943;</button>
+            <span style="font:700 7px var(--pk); letter-spacing:1px; color:var(--scr-dim);">PRESSED</span>
+          </div>
+          <div style="flex:1; min-width:0;">
+            <div class="ovf-menu" style="position:static; right:auto; top:auto; min-width:0; width:100%; box-sizing:border-box;">
+              <div class="mrow"><svg viewBox="0 0 16 16" fill="none"><use href="#ic-edit2"/></svg>SUGGEST AN EDIT (CAT-06)</div>
+              <div class="mrow"><svg viewBox="0 0 16 16" fill="none"><use href="#ic-share"/></svg>SHARE THIS GAME</div>
+              <div class="mrow danger"><svg viewBox="0 0 16 16" fill="none"><use href="#ic-flag"/></svg>REPORT (MOD-01)</div>
+            </div>
+          </div>
+        </div>
+        <div class="hint" style="text-align:left; margin-top:9px;"><b>IN-BETWEEN UI &mdash; THE &#8943; OVERFLOW MENU:</b> the header &#8943; opens this drawer &mdash; suggest a catalog edit (CAT-06) · share the game · report (MOD-01, → the `ReportSheet`). Present on every state's header.</div>
+      </div>
       <div class="caption">
         <h3>P2 &mdash; Owned <em>(the band becomes your inline-edit PlayStats)</em></h3>
         <p>Tapped from <b>your</b> collection: same card hero, but the adaptive band is now <b>`PlayStats`</b>
-        &mdash; hours (being edited, keyboard-ready) · complete% · status chips · owned-since · star rating ·
-        notes, all <b>editable inline</b> (COL-02..05; a pencil per field, the field opening in place). The
-        header carries the NOW-PLAYING tag (WTP-03). Below, <b>`CardSwitcher`</b> preview &mdash; your cards
-        for this game with their state tags (EQUIPPED · PRIVATE · ADOPTED) + DESIGN NEW (→ Styler); MANAGE
-        opens the full switcher (P4). <b>EDIT THIS CARD</b> (gold) opens the Styler on the equipped card;
-        viewing the card here <b>never edits the art</b> (§4.2).</p>
+        &mdash; hours (being edited, keyboard-ready) · complete% · status chips · owned-since · notes, all
+        <b>editable inline</b> (COL-02..05; a pencil per field, the field opening in place). <b>Rating is
+        de-emphasized + flagged PENDING (OQ-058)</b> per your note &mdash; it stays a per-*game* field, never
+        a card rating. The header carries the NOW-PLAYING tag (WTP-03) + the <b>&#8943; overflow</b>
+        (fragment). Below, <b>`CardSwitcher`</b> preview; MANAGE opens the full switcher (P4). <b>EDIT THIS
+        CARD</b> (gold) opens the Styler on the equipped card; viewing the card here <b>never edits the
+        art</b> (§4.2).</p>
       </div>
     </div>
 
@@ -534,7 +593,6 @@
                       <div class="cb-row"><span class="cl">COMPLETE</span><span class="cv">68%</span></div>
                       <div class="cb-row"><span class="cl">STATUS</span><span class="cv">PLAYING</span></div>
                       <div class="cb-row"><span class="cl">OWNED SINCE</span><span class="cv">2014</span></div>
-                      <div class="cb-row"><span class="cl">RATING</span><span class="cv">&#9733;&#9733;&#9733;&#9733;&#9734;</span></div>
                     </div>
                     <div class="cb-prov">
                       <span class="p1">DESIGNED BY MAVERICK</span>
@@ -591,7 +649,7 @@
               <div class="equip" style="justify-content:center;">
                 <span class="eq prem">FRAME &middot; <b>STEP GILT</b></span><span class="eq prem">FX &middot; <b>EMBER 70%</b></span><span class="eq prem">FIN &middot; <b>HOLO</b></span><span class="eq">PLATE &middot; <b>RIBBON</b></span>
               </div>
-              <div class="sec"><h3>MINE &amp; ADOPTED &mdash; 5</h3><a href="#">+ DESIGN NEW</a></div>
+              <div class="sec"><h3>MINE &amp; ADOPTED &mdash; 5</h3><a href="#">&#8645; SORT</a></div>
               <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:9px;">
                 <div class="swcard"><span class="state-tag published">PUBLISHED</span><div class="gcard cell-size fr-gilt fx-ember" style="width:100%; aspect-ratio:96/134; height:auto;"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div></div>
                 <div class="swcard"><span class="state-tag private">PRIVATE</span><div class="gcard cell-size fr-slate fx-ghost" style="width:100%; aspect-ratio:96/134; height:auto;"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div></div>
@@ -612,12 +670,22 @@
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
         </div>
       </div>
+      <div class="half-panel">
+        <div class="hp-row">
+          <div class="gcard pick-size fr-slate fx-ghost" style="width:64px; height:90px;"><span class="state-tag" style="position:static; display:none;"></span><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div>
+          <div class="hp-meta" style="flex:1;">
+            <div class="ctoast equip" style="width:100%; box-sizing:border-box;"><span class="ci">&#9670;</span><div class="ct"><span class="t1">EQUIPPED &mdash; YOUR PRIVATE FACE IS NOW LIVE</span><span class="t2">tapped a card in the switcher → it equips for Destiny &amp; shows everywhere (COL-06/CARD-07)</span></div></div>
+          </div>
+        </div>
+        <div class="hint" style="text-align:left; margin-top:9px;"><b>IN-BETWEEN UI &mdash; SWITCH → EQUIP:</b> tapping any card in the switcher equips it (the &#9670; EQUIPPED tag moves); long-press opens edit / duplicate / delete.</div>
+      </div>
       <div class="caption">
         <h3>P4 &mdash; The card switcher <em>(your customizations view &mdash; OQ-056 made real)</em></h3>
-        <p>MANAGE / DESIGN NEW lands here &mdash; <b>your cards for Destiny</b> (COL-06): the equipped card up
+        <p>MANAGE / DESIGN lands here &mdash; <b>your cards for Destiny</b> (COL-06): the equipped card up
         top with its <b>`EquipReadout`</b> (CARD-22 &mdash; what makes it), then a grid of every card you have
-        for this game with <b>state tags</b> (PUBLISHED · PRIVATE · DRAFT · ADOPTED-from-Riko/Vanta) + DESIGN
-        NEW. Tap = equip; long-press = edit / duplicate / delete. This is <b>OQ-056's customizations view</b>:
+        for this game with <b>state tags</b> (PUBLISHED · PRIVATE · DRAFT · ADOPTED-from-Riko/Vanta) + a
+        single <b>DESIGN NEW</b> tile (the duplicate header link removed per the note). Tap = equip
+        (fragment); long-press = edit / duplicate / delete. This is <b>OQ-056's customizations view</b>:
         adopted/downloaded faces live alongside your own; new designs flow in from the Styler as DRAFT →
         PRIVATE/PUBLISHED; <b>SAVE AS NEW</b> (in the editor) forks rather than overwrites; the cross-game
         library is <b>My Designs</b> on Profile.</p>
@@ -626,36 +694,42 @@
 
     <!-- ═══ P5 · Community gallery + adopt ═══ -->
     <div class="take">
-      <div class="artboard-label">P5 &middot; Community gallery + adopt (CARD-22 readout · atomic adopt)</div>
+      <div class="artboard-label">P5 &middot; Gallery grid &rarr; the inspect sheet (CardDetail · atomic adopt)</div>
       <div class="device" data-screen-label="Game page A · P5 — Gallery adopt">
         <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
             <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DESTINY &middot; CARDS</h2><span class="sh-sp"></span><button class="ccount" style="display:inline-flex; align-items:center; gap:4px; background:var(--gold); color:#3c2a09; border:none; padding:5px 8px; font:700 11px/1 var(--pk); box-shadow:0 2px 0 color-mix(in srgb, var(--gold) 45%, #000), inset 0 1px 0 rgba(255,255,255,.5);"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>27</button></div>
-            <div class="scroll">
-              <div class="hint" style="margin-top:2px;">THE COMMUNITY GALLERY (CARD-04) &mdash; <b>TAP A CARD</b> TO INSPECT ITS EQUIPPED READOUT, THEN ADOPT</div>
-              <div style="display:flex; justify-content:center; padding:8px 0 0;">
-                <div class="gcard hero-size fr-foil" style="width:148px; height:207px;"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div>
+            <div class="scroll dimmed">
+              <div class="hint" style="margin-top:2px;">THE COMMUNITY GALLERY (CARD-04) &mdash; 41 FACES &middot; <b>TAP ONE</b> TO INSPECT &amp; ADOPT</div>
+              <div class="sec"><h3>COMMUNITY CARDS &mdash; 41</h3><a href="#">SORT &rsaquo;</a></div>
+              <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:9px;">
+                <div class="gwrap" style="width:100%;"><div class="gcard cell-size fr-foil" style="width:100%; aspect-ratio:96/134; height:auto; outline:2px solid var(--scr-accent); outline-offset:1px;"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>RIKO</b></span><div class="gw-foot"><span class="adopt-chip">1 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="adopt-count">58&times;</span></div></div>
+                <div class="gwrap" style="width:100%;"><div class="gcard cell-size fr-teal fin-holo" style="width:100%; aspect-ratio:96/134; height:auto;"><div class="art art-hue2"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>VANTA</b></span><div class="gw-foot"><span class="adopt-chip free">FREE</span><span class="adopt-count">31&times;</span></div></div>
+                <div class="gwrap" style="width:100%;"><div class="gcard cell-size fr-gilt fx-ember" style="width:100%; aspect-ratio:96/134; height:auto;"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>MAVERICK</b></span><div class="gw-foot"><span class="adopt-chip">1 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="adopt-count">12&times;</span></div></div>
+                <div class="gwrap" style="width:100%;"><div class="gcard cell-size fr-slate fx-volt" style="width:100%; aspect-ratio:96/134; height:auto;"><div class="art art-hue3"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>NOVA</b></span><div class="gw-foot"><span class="adopt-chip">1 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="adopt-count">7&times;</span></div></div>
+                <div class="gwrap" style="width:100%;"><div class="gcard cell-size fr-scan" style="width:100%; aspect-ratio:96/134; height:auto;"><div class="art art-hue2"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>KAI</b></span><div class="gw-foot"><span class="adopt-chip free">FREE</span><span class="adopt-count">5&times;</span></div></div>
+                <div class="gwrap" style="width:100%;"><div class="gcard cell-size fr-foil" style="width:100%; aspect-ratio:96/134; height:auto;"><span class="foil-band"></span><div class="art art-hue3"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>ORI</b></span><div class="gw-foot"><span class="adopt-chip">1 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="adopt-count">3&times;</span></div></div>
+              </div>
+            </div>
+            <div class="scrim"></div>
+            <div class="sheet">
+              <div class="handle"></div>
+              <div class="sh-h">COMMUNITY CARD &mdash; <b style="color:var(--scr-text);">RIKO'S DESTINY</b><span class="x">&#10005;</span></div>
+              <div class="detail-card">
+                <div class="gcard pick-size fr-foil" style="width:120px; height:168px;"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div>
               </div>
               <div class="credit-line" style="justify-content:center;">DESIGNED BY <b>RIKO</b> &middot; ADOPTED <b>58&times;</b> (CARD-05)</div>
               <div class="equip" style="justify-content:center;">
                 <span class="eq prem">FRAME &middot; <b>ROSE FOIL</b></span><span class="eq prem">FX &middot; <b>EMBER</b></span><span class="eq prem">FIN &middot; <b>FOIL</b></span><span class="eq">PLATE &middot; <b>RIBBON</b></span><span class="eq">FONT &middot; <b>CHAKRA</b></span>
               </div>
-              <div class="band" style="margin-top:11px;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                  <div style="display:flex; flex-direction:column; gap:2px;"><span class="npl">ADOPT THIS FACE</span><span class="hint" style="margin:0; text-align:left;">THE WHOLE CARD, FOR DESTINY (ECON-04) &middot; YOU GET THE IMAGE, NOT THE LAYERS (CARD-15)</span></div>
-                  <span style="flex:1;"></span>
-                  <button class="btn gold mini">ADOPT &middot; 1 <svg width="10" height="10" viewBox="0 0 40 40" style="vertical-align:-1px;"><use href="#ic-pix"/></svg></button>
-                </div>
+              <div class="adoptbar">
+                <div class="ab-meta"><span class="npl">ADOPT &mdash; THE WHOLE CARD</span><span class="ab-have">FOR DESTINY (ECON-04) &middot; YOU GET THE IMAGE, NOT THE LAYERS (CARD-15)</span></div>
+                <span style="flex:1;"></span>
+                <button class="btn gold mini">ADOPT &middot; 1 <svg width="10" height="10" viewBox="0 0 40 40" style="vertical-align:-1px;"><use href="#ic-pix"/></svg></button>
               </div>
-              <div class="hint" style="text-align:left;">PREMIUM FACE = 1 PX (RIKO EARNS CLOUT, NOT CURRENCY &mdash; ECON-05) &middot; A NON-PREMIUM FACE ADOPTS <b>FREE</b> &middot; THERE IS <b>NO &ldquo;ADOPT JUST THE CANVAS&rdquo;</b> (SOC-11)</div>
-              <div class="sec"><h3>MORE COMMUNITY FACES &mdash; 41</h3><a href="#">SORT &rsaquo;</a></div>
-              <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:9px;">
-                <div class="gwrap" style="width:100%;"><div class="gcard cell-size fr-teal fin-holo" style="width:100%; aspect-ratio:96/134; height:auto;"><div class="art art-hue2"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>VANTA</b></span><div class="gw-foot"><span class="adopt-chip free">FREE</span><span class="adopt-count">31&times;</span></div></div>
-                <div class="gwrap" style="width:100%;"><div class="gcard cell-size fr-gilt fx-ember" style="width:100%; aspect-ratio:96/134; height:auto;"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>MAVERICK</b></span><div class="gw-foot"><span class="adopt-chip">1 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="adopt-count">12&times;</span></div></div>
-                <div class="gwrap" style="width:100%;"><div class="gcard cell-size fr-slate fx-volt" style="width:100%; aspect-ratio:96/134; height:auto;"><div class="art art-hue3"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>NOVA</b></span><div class="gw-foot"><span class="adopt-chip">1 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="adopt-count">7&times;</span></div></div>
-              </div>
+              <div class="hint" style="text-align:left;">PREMIUM = 1 PX (RIKO EARNS CLOUT, NOT CURRENCY &mdash; ECON-05) &middot; FREE for non-premium &middot; NO &ldquo;ADOPT JUST THE CANVAS&rdquo; (SOC-11)</div>
             </div>
           </div>
         </div>
@@ -667,15 +741,20 @@
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
         </div>
       </div>
+      <div class="half-panel">
+        <div class="ctoast"><span class="ci">&#10003;</span><div class="ct"><span class="t1">ADOPTED &mdash; RIKO'S CARD IS YOURS FOR DESTINY</span><span class="t2">1 PX spent &middot; it's in your switcher now (equip it any time) &middot; Riko earns +1 adoption (ECON-05)</span></div></div>
+        <div class="hint" style="text-align:left; margin-top:9px;"><b>IN-BETWEEN UI &mdash; ADOPT CONFIRM:</b> the result beat after ADOPT &mdash; a quiet gold toast; the card lands in your <b>`CardSwitcher`</b> (P4), the spend hits your ledger.</div>
+      </div>
       <div class="caption">
-        <h3>P5 &mdash; Community gallery + adopt <em>(inspect the readout, then adopt the whole card)</em></h3>
-        <p>Tapping a gallery face inspects it: the card large + <b>designer credit + adoption count</b>
-        (CARD-05) + the <b>`EquipReadout`</b> (CARD-22 &mdash; ROSE FOIL · EMBER · FOIL · RIBBON · CHAKRA: what
-        makes it, so you can decide) + the adopt action. <b>Adoption is atomic</b> (SOC-11): the whole card,
-        for this game (ECON-04), priced FREE or <b>1 PX</b> (the creator earns clout, ECON-05) &mdash; you
-        receive the flattened image, never the layers (CARD-15), and there's <b>no &ldquo;adopt just the
-        canvas&rdquo;</b>. The CurrencyCounter sits in the header (→ Wallet). The grid continues below with
-        sort.</p>
+        <h3>P5 &mdash; Gallery grid + the inspect sheet <em>(tap a face → a CardDetail drawer rises)</em></h3>
+        <p>Re-cut per the note: P5 now <b>leads with the gallery grid</b> (the 41 community faces, each with
+        its designer + adoption count + an adopt chip; the tapped one accent-outlined) and tapping a face
+        <b>raises a `CardDetail` bottom-sheet</b> &mdash; the same drawer grammar Add Game uses &mdash; with
+        the card large, the <b>`EquipReadout`</b> (CARD-22: ROSE FOIL · EMBER · FOIL · RIBBON · CHAKRA), and
+        the <b>adopt bar</b>. <b>Adoption is atomic</b> (SOC-11): the whole card, for this game (ECON-04), FREE
+        or <b>1 PX</b> (the creator earns clout, ECON-05) &mdash; you get the flattened image, never the
+        layers (CARD-15), <b>no &ldquo;adopt just the canvas.&rdquo;</b> The fragment shows the
+        <b>adopt-confirm</b> in-between beat.</p>
       </div>
     </div>
 
@@ -708,7 +787,7 @@
                   <div class="fc"><span class="fv" style="font-size:11px;">PLAYING</span><span class="fl">STATUS</span></div>
                   <div class="fc"><span class="fv" style="font-size:11px;">2014</span><span class="fl">OWNED SINCE</span></div>
                 </div>
-                <div class="privacy-note">&#128274; RIKO'S NOTES, RATING &amp; PLATFORMS STAY PRIVATE (COL-04/05) &mdash; ONLY HOURS · STATUS · OWNED-SINCE SHOW</div>
+                <div class="privacy-note"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" style="flex:0 0 auto;"><use href="#ic-lock"/></svg>RIKO'S NOTES &amp; PLATFORMS STAY PRIVATE (COL-04/05) &mdash; ONLY HOURS · STATUS · OWNED-SINCE SHOW</div>
                 <div class="band-actions">
                   <button class="btn gold mini">ADOPT RIKO'S CARD &middot; 1 <svg width="10" height="10" viewBox="0 0 40 40" style="vertical-align:-1px;"><use href="#ic-pix"/></svg></button>
                   <button class="btn sec mini">&#8646; COMPARE WITH MINE</button>
@@ -781,9 +860,9 @@
                 <div style="display:flex; align-items:center; gap:10px;">
                   <div style="display:flex; flex-direction:column; gap:2px;"><span class="npl">NOT OUT YET (DISC-01)</span><span class="hint" style="margin:0; text-align:left;">WE'LL PING YOU ON RELEASE DAY (NOTIF-01)</span></div>
                   <span style="flex:1;"></span>
-                  <button class="btn gold mini">&#128276; NOTIFY ME</button>
+                  <button class="btn gold mini"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-bell"/></svg>NOTIFY ME</button>
                 </div>
-                <div class="band-actions"><button class="btn sec mini">&#43; UP NEXT (WISHLIST)</button><button class="btn mini">RECOMMEND</button></div>
+                <div class="band-actions" style="align-items:center;"><button class="btn sec mini">&#43; UP NEXT (WISHLIST)</button><a class="tert dim" href="#" style="margin-left:2px; font-size:10px;">RECOMMEND</a></div>
               </div>
               <div class="sec"><h3>NO CARDS YET</h3></div>
               <div class="befirst">
