@@ -19,11 +19,6 @@
 - OQ-002: First-pass values for the economy levers — starting balance is 5 (ECON-02), but what are
   the login-bonus amount/cadence and milestone thresholds? (tunable later, but design needs a
   starting number) [behavior]
-- OQ-008: Card editor **element cap** — the actual maximum element count per card (server-configurable
-  via SYS-04, but design/perf need a starting number). (CARD-15) [behavior/tuning]
-  **RULED (owner, styler-track follow-up 2026-06-12): start at 30 elements** — server-configurable
-  stays (SYS-04); stage-3 design draws the layers panel + the at-cap state against 30. Spec encode
-  (CARD-15 starting value) = next triage.
 - OQ-009: **Vector-asset library scope** — how many/which starter SVG packs (shapes/letters/numbers/
   icons) ship at launch, free vs premium split. (CARD-02/17) [content]
 - OQ-010: **Effect & finish roster** — the launch set of animated effects and finishes, free vs
@@ -56,26 +51,6 @@
 - OQ-045: **Sticker placed-on-shell preview** (owner deferral, store track 2026-06-12) — §4.11's
   sticker-preview case is NOT drawn on the converged Store board; design it with the **Device editor
   pass** (DEV-01). [presentation]
-- OQ-048: **Effect-intensity scope** — the Styler's `IntensitySlider` (CARD-12's intensity/opacity)
-  is drawn for effects; does intensity apply to **finishes** too, and does the value persist in the
-  composition (CARD-15 JSON)? (styler track, 2026-06-12) [behavior]
-  **RULED (owner, 2026-06-12): effects only in v2** — finishes stay binary surface materials, no
-  second slider; the chosen intensity **persists in the composition** (CARD-15 JSON — the converged
-  board's "EFFECT · 70%" reconcile row is canonical). Spec encode (CARD-12 wording) = next triage.
-- OQ-049: **Save-private landing spot** — a Styler SAVE PRIVATE (CARD-04/14) leaves the card
-  un-equipped: does it surface only in the game's **card switcher** (COL-06), or also on a drafts
-  shelf? (styler track, 2026-06-12) [behavior]
-  **RULED (owner, 2026-06-12): both** — the game's card switcher (COL-06) **and** the My-designs
-  shelf (`GET /me/cards`: drafts · private · published, CARD-14); no new surface. Spec encode
-  (CARD-04/14 wording) = next triage.
-- OQ-051: **"Popular first adds" selection rule** — the empty-Collection suggestion rail + AUTH-06's
-  add-a-few-games step now have a contract shape (`GET /catalog/popular`, api-contract 0.17), but
-  *what ranks it* is unspecified: CAT-09 collections-count? recency-weighted? curated? And how many
-  items / does "SEE MORE" page it? (Collection page-audit, 2026-06-12) [behavior/tuning]
-- OQ-052: **Friend-profile SHARE semantics** — the converged Profile friend-view draws a SHARE tool
-  (profile-states board). Self-profile SHARE = the SOC-07 invite link, but sharing *someone else's*
-  profile has no spec backing (profile deep links are parked, §10). Cut the chip on friend-view, or
-  spec a share-a-friend's-profile behavior? (Profile page-audit, 2026-06-12) [behavior]
 
 ## Resolved
 - OQ-001 → **Multiple device models.** *(Superseded by OQ-042/decision 0017 — one handheld body; users own multiple **shells**, not models.)* A user can own several device models (via entitlements/store)
@@ -149,3 +124,8 @@
   BEVEL · premium HOLO PLATE); the card layer stack gains it and **TITLE rescopes to font + ink**
   (CARD-01/11); the store gains a Nameplates aisle (design-req 3.4); api was pre-synced (0.16).
   See decision [0018](decisions/0018-styler-formalization-nameplate.md). (2026-06-12)
+- OQ-008 → **Element cap starts at 30** (server-configurable stays, SYS-04); stage-3 draws the layers panel + at-cap state against 30. CARD-15. Decision [0019](decisions/0019-triage-element-cap-intensity-private-popular-share.md). (2026-06-13)
+- OQ-048 → **Intensity is the effect's alone, and it persists** — finishes stay binary (no second slider); the value lives in the composition JSON ("EFFECT · 70%"). CARD-12. Decision 0019. (2026-06-13)
+- OQ-049 → **Save-private surfaces in both** the game's card switcher (COL-06) and the My-designs shelf (`GET /me/cards`); no new surface. CARD-14. Decision 0019. (2026-06-13)
+- OQ-051 → **"Popular" = ranked by collections-count** (CAT-09, most-collected first), capped ~12, no paging — the rail is a nudge; Discover browses. `/catalog/popular`. Decision 0019. (2026-06-13)
+- OQ-052 → **Friend-view SHARE chip cut** — sharing is self-only (your invite link, SOC-07); others'-profile deep links stay parked (§10). PROF-05 / design-req 3.5. Decision 0019. (2026-06-13)
