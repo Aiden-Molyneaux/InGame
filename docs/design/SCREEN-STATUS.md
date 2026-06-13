@@ -9,11 +9,11 @@
 > **per-page subfolders** under [`mockups/`](mockups/) (file map: its README); the catalog
 > stays at the mockups root.
 
-**Last updated:** 2026-06-13 (canvas track — **Canvas converged** (print shop · `canvas-states.html`): C wins + undo/redo relocated + proof size-ladder; **the 0014 editor arc is complete**; OQ-007 + OQ-040 resolved design-side. Prior: spec-owner triage 0019 — OQ-008/048/049/051/052 resolved.)
+**Last updated:** 2026-06-13 (report track — **§4.16 Report promoted to its own converged board** (`report-states.html`, A `/drawer`; 3 targets × full matrix; MOD-01/02 · SOC-09 · SYS-10): board ✅, API ✅ (page-audited), **Design-spec ⬜ (lifecycle-cell formalization owed)**. Prior: canvas track — Canvas converged (print shop · `canvas-states.html`), the 0014 editor arc complete, OQ-007 + OQ-040 resolved; spec-owner triage 0019.)
 
 ## Up next (the queue)
 0. **🎉 The 0014 editor arc is COMPLETE** — Add Game → Styler → Canvas all converged. OQ-007 (breakout) + OQ-040 (first-print ritual) resolved design-side in the Canvas board.
-1. *Formalization batches owed (spec-owner):* the **Styler converge set** (design-spec §2.5 already landed 0.13 — the catalog component shells) + the **Canvas converge set** (design-spec §2.x + the editor's open-composition components: `CanvasStage` · `AssetShelf` · `ElementTray` · `LayerRack`/slips · `PrintRitual`); + the **Canvas API page-audit** (writes already in 0.16/0.18 — confirm no gap).
+1. *Formalization batches owed (spec-owner):* the **Styler converge set** (design-spec §2.5 already landed 0.13 — the catalog component shells) + the **Canvas converge set** (design-spec §2.x + the editor's open-composition components: `CanvasStage` · `AssetShelf` · `ElementTray` · `LayerRack`/slips · `PrintRitual`); + the **Canvas API page-audit** (writes already in 0.16/0.18 — confirm no gap); + the **Report converge set** (design-spec §1.5/§1.6: the `ReportSheet` lifecycle cells — in-flight · filed-confirmation · post-block-confirmation · offline-gated — formalization owed; its API is already page-audited).
 2. *Coverage-driven after that* (design-process): **Discover** (surfaces the segmented control) and **Settings** (rows · toggles · destructive confirm) are the named gap-closers; **Device editor** carries the OQ-045 debt. *(Inbox for next triage: OQ-038 offline-cache-scope · the OQ-002/009/010/011 economy+content tuning set.)*
 
 ## Legend
@@ -46,7 +46,7 @@
 | 4.13 | Welcome & Auth | ⬜ | — | — | — | — | 🔶 | Logged-out root (AUTH) |
 | 4.14 | Onboarding | ⬜ | — | — | — | — | 🔶 | NOTIF-04 pre-prompt close |
 | 4.15 | Settings | 🔜 queued (#5) | — | — | — | — | 🔶 | Rows · toggles · destructive confirm |
-| 4.16 | Report (modal) | ✅ pattern ruled | `report-sheet/report-sheet-drafts.html` (**A `/drawer` won**; B/C history) + normalized in `add-game-states.html` P3b | `report-sheet/report-sheet-drafts.html` (**A** `/drawer`) + `add-game/add-game-states.html` P3b (the normalized form) | — (rides each host screen's board) | ✅ (`ReportSheet` in §1.5, 0.12 + catalog v0.4) | ✅ (MOD-01 `details`, 0.14) | Entry + **user contexts drawn** (block handoff incl., SOC-09); per-surface integration rides each screen's pass |
+| 4.16 | Report (modal) | ✅ converged | `report-sheet/report-states.html` (converged board, A `/drawer`; `report-sheet-drafts.html` A/B/C + `add-game-states.html` P3b kept for history) | `report-sheet/report-states.html` | ✅ (3 targets × full lifecycle matrix) | ⬜ (formalization owed — §1.5/§1.6 carry the static `ReportSheet` + Block strip, **not** the in-flight · filed-confirm · post-block-confirm · offline-gated cells this board adds) | ✅ (page-audited — `POST /reports` {card\|game\|user + reason + `details`} incl. duplicate + `/me/blocks` SOC-09) | **Promoted to its own board** (9 devices): card · catalog (+duplicate) · user **+ Block** (SOC-09) across launch · picker · required-details (MOD-01, mod-only/outside MOD-07) · dormant-submit · **in-flight · filed-confirm (MOD-02 soft-hide, no thresholds) · post-block confirm · offline writes-gate (SYS-10) · error→Toast** (§1.8). All drawn affordances contract-backed (no OQ logged) |
 
 ## How to update (the protocol)
 At the end of **every draft pass**: update your screen's row (state · mockup version · states board ·
