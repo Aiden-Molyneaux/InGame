@@ -1,0 +1,94 @@
+# Game page (4.2) — design-track kickoff (the editor-arc keystone)
+
+The **adaptive Game page** — the shared catalog hub that adapts to how you arrived (neutral · owned ·
+friend-view), hosts the **card-object/flip**, the **community gallery + adopt**, and the **card
+switcher** (the OQ-056 "customizations" view), and is the screen the Styler/Canvas **launch from and
+return to**. Owner-initiated 2026-06-13 ("start drafting Game page"); 3 distinct treatments → owner
+gate in this session → converge. Design-side only — §4.2 behavior is already specified; flag, don't edit.
+
+## Read first (done — grounding)
+- `ui-design-requirements.md` §4.2 (the adaptive states · shared vs owned vs friend-view · the flip
+  lives here · viewing never edits art) + §1.1 art-direction split.
+- `product-spec.md` §5.6 **CARD-01** (the card front/back: back = auto-stats + provenance, designer +
+  adoption count) · **CARD-22** (the **equipped readout** — base · effect(+intensity) · finish · frame ·
+  nameplate · font — display metadata, NOT the composition; CARD-15 still flattens to one image) ·
+  CARD-04/07/18/21 · COL-03/06 (selected card + switcher) · ECON-03/04 (adopt: free / 1 PX) ·
+  **SOC-11** (friend-view detail + **opt-in** compare + **atomic adopt** — no "adopt just the canvas") ·
+  CAT-02/05/09 (contributor credit · presence stats) · WTP-02/03 · MOD-01.
+- `decisions/0014` — the junction component **doubles as the Game-page card switcher (COL-06) —
+  designed once**; the Styler receives *(game, optional preselected base)* from here.
+- `open-questions.md` **OQ-056** — the customizations view = the Game-page card switcher (per-game:
+  my cards + adopted/downloaded + design-new → Styler) + the global My Designs shelf (`/me/cards`);
+  the card stays the atomic save/equip/publish/adopt unit; SAVE AS NEW + reusable style presets are
+  the editor's, not this page's.
+- `api-contract.md`: `GET /catalog/games/:id` (shared page source) · `GET /me/collection/:entryId`
+  (owned inline-edit fields) · `GET /me/collection/:entryId/cards` (the switcher: mine + adopted +
+  create-link) · `GET /games/:gameId/cards` (the gallery; every card carries the **CARD-22 `equipped`**
+  readout) · `POST /cards/:id/adopt` · `GET /users/:id/collection` (friend-view + SOC-11 detail).
+- Sibling boards for grammar: `collection-states.html` (device shell + the shelf/stat grammar + the
+  card-flip if any) · `add-game-states.html` (the `CardFan`, `CardDetail`, `EquipReadout`, the report
+  drawer) · `styler-states.html` / `canvas-states.html` (the editor entry/return seams; the GameCard
+  size ladder) · `store-states.html` (the adopt PriceChip + `ic-pix`).
+
+## The three models (genuinely distinct ORGANIZATION; §4.2 behavior is fixed)
+The page is dense (a shared page + your owned-state + a friend-view + a gallery + a switcher). The
+divergence is *how you organize that*:
+- **A "Card-led scroll"** — the **card object is the hero** (tap-flips front↔back); one prioritized
+  vertical scroll of all modules beneath it; the **adaptive state changes the band right under the
+  card** (owned → your inline-edit stats; friend → their readout + ADOPT; neutral → ADD TO
+  COLLECTION). Card-centric, everything-visible — the InGame-native pole. `game-page-draft-a-cardled.html`
+- **B "Tabbed dossier"** — a top **section switcher** (a chip-row; aligns with the forthcoming
+  `SegmentedKeycap` — flag it, don't depend on its ruling) chunks the density into **PLAY** (your
+  card + stats + edit) · **CARDS** (gallery + switcher + design-new) · **ABOUT** (canonical facts +
+  presence + friends-who-own + suggest-edit/report). The conventional-legible pole; the state sets
+  the default tab. `game-page-draft-b-dossier.html`
+- **C "Pinned card + drawer depth"** — the **card stays pinned** at the top with its primary action
+  always present (equip/edit · adopt · add); the body is a lean summary; the **heavy content** (the
+  full community gallery · the switcher · friends-who-own · the flip-back provenance) opens as
+  **bottom-sheet drawers** (the app's one drawer grammar). Card always in view, depth on demand — the
+  sheet-family pole. `game-page-draft-c-pinned.html`
+
+## Locked component names (FORM is each draft's; names fixed)
+`CardHero` (the flippable card-object: front = art+title, back = auto-stats + provenance) · `PlayStats`
+(the owned-state inline-edit block: hours/%/status/owned-since/rating/notes) · `CardSwitcher` (the
+customizations gallery — my cards + adopted, COL-06/OQ-056) · `CommunityGallery` (the adopt gallery) ·
+`EquipReadout` (CARD-22 — reuse the Add Game form) · `FriendContext` (SOC-11) · `CompareStrip` (opt-in
+compare) · `PresenceStats` (CAT-09 in-N-collections · friends-have-it). Reuse from the catalog:
+`GameCard` (all sizes), the **sheet/drawer** family, `StatTile`, `PriceChip`/adopt chip, `ReportSheet`,
+the nav band + device shell. A genuinely needed extra: build it, flag at the gate.
+
+## Panel contract (each draft renders P1–P7; the rest deferred WITH a caption note)
+P1 **Neutral (not-owned)** — the shared catalog page (facts + contributor credit + `PresenceStats` +
+`CommunityGallery` + ADD TO COLLECTION / Up Next + design-a-card) — THE model thesis · P2 **Owned
+state** — `CardHero` + `PlayStats` inline-edit + Now Playing + share + the switcher entry ·
+P3 **The card flip** — front (art+title) ↔ back (auto-stats + provenance: designer + adoption count,
+CARD-01) · P4 **The card switcher / customizations view** (OQ-056 + COL-06) — your cards for this game
+(draft · private · published · **adopted** · equipped states) + DESIGN NEW (→ Styler) + the SAVE-AS-NEW
+note + adopted/downloaded cards · P5 **`CommunityGallery` + adopt** — community cards, each with its
+`EquipReadout` (CARD-22) + designer credit + adoption count + ADOPT (free / 1 PX) · P6 **Friend-view**
+(SOC-11) — their card + `EquipReadout` + `FriendContext` (hours/status/owned-since, privacy-gated) +
+ADOPT (atomic) + the opt-in **COMPARE** affordance + the **don't-own-it** variant · P7 **Upcoming →
+NOTIFY ME** (DISC-01/NOTIF-01) + **no-cards-yet (be-first)** — the cold-start/upcoming states.
+Deferred to converge: soft-hidden/reported (MOD-02/08/09) · loading skeleton · offline.
+
+## Hard rules (the law — carried from prior tracks)
+- Compose from the §1.5 catalog + the locked names; tokens verbatim (Teal shell + Midnight); standalone
+  HTML; Google Fonts via the `media="print" onload` pattern; built-in SVG; `ic-pix` from
+  `store-states.html` for PX. Sample data: **Destiny (210 hrs)** the working game (the gilt · ember 70% ·
+  holo · ribbon card); **Maverick = self · Riko / Vanta = friends**; adoption/presence numbers
+  caption-marked illustrative (OQ-002/011).
+- **HTML only — no PNG artifacts.** Verify each draft via headless Edge, read it, walk every panel,
+  iterate — then **DELETE every screenshot before the turn ends**.
+- Behavior questions → APPEND one-liners to `open-questions.md` (the only shared doc). Do **not** edit
+  product-spec / api-contract / design-spec / catalog / other tracks' files / SCREEN-STATUS rows other
+  than **4.2**. `git pull --rebase` before EVERY push (parallel sessions are live).
+
+## Process
+1. This brief → commit (`docs: game-page track brief`) → push; SCREEN-STATUS 4.2 → in-pass.
+2. Per draft: verify headless (delete shots) · append a README row · commit (`design: Game page
+   draft A (<model>) — P1-P7 (game-page track)` + Co-Authored-By) · `git pull --rebase` · push.
+3. **Owner gate in THIS session:** model summaries + judgment calls (esp. how the adaptive states +
+   the card switcher/OQ-056 read) — the owner opens the HTML directly; no gate PNGs. Append the
+   ruling verbatim+dated here.
+4. Converge per the ruling → `game-page/game-page-states.html` (full matrix incl. the deferred
+   states) → SCREEN-STATUS (row + UP NEXT) → STOP. Behavior finds → the inbox.
