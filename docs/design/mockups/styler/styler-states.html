@@ -254,6 +254,10 @@
   /* ── the Styler's named pieces — CONVERGED carousel forms ── */
   .schips { display: flex; justify-content: center; gap: 6px; padding: 9px 0 0; flex-wrap: wrap; }
   .schips .chip { padding: 6px 7px; font-size: 9px; letter-spacing: .8px; font-weight: 700; }
+  /* the persistent CANVAS door — a chip in the row but ORANGE (a posture switch, not an attribute
+     section); always present so EDIT ART is one tap from anywhere in the Styler (owner, 2026-06-13) */
+  .schips .chip.canvas { background: var(--scr-accent); color: var(--scr-accent-ink); margin-left: 6px;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-accent) 45%, #000), inset 0 1px 0 rgba(255,255,255,.4); }
   .sdots { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 8px 0 0; }
   .sdots .fdot { width: 5px; height: 5px; border-radius: 50%; background: var(--scr-grip); }
   .sdots .fdot.on { background: var(--scr-accent); box-shadow: 0 0 5px 1px rgba(255,159,67,.55); }
@@ -535,13 +539,13 @@
                   <div class="plate pl-destiny">Destiny</div>
                 </div>
               </div>
-              <div style="display:flex; justify-content:center; padding:7px 0 0;"><span class="canvas-door">&#10530; <b>EDIT ART</b> &mdash; THE CANVAS (STAGE-3 STUB)</span></div>
               <div class="schips">
                 <span class="chip">FRAME</span>
                 <span class="chip active">EFFECT<span class="chip-pip"></span></span>
                 <span class="chip">FINISH</span>
                 <span class="chip">PLATE</span>
                 <span class="chip">TITLE</span>
+                <span class="chip canvas">&#10530; CANVAS</span>
               </div>
               <div class="sdots"><span class="chev">&lsaquo;</span><span class="fdot"></span><span class="fdot on"></span><span class="fdot"></span><span class="fdot"></span><span class="fdot"></span><span class="chev">&rsaquo;</span><span class="swipe-lbl">SWIPE SECTIONS</span></div>
               <div class="carousel push" style="margin-bottom:4px;">
@@ -582,13 +586,15 @@
         </div>
       </div>
       <div class="caption">
-        <h3>P2 &mdash; The editing surface <em>(five sections &mdash; the ruling absorbed for free)</em></h3>
+        <h3>P2 &mdash; The editing surface <em>(five sections + the always-on Canvas door)</em></h3>
         <p>The carousel as ruled: hero fixed, <b>AttributeSection pages sliding beneath</b> (EFFECT leaving,
-        FINISH arriving &mdash; drawn mid-swipe), <b>SectionChips now five</b>: FRAME &middot; EFFECT &middot;
-        FINISH &middot; <b>PLATE</b> &middot; TITLE (the P8 absorption mock, made real &mdash; one more page,
-        chip, and dot). Browsing is editing; no apply step. Outcomes ride the pinned bar: <b>KEEP</b> gold +
-        step (F-02), SAVE PRIVATE quiet; the <b>&#10530; EDIT ART door</b> hands the composition to the
-        Canvas posture (stage 3, undesigned).</p>
+        FINISH arriving &mdash; drawn mid-swipe), <b>SectionChips</b>: FRAME &middot; EFFECT &middot; FINISH
+        &middot; <b>PLATE</b> &middot; TITLE. Browsing is editing; no apply step. Outcomes ride the pinned
+        bar: <b>KEEP</b> gold + step (F-02), SAVE PRIVATE quiet. <b>The &#10530; CANVAS chip (orange) is the
+        sixth, always-present chip</b> (owner, 2026-06-13) &mdash; a posture switch, not an attribute
+        section, so it's coloured the action-orange and sits in the row on every editing panel: <b>EDIT ART
+        is one tap from anywhere</b>, handing the composition to the Canvas (the breakout posture &mdash; now
+        converged, `canvas/canvas-states.html`).</p>
       </div>
     </div>
 
@@ -621,6 +627,7 @@
                 <span class="chip">FINISH</span>
                 <span class="chip">PLATE</span>
                 <span class="chip">TITLE</span>
+                <span class="chip canvas">&#10530; CANVAS</span>
               </div>
               <div class="sdots"><span class="chev">&lsaquo;</span><span class="fdot on"></span><span class="fdot"></span><span class="fdot"></span><span class="fdot"></span><span class="fdot"></span><span class="chev">&rsaquo;</span></div>
               <div class="push" style="margin-bottom:4px;">
@@ -695,6 +702,7 @@
                 <span class="chip">FINISH</span>
                 <span class="chip">PLATE</span>
                 <span class="chip">TITLE</span>
+                <span class="chip canvas">&#10530; CANVAS</span>
               </div>
               <div class="sdots"><span class="chev">&lsaquo;</span><span class="fdot"></span><span class="fdot on"></span><span class="fdot"></span><span class="fdot"></span><span class="fdot"></span><span class="chev">&rsaquo;</span></div>
               <div class="push" style="margin-bottom:4px;">
@@ -770,6 +778,7 @@
                 <span class="chip active">FINISH<span class="chip-pip"></span></span>
                 <span class="chip">PLATE</span>
                 <span class="chip">TITLE</span>
+                <span class="chip canvas">&#10530; CANVAS</span>
               </div>
               <div class="sdots"><span class="chev">&lsaquo;</span><span class="fdot"></span><span class="fdot"></span><span class="fdot on"></span><span class="fdot"></span><span class="fdot"></span><span class="chev">&rsaquo;</span></div>
               <div class="push" style="margin-bottom:4px;">
@@ -844,6 +853,7 @@
                 <span class="chip">FINISH</span>
                 <span class="chip active">PLATE<span class="chip-pip"></span></span>
                 <span class="chip">TITLE</span>
+                <span class="chip canvas">&#10530; CANVAS</span>
               </div>
               <div class="sdots"><span class="chev">&lsaquo;</span><span class="fdot"></span><span class="fdot"></span><span class="fdot"></span><span class="fdot on"></span><span class="fdot"></span><span class="chev">&rsaquo;</span></div>
               <div class="push" style="margin-bottom:4px;">
@@ -1002,7 +1012,7 @@
               </div>
               <div class="hint">ONE GOLD PULSE &mdash; <b>THE LIGHT BEAT</b> (0015): NO RITUAL FOR STYLER KEEPS; THE FULL &ldquo;FIRST PRINT&rdquo; REVEAL IS CANVAS-TIER (OQ-040)</div>
               <div class="push" style="display:flex; flex-direction:column; align-items:center; gap:10px; padding-bottom:10px;">
-                <span class="canvas-door">&#10530; <b>EDIT ART</b> &mdash; REOPEN IN THE CANVAS (STAGE-3 STUB &middot; OQ-007)</span>
+                <span class="canvas-door">&#10530; <b>EDIT ART</b> &mdash; REOPEN IN THE CANVAS (THE BREAKOUT POSTURE &middot; OQ-007 RESOLVED)</span>
                 <button class="btn">DONE &mdash; BACK TO THE GAME</button>
               </div>
             </div>
@@ -1220,6 +1230,7 @@
                 <span class="chip">FINISH</span>
                 <span class="chip">PLATE</span>
                 <span class="chip">TITLE</span>
+                <span class="chip canvas">&#10530; CANVAS</span>
               </div>
               <div class="sdots"><span class="chev">&lsaquo;</span><span class="fdot on"></span><span class="fdot"></span><span class="fdot"></span><span class="fdot"></span><span class="fdot"></span><span class="chev">&rsaquo;</span></div>
               <div class="push" style="margin-bottom:4px;">
