@@ -64,6 +64,22 @@
 - OQ-045: **Sticker placed-on-shell preview** (owner deferral, store track 2026-06-12) — §4.11's
   sticker-preview case is NOT drawn on the converged Store board; design it with the **Device editor
   pass** (DEV-01). [presentation]
+- OQ-053: **Upcoming "NOTIFY ME" has no backing endpoint.** All three Discover drafts (§3.2, the
+  Upcoming marquee/rail — also Game page 4.2) draw a per-game **NOTIFY ME** affordance for unreleased
+  titles (DISC-01 → NOTIF-01), but the api-contract has no per-game release-notify **subscription**
+  endpoint (set/unset) nor a NOTIF pref type for it. Needs a contract endpoint at the Discover /
+  Game-page converge page-audit. (Discover drafts, P3) [behavior]
+- OQ-054: **`GET /me/queue` read-shape for the Up Next source/status tags.** Every draft tags queue
+  rows — gold **WISHLIST** (unowned, COL-02) vs **REC'D BY @kai** (a friend rec, SOC-05) vs
+  on-shelf/in-collection — so each item must expose its **`source`** (collection · discovery ·
+  friend-rec) and, for friend-recs, the **recommender identity + optional note** (`POST
+  /recommendations {toUserId, gameId, note}` carries the note; the queue read-back isn't enumerated).
+  `POST /me/queue` takes `{gameId, source}`, but `GET /me/queue` only documents "owned vs unowned."
+  (Discover drafts, P1/P2) [behavior]
+- OQ-055: **`GET /discover/trending-cards` item shape** — the DISC-04 showcase draws each entry as a
+  `RankChip` + the custom card + **designer credit** (CAT-05) + an **AdoptCount** (CARD-05); confirm
+  the endpoint returns `{ rank, card, game, designer, adoptionCount }` (a page-audit confirm at the
+  Discover converge — likely already intended, just unenumerated). (Discover drafts, P3/P8) [behavior]
 
 ## Resolved
 - OQ-001 → **Multiple device models.** *(Superseded by OQ-042/decision 0017 — one handheld body; users own multiple **shells**, not models.)* A user can own several device models (via entitlements/store)
