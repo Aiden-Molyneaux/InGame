@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InGame · Canvas — CONVERGED board (print shop · gate ruling applied · full matrix)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" /></noscript>
+<style>
+  :root {
+    --plastic: #2bb6b0; --plastic-hi: #3ec9c2; --plastic-lo: #1f9a94; --silk: #0d524e;
+    --accent: #ff3d77; --gold: #ffd23f; --cream: #f5f1e4; --navy: #1d2a4a;
+    --bezel: #14122a;
+    --pk: 'Chakra Petch', sans-serif; --shell: 'Paytone One', sans-serif;
+    --scr-bg: #232045; --scr-well: #2c2950; --scr-tools: #1a1733; --scr-accent: #ff9f43;
+    --scr-accent-ink: #2a1430; --scr-head: #f5f1e4; --scr-text: #ffffff; --scr-dim: #9b97c0;
+    --scr-soft: #c9c5e6; --scr-panel: rgba(255,255,255,.065); --scr-hairline: rgba(255,255,255,.08);
+    --scr-grip: #565178; --scr-chip: #f5f1e4; --scr-head-shadow: rgba(0,0,0,.45);
+    --scr-btn: var(--scr-accent); --scr-btn-ink: var(--scr-accent-ink); --alert: #e3414e;
+    --shell-ink: #08433f; --void: #0d0b1e;
+    --bench: #161226; --bench-hi: #1d1830;
+  }
+  html, body { margin: 0; min-height: 100%; background: #efece6; font-family: var(--pk); }
+  .canvas { max-width: 1348px; margin: 0 auto; padding: 40px 24px 60px; }
+  .canvas-head h1 { font: 700 17px/1.2 var(--pk); letter-spacing: 2.5px; color: #2a2633; margin: 0 0 6px; text-transform: uppercase; }
+  .canvas-head p { font: 500 12.5px/1.5 var(--pk); color: #79748a; margin: 0 0 32px; max-width: 668px; }
+  .canvas-head p b { color: #2a2633; }
+  .stage { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+  .take { width: 404px; }
+  .artboard-label { font: 700 11px/1 var(--pk); letter-spacing: 1.5px; color: #8d889c; margin: 0 0 10px 2px; text-transform: uppercase; }
+  .caption { margin-top: 14px; background: #fff; border-radius: 12px; padding: 13px 15px; box-shadow: 0 2px 8px rgba(42,38,51,.08); }
+  .caption h3 { margin: 0 0 5px; font: 700 12.5px var(--pk); letter-spacing: .8px; color: #2a2633; text-transform: uppercase; }
+  .caption h3 em { font-style: normal; color: var(--accent); }
+  .caption p { margin: 0 0 4px; font: 500 11.8px/1.5 var(--pk); color: #5d5870; }
+  .caption p b { color: #2a2633; }
+  .stage-label { font: 700 13px/1 var(--pk); letter-spacing: 2px; color: #2a2633; text-transform: uppercase; margin: 36px 2px 14px; }
+  .stage-label small { display: block; margin-top: 5px; font: 500 11px/1.4 var(--pk); letter-spacing: .3px; color: #79748a; text-transform: none; }
+
+  /* ── the workshop ── */
+  .shop { position: relative; width: 404px; height: 884px; border-radius: 26px; overflow: hidden; box-sizing: border-box;
+    background:
+      repeating-linear-gradient(35deg, rgba(255,255,255,.016) 0 2px, transparent 2px 10px),
+      linear-gradient(180deg, var(--bench-hi) 0%, var(--bench) 46%, #120e20 100%);
+    border: 1px solid rgba(255,255,255,.06);
+    box-shadow: inset 0 1.5px 0 rgba(255,255,255,.05), 0 18px 40px rgba(10,8,24,.5);
+    display: flex; flex-direction: column; }
+  .shell-swing { position: absolute; left: -210px; top: 90px; width: 300px; height: 660px; opacity: .5; pointer-events: none;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%);
+    border-radius: 30px; transform: rotate(-14deg) skewY(-4deg);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.3), 14px 0 34px rgba(0,0,0,.4); }
+  .shell-swing .hinge { position: absolute; right: -7px; top: 16%; bottom: 16%; width: 7px; background: var(--bezel); border-radius: 3px; }
+  .yield-streak { position: absolute; width: 2.5px; border-radius: 2px; pointer-events: none;
+    background: linear-gradient(90deg, transparent, rgba(43,182,176,.5)); transform: rotate(90deg); }
+
+  .topbar { flex: 0 0 auto; display: flex; align-items: center; gap: 9px; padding: 12px 13px 9px; z-index: 6; }
+  .dkey { width: 30px; height: 30px; border: none; background: var(--scr-chip); color: var(--navy);
+    font: 700 13px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .dkey.dim { opacity: .45; box-shadow: 0 1px 0 color-mix(in srgb, var(--scr-chip) 55%, #000); }
+  .hud-title { display: flex; flex-direction: column; gap: 2px; }
+  .hud-title .t { font: 700 15px/1 var(--pk); letter-spacing: 2.5px; color: var(--scr-head); text-shadow: 0 2px 0 rgba(0,0,0,.5); }
+  .hud-title .s { font: 700 8px/1 var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
+  .topbar .spacer { flex: 1 1 auto; }
+
+  .btn { display: inline-flex; align-items: center; gap: 6px; border: none; width: fit-content;
+    background: var(--scr-btn); color: var(--scr-btn-ink); padding: 9px 13px;
+    font: 700 11px var(--pk); letter-spacing: 1px; white-space: nowrap;
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--scr-btn) 45%, #000), inset 0 1px 0 rgba(255,255,255,.4); }
+  .btn.gold { background: var(--gold); color: #3c2a09; box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
+    filter: drop-shadow(0 3px 0 color-mix(in srgb, var(--gold) 45%, #000));
+    clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+      100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
+      calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
+  .btn.sec { background: var(--cream); color: var(--navy);
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .btn.alt { box-shadow: inset 0 1px 0 rgba(255,255,255,.45);
+    filter: drop-shadow(0 3px 0 color-mix(in srgb, var(--scr-accent) 45%, #000));
+    clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+      100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
+      calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
+  .btn.mini { padding: 6px 8px; font-size: 9px; }
+  .btn.disabled { opacity: .4; box-shadow: 0 1px 0 color-mix(in srgb, var(--scr-btn) 45%, #000); filter: none; }
+  .tert { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
+  .tert.dim { color: var(--scr-dim); }
+  .hint { margin: 8px 1px 0; font: 600 9px/1.6 var(--pk); letter-spacing: .5px; color: var(--scr-dim); text-align: center; }
+  .hint b { color: var(--scr-soft); }
+  .npl { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-accent); }
+  .hero-sub { font: 600 11px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .stat-chip { display: inline-flex; align-items: center; gap: 5px; font: 700 8.5px/1 var(--pk); letter-spacing: 1px;
+    color: var(--scr-dim); background: rgba(20,17,40,.88); border: 1px solid var(--scr-hairline); padding: 5px 7px; white-space: nowrap; }
+  .stat-chip b { color: var(--scr-soft); }
+
+  /* ── the press bed ── */
+  .bedzone { flex: 1 1 auto; min-height: 0; position: relative; }
+  .bed { position: absolute; left: 50%; top: 46%; transform: translate(-50%,-50%); padding: 14px;
+    background: rgba(10,8,22,.55); border: 1px solid var(--scr-hairline); }
+  .bed .corner { position: absolute; width: 7px; height: 7px; border: 1.5px solid var(--scr-grip); }
+  .bed .corner.tl { left: 3px; top: 3px; border-right: none; border-bottom: none; }
+  .bed .corner.tr { right: 3px; top: 3px; border-left: none; border-bottom: none; }
+  .bed .corner.bl { left: 3px; bottom: 3px; border-right: none; border-top: none; }
+  .bed .corner.br { right: 3px; bottom: 3px; border-left: none; border-top: none; }
+  .card-bounds { position: relative; width: 238px; height: 332px; }
+  .card-bounds .safe { position: absolute; left: 8%; right: 8%; top: 6%; bottom: 12%; border: 1px dashed rgba(255,159,67,.35); pointer-events: none; }
+  .ly { position: absolute; }
+  .ly svg { display: block; width: 100%; height: 100%; }
+  .ly-backdrop { inset: 0; }
+  .ly-orbit { left: 19%; top: 26%; width: 62%; height: 44.5%; }
+  .ly-diamond { left: 23%; top: 21.5%; width: 54%; height: 53%; }
+  .ly-facet { left: 33%; top: 30.5%; width: 34%; height: 33.5%; }
+  .ly-core { left: 45.5%; top: 41.5%; width: 9%; height: 6.5%; }
+  .ly-sats { inset: 0; }
+  .ly.ghosted { opacity: .28; }
+  .sel-ring { position: absolute; border: 1.5px solid var(--scr-accent); box-shadow: 0 0 10px rgba(255,159,67,.35); pointer-events: none; }
+  .sel-ring .h { position: absolute; width: 9px; height: 9px; background: var(--cream); border: 1.5px solid var(--scr-accent); box-sizing: border-box; }
+  .sel-ring .h.tl { left: -5px; top: -5px; } .sel-ring .h.tr { right: -5px; top: -5px; }
+  .sel-ring .h.bl { left: -5px; bottom: -5px; } .sel-ring .h.br { right: -5px; bottom: -5px; }
+  .guide-v { position: absolute; width: 1px; background: var(--accent); opacity: .8; box-shadow: 0 0 5px rgba(255,61,119,.6); pointer-events: none; }
+  .numpop { position: absolute; z-index: 8; display: grid; grid-template-columns: auto auto; gap: 5px 8px; padding: 9px 10px;
+    background: rgba(18,15,36,.97); border: 1px solid var(--scr-hairline); box-shadow: 0 8px 22px rgba(0,0,0,.55); }
+  .numpop .k { font: 700 8px/1.6 var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .numpop .v { font: 700 9.5px/1.4 var(--pk); color: var(--scr-text); background: var(--scr-panel);
+    border: 1px solid var(--scr-hairline); padding: 2px 6px; min-width: 44px; text-align: right; }
+
+  /* ── CHANGE 1: the editbar — undo/redo (+ scoped reset) docked just above the Ops dashboard ── */
+  .editbar { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 0 13px 7px; }
+  .editbar.dimmed { opacity: .4; }
+  .editbar .reset { margin-right: auto; font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); text-decoration: none; }
+  .ek { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; }
+  .ek .kl { font: 700 7px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+
+  /* ── the slip rack (the Ops dashboard) ── */
+  .rack { flex: 0 0 auto; padding: 8px 12px 12px; z-index: 5; border-top: 1px solid var(--scr-hairline); }
+  .rack .rk-h { display: flex; align-items: center; gap: 8px; padding-bottom: 6px;
+    font: 700 8.5px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .cap-meter { margin-left: auto; font: 700 8px/1 var(--pk); letter-spacing: .5px; color: var(--gold);
+    border: 1px solid color-mix(in srgb, var(--gold) 50%, transparent); background: rgba(255,210,63,.08); padding: 3px 5px; }
+  .cap-meter.full { color: #ff8a93; border-color: color-mix(in srgb, var(--alert) 55%, transparent); background: rgba(227,65,78,.1); }
+  .slips { display: flex; align-items: flex-end; gap: 5px; padding: 6px 2px 2px; }
+  .slip { position: relative; flex: 0 0 auto; width: 52px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .slip .pane { position: relative; width: 50px; height: 70px; background: rgba(255,255,255,.045);
+    border: 1px solid var(--scr-hairline); overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.06); }
+  .slip .pane svg { position: absolute; inset: 16%; width: 68%; height: 68%; }
+  .slip .pane .full { inset: 0; width: 100%; height: 100%; position: absolute; }
+  .slip .nm { font: 700 6.5px/1.1 var(--pk); letter-spacing: .5px; color: var(--scr-soft); text-align: center; }
+  .slip .bdg { position: absolute; top: 2px; right: 2px; font: 700 6.5px/1 var(--pk); color: var(--scr-dim);
+    background: rgba(10,8,22,.8); border: 1px solid var(--scr-hairline); padding: 1.5px 3px; z-index: 2; }
+  .slip.r1 { transform: rotate(-2deg); } .slip.r2 { transform: rotate(1.5deg); } .slip.r3 { transform: rotate(-1deg); }
+  .slip.pulled { transform: translateY(-10px); }
+  .slip.pulled .pane { border: 1.5px solid var(--scr-accent); box-shadow: 0 8px 16px rgba(0,0,0,.5), 0 0 10px rgba(255,159,67,.3); }
+  .slip.pulled .spip { position: absolute; top: -4px; right: 0; width: 7px; height: 7px; border-radius: 50%; z-index: 3;
+    background: var(--accent); box-shadow: 0 0 6px 1.5px rgba(255,61,119,.8); }
+  .slip.hiddenly { opacity: .42; }
+  .slip-ops { display: flex; gap: 5px; margin-top: 7px; flex-wrap: wrap; }
+  .slip-ops .op { font: 700 7.5px/1 var(--pk); letter-spacing: .5px; color: var(--scr-soft); border: 1px solid var(--scr-hairline);
+    background: rgba(20,17,40,.8); padding: 4.5px 6px; }
+  .benchrow { display: flex; align-items: center; gap: 7px; }
+  .benchrow .spacer { flex: 1 1 auto; }
+
+  /* ── the sheet family ── */
+  .scrim { position: absolute; inset: 0; z-index: 8; background: rgba(8,6,20,.55); }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 9; background: var(--scr-tools);
+    border-top: 1px solid var(--scr-hairline); box-shadow: 0 -12px 26px rgba(0,0,0,.55); padding: 7px 13px 12px; }
+  .sheet .handle { width: 38px; height: 4px; background: var(--scr-grip); margin: 2px auto 8px; }
+  .sheet .sh-h { display: flex; align-items: center; gap: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--scr-hairline);
+    font: 700 8.5px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .sheet .sh-h b { color: var(--scr-text); letter-spacing: 1px; }
+  .sheet .sh-h .meta { margin-left: auto; font: 600 8px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .cat-row { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+  .cat { position: relative; background: var(--scr-chip); color: var(--navy); border: none; padding: 5.5px 8px;
+    font: 700 8.5px/1 var(--pk); letter-spacing: 1px;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .cat.active { transform: translateY(2px); box-shadow: 0 0 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 2px 3px rgba(0,0,0,.22); }
+  .cat.active .cat-pip { position: absolute; top: -2.5px; right: -2.5px; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 6px 1.5px rgba(255,61,119,.8); }
+  .glyphs { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; }
+  .gcell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    background: var(--scr-panel); border: 1px solid var(--scr-hairline); }
+  .gcell svg { width: 17px; height: 17px; fill: var(--scr-soft); }
+  .gcell.alpha { font: 700 12px/1 var(--pk); color: var(--scr-soft); }
+  .base-row { display: flex; gap: 6px; align-items: center; margin-top: 8px; }
+  .base-sw { width: 26px; height: 26px; border: 1px solid var(--scr-hairline); box-sizing: border-box; position: relative; }
+  .base-sw.sel { border: 1.5px solid var(--scr-accent); }
+  .base-sw.sel::after { content: ""; position: absolute; top: -2.5px; right: -2.5px; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 6px 1.5px rgba(255,61,119,.8); }
+  .islider { display: flex; align-items: center; gap: 9px; margin: 8px 1px 0; }
+  .islider .is-lbl { font: 700 8px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); flex: 0 0 62px; }
+  .islider .is-track { position: relative; flex: 1 1 auto; height: 10px; background: var(--scr-panel); border: 1px solid var(--scr-hairline); }
+  .islider .is-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--scr-accent); opacity: .85; }
+  .islider .is-thumb { position: absolute; top: 50%; width: 20px; height: 20px; transform: translate(-50%,-50%);
+    background: var(--cream); box-shadow: 0 2px 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .islider .is-val { flex: 0 0 auto; font: 700 9px var(--pk); color: var(--scr-soft); letter-spacing: .5px;
+    border: 1px solid var(--scr-hairline); padding: 3px 5px; }
+  .ctl-row { display: flex; align-items: center; gap: 7px; margin-top: 8px; flex-wrap: wrap; }
+  .ctl-lbl { font: 700 8px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); flex: 0 0 62px; }
+  .swatches { display: flex; gap: 5px; }
+  .csw { width: 22px; height: 22px; border: 1px solid rgba(255,255,255,.2); box-sizing: border-box; position: relative; }
+  .csw.sel { border: 1.5px solid var(--scr-accent); }
+  .csw.sel::after { content: ""; position: absolute; top: -2.5px; right: -2.5px; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 5px 1.5px rgba(255,61,119,.8); }
+  .csw.eyedrop { display: flex; align-items: center; justify-content: center; background: var(--scr-panel); }
+  .tog-row { display: inline-flex; gap: 5px; }
+  .tog { font: 700 8px/1 var(--pk); letter-spacing: 1px; color: var(--scr-soft); border: 1px solid var(--scr-hairline);
+    background: var(--scr-panel); padding: 5px 7px; }
+  .tog.on { border: 1.5px solid var(--scr-accent); color: var(--scr-text); background: rgba(255,159,67,.08); padding: 4.5px 6.5px; }
+  .chk { display: flex; align-items: center; gap: 8px; padding: 6.5px 2px; border-bottom: 1px solid var(--scr-hairline);
+    font: 600 10px var(--pk); letter-spacing: .5px; color: var(--scr-soft); }
+  .chk .ok { color: #7fe0c3; font-weight: 700; }
+  .chk .meta { margin-left: auto; font: 600 8px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+
+  /* ── the true card (proof / publish) ── */
+  .gcard { position: relative; border-radius: 0; box-sizing: border-box; overflow: hidden;
+    filter: drop-shadow(0 10px 18px rgba(0,0,0,.55));
+    clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
+      100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
+      calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
+  .gcard .art { position: absolute; inset: 11px; overflow: hidden;
+    clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+      100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .gcard .art svg { width: 100%; height: 100%; display: block; }
+  .gcard .plate { position: absolute; left: 16px; right: 16px; bottom: 5px; padding: 7px 4px 6px;
+    text-align: center; font: 700 13px/1.15 var(--pk); letter-spacing: .5px; text-transform: uppercase; z-index: 2;
+    clip-path: polygon(6% 0, 94% 0, 100% 50%, 94% 100%, 6% 100%, 0 50%); }
+  .fr-gilt { background: linear-gradient(160deg, #f0d57a, #b8901f);
+    box-shadow: inset 0 0 0 3px rgba(255,240,190,.55), inset 0 0 0 6px rgba(120,82,12,.5); }
+  .pl-destiny { background: #f0cd6e; color: #3c2a09; }
+  .fx-ember::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: screen;
+    background: radial-gradient(circle at 50% 88%, rgba(255,122,40,.75) 0%, rgba(255,61,40,.3) 38%, transparent 62%),
+      radial-gradient(circle at 24% 64%, rgba(255,180,60,.5) 0%, transparent 18%),
+      radial-gradient(circle at 76% 56%, rgba(255,150,50,.45) 0%, transparent 14%); }
+  .fin-holo::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: screen;
+    background: linear-gradient(115deg, transparent 26%, rgba(255,90,90,.3) 36%, rgba(255,220,90,.32) 44%,
+      rgba(90,255,160,.3) 52%, rgba(90,170,255,.32) 60%, rgba(200,90,255,.3) 68%, transparent 78%); }
+
+  /* ── CHANGE 2: the proof size-ladder — GameCard at its set sizes (CARD-07/15) ── */
+  .proof-sizes { flex: 0 0 auto; padding: 9px 13px 12px; border-top: 1px solid var(--scr-hairline); background: rgba(10,8,22,.4); }
+  .proof-sizes .ps-h { font: 700 8.5px var(--pk); letter-spacing: 2px; color: var(--scr-dim); padding-bottom: 10px; }
+  .proof-sizes .ps-h b { color: var(--scr-soft); }
+  .ps-row { display: flex; align-items: flex-end; justify-content: center; gap: 20px; }
+  .ps-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .ps-item .ps-lbl { font: 700 7.5px var(--pk); letter-spacing: 1px; color: var(--scr-soft); }
+  .ps-item .ps-lbl b { color: var(--scr-dim); font-weight: 600; }
+  /* small true-card renders (single-step C5; thin gilt; ribbon plate inherited) */
+  .gcard.pc-grid { width: 96px; height: 134px; }
+  .gcard.pc-grid .art { inset: 5px; }
+  .gcard.pc-grid .plate { left: 8px; right: 8px; bottom: 2.5px; padding: 3.5px 2px 3px; font-size: 7.5px; }
+  .gcard.pc-mini { width: 64px; height: 89px; }
+  .gcard.pc-mini .art { inset: 3.5px; }
+  .gcard.pc-mini .plate { left: 5.5px; right: 5.5px; bottom: 1.5px; padding: 2.5px 1px 2px; font-size: 5px; }
+  .gcard.pc-thumb { width: 44px; height: 62px; }
+  .gcard.pc-thumb .art { inset: 2.5px; }
+  .gcard.pc-thumb .plate { left: 4px; right: 4px; bottom: 1px; padding: 1.5px 1px 1px; font-size: 3.4px; }
+  .gcard.pc-grid, .gcard.pc-mini, .gcard.pc-thumb { filter: drop-shadow(0 3px 7px rgba(0,0,0,.5));
+    clip-path: polygon(0 4px, 4px 4px, 4px 0, 100% 0,
+      100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%, 0 100%); }
+  .gcard.pc-grid .art, .gcard.pc-mini .art, .gcard.pc-thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  .fr-gilt-sm { background: linear-gradient(160deg, #f0d57a, #b8901f); }
+
+  /* ── the ritual ── */
+  .print-line { position: absolute; left: -6%; right: -6%; height: 3px; z-index: 4;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent); box-shadow: 0 0 14px rgba(255,210,63,.8); }
+  .print-veil { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; background: rgba(13,11,30,.82); }
+  .replay-ghost { position: absolute; border: 1.5px dashed rgba(255,159,67,.5); pointer-events: none; }
+  .replay-arrow { position: absolute; font: 700 12px var(--pk); color: var(--scr-accent); opacity: .8; }
+  .bloom-stage::before { content: ""; position: absolute; left: 50%; top: 44%; width: 420px; height: 420px;
+    transform: translate(-50%,-50%); background: radial-gradient(circle, rgba(255,210,63,.22) 0%, transparent 60%); pointer-events: none; z-index: 1; }
+  .ok-strip { display: flex; align-items: center; gap: 9px; padding: 9px 11px;
+    background: rgba(255,210,63,.09); border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent); }
+  .ok-strip .ok-ic { flex: 0 0 auto; color: var(--gold); font: 700 14px/1 var(--pk); }
+  .ok-strip .ok-tx { display: flex; flex-direction: column; gap: 2px; }
+  .ok-strip .ok-t { font: 700 10.5px var(--pk); letter-spacing: 1px; color: var(--gold); }
+  .ok-strip .ok-s { font: 600 8.5px/1.5 var(--pk); letter-spacing: .5px; color: var(--scr-soft); }
+
+  /* ── lifecycle (the §1.6 family) ── */
+  .sk-bar { height: 9px; background: var(--scr-panel); }
+  .sk-block { background: var(--scr-panel); }
+  .sk-card { width: 200px; height: 280px; background: var(--scr-panel);
+    clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
+      100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
+      calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
+  .err-wrap { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 9px; padding: 60px 18px 0; }
+  .err-card { position: relative; width: 96px; height: 134px; background: var(--scr-panel); margin-bottom: 8px;
+    clip-path: polygon(0 6px, 3px 6px, 3px 3px, 6px 3px, 6px 0, 100% 0,
+      100% calc(100% - 6px), calc(100% - 3px) calc(100% - 6px), calc(100% - 3px) calc(100% - 3px),
+      calc(100% - 6px) calc(100% - 3px), calc(100% - 6px) 100%, 0 100%); }
+  .err-card::before { content: ""; position: absolute; inset: 6px; border: 2px dashed var(--scr-grip); opacity: .8; }
+  .err-card .bang { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font: 700 34px/1 var(--pk); color: var(--scr-accent); }
+  .err-eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .err-title { font: 700 17px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
+  .err-sub { font: 500 10.5px/1.55 var(--pk); color: var(--scr-soft); max-width: 250px; }
+  .offline-strip { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; margin: 0 13px 4px; padding: 7px 11px;
+    background: var(--scr-panel); border: 1px solid var(--scr-hairline); font: 700 8.5px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .offline-strip svg { width: 13px; height: 13px; flex: 0 0 auto; } .offline-strip svg path { stroke: var(--scr-dim); }
+  .offline-strip .sync { margin-left: auto; font-weight: 600; letter-spacing: .5px; color: var(--scr-grip); }
+
+  .half-panel { margin-top: 14px; background: var(--bench); border: 5px solid var(--bezel); border-radius: 8px; padding: 13px 14px; position: relative; overflow: hidden; }
+  .half-panel .hp-row { display: flex; gap: 13px; align-items: center; }
+  .half-panel .hp-meta { display: flex; flex-direction: column; gap: 6px; min-width: 0; align-items: flex-start; }
+  .dimmed { opacity: .45; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="g-dst" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2156"/><stop offset="1" stop-color="#14102e"/></linearGradient>
+    <linearGradient id="g-dst2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#58e0d8"/><stop offset="1" stop-color="#2ba8a0"/></linearGradient>
+    <symbol id="ly-backdrop" viewBox="0 0 63 88" preserveAspectRatio="none"><rect width="63" height="88" fill="url(#g-dst)"/></symbol>
+    <symbol id="ly-orbit" viewBox="0 0 39 39"><circle cx="19.5" cy="19.5" r="17.8" fill="none" stroke="#d9a93f" stroke-width="1.4" opacity=".55"/></symbol>
+    <symbol id="ly-diamond" viewBox="0 0 34 46"><path d="M17 1 L33 23 L17 45 L1 23 Z" fill="url(#g-dst2)" stroke="#e8c364" stroke-width="2" stroke-linejoin="round"/></symbol>
+    <symbol id="ly-facet" viewBox="0 0 22 29"><path d="M11 1 L21 14.5 L11 28 L1 14.5 Z" fill="rgba(255,255,255,.2)"/></symbol>
+    <symbol id="ly-core" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4.4" fill="#f4f9f8"/></symbol>
+    <symbol id="ly-sats" viewBox="0 0 63 88">
+      <circle cx="31.5" cy="13" r="1.9" fill="#e8c364"/><circle cx="51" cy="38" r="1.9" fill="#e8c364"/>
+      <circle cx="31.5" cy="63" r="1.9" fill="#e8c364"/><circle cx="12" cy="38" r="1.9" fill="#e8c364"/>
+    </symbol>
+    <symbol id="art-destiny" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-dst)"/>
+      <circle cx="31.5" cy="38" r="17" fill="none" stroke="#d9a93f" stroke-width="1.2" opacity=".5"/>
+      <path d="M31.5 16 L48 38 L31.5 60 L15 38 Z" fill="url(#g-dst2)" stroke="#e8c364" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M31.5 24 L42.5 38 L31.5 52 L20.5 38 Z" fill="rgba(255,255,255,.18)"/>
+      <circle cx="31.5" cy="38" r="4" fill="#f4f9f8"/>
+      <circle cx="31.5" cy="13" r="1.8" fill="#e8c364"/><circle cx="51" cy="38" r="1.8" fill="#e8c364"/>
+      <circle cx="31.5" cy="63" r="1.8" fill="#e8c364"/><circle cx="12" cy="38" r="1.8" fill="#e8c364"/>
+    </symbol>
+    <symbol id="gl-star" viewBox="0 0 20 20"><path d="M10 1 L12.4 7 L19 7.6 L14 12 L15.6 19 L10 15.2 L4.4 19 L6 12 L1 7.6 L7.6 7 Z"/></symbol>
+    <symbol id="gl-bolt" viewBox="0 0 20 20"><path d="M12 1 L4.5 11 L9 11 L8 19 L15.5 9 L11 9 Z"/></symbol>
+    <symbol id="gl-crown" viewBox="0 0 20 20"><path d="M2.5 16 L2.5 6 L7 10 L10 3 L13 10 L17.5 6 L17.5 16 Z"/></symbol>
+    <symbol id="gl-heart" viewBox="0 0 20 20"><path d="M10 18 C3 12 1 8 3.5 5 C5.5 2.8 9 3.5 10 6 C11 3.5 14.5 2.8 16.5 5 C19 8 17 12 10 18 Z"/></symbol>
+    <symbol id="gl-diamond" viewBox="0 0 20 20"><path d="M10 1 L17.5 10 L10 19 L2.5 10 Z"/></symbol>
+    <symbol id="gl-ring" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2 a8 8 0 1 0 .02 0 Z M10 5.6 a4.4 4.4 0 1 1 -.02 0 Z"/></symbol>
+    <symbol id="gl-moon" viewBox="0 0 20 20"><path d="M12.5 2 A8.5 8.5 0 1 0 18 13.5 A7 7 0 0 1 12.5 2 Z"/></symbol>
+    <symbol id="gl-invader" viewBox="0 0 20 20"><path d="M5 4 L7 4 L7 6 L13 6 L13 4 L15 4 L15 6 L17 6 L17 12 L15 12 L15 14 L13 14 L13 16 L11 16 L11 14 L9 14 L9 16 L7 16 L7 14 L5 14 L5 12 L3 12 L3 6 L5 6 Z M7 8 L7 10 L9 10 L9 8 Z M11 8 L11 10 L13 10 L13 8 Z" fill-rule="evenodd"/></symbol>
+  </defs>
+</svg>
+
+<div class="canvas">
+  <div class="canvas-head">
+    <h1>Canvas &mdash; CONVERGED board (print shop &middot; the gate ruling applied)</h1>
+    <p>The Card editor's breakout posture, converged per the owner gate (2026-06-13): <b>&ldquo;Let's go with
+    C.&rdquo;</b> Draft C's <b>print-shop</b> grammar carries &mdash; the shell swings open onto the workshop,
+    the composition lies on a <b>press bed</b>, layers are <b>physical slips</b> you pull to edit in
+    isolation, tools ride the app's one <b>bottom-sheet</b> grammar, <b>PROOF</b> = the diegetic
+    hold-to-preview, <b>PRESS</b> = run-the-press publish (OQ-007 + OQ-040 resolved here). Two ruled changes
+    are baked in: <b>(1)</b> Undo/Redo (+ scoped reset) moved to a persistent <b>editbar docked just above
+    the slip rack</b> &mdash; thumb reach; <b>(2)</b> <b>PROOF now renders the card at its set sizes</b>
+    (GRID &middot; MINI &middot; THUMB) so legibility into the <b>thumbnail safe-area</b> is verifiable at
+    proof time (CARD-07/15). <b>Full matrix:</b> P1&ndash;P8 + the lifecycle cells P9&ndash;P11 (skeleton
+    &middot; load-error+RETRY &middot; offline: editing + PROOF from cache, PRESS writes-gated). Element cap
+    <b>30</b> (OQ-008). <i>Values illustrative (OQ-002/OQ-011).</i></p>
+  </div>
+
+  <div class="stage-label">Breakout &amp; the surface <small>P1 to the press &middot; P2 slips + isolation (undo/redo relocated) &middot; P3 ADD</small></div>
+  <div class="stage">
+
+    <!-- ═══ P1 · Entry ═══ -->
+    <div class="take">
+      <div class="artboard-label">P1 &middot; Entry &mdash; the card goes to the press</div>
+      <div class="shop" data-screen-label="Canvas states · P1 — To the press">
+        <div class="shell-swing"><span class="hinge"></span></div>
+        <span class="yield-streak" style="left:96px; top:300px; height:60px;"></span>
+        <span class="yield-streak" style="left:120px; top:420px; height:44px;"></span>
+        <div class="topbar">
+          <button class="dkey">&#9666;</button>
+          <div class="hud-title"><span class="t">CANVAS</span><span class="s">DESTINY &middot; ON THE PRESS</span></div>
+          <span class="spacer"></span>
+        </div>
+        <div class="bedzone">
+          <div class="bed">
+            <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+            <div class="card-bounds">
+              <span class="ly ly-backdrop"><svg viewBox="0 0 63 88" preserveAspectRatio="none"><use href="#ly-backdrop"/></svg></span>
+              <span class="ly ly-orbit"><svg viewBox="0 0 39 39"><use href="#ly-orbit"/></svg></span>
+              <span class="ly ly-diamond"><svg viewBox="0 0 34 46"><use href="#ly-diamond"/></svg></span>
+              <span class="ly ly-facet"><svg viewBox="0 0 22 29"><use href="#ly-facet"/></svg></span>
+              <span class="ly ly-core"><svg viewBox="0 0 10 10"><use href="#ly-core"/></svg></span>
+              <span class="ly ly-sats"><svg viewBox="0 0 63 88"><use href="#ly-sats"/></svg></span>
+            </div>
+          </div>
+          <div class="hint" style="position:absolute; left:10px; right:10px; bottom:6px; margin:0;">THE SHELL SWINGS OPEN &mdash; <b>THE BENCH SLIDES IN</b>; THE COMPOSITION LIES ON THE PRESS BED, BARE (BASE + VECTORS)</div>
+        </div>
+        <div class="editbar dimmed">
+          <a class="reset" href="#">RESET SLIP</a>
+          <div class="ek"><button class="dkey">&#8634;</button><span class="kl">UNDO</span></div>
+          <div class="ek"><button class="dkey">&#8635;</button><span class="kl">REDO</span></div>
+        </div>
+        <div class="rack">
+          <div class="rk-h">THE SLIPS &mdash; ITS LAYERS<span class="cap-meter">9 / 30</span></div>
+          <div class="slips" style="opacity:.6;">
+            <div class="slip r1"><div class="pane"><svg class="full" viewBox="0 0 63 88" preserveAspectRatio="none"><use href="#ly-backdrop"/></svg></div><span class="nm">BACKDROP</span></div>
+            <div class="slip r2"><div class="pane"><svg viewBox="0 0 39 39"><use href="#ly-orbit"/></svg></div><span class="nm">ORBIT</span></div>
+            <div class="slip r3"><div class="pane"><svg viewBox="0 0 34 46"><use href="#ly-diamond"/></svg></div><span class="nm">DIAMOND</span></div>
+            <div class="slip r1"><div class="pane"><svg viewBox="0 0 22 29"><use href="#ly-facet"/></svg></div><span class="nm">FACET</span></div>
+            <div class="slip r2"><div class="pane"><svg viewBox="0 0 10 10" style="inset:34%; width:32%; height:32%;"><use href="#ly-core"/></svg></div><span class="nm">CORE</span></div>
+            <div class="slip r3"><div class="pane"><svg class="full" viewBox="0 0 63 88"><use href="#ly-sats"/></svg></div><span class="nm">SATS</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P1 &mdash; Entry / breakout <em>(OQ-007 resolved: the diegetic yield)</em></h3>
+        <p>EDIT ART crosses the posture seam (0014): the device <b>opens like a cabinet</b> (drawn mid-swing
+        on its hinge) onto the workshop behind the arcade &mdash; a grained bench, the <b>press bed</b> with
+        registration corners, the composition lying on it <b>bare</b> (base + the six vector layers; closed
+        attributes stay un-editable here, shown only on PROOF). The slip rack fans in at the foot; the
+        editbar (undo/redo) waits dim &mdash; nothing to undo yet. Reduce-motion: a fade (CARD-16).</p>
+      </div>
+    </div>
+
+    <!-- ═══ P2 · The surface ═══ -->
+    <div class="take">
+      <div class="artboard-label">P2 &middot; The surface &mdash; pull a slip, edit in isolation</div>
+      <div class="shop" data-screen-label="Canvas states · P2 — Slip isolation">
+        <div class="topbar">
+          <button class="dkey">&#9666;</button>
+          <div class="hud-title"><span class="t">CANVAS</span><span class="s">DESTINY &middot; DRAFT &middot; AUTOSAVED 12S</span></div>
+          <span class="spacer"></span>
+        </div>
+        <div class="bedzone">
+          <div class="bed">
+            <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+            <div class="card-bounds">
+              <span class="safe"></span>
+              <span class="ly ly-backdrop ghosted"><svg viewBox="0 0 63 88" preserveAspectRatio="none"><use href="#ly-backdrop"/></svg></span>
+              <span class="ly ly-orbit ghosted"><svg viewBox="0 0 39 39"><use href="#ly-orbit"/></svg></span>
+              <span class="ly ly-diamond"><svg viewBox="0 0 34 46"><use href="#ly-diamond"/></svg></span>
+              <span class="ly ly-facet ghosted"><svg viewBox="0 0 22 29"><use href="#ly-facet"/></svg></span>
+              <span class="ly ly-core ghosted"><svg viewBox="0 0 10 10"><use href="#ly-core"/></svg></span>
+              <span class="ly ly-sats ghosted"><svg viewBox="0 0 63 88"><use href="#ly-sats"/></svg></span>
+              <span class="sel-ring" style="left:21%; top:19%; width:58%; height:57%;">
+                <span class="h tl"></span><span class="h tr"></span><span class="h bl"></span><span class="h br"></span>
+              </span>
+            </div>
+          </div>
+          <span class="stat-chip" style="position:absolute; right:10px; top:8px;">ISOLATION &middot; <b>ON</b></span>
+        </div>
+        <div class="editbar">
+          <a class="reset" href="#">RESET SLIP</a>
+          <div class="ek"><button class="dkey">&#8634;</button><span class="kl">UNDO</span></div>
+          <div class="ek"><button class="dkey dim">&#8635;</button><span class="kl">REDO</span></div>
+        </div>
+        <div class="rack">
+          <div class="rk-h">THE SLIPS &mdash; PULL ONE TO WORK IT<span class="cap-meter">9 / 30</span></div>
+          <div class="slips">
+            <div class="slip r1"><div class="pane"><svg class="full" viewBox="0 0 63 88" preserveAspectRatio="none"><use href="#ly-backdrop"/></svg></div><span class="nm">BACKDROP</span></div>
+            <div class="slip r2"><span class="bdg">&#128274;</span><div class="pane"><svg viewBox="0 0 39 39"><use href="#ly-orbit"/></svg></div><span class="nm">ORBIT</span></div>
+            <div class="slip pulled"><span class="spip"></span><div class="pane"><svg viewBox="0 0 34 46"><use href="#ly-diamond"/></svg></div><span class="nm">DIAMOND</span></div>
+            <div class="slip r1"><div class="pane"><svg viewBox="0 0 22 29"><use href="#ly-facet"/></svg></div><span class="nm">FACET</span></div>
+            <div class="slip r2"><div class="pane"><svg viewBox="0 0 10 10" style="inset:34%; width:32%; height:32%;"><use href="#ly-core"/></svg></div><span class="nm">CORE</span></div>
+            <div class="slip hiddenly r3"><span class="bdg">HID</span><div class="pane"><svg class="full" viewBox="0 0 63 88"><use href="#ly-sats"/></svg></div><span class="nm">SATS</span></div>
+          </div>
+          <div class="benchrow" style="margin-top:9px;">
+            <button class="btn sec mini">+ ADD A SLIP</button>
+            <button class="btn sec mini">EDIT THIS SLIP</button>
+            <button class="btn sec mini">&#128065; PROOF</button>
+            <span class="spacer"></span>
+            <button class="btn gold mini">PRESS &#9656;</button>
+          </div>
+          <div class="hint" style="margin-top:7px;">HOLD <b>&#128065; PROOF</b> FOR THE TRUE PRINT (CARD-15) &middot; TAP <b>PRESS &#9656;</b> TO FINISH UP &amp; PUBLISH</div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P2 &mdash; The editing surface <em>(layers-first; undo/redo at the thumb)</em></h3>
+        <p>The thesis: the DIAMOND slip is <b>pulled</b> from the rack and the bed shows that layer <b>in
+        isolation</b> &mdash; everything else ghosts to 28%, so you always know what you're touching (CARD-08
+        solved spatially). <b>Change 1 applied:</b> Undo/Redo (+ a scoped <b>RESET SLIP</b>, CARD-09) now sit
+        in the <b>editbar docked directly above the rack</b> &mdash; the most-used controls in thumb reach,
+        off the far top corner. The bench row keeps ADD A SLIP &middot; EDIT THIS SLIP &middot; the persistent
+        <b>&#128065; PROOF</b> key &middot; the gold <b>PRESS &#9656;</b>.</p>
+      </div>
+    </div>
+
+    <!-- ═══ P3 · ADD sheet ═══ -->
+    <div class="take">
+      <div class="artboard-label">P3 &middot; ADD (bucket ①) &mdash; the sheet grammar</div>
+      <div class="shop" data-screen-label="Canvas states · P3 — Add sheet">
+        <div class="topbar">
+          <button class="dkey">&#9666;</button>
+          <div class="hud-title"><span class="t">CANVAS</span><span class="s">DESTINY &middot; DRAFT</span></div>
+          <span class="spacer"></span>
+        </div>
+        <div class="bedzone dimmed">
+          <div class="bed" style="top:40%;">
+            <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+            <div class="card-bounds" style="width:190px; height:265px;">
+              <span class="ly ly-backdrop"><svg viewBox="0 0 63 88" preserveAspectRatio="none"><use href="#ly-backdrop"/></svg></span>
+              <span class="ly ly-orbit"><svg viewBox="0 0 39 39"><use href="#ly-orbit"/></svg></span>
+              <span class="ly ly-diamond"><svg viewBox="0 0 34 46"><use href="#ly-diamond"/></svg></span>
+              <span class="ly ly-facet"><svg viewBox="0 0 22 29"><use href="#ly-facet"/></svg></span>
+              <span class="ly ly-core"><svg viewBox="0 0 10 10"><use href="#ly-core"/></svg></span>
+              <span class="ly ly-sats"><svg viewBox="0 0 63 88"><use href="#ly-sats"/></svg></span>
+            </div>
+          </div>
+        </div>
+        <div class="scrim" style="background:rgba(8,6,20,.35);"></div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <div class="sh-h">ADD A SLIP &mdash; <b>ALL FREE</b><span class="meta">CARD-02 &middot; 0017 &middot; SEARCH &#9906;</span></div>
+          <div class="cat-row">
+            <button class="cat active"><span class="cat-pip"></span>SHAPES</button>
+            <button class="cat">LETTERS</button>
+            <button class="cat">NUMBERS</button>
+            <button class="cat">ICONS</button>
+            <button class="cat">BASE</button>
+            <button class="cat">&#9733;</button>
+          </div>
+          <div class="glyphs">
+            <div class="gcell"><svg viewBox="0 0 20 20"><use href="#gl-diamond"/></svg></div>
+            <div class="gcell"><svg viewBox="0 0 20 20"><use href="#gl-star"/></svg></div>
+            <div class="gcell"><svg viewBox="0 0 20 20"><use href="#gl-ring"/></svg></div>
+            <div class="gcell"><svg viewBox="0 0 20 20"><use href="#gl-bolt"/></svg></div>
+            <div class="gcell"><svg viewBox="0 0 20 20"><use href="#gl-moon"/></svg></div>
+            <div class="gcell"><svg viewBox="0 0 20 20"><use href="#gl-crown"/></svg></div>
+            <div class="gcell"><svg viewBox="0 0 20 20"><use href="#gl-heart"/></svg></div>
+            <div class="gcell"><svg viewBox="0 0 20 20"><use href="#gl-invader"/></svg></div>
+            <div class="gcell alpha">A</div>
+            <div class="gcell alpha">7</div>
+            <div class="gcell alpha" style="font-size:9px; letter-spacing:1px; color:var(--scr-dim);">+184</div>
+            <div class="gcell alpha" style="color:var(--scr-accent);">&#9733;</div>
+            <div class="gcell alpha" style="opacity:0;"></div><div class="gcell alpha" style="opacity:0;"></div><div class="gcell alpha" style="opacity:0;"></div><div class="gcell alpha" style="opacity:0;"></div>
+          </div>
+          <div class="base-row">
+            <span class="stat-chip" style="background:none; border:none; padding:0;">BASE</span>
+            <span class="base-sw sel" style="background:linear-gradient(180deg,#2a2156,#14102e);"></span>
+            <span class="base-sw" style="background:linear-gradient(180deg,#0f2e2b,#0a1f1d);"></span>
+            <span class="base-sw" style="background:#1c1a2e;"></span>
+            <span class="base-sw" style="background:conic-gradient(from 180deg, #ff3d77, #ff9f43, #ffd23f, #58e0d8, #ff3d77);"></span>
+            <span class="hint" style="margin:0 0 0 auto; text-align:right;">A NEW SLIP JOINS THE RACK, PULLED</span>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P3 &mdash; ADD <em>(the app's one drawer, on the bench)</em></h3>
+        <p>ADD A SLIP raises the <b>bottom sheet</b> &mdash; the same pulled-drawer grammar as Collection's
+        sort/filter and the Styler's drawers (handle and all), so the workshop never invents a second
+        summons. Categories, the free glyph roster (CARD-02/17 &mdash; every vector free, 0017), search +
+        &#9733; favourites, the BASE solid/gradient row. A picked glyph lands on the bed <b>as a new pulled
+        slip</b> and counts against the 30 (OQ-008). No uploads, no AI &mdash; stated by omission.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="stage-label">Element editing &amp; structure <small>P4 the EDIT sheet (CARD-10/11) &middot; P5 the rack in full + the cap &middot; P6 PROOF + the size ladder</small></div>
+  <div class="stage">
+
+    <!-- ═══ P4 · EDIT sheet ═══ -->
+    <div class="take">
+      <div class="artboard-label">P4 &middot; EDIT (bucket ②) &mdash; the slip's sheet</div>
+      <div class="shop" data-screen-label="Canvas states · P4 — Edit sheet">
+        <div class="topbar">
+          <button class="dkey">&#9666;</button>
+          <div class="hud-title"><span class="t">CANVAS</span><span class="s">DESTINY &middot; DRAFT</span></div>
+          <span class="spacer"></span>
+        </div>
+        <div class="bedzone">
+          <div class="bed" style="top:38%;">
+            <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+            <div class="card-bounds" style="width:190px; height:265px;">
+              <span class="ly ly-backdrop ghosted"><svg viewBox="0 0 63 88" preserveAspectRatio="none"><use href="#ly-backdrop"/></svg></span>
+              <span class="ly ly-orbit ghosted"><svg viewBox="0 0 39 39"><use href="#ly-orbit"/></svg></span>
+              <span class="ly ly-diamond"><svg viewBox="0 0 34 46"><use href="#ly-diamond"/></svg></span>
+              <span class="ly ly-facet ghosted"><svg viewBox="0 0 22 29"><use href="#ly-facet"/></svg></span>
+              <span class="ly ly-core ghosted"><svg viewBox="0 0 10 10"><use href="#ly-core"/></svg></span>
+              <span class="ly ly-sats ghosted"><svg viewBox="0 0 63 88"><use href="#ly-sats"/></svg></span>
+            </div>
+          </div>
+        </div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <div class="sh-h">THE DIAMOND SLIP<span class="meta">VECTOR &middot; SHAPE &middot; ISOLATION ON</span></div>
+          <div class="islider">
+            <span class="is-lbl">OPACITY</span>
+            <span class="is-track"><span class="is-fill" style="width:100%;"></span><span class="is-thumb" style="left:100%;"></span></span>
+            <span class="is-val">100%</span>
+          </div>
+          <div class="ctl-row">
+            <span class="ctl-lbl">FILL</span>
+            <span class="swatches">
+              <span class="csw sel" style="background:linear-gradient(180deg,#58e0d8,#2ba8a0);"></span>
+              <span class="csw" style="background:#e8c364;"></span>
+              <span class="csw" style="background:#ff3d77;"></span>
+              <span class="csw" style="background:#f5f1e4;"></span>
+              <span class="csw eyedrop"><svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M8.5 1.5 L10.5 3.5 L4.5 9.5 L2 10 L2.5 7.5 Z" stroke="#c9c5e6" stroke-width="1.3" stroke-linejoin="round"/></svg></span>
+            </span>
+            <span class="tog-row" style="margin-left:auto;"><span class="tog">SOLID</span><span class="tog on">GRADIENT</span></span>
+          </div>
+          <div class="ctl-row">
+            <span class="ctl-lbl">STROKE</span>
+            <span class="csw" style="background:#e8c364;"></span><span class="tog on">2PX</span>
+            <span class="ctl-lbl" style="flex:0 0 auto; margin-left:6px;">GLOW</span><span class="tog">OFF</span>
+            <span class="ctl-lbl" style="flex:0 0 auto; margin-left:6px;">BLEND</span><span class="tog">NORMAL</span>
+          </div>
+          <div class="ctl-row">
+            <span class="ctl-lbl">MORE</span>
+            <span class="tog">FLIP &#8596;</span><span class="tog">FLIP &#8597;</span><span class="tog">RADIUS 0</span><span class="tog">DUP</span><span class="tog" style="color:#ff8a93; border-color:rgba(227,65,78,.45);">DELETE</span>
+          </div>
+        </div>
+      </div>
+      <div class="half-panel">
+        <div style="display:flex; align-items:center; gap:8px; font:700 9px var(--pk); letter-spacing:2px; color:var(--scr-dim); padding-bottom:7px; border-bottom:1px solid var(--scr-hairline);">THE <b style="color:var(--scr-text); letter-spacing:1px;">&ldquo;GUARDIAN&rdquo;</b> SLIP<span style="font:600 8px var(--pk); letter-spacing:1px;">TEXT ELEMENT</span></div>
+        <div style="display:flex; align-items:center; gap:7px; margin-top:9px; flex-wrap:wrap;">
+          <span style="font:700 8px var(--pk); letter-spacing:1.5px; color:var(--scr-dim); flex:0 0 62px;">FONT</span>
+          <span class="tog on">CHAKRA</span><span class="tog">PIXELLA</span>
+          <span style="font:700 8px var(--pk); letter-spacing:1.5px; color:var(--scr-dim); flex:0 0 auto; margin-left:8px;">CURVE</span>
+          <span class="tog">NONE</span><span class="tog on">ARC &#9697;</span>
+        </div>
+        <div class="hint" style="text-align:left;">TEXT SLIPS: FONT + SPACING/ALIGN/CASE + <b>ARC TEXT</b> (CARD-11) &middot; SCREENED (MOD-07)</div>
+      </div>
+      <div class="caption">
+        <h3>P4 &mdash; The EDIT sheet <em>(CARD-10, one drawer up)</em></h3>
+        <p>EDIT THIS SLIP raises the second sheet: opacity (the catalog slider) · fill/eyedropper +
+        SOLID/GRADIENT · stroke/glow/blend · flip/radius/dup/delete (CARD-10). The bed stays in isolation
+        above the sheet (no scrim-dim on the work &mdash; the Styler's no-scrim lesson carried). Fragment:
+        the text slip (font · ARC curve · screening, CARD-11/MOD-07).</p>
+      </div>
+    </div>
+
+    <!-- ═══ P5 · The rack in full ═══ -->
+    <div class="take">
+      <div class="artboard-label">P5 &middot; The rack in full &mdash; ops + precision + the cap</div>
+      <div class="shop" data-screen-label="Canvas states · P5 — Rack ops">
+        <div class="topbar">
+          <button class="dkey">&#9666;</button>
+          <div class="hud-title"><span class="t">CANVAS</span><span class="s">DESTINY &middot; DRAFT</span></div>
+          <span class="spacer"></span>
+        </div>
+        <div class="bedzone">
+          <div class="bed" style="top:42%;">
+            <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+            <div class="card-bounds" style="width:206px; height:288px;">
+              <span class="ly ly-backdrop"><svg viewBox="0 0 63 88" preserveAspectRatio="none"><use href="#ly-backdrop"/></svg></span>
+              <span class="ly ly-orbit"><svg viewBox="0 0 39 39"><use href="#ly-orbit"/></svg></span>
+              <span class="ly ly-diamond"><svg viewBox="0 0 34 46"><use href="#ly-diamond"/></svg></span>
+              <span class="ly ly-facet"><svg viewBox="0 0 22 29"><use href="#ly-facet"/></svg></span>
+              <span class="ly ly-core"><svg viewBox="0 0 10 10"><use href="#ly-core"/></svg></span>
+              <span class="ly ly-sats"><svg viewBox="0 0 63 88"><use href="#ly-sats"/></svg></span>
+              <span class="guide-v" style="left:50%; top:-6%; bottom:-6%;"></span>
+              <span class="sel-ring" style="left:42%; top:38.5%; width:16%; height:12%;">
+                <span class="h tl"></span><span class="h tr"></span><span class="h bl"></span><span class="h br"></span>
+              </span>
+            </div>
+          </div>
+          <div class="numpop" style="right:10px; top:8px;">
+            <span class="k">X</span><span class="v">131</span>
+            <span class="k">Y</span><span class="v">187</span>
+          </div>
+        </div>
+        <div class="editbar">
+          <a class="reset" href="#">RESET SLIP</a>
+          <div class="ek"><button class="dkey">&#8634;</button><span class="kl">UNDO</span></div>
+          <div class="ek"><button class="dkey">&#8635;</button><span class="kl">REDO</span></div>
+        </div>
+        <div class="rack">
+          <div class="rk-h">THE SLIPS &mdash; LONG-PRESS FOR OPS &middot; DRAG TO REORDER Z<span class="cap-meter">9 / 30</span></div>
+          <div class="slips">
+            <div class="slip r1"><div class="pane"><svg class="full" viewBox="0 0 63 88" preserveAspectRatio="none"><use href="#ly-backdrop"/></svg></div><span class="nm">BACKDROP</span></div>
+            <div class="slip r2"><span class="bdg">&#128274;</span><div class="pane"><svg viewBox="0 0 39 39"><use href="#ly-orbit"/></svg></div><span class="nm">ORBIT</span></div>
+            <div class="slip r3"><div class="pane"><svg viewBox="0 0 34 46"><use href="#ly-diamond"/></svg></div><span class="nm">DIAMOND</span></div>
+            <div class="slip r1"><div class="pane"><svg viewBox="0 0 22 29"><use href="#ly-facet"/></svg></div><span class="nm">FACET</span></div>
+            <div class="slip pulled"><span class="spip"></span><div class="pane"><svg viewBox="0 0 10 10" style="inset:34%; width:32%; height:32%;"><use href="#ly-core"/></svg></div><span class="nm">CORE</span></div>
+            <div class="slip hiddenly r3"><span class="bdg">HID</span><div class="pane"><svg class="full" viewBox="0 0 63 88"><use href="#ly-sats"/></svg></div><span class="nm">SATS</span></div>
+          </div>
+          <div class="slip-ops">
+            <span class="op">RENAME</span><span class="op">LOCK</span><span class="op">HIDE</span><span class="op">DUPLICATE</span><span class="op">GROUP</span><span class="op" style="color:#ff8a93; border-color:rgba(227,65,78,.45);">DELETE</span>
+          </div>
+          <div class="benchrow" style="margin-top:9px;">
+            <button class="btn sec mini">&#128065; PROOF</button>
+            <span style="font:600 8.5px var(--pk); letter-spacing:.5px; color:var(--scr-dim);">HOLD FOR THE TRUE PRINT</span>
+            <span class="spacer"></span>
+            <button class="btn gold mini">PRESS &#9656;</button>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P5 &mdash; The rack in full <em>(CARD-08/09; the cap is physical)</em></h3>
+        <p>Long-press the pulled CORE slip → the <b>ops row</b>: RENAME · LOCK · HIDE · DUPLICATE · GROUP ·
+        DELETE (CARD-08). <b>Z-order is the rack order</b> &mdash; drag a slip left/right. Precision stays on
+        the bed: guides + the numeric popover (CARD-09). The editbar (undo/redo + RESET) sits just above the
+        rack here too. The fragment is the <b>at-cap state</b> (next).</p>
+      </div>
+    </div>
+
+    <!-- ═══ P6 · PROOF + the size ladder ═══ -->
+    <div class="take">
+      <div class="artboard-label">P6 &middot; PROOF &mdash; the true print + the GameCard size ladder</div>
+      <div class="shop" data-screen-label="Canvas states · P6 — Proof + sizes">
+        <div class="topbar">
+          <button class="dkey">&#9666;</button>
+          <div class="hud-title"><span class="t">CANVAS</span><span class="s">DESTINY &middot; PROOFING</span></div>
+          <span class="spacer"></span>
+        </div>
+        <div class="bedzone">
+          <div class="bed" style="top:43%; background:rgba(10,8,22,.75);">
+            <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+            <div class="gcard" style="width:200px; height:280px;">
+              <span class="fx-ember" style="position:absolute; inset:0;"></span>
+              <span class="fin-holo" style="position:absolute; inset:0;"></span>
+              <div class="fr-gilt" style="position:absolute; inset:0;"></div>
+              <div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div>
+              <div class="plate pl-destiny">Destiny</div>
+            </div>
+          </div>
+          <div class="hint" style="position:absolute; left:10px; right:10px; bottom:6px; margin:0;"><b>PROOFING</b> &mdash; HOLD STAMPS THE TRUE PRINT (GILT &middot; EMBER 70% &middot; HOLO &middot; RIBBON); RELEASE LIFTS IT</div>
+        </div>
+        <div class="editbar dimmed">
+          <a class="reset" href="#">RESET SLIP</a>
+          <div class="ek"><button class="dkey">&#8634;</button><span class="kl">UNDO</span></div>
+          <div class="ek"><button class="dkey">&#8635;</button><span class="kl">REDO</span></div>
+        </div>
+        <div class="proof-sizes">
+          <div class="ps-h">HOW THE PRINT READS <b>AT EVERY SIZE IT'LL APPEAR</b> (CARD-07)</div>
+          <div class="ps-row">
+            <div class="ps-item">
+              <div class="gcard pc-grid"><span class="fx-ember" style="position:absolute; inset:0;"></span><span class="fin-holo" style="position:absolute; inset:0;"></span><div class="fr-gilt-sm" style="position:absolute; inset:0;"></div><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+              <span class="ps-lbl">GRID <b>&middot; 96</b></span>
+            </div>
+            <div class="ps-item">
+              <div class="gcard pc-mini"><span class="fx-ember" style="position:absolute; inset:0;"></span><span class="fin-holo" style="position:absolute; inset:0;"></span><div class="fr-gilt-sm" style="position:absolute; inset:0;"></div><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+              <span class="ps-lbl">MINI <b>&middot; 64</b></span>
+            </div>
+            <div class="ps-item">
+              <div class="gcard pc-thumb"><span class="fx-ember" style="position:absolute; inset:0;"></span><span class="fin-holo" style="position:absolute; inset:0;"></span><div class="fr-gilt-sm" style="position:absolute; inset:0;"></div><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+              <span class="ps-lbl">THUMB <b>&middot; 44</b></span>
+            </div>
+          </div>
+          <div class="hint" style="margin-top:10px;">THE PLATE STAYS LEGIBLE INTO THE <b>THUMBNAIL SAFE-AREA</b> (CARD-15) &mdash; WHAT YOU PROOF IS WHAT THE SHELF, TOP-5 &amp; LIST ROWS SHOW (CARD-07)</div>
+          <div class="benchrow" style="margin-top:9px;">
+            <button class="btn sec mini" style="transform:translateY(2px); box-shadow:0 0 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 2px 3px rgba(0,0,0,.22);">&#128065; PROOF &mdash; HOLDING&hellip;</button>
+            <span class="spacer"></span>
+            <button class="btn gold mini">PRESS &#9656;</button>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P6 &mdash; PROOF + the size ladder <em>(change 2 applied)</em></h3>
+        <p>Press-and-hold <b>&#128065; PROOF</b> and the press stamps the <b>true print</b> on the bed
+        (flattened, the Styler's closed layers live &mdash; GILT · EMBER 70% · HOLO · the RIBBON plate;
+        CARD-15). <b>Change 2 applied:</b> below it, the print renders at the <b>GameCard's set sizes</b>
+        &mdash; <b>GRID (96) · MINI (64) · THUMB (44)</b> (design-spec §1.5 `GameCard/grid|mini|thumb`) &mdash;
+        so the proof answers the question that matters: <b>does it still read small?</b> The card is the
+        universal representation everywhere (CARD-07: shelf · Top-5 · list rows), and the plate must survive
+        the <b>thumbnail safe-area</b> (CARD-15). The size ladder makes that legibility check part of the
+        proof, not a post-publish surprise. Release lifts the proof; the slips return.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="stage-label">Outcomes &amp; the ritual <small>P7 PRESS — finish-up (CARD-19 + the reconcile) &middot; P8 the press RUNS (OQ-040)</small></div>
+  <div class="stage">
+
+    <!-- ═══ P7 · PRESS finish-up ═══ -->
+    <div class="take">
+      <div class="artboard-label">P7 &middot; Outcomes &mdash; PRESS: the finish-up sheet</div>
+      <div class="shop" data-screen-label="Canvas states · P7 — Press finish-up">
+        <div class="topbar">
+          <button class="dkey">&#9666;</button>
+          <div class="hud-title"><span class="t">CANVAS</span><span class="s">DESTINY &middot; FINISH UP</span></div>
+          <span class="spacer"></span>
+        </div>
+        <div class="bedzone dimmed">
+          <div class="bed" style="top:38%;">
+            <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+            <div class="gcard" style="width:190px; height:265px;">
+              <span class="fx-ember" style="position:absolute; inset:0;"></span>
+              <span class="fin-holo" style="position:absolute; inset:0;"></span>
+              <div class="fr-gilt" style="position:absolute; inset:0;"></div>
+              <div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div>
+              <div class="plate pl-destiny" style="font-size:10px; padding:5px 3px 4px;">Destiny</div>
+            </div>
+          </div>
+        </div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <div class="sh-h">THE PRESS &mdash; WHERE DOES IT GO?<span class="meta">TRUE PREVIEW &middot; SAFE-AREA ON</span></div>
+          <div class="chk"><span class="ok">&#10003;</span>COMPLEX ENOUGH TO PUBLISH<span class="meta">CARD-19 &middot; 9 SLIPS</span></div>
+          <div class="chk"><span class="ok">&#10003;</span>NO DUPLICATE IN THE POOL<span class="meta">HASH CHECK</span></div>
+          <div class="chk"><span class="ok">&#10003;</span>PREMIUM ATTRIBUTES OWNED<span class="meta">ELSE &rarr; RECONCILE (CARD-13)</span></div>
+          <div style="display:flex; gap:8px; margin-top:10px; align-items:center;">
+            <button class="btn gold mini">&#9670; PUBLISH</button>
+            <button class="btn sec mini">SAVE PRIVATE</button>
+            <button class="btn mini">TO THE STYLER</button>
+            <a class="tert dim" href="#" style="margin-left:auto;">CANCEL</a>
+          </div>
+          <div class="hint">PUBLISH = RUN THE PRESS: FLATTEN + LIST ADOPTABLE (CARD-04/15) &middot; PUBLISHED PRINTS ARE IMMUTABLE (CARD-20)</div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P7 &mdash; PRESS <em>(conventional where it counts)</em></h3>
+        <p>The gold PRESS key raises the finish-up <b>sheet</b>: the CARD-19 checklist (complexity · hash
+        dedup · premium ownership → the Styler's <b>ReconcileSheet</b> + <code>POST /cosmetics/acquire-batch</code>
+        when unowned attributes ride), over the true preview with safe-area on (CARD-15). Labels stay
+        canonical &mdash; <b>PUBLISH · SAVE PRIVATE · TO THE STYLER</b> (the workshop flavors the eyebrows
+        only, &sect;1.1); private lands in the switcher + <code>/me/cards</code> (OQ-049). Publishing is
+        rate-limited server-side (SYS-05).</p>
+      </div>
+    </div>
+
+    <!-- ═══ P8 · The press runs ═══ -->
+    <div class="take">
+      <div class="artboard-label">P8 &middot; The FIRST-PRINT ritual &mdash; the press RUNS (OQ-040)</div>
+      <div class="shop bloom-stage" data-screen-label="Canvas states · P8 — The press runs">
+        <div style="position:absolute; left:0; right:0; top:28px; z-index:5; text-align:center;">
+          <span class="npl" style="letter-spacing:3px;">FIRST PRINT</span>
+          <div style="font:700 19px var(--pk); letter-spacing:2px; color:var(--scr-head); text-shadow:0 2px 0 rgba(0,0,0,.5); margin-top:4px;">DESTINY &mdash; BY MAVERICK</div>
+        </div>
+        <div class="bedzone">
+          <div class="bed" style="top:48%; background:rgba(10,8,22,.4); border-color:rgba(255,210,63,.25);">
+            <div class="gcard" style="width:238px; height:332px; filter: drop-shadow(0 0 6px rgba(255,210,63,.6)) drop-shadow(0 0 28px rgba(255,210,63,.5)) drop-shadow(0 14px 20px rgba(0,0,0,.55));">
+              <span class="fx-ember" style="position:absolute; inset:0;"></span>
+              <span class="fin-holo" style="position:absolute; inset:0;"></span>
+              <div class="fr-gilt" style="position:absolute; inset:0;"></div>
+              <div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div>
+              <div class="plate pl-destiny">Destiny</div>
+            </div>
+          </div>
+        </div>
+        <div style="position:absolute; left:12px; right:12px; bottom:12px; z-index:6; display:flex; flex-direction:column; gap:8px;">
+          <div class="ok-strip">
+            <span class="ok-ic">&#10003;</span>
+            <div class="ok-tx">
+              <span class="ok-t">PUBLISHED &mdash; ADOPTABLE BY EVERYONE</span>
+              <span class="ok-s">THE PRINT IS LIFTED OFF THE PRESS &middot; ATTRIBUTION RIDES THE CARD BACK (CARD-01/04)</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <button class="btn gold mini">SHARE THE CARD &#8599;</button>
+            <button class="btn sec mini">TO MY SHELF</button>
+            <span class="hint" style="margin:0; text-align:right; flex:1;">THE NOTIF-04 ADOPTION-ASK RIDES THIS PEAK</span>
+          </div>
+        </div>
+      </div>
+      <div class="half-panel">
+        <div class="hp-row">
+          <div style="position:relative; width:96px; height:134px; flex:0 0 auto;">
+            <div class="gcard" style="position:absolute; inset:0;">
+              <div class="fr-gilt" style="position:absolute; inset:0;"></div>
+              <div class="art" style="inset:5px;"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div>
+            </div>
+            <span class="print-veil" style="height:58%;"></span>
+            <span class="print-line" style="top:42%;"></span>
+          </div>
+          <div class="hp-meta">
+            <span class="npl">BEAT 1 &mdash; THE PRESS RUNS</span>
+            <span class="hero-sub" style="white-space:normal;">THE PLATEN SWEEPS &mdash; FLATTEN-AS-ANTICIPATION, CLIENT-RENDERED, <b>NEVER NETWORK-BOUND</b></span>
+          </div>
+        </div>
+      </div>
+      <div class="half-panel">
+        <div class="hp-row">
+          <div style="position:relative; width:120px; height:100px; flex:0 0 auto;">
+            <span class="replay-ghost" style="left:30%; top:4%; width:40%; height:74%;"></span>
+            <div class="slip" style="position:absolute; left:0; bottom:0; transform:rotate(-6deg);"><div class="pane" style="width:34px; height:48px;"><svg viewBox="0 0 34 46" style="inset:18%; width:64%; height:64%;"><use href="#ly-diamond"/></svg></div></div>
+            <div class="slip" style="position:absolute; left:38px; bottom:6px; transform:rotate(3deg);"><div class="pane" style="width:34px; height:48px;"><svg viewBox="0 0 39 39" style="inset:18%; width:64%; height:64%;"><use href="#ly-orbit"/></svg></div></div>
+            <span class="replay-arrow" style="right:8px; top:8px;">&#8593; 1&middot;2&middot;3</span>
+          </div>
+          <div class="hp-meta">
+            <span class="npl">BEAT 2 &mdash; THE SLIPS FLY IN</span>
+            <span class="hero-sub" style="white-space:normal;">THE COMPOSITION JSON REPLAYS AS THE SLIPS STACK ONTO THE BED, IN ORDER; THE EFFECT IGNITES LAST</span>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P8 &mdash; The press runs <em>(OQ-040, full tier &mdash; native to the set)</em></h3>
+        <p>Publish fires 0015's three beats, and the workshop <b>is</b> the ritual's set: ① <b>the press
+        runs</b> (the platen scan-line, client-rendered, fixed beat) · ② <b>the slips fly in</b> &mdash; the
+        replay re-enacts the rack · ③ the finished print is <b>lifted off the press</b>, glowing at its
+        largest, bed edges going gold; bloom + haptics. Routing rides the peak: SHARE (CARD-21) · TO MY
+        SHELF · the NOTIF-04 adoption-ask. Reduce-motion: crossfade (CARD-16). <b>Full tier only</b> &mdash;
+        first-ever cards · canvas completions · publishes; Styler keeps stay light (0015).</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="stage-label">Lifecycle <small>P9 loading skeleton &middot; P10 load-error + RETRY &middot; P11 offline (editing + PROOF from cache · PRESS writes-gated) &mdash; the deferred cells, drawn</small></div>
+  <div class="stage">
+
+    <!-- ═══ P9 · Skeleton ═══ -->
+    <div class="take">
+      <div class="artboard-label">P9 &middot; Loading &mdash; Skeleton (solid fills, &sect;1.6)</div>
+      <div class="shop" data-screen-label="Canvas states · P9 — Skeleton">
+        <div class="topbar">
+          <button class="dkey">&#9666;</button>
+          <div class="hud-title"><span class="t">CANVAS</span><span class="s">DESTINY &middot; OPENING THE PRESS&hellip;</span></div>
+          <span class="spacer"></span>
+        </div>
+        <div class="bedzone">
+          <div style="position:absolute; left:50%; top:44%; transform:translate(-50%,-50%);"><div class="sk-card"></div></div>
+        </div>
+        <div class="editbar dimmed">
+          <span class="sk-bar" style="width:60px; margin-right:auto;"></span>
+          <span class="sk-block" style="width:30px; height:30px;"></span>
+          <span class="sk-block" style="width:30px; height:30px;"></span>
+        </div>
+        <div class="rack">
+          <div class="rk-h"><span class="sk-bar" style="width:120px;"></span><span class="cap-meter" style="border:none; background:none;"><span class="sk-bar" style="width:32px;"></span></span></div>
+          <div class="slips">
+            <div class="slip"><span class="sk-block" style="width:50px; height:70px;"></span><span class="sk-bar" style="width:34px; margin-top:3px;"></span></div>
+            <div class="slip"><span class="sk-block" style="width:50px; height:70px;"></span><span class="sk-bar" style="width:34px; margin-top:3px;"></span></div>
+            <div class="slip"><span class="sk-block" style="width:50px; height:70px;"></span><span class="sk-bar" style="width:34px; margin-top:3px;"></span></div>
+            <div class="slip"><span class="sk-block" style="width:50px; height:70px;"></span><span class="sk-bar" style="width:34px; margin-top:3px;"></span></div>
+            <div class="slip"><span class="sk-block" style="width:50px; height:70px;"></span><span class="sk-bar" style="width:34px; margin-top:3px;"></span></div>
+            <div class="slip"><span class="sk-block" style="width:50px; height:70px;"></span><span class="sk-bar" style="width:34px; margin-top:3px;"></span></div>
+          </div>
+          <div class="benchrow" style="margin-top:11px;">
+            <span class="sk-bar" style="width:80px; height:24px;"></span>
+            <span class="sk-bar" style="width:80px; height:24px;"></span>
+            <span class="spacer"></span>
+            <span class="sk-bar" style="width:64px; height:24px;"></span>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P9 &mdash; Loading <em>(Skeleton &mdash; solid fills, never dashes)</em></h3>
+        <p>The press opens before its content lands: the bed's card slab, the editbar keys, the slip rack,
+        the bench actions &mdash; all <b>solid `Skeleton` fills</b> (&sect;1.6: dashes are invitations, solids
+        are loading). The workshop's shape is recognizable at a glance, so the editor never &ldquo;pops
+        in.&rdquo;</p>
+      </div>
+    </div>
+
+    <!-- ═══ P10 · Load error ═══ -->
+    <div class="take">
+      <div class="artboard-label">P10 &middot; Load error &mdash; &ldquo;Signal Lost&rdquo; + RETRY</div>
+      <div class="shop" data-screen-label="Canvas states · P10 — Load error">
+        <div class="topbar">
+          <button class="dkey">&#9666;</button>
+          <div class="hud-title"><span class="t">CANVAS</span><span class="s">DESTINY</span></div>
+          <span class="spacer"></span>
+        </div>
+        <div class="bedzone">
+          <div class="err-wrap">
+            <div class="err-card"><span class="bang">!</span></div>
+            <span class="err-eyebrow">COULDN'T OPEN THE PRESS</span>
+            <span class="err-title">SIGNAL LOST</span>
+            <span class="err-sub">THE WORKSHOP DIDN'T COME DOWN. YOUR DRAFT IS SAFE &mdash; NOTHING YOU MADE IS LOST (CARD-14).</span>
+            <button class="btn alt" style="margin-top:6px;">&#8635; RETRY</button>
+            <a class="tert dim" href="#" style="margin-top:2px;">GO BACK</a>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P10 &mdash; Load error <em>(retryable &mdash; the &sect;1.6 family)</em></h3>
+        <p>The composition fetch fails &rarr; the <b>`LoadError` family verbatim</b>: dashed stepped-card
+        silhouette, accent <b>!</b>, SIGNAL LOST, the orange <b>RETRY</b> (KeycapButton/action-alt &mdash;
+        accent + the 2/4 step). The copy carries the CARD-14 reassurance in plain words: <b>your draft is
+        safe</b> &mdash; autosave means a failed open never eats work. GO BACK is the quiet exit.</p>
+      </div>
+    </div>
+
+    <!-- ═══ P11 · Offline ═══ -->
+    <div class="take">
+      <div class="artboard-label">P11 &middot; Offline &mdash; editing + PROOF from cache · PRESS gated (SYS-10)</div>
+      <div class="shop" data-screen-label="Canvas states · P11 — Offline">
+        <div class="topbar">
+          <button class="dkey">&#9666;</button>
+          <div class="hud-title"><span class="t">CANVAS</span><span class="s">DESTINY &middot; DRAFT</span></div>
+          <span class="spacer"></span>
+        </div>
+        <div class="offline-strip">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M2 6 C5.5 2.8 10.5 2.8 14 6 M4.5 8.5 C6.8 6.6 9.2 6.6 11.5 8.5 M7 11 C7.7 10.4 8.3 10.4 9 11" stroke-width="1.5" stroke-linecap="round"/><path d="M3 13 L13 3" stroke-width="1.5" stroke-linecap="round"/></svg>
+          YOU'RE OFFLINE &mdash; DRAFT-SAFE
+          <span class="sync">AUTOSAVED LOCALLY &middot; 30S AGO</span>
+        </div>
+        <div class="bedzone">
+          <div class="bed" style="top:44%;">
+            <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+            <div class="card-bounds" style="width:200px; height:280px;">
+              <span class="ly ly-backdrop"><svg viewBox="0 0 63 88" preserveAspectRatio="none"><use href="#ly-backdrop"/></svg></span>
+              <span class="ly ly-orbit"><svg viewBox="0 0 39 39"><use href="#ly-orbit"/></svg></span>
+              <span class="ly ly-diamond"><svg viewBox="0 0 34 46"><use href="#ly-diamond"/></svg></span>
+              <span class="ly ly-facet"><svg viewBox="0 0 22 29"><use href="#ly-facet"/></svg></span>
+              <span class="ly ly-core"><svg viewBox="0 0 10 10"><use href="#ly-core"/></svg></span>
+              <span class="ly ly-sats"><svg viewBox="0 0 63 88"><use href="#ly-sats"/></svg></span>
+            </div>
+          </div>
+        </div>
+        <div class="editbar">
+          <a class="reset" href="#">RESET SLIP</a>
+          <div class="ek"><button class="dkey">&#8634;</button><span class="kl">UNDO</span></div>
+          <div class="ek"><button class="dkey">&#8635;</button><span class="kl">REDO</span></div>
+        </div>
+        <div class="rack">
+          <div class="rk-h">THE SLIPS &mdash; FREE VECTORS WORK FROM CACHE<span class="cap-meter">9 / 30</span></div>
+          <div class="slips">
+            <div class="slip r1"><div class="pane"><svg class="full" viewBox="0 0 63 88" preserveAspectRatio="none"><use href="#ly-backdrop"/></svg></div><span class="nm">BACKDROP</span></div>
+            <div class="slip r2"><div class="pane"><svg viewBox="0 0 39 39"><use href="#ly-orbit"/></svg></div><span class="nm">ORBIT</span></div>
+            <div class="slip r3"><div class="pane"><svg viewBox="0 0 34 46"><use href="#ly-diamond"/></svg></div><span class="nm">DIAMOND</span></div>
+            <div class="slip r1"><div class="pane"><svg viewBox="0 0 22 29"><use href="#ly-facet"/></svg></div><span class="nm">FACET</span></div>
+            <div class="slip r2"><div class="pane"><svg viewBox="0 0 10 10" style="inset:34%; width:32%; height:32%;"><use href="#ly-core"/></svg></div><span class="nm">CORE</span></div>
+            <div class="slip hiddenly r3"><span class="bdg">HID</span><div class="pane"><svg class="full" viewBox="0 0 63 88"><use href="#ly-sats"/></svg></div><span class="nm">SATS</span></div>
+          </div>
+          <div class="benchrow" style="margin-top:9px;">
+            <button class="btn sec mini">+ ADD A SLIP</button>
+            <button class="btn sec mini">&#128065; PROOF</button>
+            <span class="spacer"></span>
+            <button class="btn gold mini disabled">PRESS &#9656; &middot; BACK ONLINE</button>
+          </div>
+          <div class="hint" style="margin-top:7px;">EDITING + <b>&#128065; PROOF</b> WORK OFFLINE (CLIENT-SIDE FLATTEN; THE DRAFT IS THE ONE OFFLINE WRITE, CARD-14) &middot; <b>PRESS / PUBLISH + PREMIUM ACQUIRES WAIT FOR SIGNAL</b> (SYS-10: WRITES GATED)</div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P11 &mdash; Offline <em>(the workshop keeps working)</em></h3>
+        <p>The calm `OfflineStrip` (never an alarm; auto-recovers) and the editor <b>keeps going</b>: free
+        vectors apply from cache, the draft autosaves locally &mdash; the collection-states precedent that
+        <b>card-editor drafts are the one offline write</b> (CARD-14). Crucially, <b>PROOF works offline</b>
+        &mdash; it's a client-side flatten, no server needed. What gates is the server write: <b>PRESS /
+        PUBLISH waits</b> (and any premium reconcile), SYS-10's writes-gated rule. Reconnect re-arms PRESS in
+        place.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

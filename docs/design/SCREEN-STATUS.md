@@ -9,10 +9,11 @@
 > **per-page subfolders** under [`mockups/`](mockups/) (file map: its README); the catalog
 > stays at the mockups root.
 
-**Last updated:** 2026-06-13 (spec owner — **triage batch landed** (decision 0019): product-spec **0.19** · api-contract **0.18** · design-req **0.14**; OQ-008 (cap 30) · OQ-048 (intensity) · OQ-049 (save-private) · OQ-051 (popular rank) · OQ-052 (friend-share cut) all resolved · SectionChips catalog sample corrected to pressed+pip)
+**Last updated:** 2026-06-13 (canvas track — **Canvas converged** (print shop · `canvas-states.html`): C wins + undo/redo relocated + proof size-ladder; **the 0014 editor arc is complete**; OQ-007 + OQ-040 resolved design-side. Prior: spec-owner triage 0019 — OQ-008/048/049/051/052 resolved.)
 
 ## Up next (the queue)
-1. **Card editor · Canvas posture** (0014 stage 3 — the breakout; resolves OQ-007; the OQ-040 reveal ritual; receives the composition from the converged Styler).
+0. **🎉 The 0014 editor arc is COMPLETE** — Add Game → Styler → Canvas all converged. OQ-007 (breakout) + OQ-040 (first-print ritual) resolved design-side in the Canvas board.
+1. *Formalization batches owed (spec-owner):* the **Styler converge set** (design-spec §2.5 already landed 0.13 — the catalog component shells) + the **Canvas converge set** (design-spec §2.x + the editor's open-composition components: `CanvasStage` · `AssetShelf` · `ElementTray` · `LayerRack`/slips · `PrintRitual`); + the **Canvas API page-audit** (writes already in 0.16/0.18 — confirm no gap).
 2. *Coverage-driven after that* (design-process): **Discover** (surfaces the segmented control) and **Settings** (rows · toggles · destructive confirm) are the named gap-closers; **Device editor** carries the OQ-045 debt. *(Inbox for next triage: OQ-038 offline-cache-scope · the OQ-002/009/010/011 economy+content tuning set.)*
 
 ## Legend
@@ -32,7 +33,7 @@
 | 4.1 | Add Game (flow) | ✅ converged | `add-game/add-game-states.html` (c6 + P9–P10 + PIXELS + `ReportSheet/drawer`) | `add-game/add-game-states.html` | ✅ (P1–P10 + P3b/P7b; lifecycle + writes-gated offline) | ✅ (§2.4; 0.12 + catalog v0.4) | ✅ (0016 + MOD-01 ripples) | — |
 | 4.2 | Game page (adaptive) | ⬜ | — (`CardDetail` slice exists in Add Game c5) | — | — | — | 🔶 (CAT-09 fields landed) | Owned-state fold-in; card gallery |
 | 4.3 | Card editor — Styler | ✅ converged | `styler/styler-states.html` (carousel; gate ruling 2026-06-12 — **+NAMEPLATE, overlay cut**) | `styler/styler-states.html` | ✅ (skeleton · load-error · offline draft-safe, writes gated) | ✅ (§2.5; 0.13 + catalog v0.4) | ✅ (**0.16 styler sync**: card-bases + surprise · save-private · acquire-batch · `nameplate` enums; OQ-050 resolved) | **OQ-039 ruled** (decision 0018: COSM-01 +nameplate · TITLE→font+ink · Nameplates aisle); OQ-048 (intensity) + OQ-049 (save-private) resolved (0019) |
-| 4.3 | Card editor — Canvas | 🔶 in pass | canvas drafts A/B/C in progress (canvas track) | — | — | — | 🔶 | Breakout (OQ-007 = the divergence axis); OQ-040 full ritual; element cap 30 (OQ-008 ruling) |
+| 4.3 | Card editor — Canvas | ✅ converged | `canvas/canvas-states.html` (print shop; gate ruling 2026-06-13 — **C wins** + undo/redo relocated, proof size-ladder) | `canvas/canvas-states.html` | ✅ (skeleton · load-error · offline: editing+PROOF from cache, PRESS writes-gated) | ⬜ (formalization batch owed: §2.x + the open-composition set — `CanvasStage`/`AssetShelf`/`ElementTray`/`LayerRack`(slips)/`PrintRitual`) | 🔶 (writes exist in 0.16/0.18: draft · autosave · publish · save-private · acquire-batch · assets · share-image; **canvas page-audit owed**) | **OQ-007 + OQ-040 resolved design-side** (diegetic breakout · the first-print ritual); cap 30 (OQ-008) |
 | 4.4 | Admin / Moderator console | ⬜ | — | — | — | — | 🔶 | Mod-only (MOD-04) |
 | 4.5 | Device editor | ⬜ | — | — | — | — | 🔶 | Owes OQ-045; shells per 0017 |
 | 4.6 | Compare Hours | ⬜ | — | — | — | — | 🔶 | — |
