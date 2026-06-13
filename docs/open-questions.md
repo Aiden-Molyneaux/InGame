@@ -80,6 +80,31 @@
   `RankChip` + the custom card + **designer credit** (CAT-05) + an **AdoptCount** (CARD-05); confirm
   the endpoint returns `{ rank, card, game, designer, adoptionCount }` (a page-audit confirm at the
   Discover converge — likely already intended, just unenumerated). (Discover drafts, P3/P8) [behavior]
+- OQ-056: **Modular card saving — explicit named saves + reusable style presets + the customizations
+  gallery.** Owner ruling (2026-06-13, brainstormed; chose "parts + presets" over full
+  style×canvas decomposition and over anxiety-fix-only). The **card stays the atomic
+  save/equip/publish/adopt unit** (CARD-01/15 unchanged); the editor gains:
+  **(a) explicit named save-targets** — the Styler + Canvas header shows *which* design is being
+  edited and its save state ("editing «Destiny — Aurora» · saved 12s ago"), with a manual **SAVE**
+  and **SAVE AS NEW** (the latter promotes CARD-14's duplicate/save-as-copy so a user never silently
+  overwrites prior work); autosave + crash-recovery continue **across the Styler↔Canvas posture
+  switch** (it's one draft document, so styling is never lost crossing into the Canvas — the anxiety
+  this resolves).
+  **(b) reusable STYLE PRESETS** — "save my current closed attributes (frame · effect · finish ·
+  nameplate · title-styling) as a named, **game-agnostic** preset" that slots into the existing
+  start-from rail (CARD-16) beside the store's preset kits (COSM-02); "choose a style combo" = apply
+  a preset. *(Art/canvas reuse = SAVE AS NEW + restyle; a separate global art library was considered
+  and **deferred** as heavier — revisit if demand appears.)*
+  **(c) the customizations view** — per-game "my cards for this game" = the **Game-page (4.2) card
+  switcher** (COL-06: my cards + adopted/downloaded + design-new → Styler), a GameCard gallery; the
+  **global** library = the **My Designs shelf** (`/me/cards`: drafts · private · published + saved
+  presets) reached from Profile. Adopted/downloaded cards land in the per-game switcher (COL-06,
+  already specced).
+  Needs (spec-owner): product-spec CARD-* — the **StylePreset** entity + save-as-new / named-target
+  wording; api-contract — **style-preset CRUD** (`/me/style-presets`) and a page-audit confirm that
+  `/me/cards` (shelf) + `GET /me/collection/:entryId/cards` (switcher) cover the gallery. **Drives
+  the #3 Game-page card-gallery drafts** (3 distinct interfaces, owner-initiated). (from the
+  save-model brainstorm, 2026-06-13) [behavior]
 
 ## Resolved
 - OQ-001 → **Multiple device models.** *(Superseded by OQ-042/decision 0017 — one handheld body; users own multiple **shells**, not models.)* A user can own several device models (via entitlements/store)
