@@ -6,7 +6,7 @@
 > "how it looks/feels"). Behavior questions raised while designing go to
 > [`../open-questions.md`](../open-questions.md), not edited into the spec directly.
 
-**Version:** 0.12 · **Last updated:** 2026-06-12 · **Owner:** Claude Code → Claude Design
+**Version:** 0.13 · **Last updated:** 2026-06-12 · **Owner:** Claude Code → Claude Design
 **Status:** **ALL screens specified** (5 tabs + 16 detail screens/flows). Ready to hand to Claude Design. Open design notes live in `open-questions.md` (`OQ-005/007`).
 > **Claude Design — read [`design-process.md`](design-process.md) first.** It defines the phased,
 > reuse-first process: 3 hero-screen (Collection) drafts → extract a named component catalog →
@@ -129,7 +129,7 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 **Purpose:** acquire cosmetics + currency (monetization) — and the app's **daily return ritual**. **Persona:** Curator/spender.
 **Must host:**
 - The **daily bonus claim** (+1 PX/day, claimed HERE — ready + claimed states; `ECON-02`, decision 0017).
-- Featured **Drops** (the drop's own page opens as a **drawer/sheet**) + category sections (Sticker packs (shell) · Effects · Finishes · Frames · Fonts · Device shells · Screen themes · Pixels/Top-Up) (`COSM-01`, `ECON-08`, decision 0017).
+- Featured **Drops** (the drop's own page opens as a **drawer/sheet**) + category sections (Sticker packs (shell) · Effects · Finishes · Frames · **Nameplates** · Fonts · Device shells · Screen themes · Pixels/Top-Up) (`COSM-01`, `ECON-08`, decisions 0017/0018).
 - **Single-currency model:** real money buys **Pixels only**; premium cosmetics are **priced in Pixels** (`ECON-01`).
 - A dedicated **Top Up page** (pack grid incl. the one-time **Starter Pack**, `ECON-10`, + per-pack **value math**; **↺ Restore purchases**, `ECON-06`) — reached via the Wallet, the category index, and the can't-afford bridge; the header counter stays a *wallet* door, never a buy button.
 - **Wallet surfaced here:** **balance + earn/spend ledger + buy-currency** (`ECON-07`); the header counter is its entry point elsewhere.
@@ -278,3 +278,4 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 | 2026-06-11 | 0.10 | Decision 0015 ripple: **share card image** (`CARD-21`) on the Game page owned state (4.2) and at the card-editor reveal (4.3); reveal/celebration pattern tracked as `OQ-040`. |
 | 2026-06-12 | 0.11 | Decision 0016 ripple: **community presence stats** (`CAT-09`) in search results (4.1) + on the Game page (4.2 — presence pulled forward; richer aggregates stay later-phase). |
 | 2026-06-12 | 0.12 | Decision 0017 ripple (store-economy batch): §1.5 the currency's in-app identity = **Pixels** (PX, pixel-gem); §3.4 gains the **Store-claimed daily bonus**, the **drop drawer**, the **Top Up page** (+`ECON-10` Starter Pack, value math, the three doors), renamed categories (sticker packs = shell; device shells; screen themes) and a designed-states line; §4.11 = **sheet detail · hold-to-buy (+required a11y alternative) · pack contents view · whole-page theme preview** (sticker-on-shell preview deferred `OQ-045`); §4.12 ledger entries + the negative variant. |
+| 2026-06-12 | 0.13 | Decision 0018 ripple: §3.4 store categories gain **Nameplates** (`COSM-01`'s new type, the styler gate ruling — OQ-039 closed). |

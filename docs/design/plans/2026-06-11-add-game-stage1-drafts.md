@@ -204,3 +204,11 @@ Meta: **no PNG deliverables** — the html files are what the owner reviews; ren
   notice, SYS-10) + **◈ → the PIXELS mark** (store-track ruling, pixel-gem v3) + the polish backlog
   (P3 balance + hint orphan trim · `.cfan.pick` unification · shared plate-band recipe · drawer-pip
   centering · dead `.well` cleanup).
+
+### Plan complete (2026-06-12)
+- **Task 5 ✓** — `mockups/add-game/add-game-states.html` landed (13 devices + 3 insets; full P1–P10).
+- **Task 6 ✓** — formalized: design-spec **0.12** (new §2.4 Add Game composition + state matrix; §1.5
+  Forms & Flow set incl. `ReportSheet`; §1.2 plate legibility floor) + catalog HTML **v0.4** (the
+  Forms & Flow visual section). SCREEN-STATUS rows 4.1/4.16 → Design-spec ✅. **Stage 1 of decision
+  0014 is closed**; stage 2 (Styler) is at its owner gate on the parallel track; its components
+  formalize at its own converge.

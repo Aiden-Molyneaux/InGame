@@ -4,7 +4,7 @@
 > Screens and visuals are owned by the design-spec; endpoint shapes by the api-contract. This
 > document references those by ID. See [`../00-INDEX.md`](../00-INDEX.md) for the working agreement.
 
-**Version:** 0.17 (draft) · **Last updated:** 2026-06-12 · **Owner:** Claude Code
+**Version:** 0.18 (draft) · **Last updated:** 2026-06-12 · **Owner:** Claude Code
 
 ---
 
@@ -150,7 +150,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 
 | ID | Pri | Behavior |
 |---|---|---|
-| CARD-01 | P0 | A **Card editor**, launched for a specific game, composes the card **front** as layers (the **back is a standardized** auto-stats layout **incl. printed provenance — designer attribution + adoption count**, decision 0015): *optional colour/gradient base → vector elements → one animated effect → finish → frame → title.* Trading-card portrait. |
+| CARD-01 | P0 | A **Card editor**, launched for a specific game, composes the card **front** as layers (the **back is a standardized** auto-stats layout **incl. printed provenance — designer attribution + adoption count**, decision 0015): *optional colour/gradient base → vector elements → one animated effect → finish → frame → **nameplate** → title (**font + ink**).* Trading-card portrait. *(Nameplate = the plate **object** the title sits on — a cosmetic type per OQ-039/decision 0018; the title layer itself is font + ink colour.)* |
 | CARD-02 | P0 | Art is **in-app vector composition** — placeable **vector primitives** (shapes, letters, numbers, icons/SVGs — **the free baseline; premium vector packs are rescoped to shell stickers**, decision 0017/OQ-047) positioned/scaled/rotated/recoloured/layered, plus an optional colour/gradient base. **No image uploads. No AI art.** ("Stickers" and "art assets" on cards are unified as vector elements; purchasable sticker packs belong to the shell.) |
 | CARD-03 | P0 | With no uploads, moderation is **report/hide on published cards** (MOD-01/02) + **text/glyph screening** on user-entered text (MOD-07) — no upload-review pipeline. |
 | CARD-04 | P0 | **Save private** (your collection only) or **Publish** to the community; published cards are **adoptable** and retain **designer attribution**. |
@@ -160,7 +160,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | CARD-08 | P0 | **Element management:** a **layers panel** (reorder z-order, select, rename, lock, hide, duplicate, delete) + stacked-tap disambiguation; **multi-select + group/ungroup**; explicit bring-forward/back. |
 | CARD-09 | P0 | **Precision on a small canvas:** **pan/zoom** the canvas (distinct from scaling an element); **snapping / smart-guides / align / distribute**; **nudge + numeric** transform input; surfaced **undo/redo** + scoped reset. |
 | CARD-10 | P1 | **Per-element creative controls:** opacity, solid/gradient fill, stroke/outline, shadow & glow, flip/mirror, blend modes, corner-radius/parametric shapes. *(Heavy ops — clip-to-shape masking, boolean, pattern/array — parked, §10.)* |
-| CARD-11 | P1 | **Colour & type system:** saved palettes/swatches/recents/favourites + **eyedropper** + curated theme palettes; categorized **fonts** (free + premium) with text-styling parity (spacing/align/case) and **curved/arc text**. |
+| CARD-11 | P1 | **Colour & type system:** saved palettes/swatches/recents/favourites + **eyedropper** + curated theme palettes; categorized **fonts** (free + premium) with text-styling parity (spacing/align/case) and **curved/arc text**. **The title layer = font + ink colour**; the plate object behind it is the **nameplate** cosmetic (COSM-01, decision 0018). |
 | CARD-12 | P0 | **Effects & finish:** **one animated effect** at a time (frost/fire/galaxy/raining-blood…) with intensity/opacity; plus a **separate stackable finish** layer (holo/foil/metallic, optionally tilt-reactive). Both free + premium. |
 | CARD-13 | P0 | **Premium-in-editor = preview-then-acquire:** apply premium items to preview live (visibly flagged); at **publish/keep**, a **reconcile step** (acquire all / remove) with the **buy-currency** path surfaced at the point of intent. |
 | CARD-14 | P0 | **Drafts & lifecycle:** an explicit **Draft** state + drafts shelf; **autosave + crash recovery**; **unsaved-exit guard**; **duplicate / save-as-copy**. |
@@ -183,7 +183,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 ### 5.8 Cosmetics library (`COSM-`)
 | ID | Pri | Behavior |
 |---|---|---|
-| COSM-01 | P0 | A library of cosmetic items typed as: **shell sticker pack** (shapes/letters/icons placed on the device shell, DEV-01) · **effect** · **finish** (holo/foil) · **frame** · **font** · **device shell** (colourways/wraps for the one handheld — replaces the former "device skin" + "device model" pair) · **screen theme** (DEV-04). (The card canvas sells nothing: card vector elements are the free baseline, CARD-02 — decision 0017.) |
+| COSM-01 | P0 | A library of cosmetic items typed as: **shell sticker pack** (shapes/letters/icons placed on the device shell, DEV-01) · **effect** · **finish** (holo/foil) · **frame** · **nameplate** (the title-plate object — SLAB/RIBBON/BEVEL/…; adopted per the styler gate ruling, OQ-039/decision 0018; "overlay" was considered and **cut**) · **font** · **device shell** (colourways/wraps for the one handheld — replaces the former "device skin" + "device model" pair) · **screen theme** (DEV-04). (The card canvas sells nothing: card vector elements are the free baseline, CARD-02 — decision 0017.) |
 | COSM-02 | P0 | A **free baseline** set is always available so everyone can customize meaningfully. |
 | COSM-03 | P0 | Premium items are gated by **entitlement** (owned via purchase or earned). The store's moat = **things you can't just draw** (animated/dynamic effects, curated packs). |
 | COSM-04 | P1 | Some cosmetics are **earned**, not bought — delivered via the achievement system (ACH-04), including **achievement-exclusive** items that are never purchasable (prestige). |
@@ -283,7 +283,7 @@ Authoritative field-level shapes live in [`api-contract.md`](api-contract.md); t
 - **Collection:** `collection_entries` (user×game: status, hours, hours_source, percent_complete, owned_since, rating, notes, active_card_design_id) · `collection_platforms` (entry × controlled platform)
 - **Cards:** `card_designs` (game, creator, visibility, **composition JSON (vector elements)**, **rendered_image_url + thumbnail_url**, **effect/finish ids**, is_premium, **composition_hash**, adoption_count, moderation_status) · `card_adoptions` (adopter × design × game, currency_paid)
 - **Device:** `device_configs` (user: active_model, shell_colour, **screen_theme**, sticker_composition JSON)
-- **Cosmetics:** `cosmetic_items` (type ∈ vector_pack/effect/finish/frame/font/device_skin/screen_theme/device_model, is_premium, price) · `cosmetic_packs` · `user_entitlements` (user × item, source)
+- **Cosmetics:** `cosmetic_items` (type ∈ shell_sticker_pack/effect/finish/frame/**nameplate**/font/device_shell/screen_theme — decisions 0017/0018, is_premium, price) · `cosmetic_packs` · `user_entitlements` (user × item, source)
 - **Economy:** `wallets` (balance) · `currency_ledger` (delta, reason, ref) · `store_products` (IAP product → grant) · `iap_receipts` (validated)
 - **Social:** `friendships` (requester/addressee, status) · `user_blocks` (blocker × blocked — SOC-09) · `invite_tokens` (SOC-07/10) · `lists` + `list_items` (Top-5 = capped list) · `game_recommendations` · `activity_events`
 - **What to Play:** `play_queue_items` (user × game, position, source, currently_playing)
@@ -356,3 +356,4 @@ Recorded so they're conscious choices, not omissions:
 | 2026-06-12 | 0.15 | **CAT-09 community presence stats** (decision 0016, owner direction during Add Game pass 3): collections-count + friends-have-it on every catalog entry, surfaced in search + the Game page — the presence half of the Game page's "aggregate stats" pulled forward from later-phase. Ripples api-contract (search/game payload fields) + design-req 4.1/4.2. | CAT-09 |
 | 2026-06-12 | 0.16 | **MOD-01: reports gain a required details note** for reasons needing specifics (incorrect info) — moderator-facing only, outside MOD-07 scope (owner direction, Add Game pass 5). Ripples api-contract (`details` on POST /reports). | MOD-01 |
 | 2026-06-12 | 0.17 | **Store-economy batch** (decision 0017, the store track's five owner rulings): currency's in-app identity = **Pixels** + **hold-to-buy** spend confirm (ECON-01) · daily bonus becomes a **Store-claimed daily** (lapses, no streaks v2; ECON-02) · **restore never re-grants consumables** (ECON-06) · ledger entry list refreshed (ECON-07) · **+ECON-10 one-time Starter Pack** · **COSM-01 retyped**: shell sticker packs + device shell (skin+model collapsed; the card canvas sells nothing) · DEV-02 → shells of the one handheld · CARD-02/17 vector elements all free. Resolves OQ-041..044/046/047. Ripples api-contract + design-req. | ECON-01/02/06/07/10, COSM-01, DEV-02, CARD-02/17 |
+| 2026-06-12 | 0.18 | **Nameplate cosmetic type** (decision 0018, the styler gate ruling — closes OQ-039): COSM-01 gains **nameplate** (the title-plate object; "overlay" cut); the card layer stack gains the nameplate layer and **title rescopes to font + ink** (CARD-01/11); §6 `cosmetic_items` types synced (also fixing a stale pre-0017 list). Ripples design-req 3.4 (store aisle); api-contract was pre-synced (0.16). | COSM-01, CARD-01/11 |
