@@ -86,3 +86,32 @@ Deferred to converge: loading/error/offline cells · reduce-motion + non-gesture
    breakout proposal + the OQ-040 ritual treatment. Append the ruling here verbatim.
 4. Converge → `canvas/canvas-states.html` (full matrix incl. lifecycle) → SCREEN-STATUS (row +
    UP NEXT) → STOP. OQ-007/040 resolutions = design-side; any behavior finds → the inbox.
+
+---
+
+## Owner gate ruling — 2026-06-13 (verbatim)
+
+> "Let's go with C." (+ a mid-gate fix already applied: "I don't see the affordance to Proof the
+> card in C" → the persistent `👁 PROOF` key added to the bench row, P2/P5.)
+
+Then, two converge changes:
+> "* Bring the Undo and Redo bottoms down to just above the Ops dashboard.
+> * When proofing, the smaller versions of the Game Card should also be rendered - I believe we have
+>   a couple set sizes for the game card when it's in the grid, or in thumbnail form, etc."
+
+Decoded and applied to the converged board:
+1. **Model: Draft C "Print shop" wins** (the diegetic breakout — OQ-007 resolved: the shell swings
+   open onto the workshop; layers = physical slips; tools ride the one bottom-sheet grammar; PROOF =
+   the diegetic hold-to-preview; PRESS = run-the-press publish; OQ-040's ritual native to the set).
+   Drafts A (floating HUD) + B (cockpit rails) retire, kept for history.
+2. **Undo/Redo relocated** off the top bar to a persistent **`editbar`** docked **just above the
+   slip rack ("Ops dashboard")** — thumb reach for the most-used controls; carries CARD-09's scoped
+   RESET too.
+3. **PROOF renders the card at its set sizes** — the converged P6 shows the true print on the bed
+   **plus the GameCard size ladder GRID · MINI · THUMB** (design-spec §1.5 `GameCard/grid|mini|thumb`)
+   so legibility into the **thumbnail safe-area is verifiable at proof time** (CARD-07 universal
+   representation + CARD-15 safe-area).
+
+Converge target: `canvas/canvas-states.html` — C's grammar + the two changes, P1–P8 + the deferred
+lifecycle cells P9–P11 (skeleton · load-error+RETRY · offline: editing + PROOF work from cache as
+the client-side flatten, PRESS/publish + premium acquires writes-gated per SYS-10/CARD-14).
