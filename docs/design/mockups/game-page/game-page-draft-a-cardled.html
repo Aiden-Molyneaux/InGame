@@ -93,17 +93,16 @@
     font: 700 11px var(--pk); letter-spacing: 1px; white-space: nowrap;
     box-shadow: 0 3px 0 color-mix(in srgb, var(--scr-btn) 45%, #000), inset 0 1px 0 rgba(255,255,255,.4); }
   .btn.gold { background: var(--gold); color: #3c2a09; box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
-    filter: drop-shadow(0 2px 0 color-mix(in srgb, var(--gold) 45%, #000));
+    filter: drop-shadow(0 3px 0 color-mix(in srgb, var(--gold) 45%, #000));
     clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
       100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
       calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
   .btn.sec { background: var(--cream); color: var(--navy);
-    box-shadow: 0 2px 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
-  /* button scale tightened to the Add Game / editor reference (owner note, 2026-06-13):
-     mini = the dense-action default; the gold/cream raised edge dropped 3px→2px so colour buttons
-     read lighter; reserve gold for ONE primary per band, cream/tertiary for the rest. */
-  .btn.mini { padding: 5px 8px; font-size: 9px; box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-btn) 45%, #000), inset 0 1px 0 rgba(255,255,255,.4); }
-  .btn.gold.mini { filter: drop-shadow(0 2px 0 color-mix(in srgb, var(--gold) 45%, #000)); }
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  /* button scale = the Add Game / editor catalog, verbatim (owner note, 2026-06-13):
+     base .btn 9px·13px / 11px / shadow.key 0 3px 0; .btn.mini is padding-only (6px·8px / 9px) and
+     KEEPS the base 3px edge — never a lighter 2px. Reserve gold for ONE primary per band. */
+  .btn.mini { padding: 6px 8px; font-size: 9px; }
   .btn svg { flex: 0 0 auto; }
   .btn.block { width: 100%; justify-content: center; box-sizing: border-box; }
   .tert { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
@@ -217,6 +216,15 @@
   .band { margin: 11px 0 0; padding: 11px 12px; background: var(--scr-well); border: 1px solid var(--scr-hairline); }
   .band.neutral { background: rgba(255,159,67,.06); border-color: color-mix(in srgb, var(--scr-accent) 35%, transparent); }
   .band-actions { display: flex; gap: 8px; margin-top: 9px; }
+
+  /* ── YourPlay collapsed peek (the PlayStats drawer's closed handle on the page) ── */
+  .yp-peek { position: relative; display: flex; align-items: center; gap: 9px; margin: 11px 0 0;
+    padding: 13px 12px 10px; background: var(--scr-well); border: 1px solid var(--scr-hairline); }
+  .yp-peek::before { content: ""; position: absolute; top: 4px; left: 50%; transform: translateX(-50%);
+    width: 34px; height: 3px; background: var(--scr-grip); }
+  .yp-peek .yp-sum { font: 700 10px var(--pk); letter-spacing: .5px; color: var(--scr-soft); }
+  .yp-peek .yp-edit { margin-left: auto; display: inline-flex; align-items: center; gap: 4px;
+    font: 700 8.5px var(--pk); letter-spacing: 1px; color: var(--scr-accent); }
 
   /* ── PlayStats (owned inline-edit) ── */
   .playstats { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--scr-hairline); border: 1px solid var(--scr-hairline); }
@@ -380,6 +388,11 @@
     inspect sheet; <b>rating</b> de-emphasized + flagged PENDING (OQ-058), pulled off the card-back (no card
     rating); the duplicate &ldquo;design new&rdquo; removed; and the <b>in-between UIs</b> added &mdash; the
     &#8943; overflow menu (P2), switch→equip (P4), adopt-confirm (P5).
+    <b style="color:#2a2633;">Rev 3 (owner notes, 2026-06-13):</b> <b>P2 `PlayStats` is now a pull-up
+    drawer</b> &mdash; the page keeps only a slim collapsed peek, the card stays the hero; the <b>card-back no
+    longer reads &ldquo;made in InGame&rdquo;</b>; and the <b>button scale is re-aligned to the Add Game
+    catalog verbatim</b> (mini = 6px&middot;8px / 9px, keeping the base `shadow.key` 3px edge &mdash; the
+    rev-2 lighter 2px was the miss).
     <i>Lifecycle cells (soft-hidden · loading · offline) deferred to converge. Sample: Destiny, 210 hrs;
     Maverick = you · Riko/Vanta = friends. Numbers illustrative (OQ-002/011).</i></p>
   </div>
@@ -493,7 +506,7 @@
         <div class="screen-bezel">
           <div class="screen sk2 c5">
             <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DESTINY</h2><span class="sh-sp"></span><span class="now-tag">&#9656; NOW PLAYING</span><button class="ovf-key" style="margin-left:8px;">&#8943;</button></div>
-            <div class="scroll">
+            <div class="scroll dimmed">
               <div class="cardhero">
                 <div class="gcard hero-size fr-gilt fx-ember fin-holo">
                   <div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div>
@@ -504,26 +517,10 @@
                 <span class="flip-hint">&#8635; FLIP FOR STATS &amp; PROVENANCE</span>
                 <span class="flip-hint" style="color:var(--scr-accent); border-color:color-mix(in srgb,var(--scr-accent) 45%,transparent);">&#9670; YOUR SELECTED CARD</span>
               </div>
-              <div class="band">
-                <div class="sec" style="margin:0 0 7px;"><h3>YOUR PLAY &mdash; TAP A FIELD TO EDIT</h3><a href="#">&#8635; LOG HOURS</a></div>
-                <div class="playstats">
-                  <div class="pstat-cell editing">
-                    <span class="l">HOURS</span>
-                    <div class="field-inline"><span class="q">210</span><span class="caret"></span></div>
-                  </div>
-                  <div class="pstat-cell"><span class="pen"><svg viewBox="0 0 12 12"><use href="#ic-pen"/></svg></span><span class="l">COMPLETE</span><span class="v">68<small>%</small></span></div>
-                  <div class="pstat-cell wide"><span class="pen"><svg viewBox="0 0 12 12"><use href="#ic-pen"/></svg></span><span class="l">STATUS</span>
-                    <div class="status-row"><span class="schip on">PLAYING</span><span class="schip">BEATEN</span><span class="schip">COMPLETED</span><span class="schip">SHELVED</span></div>
-                  </div>
-                  <div class="pstat-cell wide"><span class="pen"><svg viewBox="0 0 12 12"><use href="#ic-pen"/></svg></span><span class="l">OWNED SINCE</span><span class="v" style="font-size:11px;">SEP 2014</span></div>
-                  <div class="pstat-cell wide" style="opacity:.55;"><span class="l">RATING <span style="color:var(--scr-grip); letter-spacing:0; font-weight:600;">&mdash; PENDING (OQ-058)</span></span><span class="stars" style="font-size:12px;">&#9733;&#9733;&#9733;&#9733;<span class="off">&#9733;</span></span></div>
-                  <div class="pstat-cell wide"><span class="pen"><svg viewBox="0 0 12 12"><use href="#ic-pen"/></svg></span><span class="l">NOTES</span><span class="v" style="font:600 10px/1.4 var(--pk); color:var(--scr-soft);">&ldquo;Back for the new season &mdash; chasing the raid title.&rdquo;</span></div>
-                </div>
-                <div class="band-actions">
-                  <button class="btn gold mini"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-edit2"/></svg>EDIT THIS CARD</button>
-                  <button class="btn sec mini">&#8645; SWITCH CARD</button>
-                  <button class="btn sec mini"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-share"/></svg>SHARE</button>
-                </div>
+              <div class="yp-peek">
+                <span class="npl">YOUR PLAY</span>
+                <span class="yp-sum">210 HRS &middot; 68% &middot; PLAYING</span>
+                <span class="yp-edit">&#9650; TAP TO EDIT</span>
               </div>
               <div class="sec"><h3>YOUR CARDS FOR DESTINY</h3><a href="#">MANAGE &rsaquo;</a></div>
               <div class="switch-rail">
@@ -533,6 +530,29 @@
                 <div class="newtile"><span class="plus">&#43;</span><span class="nl">DESIGN NEW</span></div>
               </div>
               <div class="hint" style="text-align:left;">YOUR SELECTED CARD SHOWS EVERYWHERE (COL-06/CARD-07) &middot; SWITCH ANY TIME &middot; FULL LIBRARY = MANAGE (THE CARD SWITCHER, P4)</div>
+            </div>
+            <div class="scrim"></div>
+            <div class="sheet">
+              <div class="handle"></div>
+              <div class="sh-h">YOUR PLAY &mdash; TAP A FIELD TO EDIT<a href="#" style="margin-left:auto; color:var(--scr-accent); font:600 9px var(--pk); letter-spacing:.5px; text-decoration:none;">&#8635; LOG HOURS</a><span class="x" style="margin-left:11px;">&#10005;</span></div>
+              <div class="playstats">
+                <div class="pstat-cell editing">
+                  <span class="l">HOURS</span>
+                  <div class="field-inline"><span class="q">210</span><span class="caret"></span></div>
+                </div>
+                <div class="pstat-cell"><span class="pen"><svg viewBox="0 0 12 12"><use href="#ic-pen"/></svg></span><span class="l">COMPLETE</span><span class="v">68<small>%</small></span></div>
+                <div class="pstat-cell wide"><span class="pen"><svg viewBox="0 0 12 12"><use href="#ic-pen"/></svg></span><span class="l">STATUS</span>
+                  <div class="status-row"><span class="schip on">PLAYING</span><span class="schip">BEATEN</span><span class="schip">COMPLETED</span><span class="schip">SHELVED</span></div>
+                </div>
+                <div class="pstat-cell wide"><span class="pen"><svg viewBox="0 0 12 12"><use href="#ic-pen"/></svg></span><span class="l">OWNED SINCE</span><span class="v" style="font-size:11px;">SEP 2014</span></div>
+                <div class="pstat-cell wide" style="opacity:.55;"><span class="l">RATING <span style="color:var(--scr-grip); letter-spacing:0; font-weight:600;">&mdash; PENDING (OQ-058)</span></span><span class="stars" style="font-size:12px;">&#9733;&#9733;&#9733;&#9733;<span class="off">&#9733;</span></span></div>
+                <div class="pstat-cell wide"><span class="pen"><svg viewBox="0 0 12 12"><use href="#ic-pen"/></svg></span><span class="l">NOTES</span><span class="v" style="font:600 10px/1.4 var(--pk); color:var(--scr-soft);">&ldquo;Back for the new season &mdash; chasing the raid title.&rdquo;</span></div>
+              </div>
+              <div class="band-actions" style="margin-top:11px;">
+                <button class="btn gold mini"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-edit2"/></svg>EDIT THIS CARD</button>
+                <button class="btn sec mini">&#8645; SWITCH CARD</button>
+                <button class="btn sec mini"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-share"/></svg>SHARE</button>
+              </div>
             </div>
           </div>
         </div>
@@ -545,6 +565,14 @@
         </div>
       </div>
       <div class="half-panel">
+        <div class="sec" style="margin:0 0 7px;"><h3>RESTING STATE &mdash; THE DRAWER CLOSED</h3></div>
+        <div class="yp-peek" style="margin:0;">
+          <span class="npl">YOUR PLAY</span>
+          <span class="yp-sum">210 HRS &middot; 68% &middot; PLAYING</span>
+          <span class="yp-edit">&#9650; TAP TO EDIT</span>
+        </div>
+        <div class="hint" style="text-align:left; margin-top:7px;"><b>THE PAGE AT REST:</b> just this slim peek (the drawer's handle) under the card &mdash; tap it or pull up and the editing sheet shown on-screen rises. The card keeps the spotlight; the stats stay one gesture away.</div>
+        <div class="sec" style="margin:11px 0 7px;"><h3>THE &#8943; OVERFLOW MENU</h3></div>
         <div style="display:flex; align-items:flex-start; gap:13px;">
           <div style="display:flex; flex-direction:column; align-items:center; gap:5px; flex:0 0 auto;">
             <button class="ovf-key" style="transform:translateY(2px); box-shadow:0 0 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 2px 3px rgba(0,0,0,.22);">&#8943;</button>
@@ -558,18 +586,20 @@
             </div>
           </div>
         </div>
-        <div class="hint" style="text-align:left; margin-top:9px;"><b>IN-BETWEEN UI &mdash; THE &#8943; OVERFLOW MENU:</b> the header &#8943; opens this drawer &mdash; suggest a catalog edit (CAT-06) · share the game · report (MOD-01, → the `ReportSheet`). Present on every state's header.</div>
+        <div class="hint" style="text-align:left; margin-top:9px;"><b>THE HEADER &#8943;</b> opens this menu &mdash; suggest a catalog edit (CAT-06) · share the game · report (MOD-01, → the `ReportSheet`). Present on every state's header.</div>
       </div>
       <div class="caption">
-        <h3>P2 &mdash; Owned <em>(the band becomes your inline-edit PlayStats)</em></h3>
-        <p>Tapped from <b>your</b> collection: same card hero, but the adaptive band is now <b>`PlayStats`</b>
-        &mdash; hours (being edited, keyboard-ready) · complete% · status chips · owned-since · notes, all
-        <b>editable inline</b> (COL-02..05; a pencil per field, the field opening in place). <b>Rating is
-        de-emphasized + flagged PENDING (OQ-058)</b> per your note &mdash; it stays a per-*game* field, never
-        a card rating. The header carries the NOW-PLAYING tag (WTP-03) + the <b>&#8943; overflow</b>
-        (fragment). Below, <b>`CardSwitcher`</b> preview; MANAGE opens the full switcher (P4). <b>EDIT THIS
-        CARD</b> (gold) opens the Styler on the equipped card; viewing the card here <b>never edits the
-        art</b> (§4.2).</p>
+        <h3>P2 &mdash; Owned <em>(PlayStats is now a pull-up drawer)</em></h3>
+        <p>Tapped from <b>your</b> collection: same card hero, but <b>`PlayStats` is now a drawer</b> (your
+        note) &mdash; the page carries only a slim <b>collapsed peek</b> (YOUR PLAY · 210 HRS · 68% · PLAYING ·
+        &#9650; TAP TO EDIT), and pulling it up raises the <b>editing sheet</b> (the app's one bottom-sheet
+        grammar, shared with P5/Add Game): hours (being edited, keyboard-ready) · complete% · status chips ·
+        owned-since · notes, all <b>editable inline</b> (COL-02..05; a pencil per field). <b>Rating is
+        de-emphasized + flagged PENDING (OQ-058)</b> &mdash; it stays a per-<i>game</i> field, never a card
+        rating. The card stays the hero, the page breathes; the drawer foot holds <b>EDIT THIS CARD</b> (gold →
+        the Styler on the equipped card), SWITCH, SHARE. The header carries the NOW-PLAYING tag (WTP-03) + the
+        <b>&#8943; overflow</b> (fragment); MANAGE opens the full switcher (P4). Viewing the card here
+        <b>never edits the art</b> (§4.2).</p>
       </div>
     </div>
 
@@ -596,7 +626,7 @@
                     </div>
                     <div class="cb-prov">
                       <span class="p1">DESIGNED BY MAVERICK</span>
-                      <span class="p2">ADOPTED 12&times; &middot; STEP GILT &middot; EMBER &middot; HOLO &middot; MADE IN INGAME</span>
+                      <span class="p2">ADOPTED 12&times; &middot; STEP GILT &middot; EMBER &middot; HOLO</span>
                     </div>
                   </div>
                 </div>
@@ -620,8 +650,8 @@
         <h3>P3 &mdash; The card flip <em>(the card-object lives here, §4.2)</em></h3>
         <p>The Game page <b>hosts the card-object/flip</b>: tap the hero and it turns to its <b>standardized
         back</b> (CARD-01) &mdash; your per-game stats auto-filled up top, then the card's <b>provenance</b>:
-        DESIGNED BY MAVERICK · ADOPTED 12× · the equipped cosmetics · the &ldquo;made in InGame&rdquo; mark.
-        The back is **auto-generated, never designed** (the front is the canvas; the back is the receipt). A
+        DESIGNED BY MAVERICK · ADOPTED 12× · the equipped cosmetics. The back is
+        <b>auto-generated, never designed</b> (the front is the canvas; the back is the receipt). A
         community card flips to the same layout with its aggregate stats instead of yours.</p>
       </div>
     </div>
