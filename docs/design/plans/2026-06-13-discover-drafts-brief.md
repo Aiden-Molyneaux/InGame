@@ -183,3 +183,16 @@ Folder: `docs/design/mockups/discover/` — drafts a/b/c as named above (README 
 
 Converge target: `discover/discover-states.html` — A's two-rooms grammar + the seven changes, full
 matrix incl. lifecycle (Skeleton · Signal-Lost+RETRY · Offline writes-gated, SYS-10).
+
+### Post-converge: aesthetic exploration + pick (2026-06-13)
+
+> Owner: *"This draft is really good. Keep this draft, but make another that's like this one, except it
+> uses the card fan aesthetic from the add game screen."* → built `discover-states-fan.html` (the same
+> board, every game shown as the Add Game `CardFan` across Up Next / Upcoming / Friend recs / Trending /
+> Search). Then: *"Let's move forward with Rows/rails."*
+
+**RULED: rows/rails win.** `discover-states.html` (rails / rows / result-rows) is the **board of record**;
+the card-fan sibling `discover-states-fan.html` is **retired, kept for history**. The `SegmentedKeycap`
+form ratified for design-spec §1.5 is the **`/pair`** (bottom-docked, smaller, active pressed + pink
+PipLight). Discover-track design work complete; the design-spec formalization + API page-audit
+(OQ-053/054/055/057) remain the spec-owner batch.
