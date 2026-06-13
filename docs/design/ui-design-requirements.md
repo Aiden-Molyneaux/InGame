@@ -102,7 +102,7 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 - **Add-game** entry point (→ Add Game).
 - Card **face = art + title only**; tap → **Game page** (owned state, 4.2).
 **Not here:** summary stats (they live on Profile).
-**Modes:** your own (editable) + **friend-view read-only** (`COL-10`).
+**Modes:** your own (editable) + **friend-view read-only** (`COL-10`) — the friend-view carries **full browse-tool parity** (the same sort · scoped search · genre/status filter · view-mode toggle, **read-only**: no Arrange/edit) over the friend-visible field set (`COL-11`).
 **States:** empty (inviting first-add nudge) · populated (must scale gracefully inside the frame) · **Now-Playing unset** (hero nudge) · loading.
 
 ### 3.2 Discover (merges Up Next + discovery)
@@ -282,3 +282,4 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 | 2026-06-12 | 0.13 | Decision 0018 ripple: §3.4 store categories gain **Nameplates** (`COSM-01`'s new type, the styler gate ruling — OQ-039 closed). |
 | 2026-06-13 | 0.14 | Decision 0019 ripple: §3.5/4.1 friend-view **Share chip cut** (sharing is self-only, OQ-052); §4.1 empty-state **popular = most-collected** (`CAT-09`, OQ-051). |
 | 2026-06-13 | 0.15 | Decision 0020 ripple: §4.2 Game page gains **entry-context states** — the **friend-view** (tap a friend's card → their card + **equipped readout** `CARD-22` + per-game context, **opt-in compare**, **atomic adopt**, `SOC-11`) alongside the owned-state (now noting **inline-editable** stats + the **card-object/flip** home); Part-2 row 7 updated. |
+| 2026-06-13 | 0.16 | Decision 0021 ripple: §3.1 friend-view gains **browse-tool parity** (`COL-11`) — full sort · scoped search · genre/status filter · view-modes, **read-only**, over the friend-visible field set — the Collection board re-pass brief. |
