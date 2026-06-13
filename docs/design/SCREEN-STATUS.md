@@ -9,12 +9,12 @@
 > **per-page subfolders** under [`mockups/`](mockups/) (file map: its README); the catalog
 > stays at the mockups root.
 
-**Last updated:** 2026-06-13 (report track — **§4.16 Report promoted to its own converged board** (`report-states.html`, A `/drawer`; 3 targets × full matrix; MOD-01/02 · SOC-09 · SYS-10): board ✅, API ✅ (page-audited), **Design-spec ⬜ (lifecycle-cell formalization owed)**. Prior: canvas track — Canvas converged (print shop · `canvas-states.html`), the 0014 editor arc complete, OQ-007 + OQ-040 resolved; spec-owner triage 0019.)
+**Last updated:** 2026-06-13 (**Discover track — §3.2 Discover OPENED**: 3 distinct drafts at the owner gate — A "two rooms" · B "one feed, lensed" · C "arcade aisles"; the owed `SegmentedKeycap` proposed in 3 forms; brief `plans/2026-06-13-discover-drafts-brief.md`. Prior: report track — **§4.16 Report promoted to its own converged board** (`report-states.html`, A `/drawer`; 3 targets × full matrix; MOD-01/02 · SOC-09 · SYS-10): board ✅, API ✅ (page-audited), **Design-spec ⬜ (lifecycle-cell formalization owed)**. Prior: canvas track — Canvas converged (print shop · `canvas-states.html`), the 0014 editor arc complete, OQ-007 + OQ-040 resolved; spec-owner triage 0019.)
 
 ## Up next (the queue)
 0. **🎉 The 0014 editor arc is COMPLETE** — Add Game → Styler → Canvas all converged. OQ-007 (breakout) + OQ-040 (first-print ritual) resolved design-side in the Canvas board.
 1. *Formalization batches owed (spec-owner):* the **Styler converge set** (design-spec §2.5 already landed 0.13 — the catalog component shells) + the **Canvas converge set** (design-spec §2.x + the editor's open-composition components: `CanvasStage` · `AssetShelf` · `ElementTray` · `LayerRack`/slips · `PrintRitual`); + the **Canvas API page-audit** (writes already in 0.16/0.18 — confirm no gap); + the **Report converge set** (design-spec §1.5/§1.6: the `ReportSheet` lifecycle cells — in-flight · filed-confirmation · post-block-confirmation · offline-gated — formalization owed; its API is already page-audited).
-2. *Coverage-driven after that* (design-process): **Discover** (surfaces the segmented control) and **Settings** (rows · toggles · destructive confirm) are the named gap-closers; **Device editor** carries the OQ-045 debt. *(Inbox for next triage: OQ-038 offline-cache-scope · the OQ-002/009/010/011 economy+content tuning set.)*
+2. *Coverage-driven, IN PASS:* **Discover** (the segmented-control gap-closer) — **3 distinct drafts at the owner gate** (A rooms · B feed · C arcade; the owed `SegmentedKeycap` in 3 forms). **Settings** (rows · toggles · destructive confirm) is now the **next queued** coverage-closer; **Device editor** carries the OQ-045 debt. *(Inbox for next triage: the **Discover OQs logged this pass** · OQ-038 offline-cache-scope · the OQ-002/009/010/011 economy+content tuning set.)*
 
 ## Legend
 **State:** ✅ converged · 🔶 in pass / partial · 🔜 queued (#n) · ⬜ not started ·
@@ -26,7 +26,7 @@
 | § | Screen | State | Mockup (version) | Implements from | States board | Design-spec | API | Notes / next |
 |---|---|---|---|---|---|---|---|---|
 | 3.1 | Collection (home) | ✅ converged | `h2-underlay-v2` + `collection-states.html` (per 0011–0013) | `collection/collection-states.html` + `collection/h2-underlay-v2-c5-hybrid-ds-enforced.html` | ✅ (incl. friend-view, lifecycle, offline) | ✅ (§2.1; synced 0.8/0013) | ✅ (page-audited, 0.17) | 0.17 audit: list totals + item shape · `/me/collection/reorder` · the now-playing pin · `/catalog/popular` (ranked by collections-count — OQ-051 resolved, 0019) |
-| 3.2 | Discover | 🔜 queued (#4) | — | — | — | — | 🔶 | First surface for the segmented control |
+| 3.2 | Discover | 🔶 in pass | `discover-draft-{a,b,c}` (3 models · pre-gate) | — | — | — | 🔶 | **DISCOVER track — 3 drafts at the owner gate**: A "two rooms" · B "one feed, lensed" · C "arcade aisles"; new `SegmentedKeycap` (3 forms). Converge → `discover-states.html` after the pick |
 | 3.3 | Friends | ⬜ | — | — | — | — | 🔶 | Feed-first landing (SOC-06) |
 | 3.4 | Store (incl. 4.11/4.12) | ✅ converged | `store-states.html` (5 rulings + 0017) | `store/store-states.html` | ✅ (incl. lifecycle, writes-gated offline) | ✅ (§2.3; 0.10) | ✅ | OQ-045 sticker preview → Device editor pass |
 | 3.5 | Profile | ✅ converged | `profile-states.html` (per 0011–0013) | `profile/profile-states.html` (+ the h2-underlay board's Profile artboard) | ✅ (edit, friend-view, privacy, terminal, offline) | ✅ (§2.2; synced 0.8/0013) | ✅ (page-audited, 0.17) | 0.17 audit: `/me` + `/users/:id` enumerated field-level (cooldown · device payload · limited card · `relationship`); friend-view SHARE chip cut (OQ-052 resolved, 0019) |
