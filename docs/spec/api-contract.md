@@ -4,7 +4,7 @@
 > be refined alongside the design-spec, because screens reveal exactly what each call must return.
 > Behavior lives in [`product-spec.md`](product-spec.md); shapes live here. Referenced by ID.
 
-**Version:** 0.17 (draft) · **Last updated:** 2026-06-12 · **Owner:** Claude Code
+**Version:** 0.18 (draft) · **Last updated:** 2026-06-13 · **Owner:** Claude Code
 
 ---
 
@@ -56,7 +56,7 @@
 | GET | `/genres` | Controlled genre list (CAT-04) |
 | GET | `/users/:id/contributions` | Contributor profile data (CAT-07) |
 | GET | `/catalog/upcoming` | Entries with `releaseDate` in the future (CAT-08) |
-| GET | `/catalog/popular` | **Empty-state / onboarding suggestion rail** — the empty Collection's "POPULAR FIRST ADDS" + AUTH-06's add-a-few-games step: entries in the search-result shape incl. `collectionsCount`/`friendsHaveCount` (CAT-09). **Selection/ranking rule is unspecified → OQ-051** |
+| GET | `/catalog/popular` | **Empty-state / onboarding suggestion rail** — the empty Collection's "POPULAR FIRST ADDS" + AUTH-06's add-a-few-games step: entries in the search-result shape incl. `collectionsCount`/`friendsHaveCount` (CAT-09). **Ranked by `collectionsCount`** (most-collected first), capped ~12, no paging (decision 0019) |
 
 ## Collection (`COL-`)
 | Method | Path | Notes |
@@ -189,3 +189,4 @@
 | 2026-06-12 | 0.15 | Store-economy ripple (decision 0017): **+`POST /cosmetics/:id/acquire`** (the spend-currency purchase call — Store BUY + editor reconcile; was missing entirely) · `/me/wallet` gains `dailyBonus { available, amount, nextResetAt }` · `/me/daily-bonus` = the Store-claimed daily (lapses) · `/store` pack shapes incl. the one-time Starter Pack (`oneTime/purchased`, ECON-10) + drop shape · ledger `type` enum · `/me/device` → `activeShellId` · `/cosmetics` type enum (shell_sticker_pack · device_shell). |
 | 2026-06-12 | 0.16 | **Styler sync** (the converged board's page audit, styler track): **+`GET /games/:gameId/card-bases`** + **`POST /games/:gameId/card-bases/surprise`** — the `BaseRail` start-from sources + the auto-design deal (CARD-16/18, COSM-02; **resolves OQ-050**) · **+`POST /cards/:id/save-private`** — the missing draft→private finalize (reconcile gate + flatten, CARD-04/13/15; KEEP = save-private + the COL-06 `activeCardDesignId` patch) · **+`POST /cosmetics/acquire-batch`** — the ReconcileSheet's atomic ACQUIRE ALL (CARD-13, ECON-01/07; `shortBy` against the total) · `/cosmetics` + `/cards/assets` type enums gain **`nameplate`** (the styler gate ruling 2026-06-12; COSM-01 wording ripple stays with OQ-039's spec batch) · adopt note: the received-base charge rides the keep-reconcile (ECON-03). |
 | 2026-06-12 | 0.17 | **Collection + Profile page-audit** (the two converged boards, SCREEN-STATUS 3.1/3.5 → API ✅): `/me/collection` response gains `total`/`collectionTotal` + a full **item enumeration** (catalog line, hours/status/ownedSince, `nowPlaying` flag, `card { isCustom, isPremium }` — COL-02..07/09, CARD-06/07/18, WTP-03) · **+`PATCH /me/collection/reorder`** — the MY-ORDER/ARRANGE write (COL-07, OQ-031) · **+`PUT /me/now-playing`** — the one pin write-path, settable from Up Next or a collection entry (WTP-03; replaces the queue-item `currentlyPlaying` patch) · `/users/:id/collection` — friend field subset + the MOD-09 "unavailable" collapse extended to it · **+`GET /catalog/popular`** — the empty-state/onboarding suggestion rail (AUTH-06, CAT-09; ranking rule → **OQ-051**) · `/me` enumerated field-level (stats six-pack + percentiles, `usernameNextChangeAt` PROF-06, favouriteGame/nowPlaying/top5 expansions, achievements + contributions teasers, nullable-avatar monogram PROF-08) · `/users/:id` — **friend/full vs non-friend/limited** shapes + `relationship` + `device { shellId, screenThemeId, stickerComposition }` + gamertags (PROF-02/03/05, DEV-02/04, decision 0012) · `/me/lists` Top-5 re-rank shape (SOC-04) · `/me/invites` = the self-Profile SHARE (PROF-05/SOC-07; friend-profile SHARE → **OQ-052**). |
+| 2026-06-13 | 0.18 | Triage ripple (decision 0019): `/catalog/popular` **ranking rule set** — by `collectionsCount`, capped ~12, no paging (OQ-051). *(OQ-008 cap=30 · OQ-048 effect-only intensity · OQ-049 save-private surfaces are product-spec-only — covered by the cap-config, the opaque composition JSON, and the existing `/me/cards` + switcher endpoints; OQ-052 = the friend-view chip cut, design-req.)* |
