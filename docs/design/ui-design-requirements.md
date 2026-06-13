@@ -6,7 +6,7 @@
 > "how it looks/feels"). Behavior questions raised while designing go to
 > [`../open-questions.md`](../open-questions.md), not edited into the spec directly.
 
-**Version:** 0.13 · **Last updated:** 2026-06-12 · **Owner:** Claude Code → Claude Design
+**Version:** 0.14 · **Last updated:** 2026-06-13 · **Owner:** Claude Code → Claude Design
 **Status:** **ALL screens specified** (5 tabs + 16 detail screens/flows). Ready to hand to Claude Design. Open design notes live in `open-questions.md` (`OQ-005/007`).
 > **Claude Design — read [`design-process.md`](design-process.md) first.** It defines the phased,
 > reuse-first process: 3 hero-screen (Collection) drafts → extract a named component catalog →
@@ -148,7 +148,7 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 - **Gateways:** teasers + links to **Achievements** (`ACH-05`) and **My Contributions** (`CAT-07`) — reachable from here only.
 - **Settings** + **Edit profile** entries.
 **Not here:** the **privacy/visibility control** (`PROF-03`) — owner direction (2026-06-10 mockup review): it lives in **Settings** (4.15), **not** as a chip/button on the Profile header.
-**Friend-view mode** adds: **friend count + mutual friends**, **Add friend / Compare hours** actions, **Share profile** (`SOC-07`), and an overflow with **Report / Block** (`MOD-01`, `SOC-09`); hides edit/management (`PROF-05`).
+**Friend-view mode** adds: **friend count + mutual friends**, **Add friend / Compare hours** actions, and an overflow with **Report / Block** (`MOD-01`, `SOC-09`); hides edit/management — and has **no Share** (sharing is self-only: your invite link, `SOC-07`; decision 0019) (`PROF-05`).
 **Design note:** the exact visual **hierarchy** (what reads first) is yours to finalize; intent is Device/collection hero → identity → stats → Top-5 → teasers.
 **States:** self vs friend-view · edit mode · privacy-limited view.
 
@@ -160,7 +160,7 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 **Purpose:** get a game into your collection (and the catalog when it's new). **Personas:** everyone; Contributor.
 **Must host:**
 - **Search** the community catalog (`CAT-01`); results show **title + release year + developer studio + a representative card + an "in your collection" marker** + **community presence** (in-N-collections · friends-have-it, `CAT-09`).
-- **Empty-state suggestions** (recently-added / popular / friends' games) — never a blank box.
+- **Empty-state suggestions** (recently-added / **popular** = most-collected, `CAT-09` — capped, no paging, decision 0019 / friends' games) — never a blank box.
 - **Exists →** add with an **all-status picker** (`COL-01/02`), then an **offered (not forced)** card step (else default placeholder, `CARD-18`).
 - **Missing →** **Create canonical entry** (name/genre/studio/publisher/release) with **fuzzy dedup** (`CAT-03`) → "be first to design its card."
 - **Add & continue** (quick multi-add); **Report duplicate** from a result (→ admin dedup, `MOD-01/05`).
@@ -279,3 +279,4 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 | 2026-06-12 | 0.11 | Decision 0016 ripple: **community presence stats** (`CAT-09`) in search results (4.1) + on the Game page (4.2 — presence pulled forward; richer aggregates stay later-phase). |
 | 2026-06-12 | 0.12 | Decision 0017 ripple (store-economy batch): §1.5 the currency's in-app identity = **Pixels** (PX, pixel-gem); §3.4 gains the **Store-claimed daily bonus**, the **drop drawer**, the **Top Up page** (+`ECON-10` Starter Pack, value math, the three doors), renamed categories (sticker packs = shell; device shells; screen themes) and a designed-states line; §4.11 = **sheet detail · hold-to-buy (+required a11y alternative) · pack contents view · whole-page theme preview** (sticker-on-shell preview deferred `OQ-045`); §4.12 ledger entries + the negative variant. |
 | 2026-06-12 | 0.13 | Decision 0018 ripple: §3.4 store categories gain **Nameplates** (`COSM-01`'s new type, the styler gate ruling — OQ-039 closed). |
+| 2026-06-13 | 0.14 | Decision 0019 ripple: §3.5/4.1 friend-view **Share chip cut** (sharing is self-only, OQ-052); §4.1 empty-state **popular = most-collected** (`CAT-09`, OQ-051). |
