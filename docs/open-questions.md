@@ -36,6 +36,12 @@
   how that transition is styled — is a Claude Design decision to consider. [presentation]
   **Rescoped (decision 0014):** owed specifically for the **Card editor's Canvas posture** (stage 3
   of the Add Game arc); Add Game + the Styler stay in-frame (the takeover tier).
+  **RESOLVED (canvas converge, design-side 2026-06-13): the DIEGETIC breakout.** Entering the Canvas,
+  the device shell **swings open like a cabinet** onto a workshop bench; the card lies on a **press
+  bed**; layers become **physical slips** (`canvas/canvas-states.html` P1–P2). Three OQ-007 treatments
+  were drafted (total-yield HUD · partial-yield rails · diegetic press); the owner picked the press.
+  Reduce-motion = a fade (CARD-16). Spec-owner: move to `decisions/` with the editor-arc batch if a
+  formal record is wanted.
 - OQ-038: **Offline cache scope** — what renders read-only when offline: your own profile/collection
   only, or also recently-viewed friends? (split from OQ-037 during the design-spec sync; SYS-10) [behavior]
 - OQ-040: **The "moments layer" — reveal ritual + celebration tiering** (decision 0015): the
@@ -48,6 +54,13 @@
   contributor first-credit (CAT-05) · adopter-side designer credit (ECON-05) · mid-edit
   **hold-to-preview** (CARD-15). Design-spec patterns owed across stages 1–3 of the 0014 arc.
   (from the engagement review, 2026-06-11) [presentation]
+  **RESOLVED (canvas converge, design-side 2026-06-13):** the full **"first print" ritual** is
+  designed in `canvas/canvas-states.html` P8 — ① the press runs (client-rendered platen sweep, never
+  network-bound) · ② the slips fly in (the composition-JSON assembly replay) · ③ the print lifted off
+  the press (gallery staging, bloom + haptics) → routing: shelf slot · SHARE (CARD-21) · NOTIF-04
+  adoption-ask. **Tiered:** full here (canvas completions / publishes); the **light KeepBeat** for
+  Styler keeps was designed in `styler/styler-states.html` P7. Mid-edit **hold-to-preview** = the
+  Canvas's PROOF (P6). Spec-owner: fold into the editor-arc decision if wanted.
 - OQ-045: **Sticker placed-on-shell preview** (owner deferral, store track 2026-06-12) — §4.11's
   sticker-preview case is NOT drawn on the converged Store board; design it with the **Device editor
   pass** (DEV-01). [presentation]
