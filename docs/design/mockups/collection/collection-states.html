@@ -369,11 +369,11 @@
 <div class="canvas">
   <div class="canvas-head">
     <h1>Collection States · Empty · Views · Friend · Lifecycle — C5 v2</h1>
-    <p>Fourteen Collection artboards in the C5 v2 language (square chrome, stepped cards, Midnight theme),
+    <p>Sixteen Collection artboards in the C5 v2 language (square chrome, stepped cards, Midnight theme),
     now at parity with the Profile state matrix. <b>Tools &amp; empty:</b> first-run empty (AUTH-06) · the
     pulled-up drawer (COL-07/09 + OQ-031/034) · in-place search (COL-09; OQ-035). <b>View modes:</b> SHELF /
-    GRID / LIST (COL-07). <b>Friend's Collection (COL-10):</b> your chrome + the "view in their device" toggle
-    (decision 0012). <b>Now-Playing &amp; lifecycle:</b> the set-your-pin nudge (§3.1) · skeleton · load-error.
+    GRID / LIST (COL-07). <b>Friend's Collection (COL-10/COL-11):</b> your chrome + the "view in their device" toggle
+    (decision 0012) + <b>full read-only browse tools</b> (search/sort/filter/view). <b>Now-Playing &amp; lifecycle:</b> the set-your-pin nudge (§3.1) · skeleton · load-error.
     <b>Unavailable &amp; offline:</b> terminal (MOD-09) · offline from cache · a friend you can't reach (SYS-10).
     Standalone file — sample art = built-in SVG symbols.</p>
   </div>
@@ -929,7 +929,7 @@
     </div>
   </div>
 
-  <div class="stage-label">Friend's Collection (COL-10) <small>reached from a friend's Top-5 (PROF-05) &mdash; read-only, privacy-gated; your chrome by default + the "view in their device" toggle (decision 0012)</small></div>
+  <div class="stage-label">Friend's Collection (COL-10) <small>reached from a friend's Top-5 (PROF-05) &mdash; read-only, privacy-gated; your chrome by default + the "view in their device" toggle (decision 0012). <b>Full browse-tool parity (COL-11):</b> search &middot; sort &middot; filter &middot; view, read-only</small></div>
   <div class="stage">
 
     <!-- ═══ Friend's Collection · default (your chrome) ═══ -->
@@ -971,9 +971,12 @@
               </div>
             </div>
             <div class="tools">
-              <div class="chip"><svg width="13" height="12" viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg><b>COMPARE</b></div>
+              <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.4" fill="none" stroke-width="1.6"/><path d="M7.8 7.8L11 11" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+              <div class="chip active"><span class="chip-pip"></span><svg width="11" height="12" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><b>A&ndash;Z &#8593;</b></div>
+              <div class="chip"><svg width="12" height="11" viewBox="0 0 12 11"><path d="M1 1.5h10L7.5 6v3.4L4.5 10V6L1 1.5z" fill="none" stroke-width="1.4" stroke-linejoin="round"/></svg><b>ALL</b></div>
               <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="4.4" height="4.4" rx="1"/><rect x="6.6" y="1" width="4.4" height="4.4" rx="1"/><rect x="1" y="6.6" width="4.4" height="4.4" rx="1"/><rect x="6.6" y="6.6" width="4.4" height="4.4" rx="1"/></svg></div>
               <div class="spacer"></div>
+              <div class="chip"><svg width="13" height="12" viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg><b>COMPARE</b></div>
               <div class="chip"><b class="ovf">&#8943;</b></div>
             </div>
           </div>
@@ -993,9 +996,10 @@
         goes back where you arrived from (PROF-05). The hero is <b>their</b> Now Playing &mdash; full stats + details,
         <b>no LOG HOURS</b> (you can't log their time).</p>
         <p><b>No chrome switch here:</b> "view in their device" is a <b>Profile-level</b> toggle (decision 0012) that
-        <i>carries over</i> to the Collection &mdash; so this screen has none of its own. <b>Read-only tools:</b>
-        COMPARE (SOC-03) + the view toggle; <b>no Add / arrange / sort</b> (owner-only); Report / Block in the
-        &#8943; overflow (MOD-01/SOC-09).</p>
+        <i>carries over</i> to the Collection. <b>Full browse tools, read-only (COL-11):</b> search &middot; sort
+        &middot; filter &middot; view &mdash; the same bar as your own, over the friend-visible field set (no
+        notes/rating/platforms); <b>no Add / arrange / per-entry edit</b> (owner-only). COMPARE (SOC-03) sits where
+        ADD would; Report / Block in the &#8943; overflow (MOD-01/SOC-09).</p>
       </div>
     </div>
 
@@ -1039,9 +1043,12 @@
               </div>
             </div>
             <div class="tools">
-              <div class="chip"><svg width="13" height="12" viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg><b>COMPARE</b></div>
+              <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.4" fill="none" stroke-width="1.6"/><path d="M7.8 7.8L11 11" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+              <div class="chip active"><span class="chip-pip"></span><svg width="11" height="12" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><b>A&ndash;Z &#8593;</b></div>
+              <div class="chip"><svg width="12" height="11" viewBox="0 0 12 11"><path d="M1 1.5h10L7.5 6v3.4L4.5 10V6L1 1.5z" fill="none" stroke-width="1.4" stroke-linejoin="round"/></svg><b>ALL</b></div>
               <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="4.4" height="4.4" rx="1"/><rect x="6.6" y="1" width="4.4" height="4.4" rx="1"/><rect x="1" y="6.6" width="4.4" height="4.4" rx="1"/><rect x="6.6" y="6.6" width="4.4" height="4.4" rx="1"/></svg></div>
               <div class="spacer"></div>
+              <div class="chip"><svg width="13" height="12" viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg><b>COMPARE</b></div>
               <div class="chip"><b class="ovf">&#8943;</b></div>
             </div>
           </div>
@@ -1062,6 +1069,164 @@
         <p>Reached by toggling on the Profile, then following <b>VIEW COLLECTION</b> (COL-10) &mdash; the two friend
         surfaces share <b>one</b> chrome state, so you never re-toggle per screen. The <b>&lsaquo; RETURN TO PROFILE</b>
         link sits under the header in both views.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-label">Friend's Collection — browse tools (COL-11) <small>full read-only parity with your own bar &mdash; sort &middot; scoped search &middot; filter &middot; view, over the friend-visible field set; the write tools (Add &middot; Arrange &middot; per-entry edit) stay owner-only</small></div>
+  <div class="stage">
+
+    <!-- ═══ Friend's Collection · sorted by hours (list) ═══ -->
+    <div class="take">
+      <div class="artboard-label">Friend's Collection — sorted by hours (list)</div>
+      <div class="device" data-screen-label="States · C5 · Friend — Sorted by hours">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2 class="whose">COLLECTION &mdash; RIKO</h2><span class="count">12 GAMES</span></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO PROFILE</a>
+            <div class="scroll">
+              <div class="sec"><h3>RIKO'S LIBRARY &middot; MOST HOURS FIRST</h3></div>
+              <div class="list-stack">
+                <div class="well strip">
+                  <div class="gcard thumb fr-minecraft"><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
+                  <div class="strip-meta"><span class="strip-title">MINECRAFT</span><span class="hero-sub">280 HRS &middot; BEATEN &middot; GOT IT '19</span></div>
+                  <span class="chev">&rsaquo;</span>
+                </div>
+                <div class="well strip">
+                  <div class="gcard thumb fr-destiny"><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                  <div class="strip-meta"><span class="strip-title">DESTINY</span><span class="hero-sub">154 HRS &middot; PLAYING &middot; GOT IT '21</span></div>
+                  <span class="chev">&rsaquo;</span>
+                </div>
+                <div class="well strip">
+                  <div class="gcard thumb fr-ratchet"><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
+                  <div class="strip-meta"><span class="strip-title">RATCHET &amp; CLANK</span><span class="hero-sub">41 HRS &middot; 100% &middot; GOT IT '23</span></div>
+                  <span class="chev">&rsaquo;</span>
+                </div>
+                <div class="well strip">
+                  <div class="gcard thumb fr-re"><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div>
+                  <div class="strip-meta"><span class="strip-title">RESIDENT EVIL<span class="now-inline">&#9654; NOW</span></span><span class="hero-sub">24 HRS &middot; PLAYING &middot; GOT IT '24</span></div>
+                  <span class="chev">&rsaquo;</span>
+                </div>
+              </div>
+            </div>
+            <div class="tools">
+              <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.4" fill="none" stroke-width="1.6"/><path d="M7.8 7.8L11 11" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+              <div class="chip active"><span class="chip-pip"></span><svg width="11" height="12" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><b>HOURS &#8595;</b></div>
+              <div class="chip"><svg width="12" height="11" viewBox="0 0 12 11"><path d="M1 1.5h10L7.5 6v3.4L4.5 10V6L1 1.5z" fill="none" stroke-width="1.4" stroke-linejoin="round"/></svg><b>ALL</b></div>
+              <div class="chip"><svg width="12" height="10" viewBox="0 0 12 10"><path d="M1 1.5h10M1 5h10M1 8.5h10" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+              <div class="spacer"></div>
+              <div class="chip"><svg width="13" height="12" viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg><b>COMPARE</b></div>
+              <div class="chip"><b class="ovf">&#8943;</b></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Sorted by hours <em>(the storytelling sort, COL-11)</em></h3>
+        <p><b>Riko's shelf, most-played first.</b> The same sort + view keycaps as your own bar, read-only: <b>LIST</b>
+        mode + <b>HOURS &#8595;</b> answer "what has she sunk time into?" &mdash; each row carries <b>her</b> hours
+        &middot; status &middot; <b>GOT IT 'YY</b> (owned-since, newly friend-visible, SOC-11). Sorting by
+        <b>OWNED SINCE</b> tells the other story &mdash; what she's picked up lately.</p>
+        <p><b>Read-only:</b> no LOG HOURS, no Arrange, no per-entry edit (owner-only). Tapping a row opens that game's
+        <b>friend-view</b> (SOC-11): her card + stats, with opt-in compare + adopt.</p>
+      </div>
+    </div>
+
+    <!-- ═══ Friend's Collection · sort/filter drawer (read-only) ═══ -->
+    <div class="take">
+      <div class="artboard-label">Friend's Collection — sort / filter drawer (read-only)</div>
+      <div class="device" data-screen-label="States · C5 · Friend — Drawer (read-only)">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2 class="whose">COLLECTION &mdash; RIKO</h2><span class="count">12 GAMES</span></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO PROFILE</a>
+            <div class="scroll">
+              <div class="grid">
+                <div class="gcard grid-size fr-re"><span class="now-tag">&#9654; NOW</span>
+                  <div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div>
+                <div class="gcard grid-size fr-ratchet">
+                  <div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
+                <div class="gcard grid-size fr-minecraft">
+                  <div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
+                <div class="gcard grid-size fr-destiny">
+                  <div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+              </div>
+            </div>
+            <div class="scrim"></div>
+            <div class="sheet">
+              <div class="handle"></div>
+              <div class="field"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.4" fill="none" stroke-width="1.6"/><path d="M7.8 7.8L11 11" stroke-width="1.8" stroke-linecap="round"/></svg><span>SEARCH RIKO'S LIBRARY &middot; TITLE &middot; DEVELOPER&hellip;</span></div>
+              <div class="sec"><h3>VIEW</h3></div>
+              <div class="chips">
+                <div class="chip"><svg width="10" height="12" viewBox="0 0 10 12"><path d="M1.5 1.5h7v9h-7z" fill="none" stroke-width="1.5" stroke-linejoin="round"/><path d="M2.8 8.6h4.4" stroke-width="1.3"/></svg><b>SHELF</b></div>
+                <div class="chip active"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="4.4" height="4.4" rx="1"/><rect x="6.6" y="1" width="4.4" height="4.4" rx="1"/><rect x="1" y="6.6" width="4.4" height="4.4" rx="1"/><rect x="6.6" y="6.6" width="4.4" height="4.4" rx="1"/></svg><b>GRID</b></div>
+                <div class="chip"><svg width="12" height="10" viewBox="0 0 12 10"><path d="M1 1.5h10M1 5h10M1 8.5h10" stroke-width="1.6" stroke-linecap="round"/></svg><b>LIST</b></div>
+              </div>
+              <div class="sec"><h3>SORT BY</h3></div>
+              <div class="chips">
+                <div class="chip"><svg width="11" height="12" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><b>A&ndash;Z</b></div>
+                <div class="chip active"><span class="chip-pip"></span><b>HOURS &#8595;</b></div>
+                <div class="chip"><b>OWNED SINCE</b></div>
+                <div class="chip"><b>RECENT</b></div>
+              </div>
+              <div class="hint">TAP THE ACTIVE SORT TO FLIP &#8593;/&#8595; &middot; <b>READ-ONLY</b> &mdash; NO <b>ARRANGE</b> ON A FRIEND'S SHELF (COL-11)</div>
+              <div class="sec"><h3>STATUS</h3></div>
+              <div class="chips">
+                <div class="chip active"><b>ALL</b></div>
+                <div class="chip"><b>PLAYING</b></div>
+                <div class="chip"><b>BACKLOG</b></div>
+                <div class="chip"><b>BEATEN</b></div>
+                <div class="chip"><b>100%</b></div>
+                <div class="chip"><b>DROPPED</b></div>
+                <div class="chip"><b>WISHLIST</b></div>
+              </div>
+              <div class="sec"><h3>GENRE</h3></div>
+              <div class="chips">
+                <div class="chip active"><b>ALL</b></div>
+                <div class="chip"><b>RPG</b></div>
+                <div class="chip"><b>SHOOTER</b></div>
+                <div class="chip"><b>PLATFORMER</b></div>
+                <div class="chip"><b>HORROR</b></div>
+                <div class="chip"><b>+12</b></div>
+              </div>
+              <div class="sheet-foot"><a href="#">RESET</a><button class="btn">DONE</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Sort / filter drawer <em>(read-only parity, COL-11)</em></h3>
+        <p><b>The same drawer as your own</b> (COL-07/09) &mdash; scoped search (title &middot; developer &middot;
+        publisher), the three views, sorts, and status + genre filters &mdash; <b>over the friend-visible field set</b>
+        (no rating/notes sort). <b>One thing's missing on purpose:</b> <b>MY ORDER / ARRANGE</b> &mdash; you can't
+        reorder a friend's shelf &mdash; and there's no per-entry edit. DONE applies to <i>your</i> view of her
+        library only.</p>
       </div>
     </div>
   </div>
