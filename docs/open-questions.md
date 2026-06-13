@@ -64,22 +64,6 @@
 - OQ-045: **Sticker placed-on-shell preview** (owner deferral, store track 2026-06-12) — §4.11's
   sticker-preview case is NOT drawn on the converged Store board; design it with the **Device editor
   pass** (DEV-01). [presentation]
-- OQ-053: **Upcoming "NOTIFY ME" has no backing endpoint.** All three Discover drafts (§3.2, the
-  Upcoming marquee/rail — also Game page 4.2) draw a per-game **NOTIFY ME** affordance for unreleased
-  titles (DISC-01 → NOTIF-01), but the api-contract has no per-game release-notify **subscription**
-  endpoint (set/unset) nor a NOTIF pref type for it. Needs a contract endpoint at the Discover /
-  Game-page converge page-audit. (Discover drafts, P3) [behavior]
-- OQ-054: **`GET /me/queue` read-shape for the Up Next source/status tags.** Every draft tags queue
-  rows — gold **WISHLIST** (unowned, COL-02) vs **REC'D BY @kai** (a friend rec, SOC-05) vs
-  on-shelf/in-collection — so each item must expose its **`source`** (collection · discovery ·
-  friend-rec) and, for friend-recs, the **recommender identity + optional note** (`POST
-  /recommendations {toUserId, gameId, note}` carries the note; the queue read-back isn't enumerated).
-  `POST /me/queue` takes `{gameId, source}`, but `GET /me/queue` only documents "owned vs unowned."
-  (Discover drafts, P1/P2) [behavior]
-- OQ-055: **`GET /discover/trending-cards` item shape** — the DISC-04 showcase draws each entry as a
-  `RankChip` + the custom card + **designer credit** (CAT-05) + an **AdoptCount** (CARD-05); confirm
-  the endpoint returns `{ rank, card, game, designer, adoptionCount }` (a page-audit confirm at the
-  Discover converge — likely already intended, just unenumerated). (Discover drafts, P3/P8) [behavior]
 - OQ-056: **Modular card saving — explicit named saves + reusable style presets + the customizations
   gallery.** Owner ruling (2026-06-13, brainstormed; chose "parts + presets" over full
   style×canvas decomposition and over anxiety-fix-only). The **card stays the atomic
@@ -105,13 +89,6 @@
   `/me/cards` (shelf) + `GET /me/collection/:entryId/cards` (switcher) cover the gallery. **Drives
   the #3 Game-page card-gallery drafts** (3 distinct interfaces, owner-initiated). (from the
   save-model brainstorm, 2026-06-13) [behavior]
-- OQ-057: **Browse-By (genre/studio browse, DISC-02) removed from Discover for now** — owner ruling at
-  the Discover converge (2026-06-13): *"The Browse By filter should be removed for now."* The converged
-  §3.2 board (`discover-states.html`) drops the genre/studio chips + the browse drill-down; Discover is
-  pared to **Upcoming · Friend recs · Trending** + games-search. DISC-02 is a spec behavior — confirm
-  whether it is **parked** (re-add to Discover later), **relocated** (e.g. tappable genre/studio on the
-  Game page 4.2, which already specs it; or a filter inside search), or **cut** for v2. (Discover
-  converge) [behavior]
 - OQ-058: **Do we capture a personal *game* rating — and we explicitly do NOT rate cards.** Two parts.
   **(a)** The collection entry already carries a `rating?` field (api-contract `PATCH
   /me/collection/:entryId`, COL-02..06) and the Game-page draft surfaces it in the owned-state
@@ -133,6 +110,18 @@
   there's a strong scan-the-backs use-case. (Game-page draft A review, 2026-06-13) [presentation]
 
 ## Resolved
+- OQ-053 → **Upcoming notify-me has a backing endpoint** (Discover §3.2 page-audit, api-contract 0.21):
+  `POST·DELETE /catalog/games/:id/notify` (subscribe/unsubscribe) + `notifyOnRelease` on
+  `/catalog/upcoming` + the **`release`** `notification-prefs` type (DISC-01 → NOTIF-01/02). (2026-06-13)
+- OQ-054 → **`GET /me/queue` item shape enumerated** (api 0.21): `{ owned, source (collection ·
+  discovery · friend_rec), recommendedBy?, note? }` — drives the IN-COLLECTION / **WISHLIST** /
+  **REC'D BY** tags (WTP-01/02 · COL-02 · SOC-05). (2026-06-13)
+- OQ-055 → **`GET /discover/trending-cards` shape** (api 0.21): `{ rank, card, game, designer,
+  adoptionCount }` — `RankChip` + designer credit (CAT-05) + `AdoptCount` (CARD-05); non-commerce. (2026-06-13)
+- OQ-057 → **DISC-02 Browse-By parked from the Discover landing** (api 0.21): the `/discover/browse`
+  endpoint stays, but genre/studio browse is reached via the **Game page 4.2** tappable genre/studio —
+  not surfaced as a Discover section for now (owner ruling). Surfaced friend-recs needed a feed, so the
+  audit also added `GET·DELETE /me/recommendations` (recs land in the feed, not auto-queued, SOC-05). (2026-06-13)
 - OQ-001 → **Multiple device models.** *(Superseded by OQ-042/decision 0017 — one handheld body; users own multiple **shells**, not models.)* A user can own several device models (via entitlements/store)
   and switch the active one — as DEV-02 states. (2026-06-08)
 - OQ-003 → **"Now Playing" is a single pin**, distinct from the multi-valued `Playing` status

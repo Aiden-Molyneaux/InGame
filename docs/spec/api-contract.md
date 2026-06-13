@@ -4,7 +4,7 @@
 > be refined alongside the design-spec, because screens reveal exactly what each call must return.
 > Behavior lives in [`product-spec.md`](product-spec.md); shapes live here. Referenced by ID.
 
-**Version:** 0.20 (draft) · **Last updated:** 2026-06-13 · **Owner:** Claude Code
+**Version:** 0.21 (draft) · **Last updated:** 2026-06-13 · **Owner:** Claude Code
 
 ---
 
@@ -55,7 +55,8 @@
 | POST | `/catalog/games/:id/edits` | Suggest field edit (CAT-06) |
 | GET | `/genres` | Controlled genre list (CAT-04) |
 | GET | `/users/:id/contributions` | Contributor profile data (CAT-07) |
-| GET | `/catalog/upcoming` | Entries with `releaseDate` in the future (CAT-08) |
+| GET | `/catalog/upcoming` | Entries with `releaseDate` in the future (CAT-08); each carries **`notifyOnRelease`** (the caller's `NotifyToggle` state, DISC-01) |
+| POST · DELETE | `/catalog/games/:id/notify` | **Subscribe / unsubscribe** to a release notification for an **upcoming** game — the Discover `NotifyToggle` (DISC-01 → NOTIF-01). Idempotent; reflected by `/catalog/upcoming`'s `notifyOnRelease`. The dispatched push obeys the **`release`** pref (NOTIF-02). *(OQ-053)* |
 | GET | `/catalog/popular` | **Empty-state / onboarding suggestion rail** — the empty Collection's "POPULAR FIRST ADDS" + AUTH-06's add-a-few-games step: entries in the search-result shape incl. `collectionsCount`/`friendsHaveCount` (CAT-09). **Ranked by `collectionsCount`** (most-collected first), capped ~12, no paging (decision 0019) |
 
 ## Collection (`COL-`)
@@ -117,7 +118,8 @@
 | GET | `/users/search?username=` | Find people by username (SOC-07) |
 | GET | `/me/compare/:friendId` | Per-game + total hours, total-games comparison + leaderboard slice (SOC-03) |
 | GET/POST/PATCH/DELETE | `/me/lists` (+ `/:id/items`) | Lists incl. Top-5 (capped) (SOC-04); **Top-5 swap / re-rank** = `PATCH /me/lists/:id { orderedGameIds[] }` (the Profile edit-mode ARRANGE gesture) |
-| POST | `/recommendations` | `{ toUserId, gameId, note }` → recipient's WTP (SOC-05) |
+| POST | `/recommendations` | `{ toUserId, gameId, note }` → lands in the recipient's **recommendations feed** (the Discover **FROM FRIENDS** section), **not auto-queued** — they add it from the feed (SOC-05) |
+| GET · DELETE | `/me/recommendations` (+ `/:recId`) | The friend-recs feed for the Discover section (SOC-05): `{ recId, game: { id, title, card }, fromUser: { userId, username }, note, createdAt }`; `DELETE` dismisses one. Adding to Up Next → `POST /me/queue { gameId, source: 'friend_rec', fromRecId }` |
 | GET | `/me/feed` | Low-noise, **aggregated** friend activity (SOC-06) |
 | POST | `/me/invites` | Create a share link / QR invite token (SOC-07) — the **self-Profile SHARE** chip (PROF-05's "Share profile"). *Friend-profile SHARE has no backing (deep links parked §10) → OQ-052* |
 | GET | `/invites/:token` | Resolve an invite → sender summary + prefilled-request affordance (SOC-10) |
@@ -127,8 +129,8 @@
 ## What to Play (`WTP-`)
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/me/queue` | Ordered; each item flags owned vs unowned (WTP-01) |
-| POST | `/me/queue` | `{ gameId, source }` add |
+| GET | `/me/queue` | Ordered queue (WTP-01). Items: `{ itemId, gameId, title, card, owned, source, recommendedBy?, note? }` — **`owned`** drives the IN-COLLECTION vs **WISHLIST** tag (unowned = COL-02 Wishlist); **`source`** ∈ `collection · discovery · friend_rec` (the add origin, WTP-02); **`recommendedBy`** (`{ userId, username }`) + **`note`** present when `source = friend_rec` (the "REC'D BY @x" tag + note, SOC-05); `card` always resolves (CARD-07/18). *(OQ-054)* |
+| POST | `/me/queue` | `{ gameId, source, fromRecId? }` add — **`source`** ∈ `collection · discovery · friend_rec`; self-adds use `collection`/`discovery`, a friend rec uses `friend_rec` + the `fromRecId` from `/me/recommendations` (carries its `recommendedBy` + `note` onto the queue item) |
 | PATCH | `/me/queue/reorder` | `{ orderedItemIds[] }` (WTP-01) |
 | PUT | `/me/now-playing` | `{ gameId \| null }` — set/clear the single **Now-Playing pin** (WTP-03), settable from Up Next **or** a collection entry (the Collection hero + SET-NOW-PLAYING nudge); read back via `/me.nowPlaying` + the collection items' `nowPlaying` flag. *(Replaces `PATCH /me/queue/:id { currentlyPlaying }` — one pin, one write path.)* |
 | DELETE | `/me/queue/:id` | Remove |
@@ -136,15 +138,15 @@
 ## Discovery (`DISC-`)
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/discover/browse?genreId=&studio=` | Browse (DISC-02) |
-| GET | `/discover/trending-cards` | Featured/trending cards (DISC-04) |
+| GET | `/discover/browse?genreId=&studio=` | Browse by genre/studio (DISC-02). *Not surfaced on the Discover landing for now (owner ruling, **OQ-057**); the endpoint stays — reached via the **Game page 4.2** tappable genre/studio* |
+| GET | `/discover/trending-cards` | Featured/trending community cards (DISC-04), ranked by adoption. Items: `{ rank, card, game: { id, title }, designer: { userId, username }, adoptionCount }` — drives `RankChip`(/first) + the card + the DESIGNED-BY credit (CAT-05) + `AdoptCount` (CARD-05). **Non-commerce** — counts, never prices. *(OQ-055)* |
 | GET | `/discover/search?q=` | Games-only catalog search (DISC-03); people-search is `/users/search` (SOC-07) |
 
 ## Notifications (`NOTIF-`)
 | Method | Path | Notes |
 |---|---|---|
 | POST | `/me/push-tokens` · DELETE `/:token` | Register/unregister Expo push token |
-| GET/PATCH | `/me/notification-prefs` | Per-type prefs (NOTIF-02) |
+| GET/PATCH | `/me/notification-prefs` | Per-type prefs (NOTIF-02) — types incl. **`release`** (the upcoming-game notify-me, DISC-01/NOTIF-01), friend requests, recommendations, adoptions |
 
 *(No notifications-list endpoint — NOTIF-03 has no center; events surface in their contextual screens.)*
 
@@ -192,3 +194,4 @@
 | 2026-06-13 | 0.18 | Triage ripple (decision 0019): `/catalog/popular` **ranking rule set** — by `collectionsCount`, capped ~12, no paging (OQ-051). *(OQ-008 cap=30 · OQ-048 effect-only intensity · OQ-049 save-private surfaces are product-spec-only — covered by the cap-config, the opaque composition JSON, and the existing `/me/cards` + switcher endpoints; OQ-052 = the friend-view chip cut, design-req.)* |
 | 2026-06-13 | 0.19 | **Friend card-detail + compare** (decision 0020): `/users/:id/collection` items add **`ownedSince`** + support **hours/owned-since sort** (SOC-11); every card payload gains a read-only **`equipped`** readout (CARD-22); the friend single-entry detail + opt-in compare **compose client-side** from existing reads (+ `/me/collection/:entryId`); adopt stays `POST /cards/:id/adopt`. | SOC-11, CARD-22 |
 | 2026-06-13 | 0.20 | **Friend-view browse parity** (decision 0021, COL-11): `/users/:id/collection` accepts the full `/me/collection` query set — `?q=` search (COL-09) · full `sort` enum + `order` · genre/status filter (COL-07) — over the friend-visible field set only, + `total`/`collectionTotal`; no write/reorder params. Supersedes 0.19's hours/owned-since-only note. | COL-11 |
+| 2026-06-13 | 0.21 | **Discover §3.2 page-audit (discover track):** the converged board reconciled to the contract — **`GET /me/queue` item shape enumerated** (`owned · source · recommendedBy · note` — the WISHLIST / REC'D-BY tags, **OQ-054**) + `POST /me/queue` source enum + `fromRecId`; **`GET /discover/trending-cards` shape** (`rank · card · game · designer · adoptionCount`, DISC-04/CARD-05/CAT-05, **OQ-055**); **upcoming notify-me** added — `POST·DELETE /catalog/games/:id/notify` + `notifyOnRelease` on `/catalog/upcoming` + the `release` `notification-prefs` type (DISC-01 → NOTIF-01/02, **OQ-053**); **friend-recs feed** — `GET·DELETE /me/recommendations` (the Discover FROM-FRIENDS section) + `POST /recommendations` lands in the **feed, not auto-queued** (SOC-05; gap surfaced by the audit); **`/discover/browse` parked** from the Discover landing (DISC-02 reached via Game page 4.2, **OQ-057**). No product-spec behavior change (SOC-05's "→ WTP" = the WTP/Discover surface). | WTP-01/02 · DISC-01/02/03/04 · CAT-08 · SOC-05 · NOTIF-01/02 |
