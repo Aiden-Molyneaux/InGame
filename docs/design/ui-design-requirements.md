@@ -6,7 +6,7 @@
 > "how it looks/feels"). Behavior questions raised while designing go to
 > [`../open-questions.md`](../open-questions.md), not edited into the spec directly.
 
-**Version:** 0.14 · **Last updated:** 2026-06-13 · **Owner:** Claude Code → Claude Design
+**Version:** 0.15 · **Last updated:** 2026-06-13 · **Owner:** Claude Code → Claude Design
 **Status:** **ALL screens specified** (5 tabs + 16 detail screens/flows). Ready to hand to Claude Design. Open design notes live in `open-questions.md` (`OQ-005/007`).
 > **Claude Design — read [`design-process.md`](design-process.md) first.** It defines the phased,
 > reuse-first process: 3 hero-screen (Collection) drafts → extract a named component catalog →
@@ -78,7 +78,7 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 | 4 | Store | Tab | incl. Wallet |
 | 5 | Profile | Tab | + friend-view mode; gateway to Achievements & Contributions |
 | 6 | Add Game | Flow | **specified** (4.1) |
-| 7 | Game page (adaptive) | Detail | shared catalog page; the **owned state folds in** your personal stats + card; card gallery lives here. **Specified** (4.2) |
+| 7 | Game page (adaptive) | Detail | shared catalog page + **entry-context states**: your **owned-state** (tap your card; inline-edit stats + card flip) and a **friend-view** (tap a friend's card → their card + equipped readout + per-game context, **opt-in compare**, **atomic adopt** — `SOC-11`/`CARD-22`); card gallery + the card-object/flip view live here. **Specified** (4.2) |
 | 8 | Card editor | Editor | **specified** (4.3) — the heaviest screen |
 | 9 | Admin/Moderator console | Mod-only | **specified** (4.4) |
 | — | Device editor | Editor | **specified** (4.5) |
@@ -166,11 +166,12 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 - **Add & continue** (quick multi-add); **Report duplicate** from a result (→ admin dedup, `MOD-01/05`).
 **States:** searching · results · no-results (→ create) · creating (dedup) · added (→ card step).
 
-### 4.2 Game page (adaptive — shared page + owned state)
-**Purpose:** the **shared community page** for a canonical game; when you own it, your personal details take precedence. **One screen, two states** — Collection Entry Detail folds in here.
-**Shared content:** canonical facts + **contributor credit** (`CAT-02/05`); **tappable genre/studio** (`DISC-02`); **community card gallery + adopt** and **design a card** (`CARD-04`, `ECON-03/04`); **add to collection / Up Next** (`WTP-02`); **recommend to a friend** (`SOC-05`); **friends-who-own + hours**; **suggest edit** (`CAT-06`); **report incl. duplicate** (`MOD-01`); **upcoming → notify me** (`DISC-01`, `NOTIF-01`); **community presence stats** (in-N-collections · friends-have-it, `CAT-09`); **richer aggregates (avg hours, completion) — later phase**.
-**Owned state (takes precedence):** your **hours / % / status / owned-since / rating / notes** (editable) + **selected card + card switcher** (`COL-03/06`); **Now Playing** (`WTP-03`); **share card image** (`CARD-21`).
-**States:** not-owned vs owned · upcoming · no-cards-yet (be-first) · soft-hidden/reported.
+### 4.2 Game page (adaptive — catalog hub + entry-context states)
+**Purpose:** the **shared community page** for a canonical game. It **adapts to how you arrived**: neutral from the catalog/Discover, your **owned-state** when you tap **your** card, and a **friend-view** when you tap a **friend's** card. **Tapping a card in a collection lands here** (your collection → owned-state; a friend's → friend-view) — and this page **hosts the card-object/flip view**.
+**Shared content (always):** canonical facts + **contributor credit** (`CAT-02/05`); **tappable genre/studio** (`DISC-02`); **community card gallery + adopt** and **design a card** (`CARD-04`, `ECON-03/04`); **add to collection / Up Next** (`WTP-02`); **recommend to a friend** (`SOC-05`); **friends-who-own + hours**; **suggest edit** (`CAT-06`); **report incl. duplicate** (`MOD-01`); **upcoming → notify me** (`DISC-01`, `NOTIF-01`); **community presence stats** (in-N-collections · friends-have-it, `CAT-09`); **richer aggregates (avg hours, completion) — later phase**.
+**Owned state — tapped from your collection (takes precedence):** your **hours / % / status / owned-since / rating / notes**, **editable inline**, + **selected card + card switcher** (`COL-03/06`); the **card flips to its back** (stats + provenance — designer + adoption count, `CARD-01`); **Now Playing** (`WTP-03`); **share card image** (`CARD-21`). Editing the card *art* opens the Card editor (4.3) — **viewing never edits the art**.
+**Friend-view state — tapped from a friend's collection (`SOC-11`):** **their** displayed card + its **equipped readout** (base · effect · finish · frame · nameplate · font, `CARD-22`) + **their per-game context** — **hours · status · owned-since** (privacy-gated, `PROF-03`; their **notes / rating / platforms are not shown**, `COL-04/05`). Primary action: **adopt their card** — **atomic, the whole design** (free / 1 PX, `ECON-03/04`; **there is no "adopt just the canvas"** — viewers get the flattened image, not the layers, `CARD-15`/§10). **Compare is opt-in, not the default:** a **compare-with-mine** affordance places your card + your stats **side-by-side** against theirs (the per-game cousin of `SOC-03`). **If you don't own the game:** no compare → *their card + canonical facts + their stats + **Adopt** + **Add to collection*** (a "discover their card" path).
+**States:** neutral (not-owned) · owned (your entry, inline-edit) · **friend-view (their entry · +opt-in compare · +don't-own-it variant)** · upcoming · no-cards-yet (be-first) · soft-hidden/reported.
 
 ### 4.3 Card editor — the heaviest screen (`CARD-01..19`)
 **Purpose:** design a Game Card for a specific game. **Persona:** Curator (+ Artist). **UX MANDATE: dense functionality must feel effortless** — progressive disclosure; the **three-bucket model** (① add elements · ② edit selected element · ③ card-level settings); direct-manipulation gestures; **start-from never blank**.
@@ -280,3 +281,4 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 | 2026-06-12 | 0.12 | Decision 0017 ripple (store-economy batch): §1.5 the currency's in-app identity = **Pixels** (PX, pixel-gem); §3.4 gains the **Store-claimed daily bonus**, the **drop drawer**, the **Top Up page** (+`ECON-10` Starter Pack, value math, the three doors), renamed categories (sticker packs = shell; device shells; screen themes) and a designed-states line; §4.11 = **sheet detail · hold-to-buy (+required a11y alternative) · pack contents view · whole-page theme preview** (sticker-on-shell preview deferred `OQ-045`); §4.12 ledger entries + the negative variant. |
 | 2026-06-12 | 0.13 | Decision 0018 ripple: §3.4 store categories gain **Nameplates** (`COSM-01`'s new type, the styler gate ruling — OQ-039 closed). |
 | 2026-06-13 | 0.14 | Decision 0019 ripple: §3.5/4.1 friend-view **Share chip cut** (sharing is self-only, OQ-052); §4.1 empty-state **popular = most-collected** (`CAT-09`, OQ-051). |
+| 2026-06-13 | 0.15 | Decision 0020 ripple: §4.2 Game page gains **entry-context states** — the **friend-view** (tap a friend's card → their card + **equipped readout** `CARD-22` + per-game context, **opt-in compare**, **atomic adopt**, `SOC-11`) alongside the owned-state (now noting **inline-editable** stats + the **card-object/flip** home); Part-2 row 7 updated. |
