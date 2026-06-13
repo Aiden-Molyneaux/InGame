@@ -112,6 +112,25 @@
   whether it is **parked** (re-add to Discover later), **relocated** (e.g. tappable genre/studio on the
   Game page 4.2, which already specs it; or a filter inside search), or **cut** for v2. (Discover
   converge) [behavior]
+- OQ-058: **Do we capture a personal *game* rating — and we explicitly do NOT rate cards.** Two parts.
+  **(a)** The collection entry already carries a `rating?` field (api-contract `PATCH
+  /me/collection/:entryId`, COL-02..06) and the Game-page draft surfaces it in the owned-state
+  `PlayStats` (your stars for the *game*) — but it was never deliberately confirmed, and the owner is
+  unsure it's wanted. Decide: keep a per-game personal rating (and is it private-only, or does it feed
+  any aggregate?), or drop it. **(b)** There is **no card rating** anywhere — individual or aggregate —
+  and the recommendation is to keep it that way: **adoption-count is deliberately the card's social
+  signal** (ECON-05 — creators earn *clout*, pointedly not ratings/currency), so a card rating would
+  create a competing popularity metric the spec avoided. Pending the ruling, the Game-page draft pulls
+  rating off the card-back and de-emphasizes it in PlayStats. (Game-page draft A review, 2026-06-13)
+  [behavior]
+- OQ-059: **Card peek-flip on the Collection screen?** Today the **card flip** (face → back: stats +
+  provenance, CARD-01) lives **only on the Game page** (§4.2 "hosts the card-object/flip view"); on
+  Collection, stats are scanned via the dense-list mode + the shelf stats-eyebrow (OQ-033) — §3.1 frames
+  dense-list as getting the answer "without flipping a single card." Question: do we *also* want a
+  **quick peek-flip in place** on Collection (e.g. long-press a card to glance its back — your own and a
+  friend's — without leaving the shelf), or keep flipping a Game-page-only deep-inspect interaction? A
+  peek-flip adds interaction load to a browse surface; the recommendation is **Game-page-only** unless
+  there's a strong scan-the-backs use-case. (Game-page draft A review, 2026-06-13) [presentation]
 
 ## Resolved
 - OQ-001 → **Multiple device models.** *(Superseded by OQ-042/decision 0017 — one handheld body; users own multiple **shells**, not models.)* A user can own several device models (via entitlements/store)
