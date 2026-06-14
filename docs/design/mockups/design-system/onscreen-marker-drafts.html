@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InGame · On-screen state marker — replacing the pink pip (3 drafts)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" /></noscript>
+<style>
+  /* ── tokens: Teal shell · Midnight theme, verbatim from collection-states.html ──
+     The point of this board: --accent (#ff3d77 pink) is the SHELL's LED voice (F-05) and must stay on
+     the plastic; the on-screen state marker should speak --scr-accent (#ff9f43 orange) — flat, square
+     (F-07/C5) — which is what F-09 already says ("an accent border + pip, the screen accent, not pink"). */
+  :root {
+    --plastic: #2bb6b0; --plastic-hi: #3ec9c2; --plastic-lo: #1f9a94; --silk: #0d524e;
+    --accent: #ff3d77; --gold: #ffd23f; --cream: #f5f1e4; --navy: #1d2a4a; --bezel: #14122a;
+    --pk: 'Chakra Petch', sans-serif; --shell: 'Paytone One', sans-serif;
+    --scr-bg: #232045; --scr-well: #2c2950; --scr-tools: #1a1733; --scr-accent: #ff9f43;
+    --scr-accent-ink: #2a1430; --scr-head: #f5f1e4; --scr-text: #ffffff; --scr-dim: #9b97c0;
+    --scr-soft: #c9c5e6; --scr-hairline: rgba(255,255,255,.085); --scr-grip: #565178; --scr-chip: #f5f1e4;
+    --shell-ink: #08433f;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #efece6; font-family: var(--pk); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 40px 24px 64px; }
+
+  h1 { font: 700 18px/1.2 var(--pk); letter-spacing: 2.5px; text-transform: uppercase; color: #2a2633; margin: 0 0 9px; }
+  .lede { font: 500 13px/1.6 var(--pk); color: #6f6a80; margin: 0 0 6px; max-width: 780px; }
+  .lede b { color: #2a2633; }
+  .lede .pink { color: #e0356c; font-weight: 700; }
+  .lede .orange { color: #d97714; font-weight: 700; }
+  .rules { display: flex; gap: 16px; flex-wrap: wrap; margin: 18px 0 32px; }
+  .rule { font: 500 11.5px/1.5 var(--pk); color: #6f6a80; background: #fff; border-left: 3px solid var(--scr-accent);
+    padding: 9px 13px; max-width: 350px; box-shadow: 0 2px 8px rgba(42,38,51,.07); }
+  .rule b { color: #2a2633; }
+
+  /* ── the option columns ── */
+  .cols { display: flex; gap: 20px; align-items: stretch; flex-wrap: wrap; }
+  .col { flex: 1 1 285px; max-width: 300px; background: var(--scr-bg); border-radius: 14px; overflow: hidden;
+    box-shadow: 0 8px 26px rgba(20,18,42,.22); display: flex; flex-direction: column; }
+  .col.today { opacity: .96; box-shadow: 0 8px 26px rgba(20,18,42,.22), inset 0 0 0 1px rgba(255,61,119,.25); }
+  .col-h { padding: 13px 15px 12px; border-bottom: 1px solid var(--scr-hairline); }
+  .col-h .tag { font: 700 8.5px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .col-h .name { font: 700 14px var(--pk); letter-spacing: .8px; color: var(--scr-head); margin-top: 4px; }
+  .col.today .col-h .name { color: #ff7da3; }
+  .col-h .name em { font-style: normal; }
+
+  .glyph { height: 96px; display: flex; align-items: center; justify-content: center; background: var(--scr-well);
+    border-bottom: 1px solid var(--scr-hairline); }
+
+  .role { padding: 15px 16px; border-bottom: 1px solid var(--scr-hairline); }
+  .role .rl { font: 700 8px var(--pk); letter-spacing: 1.6px; color: var(--scr-dim); margin: 0 0 10px; }
+
+  .notes { padding: 13px 15px 17px; flex: 1 1 auto; }
+  .notes p { margin: 0 0 7px; font: 500 11px/1.55 var(--pk); color: var(--scr-soft); }
+  .notes p:last-child { margin-bottom: 0; }
+  .notes b { color: #fff; }
+  .notes .con { color: #c9a6b8; }
+
+  /* ════ chrome — the three on-screen roles, square (F-07/C5) ════ */
+  /* role 1 — active tool keycap (the Collection ToolsBar) */
+  .tools { display: flex; align-items: center; gap: 6px; background: var(--scr-tools); padding: 7px 9px; border-radius: 8px; }
+  .grip { display: grid; grid-template-columns: repeat(2,3px); grid-auto-rows: 3px; gap: 2.5px; }
+  .grip i { width: 3px; height: 3px; background: var(--scr-grip); }
+  .spacer { flex: 1 1 auto; }
+  .chip { position: relative; display: inline-flex; align-items: center; gap: 5px; background: var(--scr-chip); color: var(--navy);
+    padding: 6px 8px; font: 600 11px var(--pk); letter-spacing: .5px;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .chip.active { transform: translateY(2px); box-shadow: 0 0 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 2px 3px rgba(0,0,0,.22); }
+  .chip svg path { stroke: var(--navy); fill: none; }
+
+  /* role 2 — F-09 selection rows (the ReportSheet reason list) */
+  .rows { background: var(--scr-tools); border-radius: 8px; padding: 2px 10px; }
+  .row { position: relative; display: flex; align-items: center; gap: 8px; padding: 9px 6px;
+    font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); border-bottom: 1px solid var(--scr-hairline); }
+  .row:last-child { border-bottom: none; }
+  .row .oi { color: var(--scr-accent); font-weight: 700; width: 13px; text-align: center; flex: 0 0 auto; }
+  .row.sel { border: 1.5px solid var(--scr-accent); padding: 7.5px 4.5px; background: rgba(255,159,67,.07); }
+  .row.sel + .row { border-top: none; }
+  /* concept C variant — the lit leading edge replaces the full border + the dot */
+  .row.sel-edge { border: none; padding: 9px 6px 9px 12px; background: rgba(255,159,67,.07); }
+
+  /* role 3 — active segment (the Discover SegmentedKeycap) */
+  .seg-foot { background: var(--scr-tools); border-radius: 8px; padding: 8px 9px; }
+  .seg-pair { display: flex; gap: 3px; }
+  .seg { position: relative; flex: 1 1 0; text-align: center; padding: 9px 0; background: var(--scr-chip); color: var(--navy);
+    font: 700 10px var(--pk); letter-spacing: 2px; overflow: visible;
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .seg.active { transform: translateY(3px); box-shadow: 0 0 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 2px 3px rgba(0,0,0,.22); }
+
+  /* ════ the markers ════ */
+  .mk-corner { position: absolute; top: -3px; right: -3px; }
+  .mk-row { position: absolute; top: 50%; right: 7px; transform: translateY(-50%); }
+  .mk-seg-bottom { position: absolute; left: 7px; right: 7px; bottom: 3px; }
+
+  /* TODAY — the pink LED leaking onto the screen (round, glowing) */
+  .led { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px 1.5px rgba(255,61,119,.85); }
+
+  /* A — orange C5 square (the GameCard silhouette in miniature; flat) */
+  .sq { width: 8px; height: 8px; background: var(--scr-accent);
+    clip-path: polygon(22% 0, 100% 0, 100% 78%, 78% 100%, 0 100%, 0 22%); }
+
+  /* B — orange tick (a shape-coded "chosen", not just a colour) */
+  .tick { display: block; }
+  .tick path { fill: none; stroke: var(--scr-accent); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* C — orange lit edge (active-tab underline / selected-row rail) */
+  .bar-h { height: 2.5px; background: var(--scr-accent); }      /* bottom underline on keycaps/segments */
+  .bar-l { position: absolute; left: 0; top: 4px; bottom: 4px; width: 3px; background: var(--scr-accent); }  /* left rail on rows */
+
+  /* enlarged glyph swatches (≈4×) */
+  .big { display: flex; align-items: center; justify-content: center; }
+  .big .led { width: 30px; height: 30px; box-shadow: 0 0 22px 6px rgba(255,61,119,.7); }
+  .big .sq { width: 36px; height: 36px; }
+  .big .tick { width: 44px; height: 44px; }
+  .big-edge { width: 50px; height: 36px; background: var(--scr-chip); position: relative; box-shadow: inset 0 1px 0 rgba(255,255,255,.7); }
+  .big-edge::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--scr-accent); }
+
+  .foot { margin-top: 30px; background: #fff; border-radius: 14px; padding: 18px 20px; box-shadow: 0 2px 10px rgba(42,38,51,.08);
+    display: flex; gap: 26px; align-items: center; flex-wrap: wrap; }
+  .foot .demo { display: flex; gap: 22px; align-items: center; }
+  .foot .stack { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+  .foot .stack .cap { font: 700 8px var(--pk); letter-spacing: 1.2px; color: #8d889c; text-align: center; max-width: 96px; }
+  .foot .txt { flex: 1 1 320px; font: 500 12px/1.6 var(--pk); color: #6f6a80; }
+  .foot .txt b { color: #2a2633; }
+  .foot .txt .pink { color: #e0356c; font-weight: 700; }
+  .foot .txt .orange { color: #d97714; font-weight: 700; }
+  /* mini nav keycap (plastic) for the boundary demo */
+  .navcap { position: relative; width: 50px; display: flex; flex-direction: column; align-items: center; }
+  .navcap .btn { width: 46px; height: 46px; border-radius: 13px; background: var(--cream); display: flex; align-items: center; justify-content: center;
+    transform: translateY(3px); box-shadow: 0 1px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 2px 3px rgba(0,0,0,.18); }
+  .navcap .btn.collection { background: var(--accent); }
+  .navcap .btn svg path, .navcap .btn svg circle { stroke: var(--navy); fill: none; stroke-width: 2; }
+  .navcap .pip { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; background: var(--accent); box-shadow: 0 0 9px 2.5px rgba(255,61,119,.85); }
+  .navcap .lbl { margin-top: 5px; font: 400 9px var(--shell); letter-spacing: .5px; color: #8d889c; }
+  .swatch-screen { background: var(--scr-bg); border-radius: 10px; padding: 12px; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>On-screen state marker — replacing the pink pip</h1>
+  <p class="lede">The <span class="pink">pink pip</span> (<code>--accent #ff3d77</code>, round + glowing) is the
+    <b>shell's LED language</b> — it belongs on the plastic (the NavBand LED, the power light). It has leaked onto the
+    flat screen as the active/selection marker in three on-screen roles. These drafts swap it for an
+    <span class="orange">on-screen-native marker</span> (<code>--scr-accent #ff9f43</code> orange, flat, square) — which is
+    what F-09 already asks for. <b>The shell LEDs stay pink and untouched.</b></p>
+  <div class="rules">
+    <div class="rule"><b>F-05</b> — Pips are <b>lights, not chrome</b>. Round LEDs, on the plastic.</div>
+    <div class="rule"><b>F-07</b> — <b>Radius lives on plastic.</b> On-screen chrome is square (C5).</div>
+    <div class="rule"><b>F-09</b> — selection = an accent border + pip <b>(the screen accent, not pink)</b>. The boards
+      kept it pink; these honour the rule as written.</div>
+  </div>
+
+  <div class="cols">
+
+    <!-- ░░░░░ TODAY — the leak ░░░░░ -->
+    <div class="col today">
+      <div class="col-h"><div class="tag">TODAY · THE LEAK</div><div class="name">Pink LED pip</div></div>
+      <div class="glyph"><div class="big"><span class="led"></span></div></div>
+      <div class="role"><div class="rl">ACTIVE TOOL KEYCAP</div>
+        <div class="tools"><div class="grip"><i></i><i></i><i></i><i></i></div>
+          <div class="chip active"><svg width="11" height="12" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><b>A&ndash;Z</b><span class="mk-corner led"></span></div>
+          <div class="spacer"></div></div></div>
+      <div class="role"><div class="rl">F-09 SELECTION ROW</div>
+        <div class="rows">
+          <div class="row sel"><span class="oi">!</span>INCORRECT INFO<span class="mk-row led"></span></div>
+          <div class="row"><span class="oi">&#9046;</span>DUPLICATE</div>
+        </div></div>
+      <div class="role"><div class="rl">ACTIVE SEGMENT</div>
+        <div class="seg-foot"><div class="seg-pair">
+          <div class="seg active">UP NEXT<span class="mk-corner led"></span></div>
+          <div class="seg">DISCOVER</div></div></div></div>
+      <div class="notes">
+        <p>The same dot the device wears as a power/activity LED. <b>Round + glowing on a flat, square screen</b> — it
+          reads as hardware sitting on the glass.</p>
+        <p class="con">Also colour-only, and a brand-pink constant that ignores the screen theme.</p>
+      </div>
+    </div>
+
+    <!-- ░░░░░ A — orange square ░░░░░ -->
+    <div class="col">
+      <div class="col-h"><div class="tag">DRAFT A</div><div class="name">Orange C5 square</div></div>
+      <div class="glyph"><div class="big"><span class="sq"></span></div></div>
+      <div class="role"><div class="rl">ACTIVE TOOL KEYCAP</div>
+        <div class="tools"><div class="grip"><i></i><i></i><i></i><i></i></div>
+          <div class="chip active"><svg width="11" height="12" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><b>A&ndash;Z</b><span class="mk-corner sq"></span></div>
+          <div class="spacer"></div></div></div>
+      <div class="role"><div class="rl">F-09 SELECTION ROW</div>
+        <div class="rows">
+          <div class="row sel"><span class="oi">!</span>INCORRECT INFO<span class="mk-row sq"></span></div>
+          <div class="row"><span class="oi">&#9046;</span>DUPLICATE</div>
+        </div></div>
+      <div class="role"><div class="rl">ACTIVE SEGMENT</div>
+        <div class="seg-foot"><div class="seg-pair">
+          <div class="seg active">UP NEXT<span class="mk-corner sq"></span></div>
+          <div class="seg">DISCOVER</div></div></div></div>
+      <div class="notes">
+        <p><b>The direct swap</b> — same footprint as the pip, but square + orange + flat. The TL/BR step makes it
+          <b>the GameCard silhouette in miniature</b>, so the marker is unmistakably "ours" and on-screen.</p>
+        <p>Role-agnostic: reads the same on a keycap corner, a row, or a segment. <b>Your orange square.</b></p>
+        <p class="con">Still an abstract mark (colour + shape, no literal meaning).</p>
+      </div>
+    </div>
+
+    <!-- ░░░░░ B — orange tick ░░░░░ -->
+    <div class="col">
+      <div class="col-h"><div class="tag">DRAFT B</div><div class="name">Orange tick</div></div>
+      <div class="glyph"><div class="big"><svg class="tick" viewBox="0 0 14 14"><path d="M2.5 7.5 L5.6 10.5 L11.5 3.5"/></svg></div></div>
+      <div class="role"><div class="rl">ACTIVE TOOL KEYCAP</div>
+        <div class="tools"><div class="grip"><i></i><i></i><i></i><i></i></div>
+          <div class="chip active"><svg width="11" height="12" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><b>A&ndash;Z</b><span class="mk-corner"><svg class="tick" width="10" height="10" viewBox="0 0 14 14"><path d="M2.5 7.5 L5.6 10.5 L11.5 3.5"/></svg></span></div>
+          <div class="spacer"></div></div></div>
+      <div class="role"><div class="rl">F-09 SELECTION ROW</div>
+        <div class="rows">
+          <div class="row sel"><span class="oi">!</span>INCORRECT INFO<span class="mk-row"><svg class="tick" width="12" height="12" viewBox="0 0 14 14"><path d="M2.5 7.5 L5.6 10.5 L11.5 3.5"/></svg></span></div>
+          <div class="row"><span class="oi">&#9046;</span>DUPLICATE</div>
+        </div></div>
+      <div class="role"><div class="rl">ACTIVE SEGMENT</div>
+        <div class="seg-foot"><div class="seg-pair">
+          <div class="seg active">UP NEXT<span class="mk-corner"><svg class="tick" width="10" height="10" viewBox="0 0 14 14"><path d="M2.5 7.5 L5.6 10.5 L11.5 3.5"/></svg></span></div>
+          <div class="seg">DISCOVER</div></div></div></div>
+      <div class="notes">
+        <p><b>Shape-coded, not colour-coded.</b> A tick <i>means</i> "selected / on" — legible at a glance and to
+          colour-blind users, where a bare dot is ambiguous.</p>
+        <p>Perfect for the selection role; reads slightly more like "done/confirmed" on an always-present tool or tab.</p>
+        <p class="con">A drawn glyph — more visual weight than a quiet state dot.</p>
+      </div>
+    </div>
+
+    <!-- ░░░░░ C — lit edge ░░░░░ -->
+    <div class="col">
+      <div class="col-h"><div class="tag">DRAFT C</div><div class="name">Orange lit edge</div></div>
+      <div class="glyph"><div class="big"><span class="big-edge"></span></div></div>
+      <div class="role"><div class="rl">ACTIVE TOOL KEYCAP</div>
+        <div class="tools"><div class="grip"><i></i><i></i><i></i><i></i></div>
+          <div class="chip active"><svg width="11" height="12" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><b>A&ndash;Z</b><span class="mk-seg-bottom bar-h"></span></div>
+          <div class="spacer"></div></div></div>
+      <div class="role"><div class="rl">F-09 SELECTION ROW</div>
+        <div class="rows">
+          <div class="row sel-edge"><span class="bar-l"></span><span class="oi">!</span>INCORRECT INFO</div>
+          <div class="row"><span class="oi">&#9046;</span>DUPLICATE</div>
+        </div></div>
+      <div class="role"><div class="rl">ACTIVE SEGMENT</div>
+        <div class="seg-foot"><div class="seg-pair">
+          <div class="seg active">UP NEXT<span class="mk-seg-bottom bar-h"></span></div>
+          <div class="seg">DISCOVER</div></div></div></div>
+      <div class="notes">
+        <p><b>No floating mark at all</b> — the plane's own edge lights orange (an active-tab underline; a selected-row
+          leading rail). The most "flat surfaces, not chrome" reading of F-09.</p>
+        <p>On rows it <b>replaces the border + dot</b> with one rail — the cleanest selection. Familiar from the web/OS.</p>
+        <p class="con">Changes form per role (underline vs rail), so it's a system, not one fixed icon.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ░░░░░ the boundary: what STAYS pink ░░░░░ -->
+  <div class="foot">
+    <div class="demo">
+      <div class="stack">
+        <div class="navcap"><div class="btn collection"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M5 5h6v6H5zM13 5h6v6h-6zM5 13h6v6H5zM13 13h6v6h-6z"/></svg></div><div class="pip"></div><div class="lbl">PLASTIC</div></div>
+        <div class="cap">SHELL LED — stays pink (F-05)</div>
+      </div>
+      <div class="stack">
+        <div class="swatch-screen"><span class="sq" style="width:14px;height:14px;"></span></div>
+        <div class="cap">SCREEN MARKER — the new orange</div>
+      </div>
+    </div>
+    <div class="txt">The fix is a <b>boundary</b>, not a recolour. The <span class="pink">pink LED</span> keeps its job on the
+      plastic — the active NavBand keycap and the power light. Only the marks that sit <b>inside the screen</b> move to the
+      <span class="orange">orange on-screen marker</span>. Pick a draft above and it becomes the single
+      <code>ChipPip</code>/<code>PipLight</code> replacement across every board (tool keycaps · F-09 selection · segments).</div>
+  </div>
+
+</div>
+</body>
+</html>
