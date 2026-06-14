@@ -101,6 +101,16 @@
   component** reconciled with the Settings track's `ConfirmDialog` (centered modal vs the page's
   bottom-sheet grammar). (Game-page A×B mix, 2026-06-14) [behavior]
 
+- OQ-062: **`stickerComposition` payload shape + the nav-exclusion enforcement boundary.** The Device-editor
+  drafts (§4.5, `DEV-01`) draw **place / scale / rotate** stickers on the shell, so the opaque
+  `stickerComposition` (api-contract `PATCH /me/device`) needs a defined per-sticker shape — at minimum
+  `{ stickerId/assetId, x, y, scale, rotation }` in a **defined coordinate space** (normalized to the shell
+  body? which decoratable zones?) — and a ruling on **where the `DEV-03`/`F-04` nav-no-go is enforced**:
+  client-only (the UI refuses placement over the 5 keycaps, as all three drafts show) vs **server-validated**
+  on write (reject/clamp compositions that overlap the nav or the screen). Device analogue of the editor's
+  composition payloads; pairs with the OQ-045 on-shell preview this pass closes. (Device-editor drafts,
+  2026-06-14) [behavior]
+
 ## Resolved
 - OQ-053 → **Upcoming notify-me has a backing endpoint** (Discover §3.2 page-audit, api-contract 0.21):
   `POST·DELETE /catalog/games/:id/notify` (subscribe/unsubscribe) + `notifyOnRelease` on
