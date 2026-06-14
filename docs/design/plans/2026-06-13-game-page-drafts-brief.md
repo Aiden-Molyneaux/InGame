@@ -128,6 +128,17 @@ existing design system. Used the **brainstorming skill**. Outcome:
     a sheet. Most at-a-glance; highest discipline to stay uncluttered.
 - All three use the design system verbatim (GameCard · SegmentedKeycap · sheet grammar · KeycapButton ·
   C5) and include the **delete** affordance (trash · equipped-locked · destructive `ConfirmSheet`, OQ-061).
-- **Next:** owner picks a take (or a blend) → that becomes the converge basis → `game-page-states.html`
-  (full matrix + deferred lifecycle), then Design-spec + API page-audit. (The rev-4 draft-A is superseded
-  as the converge basis if a trophy take is chosen; kept for history.)
+- **Owner picked A** (Collapsing Trophy) and asked for a **high-fidelity** build enforcing all conventions
+  → `game-page-trophy-collapsing.html` (2026-06-14). Owner notes applied: the **"your card" tag removed**;
+  the **full owned field set** incl. **platforms** + **date acquired** (`ownedSince`) — the few I'd missed;
+  **Your Cards** larger + **unobstructed** (state reads *below* the card; the MAIN card carries the F-09
+  selection — accent outline + pink `ChipPip`; no overlay on the art, F-01) with a **hold → options
+  drawer** (SET AS MAIN · EDIT · DUPLICATE · SHARE · DELETE→`ConfirmSheet`); **Community = one link** when
+  owned vs a **listed gallery** when not. Convention corrections enforced: **`KeycapButton/primary` = orange
+  `scr.accent`** (gold+2/4-step reserved for card-creating ADD/DESIGN, F-02) · `shadow.key` 0 3px 0 · C5
+  steps · F-09 flat planes + accent-border selection · F-06 scale. Panels A1 trophy · A2 collapsed+inventory
+  · A3 flip · A4 options drawer + delete confirm · A5 full PlayStats editor · A6 neutral (community listed)
+  · A7 friend-view (SOC-11). The trophy-takes A/B/C remain for history.
+- **Next:** owner review → converge `game-page-trophy-collapsing` → `game-page-states.html` (full matrix +
+  deferred lifecycle), then Design-spec + API page-audit. (The rev-4 draft-A line is superseded as the
+  converge basis; kept for history.)
