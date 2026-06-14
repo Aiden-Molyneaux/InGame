@@ -125,7 +125,9 @@
 
   /* ConfirmDialog (centered destructive delete-account confirm) */
   .modal-scrim { position: absolute; inset: 0; z-index: 5; background: rgba(13,11,32,.62); }
-  .cdialog { position: absolute; left: 18px; right: 18px; top: 50%; transform: translateY(-50%); z-index: 6; background: var(--scr-well); border: 1px solid var(--scr-hairline); box-shadow: 0 18px 44px rgba(0,0,0,.6); padding: 18px 16px 14px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 7px; }
+  /* `ConfirmSheet` — the destructive confirm as a BOTTOM DRAWER (owner 2026-06-14 — the app's one-drawer
+     grammar, kin to `ReportSheet`; was a centered `ConfirmDialog`). */
+  .cdialog { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--scr-tools); border-top: 1px solid var(--scr-hairline); box-shadow: 0 -12px 26px rgba(0,0,0,.55); padding: 18px 18px 16px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 7px; }
   .seal { width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; background: var(--scr-panel); border: 1px solid var(--scr-hairline); margin-bottom: 3px;
     clip-path: polygon(0 5px, 3px 5px, 3px 3px, 5px 3px, 5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 3px) calc(100% - 5px), calc(100% - 3px) calc(100% - 3px), calc(100% - 5px) calc(100% - 3px), calc(100% - 5px) 100%, 0 100%); }
   .seal svg { width: 27px; height: 27px; }
@@ -223,8 +225,10 @@
   .la-pl-rsv { margin-top: 10px; padding-top: 9px; border-top: 1px dashed color-mix(in srgb, var(--scr-grip) 60%, transparent); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .la-pl-rsv .rsv-t { font: 600 8.5px/1.4 var(--pk); letter-spacing: .4px; color: var(--scr-grip); }
   .la-pl-link { font: 600 9px var(--pk); letter-spacing: .3px; color: var(--scr-accent); text-decoration: none; white-space: nowrap; }
-  .fb-send { width: 100%; border: none; background: var(--alert); color: #fff; font: 700 12px var(--pk); letter-spacing: 1px; padding: 13px 0; text-align: center; box-shadow: 0 3px 0 color-mix(in srgb, var(--alert) 45%, #000), inset 0 1px 0 rgba(255,255,255,.25); }
-  .fb-send.busy { background: color-mix(in srgb, var(--alert) 74%, #000); color: rgba(255,255,255,.85); transform: translateY(2px); box-shadow: inset 0 2px 4px rgba(0,0,0,.35); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+  /* feedback SUBMIT — a MID-WIDTH `KeycapButton/primary` (on-theme orange, centered; owner 2026-06-14 —
+     not the full-bleed red, so a support send doesn't read as an alarm). */
+  .fb-send { display: flex; align-items: center; justify-content: center; gap: 8px; width: fit-content; min-width: 190px; margin: 8px auto 0; border: none; background: var(--scr-accent); color: var(--scr-accent-ink); font: 700 12px var(--pk); letter-spacing: 1px; padding: 13px 34px; text-align: center; box-shadow: 0 3px 0 color-mix(in srgb, var(--scr-accent) 45%, #000), inset 0 1px 0 rgba(255,255,255,.45); }
+  .fb-send.busy { background: color-mix(in srgb, var(--scr-accent) 72%, #000); color: rgba(255,255,255,.92); transform: translateY(2px); box-shadow: inset 0 2px 4px rgba(0,0,0,.35); }
   .fb-send.busy .spin { width: 12px; height: 12px; border-radius: 50%; border: 2px solid rgba(255,255,255,.28); border-top-color: #fff; }
   .submit-hint { margin: 9px 2px 0; font: 600 8.5px/1.4 var(--pk); letter-spacing: .4px; color: var(--scr-dim); text-align: center; } .submit-hint b { color: var(--scr-soft); }
   .fbconfirm { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 7px; padding: 70px 22px 0; }
@@ -255,7 +259,7 @@
     (drafts A/B retired), and <b>NOTIFICATIONS becomes a `ListRow` that opens its own dedicated page</b> &mdash;
     so Settings settles into one grammar: <b>a lean list of rows where each heavier feature (notifications ·
     blocked · feedback) opens a focused page.</b> Composed from the §1.5 catalog; introduces the flagged
-    <b>`Toggle`</b> · <b>`ConfirmDialog`</b> · <b>`LogAttach`</b> · <b>`FeedbackConfirm`</b> (+ C's
+    <b>`Toggle`</b> · <b>`ConfirmSheet`</b> · <b>`LogAttach`</b> · <b>`FeedbackConfirm`</b> (+ C's
     `TriageCard`). Non-commerce &mdash; no PIXELS, no CountKeycap; PROFILE keycap stays active throughout.</p>
   </div>
 
@@ -270,9 +274,10 @@
     <p><b>Feedback (SYS-11 · C triage):</b> the triage chooser &middot; the minimal feedback form (no-tax) &middot;
     the bug form (diagnostic chips + the `LogAttach` hero, OQ-060 room) &middot; submitting &middot;
     `FeedbackConfirm` &middot; error `Toast`. <span class="ok">&#10003;</span></p>
-    <p class="rule"><b>Residual (presentation, for design-spec formalization):</b> the feedback SUBMIT colour
-    (drawn red `/destructive`; `/primary` alternative open) &middot; the `ConfirmDialog` spatial form (drawn
-    centered modal; bottom-`drawer` alternative open).</p>
+    <p class="rule"><b>Owner refinements (2026-06-14) &mdash; both former residuals resolved:</b> the feedback
+    SUBMIT is a <b>mid-width `KeycapButton/primary`</b> (centered, on-theme orange &mdash; not the full-bleed
+    red) &middot; the destructive delete confirm is a <b>bottom `ConfirmSheet`</b> (the app's one-drawer
+    grammar; was a centered `ConfirmDialog`).</p>
   </div>
 
   <!-- ════════════════════ STAGE 1 — THE SETTINGS LIST ════════════════════ -->
@@ -591,12 +596,14 @@
         </div>
       </div>
       <div class="caption">
-        <h3>S7 &mdash; delete account <em>(the `ConfirmDialog` · AUTH-07)</em></h3>
-        <p><b>The destructive confirm.</b> DELETE ACCOUNT summons a <b>centered modal</b> over the dimmed
-        list — red alert seal, THIS CAN'T BE UNDONE / DELETE YOUR ACCOUNT?, the plain-words AUTH-07 ripple
-        (collection/queue/wallet/friends/gamertags deleted; published cards unpublished, existing adopters
-        keep their copy). Red <b>DELETE ACCOUNT</b> + cream <b>CANCEL</b>. <i>(Spatial form &mdash;
-        centered modal vs bottom-drawer &mdash; still open for design-spec.)</i></p>
+        <h3>S7 &mdash; delete account <em>(the `ConfirmSheet` · AUTH-07)</em></h3>
+        <p><b>The destructive confirm, now a bottom drawer</b> (owner 2026-06-14 — the app's one-drawer
+        grammar, kin to `ReportSheet`; summoned, no grab handle). DELETE ACCOUNT raises the sheet over the
+        dimmed list — red alert seal, THIS CAN'T BE UNDONE / DELETE YOUR ACCOUNT?, the plain-words AUTH-07
+        ripple (collection/queue/wallet/friends/gamertags deleted; published cards unpublished, existing
+        adopters keep their copy). <b>DELETE ACCOUNT stays red `/destructive`</b> (deletion IS destructive) +
+        cream <b>CANCEL</b>. <i>(Renamed `ConfirmDialog` → `ConfirmSheet`; aligns with the game-page track's
+        destructive `ConfirmSheet` (OQ-061) — spec-owner to unify into one shared component.)</i></p>
       </div>
     </div>
 
@@ -716,7 +723,7 @@
         iPhone 14, "no account data") and the <b>`LogAttach` hero</b> — accent-bordered, the square `Toggle`
         ON, a consent that <b>contrasts logs vs basics</b> ("these can include personal info &rarr; support
         only"), and the reserved <b>OQ-060</b> payload panel (room for size/summary once defined). SEND BUG
-        REPORT is the red `/destructive` commit.</p>
+        REPORT is now a <b>mid-width `KeycapButton/primary`</b> — on-theme orange, not red (a support send shouldn't read as an alarm).</p>
       </div>
     </div>
 

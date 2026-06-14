@@ -180,10 +180,15 @@ matrix incl. lifecycle).
    feedback — opens its own focused page), **not** a literal "what kind of notification?" card-chooser
    layered over 6 toggles (judged over-engineering). If a category-chooser was intended, the
    notifications page is a small redo.*
-3. **Residual (unruled at this gate — defaults kept, re-flagged):** the **feedback SUBMIT colour**
-   (kept red `/destructive` per the brief; the `/primary` alternative is still on the table) and the
-   **`ConfirmDialog` spatial form** (kept the centered modal; the bottom-`drawer` alternative is still
-   on the table). Both are presentation calls that can settle at design-spec formalization (spec-owner).
+3. **Both former residuals resolved (owner refinement, 2026-06-14):** *"let's make this a mid-button
+   primary, and let's make the confirm dialog a bottom drawer."*
+   - **Feedback SUBMIT** → a **mid-width `KeycapButton/primary`** (centered, on-theme `scr.accent` orange,
+     not the full-bleed red `/destructive`) — across every feedback state. *(The delete-account DELETE
+     button stays red `/destructive` — deletion IS destructive.)*
+   - **Destructive delete confirm** → a **bottom `ConfirmSheet`** (the app's one-drawer grammar, kin to
+     `ReportSheet`; summoned, no grab handle). The working name **`ConfirmDialog` retires → `ConfirmSheet`**,
+     aligning with the game-page track's destructive `ConfirmSheet` (OQ-061) — **spec-owner to ratify one
+     shared component** at formalization.
 
 Converge target: `settings/settings-states.html` — the lean Settings list (notifications now a row → its
 own page) + the C-triage feedback surface + the full §1.6 lifecycle matrix. `settings-page.html` +
