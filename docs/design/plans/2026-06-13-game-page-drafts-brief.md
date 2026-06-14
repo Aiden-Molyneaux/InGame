@@ -153,6 +153,11 @@ existing design system. Used the **brainstorming skill**. Outcome:
   opposite corners — reads as the card turned over to its back); **EDIT is now inline** (same GAME screen,
   no separate mode) and shows the **stats card as the only card** while editing; **Your Cards selection = a
   thin orange border** (pip dropped).
+  **Further (owner, 2026-06-14):** the **collapsed header drops the cosmetic/styler readout** — shows play
+  stats only (210 HRS · 68% · PLAYING · SINCE 2014); the **card-back credit is now "CARD ART DESIGNED BY" +
+  the account name** (prominent), with the tiny adoption-count + cosmetics line removed. *Flag for converge:*
+  this drops the **adoption count** from the card-back (CARD-01 names back-provenance = designer + adoption
+  count) — it still shows in the gallery/`AdoptCount`; reconcile the CARD-01 card-back wording at converge.
 - **Next:** owner review → converge the chosen trophy iteration → `game-page-states.html` (full matrix +
   deferred lifecycle), then Design-spec + API page-audit. (The rev-4 draft-A line + earlier trophy files are
   superseded as the converge basis; kept for history.)
