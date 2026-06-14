@@ -177,9 +177,9 @@
 
   /* ── Up Next room ── */
   .nowpin { display: flex; align-items: center; gap: 11px; padding: 11px; background: var(--scr-well);
-    border: 1px solid color-mix(in srgb, var(--accent) 42%, transparent); border-left: 3px solid var(--accent); }
+    border: 1px solid color-mix(in srgb, var(--scr-accent) 42%, transparent); border-left: 3px solid var(--scr-accent); }
   .nowpin .np-meta { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
-  .nowtag { display: inline-flex; align-items: center; gap: 4px; background: var(--accent); color: #fff; font: 700 8px/1 var(--pk); letter-spacing: 1px; padding: 3px 5px; }
+  .nowtag { display: inline-flex; align-items: center; gap: 4px; background: var(--scr-accent); color: var(--scr-accent-ink); font: 700 8px/1 var(--pk); letter-spacing: 1px; padding: 3px 5px; }
   .np-title { font: 700 15px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
   .np-sub { font: 600 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
   .qrow { display: flex; align-items: center; gap: 9px; padding: 8px 10px; background: var(--scr-well); border: 1px solid var(--scr-hairline); }
@@ -195,7 +195,7 @@
   .q-right { margin-left: auto; display: flex; align-items: center; gap: 7px; flex: 0 0 auto; }
   .qtag { font: 700 8px/1 var(--pk); letter-spacing: 1px; padding: 3px 5px; white-space: nowrap; }
   .qtag.wish { background: rgba(255,210,63,.1); border: 1px solid color-mix(in srgb, var(--gold) 65%, transparent); color: var(--gold); }
-  .qtag.rec { background: var(--scr-panel); border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); color: var(--scr-soft); }
+  .qtag.rec { background: var(--scr-panel); border: 1px solid color-mix(in srgb, var(--scr-accent) 50%, transparent); color: var(--scr-soft); }
   .qtag.src { background: var(--scr-panel); border: 1px solid var(--scr-hairline); color: var(--scr-dim); }
   .dropline { height: 2px; margin: 5px 8px; background: var(--scr-accent); border-radius: 2px; box-shadow: 0 0 8px 1px rgba(255,159,67,.6); }
   .addfrom { margin-top: 11px; display: flex; flex-direction: column; gap: 7px; }
@@ -217,11 +217,11 @@
   .notify.on { background: var(--scr-accent); color: var(--scr-accent-ink); }
   /* friend-recommendation row */
   .rec-row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; background: var(--scr-well);
-    border: 1px solid color-mix(in srgb, var(--accent) 36%, transparent); }
+    border: 1px solid color-mix(in srgb, var(--scr-accent) 36%, transparent); }
   .rec-row + .rec-row { margin-top: 6px; }
   .rec-row .rc-meta { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .rec-row .rc-who { font: 700 8.5px var(--pk); letter-spacing: 1px; color: var(--scr-soft); }
-  .rec-row .rc-who b { color: var(--accent); }
+  .rec-row .rc-who b { color: var(--scr-accent); }
   .rec-row .rc-title { font: 700 12px var(--pk); letter-spacing: .3px; color: var(--scr-text); }
   .rec-row .rc-note { font: 600 9px/1.35 var(--pk); letter-spacing: .2px; color: var(--scr-dim); font-style: italic; }
   /* trending row */
@@ -686,7 +686,7 @@
                 <div class="meta-row prez"><span class="ml">COLLECTIONS</span><span class="mv">IN <b>96</b> COLLECTIONS</span></div>
                 <div class="meta-row prez"><span class="ml">FRIENDS</span><span class="mv"><b>2</b> FRIENDS HAVE IT</span></div>
               </div>
-              <div class="detail-credit"><span class="credit">&#9670; ADDED BY <b>@RIA</b></span> <span class="credit" style="margin-left:6px; border-color: color-mix(in srgb, var(--accent) 50%, transparent);">&#9786; REC&rsquo;D BY <b>@SOL</b></span></div>
+              <div class="detail-credit"><span class="credit">&#9670; ADDED BY <b>@RIA</b></span> <span class="credit" style="margin-left:6px; border-color: color-mix(in srgb, var(--scr-accent) 50%, transparent);">&#9786; REC&rsquo;D BY <b>@SOL</b></span></div>
               <div class="detail-actions">
                 <button class="btn add">&#43; ADD TO COLLECTION</button>
                 <button class="btn">&#9654; UP NEXT</button>
