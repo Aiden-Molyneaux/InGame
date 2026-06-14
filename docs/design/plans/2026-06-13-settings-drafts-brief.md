@@ -163,7 +163,28 @@ matrix incl. lifecycle).
 
 ---
 
-## Owner gate ruling — (pending)
+## Owner gate ruling — 2026-06-14 (verbatim)
 
-> _(verbatim owner ruling pasted here at the gate; then decoded → applied to `settings-states.html` at
-> converge)._
+> "use feedback draft C triage and make the notifications feature its own page, similar to triage."
+
+**Decoded → applied to `settings-states.html` (converge):**
+1. **Feedback model: Draft C "Type-first triage" wins.** The feedback row opens a triage screen (3
+   `TriageCard`s) → tailored per-type forms (minimal feedback/suggestion; the purpose-built **bug form**
+   foregrounding the non-PII diagnostic-context chips + the `LogAttach` hero). Drafts A (inline) + B
+   (sheet) retire, kept for history.
+2. **Notifications → its own page.** The inline NOTIFICATIONS section becomes a **`ListRow` in Settings
+   that opens a dedicated NOTIFICATIONS page** (FlowHeader ◂ NOTIFICATIONS) hosting the per-type
+   `Toggle`s (grouped Social / Games & Cards / Store) + the NOTIF-04 OS-permission-declined recovery.
+   *Interpretation flagged: "similar to triage" read as the **row → focused dedicated page** navigation
+   pattern C established (Settings becomes a lean list; each heavier feature — notifications · blocked ·
+   feedback — opens its own focused page), **not** a literal "what kind of notification?" card-chooser
+   layered over 6 toggles (judged over-engineering). If a category-chooser was intended, the
+   notifications page is a small redo.*
+3. **Residual (unruled at this gate — defaults kept, re-flagged):** the **feedback SUBMIT colour**
+   (kept red `/destructive` per the brief; the `/primary` alternative is still on the table) and the
+   **`ConfirmDialog` spatial form** (kept the centered modal; the bottom-`drawer` alternative is still
+   on the table). Both are presentation calls that can settle at design-spec formalization (spec-owner).
+
+Converge target: `settings/settings-states.html` — the lean Settings list (notifications now a row → its
+own page) + the C-triage feedback surface + the full §1.6 lifecycle matrix. `settings-page.html` +
+feedback drafts a/b/c kept for history.
