@@ -110,6 +110,14 @@
   on write (reject/clamp compositions that overlap the nav or the screen). Device analogue of the editor's
   composition payloads; pairs with the OQ-045 on-shell preview this pass closes. (Device-editor drafts,
   2026-06-14) [behavior]
+- OQ-063: **A new `SectionSwitch` mode-switcher — does it replace the Segmented Toolbar app-wide?** The owner
+  asked (reviewing Device Draft A) to rebuild the SHELL/THEME/STICKERS switcher as an **S8-style option-card**
+  component (`device-switcher-takes.html`: T1 Section Stack · T2 Section Rail · T3 Section Hero; selection
+  moves to the **F-09 accent-border + pink-pip** tell, off the old F-03 pressed-keycap). The same convention
+  lives on **converged** boards — Discover's `SegmentedKeycap` (2-way) and the Styler's `SectionChips` (5-way).
+  Open: once the owner picks a take, **is it adopted on those boards too** (one shared component → design-spec
+  §1.5, retiring/aliasing `SegmentedKeycap`+`SectionChips`), or scoped to the Device editor only? Cross-track /
+  spec-owner call — **not applied to Discover/Styler here**. (Device switcher exploration, 2026-06-14) [presentation]
 
 ## Resolved
 - OQ-053 → **Upcoming notify-me has a backing endpoint** (Discover §3.2 page-audit, api-contract 0.21):
