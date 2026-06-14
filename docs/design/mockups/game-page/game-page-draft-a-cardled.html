@@ -393,11 +393,16 @@
     longer reads &ldquo;made in InGame&rdquo;</b>; and the <b>button scale is re-aligned to the Add Game
     catalog verbatim</b> (mini = 6px&middot;8px / 9px, keeping the base `shadow.key` 3px edge &mdash; the
     rev-2 lighter 2px was the miss).
+    <b style="color:#2a2633;">Rev 4 (owner gate ruling &mdash; A wins, with changes, 2026-06-13):</b> a dedicated
+    <b>owned landing</b> (P2 &mdash; what you see the instant you open an owned game: card + the collapsed YOUR
+    PLAY peek + your switcher, drawer closed) · the <b>&#8943; overflow is now a pull-up drawer</b> (was a
+    dropdown) · <b>COMPARE now opens a drawer</b> (P6, was inline). Everything heavy on the page now shares the
+    one bottom-sheet grammar; P2b shows the YOUR PLAY drawer open.
     <i>Lifecycle cells (soft-hidden · loading · offline) deferred to converge. Sample: Destiny, 210 hrs;
     Maverick = you · Riko/Vanta = friends. Numbers illustrative (OQ-002/011).</i></p>
   </div>
 
-  <div class="stage-label">The shared page &amp; the owned state <small>P1 neutral (not-owned) &middot; P2 owned (your stats inline-edit) &middot; P3 the card flip</small></div>
+  <div class="stage-label">The shared page &amp; the owned state <small>P1 neutral (not-owned) &middot; P2 owned &mdash; just opened (the landing) &middot; P2b owned &mdash; YOUR PLAY drawer &middot; P3 the card flip</small></div>
   <div class="stage">
 
     <!-- ═══ P1 · Neutral ═══ -->
@@ -497,10 +502,78 @@
       </div>
     </div>
 
-    <!-- ═══ P2 · Owned ═══ -->
+    <!-- ═══ P2 · Owned — the landing (just clicked) ═══ -->
     <div class="take">
-      <div class="artboard-label">P2 &middot; Owned &mdash; your card + inline-edit PlayStats</div>
-      <div class="device" data-screen-label="Game page A · P2 — Owned">
+      <div class="artboard-label">P2 &middot; Owned &mdash; just opened (the landing, drawer closed)</div>
+      <div class="device" data-screen-label="Game page A · P2 — Owned landing">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DESTINY</h2><span class="sh-sp"></span><span class="now-tag">&#9656; NOW PLAYING</span><button class="ovf-key" style="margin-left:8px;">&#8943;</button></div>
+            <div class="scroll">
+              <div class="cardhero">
+                <div class="gcard hero-size fr-gilt fx-ember fin-holo">
+                  <div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div>
+                  <div class="plate pl-destiny pl-ribbon">Destiny</div>
+                </div>
+              </div>
+              <div class="flip-row" style="gap:10px;">
+                <span class="flip-hint">&#8635; FLIP FOR STATS &amp; PROVENANCE</span>
+                <span class="flip-hint" style="color:var(--scr-accent); border-color:color-mix(in srgb,var(--scr-accent) 45%,transparent);">&#9670; YOUR SELECTED CARD</span>
+              </div>
+              <div class="yp-peek">
+                <span class="npl">YOUR PLAY</span>
+                <span class="yp-sum">210 HRS &middot; 68% &middot; PLAYING</span>
+                <span class="yp-edit">&#9650; TAP TO EDIT</span>
+              </div>
+              <div class="sec"><h3>YOUR CARDS FOR DESTINY</h3><a href="#">MANAGE &rsaquo;</a></div>
+              <div class="switch-rail">
+                <div class="swcard"><span class="state-tag equipped">&#9670; EQUIPPED</span><div class="gcard pick-size fr-gilt fx-ember fin-holo"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div></div>
+                <div class="swcard"><span class="state-tag private">PRIVATE</span><div class="gcard pick-size fr-slate fx-ghost"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div></div>
+                <div class="swcard"><span class="state-tag adopted">ADOPTED</span><div class="gcard pick-size fr-foil"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div></div>
+                <div class="newtile"><span class="plus">&#43;</span><span class="nl">DESIGN NEW</span></div>
+              </div>
+              <div class="hint" style="text-align:left;">YOUR SELECTED CARD SHOWS EVERYWHERE (COL-06/CARD-07) &middot; SWITCH ANY TIME &middot; FULL LIBRARY = MANAGE (THE CARD SWITCHER, P4)</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="half-panel">
+        <div class="sec" style="margin:0 0 8px;"><h3>THE &#8943; OVERFLOW &mdash; NOW A PULL-UP DRAWER</h3></div>
+        <div style="background:var(--scr-tools); border:1px solid var(--scr-hairline); border-top:2px solid var(--scr-grip); box-shadow:0 -10px 22px rgba(0,0,0,.45); padding:7px 13px 12px;">
+          <div class="handle"></div>
+          <div class="sh-h">GAME OPTIONS<span class="x">&#10005;</span></div>
+          <div class="ovf-menu" style="position:static; right:auto; top:auto; min-width:0; width:100%; box-sizing:border-box; border:none; box-shadow:none;">
+            <div class="mrow"><svg viewBox="0 0 16 16" fill="none"><use href="#ic-edit2"/></svg>SUGGEST AN EDIT (CAT-06)</div>
+            <div class="mrow"><svg viewBox="0 0 16 16" fill="none"><use href="#ic-share"/></svg>SHARE THIS GAME</div>
+            <div class="mrow danger"><svg viewBox="0 0 16 16" fill="none"><use href="#ic-flag"/></svg>REPORT (MOD-01)</div>
+          </div>
+        </div>
+        <div class="hint" style="text-align:left; margin-top:9px;"><b>TAP THE HEADER &#8943; &rarr; THIS DRAWER PULLS UP</b> (the app's one bottom-sheet grammar, your note) &mdash; suggest a catalog edit (CAT-06) · share · report (MOD-01 → the `ReportSheet`). Was a dropdown; now a drawer, consistent with the rest of the page. Present on every state's header.</div>
+      </div>
+      <div class="caption">
+        <h3>P2 &mdash; Owned, just opened <em>(the landing &mdash; what you see the instant you tap an owned game)</em></h3>
+        <p>Your note: <b>the state when you click a game in your collection</b>. The card hero leads with
+        <b>&#9670; YOUR SELECTED CARD</b>, then a slim <b>YOUR PLAY peek</b> (210 HRS · 68% · PLAYING · &#9650;
+        TAP TO EDIT &mdash; the closed `PlayStats` drawer), then your <b>`CardSwitcher`</b> rail (equipped ·
+        private · adopted · DESIGN NEW). <b>Drawer closed</b> &mdash; the page is at rest, the card holds the
+        spotlight; the stats are one tap away (&rarr; P2b). The header carries NOW-PLAYING + the <b>&#8943;
+        overflow</b>, which now <b>pulls up the drawer in the fragment</b> (was a dropdown).</p>
+      </div>
+    </div>
+
+    <!-- ═══ P2b · Owned — the YOUR PLAY drawer ═══ -->
+    <div class="take">
+      <div class="artboard-label">P2b &middot; Owned &mdash; the YOUR PLAY drawer (stats edit)</div>
+      <div class="device" data-screen-label="Game page A · P2b — Owned (stats drawer)">
         <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
@@ -564,42 +637,16 @@
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
         </div>
       </div>
-      <div class="half-panel">
-        <div class="sec" style="margin:0 0 7px;"><h3>RESTING STATE &mdash; THE DRAWER CLOSED</h3></div>
-        <div class="yp-peek" style="margin:0;">
-          <span class="npl">YOUR PLAY</span>
-          <span class="yp-sum">210 HRS &middot; 68% &middot; PLAYING</span>
-          <span class="yp-edit">&#9650; TAP TO EDIT</span>
-        </div>
-        <div class="hint" style="text-align:left; margin-top:7px;"><b>THE PAGE AT REST:</b> just this slim peek (the drawer's handle) under the card &mdash; tap it or pull up and the editing sheet shown on-screen rises. The card keeps the spotlight; the stats stay one gesture away.</div>
-        <div class="sec" style="margin:11px 0 7px;"><h3>THE &#8943; OVERFLOW MENU</h3></div>
-        <div style="display:flex; align-items:flex-start; gap:13px;">
-          <div style="display:flex; flex-direction:column; align-items:center; gap:5px; flex:0 0 auto;">
-            <button class="ovf-key" style="transform:translateY(2px); box-shadow:0 0 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 2px 3px rgba(0,0,0,.22);">&#8943;</button>
-            <span style="font:700 7px var(--pk); letter-spacing:1px; color:var(--scr-dim);">PRESSED</span>
-          </div>
-          <div style="flex:1; min-width:0;">
-            <div class="ovf-menu" style="position:static; right:auto; top:auto; min-width:0; width:100%; box-sizing:border-box;">
-              <div class="mrow"><svg viewBox="0 0 16 16" fill="none"><use href="#ic-edit2"/></svg>SUGGEST AN EDIT (CAT-06)</div>
-              <div class="mrow"><svg viewBox="0 0 16 16" fill="none"><use href="#ic-share"/></svg>SHARE THIS GAME</div>
-              <div class="mrow danger"><svg viewBox="0 0 16 16" fill="none"><use href="#ic-flag"/></svg>REPORT (MOD-01)</div>
-            </div>
-          </div>
-        </div>
-        <div class="hint" style="text-align:left; margin-top:9px;"><b>THE HEADER &#8943;</b> opens this menu &mdash; suggest a catalog edit (CAT-06) · share the game · report (MOD-01, → the `ReportSheet`). Present on every state's header.</div>
-      </div>
       <div class="caption">
-        <h3>P2 &mdash; Owned <em>(PlayStats is now a pull-up drawer)</em></h3>
-        <p>Tapped from <b>your</b> collection: same card hero, but <b>`PlayStats` is now a drawer</b> (your
-        note) &mdash; the page carries only a slim <b>collapsed peek</b> (YOUR PLAY · 210 HRS · 68% · PLAYING ·
-        &#9650; TAP TO EDIT), and pulling it up raises the <b>editing sheet</b> (the app's one bottom-sheet
-        grammar, shared with P5/Add Game): hours (being edited, keyboard-ready) · complete% · status chips ·
-        owned-since · notes, all <b>editable inline</b> (COL-02..05; a pencil per field). <b>Rating is
-        de-emphasized + flagged PENDING (OQ-058)</b> &mdash; it stays a per-<i>game</i> field, never a card
-        rating. The card stays the hero, the page breathes; the drawer foot holds <b>EDIT THIS CARD</b> (gold →
-        the Styler on the equipped card), SWITCH, SHARE. The header carries the NOW-PLAYING tag (WTP-03) + the
-        <b>&#8943; overflow</b> (fragment); MANAGE opens the full switcher (P4). Viewing the card here
-        <b>never edits the art</b> (§4.2).</p>
+        <h3>P2b &mdash; Owned <em>(the YOUR PLAY drawer, pulled up)</em></h3>
+        <p>Tapping the <b>YOUR PLAY peek</b> on the landing (P2) raises this <b>`PlayStats` drawer</b> &mdash;
+        the app's one bottom-sheet grammar (shared with P5/Add Game): hours (being edited, keyboard-ready) ·
+        complete% · status chips · owned-since · notes, all <b>editable inline</b> (COL-02..05; a pencil per
+        field). <b>Rating is de-emphasized + flagged PENDING (OQ-058)</b> &mdash; it stays a per-<i>game</i>
+        field, never a card rating. The <b>card stays pinned above</b> the dimmed page, so you never lose sight
+        of it while you log; the drawer foot holds <b>EDIT THIS CARD</b> (gold → the Styler on the equipped
+        card), SWITCH, SHARE. Viewing the card here <b>never edits the art</b> (§4.2). MANAGE (on P2) opens the
+        full switcher (P4).</p>
       </div>
     </div>
 
@@ -795,14 +842,14 @@
 
     <!-- ═══ P6 · Friend-view ═══ -->
     <div class="take">
-      <div class="artboard-label">P6 &middot; Friend-view (SOC-11) &mdash; their card + opt-in compare</div>
+      <div class="artboard-label">P6 &middot; Friend-view (SOC-11) &mdash; their card + the COMPARE drawer</div>
       <div class="device" data-screen-label="Game page A · P6 — Friend-view">
         <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
             <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DESTINY</h2><span class="sh-sp"></span><span class="eq" style="background:var(--scr-panel);">RIKO'S</span><button class="ovf-key" style="margin-left:8px;">&#8943;</button></div>
-            <div class="scroll">
+            <div class="scroll dimmed">
               <div class="cardhero">
                 <div class="gcard hero-size fr-foil" style="width:158px; height:221px;"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div>
               </div>
@@ -823,18 +870,22 @@
                   <button class="btn sec mini">&#8646; COMPARE WITH MINE</button>
                 </div>
               </div>
-              <div class="hint" style="text-align:left;"><b>COMPARE IS OPT-IN</b> (SOC-11) &mdash; tap it and your card + stats slide in beside theirs (the single-game cousin of Compare Hours, SOC-03):</div>
-              <div class="compare">
-                <div class="npl" style="text-align:center; display:block; margin-bottom:8px;">&#8646; COMPARE &mdash; YOU vs RIKO</div>
-                <div class="compare-row">
-                  <div class="compare-col"><span class="who you">YOU</span><div class="gcard pick-size fr-gilt fx-ember fin-holo" style="width:72px; height:101px;"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div></div>
-                  <div class="compare-mid">
-                    <div class="vbar"><span class="vv">210</span><span class="vl">HRS</span><span class="vs">vs</span><span class="vv win">240</span></div>
-                    <div class="vbar"><span class="vv win">68%</span><span class="vl">DONE</span><span class="vs">vs</span><span class="vv">&mdash;</span></div>
-                  </div>
-                  <div class="compare-col"><span class="who">RIKO</span><div class="gcard pick-size fr-foil" style="width:72px; height:101px;"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div></div>
+              <div class="hint" style="text-align:left;"><b>COMPARE IS OPT-IN</b> (SOC-11) &mdash; tap COMPARE and the comparison <b>pulls up as a drawer</b> (the single-game cousin of Compare Hours, SOC-03), shown open over the dimmed page:</div>
+            </div>
+            <div class="scrim"></div>
+            <div class="sheet">
+              <div class="handle"></div>
+              <div class="sh-h">&#8646; COMPARE &mdash; YOU vs RIKO (OPT-IN, SOC-11)<span class="x">&#10005;</span></div>
+              <div class="compare-row" style="margin-top:4px;">
+                <div class="compare-col"><span class="who you">YOU</span><div class="gcard pick-size fr-gilt fx-ember fin-holo" style="width:84px; height:118px;"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div></div>
+                <div class="compare-mid">
+                  <div class="vbar"><span class="vv">210</span><span class="vl">HRS</span><span class="vs">vs</span><span class="vv win">240</span></div>
+                  <div class="vbar"><span class="vv win">68%</span><span class="vl">DONE</span><span class="vs">vs</span><span class="vv">&mdash;</span></div>
+                  <div class="vbar"><span class="vv">2014</span><span class="vl">SINCE</span><span class="vs">vs</span><span class="vv">2014</span></div>
                 </div>
+                <div class="compare-col"><span class="who">RIKO</span><div class="gcard pick-size fr-foil" style="width:84px; height:118px;"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div></div>
               </div>
+              <div class="hint" style="text-align:left; margin-top:11px;">Your card + stats slide in beside theirs, who's-ahead lit gold. Only privacy-allowed fields compare (PROF-03) &mdash; their notes/platforms never appear.</div>
             </div>
           </div>
         </div>
@@ -861,9 +912,9 @@
         <p>Tapped from <b>Riko's</b> collection: their selected card + its <b>`EquipReadout`</b> (CARD-22) +
         <b>`FriendContext`</b> &mdash; hours · status · owned-since only, <b>privacy-gated</b> (PROF-03; their
         notes/rating/platforms stay owner-only, COL-04/05). Primary action <b>ADOPT</b> (atomic, 1 PX). <b>Compare
-        is opt-in</b> (the explicit COMPARE button → the `CompareStrip`: your card + stats side-by-side against
-        theirs, who's-ahead lit gold). The fragment is the <b>don't-own-it variant</b>: no compare → their card
-        + facts + ADOPT + ADD TO COLLECTION (a discover-their-card path).</p>
+        is opt-in</b> &mdash; per your note the COMPARE button now <b>pulls up the `CompareStrip` as a drawer</b>
+        (shown open over the dimmed page): your card + stats beside theirs, who's-ahead lit gold. The fragment is
+        the <b>don't-own-it variant</b>: no compare → their card + facts + ADOPT + ADD TO COLLECTION.</p>
       </div>
     </div>
 

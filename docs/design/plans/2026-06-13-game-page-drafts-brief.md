@@ -92,3 +92,18 @@ Deferred to converge: soft-hidden/reported (MOD-02/08/09) · loading skeleton ·
    ruling verbatim+dated here.
 4. Converge per the ruling → `game-page/game-page-states.html` (full matrix incl. the deferred
    states) → SCREEN-STATUS (row + UP NEXT) → STOP. Behavior finds → the inbox.
+
+## Gate ruling (owner, 2026-06-13)
+**A "Card-led scroll" wins** — *"moving forward with A definitely going to have some changes though."*
+B "Tabbed dossier" + C "Pinned card + drawer depth" retired (kept for history). Owner change requests
+applied to `game-page-draft-a-cardled.html` (**rev 4**):
+1. **Add an owned-landing panel** — what you see the instant you tap an owned game in your collection
+   (the resting state, drawer closed): card hero + the collapsed `YOUR PLAY` peek + the `CardSwitcher`
+   rail. → new **P2** (the prior owned/stats panel becomes **P2b**, the drawer open).
+2. **The ⋮ overflow opens a drawer** (was a dropdown menu) — bottom-sheet `GAME OPTIONS` (suggest edit ·
+   share · report). Shown in P2's fragment.
+3. **COMPARE opens a drawer** (was inline) — the `CompareStrip` rises as a bottom-sheet over the dimmed
+   friend page (P6). Mirrors C's treatment; same opt-in (SOC-11) + privacy gate (PROF-03).
+Net: every heavy surface on the page now shares the one bottom-sheet grammar. **Next:** any further A
+tweaks from the owner, then converge → `game-page-states.html` (+ the deferred lifecycle states:
+soft-hidden/reported · loading · offline).
