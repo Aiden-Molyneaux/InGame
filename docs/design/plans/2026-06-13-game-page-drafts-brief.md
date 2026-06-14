@@ -139,6 +139,15 @@ existing design system. Used the **brainstorming skill**. Outcome:
   steps · F-09 flat planes + accent-border selection · F-06 scale. Panels A1 trophy · A2 collapsed+inventory
   · A3 flip · A4 options drawer + delete confirm · A5 full PlayStats editor · A6 neutral (community listed)
   · A7 friend-view (SOC-11). The trophy-takes A/B/C remain for history.
-- **Next:** owner review → converge `game-page-trophy-collapsing` → `game-page-states.html` (full matrix +
-  deferred lifecycle), then Design-spec + API page-audit. (The rev-4 draft-A line is superseded as the
-  converge basis; kept for history.)
+- **Iteration → `game-page-trophy-dualface.html` (owner notes, 2026-06-14):** the **hero now shows both
+  sides of the card at once** — the face + the stats back **side-by-side** (no flip), with **EDIT STATS**
+  under the stats side · **EDIT enlarges the stats card and the values become fields directly on the back**
+  (on-card editing; provenance stays auto) · **game facts as tags** · **Your Cards: no hold-drawer** — **tap
+  to select** (orange outline + pip) and the options (**SET AS MAIN · EDIT · DELETE**) render **inline on
+  the screen**; DELETE still routes to the `ConfirmSheet` · **Share Card Image removed from the per-card
+  options** — the **only share spot is a docked footer at the bottom of the screen** (owned only; self-share,
+  decision 0019). Panels A1 dual-face hero · A2 on-card stat edit · A3 scrolled (select+inline-options +
+  bottom share + delete confirm) · A4 friend dual-face (gated back). Conventions held.
+- **Next:** owner review → converge the chosen trophy iteration → `game-page-states.html` (full matrix +
+  deferred lifecycle), then Design-spec + API page-audit. (The rev-4 draft-A line + earlier trophy files are
+  superseded as the converge basis; kept for history.)
