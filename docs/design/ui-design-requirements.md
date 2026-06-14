@@ -6,7 +6,7 @@
 > "how it looks/feels"). Behavior questions raised while designing go to
 > [`../open-questions.md`](../open-questions.md), not edited into the spec directly.
 
-**Version:** 0.15 · **Last updated:** 2026-06-13 · **Owner:** Claude Code → Claude Design
+**Version:** 0.17 · **Last updated:** 2026-06-13 · **Owner:** Claude Code → Claude Design
 **Status:** **ALL screens specified** (5 tabs + 16 detail screens/flows). Ready to hand to Claude Design. Open design notes live in `open-questions.md` (`OQ-005/007`).
 > **Claude Design — read [`design-process.md`](design-process.md) first.** It defines the phased,
 > reuse-first process: 3 hero-screen (Collection) drafts → extract a named component catalog →
@@ -252,7 +252,8 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 **States:** step-by-step · skip · push pre-prompt · complete.
 
 ### 4.15 Settings
-**Must host:** account (email/password · **username change**, cooldown-limited `PROF-06` · **email-verification status + resend** `AUTH-08` · **sign out** · **delete account** `AUTH-07`) · **privacy** (friends-only vs limited public, `PROF-03`) · **blocked users** (list + unblock, `SOC-09`) · **notification prefs** (`NOTIF-02`; incl. recovery guidance when the OS permission was declined, `NOTIF-04`) · **Help/Contact** (`SYS-09`) · about/legal (ToS + Privacy, `AUTH-10`).
+**Must host:** account (email/password · **username change**, cooldown-limited `PROF-06` · **email-verification status + resend** `AUTH-08` · **sign out** · **delete account** `AUTH-07`) · **privacy** (friends-only vs limited public, `PROF-03`) · **blocked users** (list + unblock, `SOC-09`) · **notification prefs** (`NOTIF-02`; incl. recovery guidance when the OS permission was declined, `NOTIF-04`) · **Feedback & bug reporting** (`SYS-11` — feedback/suggestion/bug + message; support-facing) · **Help/Contact** (`SYS-09`) · about/legal (ToS + Privacy, `AUTH-10`).
+**Feedback surface (`SYS-11`):** a Settings row opening a small form/sheet — a **type** selector (feedback · suggestion · bug) + a **message** field; choosing **bug** reveals an **opt-in "attach InGame device logs" control** with a one-line **consent** note and **room reserved for the not-yet-defined log payload** (`OQ-060`). Support-facing (not screened — MOD-07-exempt); **distinct from Help/Contact** (`SYS-09`, which reaches support). **States:** idle · bug-with-logs · submitting · submitted-confirmation · error (the §1.8 channels). Delete-account keeps its **destructive-confirm** (`AUTH-07`).
 **Not here:** display theming — the **screen theme** is device customization and lives in the **Device editor** (`DEV-04`).
 
 ### 4.16 Report (modal, `MOD-01`)
@@ -283,3 +284,4 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 | 2026-06-13 | 0.14 | Decision 0019 ripple: §3.5/4.1 friend-view **Share chip cut** (sharing is self-only, OQ-052); §4.1 empty-state **popular = most-collected** (`CAT-09`, OQ-051). |
 | 2026-06-13 | 0.15 | Decision 0020 ripple: §4.2 Game page gains **entry-context states** — the **friend-view** (tap a friend's card → their card + **equipped readout** `CARD-22` + per-game context, **opt-in compare**, **atomic adopt**, `SOC-11`) alongside the owned-state (now noting **inline-editable** stats + the **card-object/flip** home); Part-2 row 7 updated. |
 | 2026-06-13 | 0.16 | Decision 0021 ripple: §3.1 friend-view gains **browse-tool parity** (`COL-11`) — full sort · scoped search · genre/status filter · view-modes, **read-only**, over the friend-visible field set — the Collection board re-pass brief. |
+| 2026-06-13 | 0.17 | Decision 0022 ripple: §4.15 Settings gains a **Feedback & bug-reporting** surface (`SYS-11`) — feedback/suggestion/bug + message, with an **opt-in "attach InGame device logs" control on bug reports** (consent-gated; UI room reserved, log shape TBD `OQ-060`); distinct from Help/Contact (`SYS-09`). *(Header version catch-up 0.15→0.17.)* |

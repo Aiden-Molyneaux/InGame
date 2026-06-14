@@ -4,7 +4,7 @@
 > be refined alongside the design-spec, because screens reveal exactly what each call must return.
 > Behavior lives in [`product-spec.md`](product-spec.md); shapes live here. Referenced by ID.
 
-**Version:** 0.21 (draft) · **Last updated:** 2026-06-13 · **Owner:** Claude Code
+**Version:** 0.22 (draft) · **Last updated:** 2026-06-13 · **Owner:** Claude Code
 
 ---
 
@@ -169,6 +169,14 @@
 
 *(Unlocks happen server-side via the event engine — there is no client "unlock" call.)*
 
+## Feedback & support (`SYS-`)
+| Method | Path | Notes |
+|---|---|---|
+| POST | `/feedback` | `{ type: feedback\|suggestion\|bug, message, appVersion?, platform? }` → `{ id }` — the Settings feedback/bug surface (SYS-11). **Support/moderator-facing only**, never rendered to other users → **outside MOD-07 screening** (like the report `details`). **Rate-limited** (SYS-05) |
+| POST | `/feedback/:id/logs` | **Bug-only** — attach the opt-in **InGame diagnostic-log bundle** (SYS-11; consent-gated client-side). **Payload shape is TBD (OQ-060)** — the contract reserves the endpoint; v2 stores the body as an **opaque bundle** in access-controlled object storage, linked as the submission's `log_ref`. *(May become a presigned-upload handshake once the log format is defined)* |
+
+*(Help/Contact, SYS-09, is a mailto/support-form — no endpoint.)*
+
 ---
 
 ## Changelog
@@ -195,3 +203,4 @@
 | 2026-06-13 | 0.19 | **Friend card-detail + compare** (decision 0020): `/users/:id/collection` items add **`ownedSince`** + support **hours/owned-since sort** (SOC-11); every card payload gains a read-only **`equipped`** readout (CARD-22); the friend single-entry detail + opt-in compare **compose client-side** from existing reads (+ `/me/collection/:entryId`); adopt stays `POST /cards/:id/adopt`. | SOC-11, CARD-22 |
 | 2026-06-13 | 0.20 | **Friend-view browse parity** (decision 0021, COL-11): `/users/:id/collection` accepts the full `/me/collection` query set — `?q=` search (COL-09) · full `sort` enum + `order` · genre/status filter (COL-07) — over the friend-visible field set only, + `total`/`collectionTotal`; no write/reorder params. Supersedes 0.19's hours/owned-since-only note. | COL-11 |
 | 2026-06-13 | 0.21 | **Discover §3.2 page-audit (discover track):** the converged board reconciled to the contract — **`GET /me/queue` item shape enumerated** (`owned · source · recommendedBy · note` — the WISHLIST / REC'D-BY tags, **OQ-054**) + `POST /me/queue` source enum + `fromRecId`; **`GET /discover/trending-cards` shape** (`rank · card · game · designer · adoptionCount`, DISC-04/CARD-05/CAT-05, **OQ-055**); **upcoming notify-me** added — `POST·DELETE /catalog/games/:id/notify` + `notifyOnRelease` on `/catalog/upcoming` + the `release` `notification-prefs` type (DISC-01 → NOTIF-01/02, **OQ-053**); **friend-recs feed** — `GET·DELETE /me/recommendations` (the Discover FROM-FRIENDS section) + `POST /recommendations` lands in the **feed, not auto-queued** (SOC-05; gap surfaced by the audit); **`/discover/browse` parked** from the Discover landing (DISC-02 reached via Game page 4.2, **OQ-057**). No product-spec behavior change (SOC-05's "→ WTP" = the WTP/Discover surface). | WTP-01/02 · DISC-01/02/03/04 · CAT-08 · SOC-05 · NOTIF-01/02 |
+| 2026-06-13 | 0.22 | **Feedback & bug reporting** (decision 0022): **+`POST /feedback`** (type feedback/suggestion/bug + message; support-facing, outside MOD-07; rate-limited SYS-05) + **`POST /feedback/:id/logs`** — the opt-in diagnostic-log attach for bug reports (**opaque bundle, shape TBD → OQ-060**; access-controlled object storage, `log_ref`). | SYS-11 |

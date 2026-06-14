@@ -108,6 +108,13 @@
   friend's — without leaving the shelf), or keep flipping a Game-page-only deep-inspect interaction? A
   peek-flip adds interaction load to a browse surface; the recommendation is **Game-page-only** unless
   there's a strong scan-the-backs use-case. (Game-page draft A review, 2026-06-13) [presentation]
+- OQ-060: **InGame diagnostic-log bundle — structure, capture, redaction, retention (undefined in v2).**
+  SYS-11's bug reports may **opt in** to attach the app's on-device diagnostic logs, but the **bundle
+  format/schema, what it captures, size caps, PII redaction, upload mechanism** (inline vs presigned) **and
+  retention/deletion policy** are all undecided. v2 reserves the endpoint (`POST /feedback/:id/logs`) + the
+  UI room and treats the body as an **opaque bundle** in access-controlled storage (`log_ref`). Decide
+  before bug-log capture is built (likely the Engagement/foundation phase). (Settings formalization,
+  decision 0022) [behavior]
 
 ## Resolved
 - OQ-053 → **Upcoming notify-me has a backing endpoint** (Discover §3.2 page-audit, api-contract 0.21):

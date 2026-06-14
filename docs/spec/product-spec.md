@@ -4,7 +4,7 @@
 > Screens and visuals are owned by the design-spec; endpoint shapes by the api-contract. This
 > document references those by ID. See [`../00-INDEX.md`](../00-INDEX.md) for the working agreement.
 
-**Version:** 0.21 (draft) · **Last updated:** 2026-06-13 · **Owner:** Claude Code
+**Version:** 0.22 (draft) · **Last updated:** 2026-06-13 · **Owner:** Claude Code
 
 ---
 
@@ -83,12 +83,13 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | SYS-02 | P0 | All write requests are **validated** server-side (types, ranges, required fields) before persistence. |
 | SYS-03 | P0 | API base URL and all secrets are **environment-configured**, never hardcoded. |
 | SYS-04 | P0 | Economy and tuning values (starting balance, daily-bonus amount/cadence, adoption cost, milestone thresholds) are **server-configurable** without an app release. |
-| SYS-05 | P1 | Sensitive/abuse-prone endpoints (auth, create-entry, **card publishing**, report) are **rate-limited**. |
+| SYS-05 | P1 | Sensitive/abuse-prone endpoints (auth, create-entry, **card publishing**, report, **feedback/bug submission**) are **rate-limited**. |
 | SYS-06 | P0 | An **automated testing harness + CI** exist from Phase 1 (before feature code). Approach: risk-based, meaningful-tests-first — see [`testing-strategy.md`](testing-strategy.md). |
 | SYS-07 | P0 | **Every mutating endpoint carries a standing authorization test** proving a user cannot read/modify another user's resource (enforces SYS-01). |
 | SYS-08 | P1 | Users have a **role** (user / moderator / admin). Moderator/admin tools (the Admin console, MOD-04) are gated to the role. |
 | SYS-09 | P1 | An in-app **Help/Contact channel** (a Settings entry → support email or form). Pairs with report/block for App Store UGC compliance (Guideline 1.2 expects published contact info), and gives IAP/account problems a destination. |
 | SYS-10 | P1 | **Offline baseline:** the app opens usefully with no connectivity — last-synced collection/profile render from local cache, **read-only with a lightweight offline indicator**; writes require connectivity, **except** card-editor drafts which autosave locally (CARD-14). No blank screens or dead ends on a bad connection. |
+| SYS-11 | P1 | **In-app feedback & bug reporting.** A **Settings** entry lets a user submit structured input typed as **feedback · suggestion · bug report** (type list server-configurable, SYS-04), each carrying a freeform **message**. Submissions are **support/moderator-facing only — never rendered to other users** (so outside MOD-07's screening scope, like the report `details` note, MOD-01). A **bug** report may **opt in to attach InGame diagnostic logs** — the app's **on-device runtime/diagnostic logs** (distinct from the `DEV-` *Device* cosmetic) — **opt-in + consent-gated** (logs can contain personal data: an explicit toggle + a one-line consent note; **never auto-attached**). The bundle is a **private support artifact, not user content** rendered to others, so it does **not** reopen the no-image-uploads rule (CARD-02 / §9). The **log bundle's structure is undefined in v2** (OQ-060): the UI **leaves room for it** and the endpoint accepts an **opaque bundle**. Submission is **rate-limited** (SYS-05) and captures lightweight **client context** (app version, platform — non-PII) so reports are actionable. **Pairs with Help/Contact** (SYS-09) — that channel *reaches* support; this is structured product input. (No public ticket tracker in v2.) |
 
 ### 5.2 Authentication & identity (`AUTH-`)
 | ID | Pri | Behavior |
@@ -292,6 +293,7 @@ Authoritative field-level shapes live in [`api-contract.md`](api-contract.md); t
 - **What to Play:** `play_queue_items` (user × game, position, source, currently_playing)
 - **Engagement:** `notifications` · `notification_prefs` · `device_push_tokens`
 - **Moderation:** `reports` · `edit_suggestions` (CAT-06) · `user_suspensions` (subject × actor, reason, starts_at, ends_at?, lifted_at? — MOD-09) (+ soft-hide flags; game soft-delete for dedup grace)
+- **Support:** `feedback_submissions` (user, `type` ∈ feedback·suggestion·bug, message, app_version, platform, created_at, status, **`log_ref?`** — the opaque diagnostic-bundle reference for bug reports; bundle structure TBD, OQ-060) (SYS-11)
 - **Achievements:** `achievements` (definition: key, type milestone|egg, condition spec, reward spec, visibility, active — config/seed data) · `user_achievements` (user × achievement, progress, unlocked_at). Achievement-exclusive cosmetics are `cosmetic_items` flagged non-purchasable.
 
 ---
@@ -321,7 +323,7 @@ Authoritative field-level shapes live in [`api-contract.md`](api-contract.md); t
 
 - **Client:** Expo / React Native (iOS + Android). Redux Toolkit + **RTK Query** (server cache) + redux-persist (local drafts). expo-router tab navigation. Reanimated for effects. expo-notifications. RevenueCat for IAP.
 - **Server:** Node / Express + TypeScript, layered routes → controllers → services → repositories; zod validation. PostgreSQL via **Drizzle** (typed SQL + migrations).
-- **Storage:** object storage + CDN for **server-rendered (flattened) card images** + thumbnails and asset previews. (No user image uploads; moderation is report/hide + text screening — MOD-01/02/07.)
+- **Storage:** object storage + CDN for **server-rendered (flattened) card images** + thumbnails and asset previews. (No user image uploads; moderation is report/hide + text screening — MOD-01/02/07.) **Diagnostic-log bundles** for bug reports (SYS-11) live in **access-controlled object storage** (not the CDN), support-only and **never served to other users** — a private support artifact, so it doesn't reopen the no-uploads rule.
 
 ---
 
@@ -363,3 +365,4 @@ Recorded so they're conscious choices, not omissions:
 | 2026-06-13 | 0.19 | **Triage batch** (decision 0019, owner rulings): CARD-15 element cap **starts at 30** (OQ-008) · CARD-12 **intensity = effect-only + persisted** (OQ-048) · CARD-14 **save-private surfaces in both the switcher + My-designs** (OQ-049) · CAT-09 collections-count **also ranks "popular"** suggestions (OQ-051) · PROF-05 **Share is self-only**, friend-view chip cut (OQ-052). Ripples api-contract (popular ranking) + design-req (friend-view, empty-state). | CARD-12/14/15, CAT-09, PROF-05 |
 | 2026-06-13 | 0.20 | **Friend card-detail + compare** (decision 0020, owner direction): tapping a card in a friend's collection opens the Game-page **friend-view state** — their card + per-game context (**owned-since newly friend-visible**; hours/status already were), **adopt** (atomic — adoption is the whole card; "adopt just the canvas" isn't a v2 concept — rides CARD-15/§10), and an **opt-in per-card compare** (SOC-11); cards gain a **viewer-facing equipped readout** (CARD-22). Ripples api-contract (friend `ownedSince` + sort + card `equipped`) + design-req 4.2. **Ripple debt:** friend-view collection **sort by hours/owned-since** touches the converged Collection board (3.1) — a design re-pass is owed. | SOC-11, CARD-22, COL-10 |
 | 2026-06-13 | 0.21 | **Friend-view browse parity** (decision 0021, owner direction — Collection re-pass prep): **+COL-11** — the friend-view collection (COL-10) gains the **full sort + scoped search + filter + view-mode** tools of your own (COL-07/09), **read-only** (no Arrange/stat-edit), over the friend-visible field set only (PROF-03); SOC-11's sort line now defers to COL-11. Promotes decision 0020's ripple-debt into a tracked re-pass. Ripples api-contract (`/users/:id/collection` gains `?q=` + full `sort` enum + filter + counts) + design-req §3.1. | COL-11, SOC-11, COL-10 |
+| 2026-06-13 | 0.22 | **Feedback & bug reporting** (decision 0022, owner direction — Settings pass prep): **+SYS-11** — a Settings feedback/suggestion/bug surface (support-facing, outside MOD-07 like the report `details`), with **opt-in, consent-gated InGame diagnostic-log upload** on bug reports (a private support artifact — *not* the no-image-uploads card rule; **log bundle structure TBD → OQ-060**); SYS-05 rate-limit list + §6 `feedback_submissions` + §9 storage note. Ripples api-contract (`POST /feedback` + log attach) + design-req §4.15. | SYS-11, SYS-05 |
