@@ -108,8 +108,11 @@
   body? which decoratable zones?) — and a ruling on **where the `DEV-03`/`F-04` nav-no-go is enforced**:
   client-only (the UI refuses placement over the 5 keycaps, as all three drafts show) vs **server-validated**
   on write (reject/clamp compositions that overlap the nav or the screen). Device analogue of the editor's
-  composition payloads; pairs with the OQ-045 on-shell preview this pass closes. (Device-editor drafts,
-  2026-06-14) [behavior]
+  composition payloads; pairs with the OQ-045 on-shell preview this pass closes. **Owner clarified
+  (2026-06-14): the decoratable surface is the coloured plastic only — the forehead (top-band) + the chin
+  (nav-band margins); the screen (DEV-04's theme surface) AND the 5 nav keycaps are both off-limits.** So the
+  coordinate space is plastic-zones-only; the open part is just the per-sticker shape + where that exclusion
+  is enforced (client vs server). (Device-editor drafts, 2026-06-14) [behavior]
 - OQ-063: **A new `SectionSwitch` mode-switcher — does it replace the Segmented Toolbar app-wide?** The owner
   asked (reviewing Device Draft A) to rebuild the SHELL/THEME/STICKERS switcher as an **S8-style option-card**
   component (`device-switcher-takes.html`: T1 Section Stack · T2 Section Rail · T3 Section Hero; selection
@@ -118,6 +121,14 @@
   Open: once the owner picks a take, **is it adopted on those boards too** (one shared component → design-spec
   §1.5, retiring/aliasing `SegmentedKeycap`+`SectionChips`), or scoped to the Device editor only? Cross-track /
   spec-owner call — **not applied to Discover/Styler here**. (Device switcher exploration, 2026-06-14) [presentation]
+- OQ-064: **Saved device "looks" — the data model + scope.** The Device editor gains a **LOOKS** section
+  (`device-draft-a-looks.html`, owner ask 2026-06-14) that saves a styled combo — **shell colour + the
+  `stickerComposition` + screen theme** — as a named, re-applyable **`SavedLook`**, with **SAVE THIS LOOK** and
+  an **ON-NOW** tag. Open: is this a **new entity** (e.g. `device_looks`: user × `{ name, activeShellId,
+  stickerComposition, screenThemeId }`) — a **cap** on count — **rename/delete** — and does *applying* a look
+  just write those three fields onto `/me/device` (a look = a saved snapshot; the live device is one of them)?
+  Device cousin of the card editor's **OQ-056** (named saves + customizations gallery). **Personal-only**, like
+  the rest of the device. (Device editor LOOKS, 2026-06-14) [behavior]
 
 ## Resolved
 - OQ-053 → **Upcoming notify-me has a backing endpoint** (Discover §3.2 page-audit, api-contract 0.21):
