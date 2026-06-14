@@ -107,3 +107,27 @@ applied to `game-page-draft-a-cardled.html` (**rev 4**):
 Net: every heavy surface on the page now shares the one bottom-sheet grammar. **Next:** any further A
 tweaks from the owner, then converge → `game-page-states.html` (+ the deferred lifecycle states:
 soft-hidden/reported · loading · offline).
+
+## Re-brainstorm (owner, 2026-06-14) — "card as trophy"
+The owner paused the rev-4 line and asked to **go back to brainstorming** the best mobile UI/UX for
+showing *all* the §4.2 information, from first principles (not bound to A/B/C or the A×B mix), on the
+existing design system. Used the **brainstorming skill**. Outcome:
+- **Priority ruling:** on the owned state (the richest/most-visited), the page's primary job is the
+  **card as a trophy** — the equipped card is the unquestioned star; every other piece of the inventory
+  gets a calm, clearly-subordinate home. (The earlier "incoherence" was diagnosed as too many elements
+  sharing equal weight.)
+- **3 fresh takes** built → `game-page-trophy-takes.html` (owner: *"draft all three"*), each a distinct
+  interaction model for the same trophy, owned-state shown (neutral/friend-view reuse each spine):
+  - **A "Collapsing Trophy"** *(my recommendation)* — card opens large + alive, then **collapses into a
+    slim sticky header** as you scroll; tap=flip · swipe=riffle your cards · long-press=peek; calm
+    prioritized sections below (Your Play · Your Cards+delete · Community · Friends/About). The proven
+    iOS large-title / Wallet pattern; the most direct cure for the incoherence.
+  - **B "Card in Hand"** — near full-bleed gesture-operated card; all info in one pull-up dossier sheet
+    with the bottom `SegmentedKeycap`. Most tactile; leans on gesture discoverability.
+  - **C "Trophy Dashboard"** — card at the heart of a glanceable module-tile board, each tapping out to
+    a sheet. Most at-a-glance; highest discipline to stay uncluttered.
+- All three use the design system verbatim (GameCard · SegmentedKeycap · sheet grammar · KeycapButton ·
+  C5) and include the **delete** affordance (trash · equipped-locked · destructive `ConfirmSheet`, OQ-061).
+- **Next:** owner picks a take (or a blend) → that becomes the converge basis → `game-page-states.html`
+  (full matrix + deferred lifecycle), then Design-spec + API page-audit. (The rev-4 draft-A is superseded
+  as the converge basis if a trophy take is chosen; kept for history.)
