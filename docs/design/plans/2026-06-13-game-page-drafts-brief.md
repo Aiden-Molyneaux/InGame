@@ -142,14 +142,14 @@ existing design system. Used the **brainstorming skill**. Outcome:
 - **Iteration → `game-page-trophy-dualface.html` (owner notes, 2026-06-14):** the **hero now shows both
   sides of the card at once** — the face + the stats back **side-by-side** (no flip), with **EDIT STATS**
   under the stats side · **EDIT enlarges the stats card and the values become fields directly on the back**
-  (on-card editing; provenance stays auto) · **game facts as tags** · **Your Cards: no hold-drawer** — **tap
+  (on-card editing; provenance stays auto) · **game facts as a meta line** · **Your Cards: no hold-drawer** — **tap
   to select** (orange outline + pip) and the options (**SET AS MAIN · EDIT · DELETE**) render **inline on
   the screen**; DELETE still routes to the `ConfirmSheet` · **Share Card Image removed from the per-card
   options** — the **only share spot is a docked footer at the bottom of the screen** (owned only; self-share,
   decision 0019). Panels A1 dual-face hero · A2 on-card stat edit · A3 scrolled (select+inline-options +
   bottom share + delete confirm) · A4 friend dual-face (gated back). Conventions held.
-  **Refined (owner, 2026-06-14):** screen title → **"GAME"** (the game name is the hero); **facts tags
-  moved under the game title**; the **stats card's frame is mirrored on the Y axis** (the C5 step on the
+  **Refined (owner, 2026-06-14):** screen title → **"GAME"** (the game name is the hero); **game facts as a
+  plain meta line under the game title** (the boxed chips reverted); the **stats card's frame is mirrored on the Y axis** (the C5 step on the
   opposite corners — reads as the card turned over to its back); **EDIT is now inline** (same GAME screen,
   no separate mode) and shows the **stats card as the only card** while editing; **Your Cards selection = a
   thin orange border** (pip dropped).
