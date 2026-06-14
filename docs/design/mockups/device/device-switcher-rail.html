@@ -137,11 +137,9 @@
   .rail-card .r-ic { flex: 0 0 auto; display: inline-flex; }
   .rail-card .r-ic svg { width: 19px; height: 19px; stroke: var(--scr-soft); fill: none; }
   .rail-card .r-l { font: 700 10px var(--pk); letter-spacing: 1px; color: var(--scr-soft); white-space: nowrap; }
-  .rail-card .r-pip { position: absolute; top: 5px; right: 6px; width: 5px; height: 5px; border-radius: 50%; background: transparent; }
   .rail-card.on { border-color: var(--scr-accent); }
   .rail-card.on .r-ic svg { stroke: var(--scr-accent); }
   .rail-card.on .r-l { color: var(--scr-text); }
-  .rail-card.on .r-pip { background: var(--accent); box-shadow: 0 0 6px 1.5px rgba(255,61,119,.7); }
   .rail-cap { margin: 8px 2px 0; font: 700 8px var(--pk); letter-spacing: 1.5px; color: var(--scr-grip); text-align: center; }
 </style>
 </head>
@@ -180,7 +178,8 @@
     as Discover's switcher), and each <code>SectionCard</code> wears its <b>icon in-line with the label</b>
     (one row, centered). The active section's content fills the screen <b>above</b> the rail; the descriptive
     title + one-line subtitle (the S8 DNA) now lead that content area, so the compact rail stays a clean
-    switch. Selection = <b>scr.accent border + pink ChipPip</b> (F-09). Three frames show the switch &mdash;
+    switch. Selection = <b>scr.accent border + accent icon + bright label</b> &mdash; <b>no pip</b> (owner,
+    2026-06-14). Three frames show the switch &mdash;
     STICKERS · SHELL · THEME &mdash; in the Device A context. <i>Working names <code>SectionSwitch</code> /
     <code>SectionCard</code>; tokens verbatim. Pre-converge &mdash; confirm, then I fold it into Device A's
     full state matrix (<code>device-states.html</code>). Cross-app adoption on Discover/Styler = OQ-063.</i></p>
@@ -218,9 +217,9 @@
             </div>
             <div class="rail-dock">
               <div class="rail">
-                <div class="rail-card"><span class="r-pip"></span><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-shell"/></svg></span><span class="r-l">SHELL</span></div>
-                <div class="rail-card"><span class="r-pip"></span><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-theme"/></svg></span><span class="r-l">THEME</span></div>
-                <div class="rail-card on"><span class="r-pip"></span><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-stickers"/></svg></span><span class="r-l">STICKERS</span></div>
+                <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-shell"/></svg></span><span class="r-l">SHELL</span></div>
+                <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-theme"/></svg></span><span class="r-l">THEME</span></div>
+                <div class="rail-card on"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-stickers"/></svg></span><span class="r-l">STICKERS</span></div>
               </div>
             </div>
           </div>
@@ -237,8 +236,8 @@
         <h3>R1 &mdash; STICKERS <em>(the rail pinned at the foot)</em></h3>
         <p>The <code>SectionSwitch</code> is now a <b>bottom-docked rail</b> &mdash; three <code>SectionCard</code>s
         sitting just above the plastic <code>NavBand</code>, each with its <b>icon in-line with the label</b>.
-        STICKERS is active (accent border + pink pip + accent icon). The section's content fills the screen
-        <b>above</b> the rail, led by the descriptive title + one-line subtitle (the S8 DNA, relocated to the
+        STICKERS is active (accent border + accent icon + bright label, no pip). The section's content fills the
+        screen <b>above</b> the rail, led by the descriptive title + one-line subtitle (the S8 DNA, relocated to the
         content header now the rail is compact). Thumb-reach switching that never reflows the layout.</p>
       </div>
     </div>
@@ -271,9 +270,9 @@
             </div>
             <div class="rail-dock">
               <div class="rail">
-                <div class="rail-card on"><span class="r-pip"></span><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-shell"/></svg></span><span class="r-l">SHELL</span></div>
-                <div class="rail-card"><span class="r-pip"></span><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-theme"/></svg></span><span class="r-l">THEME</span></div>
-                <div class="rail-card"><span class="r-pip"></span><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-stickers"/></svg></span><span class="r-l">STICKERS</span></div>
+                <div class="rail-card on"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-shell"/></svg></span><span class="r-l">SHELL</span></div>
+                <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-theme"/></svg></span><span class="r-l">THEME</span></div>
+                <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-stickers"/></svg></span><span class="r-l">STICKERS</span></div>
               </div>
             </div>
           </div>
@@ -288,7 +287,7 @@
       </div>
       <div class="caption">
         <h3>R2 &mdash; SHELL <em>(switched — no reflow)</em></h3>
-        <p>Tap SHELL on the rail: the pip and accent jump to the SHELL card, the content above swaps to the
+        <p>Tap SHELL on the rail: the accent border + icon jump to the SHELL card, the content above swaps to the
         colourway picker (its title + subtitle update), <b>the rail itself never moves</b>. The whole switch is
         one thumb-tap at the bottom of the screen &mdash; the lowest-friction posture, and the one that reads
         as a tab bar without becoming one.</p>
@@ -324,9 +323,9 @@
             </div>
             <div class="rail-dock">
               <div class="rail">
-                <div class="rail-card"><span class="r-pip"></span><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-shell"/></svg></span><span class="r-l">SHELL</span></div>
-                <div class="rail-card on"><span class="r-pip"></span><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-theme"/></svg></span><span class="r-l">THEME</span></div>
-                <div class="rail-card"><span class="r-pip"></span><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-stickers"/></svg></span><span class="r-l">STICKERS</span></div>
+                <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-shell"/></svg></span><span class="r-l">SHELL</span></div>
+                <div class="rail-card on"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-theme"/></svg></span><span class="r-l">THEME</span></div>
+                <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-stickers"/></svg></span><span class="r-l">STICKERS</span></div>
               </div>
             </div>
           </div>
@@ -342,7 +341,7 @@
       <div class="caption">
         <h3>R3 &mdash; THEME <em>(the third section)</em></h3>
         <p>THEME active: the content swaps to the 6 §1.1 screen themes (the whole-page DEV-04 preview rides on
-        KEEP, exactly as in Draft A). Across R1–R3 the <b>rail holds its place at the foot</b> and only the pip
+        KEEP, exactly as in Draft A). Across R1–R3 the <b>rail holds its place at the foot</b> and only the accent
         + the content move &mdash; the <b>icon-in-line-with-label</b> cards stay legible and consistent. Ready
         to fold into the Device A converge.</p>
       </div>
