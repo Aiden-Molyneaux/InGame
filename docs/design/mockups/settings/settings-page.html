@@ -87,6 +87,10 @@
   .sk2 .screen-head h2 { margin: 0; font: 700 21px/1 var(--pk); letter-spacing: 3px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); }
   .scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 12px 16px; scrollbar-width: none; }
   .scroll::-webkit-scrollbar { display: none; }
+  /* scroll-position rail — signals the page is ONE long scroll (A1 = top, A2 = the same page lower);
+     a faint right-edge position indicator, not app chrome the user taps. */
+  .srail { position: absolute; right: 5px; top: 56px; bottom: 12px; width: 3px; background: var(--scr-panel); z-index: 3; }
+  .srail .thumb { position: absolute; left: -0.5px; right: -0.5px; background: var(--scr-grip); box-shadow: 0 0 0 1px rgba(0,0,0,.2); }
 
   /* FlowHeader — ◂ keycap + flow title (the FlowTakeover tier — frame + NavBand persist) */
   .fh-key { flex: 0 0 auto; width: 28px; height: 28px; border: none; background: var(--scr-chip); color: var(--navy);
@@ -297,12 +301,12 @@
   </div>
 
   <!-- ════════════════════ STAGE 1 ════════════════════ -->
-  <div class="stage-label">Stage 1 &mdash; The page, loaded <small>the FlowTakeover composed from the catalog &middot; A1 = ACCOUNT + PRIVACY + BLOCKED (top of the scroll) &middot; A2 = NOTIFICATIONS + FEEDBACK + ABOUT (lower scroll) &middot; B1 = the AUTH-08 unverified-email variant (the verify notice + resend)</small></div>
+  <div class="stage-label">Stage 1 &mdash; The page, loaded (one long scroll) <small><b>A1 and A2 are the SAME page, not two screens</b> &mdash; one continuous scroll: A1 is the TOP (ACCOUNT &middot; PRIVACY &middot; BLOCKED), A2 is that same screen <b>scrolled down</b> (NOTIFICATIONS &middot; FEEDBACK &middot; ABOUT). The right-edge scroll-rail shows the position; there's no navigation between them. B1 = the AUTH-08 unverified-email variant (a separate state).</small></div>
   <div class="stage">
 
     <!-- ═══ A1 · loaded — account + privacy + blocked ═══ -->
     <div class="take">
-      <div class="artboard-label">A1 · loaded — account &middot; privacy &middot; blocked (top of scroll)</div>
+      <div class="artboard-label">A1 · the SETTINGS page — TOP of one scroll (1 of 2) · account &middot; privacy &middot; blocked</div>
       <div class="device" data-screen-label="Settings · A1 — loaded (account/privacy/blocked)">
         <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
         <div class="top-band">
@@ -361,6 +365,7 @@
               </div>
 
             </div>
+            <div class="srail"><span class="thumb" style="top:0; height:46%;"></span></div>
           </div>
         </div>
         <div class="nav-band">
@@ -372,8 +377,10 @@
         </div>
       </div>
       <div class="caption">
-        <h3>A1 &mdash; loaded <em>(account &middot; privacy &middot; blocked)</em></h3>
-        <p><b>Composed from the catalog.</b> `FlowHeader` &#9666; + SETTINGS; PROFILE keycap stays pressed
+        <h3>A1 &mdash; loaded <em>(the page, top of scroll &middot; 1 of 2)</em></h3>
+        <p><b>A1 and A2 are the SAME page</b> &mdash; one continuous scroll, not two screens: this is the
+        top, A2 is the same screen scrolled down (the right-edge rail shows the position). <b>Composed from
+        the catalog:</b> `FlowHeader` &#9666; + SETTINGS; PROFILE keycap stays pressed
         (Settings is a takeover from Profile, decision 0011). <b>ACCOUNT</b> `Well`: EMAIL (&#10003; VERIFIED
         tag) &middot; USERNAME @aiden with the <b>PROF-06 cooldown microcopy "NEXT CHANGE OK NOW"</b> &middot;
         PASSWORD &rarr; CHANGE. A second `Well` holds <b>SIGN OUT</b> (cream `/secondary`, AUTH-05) and
@@ -386,7 +393,7 @@
 
     <!-- ═══ A2 · loaded — notifications + feedback + about ═══ -->
     <div class="take">
-      <div class="artboard-label">A2 · loaded — notifications &middot; feedback &middot; about (lower scroll)</div>
+      <div class="artboard-label">A2 · the SAME page, scrolled down (2 of 2) · notifications &middot; feedback &middot; about</div>
       <div class="device" data-screen-label="Settings · A2 — loaded (notifications/feedback/about)">
         <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
         <div class="top-band">
@@ -468,6 +475,7 @@
               <div class="footnote">Screen theme isn&rsquo;t here &mdash; it&rsquo;s part of your device, set in the Device editor (DEV-04).</div>
 
             </div>
+            <div class="srail"><span class="thumb" style="top:52%; height:46%;"></span></div>
           </div>
         </div>
         <div class="nav-band">
@@ -479,8 +487,9 @@
         </div>
       </div>
       <div class="caption">
-        <h3>A2 &mdash; loaded <em>(notifications &middot; feedback &middot; about)</em></h3>
-        <p><b>NOTIFICATIONS (NOTIF-02):</b> per-type `Toggle`s &mdash; FRIEND ACTIVITY / GAME RELEASES
+        <h3>A2 &mdash; loaded <em>(the same page, scrolled down &middot; 2 of 2)</em></h3>
+        <p><b>Still the same Settings page as A1</b> &mdash; you reach this by scrolling down; there's no
+        button or navigation between them. <b>NOTIFICATIONS (NOTIF-02):</b> per-type `Toggle`s &mdash; FRIEND ACTIVITY / GAME RELEASES
         (the `release` type) / CARD ADOPTIONS / FRIEND REQUESTS <b>on</b> (orange `scr.accent` track, knob
         right), STORE DROPS / RECOMMENDATIONS <b>off</b> (grey `scr.grip` track, knob left) &mdash; a
         realistic mix that shows both `Toggle` states side by side.</p>
