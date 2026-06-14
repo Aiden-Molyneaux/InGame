@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InGame · Game page — Draft C "Pinned card + drawer depth" (4.2 · pre-gate)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" /></noscript>
+<style>
+  /* ── tokens: verbatim (Teal shell · Midnight) ── */
+  :root {
+    --plastic: #2bb6b0; --plastic-hi: #3ec9c2; --plastic-lo: #1f9a94; --silk: #0d524e;
+    --accent: #ff3d77; --gold: #ffd23f; --cream: #f5f1e4; --navy: #1d2a4a;
+    --bezel: #14122a;
+    --pk: 'Chakra Petch', sans-serif; --shell: 'Paytone One', sans-serif;
+    --scr-bg: #232045; --scr-well: #2c2950; --scr-tools: #1a1733; --scr-accent: #ff9f43;
+    --scr-accent-ink: #2a1430; --scr-head: #f5f1e4; --scr-text: #ffffff; --scr-dim: #9b97c0;
+    --scr-soft: #c9c5e6; --scr-panel: rgba(255,255,255,.065); --scr-hairline: rgba(255,255,255,.08);
+    --scr-grip: #565178; --scr-chip: #f5f1e4; --scr-head-shadow: rgba(0,0,0,.45);
+    --scr-btn: var(--scr-accent); --scr-btn-ink: var(--scr-accent-ink); --alert: #e3414e;
+    --shell-ink: #08433f; --screw-hi: #2aa39d; --screw-lo: #137671; --pip-off: #117672;
+  }
+  html, body { margin: 0; min-height: 100%; background: #efece6; font-family: var(--pk); }
+  .canvas { max-width: 1348px; margin: 0 auto; padding: 40px 24px 60px; }
+  .canvas-head h1 { font: 700 17px/1.2 var(--pk); letter-spacing: 2.5px; color: #2a2633; margin: 0 0 6px; text-transform: uppercase; }
+  .canvas-head p { font: 500 12.5px/1.5 var(--pk); color: #79748a; margin: 0 0 32px; max-width: 660px; }
+  .canvas-head p b { color: #2a2633; }
+  .stage { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+  .take { width: 404px; }
+  .artboard-label { font: 700 11px/1 var(--pk); letter-spacing: 1.5px; color: #8d889c; margin: 0 0 10px 2px; text-transform: uppercase; }
+  .caption { margin-top: 14px; background: #fff; border-radius: 12px; padding: 13px 15px; box-shadow: 0 2px 8px rgba(42,38,51,.08); }
+  .caption h3 { margin: 0 0 5px; font: 700 12.5px var(--pk); letter-spacing: .8px; color: #2a2633; text-transform: uppercase; }
+  .caption h3 em { font-style: normal; color: var(--accent); }
+  .caption p { margin: 0 0 4px; font: 500 11.8px/1.5 var(--pk); color: #5d5870; }
+  .caption p b { color: #2a2633; }
+  .stage-label { font: 700 13px/1 var(--pk); letter-spacing: 2px; color: #2a2633; text-transform: uppercase; margin: 36px 2px 14px; }
+  .stage-label small { display: block; margin-top: 5px; font: 500 11px/1.4 var(--pk); letter-spacing: .3px; color: #79748a; text-transform: none; }
+
+  /* ── device shell (verbatim sibling) ── */
+  .device { position: relative; width: 404px; height: 884px; border-radius: 30px; overflow: hidden;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.4), inset 0 -4px 0 rgba(0,0,0,.18), 0 18px 40px color-mix(in srgb, var(--shell-ink) 28%, transparent);
+    display: flex; flex-direction: column; padding: 0 14px; box-sizing: border-box; }
+  .screw { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--screw-hi), var(--screw-lo) 75%);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.25); }
+  .screw::after { content: ""; position: absolute; left: 1.5px; right: 1.5px; top: 3.5px; height: 1.5px; background: color-mix(in srgb, var(--shell-ink) 70%, transparent); border-radius: 1px; }
+  .screw.tl { top: 10px; left: 12px; } .screw.tr { top: 10px; right: 12px; }
+  .screw.bl { bottom: 10px; left: 12px; } .screw.br { bottom: 10px; right: 12px; }
+  .top-band { height: 64px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 12px 0; position: relative; }
+  .power { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+  .power .led { width: 9px; height: 9px; border-radius: 50%; background: #ff5a4e; box-shadow: 0 0 7px 2px rgba(255,90,78,.65), inset 0 -1px 1px rgba(0,0,0,.3); }
+  .power .lbl { font: 400 9px var(--shell); letter-spacing: .5px; color: var(--silk); opacity: .75; }
+  .logo { position: absolute; left: 50%; transform: translateX(-50%); font: 400 21px var(--shell); letter-spacing: 7px; text-indent: 7px;
+    color: color-mix(in srgb, var(--shell-ink) 28%, transparent); text-shadow: 0 -1px 0 color-mix(in srgb, var(--shell-ink) 30%, transparent); }
+  .grille { display: flex; gap: 6px; }
+  .grille span { width: 5px; height: 23px; background: color-mix(in srgb, var(--shell-ink) 40%, transparent); border-radius: 2px; transform: skewX(-22deg); box-shadow: inset 0 1px 1px rgba(0,0,0,.3); }
+  .screen-bezel { flex: 1 1 auto; min-height: 0; background: var(--bezel); border-radius: 20px; padding: 9px; box-sizing: border-box; }
+  .nav-band { flex: 0 0 auto; height: 128px; display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 6px 0; }
+  .nav-item { display: flex; flex-direction: column; align-items: center; width: 64px; }
+  .nav-lbl { height: 16px; font: 400 11px var(--shell); letter-spacing: .5px; color: var(--silk); display: flex; align-items: center; }
+  .nav-lbl.big { font-size: 11px; }
+  .nav-btn { width: 54px; height: 54px; border-radius: 15px; background: var(--cream); border: none;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 1px 0 rgba(255,255,255,.85); }
+  .nav-btn.store { background: var(--gold); }
+  .nav-btn.collection { background: var(--accent); }
+  .nav-item.active .nav-btn { transform: translateY(3px); box-shadow: 0 1px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 2px 3px rgba(0,0,0,.18); }
+  .pip { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; background: var(--pip-off);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.25); }
+  .nav-item.active .pip { background: var(--accent); box-shadow: 0 0 9px 2.5px rgba(255,61,119,.85), inset 0 -1px 1px rgba(0,0,0,.25); }
+  .nav-band .nav-item:nth-child(2) .nav-lbl:first-child,
+  .nav-band .nav-item:nth-child(4) .nav-lbl:first-child { transform: translateY(-8px); }
+
+  /* ── shared screen ── */
+  .screen { position: relative; height: 100%; border-radius: 13px; overflow: hidden; display: flex; flex-direction: column; }
+  .screen.sk2 { background: var(--scr-bg); }
+  .screen-head { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding: 13px 14px 9px; }
+  .fh-key { flex: 0 0 auto; width: 30px; height: 30px; border: none; background: var(--scr-chip); color: var(--navy);
+    font: 700 14px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .screen-head h2 { margin: 0; font: 700 17px/1 var(--pk); letter-spacing: 1.5px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .screen-head .sh-sp { flex: 1 1 auto; }
+  .scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 12px 10px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 13px 2px 7px; }
+  .sec h3 { margin: 0; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .sec a { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
+
+  .btn { display: inline-flex; align-items: center; gap: 6px; border: none; width: fit-content;
+    background: var(--scr-btn); color: var(--scr-btn-ink); padding: 9px 13px;
+    font: 700 11px var(--pk); letter-spacing: 1px; white-space: nowrap;
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--scr-btn) 45%, #000), inset 0 1px 0 rgba(255,255,255,.4); }
+  .btn.gold { background: var(--gold); color: #3c2a09; box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
+    filter: drop-shadow(0 3px 0 color-mix(in srgb, var(--gold) 45%, #000));
+    clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+      100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
+      calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
+  .btn.sec { background: var(--cream); color: var(--navy);
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  /* button scale = the Add Game / editor catalog, verbatim: base 9px·13px / 11px / shadow.key 0 3px 0;
+     .btn.mini = padding-only (6px·8px / 9px), KEEPS the base 3px edge. */
+  .btn.mini { padding: 6px 8px; font-size: 9px; }
+  .btn svg { flex: 0 0 auto; }
+  .btn.block { width: 100%; justify-content: center; box-sizing: border-box; }
+  .tert { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
+  .tert.dim { color: var(--scr-dim); }
+  .hint { margin: 8px 1px 0; font: 600 9px/1.6 var(--pk); letter-spacing: .5px; color: var(--scr-dim); text-align: center; }
+  .hint b { color: var(--scr-soft); }
+  .npl { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-accent); }
+
+  /* ── C: the pinned card zone (held above the scroll; card always in view) ── */
+  .pin { flex: 0 0 auto; display: flex; align-items: center; gap: 14px; padding: 4px 6px 15px;
+    position: relative; z-index: 2; background: var(--scr-bg); box-shadow: 0 9px 16px -5px rgba(0,0,0,.45); border-bottom: 1px solid var(--scr-hairline); }
+  .pin .pin-id { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1 1 auto; }
+  .pin .pin-title { font: 700 19px/1 var(--pk); letter-spacing: .5px; color: var(--scr-text); display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .pin .pin-meta { font: 600 9px var(--pk); letter-spacing: .8px; color: var(--scr-dim); }
+  .pin .pin-strip { display: inline-flex; flex-wrap: wrap; gap: 4px 9px; font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-soft); padding: 1px 0 2px; }
+  .pin .pin-strip .s-on { color: var(--scr-accent); }
+  .pin .pin-act { display: flex; gap: 7px; align-items: center; margin-top: 1px; flex-wrap: wrap; }
+  .pin .flip-hint { margin: 0; }
+
+  /* ── C: the lean body — open space, hairline rows, no boxes ── */
+  .lean { padding: 2px 2px 4px; }
+  .lean-lead { font: 600 9.5px/1.6 var(--pk); letter-spacing: .4px; color: var(--scr-dim); padding: 13px 6px 3px; }
+  .lean-lead b { color: var(--scr-soft); }
+  .launch { display: flex; align-items: center; gap: 13px; padding: 16px 7px; border-bottom: 1px solid var(--scr-hairline); }
+  .launch:first-of-type { border-top: 1px solid var(--scr-hairline); }
+  .launch .lx { width: 32px; height: 32px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+    background: var(--scr-panel); border: 1px solid var(--scr-hairline); color: var(--scr-accent); }
+  .launch .lx svg { width: 17px; height: 17px; } .launch .lx svg [fill="curr"] { fill: currentColor; }
+  .launch .lx svg path, .launch .lx svg rect, .launch .lx svg circle { stroke: currentColor; }
+  .launch .lt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .launch .lt .ltt { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .launch .lt .lts { font: 600 9px var(--pk); letter-spacing: .3px; color: var(--scr-dim); }
+  .launch .lt .lts b { color: var(--scr-soft); }
+  .launch .lc { font: 700 14px var(--pk); color: var(--scr-soft); flex: 0 0 auto; }
+  .launch .lchev { flex: 0 0 auto; color: var(--scr-grip); display: inline-flex; } .launch .lchev svg { width: 15px; height: 15px; } .launch .lchev svg path { stroke: currentColor; }
+  .launch.accent .lx { color: var(--gold); border-color: color-mix(in srgb, var(--gold) 45%, transparent); background: rgba(255,210,63,.07); }
+
+  /* ── GameCard + C5 ── */
+  .gcard { position: relative; border-radius: 11px; box-sizing: border-box; flex: 0 0 auto; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
+  .gcard .art { position: absolute; inset: 7px; border-radius: 5px; overflow: hidden; }
+  .gcard .art svg { width: 100%; height: 100%; display: block; }
+  .gcard .plate { position: absolute; left: 11px; right: 11px; bottom: 3px; border-radius: 4px; padding: 5px 4px 4px;
+    text-align: center; font: 700 10px/1.15 var(--pk); letter-spacing: .5px; text-transform: uppercase; z-index: 2; }
+  .gcard.hero-size { width: 168px; height: 235px; }
+  .gcard.hero-size .art { inset: 9px; }
+  .gcard.hero-size .plate { left: 14px; right: 14px; bottom: 4px; padding: 7px 4px 6px; font-size: 12px; }
+  .gcard.pick-size { width: 96px; height: 134px; }
+  .gcard.pick-size .art { inset: 4.5px; }
+  .gcard.pick-size .plate { left: 7px; right: 7px; bottom: 2px; padding: 3.5px 2px 3px; font-size: 10px; letter-spacing: .2px; }
+  .gcard.cell-size { width: 78px; height: 109px; }
+  .gcard.cell-size .art { inset: 4px; }
+  .gcard.cell-size .plate { left: 5.5px; right: 5.5px; bottom: 1.5px; padding: 2.5px 1px 2px; font-size: 5.6px; letter-spacing: 0; }
+  .gcard.thumb { width: 44px; height: 62px; }
+  .gcard.thumb .art { inset: 2.5px; }
+  .gcard.thumb .plate { left: 3.5px; right: 3.5px; bottom: 1px; padding: 1.5px 1px 1px; font-size: 3.2px; letter-spacing: 0; }
+  .c5 .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
+    clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
+      100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
+      calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
+  .c5 .gcard .art { border-radius: 0;
+    clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+      100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .c5 .gcard .plate { border-radius: 0;
+    clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  .c5 .gcard.pick-size, .c5 .gcard.cell-size { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+      100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .c5 .gcard.pick-size .art, .c5 .gcard.cell-size .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  .c5 .gcard.pick-size .plate, .c5 .gcard.cell-size .plate { clip-path: polygon(0 1.5px, 1.5px 1.5px, 1.5px 0, 100% 0,
+      100% calc(100% - 1.5px), calc(100% - 1.5px) calc(100% - 1.5px), calc(100% - 1.5px) 100%, 0 100%); }
+  .c5 .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0,
+      100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
+  .c5 .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+
+  /* frames + plates + fx */
+  .fr-gilt { background: linear-gradient(160deg, #f0d57a, #b8901f);
+    box-shadow: inset 0 0 0 2px rgba(255,240,190,.55), inset 0 0 0 4px rgba(120,82,12,.5); }
+  .fr-slate { background: linear-gradient(160deg, #4a4677, #322e58); }
+  .fr-foil { background: linear-gradient(160deg, #f0a8c8, #c85e9a); }
+  .fr-scan { background: repeating-linear-gradient(0deg, #3a3654 0 3px, #232045 3px 6px); }
+  .fr-teal { background: linear-gradient(160deg, #58b8c9, #2a7484); }
+  .pl-destiny { background: #f0cd6e; color: #3c2a09; }
+  .pl-neutral { background: #d9d4ee; color: #2a2633; }
+  .pl-ribbon { clip-path: polygon(6% 0, 94% 0, 100% 50%, 94% 100%, 6% 100%, 0 50%) !important; }
+  .art-hue1 { filter: hue-rotate(28deg) saturate(1.1); }
+  .art-hue2 { filter: hue-rotate(150deg) saturate(1.15); }
+  .art-hue3 { filter: hue-rotate(300deg) saturate(1.05); }
+  .fx-ember::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: screen;
+    background: radial-gradient(circle at 50% 88%, rgba(255,122,40,.75) 0%, rgba(255,61,40,.3) 38%, transparent 62%),
+      radial-gradient(circle at 24% 64%, rgba(255,180,60,.5) 0%, transparent 18%),
+      radial-gradient(circle at 76% 56%, rgba(255,150,50,.45) 0%, transparent 14%); }
+  .fx-ghost::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(circle at 50% 42%, rgba(235,240,255,.34) 0%, transparent 58%); }
+  .fx-volt::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: screen;
+    background: linear-gradient(64deg, transparent 42%, rgba(88,224,255,.55) 47%, transparent 52%); }
+  .fin-holo::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: screen;
+    background: linear-gradient(115deg, transparent 26%, rgba(255,90,90,.3) 36%, rgba(255,220,90,.32) 44%,
+      rgba(90,255,160,.3) 52%, rgba(90,170,255,.32) 60%, rgba(200,90,255,.3) 68%, transparent 78%); }
+  .foil-band { position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.34) 42%, rgba(140,235,255,.28) 50%, transparent 64%); }
+
+  /* ── the card-back (CARD-01: auto-stats + provenance) — rendered into the provenance drawer ── */
+  .gcard.back .art { background: linear-gradient(168deg, #2a2650, #17142f); display: flex; flex-direction: column; padding: 10px 9px; box-sizing: border-box; }
+  .cb-title { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--scr-head); text-align: center; padding-bottom: 8px; border-bottom: 1px solid var(--scr-hairline); }
+  .cb-stats { display: flex; flex-direction: column; gap: 6px; padding: 9px 2px; flex: 1 1 auto; }
+  .cb-row { display: flex; justify-content: space-between; align-items: baseline; }
+  .cb-row .cl { font: 700 8px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
+  .cb-row .cv { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .cb-prov { border-top: 1px solid var(--scr-hairline); padding-top: 7px; display: flex; flex-direction: column; gap: 3px; }
+  .cb-prov .p1 { font: 700 8px var(--pk); letter-spacing: 1px; color: var(--gold); }
+  .cb-prov .p2 { font: 600 7.5px var(--pk); letter-spacing: .5px; color: var(--scr-soft); }
+
+  /* ── canonical facts ── */
+  .facts { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 0 0; }
+  .facts .title { font: 700 21px/1 var(--pk); letter-spacing: 1px; color: var(--scr-text); text-align: center; }
+  .facts .meta { font: 600 10px var(--pk); letter-spacing: .8px; color: var(--scr-dim); text-align: center; }
+  .gchips { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; padding: 4px 8px 0; }
+  .gchip { font: 700 8.5px/1 var(--pk); letter-spacing: .8px; color: var(--scr-soft); border: 1px solid var(--scr-hairline);
+    background: var(--scr-panel); padding: 5px 7px; }
+  .gchip.studio { color: var(--scr-accent); border-color: color-mix(in srgb, var(--scr-accent) 45%, transparent); }
+  .credit-line { display: inline-flex; align-items: center; gap: 4px; margin: 7px auto 0; font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .credit-line b { color: var(--scr-soft); }
+  .flip-hint { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px;
+    border: 1px solid var(--scr-hairline); background: var(--scr-panel); font: 700 8px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
+
+  /* ── PlayStats (the YOUR PLAY drawer) ── */
+  .playstats { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--scr-hairline); border: 1px solid var(--scr-hairline); }
+  .pstat-cell { background: var(--scr-well); padding: 8px 9px; display: flex; flex-direction: column; gap: 3px; position: relative; }
+  .pstat-cell.wide { grid-column: 1 / -1; }
+  .pstat-cell .l { font: 700 8px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
+  .pstat-cell .v { font: 700 14px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .pstat-cell .v small { font: 600 9px var(--pk); color: var(--scr-dim); }
+  .pstat-cell .pen { position: absolute; top: 7px; right: 8px; width: 11px; height: 11px; opacity: .55; }
+  .pstat-cell .pen svg { width: 11px; height: 11px; } .pstat-cell .pen svg path { stroke: var(--scr-soft); }
+  .pstat-cell.editing { border: 1.5px solid var(--scr-accent); background: rgba(255,159,67,.07); }
+  .field-inline { display: flex; align-items: center; gap: 6px; background: var(--scr-chip); padding: 6px 8px; box-shadow: inset 0 2px 3px rgba(0,0,0,.16); }
+  .field-inline .q { font: 700 13px var(--pk); color: var(--navy); }
+  .field-inline .caret { width: 1.5px; height: 14px; background: var(--accent); }
+  .status-row { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 3px; }
+  .schip { font: 700 8px/1 var(--pk); letter-spacing: .5px; color: var(--scr-soft); border: 1px solid var(--scr-hairline); background: var(--scr-panel); padding: 4px 6px; }
+  .schip.on { border: 1.5px solid var(--scr-accent); color: var(--scr-text); background: rgba(255,159,67,.08); padding: 3px 5px; }
+  .stars { display: inline-flex; gap: 2px; color: var(--gold); font-size: 13px; letter-spacing: 1px; }
+  .stars .off { color: var(--scr-grip); }
+  .now-tag { display: inline-flex; align-items: center; gap: 4px; background: var(--scr-accent); color: var(--scr-accent-ink); font: 700 8px var(--pk); letter-spacing: .5px; padding: 3px 6px; }
+  .band-actions { display: flex; gap: 8px; }
+
+  /* ── gallery / switcher (rendered into drawers) ── */
+  .gwrap { display: flex; flex-direction: column; gap: 5px; align-items: center; }
+  .gw-credit { font: 600 7.5px var(--pk); letter-spacing: .3px; color: var(--scr-dim); text-align: center; }
+  .gw-credit b { color: var(--scr-soft); }
+  .gw-foot { display: flex; align-items: center; gap: 5px; }
+  .adopt-chip { display: inline-flex; align-items: center; gap: 3px; background: var(--gold); color: #3c2a09; font: 700 8.5px/1 var(--pk); padding: 3.5px 6px; }
+  .adopt-chip svg { display: block; }
+  .adopt-chip.free { background: var(--cream); color: var(--navy); }
+  .adopt-count { font: 700 7.5px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .swcard { position: relative; }
+  .state-tag { position: absolute; top: 4px; left: 4px; z-index: 3; font: 700 7px/1 var(--pk); letter-spacing: .5px; padding: 2.5px 4px; }
+  .state-tag.equipped { background: var(--scr-accent); color: var(--scr-accent-ink); }
+  .state-tag.published { background: var(--gold); color: #3c2a09; }
+  .state-tag.private { background: var(--cream); color: var(--navy); }
+  .state-tag.draft { background: rgba(13,11,30,.78); color: var(--scr-soft); border: 1px solid var(--scr-hairline); }
+  .state-tag.adopted { background: var(--scr-panel); color: var(--scr-soft); border: 1px solid color-mix(in srgb, var(--scr-accent) 50%, transparent); }
+  .newtile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    border: 1.5px dashed var(--scr-accent); background: rgba(255,159,67,.05); color: var(--scr-accent); }
+  .newtile .plus { font: 700 26px/1 var(--pk); }
+  .newtile .nl { font: 700 8px var(--pk); letter-spacing: 1px; }
+
+  /* ── EquipReadout (CARD-22) ── */
+  .equip { display: flex; flex-wrap: wrap; gap: 5px; padding: 8px 1px 0; }
+  .eq { display: inline-flex; align-items: center; gap: 3px; background: var(--scr-panel); border: 1px solid var(--scr-hairline);
+    padding: 3px 6px; font: 600 8.5px var(--pk); letter-spacing: .5px; color: var(--scr-soft); }
+  .eq b { color: var(--scr-text); }
+  .eq.prem b { color: var(--gold); }
+
+  /* ── compare (the COMPARE drawer) ── */
+  .privacy-note { display: flex; align-items: center; gap: 6px; padding: 6px 9px; background: var(--scr-panel); border: 1px solid var(--scr-hairline); font: 600 8px/1.5 var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .compare-row { display: flex; align-items: stretch; gap: 8px; }
+  .compare-col { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .compare-col .who { font: 700 8px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .compare-col .who.you { color: var(--scr-accent); }
+  .compare-mid { display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+  .vbar { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .vbar .vv { font: 700 12px var(--pk); color: var(--scr-text); } .vbar .vv.win { color: var(--gold); }
+  .vbar .vl { font: 700 6.5px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .vs { font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-grip); text-align: center; }
+
+  /* ── overflow key ── */
+  .ovf-key { width: 30px; height: 30px; border: none; background: var(--scr-chip); color: var(--navy); font: 700 15px/1 var(--pk);
+    display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+
+  /* upcoming + be-first */
+  .upcoming-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,210,63,.1); border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent);
+    color: var(--gold); font: 700 8.5px var(--pk); letter-spacing: 1px; padding: 3px 7px; }
+  .befirst { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 9px; padding: 16px; }
+  .ghost-card { position: relative; width: 96px; height: 134px; background: var(--scr-panel);
+    clip-path: polygon(0 6px, 3px 6px, 3px 3px, 6px 3px, 6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 3px) calc(100% - 6px), calc(100% - 3px) calc(100% - 3px), calc(100% - 6px) calc(100% - 3px), calc(100% - 6px) 100%, 0 100%); }
+  .ghost-card::before { content: ""; position: absolute; inset: 7px; border: 2px dashed var(--scr-grip); opacity: .8; }
+  .ghost-card .plus { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 700 30px/1 var(--pk); color: var(--scr-grip); }
+
+  /* ── the sheet/drawer family (C leans on this — every "deeper" view is a drawer) ── */
+  .scrim { position: absolute; inset: 0; z-index: 5; background: rgba(13,11,32,.6); }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--scr-tools);
+    border-top: 1px solid var(--scr-hairline); box-shadow: 0 -12px 26px rgba(0,0,0,.55); padding: 7px 13px 13px; }
+  .sheet .handle { width: 38px; height: 4px; background: var(--scr-grip); margin: 2px auto 9px; }
+  .sheet .sh-h { display: flex; align-items: center; gap: 8px; padding-bottom: 7px; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .sheet .sh-h .x { margin-left: auto; color: var(--scr-dim); font: 700 13px var(--pk); }
+  .detail-card { display: flex; justify-content: center; padding: 4px 0 2px; }
+  .adoptbar { display: flex; align-items: center; gap: 10px; margin-top: 11px; padding: 9px 11px; background: var(--scr-bg); border: 1px solid var(--scr-hairline); }
+  .adoptbar .ab-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .adoptbar .ab-have { font: 600 8.5px var(--pk); letter-spacing: .8px; color: var(--scr-dim); }
+  .ctoast { display: flex; align-items: center; gap: 9px; padding: 9px 11px; background: rgba(255,210,63,.1); border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent); }
+  .ctoast .ci { flex: 0 0 auto; color: var(--gold); font: 700 14px/1 var(--pk); }
+  .ctoast .ct { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .ctoast .ct .t1 { font: 700 10px var(--pk); letter-spacing: .8px; color: var(--scr-text); }
+  .ctoast .ct .t2 { font: 600 8.5px/1.5 var(--pk); letter-spacing: .3px; color: var(--scr-soft); }
+
+  .half-panel { margin-top: 14px; background: var(--scr-bg); border: 5px solid var(--bezel); border-radius: 8px; padding: 13px 14px; position: relative; }
+  .hero-sub { font: 600 11px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .dimmed { opacity: .45; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="g-dst" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2156"/><stop offset="1" stop-color="#14102e"/></linearGradient>
+    <linearGradient id="g-dst2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#58e0d8"/><stop offset="1" stop-color="#2ba8a0"/></linearGradient>
+    <symbol id="art-destiny" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-dst)"/>
+      <circle cx="31.5" cy="38" r="17" fill="none" stroke="#d9a93f" stroke-width="1.2" opacity=".5"/>
+      <path d="M31.5 16 L48 38 L31.5 60 L15 38 Z" fill="url(#g-dst2)" stroke="#e8c364" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M31.5 24 L42.5 38 L31.5 52 L20.5 38 Z" fill="rgba(255,255,255,.18)"/>
+      <circle cx="31.5" cy="38" r="4" fill="#f4f9f8"/>
+      <circle cx="31.5" cy="13" r="1.8" fill="#e8c364"/><circle cx="51" cy="38" r="1.8" fill="#e8c364"/>
+      <circle cx="31.5" cy="63" r="1.8" fill="#e8c364"/><circle cx="12" cy="38" r="1.8" fill="#e8c364"/>
+    </symbol>
+    <symbol id="ic-pix" viewBox="0 0 40 40">
+      <path d="M20 5 L18 5 L18 9 L14 9 L14 13 L10 13 L10 17 L6 17 L6 20 L20 20 Z" fill="#ffe9a3"/>
+      <path d="M20 5 L22 5 L22 9 L26 9 L26 13 L30 13 L30 17 L34 17 L34 20 L20 20 Z" fill="var(--gold)"/>
+      <path d="M6 20 L6 23 L10 23 L10 27 L14 27 L14 31 L18 31 L18 35 L20 35 L20 20 Z" fill="#f0bf32"/>
+      <path d="M34 20 L34 23 L30 23 L30 27 L26 27 L26 31 L22 31 L22 35 L20 35 L20 20 Z" fill="#c8922a"/>
+      <rect x="15" y="11" width="3.5" height="3.5" fill="#fff"/><rect x="23" y="13" width="4" height="4" fill="#58e0ff"/>
+      <rect x="27" y="17" width="4" height="4" fill="#4a90ff"/><rect x="14" y="24" width="3.5" height="3.5" fill="#4a90ff"/>
+      <path d="M18 5 L22 5 L22 9 L26 9 L26 13 L30 13 L30 17 L34 17 L34 23 L30 23 L30 27 L26 27 L26 31 L22 31 L22 35 L18 35 L18 31 L14 31 L14 27 L10 27 L10 23 L6 23 L6 17 L10 17 L10 13 L14 13 L14 9 L18 9 Z" fill="none" stroke="#3c2a09" stroke-width="2.2"/>
+    </symbol>
+    <symbol id="ic-pen" viewBox="0 0 12 12"><path d="M8.5 1.5 L10.5 3.5 L4 10 L1.5 10.5 L2 8 Z" fill="none" stroke-width="1.2" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-bell" viewBox="0 0 16 16"><path d="M8 2.2 V1.2 M4.5 7 a3.5 3.5 0 0 1 7 0 c0 3 1.3 4 1.3 4 H3.2 S4.5 10 4.5 7 Z M6.4 13 a1.6 1.6 0 0 0 3.2 0" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-share" viewBox="0 0 16 16"><path d="M8 10 V2 M5 5 L8 2 L11 5 M3.5 8.5 V13 h9 V8.5" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-flag" viewBox="0 0 16 16"><path d="M4 14 V2 M4 2.5 h8.5 L10 5.5 l2.5 3 H4" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-edit2" viewBox="0 0 16 16"><path d="M11 2.5 L13.5 5 L6 12.5 L3 13 L3.5 10 Z M9.5 4 L12 6.5" fill="none" stroke-width="1.4" stroke-linejoin="round"/></symbol>
+    <symbol id="ic-lock" viewBox="0 0 16 16"><rect x="3.5" y="7" width="9" height="6.5" rx="1" fill="none" stroke-width="1.4"/><path d="M5.5 7 V5 a2.5 2.5 0 0 1 5 0 v2" fill="none" stroke-width="1.4"/></symbol>
+    <symbol id="ic-grid" viewBox="0 0 16 16"><rect x="2.2" y="2.2" width="4.6" height="4.6" rx="1" fill="none" stroke-width="1.4"/><rect x="9.2" y="2.2" width="4.6" height="4.6" rx="1" fill="none" stroke-width="1.4"/><rect x="2.2" y="9.2" width="4.6" height="4.6" rx="1" fill="none" stroke-width="1.4"/><rect x="9.2" y="9.2" width="4.6" height="4.6" rx="1" fill="none" stroke-width="1.4"/></symbol>
+    <symbol id="ic-cards" viewBox="0 0 16 16"><rect x="2.5" y="3" width="7" height="9.5" rx="1.2" fill="none" stroke-width="1.4"/><path d="M6 3 V2.2 a1.2 1.2 0 0 1 1.2 -1.2 H12 a1.2 1.2 0 0 1 1.2 1.2 V11 a1.2 1.2 0 0 1 -1.2 1.2 H9.5" fill="none" stroke-width="1.4"/></symbol>
+    <symbol id="ic-people" viewBox="0 0 16 16"><circle cx="6" cy="6" r="2.4" fill="none" stroke-width="1.3"/><path d="M2.2 13 a3.8 3.8 0 0 1 7.6 0" fill="none" stroke-width="1.3" stroke-linecap="round"/><path d="M10.5 4 a2 2 0 0 1 0 4 M11 13 a3.6 3.6 0 0 0 -2 -3.2" fill="none" stroke-width="1.3" stroke-linecap="round"/></symbol>
+    <symbol id="ic-chev" viewBox="0 0 16 16"><path d="M6 3 L11 8 L6 13" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </defs>
+</svg>
+
+<div class="canvas">
+  <div class="canvas-head">
+    <h1>Game page &mdash; Draft C &ldquo;Pinned card + drawer depth&rdquo; (4.2 &middot; the adaptive hub)</h1>
+    <p>The card <b>pins compact at the top with its primary action always present</b> &mdash; it never leaves
+    your sight &mdash; while the body is a <b>lean summary</b>: a few hairline-separated rows, lots of open
+    space, almost no boxes. The <b>heavy content lives on demand in drawers</b> (the app's one bottom-sheet
+    grammar): YOUR PLAY (stats) · STATS &amp; PROVENANCE (the card-back) · YOUR CARDS (switcher) · COMMUNITY
+    CARDS (gallery + adopt) · COMPARE. The <b>sheet-family pole</b> &mdash; the airiest take, the
+    fewest-containers take (your note). The page <b>adapts the pin's strip + primary action</b>: neutral &rarr;
+    ADD · owned &rarr; EDIT + your stat strip · friend &rarr; ADOPT. In C the <b>flip is a drawer too</b> &mdash;
+    the front never leaves the pin; tap it and the back (auto-stats + provenance, CARD-01) rises as a sheet.
+    <i>Lifecycle (soft-hidden · loading · offline) deferred to converge. Sample: Destiny, 210 hrs; Maverick =
+    you · Riko/Vanta = friends. Numbers illustrative (OQ-002/011).</i></p>
+  </div>
+
+  <div class="stage-label">The shared page &amp; the owned state <small>P1 neutral (the open landing) &middot; P2 owned + the YOUR PLAY drawer &middot; P3 the flip-as-drawer</small></div>
+  <div class="stage">
+
+    <!-- ═══ P1 · Neutral — the open landing ═══ -->
+    <div class="take">
+      <div class="artboard-label">P1 &middot; Neutral &mdash; pinned card + a lean, open landing</div>
+      <div class="device" data-screen-label="Game page C · P1 — Neutral">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DESTINY</h2><span class="sh-sp"></span><button class="ovf-key">&#8943;</button></div>
+            <div class="pin">
+              <div class="gcard pick-size fr-gilt fx-ember fin-holo"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div>
+              <div class="pin-id">
+                <div class="pin-title">Destiny</div>
+                <div class="pin-meta">BUNGIE &middot; 2014 &middot; LOOTER-SHOOTER</div>
+                <div class="pin-strip"><span>214 IN COLLECTIONS</span><span class="s-on">3 FRIENDS</span></div>
+                <div class="pin-act">
+                  <button class="btn gold mini">&#43; ADD TO COLLECTION</button>
+                  <button class="btn sec mini">&#43; UP NEXT</button>
+                </div>
+              </div>
+            </div>
+            <div class="scroll">
+              <div class="lean">
+                <div class="lean-lead">Not in your collection &mdash; <b>add it</b> to track hours &amp; pick a card, or open a drawer below. The top community face is pinned above; everything heavy is one tap away.</div>
+                <div class="launch">
+                  <span class="lx"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-grid"/></svg></span>
+                  <span class="lt"><span class="ltt">COMMUNITY CARDS</span><span class="lts">adopt a face &mdash; FREE or 1 PX (ECON-03/04)</span></span>
+                  <span class="lc">41</span><span class="lchev"><svg viewBox="0 0 16 16"><use href="#ic-chev"/></svg></span>
+                </div>
+                <div class="launch accent">
+                  <span class="lx"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-cards"/></svg></span>
+                  <span class="lt"><span class="ltt">DESIGN A CARD</span><span class="lts">open the Styler &rarr; make this game yours</span></span>
+                  <span class="lchev"><svg viewBox="0 0 16 16"><use href="#ic-chev"/></svg></span>
+                </div>
+                <div class="launch">
+                  <span class="lx"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-people"/></svg></span>
+                  <span class="lt"><span class="ltt">FRIENDS WHO OWN IT</span><span class="lts"><b>VANTA</b> 182h &middot; <b>RIKO</b> 240h</span></span>
+                  <span class="lc">3</span><span class="lchev"><svg viewBox="0 0 16 16"><use href="#ic-chev"/></svg></span>
+                </div>
+                <div class="launch">
+                  <span class="lx"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-flag"/></svg></span>
+                  <span class="lt"><span class="ltt">GAME INFO &amp; CATALOG</span><span class="lts">added by <b>Maverick</b> (CAT-05) &middot; suggest an edit</span></span>
+                  <span class="lchev"><svg viewBox="0 0 16 16"><use href="#ic-chev"/></svg></span>
+                </div>
+                <div class="hint" style="text-align:left;">The lean body is <b>rows, not boxes</b> &mdash; the page breathes. Each row opens its drawer (gallery · Styler · friends · catalog).</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P1 &mdash; Neutral <em>(the open landing &mdash; the model thesis)</em></h3>
+        <p>The <b>card pins at the top</b> with the canonical facts + a slim presence strip + <b>ADD TO
+        COLLECTION</b> &mdash; always in view. Below, the body is deliberately <b>lean</b>: a handful of
+        hairline rows (COMMUNITY CARDS · DESIGN A CARD · FRIENDS WHO OWN · GAME INFO), each a <b>drawer
+        launcher</b>. No competing panels, no boxes &mdash; the airiest of the three. Everything dense
+        (`CommunityGallery`, friends, catalog) is <b>depth on demand</b>, one tap into a sheet.</p>
+      </div>
+    </div>
+
+    <!-- ═══ P2 · Owned — the YOUR PLAY drawer ═══ -->
+    <div class="take">
+      <div class="artboard-label">P2 &middot; Owned &mdash; pinned card + the YOUR PLAY (stats) drawer</div>
+      <div class="device" data-screen-label="Game page C · P2 — Owned / stats drawer">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DESTINY</h2><span class="sh-sp"></span><span class="now-tag">&#9656; NOW PLAYING</span><button class="ovf-key" style="margin-left:8px;">&#8943;</button></div>
+            <div class="pin">
+              <div class="gcard pick-size fr-gilt fx-ember fin-holo"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div>
+              <div class="pin-id">
+                <div class="pin-title">Destiny <span class="flip-hint">&#9670; YOUR CARD</span></div>
+                <div class="pin-strip"><span><b style="color:var(--scr-text);">210</b> HRS</span><span>68% DONE</span><span class="s-on">PLAYING</span></div>
+                <div class="pin-act">
+                  <button class="btn gold mini"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-edit2"/></svg>EDIT THIS CARD</button>
+                  <button class="btn sec mini">&#8645; SWITCH</button>
+                </div>
+              </div>
+            </div>
+            <div class="scroll dimmed">
+              <div class="lean">
+                <div class="launch">
+                  <span class="lx"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-pen"/></svg></span>
+                  <span class="lt"><span class="ltt">YOUR PLAY</span><span class="lts">210h &middot; 68% &middot; PLAYING &middot; notes</span></span>
+                  <span class="lchev"><svg viewBox="0 0 16 16"><use href="#ic-chev"/></svg></span>
+                </div>
+                <div class="launch">
+                  <span class="lx"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-cards"/></svg></span>
+                  <span class="lt"><span class="ltt">YOUR CARDS</span><span class="lts">equipped: Step Gilt &middot; mine + adopted</span></span>
+                  <span class="lc">5</span><span class="lchev"><svg viewBox="0 0 16 16"><use href="#ic-chev"/></svg></span>
+                </div>
+                <div class="launch">
+                  <span class="lx"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-grid"/></svg></span>
+                  <span class="lt"><span class="ltt">COMMUNITY CARDS</span><span class="lts">adopt a different face</span></span>
+                  <span class="lc">41</span><span class="lchev"><svg viewBox="0 0 16 16"><use href="#ic-chev"/></svg></span>
+                </div>
+              </div>
+            </div>
+            <div class="scrim"></div>
+            <div class="sheet">
+              <div class="handle"></div>
+              <div class="sh-h">YOUR PLAY &mdash; TAP A FIELD TO EDIT<a href="#" style="margin-left:auto; color:var(--scr-accent); font:600 9px var(--pk); letter-spacing:.5px; text-decoration:none;">&#8635; LOG HOURS</a><span class="x" style="margin-left:11px;">&#10005;</span></div>
+              <div class="playstats">
+                <div class="pstat-cell editing">
+                  <span class="l">HOURS</span>
+                  <div class="field-inline"><span class="q">210</span><span class="caret"></span></div>
+                </div>
+                <div class="pstat-cell"><span class="pen"><svg viewBox="0 0 12 12"><use href="#ic-pen"/></svg></span><span class="l">COMPLETE</span><span class="v">68<small>%</small></span></div>
+                <div class="pstat-cell wide"><span class="pen"><svg viewBox="0 0 12 12"><use href="#ic-pen"/></svg></span><span class="l">STATUS</span>
+                  <div class="status-row"><span class="schip on">PLAYING</span><span class="schip">BEATEN</span><span class="schip">COMPLETED</span><span class="schip">SHELVED</span></div>
+                </div>
+                <div class="pstat-cell wide"><span class="pen"><svg viewBox="0 0 12 12"><use href="#ic-pen"/></svg></span><span class="l">OWNED SINCE</span><span class="v" style="font-size:11px;">SEP 2014</span></div>
+                <div class="pstat-cell wide" style="opacity:.55;"><span class="l">RATING <span style="color:var(--scr-grip); letter-spacing:0; font-weight:600;">&mdash; PENDING (OQ-058)</span></span><span class="stars" style="font-size:12px;">&#9733;&#9733;&#9733;&#9733;<span class="off">&#9733;</span></span></div>
+                <div class="pstat-cell wide"><span class="pen"><svg viewBox="0 0 12 12"><use href="#ic-pen"/></svg></span><span class="l">NOTES</span><span class="v" style="font:600 10px/1.4 var(--pk); color:var(--scr-soft);">&ldquo;Back for the new season &mdash; chasing the raid title.&rdquo;</span></div>
+              </div>
+              <div class="hint" style="text-align:left;">EDIT inline (COL-02..05); rating PENDING (OQ-058, per-game not card). The card stays pinned above &mdash; the stats slide up over the page.</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P2 &mdash; Owned <em>(the YOUR PLAY drawer over the pin)</em></h3>
+        <p>Owned: the pin gains a <b>stat strip</b> (210 HRS · 68% · PLAYING) + <b>EDIT THIS CARD</b> / SWITCH,
+        always present. The lean body is three launchers (YOUR PLAY · YOUR CARDS · COMMUNITY). Tapping <b>YOUR
+        PLAY</b> raises the <b>`PlayStats` drawer</b> &mdash; hours (editing) · complete · status · owned-since ·
+        rating <b>PENDING (OQ-058)</b> · notes, editable inline (COL-02..05). The <b>card stays pinned above the
+        sheet</b> &mdash; you never lose sight of it while you log. EDIT THIS CARD &rarr; the Styler.</p>
+      </div>
+    </div>
+
+    <!-- ═══ P3 · The flip as a drawer ═══ -->
+    <div class="take">
+      <div class="artboard-label">P3 &middot; The flip-as-drawer &mdash; the back rises (CARD-01)</div>
+      <div class="device" data-screen-label="Game page C · P3 — Flip drawer">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DESTINY</h2><span class="sh-sp"></span><span class="now-tag">&#9656; NOW PLAYING</span><button class="ovf-key" style="margin-left:8px;">&#8943;</button></div>
+            <div class="pin">
+              <div class="gcard pick-size fr-gilt fx-ember fin-holo"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div>
+              <div class="pin-id">
+                <div class="pin-title">Destiny <span class="flip-hint">&#9670; YOUR CARD</span></div>
+                <div class="pin-strip"><span><b style="color:var(--scr-text);">210</b> HRS</span><span>68% DONE</span><span class="s-on">PLAYING</span></div>
+                <div class="pin-act">
+                  <button class="btn gold mini"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-edit2"/></svg>EDIT THIS CARD</button>
+                  <button class="btn sec mini">&#8645; SWITCH</button>
+                </div>
+              </div>
+            </div>
+            <div class="scroll dimmed">
+              <div class="lean">
+                <div class="launch"><span class="lx"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-pen"/></svg></span><span class="lt"><span class="ltt">YOUR PLAY</span><span class="lts">210h &middot; 68% &middot; PLAYING</span></span><span class="lchev"><svg viewBox="0 0 16 16"><use href="#ic-chev"/></svg></span></div>
+                <div class="launch"><span class="lx"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-cards"/></svg></span><span class="lt"><span class="ltt">YOUR CARDS</span><span class="lts">mine + adopted</span></span><span class="lc">5</span><span class="lchev"><svg viewBox="0 0 16 16"><use href="#ic-chev"/></svg></span></div>
+              </div>
+            </div>
+            <div class="scrim"></div>
+            <div class="sheet">
+              <div class="handle"></div>
+              <div class="sh-h">STATS &amp; PROVENANCE &mdash; THE CARD BACK (CARD-01)<span class="x">&#10005;</span></div>
+              <div class="detail-card">
+                <div class="gcard hero-size back fr-gilt" style="width:138px; height:193px;">
+                  <div class="art">
+                    <div class="cb-title">DESTINY</div>
+                    <div class="cb-stats">
+                      <div class="cb-row"><span class="cl">YOUR HOURS</span><span class="cv">210</span></div>
+                      <div class="cb-row"><span class="cl">COMPLETE</span><span class="cv">68%</span></div>
+                      <div class="cb-row"><span class="cl">STATUS</span><span class="cv">PLAYING</span></div>
+                      <div class="cb-row"><span class="cl">OWNED SINCE</span><span class="cv">2014</span></div>
+                    </div>
+                    <div class="cb-prov">
+                      <span class="p1">DESIGNED BY MAVERICK</span>
+                      <span class="p2">ADOPTED 12&times; &middot; STEP GILT &middot; EMBER &middot; HOLO</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="hint" style="text-align:left; margin-top:11px;">THE BACK IS <b>STANDARDIZED + AUTO-FILLED</b> (NOT DESIGNED): YOUR STATS UP TOP, THE CARD'S <b>PROVENANCE</b> BELOW &mdash; DESIGNER + ADOPTION COUNT (CARD-01/05) + EQUIPPED COSMETICS. A COMMUNITY CARD SHOWS ITS AGGREGATE INSTEAD.</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P3 &mdash; The flip-as-drawer <em>(C's take: the front never leaves the pin)</em></h3>
+        <p>C reads the flip as <b>depth, not a turn</b>: the front <b>stays pinned</b>, and tapping the card (or
+        STATS &amp; PROVENANCE) <b>raises the back as a drawer</b> &mdash; the standardized auto-stats +
+        provenance face (CARD-01): DESIGNED BY MAVERICK · ADOPTED 12&times; · the equipped cosmetics. Same
+        content as the other drafts' flip, but consistent with C's <b>one grammar</b>: the card is constant; the
+        rest is sheets. (Behavior-equivalent to the flip in &sect;4.2 &mdash; the front/back pairing is intact.)</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="stage-label">The card library &amp; adopting <small>P4 the YOUR CARDS drawer (OQ-056) &middot; P5 the COMMUNITY CARDS drawer + adopt</small></div>
+  <div class="stage">
+
+    <!-- ═══ P4 · The switcher drawer ═══ -->
+    <div class="take">
+      <div class="artboard-label">P4 &middot; The YOUR CARDS drawer &mdash; switcher / customizations (OQ-056)</div>
+      <div class="device" data-screen-label="Game page C · P4 — Switcher drawer">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DESTINY</h2><span class="sh-sp"></span><span class="now-tag">&#9656; NOW PLAYING</span><button class="ovf-key" style="margin-left:8px;">&#8943;</button></div>
+            <div class="pin">
+              <div class="gcard pick-size fr-gilt fx-ember fin-holo"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div>
+              <div class="pin-id">
+                <div class="pin-title">Destiny <span class="flip-hint">&#9670; YOUR CARD</span></div>
+                <div class="pin-strip"><span><b style="color:var(--scr-text);">210</b> HRS</span><span>68% DONE</span><span class="s-on">PLAYING</span></div>
+                <div class="pin-act">
+                  <button class="btn gold mini"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-edit2"/></svg>EDIT THIS CARD</button>
+                  <button class="btn sec mini">&#8645; SWITCH</button>
+                </div>
+              </div>
+            </div>
+            <div class="scroll dimmed">
+              <div class="lean">
+                <div class="launch"><span class="lx"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-pen"/></svg></span><span class="lt"><span class="ltt">YOUR PLAY</span><span class="lts">210h &middot; 68% &middot; PLAYING</span></span><span class="lchev"><svg viewBox="0 0 16 16"><use href="#ic-chev"/></svg></span></div>
+                <div class="launch"><span class="lx"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-cards"/></svg></span><span class="lt"><span class="ltt">YOUR CARDS</span><span class="lts">mine + adopted</span></span><span class="lc">5</span><span class="lchev"><svg viewBox="0 0 16 16"><use href="#ic-chev"/></svg></span></div>
+              </div>
+            </div>
+            <div class="scrim"></div>
+            <div class="sheet">
+              <div class="handle"></div>
+              <div class="sh-h">YOUR CARDS FOR DESTINY &mdash; 5<a href="#" style="margin-left:auto; color:var(--scr-accent); font:600 9px var(--pk); letter-spacing:.5px; text-decoration:none;">&#8645; SORT</a><span class="x" style="margin-left:11px;">&#10005;</span></div>
+              <div class="hint" style="text-align:left; margin:0 0 8px;"><b>TAP = EQUIP</b> &middot; long-press = edit / duplicate / delete</div>
+              <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:9px;">
+                <div class="swcard"><span class="state-tag equipped">&#9670; EQUIPPED</span><div class="gcard cell-size fr-gilt fx-ember fin-holo" style="width:100%; aspect-ratio:96/134; height:auto;"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div></div>
+                <div class="swcard"><span class="state-tag published">PUBLISHED</span><div class="gcard cell-size fr-gilt fx-ember" style="width:100%; aspect-ratio:96/134; height:auto;"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div></div>
+                <div class="swcard"><span class="state-tag private">PRIVATE</span><div class="gcard cell-size fr-slate fx-ghost" style="width:100%; aspect-ratio:96/134; height:auto;"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div></div>
+                <div class="swcard"><span class="state-tag draft">DRAFT</span><div class="gcard cell-size fr-scan" style="width:100%; aspect-ratio:96/134; height:auto; opacity:.85;"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div></div>
+                <div class="swcard"><span class="state-tag adopted">ADOPTED</span><div class="gcard cell-size fr-foil" style="width:100%; aspect-ratio:96/134; height:auto;"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit" style="margin-top:3px; display:block;">BY <b>RIKO</b></span></div>
+                <div class="newtile" style="width:100%; aspect-ratio:96/134; height:auto;"><span class="plus">&#43;</span><span class="nl">DESIGN NEW</span></div>
+              </div>
+              <div class="hint" style="text-align:left;"><b>DESIGN NEW &rarr; the Styler</b> (then EDIT ART &rarr; Canvas); lands as DRAFT &rarr; PRIVATE/PUBLISHED. Adopted faces sit alongside; <b>SAVE AS NEW</b> forks (OQ-056). Cross-game library = <b>My Designs</b> (Profile).</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P4 &mdash; The YOUR CARDS drawer <em>(OQ-056 customizations view)</em></h3>
+        <p>Tapping <b>YOUR CARDS</b> raises the <b>`CardSwitcher`</b> drawer &mdash; your cards for Destiny
+        (COL-06): equipped + every card <b>state-tagged</b> (PUBLISHED · PRIVATE · DRAFT · ADOPTED-from-Riko) +
+        a <b>DESIGN NEW</b> tile. Tap = equip; long-press = edit / duplicate / delete. <b>OQ-056</b>: adopted
+        faces alongside your own; new designs flow from the Styler as DRAFT; <b>SAVE AS NEW</b> forks; the
+        cross-game library is <b>My Designs</b>. The pinned card stays put behind the sheet.</p>
+      </div>
+    </div>
+
+    <!-- ═══ P5 · The community gallery drawer + adopt ═══ -->
+    <div class="take">
+      <div class="artboard-label">P5 &middot; The COMMUNITY CARDS drawer &rarr; inspect &amp; adopt (atomic)</div>
+      <div class="device" data-screen-label="Game page C · P5 — Gallery drawer adopt">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DESTINY</h2><span class="sh-sp"></span><button class="ovf-key">&#8943;</button></div>
+            <div class="pin">
+              <div class="gcard pick-size fr-gilt fx-ember fin-holo"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div>
+              <div class="pin-id">
+                <div class="pin-title">Destiny</div>
+                <div class="pin-meta">BUNGIE &middot; 2014 &middot; LOOTER-SHOOTER</div>
+                <div class="pin-strip"><span>214 IN COLLECTIONS</span><span>41 CARDS</span></div>
+                <div class="pin-act"><button class="btn sec mini">&#8645; SWITCH MY CARD</button></div>
+              </div>
+            </div>
+            <div class="scroll dimmed">
+              <div class="lean">
+                <div class="launch"><span class="lx"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-grid"/></svg></span><span class="lt"><span class="ltt">COMMUNITY CARDS</span><span class="lts">adopt a face</span></span><span class="lc">41</span><span class="lchev"><svg viewBox="0 0 16 16"><use href="#ic-chev"/></svg></span></div>
+              </div>
+            </div>
+            <div class="scrim"></div>
+            <div class="sheet">
+              <div class="handle"></div>
+              <div class="sh-h">COMMUNITY CARDS &mdash; 41<a href="#" style="margin-left:auto; color:var(--scr-accent); font:600 9px var(--pk); letter-spacing:.5px; text-decoration:none;">SORT</a><span class="x" style="margin-left:11px;">&#10005;</span></div>
+              <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:9px;">
+                <div class="gwrap"><div class="gcard cell-size fr-foil" style="width:100%; aspect-ratio:96/134; height:auto; outline:2px solid var(--scr-accent); outline-offset:1px;"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>RIKO</b></span><div class="gw-foot"><span class="adopt-chip">1 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="adopt-count">58&times;</span></div></div>
+                <div class="gwrap"><div class="gcard cell-size fr-teal fin-holo" style="width:100%; aspect-ratio:96/134; height:auto;"><div class="art art-hue2"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>VANTA</b></span><div class="gw-foot"><span class="adopt-chip free">FREE</span><span class="adopt-count">31&times;</span></div></div>
+                <div class="gwrap"><div class="gcard cell-size fr-gilt fx-ember" style="width:100%; aspect-ratio:96/134; height:auto;"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>MAVERICK</b></span><div class="gw-foot"><span class="adopt-chip">1 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="adopt-count">12&times;</span></div></div>
+              </div>
+              <div class="adoptbar">
+                <div class="detail-card" style="padding:0;"><div class="gcard thumb fr-foil"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div></div></div>
+                <div class="ab-meta"><span class="npl">ADOPT RIKO'S &mdash; THE WHOLE CARD</span><span class="ab-have">ROSE FOIL · EMBER · FOIL (CARD-22) &middot; the image, not the layers (CARD-15)</span></div>
+                <span style="flex:1;"></span>
+                <button class="btn gold mini">ADOPT &middot; 1 <svg width="10" height="10" viewBox="0 0 40 40" style="vertical-align:-1px;"><use href="#ic-pix"/></svg></button>
+              </div>
+              <div class="hint" style="text-align:left;">TAP A FACE &rarr; IT SELECTS (accent outline) + ITS ADOPT BAR APPEARS &middot; ATOMIC: THE WHOLE CARD (SOC-11), FREE or 1 PX (ECON-03/04) &middot; NO &ldquo;ADOPT JUST THE CANVAS&rdquo;</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="half-panel">
+        <div class="ctoast"><span class="ci">&#10003;</span><div class="ct"><span class="t1">ADOPTED &mdash; RIKO'S CARD IS YOURS FOR DESTINY</span><span class="t2">1 PX spent &middot; it's in YOUR CARDS now (equip any time) &middot; Riko earns +1 adoption (ECON-05)</span></div></div>
+        <div class="hint" style="text-align:left; margin-top:9px;"><b>IN-BETWEEN UI &mdash; ADOPT CONFIRM:</b> the result beat &mdash; a quiet gold toast; the card lands in the YOUR CARDS drawer (P4), the spend hits your ledger.</div>
+      </div>
+      <div class="caption">
+        <h3>P5 &mdash; The COMMUNITY CARDS drawer + adopt <em>(gallery is a drawer; adopt is atomic)</em></h3>
+        <p>The gallery itself <b>opens as a drawer</b> &mdash; the 41 community faces (designer + adoption count
+        + adopt chip). Tap one and it <b>selects in place</b> (accent outline) and its <b>adopt bar</b> appears
+        at the foot with the `EquipReadout` summary (CARD-22). <b>Adoption is atomic</b> (SOC-11): the whole
+        card for this game (ECON-04), FREE or <b>1 PX</b> (creator earns clout, ECON-05); the flattened image,
+        never the layers (CARD-15). The fragment shows the <b>adopt-confirm</b> beat.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="stage-label">Friend-view &amp; cold-start <small>P6 friend's card (SOC-11) + the COMPARE drawer + don't-own variant &middot; P7 upcoming / be-first</small></div>
+  <div class="stage">
+
+    <!-- ═══ P6 · Friend-view + compare drawer ═══ -->
+    <div class="take">
+      <div class="artboard-label">P6 &middot; Friend-view (SOC-11) &mdash; their pinned card + the COMPARE drawer</div>
+      <div class="device" data-screen-label="Game page C · P6 — Friend-view">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DESTINY</h2><span class="sh-sp"></span><span class="eq" style="background:var(--scr-panel);">RIKO'S</span><button class="ovf-key" style="margin-left:8px;">&#8943;</button></div>
+            <div class="pin">
+              <div class="gcard pick-size fr-foil"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div>
+              <div class="pin-id">
+                <div class="pin-title">Destiny</div>
+                <div class="pin-meta">RIKO'S CARD &middot; DESIGNED BY <b style="color:var(--scr-soft);">RIKO</b></div>
+                <div class="pin-strip"><span><b style="color:var(--scr-text);">240</b> HRS</span><span class="s-on">PLAYING</span><span>SINCE 2014</span></div>
+                <div class="pin-act">
+                  <button class="btn gold mini">ADOPT RIKO'S &middot; 1 <svg width="10" height="10" viewBox="0 0 40 40" style="vertical-align:-1px;"><use href="#ic-pix"/></svg></button>
+                  <button class="btn sec mini">&#8646; COMPARE</button>
+                </div>
+              </div>
+            </div>
+            <div class="scroll dimmed">
+              <div class="lean">
+                <div class="privacy-note" style="margin:13px 6px 0;"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" style="flex:0 0 auto;"><use href="#ic-lock"/></svg>RIKO'S NOTES &amp; PLATFORMS STAY PRIVATE (COL-04/05) &mdash; ONLY HOURS · STATUS · OWNED-SINCE SHOW (PROF-03)</div>
+                <div class="launch"><span class="lx"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-grid"/></svg></span><span class="lt"><span class="ltt">THEIR EQUIPPED COSMETICS</span><span class="lts">Rose Foil · Ember · Foil (CARD-22)</span></span><span class="lchev"><svg viewBox="0 0 16 16"><use href="#ic-chev"/></svg></span></div>
+              </div>
+            </div>
+            <div class="scrim"></div>
+            <div class="sheet">
+              <div class="handle"></div>
+              <div class="sh-h">&#8646; COMPARE &mdash; YOU vs RIKO (SOC-11, OPT-IN)<span class="x">&#10005;</span></div>
+              <div class="compare-row" style="margin-top:4px;">
+                <div class="compare-col"><span class="who you">YOU</span><div class="gcard pick-size fr-gilt fx-ember fin-holo" style="width:84px; height:118px;"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div></div>
+                <div class="compare-mid">
+                  <div class="vbar"><span class="vv">210</span><span class="vl">HRS</span><span class="vs">vs</span><span class="vv win">240</span></div>
+                  <div class="vbar"><span class="vv win">68%</span><span class="vl">DONE</span><span class="vs">vs</span><span class="vv">&mdash;</span></div>
+                  <div class="vbar"><span class="vv">2014</span><span class="vl">SINCE</span><span class="vs">vs</span><span class="vv">2014</span></div>
+                </div>
+                <div class="compare-col"><span class="who">RIKO</span><div class="gcard pick-size fr-foil" style="width:84px; height:118px;"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div></div>
+              </div>
+              <div class="hint" style="text-align:left; margin-top:11px;">The single-game cousin of Compare Hours (SOC-03) &mdash; <b>opt-in</b>: your card + stats slide in beside theirs, who's-ahead lit gold. Only privacy-allowed fields compare (PROF-03).</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="half-panel">
+        <div class="sec" style="margin:0 0 7px;"><h3>VARIANT &mdash; YOU DON'T OWN DESTINY</h3></div>
+        <div style="display:flex; align-items:center; gap:11px;">
+          <div class="gcard pick-size fr-foil"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div>
+          <div style="display:flex; flex-direction:column; gap:7px; min-width:0;">
+            <span class="hero-sub" style="white-space:normal;">No COMPARE (nothing of yours to compare). Their pinned card + facts + their stats, and a <b>discover-their-card</b> path:</span>
+            <div style="display:flex; gap:7px;"><button class="btn gold mini">ADOPT &middot; 1 <svg width="10" height="10" viewBox="0 0 40 40" style="vertical-align:-1px;"><use href="#ic-pix"/></svg></button><button class="btn sec mini">&#43; ADD TO COLLECTION</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P6 &mdash; Friend-view <em>(SOC-11: their pinned card · privacy-gated · COMPARE drawer · atomic adopt)</em></h3>
+        <p>Tapped from <b>Riko's</b> collection: their card <b>pins</b> with the `EquipReadout` (CARD-22) +
+        their stat strip &mdash; hours · status · owned-since only, <b>privacy-gated</b> (PROF-03). Primary
+        action <b>ADOPT</b> (atomic, 1 PX), always present. <b>COMPARE is opt-in</b> &mdash; it raises the
+        <b>`CompareStrip` drawer</b> (you vs them, who's-ahead lit gold). The fragment is the <b>don't-own
+        variant</b>: no compare, ADOPT + ADD TO COLLECTION.</p>
+      </div>
+    </div>
+
+    <!-- ═══ P7 · Upcoming / be-first ═══ -->
+    <div class="take">
+      <div class="artboard-label">P7 &middot; Upcoming &rarr; NOTIFY ME + no-cards-yet (be-first)</div>
+      <div class="device" data-screen-label="Game page C · P7 — Upcoming / be-first">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>MARATHON</h2><span class="sh-sp"></span><button class="ovf-key">&#8943;</button></div>
+            <div class="pin">
+              <div class="gcard pick-size fr-slate" style="opacity:.92;"><div class="art" style="filter:saturate(.6) brightness(.85);"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Marathon</div></div>
+              <div class="pin-id">
+                <div class="pin-title">Marathon <span class="upcoming-badge">&#9202; SEP 2026</span></div>
+                <div class="pin-meta">BUNGIE &middot; EXTRACTION SHOOTER</div>
+                <div class="pin-strip"><span>ADDED BY <b style="color:var(--scr-soft);">VANTA</b></span></div>
+                <div class="pin-act">
+                  <button class="btn gold mini"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-bell"/></svg>NOTIFY ME</button>
+                  <button class="btn sec mini">&#43; UP NEXT</button>
+                </div>
+              </div>
+            </div>
+            <div class="scroll">
+              <div class="lean">
+                <div class="lean-lead"><b>Not out yet</b> (DISC-01) &mdash; we'll ping you on release day (NOTIF-01). UP NEXT keeps it on your wishlist (WTP-02).</div>
+                <div class="befirst">
+                  <div class="ghost-card"><span class="plus">&#43;</span></div>
+                  <span class="npl">BE THE FIRST TO DESIGN ITS CARD</span>
+                  <span class="hero-sub" style="white-space:normal; text-align:center;">No cards yet &mdash; an empty gallery is an opening, not a dead end (&sect;1.7). Your face becomes the game's first, credited to you (CAT-05).</span>
+                  <button class="btn gold mini">&#43; DESIGN THE FIRST CARD</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item active"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P7 &mdash; Upcoming + no-cards-yet <em>(cold-start doorways)</em></h3>
+        <p>An <b>upcoming</b> game (DISC-01): the desaturated card pins with an UPCOMING badge + release date,
+        the pin's primary becomes <b>NOTIFY ME</b> (NOTIF-01) + UP NEXT (wishlist, WTP-02). With no cards yet,
+        the lean body becomes a single <b>be-first</b> invitation (&sect;1.7) &mdash; your face becomes the
+        game's first, credited to you (CAT-05). The open layout makes the empty state feel like an opening, not
+        a void. <i>Deferred to converge: soft-hidden/reported (MOD-02/08/09) · loading · offline.</i></p>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
