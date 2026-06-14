@@ -84,6 +84,7 @@
   .btn.sec { background: var(--cream); color: var(--navy); box-shadow: 0 3px 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
   .btn.danger { background: var(--alert); color: #fff; box-shadow: 0 3px 0 color-mix(in srgb, var(--alert) 45%, #000), inset 0 1px 0 rgba(255,255,255,.28); }
   .btn.mini { padding: 6px 8px; font-size: 9px; }
+  .btn.del { color: var(--alert); }  /* destructive ENTRY (opens the confirm) — cream keycap, red ink; the solid-red /destructive lives on the confirm itself */
   .btn svg { flex: 0 0 auto; } .btn.block { width: 100%; justify-content: center; box-sizing: border-box; }
 
   /* GameCard + C5 */
@@ -400,7 +401,7 @@
                 <div class="co-acts">
                   <button class="btn sec mini"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-equip"/></svg>SET AS MAIN</button>
                   <button class="btn sec mini"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-edit2"/></svg>EDIT IN STYLER</button>
-                  <button class="btn danger mini"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-trash"/></svg>DELETE</button>
+                  <button class="btn sec mini del"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-trash"/></svg>DELETE</button>
                 </div>
               </div>
               <div class="hint" style="text-align:left;"><b>Tap a card to select it</b> (orange outline) &mdash; its actions show right here, no drawer. MAIN is labelled; the equipped card has no DELETE (set another as MAIN first, OQ-061). Card actions no longer carry SHARE.</div>
