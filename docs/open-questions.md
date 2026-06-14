@@ -31,36 +31,8 @@
   milestones, with cosmetic rewards — must be on that brainstorm's list (closes the create→earn loop).
 - OQ-005: Hidden easter-egg presentation — fully invisible until unlocked, or shown as a locked
   "???" mystery slot that hints something exists? (ACH-03) [presentation]
-- OQ-007: A **stylized "break-out"** treatment for space-hungry screens (e.g. the Card editor):
-  the bezel is intentionally thin, so whether/when a screen expands beyond the device frame — and
-  how that transition is styled — is a Claude Design decision to consider. [presentation]
-  **Rescoped (decision 0014):** owed specifically for the **Card editor's Canvas posture** (stage 3
-  of the Add Game arc); Add Game + the Styler stay in-frame (the takeover tier).
-  **RESOLVED (canvas converge, design-side 2026-06-13): the DIEGETIC breakout.** Entering the Canvas,
-  the device shell **swings open like a cabinet** onto a workshop bench; the card lies on a **press
-  bed**; layers become **physical slips** (`canvas/canvas-states.html` P1–P2). Three OQ-007 treatments
-  were drafted (total-yield HUD · partial-yield rails · diegetic press); the owner picked the press.
-  Reduce-motion = a fade (CARD-16). Spec-owner: move to `decisions/` with the editor-arc batch if a
-  formal record is wanted.
 - OQ-038: **Offline cache scope** — what renders read-only when offline: your own profile/collection
   only, or also recently-viewed friends? (split from OQ-037 during the design-spec sync; SYS-10) [behavior]
-- OQ-040: **The "moments layer" — reveal ritual + celebration tiering** (decision 0015): the
-  canvas-completion **"first print" ritual** — client-rendered flatten-as-anticipation (never
-  network-bound) · **layer-assembly replay** from the composition JSON · gallery-staged full-fidelity
-  reveal (chrome dims, effects/finish live, haptics; reduce-motion variant) — **tiered** so it stays
-  special (full: first-ever card · canvas completions · publishes; light beat: Styler keeps), with
-  post-reveal **routing** (card slots into the shelf · publish-at-peak · primed adoption
-  notification + the NOTIF-04 post-publish pre-prompt · share image, CARD-21). Plus the small beats:
-  contributor first-credit (CAT-05) · adopter-side designer credit (ECON-05) · mid-edit
-  **hold-to-preview** (CARD-15). Design-spec patterns owed across stages 1–3 of the 0014 arc.
-  (from the engagement review, 2026-06-11) [presentation]
-  **RESOLVED (canvas converge, design-side 2026-06-13):** the full **"first print" ritual** is
-  designed in `canvas/canvas-states.html` P8 — ① the press runs (client-rendered platen sweep, never
-  network-bound) · ② the slips fly in (the composition-JSON assembly replay) · ③ the print lifted off
-  the press (gallery staging, bloom + haptics) → routing: shelf slot · SHARE (CARD-21) · NOTIF-04
-  adoption-ask. **Tiered:** full here (canvas completions / publishes); the **light KeepBeat** for
-  Styler keeps was designed in `styler/styler-states.html` P7. Mid-edit **hold-to-preview** = the
-  Canvas's PROOF (P6). Spec-owner: fold into the editor-arc decision if wanted.
 - OQ-045: **Sticker placed-on-shell preview** (owner deferral, store track 2026-06-12) — §4.11's
   sticker-preview case is NOT drawn on the converged Store board; design it with the **Device editor
   pass** (DEV-01). [presentation]
@@ -115,6 +87,19 @@
   UI room and treats the body as an **opaque bundle** in access-controlled storage (`log_ref`). Decide
   before bug-log capture is built (likely the Engagement/foundation phase). (Settings formalization,
   decision 0022) [behavior]
+- OQ-061: **Card deletion semantics from the Game-page card switcher.** The Game-page CARDS view (the
+  OQ-056 customizations switcher) now needs an explicit **delete** affordance, which raises rules the spec
+  doesn't yet pin: **(a)** can you delete the **equipped** card, or must you switch first? **(b)** does
+  deleting an **owned design** remove it everywhere (incl. the global **My Designs** shelf, `/me/cards`),
+  or just this game's instance (cards are per-game, so likely the same thing)? **(c)** deleting a
+  **published** design that **others have adopted** — adopters keep their flattened image (CARD-15/ECON-04),
+  but does the public gallery entry / attribution persist, and is the count frozen? **(d)** deleting an
+  **adopted** card = just removing your downloaded copy (no effect on the creator). Recommendation: **can't
+  delete while equipped** (switch first); deleting an owned design removes it everywhere behind a
+  **destructive confirm**; published-with-adopters → keep adopters' copies + freeze the gallery entry
+  (don't orphan attribution); adopted = remove-your-copy only. Also needs the **destructive-confirm
+  component** reconciled with the Settings track's `ConfirmDialog` (centered modal vs the page's
+  bottom-sheet grammar). (Game-page A×B mix, 2026-06-14) [behavior]
 
 ## Resolved
 - OQ-053 → **Upcoming notify-me has a backing endpoint** (Discover §3.2 page-audit, api-contract 0.21):
@@ -205,3 +190,5 @@
 - OQ-049 → **Save-private surfaces in both** the game's card switcher (COL-06) and the My-designs shelf (`GET /me/cards`); no new surface. CARD-14. Decision 0019. (2026-06-13)
 - OQ-051 → **"Popular" = ranked by collections-count** (CAT-09, most-collected first), capped ~12, no paging — the rail is a nudge; Discover browses. `/catalog/popular`. Decision 0019. (2026-06-13)
 - OQ-052 → **Friend-view SHARE chip cut** — sharing is self-only (your invite link, SOC-07); others'-profile deep links stay parked (§10). PROF-05 / design-req 3.5. Decision 0019. (2026-06-13)
+- OQ-007 → **RESOLVED design-side — the DIEGETIC breakout** (Canvas converge, `canvas/canvas-states.html` P1–P2): entering the Canvas the device shell **swings open like a cabinet** onto a workshop bench; the card lies on a **press bed**; layers become **physical slips**. Three treatments were drafted (total-yield HUD · partial-yield rails · diegetic press); the owner picked the press. Reduce-motion = a fade (CARD-16). Rescoped by decision 0014 to the Card editor's Canvas posture (stage 3 of the Add Game arc; Add Game + the Styler stay in-frame). (2026-06-13)
+- OQ-040 → **RESOLVED design-side — the "first print" ritual** (Canvas converge, `canvas/canvas-states.html` P8): ① the press runs (client-rendered platen sweep, never network-bound) · ② the slips fly in (the composition-JSON assembly replay) · ③ the print lifted off the press (gallery staging, bloom + haptics) → routing: shelf slot · SHARE (CARD-21) · NOTIF-04 adoption-ask. **Tiered:** full here (canvas completions / publishes); the **light KeepBeat** for Styler keeps was designed in `styler/styler-states.html` P7. Mid-edit **hold-to-preview** = the Canvas's PROOF (P6). Decision 0015 moments layer / decision 0014 editor arc. (2026-06-13)

@@ -57,3 +57,8 @@ UP NEXT, bump the date, and surface the changed rows to the owner in the wrap-up
 API columns are the tripwires — a converged board's formalization batch is owed before its Design-spec
 reads ✅, and functionality drawn on a page must reach the contract (or the inbox) before its API
 reads ✅.
+
+**If the pass resolved any OQs design-side**, also complete [`00-INDEX`](../00-INDEX.md) §4 Step-3 —
+relocate them from `## Open` to `## Resolved` in [`open-questions.md`](../open-questions.md) and refresh
+**design-spec §2.8** traceability — don't only inline-tag them. (The OQ analogue of the §4 register-update
+step added in `a4d93d9`.)
