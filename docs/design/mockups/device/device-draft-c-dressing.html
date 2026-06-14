@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InGame · Device editor — Draft C "Dressing room" (DEV-01..04 · OQ-045)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" /></noscript>
+<style>
+  /* ── tokens: verbatim from store-states.html (Teal shell · Midnight theme) ── */
+  :root {
+    --plastic: #2bb6b0; --plastic-hi: #3ec9c2; --plastic-lo: #1f9a94; --silk: #0d524e;
+    --accent: #ff3d77; --gold: #ffd23f; --cream: #f5f1e4; --navy: #1d2a4a;
+    --bezel: #14122a; --alert: #e3414e;
+    --pk: 'Chakra Petch', sans-serif; --shell: 'Paytone One', sans-serif;
+    --scr-bg: #232045; --scr-well: #2c2950; --scr-tools: #1a1733; --scr-accent: #ff9f43;
+    --scr-accent-ink: #2a1430; --scr-head: #f5f1e4; --scr-text: #ffffff; --scr-dim: #9b97c0;
+    --scr-soft: #c9c5e6; --scr-panel: rgba(255,255,255,.065); --scr-hairline: rgba(255,255,255,.08);
+    --scr-grip: #565178; --scr-chip: #f5f1e4; --scr-head-shadow: rgba(0,0,0,.45);
+    --shell-ink: #08433f; --screw-hi: #2aa39d; --screw-lo: #137671; --pip-off: #117672;
+  }
+  html, body { margin: 0; min-height: 100%; background: #efece6; font-family: var(--pk); }
+  .canvas { max-width: 1348px; margin: 0 auto; padding: 40px 24px 60px; }
+  .canvas-head h1 { font: 700 17px/1.2 var(--pk); letter-spacing: 2.5px; color: #2a2633; margin: 0 0 6px; text-transform: uppercase; }
+  .canvas-head p { font: 500 12.5px/1.5 var(--pk); color: #79748a; margin: 0 0 14px; max-width: 720px; }
+  .stage { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+  .take { width: 404px; }
+  .artboard-label { font: 700 11px/1 var(--pk); letter-spacing: 1.5px; color: #8d889c; margin: 0 0 10px 2px; text-transform: uppercase; }
+  .caption { margin-top: 14px; background: #fff; border-radius: 12px; padding: 13px 15px; box-shadow: 0 2px 8px rgba(42,38,51,.08); }
+  .caption h3 { margin: 0 0 5px; font: 700 12.5px var(--pk); letter-spacing: .8px; color: #2a2633; text-transform: uppercase; }
+  .caption h3 em { font-style: normal; color: var(--accent); }
+  .caption p { margin: 0 0 4px; font: 500 11.8px/1.5 var(--pk); color: #5d5870; }
+  .caption p b { color: #2a2633; }
+  .stage-label { font: 700 13px/1 var(--pk); letter-spacing: 2px; color: #2a2633; text-transform: uppercase; margin: 36px 2px 14px; }
+  .stage-label small { display: block; margin-top: 5px; font: 500 11px/1.4 var(--pk); letter-spacing: .3px; color: #79748a; text-transform: none; }
+
+  /* ── device shell (verbatim from store-states) ── */
+  .device { position: relative; width: 404px; height: 884px; border-radius: 30px; overflow: hidden;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.4), inset 0 -4px 0 rgba(0,0,0,.18), 0 18px 40px color-mix(in srgb, var(--shell-ink) 28%, transparent);
+    display: flex; flex-direction: column; padding: 0 14px; box-sizing: border-box; }
+  .screw { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--screw-hi), var(--screw-lo) 75%);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.25); z-index: 8; }
+  .screw::after { content: ""; position: absolute; left: 1.5px; right: 1.5px; top: 3.5px; height: 1.5px; background: color-mix(in srgb, var(--shell-ink) 70%, transparent); border-radius: 1px; }
+  .screw.tl { top: 10px; left: 12px; } .screw.tr { top: 10px; right: 12px; }
+  .screw.bl { bottom: 10px; left: 12px; } .screw.br { bottom: 10px; right: 12px; }
+  .top-band { height: 64px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 12px 0; position: relative; }
+  .power { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+  .power .led { width: 9px; height: 9px; border-radius: 50%; background: #ff5a4e; box-shadow: 0 0 7px 2px rgba(255,90,78,.65), inset 0 -1px 1px rgba(0,0,0,.3); }
+  .power .lbl { font: 400 9px var(--shell); letter-spacing: .5px; color: var(--silk); opacity: .75; }
+  .logo { position: absolute; left: 50%; transform: translateX(-50%); font: 400 21px var(--shell); letter-spacing: 7px; text-indent: 7px;
+    color: color-mix(in srgb, var(--shell-ink) 28%, transparent); text-shadow: 0 -1px 0 color-mix(in srgb, var(--shell-ink) 30%, transparent); }
+  .grille { display: flex; gap: 6px; }
+  .grille span { width: 5px; height: 23px; background: color-mix(in srgb, var(--shell-ink) 40%, transparent); border-radius: 2px; transform: skewX(-22deg); box-shadow: inset 0 1px 1px rgba(0,0,0,.3); }
+  .screen-bezel { flex: 1 1 auto; min-height: 0; background: var(--bezel); border-radius: 20px; padding: 9px; box-sizing: border-box; position: relative; z-index: 2; }
+  .nav-band { flex: 0 0 auto; height: 128px; display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 6px 0; position: relative; z-index: 4; }
+  .nav-item { display: flex; flex-direction: column; align-items: center; width: 64px; }
+  .nav-lbl { height: 16px; font: 400 11px var(--shell); letter-spacing: .5px; color: var(--silk); display: flex; align-items: center; }
+  .nav-lbl.big { font-size: 11px; }
+  .nav-btn { width: 54px; height: 54px; border-radius: 15px; background: var(--cream); border: none;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 1px 0 rgba(255,255,255,.85); }
+  .nav-btn.store { background: var(--gold); }
+  .nav-btn.collection { background: var(--accent); }
+  .nav-item.active .nav-btn { transform: translateY(3px); box-shadow: 0 1px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 2px 3px rgba(0,0,0,.18); }
+  .pip { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; background: var(--pip-off);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.25); }
+  .nav-item.active .pip { background: var(--accent); box-shadow: 0 0 9px 2.5px rgba(255,61,119,.85), inset 0 -1px 1px rgba(0,0,0,.25); }
+  .nav-band .nav-item:nth-child(2) .nav-lbl:first-child,
+  .nav-band .nav-item:nth-child(4) .nav-lbl:first-child { transform: translateY(-8px); }
+
+  /* ── shell colourways (the 5 §1.1 wraps — real token values) ── */
+  .shell-grape  { --plastic:#8a76e8; --plastic-hi:#9f8df2; --plastic-lo:#7460cc; --silk:#392c7a; --shell-ink:#2d2164; --screw-hi:#7d6cd8; --screw-lo:#5b49b4; --pip-off:#5e4cb8; }
+  .shell-sunset { --plastic:#ff9051; --plastic-hi:#ffa76f; --plastic-lo:#ea7437; --silk:#7c3a12; --shell-ink:#6b2f0c; --screw-hi:#f08148; --screw-lo:#c75e26; --pip-off:#c96a2e; }
+  .shell-pink   { --plastic:#ff8ab0; --plastic-hi:#ffa5c4; --plastic-lo:#e96d96; --silk:#8a2247; --shell-ink:#76183a; --screw-hi:#f07da6; --screw-lo:#c75880; --pip-off:#c0577f; }
+  .shell-carbon { --plastic:#3a3a42; --plastic-hi:#4a4a54; --plastic-lo:#2c2c33; --silk:#b9b9c6; --shell-ink:#0a0a0e; --screw-hi:#45454f; --screw-lo:#26262d; --pip-off:#16161c; }
+
+  /* ── screen themes (the 6 §1.1 themes — real token values) ── */
+  .scr-deepsea { --scr-bg:#0f2e2b; --scr-well:#173d38; --scr-tools:#0a1f1d; --scr-accent:#ffd23f; --scr-accent-ink:#3c2a09; --scr-dim:#84aaa2; --scr-soft:#bcd6cf; --scr-panel:rgba(255,255,255,.06); --scr-hairline:rgba(255,255,255,.08); --scr-grip:#3f655d; }
+
+  /* ── shared screen ── */
+  .screen { position: relative; height: 100%; border-radius: 13px; overflow: hidden; display: flex; flex-direction: column; background: var(--scr-bg); }
+  .bd-prev { flex: 1 1 auto; display: flex; flex-direction: column; gap: 8px; padding: 16px 13px; }
+  .bd-eye { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .bd-bars { display: flex; flex-direction: column; gap: 8px; }
+  .bd-bars i { display: block; height: 28px; background: var(--scr-panel); border: 1px solid var(--scr-hairline); }
+  .bd-bars i.tall { height: 74px; } .bd-bars i.acc { border-color: color-mix(in srgb, var(--scr-accent) 45%, transparent); }
+  .preview-strip { flex: 0 0 auto; display: flex; align-items: center; gap: 7px; padding: 7px 11px;
+    background: var(--gold); color: #3c2a09; font: 700 9px var(--pk); letter-spacing: 1px; }
+  .preview-strip .x { margin-left: auto; font: 700 10px var(--pk); letter-spacing: .5px; }
+
+  /* buttons / chrome */
+  .btn { display: inline-flex; align-items: center; gap: 6px; border: none; width: fit-content;
+    font: 700 11px var(--pk); letter-spacing: 1px; white-space: nowrap; cursor: default; }
+  .btn.buy { background: var(--gold); color: #3c2a09; padding: 9px 13px;
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--gold) 45%, #000), inset 0 1px 0 rgba(255,255,255,.5); }
+  .btn.act { background: var(--scr-accent); color: var(--scr-accent-ink); padding: 9px 13px; box-shadow: inset 0 1px 0 rgba(255,255,255,.45);
+    filter: drop-shadow(0 3px 0 color-mix(in srgb, var(--scr-accent) 45%, #000)); }
+  .btn.secondary { background: var(--cream); color: var(--navy); padding: 9px 13px;
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .btn.disabled { opacity: .4; box-shadow: 0 1px 0 color-mix(in srgb, var(--gold) 45%, #000); filter: none; }
+  .ccount { display: inline-flex; align-items: center; gap: 4px; background: var(--gold); color: #3c2a09;
+    border: none; padding: 5px 8px; font: 700 11px/1 var(--pk); letter-spacing: .5px;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--gold) 45%, #000), inset 0 1px 0 rgba(255,255,255,.5); }
+  .ccount svg { display: block; }
+  .tert { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
+  .tert.dim { color: var(--scr-dim); }
+  .price-chip { display: inline-flex; align-items: center; gap: 3px; background: var(--gold); color: #3c2a09;
+    font: 700 9px/1 var(--pk); padding: 3px 5px; white-space: nowrap; } .price-chip svg { display: block; }
+  .price-chip.big { font-size: 13px; padding: 4px 7px; gap: 4px; }
+  .tag-owned { display: inline-flex; align-items: center; gap: 3px; background: var(--cream); color: var(--navy);
+    font: 700 9px/1 var(--pk); letter-spacing: .5px; padding: 2.5px 5px; white-space: nowrap; }
+
+  /* ── the DRESSING ROOM (the diegetic frame) ── */
+  .room { position: relative; width: 404px; height: 884px; border-radius: 26px; overflow: hidden; box-sizing: border-box;
+    background: radial-gradient(125% 78% at 50% 16%, #4a3a5e 0%, #34263f 34%, #1f1530 64%, #160e24 100%);
+    border: 1px solid rgba(255,255,255,.06);
+    box-shadow: inset 0 1.5px 0 rgba(255,255,255,.06), 0 18px 40px rgba(10,8,24,.5);
+    display: flex; flex-direction: column; }
+  .room-hud { flex: 0 0 auto; display: flex; align-items: center; gap: 9px; padding: 13px 13px 8px; z-index: 6; }
+  .dkey { width: 30px; height: 30px; border: none; background: var(--scr-chip); color: var(--navy);
+    font: 700 13px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .hud-title { display: flex; flex-direction: column; gap: 2px; }
+  .hud-title .t { font: 700 15px/1 var(--pk); letter-spacing: 2.5px; color: #ffe7c2; text-shadow: 0 2px 0 rgba(0,0,0,.5); }
+  .hud-title .s { font: 700 8px/1 var(--pk); letter-spacing: 1.5px; color: #b79bb0; }
+  .room-hud .spacer { flex: 1 1 auto; }
+  .stage-room { flex: 1 1 auto; position: relative; min-height: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 4px; }
+  .spotlight { position: absolute; top: -70px; left: 50%; transform: translateX(-50%); width: 360px; height: 380px; pointer-events: none; z-index: 0;
+    background: radial-gradient(circle at 50% 42%, rgba(255,234,196,.17) 0%, rgba(255,214,150,.07) 36%, transparent 66%); }
+  .mirror { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); width: 250px; height: 470px; z-index: 0; border-radius: 130px 130px 0 0;
+    background: linear-gradient(180deg, rgba(255,240,214,.06), rgba(255,240,214,.015) 60%, transparent);
+    border: 1px solid rgba(255,238,210,.09); border-bottom: none; }
+  .device-on-stand { position: relative; z-index: 2; width: 234px; height: 514px; }
+  .dressed { position: absolute; left: 0; bottom: 0; transform: scale(.58); transform-origin: bottom left; filter: drop-shadow(0 16px 22px rgba(0,0,0,.5)); }
+  /* C4 detail inset (the keys-repel proof, unscaled + legible) + the transform readout */
+  .detail { position: absolute; top: 14px; right: 12px; width: 152px; z-index: 5;
+    background: rgba(20,14,30,.94); border: 1.5px solid var(--scr-accent); box-shadow: 0 12px 24px rgba(0,0,0,.55); }
+  .detail .dt-h { padding: 6px 8px; font: 700 8px/1 var(--pk); letter-spacing: 1px; color: var(--scr-accent); border-bottom: 1px solid var(--scr-hairline); }
+  .detail .dt-body { position: relative; height: 92px; display: flex; align-items: center; justify-content: center; }
+  .dt-key { position: relative; width: 48px; height: 48px; border-radius: 13px; background: var(--cream);
+    box-shadow: 0 4px 0 rgba(8,67,63,.55), inset 0 1px 0 rgba(255,255,255,.85); }
+  .dt-key svg { position: absolute; inset: 13px; width: 22px; height: 22px; }
+  .dt-decal { position: absolute; top: -9px; right: -11px; width: 26px; height: 26px; opacity: .55; filter: saturate(.5) drop-shadow(0 1px 1px rgba(0,0,0,.3)); }
+  .dt-decal svg { display: block; width: 100%; height: 100%; fill: #ff6f9d; }
+  .dt-slide { position: absolute; top: 2px; right: 16px; width: 20px; height: 2px; background: linear-gradient(90deg, transparent, #ff8ab0); }
+  .dt-cap { padding: 6px 8px; font: 700 7.5px/1.4 var(--pk); letter-spacing: .5px; color: #ff8ab0; text-align: center; border-top: 1px solid var(--scr-hairline); }
+  .read-chip { position: absolute; left: 12px; top: 14px; z-index: 5; background: rgba(18,15,36,.95); border: 1px solid var(--scr-accent);
+    padding: 5px 8px; font: 700 8.5px/1.5 var(--pk); letter-spacing: .5px; color: var(--scr-soft); }
+  .read-chip b { color: var(--scr-accent); }
+  /* the turntable the device stands on */
+  .turntable { position: relative; z-index: 1; width: 214px; height: 34px; margin-top: -10px;
+    background: radial-gradient(ellipse 100% 120% at 50% 0%, rgba(255,232,190,.16), rgba(255,210,150,.04) 55%, transparent 72%); }
+  .turntable .ring { position: absolute; left: 50%; top: 4px; transform: translateX(-50%); width: 188px; height: 22px; border-radius: 50%;
+    border: 1px solid rgba(255,234,196,.22); box-shadow: inset 0 1px 0 rgba(255,234,196,.14); }
+  .turntable .tick { position: absolute; top: 12px; width: 2px; height: 5px; background: rgba(255,234,196,.4); }
+  .turn-ctl { display: flex; align-items: center; justify-content: center; gap: 9px; margin-top: 7px; z-index: 2; }
+  .turn-key { width: 30px; height: 30px; border: none; background: var(--scr-chip); color: var(--navy);
+    font: 700 13px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .turn-angle { display: inline-flex; flex-direction: column; align-items: center; gap: 1px; min-width: 86px;
+    font: 700 9px/1 var(--pk); letter-spacing: 1.5px; color: #ffe7c2; }
+  .turn-angle small { font: 600 7.5px var(--pk); letter-spacing: 1px; color: #b79bb0; }
+
+  /* the WARDROBE rail (tools, warm-framed) */
+  .wardrobe { flex: 0 0 auto; background: linear-gradient(180deg, #251a33, #1c1428); border-top: 1px solid rgba(255,234,196,.12); padding: 9px 12px 12px; z-index: 5; }
+  .ward-h { display: flex; align-items: center; gap: 6px; padding: 0 1px 7px; font: 700 8.5px var(--pk); letter-spacing: 2px; color: #c8a9c0; }
+  .chips { display: flex; gap: 6px; padding-bottom: 9px; }
+  .chip-k { flex: 1 1 0; display: inline-flex; flex-direction: column; align-items: center; gap: 4px; padding: 7px 4px 6px;
+    background: var(--scr-chip); color: var(--navy); font: 700 9px/1 var(--pk); letter-spacing: 1px;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .chip-k .cpip { width: 5px; height: 5px; border-radius: 50%; background: color-mix(in srgb, var(--navy) 35%, transparent); }
+  .chip-k.on { transform: translateY(2px); box-shadow: 0 0 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 2px 3px rgba(0,0,0,.22); }
+  .chip-k.on .cpip { background: var(--accent); box-shadow: 0 0 6px 1.5px rgba(255,61,119,.75); }
+  .tray { display: flex; gap: 7px; overflow-x: auto; padding: 3px 1px 2px; scrollbar-width: none; }
+  .tray::-webkit-scrollbar { display: none; }
+  .tile { position: relative; flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .tile .sw { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.05); border: 1px solid rgba(255,234,196,.12); box-sizing: border-box; }
+  .tile.sel .sw { border: 1.5px solid var(--scr-accent); box-shadow: 0 0 8px rgba(255,159,67,.35); }
+  .tile .sw.dev { width: 28px; height: 60px; border-radius: 6px; border: none; padding: 3px;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.4), inset 0 -1px 0 rgba(0,0,0,.18); flex-direction: column; }
+  .tile .sw.dev .ds { flex: 1 1 auto; margin: 3px 2px 2px; background: var(--scr-bg); border: 2px solid var(--bezel); border-radius: 2px; }
+  .tile .sw.dev .dn { height: 6px; display: flex; gap: 2px; align-items: center; justify-content: center; }
+  .tile .sw.dev .dn i { width: 3px; height: 3px; border-radius: 1px; background: var(--cream); } .tile .sw.dev .dn i.y { background: var(--gold); }
+  .tile .sw.glyph svg { width: 28px; height: 28px; }
+  .tile .sw.theme { padding: 5px; flex-direction: column; gap: 3px; }
+  .tile .sw.theme i { display: block; height: 8px; width: 100%; }
+  .tile .nm { font: 700 8px var(--pk); letter-spacing: .5px; color: #d9c4d4; text-align: center; }
+  .tile .pc { position: absolute; top: -6px; right: -4px; }
+  .cur-ring { position: absolute; inset: -3px; border: 1.5px solid var(--gold); pointer-events: none; }
+
+  /* ── PlacedSticker (OQ-045) + TransformBox ── */
+  .placed { position: absolute; z-index: 3; pointer-events: none; filter: drop-shadow(0 1.5px 1.5px rgba(0,0,0,.4)); }
+  .placed svg { display: block; width: 100%; height: 100%; }
+  .placed.cream svg { fill: var(--cream); } .placed.gold svg { fill: var(--gold); } .placed.pink svg { fill: #ff6f9d; }
+  .tbox { position: absolute; z-index: 6; border: 1.5px solid var(--scr-accent); box-shadow: 0 0 11px rgba(255,159,67,.45); pointer-events: none; }
+  .tbox .h { position: absolute; width: 12px; height: 12px; background: var(--cream); border: 1.5px solid var(--scr-accent); box-sizing: border-box; }
+  .tbox .h.tl { left: -6px; top: -6px; } .tbox .h.tr { right: -6px; top: -6px; }
+  .tbox .h.bl { left: -6px; bottom: -6px; } .tbox .h.br { right: -6px; bottom: -6px; }
+  .tbox .rot { position: absolute; left: 50%; top: -26px; width: 1.5px; height: 22px; background: var(--scr-accent); transform: translateX(-50%); }
+  .tbox .rot::after { content: ""; position: absolute; left: 50%; top: -8px; width: 13px; height: 13px; border-radius: 50%;
+    background: var(--cream); border: 1.5px solid var(--scr-accent); transform: translateX(-50%); box-sizing: border-box; }
+  .tbox-read { position: absolute; z-index: 7; background: rgba(18,15,36,.95); border: 1px solid var(--scr-hairline);
+    padding: 4px 7px; font: 700 8.5px/1.4 var(--pk); letter-spacing: .5px; color: var(--scr-soft); white-space: nowrap; }
+
+  /* mini device (before→after) + admire filmstrip */
+  .swaprow { display: flex; align-items: center; justify-content: center; gap: 16px; z-index: 2; margin-bottom: 4px; }
+  .mini-dev { position: relative; width: 50px; height: 110px; border-radius: 8px; padding: 4px; box-sizing: border-box;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%);
+    display: flex; flex-direction: column; box-shadow: inset 0 1px 0 rgba(255,255,255,.4), inset 0 -1px 0 rgba(0,0,0,.18); }
+  .mini-dev .mscr { flex: 1 1 auto; margin: 5px 3px 4px; background: var(--scr-bg); border: 2px solid var(--bezel); border-radius: 3px; }
+  .mini-dev .mnav { height: 10px; display: flex; gap: 2.5px; align-items: center; justify-content: center; }
+  .mini-dev .mnav i { width: 4.5px; height: 4.5px; border-radius: 1.5px; background: var(--cream); } .mini-dev .mnav i.y { background: var(--gold); }
+  .mini-dev .msticker { position: absolute; z-index: 2; filter: drop-shadow(0 1px 1px rgba(0,0,0,.4)); } .mini-dev .msticker svg { display: block; width: 100%; height: 100%; fill: var(--cream); }
+  .ps-lbl { font: 700 8px var(--pk); letter-spacing: 1.5px; color: #b79bb0; text-align: center; margin-top: 5px; }
+  .ps-lbl.gold { color: var(--gold); }
+  .floor-note { display: flex; align-items: center; gap: 7px; margin: 0 14px; padding: 7px 9px; position: absolute; left: 0; right: 0; bottom: 10px; z-index: 4;
+    background: rgba(127,224,195,.1); border: 1px solid color-mix(in srgb, #7fe0c3 45%, transparent);
+    font: 700 8.5px/1.4 var(--pk); letter-spacing: .5px; color: #7fe0c3; }
+  .admire-note { position: absolute; left: 0; right: 0; bottom: 10px; z-index: 4; margin: 0 14px; padding: 7px 9px;
+    background: rgba(127,224,195,.1); border: 1px solid color-mix(in srgb, #7fe0c3 45%, transparent);
+    font: 700 8.5px/1.4 var(--pk); letter-spacing: .5px; color: #7fe0c3; }
+
+  /* ── ReconcileSheet (verbatim) ── */
+  .scrim { position: absolute; inset: 0; z-index: 9; background: rgba(13,11,30,.62); }
+  .reconcile { position: absolute; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--scr-tools);
+    border-top: 1px solid var(--scr-hairline); padding: 11px 13px 13px; }
+  .reconcile .rc-h { padding: 0 1px 7px; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .rc-row { display: flex; align-items: center; gap: 9px; padding: 8px 2px; border-top: 1px solid var(--scr-hairline); }
+  .rc-sw { flex: 0 0 auto; width: 34px; height: 34px; background: var(--scr-panel); border: 1px solid var(--scr-hairline); display: flex; align-items: center; justify-content: center; }
+  .rc-sw svg { width: 20px; height: 20px; }
+  .rc-name { font: 700 10px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .rc-type { font: 600 8.5px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .rc-x { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; }
+  .rc-rm { width: 22px; height: 22px; border: 1px solid var(--scr-hairline); background: var(--scr-panel); color: var(--scr-soft);
+    font: 700 10px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; }
+  .rc-total { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 9px 2px 0; font: 700 10px var(--pk); letter-spacing: 1.5px; color: var(--scr-soft); }
+  .short-strip { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 8px 11px;
+    background: rgba(227,65,78,.1); border: 1px solid color-mix(in srgb, var(--alert) 55%, transparent);
+    font: 700 10px var(--pk); letter-spacing: 1px; color: #ff8a93; }
+  .packs { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 10px; }
+  .pack { position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 9px 6px 8px; background: var(--scr-well); border: 1px solid color-mix(in srgb, var(--gold) 38%, transparent); }
+  .pack .amt { display: inline-flex; align-items: center; gap: 4px; font: 700 15px/1 var(--pk); color: var(--gold); letter-spacing: 1px; text-shadow: 0 0 9px rgba(255,210,63,.3); }
+  .pack .val { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); } .pack .val b { color: #58e0ff; font-weight: 700; }
+  .buybar { display: flex; align-items: center; gap: 10px; margin-top: 11px; padding: 10px 11px; background: var(--scr-bg); border: 1px solid var(--scr-hairline); }
+  .buybar .bb-have { font: 600 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); white-space: nowrap; } .buybar .bb-have b { color: var(--scr-soft); }
+  .buybar .spacer { flex: 1 1 auto; }
+  .rc-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="ic-pix" viewBox="0 0 40 40">
+      <path d="M20 5 L18 5 L18 9 L14 9 L14 13 L10 13 L10 17 L6 17 L6 20 L20 20 Z" fill="#ffe9a3"/>
+      <path d="M20 5 L22 5 L22 9 L26 9 L26 13 L30 13 L30 17 L34 17 L34 20 L20 20 Z" fill="#ffd23f"/>
+      <path d="M6 20 L6 23 L10 23 L10 27 L14 27 L14 31 L18 31 L18 35 L20 35 L20 20 Z" fill="#f0bf32"/>
+      <path d="M34 20 L34 23 L30 23 L30 27 L26 27 L26 31 L22 31 L22 35 L20 35 L20 20 Z" fill="#c8922a"/>
+      <rect x="15" y="11" width="3.5" height="3.5" fill="#fff"/><rect x="23" y="13" width="4" height="4" fill="#58e0ff"/>
+      <rect x="27" y="17" width="4" height="4" fill="#4a90ff"/><rect x="14" y="24" width="3.5" height="3.5" fill="#4a90ff"/>
+      <path d="M18 5 L22 5 L22 9 L26 9 L26 13 L30 13 L30 17 L34 17 L34 23 L30 23 L30 27 L26 27 L26 31 L22 31 L22 35 L18 35 L18 31 L14 31 L14 27 L10 27 L10 23 L6 23 L6 17 L10 17 L10 13 L14 13 L14 9 L18 9 Z" fill="none" stroke="#3c2a09" stroke-width="2.2"/>
+    </symbol>
+    <symbol id="gl-star" viewBox="0 0 20 20"><path d="M10 1 L12.4 7 L19 7.6 L14 12 L15.6 19 L10 15.2 L4.4 19 L6 12 L1 7.6 L7.6 7 Z"/></symbol>
+    <symbol id="gl-bolt" viewBox="0 0 20 20"><path d="M12 1 L4.5 11 L9 11 L8 19 L15.5 9 L11 9 Z"/></symbol>
+    <symbol id="gl-heart" viewBox="0 0 20 20"><path d="M10 18 C3 12 1 8 3.5 5 C5.5 2.8 9 3.5 10 6 C11 3.5 14.5 2.8 16.5 5 C19 8 17 12 10 18 Z"/></symbol>
+    <symbol id="gl-crown" viewBox="0 0 20 20"><path d="M2.5 16 L2.5 6 L7 10 L10 3 L13 10 L17.5 6 L17.5 16 Z"/></symbol>
+    <symbol id="gl-diamond" viewBox="0 0 20 20"><path d="M10 1 L17.5 10 L10 19 L2.5 10 Z"/></symbol>
+    <symbol id="gl-moon" viewBox="0 0 20 20"><path d="M12.5 2 A8.5 8.5 0 1 0 18 13.5 A7 7 0 0 1 12.5 2 Z"/></symbol>
+    <symbol id="gl-ring" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2 a8 8 0 1 0 .02 0 Z M10 5.6 a4.4 4.4 0 1 1 -.02 0 Z"/></symbol>
+    <symbol id="gl-invader" viewBox="0 0 20 20"><path d="M5 4 L7 4 L7 6 L13 6 L13 4 L15 4 L15 6 L17 6 L17 12 L15 12 L15 14 L13 14 L13 16 L11 16 L11 14 L9 14 L9 16 L7 16 L7 14 L5 14 L5 12 L3 12 L3 6 L5 6 Z M7 8 L7 10 L9 10 L9 8 Z M11 8 L11 10 L13 10 L13 8 Z" fill-rule="evenodd"/></symbol>
+  </defs>
+</svg>
+
+<div class="canvas">
+  <div class="canvas-head">
+    <h1>Device editor &mdash; Draft C &ldquo;Dressing room&rdquo; (metaphor pole)</h1>
+    <p>A <b>diegetic</b> take (the C-line lineage: styler-workbench &middot; canvas-press &middot;
+    discover-arcade): your device stands on a <b>turntable under a spotlight</b> and you <b>dress it</b> &mdash;
+    spin the stand to reach a face, pull <b>wraps · decals · moods</b> from the wardrobe, watch the screen
+    light up. The metaphor makes the hard rule physical: <b>the 5 nav keys are raised hardware &mdash; decals
+    slide off them</b> (DEV-03/F-04). Six panels: dressing-room entry &middot; try-on a wrap &middot;
+    theme/mood &middot; dress it (place/scale/rotate + the keys repel) &middot; the dressed device, turned to
+    admire (OQ-045) &middot; premium-reconcile. The <b>OQ-045 on-shell preview is the dressed mannequin</b> you
+    rotate. Composed from the §1.5 catalog + tokens verbatim (5 colourways · 6 themes); PIXELS /
+    <code>ReconcileSheet</code> / <code>PreviewStrip</code> reused; <code>TransformBox</code> adapts
+    <code>sel-ring</code>. <i>Pre-gate draft &mdash; lifecycle deferred to converge. Values illustrative
+    (OQ-002/OQ-011).</i></p>
+  </div>
+
+  <div class="stage-label">Into the dressing room &amp; trying on a wrap <small>C1 the stand under the spotlight (turntable + wardrobe) &middot; C2 try on CARBON (one body, OQ-042)</small></div>
+  <div class="stage">
+
+    <!-- ═══ C1 · Dressing room entry ═══ -->
+    <div class="take">
+      <div class="artboard-label">C1 &middot; Dressing room &mdash; the device on its turntable</div>
+      <div class="room" data-screen-label="Device C · C1 — Dressing room entry">
+        <div class="room-hud">
+          <button class="dkey">&#9666;</button>
+          <div class="hud-title"><span class="t">DRESSING ROOM</span><span class="s">YOUR DEVICE &middot; THE WARDROBE</span></div>
+          <span class="spacer"></span>
+          <button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>27</button>
+        </div>
+        <div class="stage-room">
+          <div class="spotlight"></div><div class="mirror"></div>
+          <div class="device-on-stand">
+            <div class="dressed">
+              <div class="device">
+                <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+                <div class="placed cream" style="left:150px; top:18px; width:30px; height:30px;"><svg viewBox="0 0 20 20"><use href="#gl-star"/></svg></div>
+                <div class="placed gold" style="left:18px; top:300px; width:22px; height:22px; transform:rotate(-12deg);"><svg viewBox="0 0 20 20"><use href="#gl-bolt"/></svg></div>
+                <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+                <div class="screen-bezel"><div class="screen"><div class="bd-prev"><span class="bd-eye">YOUR SCREEN &middot; LIVE</span><div class="bd-bars"><i class="tall"></i><i></i><i></i><i class="acc"></i></div></div></div></div>
+                <div class="nav-band">
+                  <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+                  <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+                  <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+                  <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+                  <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="turntable"><div class="ring"></div><span class="tick" style="left:24px;"></span><span class="tick" style="left:104px;"></span><span class="tick" style="right:24px;"></span></div>
+          <div class="turn-ctl">
+            <button class="turn-key">&#8634;</button>
+            <div class="turn-angle">FRONT<small>SPIN THE STAND</small></div>
+            <button class="turn-key">&#8635;</button>
+          </div>
+        </div>
+        <div class="wardrobe">
+          <div class="chips">
+            <span class="chip-k on">SHELL<span class="cpip"></span></span>
+            <span class="chip-k">THEME<span class="cpip"></span></span>
+            <span class="chip-k">STICKERS<span class="cpip"></span></span>
+          </div>
+          <div class="ward-h">THE WARDROBE &mdash; WRAPS (DEV-02)</div>
+          <div class="tray">
+            <div class="tile sel"><div class="sw dev"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">TEAL</span></div>
+            <div class="tile"><div class="sw dev shell-grape"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">GRAPE</span><span class="pc"><span class="tag-owned">&#10003;</span></span></div>
+            <div class="tile"><div class="sw dev shell-carbon"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">CARBON</span><span class="pc"><span class="tag-owned">&#10003;</span></span></div>
+            <div class="tile"><div class="sw dev shell-sunset"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">SUNSET</span><span class="pc"><span class="price-chip">6 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></span></div>
+            <div class="tile"><div class="sw dev shell-pink"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">PINK</span><span class="pc"><span class="price-chip">6 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>C1 &mdash; Dressing room <em>(the diegetic take)</em></h3>
+        <p>From Profile's MY DEVICE strip, your device stands on a <b>turntable under a warm spotlight</b>
+        (the C-line metaphor pole). You <b>spin the stand</b> (◌ rotate · the angle reads FRONT) to reach any
+        face, and dress it from <b>the wardrobe</b> below &mdash; SHELL wraps first (the 5 §1.1 colourways).
+        The HUD carries ◂ DEVICE + the PIXELS counter. The room is the diegetic frame; legibility lives where
+        it must &mdash; the device's own screen and its raised keys stay perfectly readable in the light.</p>
+      </div>
+    </div>
+
+    <!-- ═══ C2 · Try on a wrap ═══ -->
+    <div class="take">
+      <div class="artboard-label">C2 &middot; Try on a wrap &mdash; same body, new outfit (OQ-042)</div>
+      <div class="room" data-screen-label="Device C · C2 — Try on CARBON">
+        <div class="room-hud">
+          <button class="dkey">&#9666;</button>
+          <div class="hud-title"><span class="t">DRESSING ROOM</span><span class="s">TRYING ON &middot; CARBON WRAP</span></div>
+          <span class="spacer"></span>
+          <button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>27</button>
+        </div>
+        <div class="stage-room">
+          <div class="spotlight"></div><div class="mirror"></div>
+          <div class="swaprow">
+            <div><div class="mini-dev"><div class="mscr"></div><div class="mnav"><i class="y"></i><i></i><i></i><i></i><i></i></div><span class="msticker" style="left:27px; top:6px; width:11px; height:11px;"><svg viewBox="0 0 20 20"><use href="#gl-star"/></svg></span></div><div class="ps-lbl">WAS &middot; TEAL</div></div>
+            <span style="color:var(--scr-accent); font:700 14px var(--pk);">&#10142;</span>
+            <div><div class="mini-dev shell-carbon"><div class="mscr"></div><div class="mnav"><i class="y"></i><i></i><i></i><i></i><i></i></div><span class="msticker" style="left:27px; top:6px; width:11px; height:11px;"><svg viewBox="0 0 20 20"><use href="#gl-star"/></svg></span></div><div class="ps-lbl gold">NOW &middot; CARBON</div></div>
+          </div>
+          <div class="device-on-stand">
+            <div class="dressed">
+              <div class="device shell-carbon">
+                <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+                <div class="placed cream" style="left:150px; top:18px; width:30px; height:30px;"><svg viewBox="0 0 20 20"><use href="#gl-star"/></svg></div>
+                <div class="placed gold" style="left:18px; top:300px; width:22px; height:22px; transform:rotate(-12deg);"><svg viewBox="0 0 20 20"><use href="#gl-bolt"/></svg></div>
+                <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+                <div class="screen-bezel"><div class="screen"><div class="bd-prev"><span class="bd-eye">YOUR SCREEN &middot; LIVE</span><div class="bd-bars"><i class="tall"></i><i></i><i></i><i class="acc"></i></div></div></div></div>
+                <div class="nav-band">
+                  <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+                  <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+                  <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+                  <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+                  <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="turntable"><div class="ring"></div><span class="tick" style="left:24px;"></span><span class="tick" style="left:104px;"></span><span class="tick" style="right:24px;"></span></div>
+          <div class="turn-ctl"><button class="turn-key">&#8634;</button><div class="turn-angle">FRONT<small>STICKERS RIDE ALONG</small></div><button class="turn-key">&#8635;</button></div>
+        </div>
+        <div class="wardrobe">
+          <div class="chips">
+            <span class="chip-k on">SHELL<span class="cpip"></span></span>
+            <span class="chip-k">THEME<span class="cpip"></span></span>
+            <span class="chip-k">STICKERS<span class="cpip"></span></span>
+          </div>
+          <div class="ward-h">THE WARDROBE &mdash; ONE BODY, MANY WRAPS (OQ-042 &middot; DEV-03 DEFAULT ALWAYS RENDERS)</div>
+          <div class="tray">
+            <div class="tile"><div class="sw dev"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">TEAL</span><span class="pc"><span class="tag-owned">&#10003;</span></span></div>
+            <div class="tile"><div class="sw dev shell-grape"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">GRAPE</span><span class="pc"><span class="tag-owned">&#10003;</span></span></div>
+            <div class="tile sel"><div class="sw dev shell-carbon"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">CARBON</span><span class="cur-ring"></span></div>
+            <div class="tile"><div class="sw dev shell-sunset"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">SUNSET</span><span class="pc"><span class="price-chip">6 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></span></div>
+            <div class="tile"><div class="sw dev shell-pink"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">PINK</span><span class="pc"><span class="price-chip">6 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>C2 &mdash; Try on a wrap <em>(one body, many outfits — OQ-042)</em></h3>
+        <p>Pull CARBON from the wardrobe and the device <b>tries it on</b> &mdash; same pocket body, new
+        outfit, the stickers and theme riding along (decision 0017; DEV-02/03). The before→after pair frames
+        it as <i>trying on clothes</i>, which is exactly the OQ-042 mental model: <b>one handheld, many
+        wraps</b>. A free default always renders (DEV-03) &mdash; the mannequin is never bare.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="stage-label">Mood &amp; dressing it <small>C3 the screen lights with a mood/theme (DEV-04 floor) &middot; C4 dress it: place/scale/rotate + the keys repel decals (DEV-03/F-04)</small></div>
+  <div class="stage">
+
+    <!-- ═══ C3 · Theme / mood ═══ -->
+    <div class="take">
+      <div class="artboard-label">C3 &middot; Mood &mdash; the screen lights up (DEV-04 floor held)</div>
+      <div class="room" data-screen-label="Device C · C3 — Theme / mood (deep sea)">
+        <div class="room-hud">
+          <button class="dkey">&#9666;</button>
+          <div class="hud-title"><span class="t">DRESSING ROOM</span><span class="s">MOOD &middot; DEEP SEA</span></div>
+          <span class="spacer"></span>
+          <button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>27</button>
+        </div>
+        <div class="stage-room">
+          <div class="spotlight" style="background:radial-gradient(circle at 50% 42%, rgba(63,200,210,.16) 0%, rgba(40,150,160,.06) 36%, transparent 66%);"></div><div class="mirror"></div>
+          <div class="device-on-stand">
+            <div class="dressed">
+              <div class="device">
+                <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+                <div class="placed cream" style="left:150px; top:18px; width:30px; height:30px;"><svg viewBox="0 0 20 20"><use href="#gl-star"/></svg></div>
+                <div class="placed gold" style="left:18px; top:300px; width:22px; height:22px; transform:rotate(-12deg);"><svg viewBox="0 0 20 20"><use href="#gl-bolt"/></svg></div>
+                <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+                <div class="screen-bezel"><div class="screen scr-deepsea">
+                  <div class="preview-strip">&#9686; PREVIEWING &mdash; DEEP SEA<span class="x">EXIT &#10005;</span></div>
+                  <div class="bd-prev"><span class="bd-eye">YOUR WHOLE SCREEN, RE-THEMED</span><div class="bd-bars"><i class="tall"></i><i></i><i></i><i class="acc"></i></div></div>
+                </div></div>
+                <div class="nav-band">
+                  <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+                  <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+                  <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+                  <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+                  <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="turntable"><div class="ring"></div><span class="tick" style="left:24px;"></span><span class="tick" style="left:104px;"></span><span class="tick" style="right:24px;"></span></div>
+          <div class="floor-note">&#9745; LEGIBILITY FLOOR HELD (DEV-04) &middot; A MOOD DRESSES THE SCREEN, NOT THE BODY &mdash; THE SHELL STAYS TEAL (F-04)</div>
+        </div>
+        <div class="wardrobe">
+          <div class="chips">
+            <span class="chip-k">SHELL<span class="cpip"></span></span>
+            <span class="chip-k on">THEME<span class="cpip"></span></span>
+            <span class="chip-k">STICKERS<span class="cpip"></span></span>
+          </div>
+          <div class="ward-h">THE WARDROBE &mdash; MOODS (DEV-04 &middot; FREE BASELINE + PREMIUM)</div>
+          <div class="tray">
+            <div class="tile"><div class="sw theme" style="background:#232045;"><i style="background:#2c2950;"></i><i style="background:#ff9f43;"></i><i style="background:#1a1733;"></i></div><span class="nm">MIDNIGHT</span><span class="pc"><span class="tag-owned">&#10003;</span></span></div>
+            <div class="tile sel"><div class="sw theme" style="background:#0f2e2b;"><i style="background:#173d38;"></i><i style="background:#ffd23f;"></i><i style="background:#0a1f1d;"></i></div><span class="nm">DEEP SEA</span><span class="pc"><span class="price-chip">4 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></span></div>
+            <div class="tile"><div class="sw theme" style="background:#2f1733;"><i style="background:#3d2042;"></i><i style="background:#ff3d77;"></i><i style="background:#1f0e23;"></i></div><span class="nm">BERRY</span><span class="pc"><span class="price-chip">4 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></span></div>
+            <div class="tile"><div class="sw theme" style="background:#e6e1f4;"><i style="background:#f7f5fc;"></i><i style="background:#6c4fd8;"></i><i style="background:#d2c9ec;"></i></div><span class="nm">LILAC</span><span class="pc"><span class="price-chip">4 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></span></div>
+          </div>
+          <div style="display:flex; align-items:center; gap:9px; margin-top:10px; padding:9px 11px; background:rgba(255,255,255,.04); border:1px solid rgba(255,234,196,.12);">
+            <span style="font:600 9px var(--pk); letter-spacing:1px; color:#b79bb0;">PREVIEW FREE &mdash; <b style="color:#e7d6e3;">KEEP WITH BUY</b></span>
+            <span style="flex:1 1 auto;"></span>
+            <button class="btn buy">HOLD TO BUY &middot; 4 PX</button>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>C3 &mdash; Mood <em>(the screen lights up; the body doesn't)</em></h3>
+        <p>A theme is the device's <b>mood</b> &mdash; pick DEEP SEA and the <b>whole screen lights up live</b>
+        (the <code>PreviewStrip</code>; the spotlight even warms to match), under preview-then-acquire (HOLD TO
+        BUY, COSM-03). DEV-04 holds visibly: the <b>legibility floor</b> (the green note) and the <b>shell
+        stays teal plastic</b> &mdash; a mood dresses the screen, never the body or the keys.</p>
+      </div>
+    </div>
+
+    <!-- ═══ C4 · Dress it — place/scale/rotate + the keys repel ═══ -->
+    <div class="take">
+      <div class="artboard-label">C4 &middot; Dress it &mdash; place/scale/rotate + the keys repel decals</div>
+      <div class="room" data-screen-label="Device C · C4 — Dress it (place/scale/rotate)">
+        <div class="room-hud">
+          <button class="dkey">&#9666;</button>
+          <div class="hud-title"><span class="t">DRESSING ROOM</span><span class="s">DECALS &middot; ARCADE GLYPHS</span></div>
+          <span class="spacer"></span>
+          <button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>27</button>
+        </div>
+        <div class="stage-room">
+          <div class="spotlight"></div><div class="mirror"></div>
+          <div class="read-chip"><b>STAR</b> &middot; SCALE 124%<br/>ROT 15&deg; &middot; DRAG HANDLES</div>
+          <div class="detail">
+            <div class="dt-h">&#9678; DETAIL &mdash; THE KEYS</div>
+            <div class="dt-body">
+              <div class="dt-key"><svg viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round" fill="none"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/></svg>
+                <span class="dt-slide"></span>
+                <span class="dt-decal"><svg viewBox="0 0 20 20"><use href="#gl-heart"/></svg></span>
+              </div>
+            </div>
+            <div class="dt-cap">&#8856; HARDWARE &mdash; DECALS SLIDE OFF (DEV-03/F-04)</div>
+          </div>
+          <div class="device-on-stand">
+            <div class="dressed">
+              <div class="device">
+                <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+                <!-- the active decal being dressed, with the TransformBox -->
+                <div class="placed cream" style="left:60px; top:14px; width:40px; height:40px; transform:rotate(15deg);"><svg viewBox="0 0 20 20"><use href="#gl-star"/></svg></div>
+                <div class="tbox" style="left:58px; top:12px; width:44px; height:44px; transform:rotate(15deg);"><span class="h tl"></span><span class="h tr"></span><span class="h bl"></span><span class="h br"></span><span class="rot"></span></div>
+                <div class="placed gold" style="left:18px; top:300px; width:22px; height:22px; transform:rotate(-12deg);"><svg viewBox="0 0 20 20"><use href="#gl-bolt"/></svg></div>
+                <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+                <div class="screen-bezel"><div class="screen"><div class="bd-prev"><span class="bd-eye">YOUR SCREEN &middot; LIVE</span><div class="bd-bars"><i class="tall"></i><i></i><i></i></div></div></div></div>
+                <div class="nav-band">
+                  <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+                  <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+                  <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+                  <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+                  <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="turntable"><div class="ring"></div><span class="tick" style="left:24px;"></span><span class="tick" style="left:104px;"></span><span class="tick" style="right:24px;"></span></div>
+          <div class="turn-ctl"><button class="turn-key">&#8634;</button><div class="turn-angle">FRONT<small>SPIN TO REACH A FACE</small></div><button class="turn-key">&#8635;</button></div>
+        </div>
+        <div class="wardrobe">
+          <div class="chips">
+            <span class="chip-k">SHELL<span class="cpip"></span></span>
+            <span class="chip-k">THEME<span class="cpip"></span></span>
+            <span class="chip-k on">STICKERS<span class="cpip"></span></span>
+          </div>
+          <div class="ward-h">THE WARDROBE &mdash; DECALS (FREE BASELINE, COSM-02)</div>
+          <div class="tray">
+            <div class="tile sel"><div class="sw glyph"><svg viewBox="0 0 20 20" style="fill:#d9c4d4;"><use href="#gl-star"/></svg></div><span class="nm">STAR</span></div>
+            <div class="tile"><div class="sw glyph"><svg viewBox="0 0 20 20" style="fill:#d9c4d4;"><use href="#gl-bolt"/></svg></div><span class="nm">BOLT</span></div>
+            <div class="tile"><div class="sw glyph"><svg viewBox="0 0 20 20" style="fill:#d9c4d4;"><use href="#gl-heart"/></svg></div><span class="nm">HEART</span></div>
+            <div class="tile"><div class="sw glyph"><svg viewBox="0 0 20 20" style="fill:#d9c4d4;"><use href="#gl-diamond"/></svg></div><span class="nm">GEM</span></div>
+            <div class="tile"><div class="sw glyph"><svg viewBox="0 0 20 20" style="fill:#d9c4d4;"><use href="#gl-moon"/></svg></div><span class="nm">MOON</span></div>
+            <div class="tile"><div class="sw glyph"><svg viewBox="0 0 20 20" style="fill:#d9c4d4;"><use href="#gl-ring"/></svg></div><span class="nm">RING</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>C4 &mdash; Dress it <em>(the thesis: dress a body you can turn)</em></h3>
+        <p>Pull a decal from the wardrobe onto the body; it wears the <code>TransformBox</code> &mdash; ring +
+        corner scale handles + rotate stem + the SCALE 124% · ROT 15&deg; readout (the device-side
+        <code>sel-ring</code>). <b>Spin the stand</b> to reach any face. The metaphor makes the hard rule
+        physical: try to stick a decal on a key and it <b>slides right off</b> &mdash; <b>the 5 nav keys are
+        raised hardware</b> (⊘ DECALS SLIDE OFF), the keep-clear boundary you can <i>feel</i> (DEV-03/F-04).</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="stage-label">Admire &amp; commit <small>C5 the dressed device, turned to admire (OQ-045 on-shell preview) &middot; C6 premium-reconcile (ReconcileSheet + the bridge)</small></div>
+  <div class="stage">
+
+    <!-- ═══ C5 · The dressed device — turned to admire (OQ-045) ═══ -->
+    <div class="take">
+      <div class="artboard-label">C5 &middot; Turned to admire &mdash; the dressed device (OQ-045)</div>
+      <div class="room" data-screen-label="Device C · C5 — Turned to admire (OQ-045)">
+        <div class="room-hud">
+          <button class="dkey">&#9666;</button>
+          <div class="hud-title"><span class="t">DRESSING ROOM</span><span class="s">DRESSED &middot; ADMIRE</span></div>
+          <span class="spacer"></span>
+          <button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>27</button>
+        </div>
+        <div class="stage-room">
+          <div class="spotlight" style="background:radial-gradient(circle at 50% 42%, rgba(255,234,196,.24) 0%, rgba(255,214,150,.1) 36%, transparent 68%);"></div><div class="mirror"></div>
+          <div class="device-on-stand">
+            <div class="dressed">
+              <div class="device">
+                <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+                <div class="placed cream" style="left:58px; top:13px; width:38px; height:38px; transform:rotate(15deg);"><svg viewBox="0 0 20 20"><use href="#gl-star"/></svg></div>
+                <div class="placed gold" style="left:300px; top:16px; width:26px; height:26px; transform:rotate(8deg);"><svg viewBox="0 0 20 20"><use href="#gl-crown"/></svg></div>
+                <div class="placed pink" style="left:17px; top:250px; width:22px; height:22px; transform:rotate(-14deg);"><svg viewBox="0 0 20 20"><use href="#gl-bolt"/></svg></div>
+                <div class="placed cream" style="left:368px; top:430px; width:20px; height:20px; transform:rotate(10deg);"><svg viewBox="0 0 20 20"><use href="#gl-diamond"/></svg></div>
+                <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+                <div class="screen-bezel"><div class="screen"><div class="bd-prev"><span class="bd-eye">YOUR SCREEN &middot; LIVE</span><div class="bd-bars"><i class="tall"></i><i></i><i></i><i class="acc"></i></div></div></div></div>
+                <div class="nav-band">
+                  <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+                  <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+                  <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+                  <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+                  <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="turntable"><div class="ring"></div><span class="tick" style="left:24px;"></span><span class="tick" style="left:104px;"></span><span class="tick" style="right:24px;"></span></div>
+          <div class="turn-ctl"><button class="turn-key">&#8634;</button><div class="turn-angle">FRONT<small>STEP BACK &amp; ADMIRE</small></div><button class="turn-key">&#8635;</button></div>
+          <div class="admire-note">&#9745; OQ-045 CLOSED &mdash; THE FULLY-DRESSED DEVICE, EVERY DECAL ON THE REAL SHELL, NAV LEGIBLE (DEV-03)</div>
+        </div>
+        <div class="wardrobe">
+          <div style="display:flex; align-items:center; gap:9px;">
+            <span style="font:600 9px var(--pk); letter-spacing:1px; color:#b79bb0;">SAVED LIVE &mdash; <b style="color:#e7d6e3;">PERSONAL ONLY, NEVER PUBLISHED</b></span>
+            <span style="flex:1 1 auto;"></span>
+            <button class="btn act">&#9666; KEEP DRESSING</button>
+            <button class="btn secondary">DONE</button>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>C5 &mdash; Step back &amp; admire <em>(OQ-045, the dressing-room way)</em></h3>
+        <p>Step back under the brightened spotlight: the <b>fully-dressed device on its stand</b> is C's
+        on-shell preview (OQ-045 closed) &mdash; every decal sits on the real shell where you placed it, scaled
+        and rotated, catching the light, and <b>the nav keys stay perfectly legible beneath the decoration</b>
+        (DEV-03). Spin the stand any time to check a face; it's <b>personal only</b> &mdash; saved live to
+        <code>stickerComposition</code>, never published or adopted. KEEP DRESSING returns to the wardrobe.</p>
+      </div>
+    </div>
+
+    <!-- ═══ C6 · Premium reconcile ═══ -->
+    <div class="take">
+      <div class="artboard-label">C6 &middot; Premium reconcile &mdash; ReconcileSheet over the room</div>
+      <div class="room" data-screen-label="Device C · C6 — Premium reconcile">
+        <div class="room-hud">
+          <button class="dkey">&#9666;</button>
+          <div class="hud-title"><span class="t">DRESSING ROOM</span><span class="s">KEEP &middot; PREMIUM PICKS</span></div>
+          <span class="spacer"></span>
+          <button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button>
+        </div>
+        <div class="stage-room">
+          <div class="spotlight"></div><div class="mirror"></div>
+          <div class="device-on-stand" style="filter:brightness(.55);">
+            <div class="dressed">
+              <div class="device">
+                <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+                <div class="placed cream" style="left:58px; top:13px; width:38px; height:38px; transform:rotate(15deg);"><svg viewBox="0 0 20 20"><use href="#gl-invader"/></svg></div>
+                <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+                <div class="screen-bezel"><div class="screen"><div class="bd-prev"><span class="bd-eye">YOUR SCREEN &middot; LIVE</span><div class="bd-bars"><i class="tall"></i><i></i><i></i></div></div></div></div>
+                <div class="nav-band">
+                  <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+                  <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+                  <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+                  <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+                  <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="turntable"><div class="ring"></div></div>
+        </div>
+        <div class="scrim"></div>
+        <div class="reconcile">
+          <div class="rc-h">BEFORE IT'S YOURS &mdash; 2 PREMIUM PICKS ON YOUR DEVICE (COSM-03)</div>
+          <div class="rc-row">
+            <span class="rc-sw"><svg viewBox="0 0 20 20" style="fill:var(--scr-accent);"><use href="#gl-invader"/></svg></span>
+            <span><span class="rc-name">NEON ZOO</span><br/><span class="rc-type">SHELL STICKER PACK &middot; 8 GLYPHS</span></span>
+            <span class="rc-x"><span class="price-chip">6 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><button class="rc-rm">&#10005;</button></span>
+          </div>
+          <div class="rc-row">
+            <span class="rc-sw"><span style="width:18px;height:18px;background:#0f2e2b;border:1px solid #ffd23f;display:block;"></span></span>
+            <span><span class="rc-name">DEEP SEA</span><br/><span class="rc-type">SCREEN THEME &middot; MOOD</span></span>
+            <span class="rc-x"><span class="price-chip">4 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><button class="rc-rm">&#10005;</button></span>
+          </div>
+          <div class="rc-total">TOTAL <span class="price-chip big">10 <svg width="12" height="12" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></div>
+          <div class="short-strip">&#9888; SHORT BY 5 PX &mdash; YOU HAVE 5</div>
+          <div class="packs">
+            <div class="pack"><span class="amt">+30 <svg width="13" height="13" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="val">10.0 PX / $</span><button class="btn secondary" style="padding:7px 10px; font-size:10px;">$2.99</button></div>
+            <div class="pack"><span class="amt">+80 <svg width="13" height="13" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="val"><b>+14% BETTER</b></span><button class="btn secondary" style="padding:7px 10px; font-size:10px;">$6.99</button></div>
+          </div>
+          <div class="buybar">
+            <div style="display:flex;flex-direction:column;gap:2px;"><span class="bb-have">YOU HAVE <b>5 PX</b></span><span class="bb-have" style="color:var(--scr-grip);">TOP UP TO ARM</span></div>
+            <span class="spacer"></span>
+            <button class="btn buy disabled">HOLD TO ACQUIRE ALL &middot; 10 PX</button>
+          </div>
+          <div class="rc-foot">
+            <a class="tert" href="#">REMOVE ALL PREMIUM &mdash; KEEP IT FREE</a>
+            <a class="tert dim" href="#">CANCEL</a>
+          </div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>C6 &mdash; Premium reconcile <em>(the Store's grammar, in the room)</em></h3>
+        <p>KEEP with premiums live (a <b>NEON ZOO</b> pack + the <b>DEEP SEA</b> mood) dims the room and raises
+        the <code>ReconcileSheet</code> &mdash; the same COSM-03/CARD-13 keep-gate as the Styler and Store:
+        per-item ✕, TOTAL, the <b>short-by-N strip</b>, the <code>PackTile</code> bridge at intent (dollars
+        only on the white keycap), <b>HOLD TO ACQUIRE ALL</b>, and REMOVE ALL PREMIUM as the no-spend exit.
+        Rides <code>POST /cosmetics/acquire-batch</code>.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
