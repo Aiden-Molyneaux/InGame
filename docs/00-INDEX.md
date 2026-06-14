@@ -16,12 +16,12 @@ truth** for its concern. Other documents *reference* that truth by ID — they n
 | Document | Owns the truth for | Authored / edited by | Consumed by | Status |
 |---|---|---|---|---|
 | `00-INDEX.md` (this file) | Process, ID scheme, change protocol | Claude Code | Everyone | **Active** |
-| `spec/product-spec.md` | Behavior, data model, rules, economy — *what the app does* | Claude Code | Design, Planning | **v0.21 — draft** |
-| `spec/api-contract.md` | Endpoint + payload shapes — the **frontend↔backend seam** | Claude Code | Design, Planning | **v0.20 — draft** |
+| `spec/product-spec.md` | Behavior, data model, rules, economy — *what the app does* | Claude Code | Design, Planning | **v0.22 — draft** |
+| `spec/api-contract.md` | Endpoint + payload shapes — the **frontend↔backend seam** | Claude Code | Design, Planning | **v0.22 — draft** |
 | `spec/testing-strategy.md` | How we test — layers, tooling, rigor, CI | Claude Code | Planning, Implementation | **v0.1** |
 | `design/design-process.md` | How Claude Design works the brief — phases + reuse mandate | Claude Code → read by Claude Design | Claude Design | **Active** |
-| `design/ui-design-requirements.md` | What each screen must let users *do* (derived from spec) | Claude Code → handed to Claude Design | Claude Design | **v0.16 — all screens specified** |
-| `design/design-spec.md` | Screens, flows, components, visuals — *how you touch it* | Claude Design → committed here | Planning | **v0.14 — Foundations + Collection/Profile/Store/Add Game/Styler/Report** |
+| `design/ui-design-requirements.md` | What each screen must let users *do* (derived from spec) | Claude Code → handed to Claude Design | Claude Design | **v0.17 — all screens specified** |
+| `design/design-spec.md` | Screens, flows, components, visuals — *how you touch it* | Claude Design → committed here | Planning | **v0.15 — Foundations + Collection/Profile/Store/Add Game/Styler/Report/Discover** |
 | `planning/implementation-plan.md` | Build sequence and tasks | Claude Code | Implementation | *Not started* |
 | `decisions/*.md` | **Why** we chose what we chose (rationale, dated) | Claude Code | Everyone | **Active** |
 | `open-questions.md` | The **inbox** of unresolved questions | Anyone may append | Claude Code triages | **Active** |
@@ -100,6 +100,7 @@ session in this repo. The spec owner:
 2. Edits the **owning document first** (spec, and api-contract if shapes change).
 3. Updates downstream docs that reference it (e.g. `ui-design-requirements.md`).
 4. Bumps the document version and adds a **changelog** line: *what changed, why, impacted IDs*.
+5. Updates that doc's **version cell in the §1 register** (this file) so it never lags a bump — the register is the canonical per-doc current version (§5).
 
 **Step 3 — Resolve.** Move the item out of `open-questions.md` into a short record under
 `decisions/`, linked to its ID. We never re-litigate a recorded decision without a new record.
