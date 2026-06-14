@@ -148,6 +148,11 @@ existing design system. Used the **brainstorming skill**. Outcome:
   options** — the **only share spot is a docked footer at the bottom of the screen** (owned only; self-share,
   decision 0019). Panels A1 dual-face hero · A2 on-card stat edit · A3 scrolled (select+inline-options +
   bottom share + delete confirm) · A4 friend dual-face (gated back). Conventions held.
+  **Refined (owner, 2026-06-14):** screen title → **"GAME"** (the game name is the hero); **facts tags
+  moved under the game title**; the **stats card's frame is mirrored on the Y axis** (the C5 step on the
+  opposite corners — reads as the card turned over to its back); **EDIT is now inline** (same GAME screen,
+  no separate mode) and shows the **stats card as the only card** while editing; **Your Cards selection = a
+  thin orange border** (pip dropped).
 - **Next:** owner review → converge the chosen trophy iteration → `game-page-states.html` (full matrix +
   deferred lifecycle), then Design-spec + API page-audit. (The rev-4 draft-A line + earlier trophy files are
   superseded as the converge basis; kept for history.)

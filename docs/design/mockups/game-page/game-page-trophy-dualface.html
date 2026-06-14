@@ -104,6 +104,9 @@
   .c5 .gcard.grid .art, .c5 .gcard.mini .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
   .c5 .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0, 100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
   .c5 .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  /* .flipy — the stats card's frame mirrored on the Y axis (step on TR+BL, as if the card was turned over) */
+  .c5 .gcard.flipy { clip-path: polygon(100% 8px, calc(100% - 4px) 8px, calc(100% - 4px) 4px, calc(100% - 8px) 4px, calc(100% - 8px) 0, 0 0, 0 calc(100% - 8px), 4px calc(100% - 8px), 4px calc(100% - 4px), 8px calc(100% - 4px), 8px 100%, 100% 100%); }
+  .c5 .gcard.flipy .art { clip-path: polygon(100% 3px, calc(100% - 3px) 3px, calc(100% - 3px) 0, 0 0, 0 calc(100% - 3px), 3px calc(100% - 3px), 3px 100%, 100% 100%); }
 
   .fr-gilt { background: linear-gradient(160deg, #f0d57a, #b8901f); box-shadow: inset 0 0 0 2px rgba(255,240,190,.55), inset 0 0 0 4px rgba(120,82,12,.5); }
   .fr-slate { background: linear-gradient(160deg, #4a4677, #322e58); }
@@ -158,7 +161,7 @@
   /* Your Cards rail — tap to SELECT (orange outline + pip); state label below; inline options bar */
   .cardrail { display: flex; gap: 12px; overflow: hidden; padding: 6px 1px 2px; }
   .ycard { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 96px; flex: 0 0 auto; position: relative; }
-  .ycard.sel .gcard { outline: 2px solid var(--scr-accent); outline-offset: 2px; }
+  .ycard.sel .gcard { outline: 1.5px solid var(--scr-accent); outline-offset: 3px; }
   .ycard.sel .selpip { position: absolute; top: -4px; right: 6px; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 7px 2px rgba(255,61,119,.85); z-index: 4; }
   .ycard .cstate { display: inline-flex; align-items: center; gap: 5px; font: 700 8px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
   .ycard .cstate .dot { width: 6px; height: 6px; border-radius: 50%; }
@@ -266,16 +269,19 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DESTINY</h2><span class="sh-sp"></span><span class="now-tag">&#9656; NOW PLAYING</span><button class="ovf-key" style="margin-left:8px;">&#8943;</button></div>
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>GAME</h2><span class="sh-sp"></span><span class="now-tag">&#9656; NOW PLAYING</span><button class="ovf-key" style="margin-left:8px;">&#8943;</button></div>
             <div class="scroll">
               <div class="hero-title" style="padding-top:13px;">Destiny</div>
+              <div class="gchips" style="margin-top:8px;">
+                <span class="gchip studio">&#9656; BUNGIE</span><span class="gchip">2014</span><span class="gchip">LOOTER-SHOOTER</span><span class="gchip">FPS</span><span class="gchip">CO-OP</span>
+              </div>
               <div class="dualface">
                 <div class="dface">
                   <div class="gcard face2 fr-gilt fx-ember fin-holo"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div>
                   <span class="dlbl">THE FACE</span>
                 </div>
                 <div class="dface">
-                  <div class="gcard face2 back fr-gilt">
+                  <div class="gcard face2 back flipy fr-gilt">
                     <div class="art">
                       <div class="cb-title">YOUR STATS</div>
                       <div class="cb-stats">
@@ -289,9 +295,6 @@
                   </div>
                   <span class="edit-tag"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor"><use href="#ic-edit2"/></svg> EDIT STATS</span>
                 </div>
-              </div>
-              <div class="gchips" style="margin-top:10px;">
-                <span class="gchip studio">&#9656; BUNGIE</span><span class="gchip">2014</span><span class="gchip">LOOTER-SHOOTER</span><span class="gchip">FPS</span><span class="gchip">CO-OP</span>
               </div>
               <div class="ghints" style="margin-top:9px;"><span class="ghint">&#8646; SWIPE &middot; YOUR CARDS</span><span class="ghint">&#9673; HOLD &middot; PEEK</span></div>
               <div class="hint">&#8964; SCROLL &mdash; Your Cards · Community · Friends unfold; the card collapses to a header</div>
@@ -324,28 +327,30 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>EDIT YOUR STATS</h2><span class="sh-sp"></span><button class="btn mini">DONE</button></div>
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>GAME</h2><span class="sh-sp"></span><span class="now-tag">&#9656; NOW PLAYING</span><button class="ovf-key" style="margin-left:8px;">&#8943;</button></div>
             <div class="scroll">
-              <div style="display:flex; align-items:flex-start; gap:11px; padding:12px 0 0; justify-content:center;">
-                <div class="dface"><div class="gcard grid fr-gilt fx-ember fin-holo" style="width:66px; height:92px;"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div><span class="dlbl">THE FACE</span></div>
-                <div class="dface">
-                  <div class="gcard bigback back fr-gilt">
-                    <div class="art">
-                      <div class="cb-title">YOUR STATS &mdash; DESTINY</div>
-                      <div class="cb-stats">
-                        <div class="cb-row editing"><span class="cl">HOURS</span><span class="cv"><span class="cfield">210<span class="ccaret"></span></span></span></div>
-                        <div class="cb-row"><span class="cl">COMPLETE</span><span class="cv"><span class="cfield">68%</span></span></div>
-                        <div class="cb-row"><span class="cl">STATUS</span><span class="cv"><span class="cchips"><span class="cchip on">PLAYING</span><span class="cchip">BEATEN</span></span></span></div>
-                        <div class="cb-row"><span class="cl">PLATFORMS</span><span class="cv"><span class="cchips"><span class="cchip on">PC</span><span class="cchip on">PS</span><span class="cchip">XB</span></span></span></div>
-                        <div class="cb-row"><span class="cl">ACQUIRED</span><span class="cv"><span class="cfield">SEP 2014</span></span></div>
-                        <div class="cb-row" style="opacity:.55;"><span class="cl">RATING</span><span class="cv" style="font-size:8px; color:var(--scr-grip);">PENDING · OQ-058</span></div>
-                      </div>
-                      <div class="cb-prov"><span class="p1">DESIGNED BY MAVERICK</span><span class="p2">ADOPTED 12&times; &mdash; provenance is auto, not editable</span></div>
+              <div class="hero-title" style="padding-top:13px;">Destiny</div>
+              <div class="gchips" style="margin-top:8px;">
+                <span class="gchip studio">&#9656; BUNGIE</span><span class="gchip">2014</span><span class="gchip">LOOTER-SHOOTER</span><span class="gchip">FPS</span><span class="gchip">CO-OP</span>
+              </div>
+              <div style="display:flex; flex-direction:column; align-items:center; gap:10px; padding:16px 0 2px;">
+                <div class="gcard bigback back flipy fr-gilt">
+                  <div class="art">
+                    <div class="cb-title">YOUR STATS</div>
+                    <div class="cb-stats">
+                      <div class="cb-row editing"><span class="cl">HOURS</span><span class="cv"><span class="cfield">210<span class="ccaret"></span></span></span></div>
+                      <div class="cb-row"><span class="cl">COMPLETE</span><span class="cv"><span class="cfield">68%</span></span></div>
+                      <div class="cb-row"><span class="cl">STATUS</span><span class="cv"><span class="cchips"><span class="cchip on">PLAYING</span><span class="cchip">BEATEN</span></span></span></div>
+                      <div class="cb-row"><span class="cl">PLATFORMS</span><span class="cv"><span class="cchips"><span class="cchip on">PC</span><span class="cchip on">PS</span><span class="cchip">XB</span></span></span></div>
+                      <div class="cb-row"><span class="cl">ACQUIRED</span><span class="cv"><span class="cfield">SEP 2014</span></span></div>
+                      <div class="cb-row" style="opacity:.55;"><span class="cl">RATING</span><span class="cv" style="font-size:8px; color:var(--scr-grip);">PENDING · OQ-058</span></div>
                     </div>
+                    <div class="cb-prov"><span class="p1">DESIGNED BY MAVERICK</span><span class="p2">ADOPTED 12&times; &mdash; provenance is auto, not editable</span></div>
                   </div>
                 </div>
+                <span class="edit-tag"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor"><path d="M3 8.5 L6.5 12 L13 4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> DONE EDITING</span>
               </div>
-              <div class="hint" style="margin-top:11px;"><b>Editing on the card.</b> Tap a value to change it &mdash; the back updates live; the face is held small beside it.</div>
+              <div class="hint"><b>Editing inline, on the card.</b> Same GAME screen &mdash; no separate mode; the <b>stats card is the only card shown</b> while you edit, and the values change right on its back. The face returns when you're DONE.</div>
               <div class="sec" style="margin-top:6px;"><h3>NOTES</h3></div>
               <div style="background:var(--scr-chip); color:var(--navy); padding:9px 11px; box-shadow:inset 0 2px 3px rgba(0,0,0,.16); font:600 11px/1.5 var(--pk);">&ldquo;Back for the new season &mdash; chasing the raid title.&rdquo;<span style="display:inline-block; width:1.5px; height:13px; background:var(--accent); vertical-align:-2px; margin-left:1px;"></span></div>
               <div class="hint" style="text-align:left;">All of it is the collection entry (`PATCH /me/collection/:entryId` — hours · % · status · platforms · acquired · rating · notes, COL-02..06). The card-back stats edit in place; the long free-text NOTES edits just beneath.</div>
@@ -378,7 +383,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head" style="padding-bottom:7px;"><button class="fh-key">&#9666;</button><h2>DESTINY</h2><span class="sh-sp"></span><button class="ovf-key">&#8943;</button></div>
+            <div class="screen-head" style="padding-bottom:7px;"><button class="fh-key">&#9666;</button><h2>GAME</h2><span class="sh-sp"></span><button class="ovf-key">&#8943;</button></div>
             <div class="collapse-bar">
               <div class="gcard thumb fr-gilt fx-ember fin-holo"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div></div>
               <div class="cb-id"><span class="cbt">Destiny</span><span class="cbs">210 HRS · PLAYING · STEP GILT · EMBER · HOLO</span></div>
@@ -388,7 +393,7 @@
               <div class="sec" style="margin-top:11px;"><h3>YOUR CARDS &mdash; 5</h3><a class="tl dim" href="#">TAP TO SELECT</a></div>
               <div class="cardrail">
                 <div class="ycard"><div class="gcard grid fr-gilt fx-ember fin-holo"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div><span class="cstate s-main"><span class="dot"></span>MAIN</span></div>
-                <div class="ycard sel"><span class="selpip"></span><div class="gcard grid fr-slate fx-ghost" style="--x:0"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="cstate s-sel"><span class="dot"></span>SELECTED</span></div>
+                <div class="ycard sel"><div class="gcard grid fr-slate fx-ghost"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="cstate s-sel"><span class="dot"></span>SELECTED</span></div>
                 <div class="ycard"><div class="gcard grid fr-gilt fx-ember"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div><span class="cstate s-pub"><span class="dot"></span>PUBLISHED</span></div>
                 <div class="ycard"><div class="gcard grid fr-foil"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="cstate s-adopt"><span class="dot"></span>ADOPTED</span></div>
                 <div class="newcard"><span class="plus">&#43;</span><span class="nl">DESIGN NEW</span></div>
@@ -456,16 +461,17 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DESTINY</h2><span class="sh-sp"></span><span class="eq" style="background:var(--scr-panel);">RIKO'S</span><button class="ovf-key" style="margin-left:8px;">&#8943;</button></div>
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>GAME</h2><span class="sh-sp"></span><span class="eq" style="background:var(--scr-panel);">RIKO'S</span><button class="ovf-key" style="margin-left:8px;">&#8943;</button></div>
             <div class="scroll">
               <div class="hero-title" style="padding-top:13px;">Destiny</div>
+              <div class="gchips" style="margin-top:8px;"><span class="gchip studio">&#9656; BUNGIE</span><span class="gchip">2014</span><span class="gchip">LOOTER-SHOOTER</span></div>
               <div class="dualface">
                 <div class="dface">
                   <div class="gcard face2 fr-foil"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div>
                   <span class="dlbl">RIKO'S FACE</span>
                 </div>
                 <div class="dface">
-                  <div class="gcard face2 back fr-foil">
+                  <div class="gcard face2 back flipy fr-foil">
                     <div class="art">
                       <div class="cb-title">RIKO'S STATS</div>
                       <div class="cb-stats">
@@ -480,7 +486,6 @@
                   <span class="dlbl">PRIVACY-GATED · PROF-03</span>
                 </div>
               </div>
-              <div class="gchips" style="margin-top:10px;"><span class="gchip studio">&#9656; BUNGIE</span><span class="gchip">2014</span><span class="gchip">LOOTER-SHOOTER</span></div>
               <div class="equip" style="margin-top:9px;"><span class="eq prem">FRAME &middot; <b>ROSE FOIL</b></span><span class="eq prem">FX &middot; <b>EMBER</b></span><span class="eq prem">FIN &middot; <b>FOIL</b></span></div>
               <div class="band-actions" style="margin-top:11px; justify-content:center; align-items:center;">
                 <button class="btn mini">ADOPT RIKO'S CARD &middot; 1 <svg width="10" height="10" viewBox="0 0 40 40" style="vertical-align:-1px;"><use href="#ic-pix"/></svg></button>
