@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InGame · Feedback (SYS-11) — Draft A "Inline expanding row"</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" /></noscript>
+<style>
+  /* ── tokens: Teal shell · Midnight (verbatim from settings-page / report-states). Non-commerce. ── */
+  :root {
+    --plastic: #2bb6b0; --plastic-hi: #3ec9c2; --plastic-lo: #1f9a94; --silk: #0d524e;
+    --accent: #ff3d77; --gold: #ffd23f; --cream: #f5f1e4; --navy: #1d2a4a;
+    --bezel: #14122a; --alert: #e3414e;
+    --pk: 'Chakra Petch', sans-serif; --shell: 'Paytone One', sans-serif;
+    --scr-bg: #232045; --scr-well: #2c2950; --scr-tools: #1a1733; --scr-accent: #ff9f43;
+    --scr-accent-ink: #2a1430; --scr-head: #f5f1e4; --scr-text: #ffffff; --scr-dim: #9b97c0;
+    --scr-soft: #c9c5e6; --scr-panel: rgba(255,255,255,.065); --scr-hairline: rgba(255,255,255,.08);
+    --scr-grip: #565178; --scr-chip: #f5f1e4; --scr-head-shadow: rgba(0,0,0,.45);
+    --shell-ink: #08433f; --screw-hi: #2aa39d; --screw-lo: #137671; --pip-off: #117672;
+  }
+  html, body { margin: 0; min-height: 100%; background: #efece6; font-family: var(--pk); }
+  .canvas { max-width: 1380px; margin: 0 auto; padding: 40px 24px 60px; }
+  .canvas-head h1 { font: 700 17px/1.2 var(--pk); letter-spacing: 2.5px; color: #2a2633; margin: 0 0 6px; text-transform: uppercase; }
+  .canvas-head p { font: 500 12.5px/1.5 var(--pk); color: #79748a; margin: 0 0 14px; max-width: 900px; }
+  .canvas-head p b { color: #2a2633; }
+  .thesis { margin: 0 0 30px; background: #fff; border-left: 4px solid var(--scr-accent); border-radius: 0 10px 10px 0;
+    padding: 14px 16px; box-shadow: 0 2px 8px rgba(42,38,51,.08); max-width: 900px; }
+  .thesis h2 { margin: 0 0 6px; font: 700 12px var(--pk); letter-spacing: 1.5px; color: #2a2633; text-transform: uppercase; }
+  .thesis p { margin: 0 0 5px; font: 500 11.8px/1.6 var(--pk); color: #5d5870; }
+  .thesis p b { color: #2a2633; }
+  .thesis .prove { color: #b5481f; }
+  .stage { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+  .take { width: 404px; }
+  .artboard-label { font: 700 11px/1 var(--pk); letter-spacing: 1.5px; color: #8d889c; margin: 0 0 10px 2px; text-transform: uppercase; }
+  .caption { margin-top: 14px; background: #fff; border-radius: 12px; padding: 13px 15px; box-shadow: 0 2px 8px rgba(42,38,51,.08); }
+  .caption h3 { margin: 0 0 5px; font: 700 12.5px var(--pk); letter-spacing: .8px; color: #2a2633; text-transform: uppercase; }
+  .caption h3 em { font-style: normal; color: var(--accent); }
+  .caption p { margin: 0 0 4px; font: 500 11.8px/1.5 var(--pk); color: #5d5870; }
+  .caption p b { color: #2a2633; }
+  .stage-label { font: 700 13px/1 var(--pk); letter-spacing: 2px; color: #2a2633; text-transform: uppercase; margin: 36px 2px 14px; }
+  .stage-label small { display: block; margin-top: 5px; font: 500 11px/1.4 var(--pk); letter-spacing: .3px; color: #79748a; text-transform: none; max-width: 900px; }
+
+  /* ── device shell (verbatim) ── */
+  .device { position: relative; width: 404px; height: 884px; border-radius: 30px; overflow: hidden;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.4), inset 0 -4px 0 rgba(0,0,0,.18), 0 18px 40px color-mix(in srgb, var(--shell-ink) 28%, transparent);
+    display: flex; flex-direction: column; padding: 0 14px; box-sizing: border-box; }
+  .screw { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--screw-hi), var(--screw-lo) 75%);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.25); }
+  .screw::after { content: ""; position: absolute; left: 1.5px; right: 1.5px; top: 3.5px; height: 1.5px; background: color-mix(in srgb, var(--shell-ink) 70%, transparent); border-radius: 1px; }
+  .screw.tl { top: 10px; left: 12px; } .screw.tr { top: 10px; right: 12px; }
+  .screw.bl { bottom: 10px; left: 12px; } .screw.br { bottom: 10px; right: 12px; }
+  .top-band { height: 64px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 12px 0; position: relative; }
+  .power { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+  .power .led { width: 9px; height: 9px; border-radius: 50%; background: #ff5a4e; box-shadow: 0 0 7px 2px rgba(255,90,78,.65), inset 0 -1px 1px rgba(0,0,0,.3); }
+  .power .lbl { font: 400 9px var(--shell); letter-spacing: .5px; color: var(--silk); opacity: .75; }
+  .logo { position: absolute; left: 50%; transform: translateX(-50%); font: 400 21px var(--shell); letter-spacing: 7px; text-indent: 7px;
+    color: color-mix(in srgb, var(--shell-ink) 28%, transparent); text-shadow: 0 -1px 0 color-mix(in srgb, var(--shell-ink) 30%, transparent); }
+  .grille { display: flex; gap: 6px; }
+  .grille span { width: 5px; height: 23px; background: color-mix(in srgb, var(--shell-ink) 40%, transparent); border-radius: 2px; transform: skewX(-22deg); box-shadow: inset 0 1px 1px rgba(0,0,0,.3); }
+  .screen-bezel { flex: 1 1 auto; min-height: 0; background: var(--bezel); border-radius: 20px; padding: 9px; box-sizing: border-box; }
+  .nav-band { flex: 0 0 auto; height: 128px; display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 6px 0; }
+  .nav-item { display: flex; flex-direction: column; align-items: center; width: 64px; }
+  .nav-lbl { height: 16px; font: 400 11px var(--shell); letter-spacing: .5px; color: var(--silk); display: flex; align-items: center; }
+  .nav-lbl.big { font-size: 11px; }
+  .nav-btn { width: 54px; height: 54px; border-radius: 15px; background: var(--cream); border: none;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 1px 0 rgba(255,255,255,.85); }
+  .nav-btn.store { background: var(--gold); }
+  .nav-btn.collection { background: var(--accent); }
+  .nav-item.active .nav-btn { transform: translateY(3px); box-shadow: 0 1px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 2px 3px rgba(0,0,0,.18); }
+  .pip { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; background: var(--pip-off);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.25); }
+  .nav-item.active .pip { background: var(--accent); box-shadow: 0 0 9px 2.5px rgba(255,61,119,.85), inset 0 -1px 1px rgba(0,0,0,.25); }
+  .nav-band .nav-item:nth-child(2) .nav-lbl:first-child,
+  .nav-band .nav-item:nth-child(4) .nav-lbl:first-child { transform: translateY(-8px); }
+
+  /* ── screen + furniture ── */
+  .screen { position: relative; height: 100%; border-radius: 13px; overflow: hidden; display: flex; flex-direction: column; }
+  .sk2 { background: var(--scr-bg); }
+  .screen-head { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 12px; }
+  .sk2 .screen-head h2 { margin: 0; font: 700 21px/1 var(--pk); letter-spacing: 3px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); }
+  .scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 12px 16px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .fh-key { flex: 0 0 auto; width: 28px; height: 28px; border: none; background: var(--scr-chip); color: var(--navy);
+    font: 700 13px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; margin-right: 11px;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .flow-head { justify-content: flex-start; }
+  .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 16px 2px 7px; }
+  .sec:first-child { margin-top: 4px; }
+  .sec h3 { margin: 0; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .well { background: var(--scr-well); border: 1px solid var(--scr-hairline); }
+  .row { display: flex; gap: 11px; align-items: center; padding: 11px 12px; }
+  .row + .row { border-top: 1px solid var(--scr-hairline); }
+  .ric { flex: 0 0 auto; width: 30px; height: 30px; background: var(--scr-chip); display: flex; align-items: center; justify-content: center; }
+  .ric svg path, .ric svg rect, .ric svg circle { stroke: var(--navy); fill: none; }
+  .rl-wrap { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .rl { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .rsub { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .chev { margin-left: auto; color: var(--scr-grip); font: 700 15px var(--pk); flex: 0 0 auto; }
+  .chev.open { color: var(--scr-accent); }
+
+  /* ════ Draft A — the FEEDBACK row expands IN PLACE (FeedbackInline) ════
+     The row stays in the FEEDBACK & SUPPORT `Well`; tapping it discloses a compact form BELOW the row
+     header (top-hairline split), pushing HELP & CONTACT down — you submit without leaving Settings. The
+     thing to prove: the bug→logs control (LogAttach) fits this inline footprint WITHOUT cramping or
+     hiding the consent line. */
+  .fb-inline { padding: 0 12px 13px; border-top: 1px solid var(--scr-hairline); background: rgba(255,159,67,.035); }
+
+  /* TypePick — the inline 3-up segmented type keycaps (kin to SegmentedKeycap; active = pressed + pink pip) */
+  .typepick { display: flex; gap: 0; margin: 12px 0 11px; }
+  .tp-key { position: relative; flex: 1 1 0; border: none; background: var(--scr-chip); color: var(--navy);
+    font: 700 9.5px var(--pk); letter-spacing: .5px; padding: 9px 0 10px; text-align: center;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 52%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .tp-key + .tp-key { margin-left: 3px; }
+  .tp-key.sel { transform: translateY(2px); color: var(--navy);
+    box-shadow: 0 0 0 color-mix(in srgb, var(--scr-chip) 52%, #000), inset 0 2px 3px rgba(0,0,0,.2); }
+  .tp-key.sel::after { content: ""; position: absolute; left: 50%; transform: translateX(-50%); bottom: 3px;
+    width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px 1.5px rgba(255,61,119,.8); }
+
+  /* TextField/area — the cream inset (F-09 named exception), ~3 rows */
+  .tarea { display: flex; flex-direction: column; gap: 4px; }
+  .tarea .flabel { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .tarea .box { background: var(--scr-chip); box-shadow: inset 0 2px 3px rgba(0,0,0,.16);
+    padding: 8px 10px; min-height: 42px; font: 600 11px/1.5 var(--pk); letter-spacing: .3px; color: var(--navy); }
+  .tarea .box .ph { color: #8d889c; }
+  .tarea .box .caret { display: inline-block; width: 1.5px; height: 12px; background: var(--accent); vertical-align: -2px; margin-left: 1px; }
+
+  /* ════ NEW — `LogAttach` (the bug-only device-logs opt-in · the headline feedback component) ════
+     (a) an explicit `Toggle`, OFF by default · (b) a one-line consent note (support-facing) · (c) ROOM
+     RESERVED for the TBD OQ-060 payload. Draft A's treatment is the COMPACT one — it must survive the
+     inline squeeze with the consent line always visible. */
+  .logatt { margin: 11px 0 0; background: var(--scr-panel); border: 1px solid var(--scr-hairline); padding: 10px 11px; }
+  .la-head { display: flex; align-items: center; gap: 9px; }
+  .la-g { flex: 0 0 auto; display: flex; }
+  .la-g svg { width: 15px; height: 15px; }
+  .la-g svg path, .la-g svg rect { stroke: var(--scr-accent); fill: none; }
+  .la-t { font: 700 10px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  /* the `Toggle` (square two-position keycap-knob) */
+  .tgl { position: relative; flex: 0 0 auto; width: 42px; height: 23px; margin-left: auto; background: var(--scr-grip); box-shadow: inset 0 1px 1px rgba(0,0,0,.22); }
+  .tgl .knob { position: absolute; top: 3px; left: 3px; width: 17px; height: 17px; background: var(--cream); box-shadow: 0 2px 0 color-mix(in srgb, var(--cream) 48%, #000), inset 0 1px 0 rgba(255,255,255,.9); }
+  .tgl.on { background: var(--scr-accent); }
+  .tgl.on .knob { left: 22px; }
+  .la-consent { margin: 7px 0 0; font: 500 9px/1.45 var(--pk); letter-spacing: .2px; color: var(--scr-soft); }
+  .la-consent b { color: var(--scr-text); }
+  /* the reserved OQ-060 payload slot — appears when the toggle is ON */
+  .la-payload { margin: 9px 0 0; background: var(--scr-well); border: 1px solid var(--scr-hairline); padding: 8px 9px; }
+  .la-pl-top { display: flex; align-items: center; gap: 7px; }
+  .la-pl-ic { flex: 0 0 auto; color: var(--scr-accent); font: 700 11px var(--pk); }
+  .la-pl-name { font: 700 9.5px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .la-pl-tag { margin-left: auto; font: 700 8px var(--pk); letter-spacing: .5px; color: #7fcf9b;
+    border: 1px solid color-mix(in srgb, #7fcf9b 45%, transparent); padding: 2px 5px; }
+  .la-pl-link { font: 600 9px var(--pk); letter-spacing: .3px; color: var(--scr-accent); text-decoration: none; white-space: nowrap; }
+  /* the deliberately-reserved sub-row (size/preview lands here once OQ-060 defines the bundle) */
+  .la-pl-rsv { margin-top: 7px; padding-top: 6px; border-top: 1px dashed color-mix(in srgb, var(--scr-grip) 60%, transparent);
+    display: flex; align-items: center; gap: 6px; font: 600 8px var(--pk); letter-spacing: .5px; color: var(--scr-grip); }
+  .la-pl-rsv .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--scr-grip); flex: 0 0 auto; }
+
+  /* the inline commit row — SEND (KeycapButton/destructive per the brief) + COLLAPSE */
+  .fb-acts { display: flex; align-items: center; gap: 9px; margin: 12px 0 0; }
+  .fb-hint { font: 600 8.5px/1.4 var(--pk); letter-spacing: .3px; color: var(--scr-dim); flex: 1 1 auto; }
+  .fb-hint b { color: var(--scr-soft); }
+  .fb-collapse { flex: 0 0 auto; border: none; background: transparent; color: var(--scr-dim); font: 600 10px var(--pk); letter-spacing: .5px; padding: 8px 4px; }
+  .fb-send { flex: 0 0 auto; border: none; background: var(--alert); color: #fff; font: 700 10px var(--pk); letter-spacing: .8px; padding: 9px 16px;
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--alert) 45%, #000), inset 0 1px 0 rgba(255,255,255,.25); }
+  .fb-send.dormant { background: color-mix(in srgb, var(--alert) 28%, var(--scr-tools)); color: rgba(255,255,255,.4); box-shadow: none; }
+  .fb-send.busy { background: color-mix(in srgb, var(--alert) 74%, #000); color: rgba(255,255,255,.85); transform: translateY(2px);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,.35); display: inline-flex; align-items: center; gap: 7px; }
+  .fb-send.busy .spin { width: 10px; height: 10px; border-radius: 50%; border: 2px solid rgba(255,255,255,.28); border-top-color: #fff; }
+
+  /* `FeedbackConfirm` — the calm submitted seal (kin to ReportConfirm; scr.accent, support-facing) */
+  .fbconfirm { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 16px 12px 8px; }
+  .seal { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+    background: var(--scr-panel); border: 1px solid var(--scr-hairline); margin-bottom: 3px;
+    clip-path: polygon(0 5px, 3px 5px, 3px 3px, 5px 3px, 5px 0, 100% 0,
+      100% calc(100% - 5px), calc(100% - 3px) calc(100% - 5px), calc(100% - 3px) calc(100% - 3px),
+      calc(100% - 5px) calc(100% - 3px), calc(100% - 5px) 100%, 0 100%); }
+  .seal svg { width: 26px; height: 26px; }
+  .seal svg path { stroke: var(--scr-accent); fill: none; }
+  .fbc-eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .fbc-title { font: 700 15px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .fbc-sub { font: 500 10px/1.5 var(--pk); color: var(--scr-soft); max-width: 270px; }
+
+  /* Toast (§1.8 transient) — verbatim */
+  .toastb { display: flex; align-items: center; gap: 9px; padding: 10px 14px; background: var(--scr-well); border-bottom: 1px solid var(--scr-hairline); }
+  .toastb .bang { flex: 0 0 auto; color: var(--scr-accent); font: 700 16px/1 var(--pk); }
+  .toastb .t-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .toastb .t-t { font: 700 10px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .toastb .t-s { font: 600 8.5px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .toastb .t-key { margin-left: auto; background: var(--scr-accent); color: var(--scr-accent-ink); padding: 7px 10px; font: 700 9px var(--pk); letter-spacing: .5px; border: none;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-accent) 45%, #000), inset 0 1px 0 rgba(255,255,255,.4); }
+</style>
+</head>
+<body>
+
+<div class="canvas">
+  <div class="canvas-head">
+    <h1>Feedback &amp; bug reporting (SYS-11) &mdash; Draft A &ldquo;Inline expanding row&rdquo;</h1>
+    <p>One of <b>three distinct interaction models</b> for the SYS-11 feedback surface. The distinctness
+    axis = <b>how you get from the Settings row to a filed report</b>. Draft A's answer: <b>you don't go
+    anywhere</b> &mdash; the FEEDBACK &amp; BUG REPORTING row <b>expands in place</b>.</p>
+  </div>
+  <div class="thesis">
+    <h2>Thesis &mdash; zero-navigation, the form comes to you</h2>
+    <p>Tapping <b>FEEDBACK &amp; BUG REPORTING</b> discloses a <b>compact form right inside the
+    FEEDBACK &amp; SUPPORT `Well`</b> (the rows below push down); you pick a <b>type</b> (`TypePick` &mdash;
+    3 inline segmented keycaps), type a <b>message</b>, and <b>SEND without ever leaving Settings</b>. Fast
+    and low-ceremony &mdash; ideal for the common "quick note" case.</p>
+    <p class="prove"><b>MUST PROVE:</b> when type = <b>BUG</b>, the device-logs control (<b>`LogAttach`</b>)
+    unfurls inline &mdash; and it has to fit the cramped footprint <b>without feeling squeezed or hiding the
+    consent line</b>. A2 is that proof: a compact toggle row + a always-visible consent line + a single
+    reserved OQ-060 payload chip.</p>
+  </div>
+
+  <!-- ════════════════════ STAGE 1 ════════════════════ -->
+  <div class="stage-label">Stage 1 &mdash; In place, in Settings <small>A1 the row expanded at rest (type FEEDBACK · empty · SEND dormant) &middot; A2 type = BUG &rarr; the `LogAttach` unfurls inline with the logs toggle ON (the proof: consent line never hidden, payload room reserved) &middot; A3 SEND held pressed (in-flight)</small></div>
+  <div class="stage">
+
+    <!-- ═══ A1 · idle — expanded, type FEEDBACK, empty ═══ -->
+    <div class="take">
+      <div class="artboard-label">A1 · idle — the row expanded in place (type FEEDBACK)</div>
+      <div class="device" data-screen-label="Feedback A · A1 — idle inline">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>SETTINGS</h2></div>
+            <div class="scroll">
+              <div class="sec"><h3>FEEDBACK &amp; SUPPORT</h3></div>
+              <div class="well">
+                <div class="row">
+                  <span class="ric"><svg width="15" height="15" viewBox="0 0 15 15"><path d="M2 3.5h11v7H7.5l-3 2.4V10.5H2z" stroke-width="1.3"/><path d="M4.5 6.2h6M4.5 8.2h4" stroke-width="1.2"/></svg></span>
+                  <span class="rl-wrap"><span class="rl">FEEDBACK &amp; BUG REPORTING</span><span class="rsub">TELL US WHAT&rsquo;S WORKING &middot; WHAT&rsquo;S BROKEN</span></span>
+                  <span class="chev open">&#9662;</span>
+                </div>
+                <div class="fb-inline">
+                  <div class="typepick">
+                    <button class="tp-key sel">FEEDBACK</button>
+                    <button class="tp-key">SUGGESTION</button>
+                    <button class="tp-key">BUG</button>
+                  </div>
+                  <div class="tarea">
+                    <span class="flabel">YOUR MESSAGE</span>
+                    <div class="box"><span class="ph">What&rsquo;s on your mind? We read every note.</span><span class="caret"></span></div>
+                  </div>
+                  <div class="fb-acts">
+                    <span class="fb-hint">Pick a type, write a line &mdash; <b>SEND unlocks once there&rsquo;s a message</b></span>
+                    <button class="fb-send dormant">SEND</button>
+                  </div>
+                </div>
+                <div class="row">
+                  <span class="ric"><svg width="15" height="15" viewBox="0 0 15 15"><circle cx="7.5" cy="7.5" r="5.5" stroke-width="1.3"/><path d="M5.9 5.9a1.7 1.7 0 1 1 2.3 1.6c-.6.3-.8.6-.8 1.2" stroke-width="1.3"/><circle cx="7.5" cy="11" r=".55" stroke-width="1"/></svg></span>
+                  <span class="rl">HELP &amp; CONTACT</span>
+                  <span class="chev">&rsaquo;</span>
+                </div>
+              </div>
+              <div class="sec"><h3>ABOUT &amp; LEGAL</h3></div>
+              <div class="well">
+                <div class="row"><span class="ric"><svg width="15" height="15" viewBox="0 0 15 15"><path d="M3.5 1.7h5l3 3v8.6h-8z" stroke-width="1.3"/><path d="M8.5 1.7v3h3M5 7.2h5M5 9.6h5" stroke-width="1.2"/></svg></span><span class="rl">TERMS OF SERVICE</span><span class="chev">&rsaquo;</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>A1 &mdash; idle <em>(expanded in place &middot; type FEEDBACK &middot; SEND dormant)</em></h3>
+        <p><b>Zero navigation.</b> The FEEDBACK row's chevron flips to <b>&#9662;</b> and the form discloses
+        <b>inside the same `Well`</b> (orange-tinted to read as the row's child) &mdash; HELP &amp; CONTACT
+        just pushes down. <b>`TypePick`</b> = 3 segmented keycaps (FEEDBACK selected = pressed + pink pip,
+        the SegmentedKeycap grammar); a short <b>`TextField/area`</b>; the red <b>SEND</b> sits
+        <b>dormant</b> until there's a message.</p>
+        <p>This is the whole point of Draft A: a quick note never costs a screen change. The non-bug case
+        stays tiny &mdash; no logs control appears unless you choose BUG (A2).</p>
+      </div>
+    </div>
+
+    <!-- ═══ A2 · bug-with-logs-attached (THE PROOF) ═══ -->
+    <div class="take">
+      <div class="artboard-label">A2 · type BUG → LogAttach inline, logs ON (the proof)</div>
+      <div class="device" data-screen-label="Feedback A · A2 — bug + logs">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>SETTINGS</h2></div>
+            <div class="scroll">
+              <div class="sec"><h3>FEEDBACK &amp; SUPPORT</h3></div>
+              <div class="well">
+                <div class="row">
+                  <span class="ric"><svg width="15" height="15" viewBox="0 0 15 15"><path d="M2 3.5h11v7H7.5l-3 2.4V10.5H2z" stroke-width="1.3"/><path d="M4.5 6.2h6M4.5 8.2h4" stroke-width="1.2"/></svg></span>
+                  <span class="rl-wrap"><span class="rl">FEEDBACK &amp; BUG REPORTING</span><span class="rsub">REPORTING A BUG</span></span>
+                  <span class="chev open">&#9662;</span>
+                </div>
+                <div class="fb-inline">
+                  <div class="typepick">
+                    <button class="tp-key">FEEDBACK</button>
+                    <button class="tp-key">SUGGESTION</button>
+                    <button class="tp-key sel">BUG</button>
+                  </div>
+                  <div class="tarea">
+                    <span class="flabel">WHAT WENT WRONG?</span>
+                    <div class="box">The card editor froze when I added a 12th sticker &mdash; had to force-quit. Happens every time.<span class="caret"></span></div>
+                  </div>
+                  <div class="logatt">
+                    <div class="la-head">
+                      <span class="la-g"><svg viewBox="0 0 15 15"><rect x="2.5" y="1.5" width="10" height="12" stroke-width="1.3"/><path d="M4.6 4.5h6M4.6 7h6M4.6 9.5h4" stroke-width="1.2"/></svg></span>
+                      <span class="la-t">ATTACH INGAME LOGS</span>
+                      <span class="tgl on"><span class="knob"></span></span>
+                    </div>
+                    <div class="la-consent">Logs can include personal info, so they go to our <b>support team only &mdash; never shown to other players</b>. Off by default.</div>
+                    <div class="la-payload">
+                      <div class="la-pl-top">
+                        <span class="la-pl-ic">&#9711;</span>
+                        <span class="la-pl-name">INGAME DIAGNOSTIC LOGS</span>
+                        <span class="la-pl-tag">ATTACHED</span>
+                      </div>
+                      <div class="la-pl-rsv"><span class="dot"></span>BUNDLE BUILT ON SEND &middot; SIZE &amp; CONTENTS SHOWN HERE &middot; <a class="la-pl-link" href="#">WHAT&rsquo;S INCLUDED?</a></div>
+                    </div>
+                  </div>
+                  <div class="fb-acts">
+                    <button class="fb-collapse">CANCEL</button>
+                    <span class="fb-hint" style="text-align:right;">Bug + logs ready</span>
+                    <button class="fb-send">SEND</button>
+                  </div>
+                </div>
+                <div class="row">
+                  <span class="ric"><svg width="15" height="15" viewBox="0 0 15 15"><circle cx="7.5" cy="7.5" r="5.5" stroke-width="1.3"/><path d="M5.9 5.9a1.7 1.7 0 1 1 2.3 1.6c-.6.3-.8.6-.8 1.2" stroke-width="1.3"/><circle cx="7.5" cy="11" r=".55" stroke-width="1"/></svg></span>
+                  <span class="rl">HELP &amp; CONTACT</span>
+                  <span class="chev">&rsaquo;</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>A2 &mdash; bug + logs attached <em>(the proof &middot; `LogAttach` inline)</em></h3>
+        <p><b>Choosing BUG unfurls `LogAttach` in place.</b> The compact treatment is the test of Draft A:
+        a single panel carrying <b>(a)</b> the <b>ATTACH INGAME LOGS</b> row with the square <b>`Toggle`</b>
+        ON (orange), <b>(b)</b> the <b>consent line, full-width and never clipped</b> &mdash; "support team
+        only, never shown to other players, off by default", and <b>(c)</b> the <b>reserved OQ-060 payload
+        slot</b>: an "INGAME DIAGNOSTIC LOGS &middot; ATTACHED" chip whose dashed sub-row holds the room
+        where <b>bundle size + contents will render once the format is defined</b>, plus WHAT'S INCLUDED?.</p>
+        <p>It fits &mdash; the consent line stays first-class and nothing is hidden behind a disclosure.
+        SEND arms red (`/destructive`, per the brief); CANCEL collapses the row.</p>
+      </div>
+    </div>
+
+    <!-- ═══ A3 · submitting (in-flight) ═══ -->
+    <div class="take">
+      <div class="artboard-label">A3 · submitting — SEND held pressed (in-flight)</div>
+      <div class="device" data-screen-label="Feedback A · A3 — submitting">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>SETTINGS</h2></div>
+            <div class="scroll">
+              <div class="sec"><h3>FEEDBACK &amp; SUPPORT</h3></div>
+              <div class="well">
+                <div class="row">
+                  <span class="ric"><svg width="15" height="15" viewBox="0 0 15 15"><path d="M2 3.5h11v7H7.5l-3 2.4V10.5H2z" stroke-width="1.3"/><path d="M4.5 6.2h6M4.5 8.2h4" stroke-width="1.2"/></svg></span>
+                  <span class="rl-wrap"><span class="rl">FEEDBACK &amp; BUG REPORTING</span><span class="rsub">SENDING&hellip;</span></span>
+                  <span class="chev open">&#9662;</span>
+                </div>
+                <div class="fb-inline">
+                  <div class="typepick">
+                    <button class="tp-key">FEEDBACK</button>
+                    <button class="tp-key">SUGGESTION</button>
+                    <button class="tp-key sel">BUG</button>
+                  </div>
+                  <div class="tarea">
+                    <span class="flabel">WHAT WENT WRONG?</span>
+                    <div class="box">The card editor froze when I added a 12th sticker &mdash; had to force-quit. Happens every time.</div>
+                  </div>
+                  <div class="logatt">
+                    <div class="la-head">
+                      <span class="la-g"><svg viewBox="0 0 15 15"><rect x="2.5" y="1.5" width="10" height="12" stroke-width="1.3"/><path d="M4.6 4.5h6M4.6 7h6M4.6 9.5h4" stroke-width="1.2"/></svg></span>
+                      <span class="la-t">ATTACH INGAME LOGS</span>
+                      <span class="tgl on"><span class="knob"></span></span>
+                    </div>
+                    <div class="la-consent">Support team only &mdash; never shown to other players.</div>
+                    <div class="la-payload">
+                      <div class="la-pl-top">
+                        <span class="la-pl-ic">&#9711;</span>
+                        <span class="la-pl-name">INGAME DIAGNOSTIC LOGS</span>
+                        <span class="la-pl-tag" style="color:var(--scr-accent); border-color:color-mix(in srgb, var(--scr-accent) 45%, transparent);">UPLOADING&hellip;</span>
+                      </div>
+                      <div class="la-pl-rsv"><span class="dot"></span>BUNDLING DIAGNOSTICS &amp; UPLOADING WITH YOUR REPORT</div>
+                    </div>
+                  </div>
+                  <div class="fb-acts">
+                    <span class="fb-hint">Sending your bug report + logs&hellip;</span>
+                    <button class="fb-send busy"><span class="spin"></span>SENDING</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>A3 &mdash; submitting <em>(in-flight &middot; the keycap holds pressed)</em></h3>
+        <p><b>The write in progress.</b> SEND <b>holds pressed</b> with a frozen spinner (the same
+        committed, no-second-tap posture as the Store's hold-to-buy and the ReportSheet's in-flight &mdash;
+        one in-flight grammar across writes). The row eyebrow echoes <b>SENDING&hellip;</b> and the payload
+        chip flips to <b>UPLOADING&hellip;</b> &mdash; the bug report (`POST /feedback`) and the opt-in log
+        bundle (`POST /feedback/:id/logs`) go together. Nothing reflows on resolve.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════ STAGE 2 ════════════════════ -->
+  <div class="stage-label">Stage 2 &mdash; Resolve &amp; recover <small>A4 submitted &mdash; the inline form collapses to a calm `FeedbackConfirm` right where it sat (you're still in Settings) &middot; A5 the send fails &rarr; the §1.8 `Toast` under the header, the form kept intact (type · message · logs) and SEND re-armed</small></div>
+  <div class="stage">
+
+    <!-- ═══ A4 · submitted-confirmation (inline) ═══ -->
+    <div class="take">
+      <div class="artboard-label">A4 · submitted — the inline FeedbackConfirm</div>
+      <div class="device" data-screen-label="Feedback A · A4 — submitted">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>SETTINGS</h2></div>
+            <div class="scroll">
+              <div class="sec"><h3>FEEDBACK &amp; SUPPORT</h3></div>
+              <div class="well">
+                <div class="row">
+                  <span class="ric"><svg width="15" height="15" viewBox="0 0 15 15"><path d="M2 3.5h11v7H7.5l-3 2.4V10.5H2z" stroke-width="1.3"/><path d="M4.5 6.2h6M4.5 8.2h4" stroke-width="1.2"/></svg></span>
+                  <span class="rl-wrap"><span class="rl">FEEDBACK &amp; BUG REPORTING</span><span class="rsub">SENT &middot; THANKS</span></span>
+                  <span class="chev open">&#9662;</span>
+                </div>
+                <div class="fb-inline">
+                  <div class="fbconfirm">
+                    <div class="seal"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <span class="fbc-eyebrow">BUG REPORT SENT</span>
+                    <span class="fbc-title">THANKS &mdash; WE GOT IT</span>
+                    <span class="fbc-sub">Your report and the attached logs reached our support team. We read every one &mdash; we just can&rsquo;t always reply.</span>
+                  </div>
+                </div>
+                <div class="row">
+                  <span class="ric"><svg width="15" height="15" viewBox="0 0 15 15"><circle cx="7.5" cy="7.5" r="5.5" stroke-width="1.3"/><path d="M5.9 5.9a1.7 1.7 0 1 1 2.3 1.6c-.6.3-.8.6-.8 1.2" stroke-width="1.3"/><circle cx="7.5" cy="11" r=".55" stroke-width="1"/></svg></span>
+                  <span class="rl">HELP &amp; CONTACT</span>
+                  <span class="chev">&rsaquo;</span>
+                </div>
+              </div>
+              <div class="sec"><h3>ABOUT &amp; LEGAL</h3></div>
+              <div class="well">
+                <div class="row"><span class="ric"><svg width="15" height="15" viewBox="0 0 15 15"><path d="M3.5 1.7h5l3 3v8.6h-8z" stroke-width="1.3"/><path d="M8.5 1.7v3h3M5 7.2h5M5 9.6h5" stroke-width="1.2"/></svg></span><span class="rl">TERMS OF SERVICE</span><span class="chev">&rsaquo;</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>A4 &mdash; submitted <em>(`FeedbackConfirm` &middot; inline, still in Settings)</em></h3>
+        <p><b>The reward stays in place.</b> The inline form collapses to a calm <b>`FeedbackConfirm`</b>
+        right where it sat &mdash; a <b>`scr.accent` check seal</b> (support-facing "done," not the gold
+        celebration tier), <b>THANKS &mdash; WE GOT IT</b>, and one line of plain copy ("we read every one,
+        we just can't always reply"). The row eyebrow reads <b>SENT &middot; THANKS</b>.</p>
+        <p>You never left Settings &mdash; the whole round-trip happened in one row. Tapping the row again
+        collapses it back to its resting state.</p>
+      </div>
+    </div>
+
+    <!-- ═══ A5 · error (Toast) ═══ -->
+    <div class="take">
+      <div class="artboard-label">A5 · send failed — the §1.8 Toast, form kept intact</div>
+      <div class="device" data-screen-label="Feedback A · A5 — error">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>SETTINGS</h2></div>
+            <div class="toastb">
+              <span class="bang">&#9888;</span>
+              <div class="t-tx"><span class="t-t">COULDN&rsquo;T SEND YOUR REPORT</span><span class="t-s">NOTHING WAS LOST &mdash; YOUR MESSAGE IS STILL HERE</span></div>
+              <button class="t-key">RETRY</button>
+            </div>
+            <div class="scroll">
+              <div class="sec"><h3>FEEDBACK &amp; SUPPORT</h3></div>
+              <div class="well">
+                <div class="row">
+                  <span class="ric"><svg width="15" height="15" viewBox="0 0 15 15"><path d="M2 3.5h11v7H7.5l-3 2.4V10.5H2z" stroke-width="1.3"/><path d="M4.5 6.2h6M4.5 8.2h4" stroke-width="1.2"/></svg></span>
+                  <span class="rl-wrap"><span class="rl">FEEDBACK &amp; BUG REPORTING</span><span class="rsub">REPORTING A BUG</span></span>
+                  <span class="chev open">&#9662;</span>
+                </div>
+                <div class="fb-inline">
+                  <div class="typepick">
+                    <button class="tp-key">FEEDBACK</button>
+                    <button class="tp-key">SUGGESTION</button>
+                    <button class="tp-key sel">BUG</button>
+                  </div>
+                  <div class="tarea">
+                    <span class="flabel">WHAT WENT WRONG?</span>
+                    <div class="box">The card editor froze when I added a 12th sticker &mdash; had to force-quit. Happens every time.<span class="caret"></span></div>
+                  </div>
+                  <div class="logatt">
+                    <div class="la-head">
+                      <span class="la-g"><svg viewBox="0 0 15 15"><rect x="2.5" y="1.5" width="10" height="12" stroke-width="1.3"/><path d="M4.6 4.5h6M4.6 7h6M4.6 9.5h4" stroke-width="1.2"/></svg></span>
+                      <span class="la-t">ATTACH INGAME LOGS</span>
+                      <span class="tgl on"><span class="knob"></span></span>
+                    </div>
+                    <div class="la-consent">Support team only &mdash; never shown to other players.</div>
+                  </div>
+                  <div class="fb-acts">
+                    <button class="fb-collapse">CANCEL</button>
+                    <span class="fb-hint" style="text-align:right;">Kept &mdash; tap RETRY</span>
+                    <button class="fb-send">SEND</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>A5 &mdash; send failed <em>(transient &rarr; `Toast` + RETRY, §1.8)</em></h3>
+        <p><b>The write failed (network/timeout/5xx).</b> The transient surface is the converged
+        <b>`Toast`</b> sliding under the header &mdash; <b>COULDN'T SEND YOUR REPORT &middot; NOTHING WAS
+        LOST &mdash; YOUR MESSAGE IS STILL HERE</b>, with the orange <b>RETRY</b> (safe to repeat). The
+        inline form stays put with the type, message, and logs toggle <b>intact</b>, SEND re-armed.</p>
+        <p><b>Error, not offline:</b> offline would gate SEND calmly with no red (the Settings page's
+        OfflineStrip pattern, SYS-10) &mdash; this red is reserved for a true failure.</p>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</body>
+</html>
