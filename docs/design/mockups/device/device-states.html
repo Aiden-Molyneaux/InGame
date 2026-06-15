@@ -286,8 +286,9 @@
     name; <b>SAVE CURRENT</b> is the only save). Reached from Profile's MY DEVICE strip; a <code>FlowTakeover</code>
     with PROFILE keycap active, frame + NavBand persistent. <b>Personal only.</b> Full §1.6 matrix (D1–D10):
     editing · shell-switch · theme-preview · sticker place/scale/rotate · the OQ-045 on-shell preview · LOOKS ·
-    <b>premium previewed → the KeepBar's KEEP → the ReconcileSheet</b> (D7→D7b — free edits save live, premium
-    waits for KEEP) · Skeleton · Offline (writes-gated, SYS-10) · LoadError. Tokens verbatim (5 shell
+    <b>premium previewed → the KeepBar persists across sections → KEEP → the ReconcileSheet</b> (D7→D7b→D7c —
+    free edits save live; unowned premiums preview as a live try-on, ride along across SHELL/THEME/STICKERS, and
+    only commit at KEEP) · Skeleton · Offline (writes-gated, SYS-10) · LoadError. Tokens verbatim (5 shell
     colourways · 6 screen themes); PIXELS / <code>ReconcileSheet</code> / <code>PreviewStrip</code> reused.
     <i>New components for design-spec formalization (spec-owner): <code>SectionSwitch</code>/<code>SectionCard</code>
     · <code>StickerStage</code>/<code>TransformBox</code>/<code>PlacedSticker</code>/<code>StickerTray</code> ·
@@ -627,7 +628,7 @@
 
   </div>
 
-  <div class="stage-label">Commerce &amp; lifecycle <small>D7 premium previewed &rarr; KEEP · D7b reconcile (ReconcileSheet) · D8 Skeleton · D9 Offline (writes gated, SYS-10) · D10 LoadError</small></div>
+  <div class="stage-label">Commerce &amp; lifecycle <small>D7 premium previewed (KeepBar) · D7b the cart carries across sections (SHELL) · D7c reconcile (ReconcileSheet) · D8 Skeleton · D9 Offline (writes gated, SYS-10) · D10 LoadError</small></div>
   <div class="stage">
 
     <!-- ═══ D7 · Premium previewed — the KEEP trigger ═══ -->
@@ -683,10 +684,64 @@
       </div>
     </div>
 
-    <!-- ═══ D7b · Premium reconcile ═══ -->
+    <!-- ═══ D7b · The cart carries across sections (SHELL) ═══ -->
     <div class="take">
-      <div class="artboard-label">D7b &middot; Premium reconcile &mdash; ReconcileSheet + the bridge (after KEEP)</div>
-      <div class="device" data-screen-label="Device states · D7b — Premium reconcile">
+      <div class="artboard-label">D7b &middot; The cart carries &mdash; switch to SHELL, premiums stay</div>
+      <div class="device" data-screen-label="Device states · D7b — KeepBar persists (SHELL)">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="placed cream" style="left:60px; top:14px; width:32px; height:32px; transform:rotate(-9deg);"><svg viewBox="0 0 24 24"><use href="#st-rocket"/></svg></div>
+        <div class="placed gold" style="left:292px; top:17px; width:24px; height:24px; transform:rotate(8deg);"><svg viewBox="0 0 24 24"><use href="#st-star"/></svg></div>
+        <div class="placed" style="left:150px; top:15px; width:30px; height:30px; transform:rotate(6deg);"><svg viewBox="0 0 24 24"><use href="#st-cat"/></svg></div>
+        <span class="cost-flag" style="left:172px; top:44px;">NEON ZOO &middot; 6 <svg width="8" height="8" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel"><div class="screen scr-deepsea">
+          <div class="preview-strip">&#9686; PREVIEWING &mdash; DEEP SEA + NEON ZOO<span class="x">2 PREMIUM</span></div>
+          <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DEVICE</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>27</button></div>
+          <div class="scroll">
+            <div class="edit-readout"><span class="er-dot"></span><div style="display:flex;flex-direction:column;gap:2px;"><span class="er-t">SWITCHED TO SHELL &mdash; YOUR PREMIUMS STAYED</span><span class="er-s">SWITCHING SECTIONS NEVER DROPS A PREVIEW</span></div></div>
+            <div class="sec-title">SHELL</div>
+            <div class="sec-sub">Your DEEP SEA theme + NEON ZOO sticker are <b>still on the device</b>. Try a premium shell here and it joins the same cart.</div>
+            <div class="sec"><h3>YOUR COLOURWAY</h3></div>
+            <div class="tray">
+              <div class="tile sel"><div class="sw dev"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">TEAL</span><span class="eq-pill">EQUIPPED</span></div>
+              <div class="tile"><div class="sw dev shell-grape"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">GRAPE</span></div>
+              <div class="tile"><div class="sw dev shell-carbon"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">CARBON</span></div>
+              <div class="tile"><div class="sw dev shell-sunset"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">SUNSET</span><span class="pc"><span class="price-chip">6 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></span></div>
+              <div class="tile"><div class="sw dev shell-pink"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">PINK</span><span class="pc"><span class="price-chip">6 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></span></div>
+            </div>
+            <div class="hint">The <b>KeepBar</b> is global &mdash; it rides every section while anything premium is in preview, so the cart's never out of sight.</div>
+            <div class="filler"></div>
+          </div>
+          <div class="keepbar"><span class="kb-dot"></span><div class="kb-tx"><span class="kb-t">2 PREMIUM PICKS IN PREVIEW</span><span class="kb-s">CARRIED FROM THEME + STICKERS &middot; 10 PX</span></div><span class="spacer"></span><button class="btn act">KEEP &rsaquo;</button></div>
+          <div class="rail-dock"><div class="rail">
+            <div class="rail-card on"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-shell"/></svg></span><span class="r-l">SHELL</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-theme"/></svg></span><span class="r-l">THEME</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-stickers"/></svg></span><span class="r-l">STICKERS</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-looks"/></svg></span><span class="r-l">LOOKS</span></div>
+          </div></div>
+        </div></div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>D7b &mdash; The cart carries across sections <em>(persistence)</em></h3>
+        <p>The answer to "do my unowned picks come off when I switch pages?" &mdash; <b>no.</b> Here you've left
+        STICKERS for <b>SHELL</b>, and your <b>DEEP SEA theme</b> (the screen) + <b>NEON ZOO sticker</b> (the
+        cat, cost-flagged) are <b>still applied</b>. The <b>KeepBar is global</b> &mdash; it rides every section
+        while anything premium is in preview, so the running cart is always one tap from KEEP. Preview a premium
+        shell here and it joins the same tally. (The free default still renders, so nothing ever looks broken.)</p>
+      </div>
+    </div>
+
+    <!-- ═══ D7c · Premium reconcile ═══ -->
+    <div class="take">
+      <div class="artboard-label">D7c &middot; Premium reconcile &mdash; ReconcileSheet + the bridge (after KEEP)</div>
+      <div class="device" data-screen-label="Device states · D7c — Premium reconcile">
         <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
         <div class="placed cream" style="left:62px; top:13px; width:34px; height:34px; transform:rotate(-9deg);"><svg viewBox="0 0 20 20"><use href="#gl-invader"/></svg></div>
         <div class="placed gold" style="left:290px; top:16px; width:24px; height:24px; transform:rotate(8deg);"><svg viewBox="0 0 20 20"><use href="#gl-ring"/></svg></div>
@@ -733,7 +788,7 @@
         </div>
       </div>
       <div class="caption">
-        <h3>D7b &mdash; Premium reconcile <em>(after KEEP — the Store's grammar)</em></h3>
+        <h3>D7c &mdash; Premium reconcile <em>(after KEEP — the Store's grammar)</em></h3>
         <p>Tapping <b>KEEP</b> (D7) summons the <code>ReconcileSheet</code> — the screen showing what you need
         to buy. The two premiums (a NEON ZOO pack + DEEP SEA theme) are itemized in the
         COSM-03/CARD-13 keep-gate: per-item ✕, TOTAL, the short-by-N strip, the <code>PackTile</code>
