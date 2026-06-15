@@ -158,6 +158,21 @@ existing design system. Used the **brainstorming skill**. Outcome:
   the account name** (prominent), with the tiny adoption-count + cosmetics line removed. *Flag for converge:*
   this drops the **adoption count** from the card-back (CARD-01 names back-provenance = designer + adoption
   count) — it still shows in the gallery/`AdoptCount`; reconcile the CARD-01 card-back wording at converge.
-- **Next:** owner review → converge the chosen trophy iteration → `game-page-states.html` (full matrix +
-  deferred lifecycle), then Design-spec + API page-audit. (The rev-4 draft-A line + earlier trophy files are
-  superseded as the converge basis; kept for history.)
+- **Merge → `game-page-dual-dossier.html` (owner directive, 2026-06-15) — candidate B:** *"merge this draft
+  with the dossier draft; move the dossier buttons to the bottom of the screen and use the style from
+  `device-switcher-takes.html`; keep the dual card view but edit via a form like in the dossier; capture all
+  functionality."* Built: the dossier's **section switcher (PLAY · CARDS · ABOUT)** — *the "dossier buttons"* —
+  **docked at the bottom** of the screen as the **`SectionSwitch` Section Rail** (icon-card + label; F-09
+  selection = `scr.accent` border + pink `ChipPip`; from `device/device-switcher-takes.html` Take 2). **PLAY
+  keeps the dual-face hero**; **stats edited via a dossier form** — EDIT STATS flips the readout to fields
+  (`field-inline`/`schip`/`stars`; HOURS·%·STATUS·PLATFORMS·OWNED-SINCE·NOTES), the **stats back updating
+  live**, with a **pinned DONE/CANCEL bar** above the dock (so the on-card editing of `trophy-dualface` is
+  gone). Buttons corrected to convention (orange `/primary`; **gold = card-creating only**, F-02 — fixing
+  draft-B's gold ADD/ADOPT/EDIT). **8 artboards = full functionality:** M1 PLAY · M2 EDIT (form) · M3 CARDS
+  switcher (OQ-056) · M4 community gallery → atomic-adopt `CardDetail` sheet + confirm toast · M5 ABOUT (facts
+  + `PresenceStats` + friends-who-own) · M6 neutral (PLAY locked) · M7 friend dual-face (privacy-gated +
+  compare) · M8 upcoming/be-first. Carries OQ-058 (rating) · OQ-061 (delete/`ConfirmSheet`); the CARD-01
+  card-back adoption-count reconcile is still pending at converge.
+- **Next:** owner **picks A (`trophy-dualface`) vs B (`dual-dossier`)** — or a blend — → converge the choice
+  → `game-page-states.html` (full matrix + deferred lifecycle), then Design-spec + API page-audit. (Earlier
+  trophy/draft-A files kept for history.)
