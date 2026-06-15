@@ -110,7 +110,6 @@
   .btn.disabled { opacity: .4; box-shadow: 0 1px 0 color-mix(in srgb, var(--gold) 45%, #000); filter: none; }
   .tert { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; } .tert.dim { color: var(--scr-dim); }
   .price-chip { display: inline-flex; align-items: center; gap: 3px; background: var(--gold); color: #3c2a09; font: 700 9px/1 var(--pk); padding: 3px 5px; white-space: nowrap; } .price-chip svg { display: block; } .price-chip.big { font-size: 13px; padding: 4px 7px; gap: 4px; }
-  .tag-owned { display: inline-flex; align-items: center; gap: 3px; background: var(--cream); color: var(--navy); font: 700 9px/1 var(--pk); letter-spacing: .5px; padding: 2.5px 5px; white-space: nowrap; }
   .tag-locked { display: inline-flex; align-items: center; gap: 3px; background: rgba(13,11,30,.72); color: var(--scr-soft); border: 1px solid var(--scr-hairline); font: 700 9px/1 var(--pk); letter-spacing: .5px; padding: 2.5px 5px; }
 
   /* the section content trays */
@@ -127,6 +126,8 @@
   .tile .sw.theme { padding: 5px; flex-direction: column; gap: 3px; }
   .tile .sw.theme i { display: block; height: 9px; width: 100%; }
   .tile .nm { font: 700 8px var(--pk); letter-spacing: .5px; color: var(--scr-soft); text-align: center; }
+  .tile .eq-pill { background: rgba(255,159,67,.16); border: 1px solid color-mix(in srgb, var(--scr-accent) 55%, transparent); color: var(--scr-accent);
+    font: 700 6.5px/1 var(--pk); letter-spacing: .5px; padding: 3px 5px; white-space: nowrap; } /* equipped tell — no price = owned, so owned tiles stay plain */
   .tile .pc { position: absolute; top: -6px; right: -4px; }
   .cur-ring { position: absolute; inset: -3px; border: 1.5px solid var(--gold); pointer-events: none; }
 
@@ -292,9 +293,9 @@
             <div class="sec-sub">Your colourway &mdash; one handheld, five wraps (DEV-02). A free default always renders (DEV-03).</div>
             <div class="sec"><h3>YOUR COLOURWAY</h3></div>
             <div class="tray">
-              <div class="tile sel"><div class="sw dev"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">TEAL</span></div>
-              <div class="tile"><div class="sw dev shell-grape"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">GRAPE</span><span class="pc"><span class="tag-owned">&#10003;</span></span></div>
-              <div class="tile"><div class="sw dev shell-carbon"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">CARBON</span><span class="pc"><span class="tag-owned">&#10003;</span></span></div>
+              <div class="tile sel"><div class="sw dev"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">TEAL</span><span class="eq-pill">EQUIPPED</span></div>
+              <div class="tile"><div class="sw dev shell-grape"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">GRAPE</span></div>
+              <div class="tile"><div class="sw dev shell-carbon"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">CARBON</span></div>
               <div class="tile"><div class="sw dev shell-sunset"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">SUNSET</span><span class="pc"><span class="price-chip">6 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></span></div>
               <div class="tile"><div class="sw dev shell-pink"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">PINK</span><span class="pc"><span class="price-chip">6 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></span></div>
             </div>
@@ -393,7 +394,7 @@
             <div class="sec-title">THEME</div>
             <div class="sec-sub">How the screen looks &mdash; a free baseline + premium (COSM-03).</div>
             <div class="tray">
-              <div class="tile"><div class="sw theme" style="background:#232045;"><i style="background:#2c2950;"></i><i style="background:#ff9f43;"></i><i style="background:#1a1733;"></i></div><span class="nm">MIDNIGHT</span><span class="pc"><span class="tag-owned">&#10003;</span></span></div>
+              <div class="tile"><div class="sw theme" style="background:#232045;"><i style="background:#2c2950;"></i><i style="background:#ff9f43;"></i><i style="background:#1a1733;"></i></div><span class="nm">MIDNIGHT</span><span class="eq-pill">EQUIPPED</span></div>
               <div class="tile sel"><div class="sw theme" style="background:#0f2e2b;"><i style="background:#173d38;"></i><i style="background:#ffd23f;"></i><i style="background:#0a1f1d;"></i></div><span class="nm">DEEP SEA</span><span class="pc"><span class="price-chip">4 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></span></div>
               <div class="tile"><div class="sw theme" style="background:#2f1733;"><i style="background:#3d2042;"></i><i style="background:#ff3d77;"></i><i style="background:#1f0e23;"></i></div><span class="nm">BERRY</span><span class="pc"><span class="price-chip">4 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></span></div>
               <div class="tile"><div class="sw theme" style="background:#ece5d1;"><i style="background:#f9f5e9;"></i><i style="background:#c75c12;"></i><i style="background:#dfd6bd;"></i></div><span class="nm">PAPER</span><span class="pc"><span class="price-chip">4 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></span></div>
@@ -723,9 +724,9 @@
             <div class="sec-title">SHELL</div>
             <div class="sec-sub">Your owned wraps work from cache &mdash; applying a change waits for the network.</div>
             <div class="tray">
-              <div class="tile sel"><div class="sw dev"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">TEAL</span></div>
-              <div class="tile"><div class="sw dev shell-grape"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">GRAPE</span><span class="pc"><span class="tag-owned">&#10003;</span></span></div>
-              <div class="tile"><div class="sw dev shell-carbon"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">CARBON</span><span class="pc"><span class="tag-owned">&#10003;</span></span></div>
+              <div class="tile sel"><div class="sw dev"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">TEAL</span><span class="eq-pill">EQUIPPED</span></div>
+              <div class="tile"><div class="sw dev shell-grape"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">GRAPE</span></div>
+              <div class="tile"><div class="sw dev shell-carbon"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">CARBON</span></div>
               <div class="tile" style="opacity:.5;"><div class="sw dev shell-sunset"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">SUNSET</span><span class="pc"><span class="tag-locked">&#128274;</span></span></div>
             </div>
             <div class="gated-note">&#128274; <b>Buying &amp; saving wait for the network.</b> Premium wraps/themes/packs and SAVE CURRENT re-arm when you reconnect (SYS-10).</div>
