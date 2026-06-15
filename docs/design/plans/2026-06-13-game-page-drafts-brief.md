@@ -191,6 +191,13 @@ existing design system. Used the **brainstorming skill**. Outcome:
   duplicate EDIT STATS affordance was **de-duped to the orange `EDIT STATS` button** in the PLAY action row
   (owner kept the button, dropped the text link from the YOUR PLAY header; SWITCH CARD · SHARE alongside).
   The M2 form header's `COL-02..06` spec-ID tag was dropped (chrome, not content).
+- **Follow-ups #3 (owner, 2026-06-15):** the edit form's **STATUS field now shows the full COL-02 set** —
+  BACKLOG · PLAYING · BEATEN · COMPLETED · DROPPED (was a partial 3 incl. a bogus "PAUSED") — as a **stacked
+  field** (`.drow.stk`: label on top, wrapping chips below) so every status displays when editing. *(Wishlist,
+  the 6th COL-02 value, is the unowned/discover state — omitted from an owned entry's editor; flag if it
+  should appear.)* The **CARDS `SectionSwitch` count chip was removed** (the button reads just "CARDS"). The
+  **DESIGN NEW tile now matches the card size** (`align-self: start` — it had stretched to the taller
+  ADOPTED-cell row height).
 - **Next:** **converge B (`dual-dossier`)** → `game-page-states.html` (full matrix + deferred lifecycle:
   soft-hidden · loading · offline), then Design-spec (formalize the `SectionSwitch` reuse + the dossier-form
   `PlayStats` edit) + API page-audit. Reconcile the **CARD-01 card-back adoption-count** at converge. (A

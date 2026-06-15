@@ -160,6 +160,10 @@
   .drow .dv .pen { width: 11px; height: 11px; opacity: .5; } .drow .dv .pen svg { width: 11px; height: 11px; } .drow .dv .pen svg path { stroke: var(--scr-soft); }
   .drow.editing { background: rgba(255,159,67,.1); box-shadow: inset 2px 0 0 var(--scr-accent); }
   .drow.notes { align-items: flex-start; flex-direction: column; gap: 5px; }
+  /* stacked field — label on top, the full option set wrapping below (for fields with more options than fit a row, e.g. STATUS) */
+  .drow.stk { align-items: flex-start; flex-direction: column; gap: 7px; }
+  .drow.stk .dv { display: flex; width: 100%; }
+  .drow.stk .status-row { justify-content: flex-start; flex-wrap: wrap; width: 100%; }
   .drow.notes .dv { text-align: left; font: 600 10px/1.45 var(--pk); color: var(--scr-soft); width: 100%; box-sizing: border-box; }
   .field-inline { display: inline-flex; align-items: center; gap: 6px; background: var(--scr-chip); padding: 5px 8px; box-shadow: inset 0 2px 3px rgba(0,0,0,.16); }
   .field-inline .q { font: 700 13px var(--pk); color: var(--navy); } .field-inline.note-field { width: 100%; box-sizing: border-box; font: 600 11px/1.5 var(--pk); color: var(--navy); display: block; }
@@ -210,7 +214,7 @@
   .state-tag.private { background: var(--cream); color: var(--navy); }
   .state-tag.draft { background: rgba(13,11,30,.78); color: var(--scr-soft); border: 1px solid var(--scr-hairline); }
   .state-tag.adopted { background: var(--scr-panel); color: var(--scr-soft); border: 1px solid color-mix(in srgb, var(--scr-accent) 50%, transparent); }
-  .newtile { width: 100%; aspect-ratio: 96/134; height: auto; flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: 1.5px dashed var(--scr-accent); background: rgba(255,159,67,.05); color: var(--scr-accent); box-sizing: border-box; }
+  .newtile { width: 100%; aspect-ratio: 96/134; height: auto; align-self: start; flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: 1.5px dashed var(--scr-accent); background: rgba(255,159,67,.05); color: var(--scr-accent); box-sizing: border-box; }
   .newtile .plus { font: 700 26px/1 var(--pk); } .newtile .nl { font: 700 8px var(--pk); letter-spacing: 1px; }
   .gw-credit { font: 600 7.5px var(--pk); letter-spacing: .3px; color: var(--scr-dim); text-align: center; } .gw-credit b { color: var(--scr-soft); }
 
@@ -383,7 +387,7 @@
             <div class="tabdock">
               <div class="tabsw">
                 <div class="tabsw-card on"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-play"/></svg></span><span class="tabsw-l">PLAY</span></div>
-                <div class="tabsw-card"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-cards"/></svg></span><span class="tabsw-l">CARDS <span class="tn">5</span></span></div>
+                <div class="tabsw-card"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-cards"/></svg></span><span class="tabsw-l">CARDS</span></div>
                 <div class="tabsw-card"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-info"/></svg></span><span class="tabsw-l">ABOUT</span></div>
               </div>
             </div>
@@ -441,7 +445,7 @@
               <div class="dossier">
                 <div class="drow editing"><span class="dl">HOURS</span><span class="dv"><span class="field-inline"><span class="q">211</span><span class="caret"></span></span></span></div>
                 <div class="drow"><span class="dl">COMPLETE</span><span class="dv"><span class="field-inline"><span class="q">68<small style="color:var(--scr-dim);">%</small></span></span></span></div>
-                <div class="drow"><span class="dl">STATUS</span><span class="dv"><span class="status-row"><span class="schip on">PLAYING</span><span class="schip">BEATEN</span><span class="schip">PAUSED</span></span></span></div>
+                <div class="drow stk"><span class="dl">STATUS</span><span class="dv"><span class="status-row"><span class="schip">BACKLOG</span><span class="schip on">PLAYING</span><span class="schip">BEATEN</span><span class="schip">COMPLETED</span><span class="schip">DROPPED</span></span></span></div>
                 <div class="drow"><span class="dl">PLATFORMS</span><span class="dv"><span class="status-row"><span class="schip on">PC</span><span class="schip on">PS</span><span class="schip">XB</span></span></span></div>
                 <div class="drow"><span class="dl">OWNED SINCE</span><span class="dv"><span class="field-inline"><span class="q" style="font-size:11px;">SEP 2014</span></span></span></div>
                 <div class="drow" style="opacity:.6;"><span class="dl">RATING <span style="color:var(--scr-grip); font-weight:600;">PENDING (OQ-058)</span></span><span class="dv"><span class="stars" style="font-size:12px;">&#9733;&#9733;&#9733;&#9733;<span class="off">&#9733;</span></span></span></div>
@@ -456,7 +460,7 @@
             <div class="tabdock">
               <div class="tabsw">
                 <div class="tabsw-card on"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-play"/></svg></span><span class="tabsw-l">PLAY</span></div>
-                <div class="tabsw-card"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-cards"/></svg></span><span class="tabsw-l">CARDS <span class="tn">5</span></span></div>
+                <div class="tabsw-card"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-cards"/></svg></span><span class="tabsw-l">CARDS</span></div>
                 <div class="tabsw-card"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-info"/></svg></span><span class="tabsw-l">ABOUT</span></div>
               </div>
             </div>
@@ -514,7 +518,7 @@
             <div class="tabdock">
               <div class="tabsw">
                 <div class="tabsw-card"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-play"/></svg></span><span class="tabsw-l">PLAY</span></div>
-                <div class="tabsw-card on"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-cards"/></svg></span><span class="tabsw-l">CARDS <span class="tn">5</span></span></div>
+                <div class="tabsw-card on"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-cards"/></svg></span><span class="tabsw-l">CARDS</span></div>
                 <div class="tabsw-card"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-info"/></svg></span><span class="tabsw-l">ABOUT</span></div>
               </div>
             </div>
@@ -641,7 +645,7 @@
             <div class="tabdock">
               <div class="tabsw">
                 <div class="tabsw-card"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-play"/></svg></span><span class="tabsw-l">PLAY</span></div>
-                <div class="tabsw-card"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-cards"/></svg></span><span class="tabsw-l">CARDS <span class="tn">5</span></span></div>
+                <div class="tabsw-card"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-cards"/></svg></span><span class="tabsw-l">CARDS</span></div>
                 <div class="tabsw-card on"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-info"/></svg></span><span class="tabsw-l">ABOUT</span></div>
               </div>
             </div>
@@ -709,7 +713,7 @@
             <div class="tabdock">
               <div class="tabsw">
                 <div class="tabsw-card lock"><span class="tabsw-ic"><svg viewBox="0 0 16 16"><use href="#ic-lock"/></svg></span><span class="tabsw-l">PLAY</span></div>
-                <div class="tabsw-card"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-cards"/></svg></span><span class="tabsw-l">CARDS <span class="tn">41</span></span></div>
+                <div class="tabsw-card"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-cards"/></svg></span><span class="tabsw-l">CARDS</span></div>
                 <div class="tabsw-card on"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-info"/></svg></span><span class="tabsw-l">ABOUT</span></div>
               </div>
             </div>
@@ -786,7 +790,7 @@
             <div class="tabdock">
               <div class="tabsw">
                 <div class="tabsw-card on"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-play"/></svg></span><span class="tabsw-l">PLAY</span></div>
-                <div class="tabsw-card"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-cards"/></svg></span><span class="tabsw-l">CARDS <span class="tn">41</span></span></div>
+                <div class="tabsw-card"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-cards"/></svg></span><span class="tabsw-l">CARDS</span></div>
                 <div class="tabsw-card"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-info"/></svg></span><span class="tabsw-l">ABOUT</span></div>
               </div>
             </div>
@@ -857,7 +861,7 @@
             <div class="tabdock">
               <div class="tabsw">
                 <div class="tabsw-card lock"><span class="tabsw-ic"><svg viewBox="0 0 16 16"><use href="#ic-lock"/></svg></span><span class="tabsw-l">PLAY</span></div>
-                <div class="tabsw-card"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-cards"/></svg></span><span class="tabsw-l">CARDS <span class="tn">0</span></span></div>
+                <div class="tabsw-card"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-cards"/></svg></span><span class="tabsw-l">CARDS</span></div>
                 <div class="tabsw-card on"><span class="tabsw-ic"><svg viewBox="0 0 22 22"><use href="#ic-info"/></svg></span><span class="tabsw-l">ABOUT</span></div>
               </div>
             </div>
