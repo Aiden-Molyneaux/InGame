@@ -98,10 +98,10 @@
   /* TODAY — the pink LED leaking onto the screen (round, glowing) */
   .led { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px 1.5px rgba(255,61,119,.85); }
 
-  /* A — orange square with PIXEL-STEP corners (the GameCard C5 double-step, TL+BR; flat).
-     2-step staircase per cut corner — reads as the retro pixel-cut the PIXELS mark speaks. */
+  /* A — orange square with a single PIXEL nipped off each of the four corners (pixel-rounded square; flat).
+     1px per corner at the 9px native size (≈11.1%); the % scales the cut up on the enlarged glyph. */
   .sq { width: 9px; height: 9px; background: var(--scr-accent);
-    clip-path: polygon(40% 0, 100% 0, 100% 60%, 80% 60%, 80% 80%, 60% 80%, 60% 100%, 0 100%, 0 40%, 20% 40%, 20% 20%, 40% 20%); }
+    clip-path: polygon(11.1% 0, 88.9% 0, 100% 11.1%, 100% 88.9%, 88.9% 100%, 11.1% 100%, 0 88.9%, 0 11.1%); }
 
   /* B — orange tick (a shape-coded "chosen", not just a colour) */
   .tick { display: block; }
@@ -182,7 +182,7 @@
 
     <!-- ░░░░░ A — orange square ░░░░░ -->
     <div class="col">
-      <div class="col-h"><div class="tag">DRAFT A</div><div class="name">Orange C5 square</div></div>
+      <div class="col-h"><div class="tag">DRAFT A</div><div class="name">Orange pixel square</div></div>
       <div class="glyph"><div class="big"><span class="sq"></span></div></div>
       <div class="role"><div class="rl">ACTIVE TOOL KEYCAP</div>
         <div class="tools"><div class="grip"><i></i><i></i><i></i><i></i></div>
@@ -198,9 +198,9 @@
           <div class="seg active">UP NEXT<span class="mk-corner sq"></span></div>
           <div class="seg">DISCOVER</div></div></div></div>
       <div class="notes">
-        <p><b>The direct swap</b> — same footprint as the pip, but square + orange + flat. <b>Pixel-step TL/BR
-          corners</b> (the GameCard's C5 double-step) make it the card silhouette in miniature — the retro pixel-cut
-          the PIXELS mark already speaks, unmistakably "ours" and on-screen.</p>
+        <p><b>The direct swap</b> — same footprint as the pip, but square + orange + flat. <b>One pixel nipped off
+          each corner</b> — a clean pixel-cut square in the retro language the PIXELS mark already speaks;
+          unmistakably "ours" and on-screen.</p>
         <p>Role-agnostic: reads the same on a keycap corner, a row, or a segment. <b>Your orange square.</b></p>
         <p class="con">Still an abstract mark (colour + shape, no literal meaning).</p>
       </div>
