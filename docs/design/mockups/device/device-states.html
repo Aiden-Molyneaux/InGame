@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InGame · Device editor (§4.5) — CONVERGED board (in-frame · SectionSwitch rail · LOOKS · OQ-045)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" /></noscript>
+<style>
+  /* ── tokens: verbatim (Teal shell · Midnight theme) ── */
+  :root {
+    --plastic: #2bb6b0; --plastic-hi: #3ec9c2; --plastic-lo: #1f9a94; --silk: #0d524e;
+    --accent: #ff3d77; --gold: #ffd23f; --cream: #f5f1e4; --navy: #1d2a4a;
+    --bezel: #14122a; --alert: #e3414e;
+    --pk: 'Chakra Petch', sans-serif; --shell: 'Paytone One', sans-serif;
+    --scr-bg: #232045; --scr-well: #2c2950; --scr-tools: #1a1733; --scr-accent: #ff9f43;
+    --scr-accent-ink: #2a1430; --scr-head: #f5f1e4; --scr-text: #ffffff; --scr-dim: #9b97c0;
+    --scr-soft: #c9c5e6; --scr-panel: rgba(255,255,255,.065); --scr-hairline: rgba(255,255,255,.08);
+    --scr-grip: #565178; --scr-chip: #f5f1e4; --scr-head-shadow: rgba(0,0,0,.45);
+    --shell-ink: #08433f; --screw-hi: #2aa39d; --screw-lo: #137671; --pip-off: #117672;
+  }
+  html, body { margin: 0; min-height: 100%; background: #efece6; font-family: var(--pk); }
+  .canvas { max-width: 1348px; margin: 0 auto; padding: 40px 24px 60px; }
+  .canvas-head h1 { font: 700 17px/1.2 var(--pk); letter-spacing: 2.5px; color: #2a2633; margin: 0 0 6px; text-transform: uppercase; }
+  .canvas-head p { font: 500 12.5px/1.5 var(--pk); color: #79748a; margin: 0 0 14px; max-width: 770px; }
+  .stage { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+  .take { width: 404px; }
+  .artboard-label { font: 700 11px/1 var(--pk); letter-spacing: 1.5px; color: #8d889c; margin: 0 0 10px 2px; text-transform: uppercase; }
+  .caption { margin-top: 14px; background: #fff; border-radius: 12px; padding: 13px 15px; box-shadow: 0 2px 8px rgba(42,38,51,.08); }
+  .caption h3 { margin: 0 0 5px; font: 700 12.5px var(--pk); letter-spacing: .8px; color: #2a2633; text-transform: uppercase; }
+  .caption h3 em { font-style: normal; color: var(--accent); }
+  .caption p { margin: 0 0 4px; font: 500 11.8px/1.5 var(--pk); color: #5d5870; }
+  .caption p b { color: #2a2633; }
+  .stage-label { font: 700 13px/1 var(--pk); letter-spacing: 2px; color: #2a2633; text-transform: uppercase; margin: 36px 2px 14px; }
+  .stage-label small { display: block; margin-top: 5px; font: 500 11px/1.4 var(--pk); letter-spacing: .3px; color: #79748a; text-transform: none; }
+
+  /* ── device shell ── */
+  .device { position: relative; width: 404px; height: 884px; border-radius: 30px; overflow: hidden;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.4), inset 0 -4px 0 rgba(0,0,0,.18), 0 18px 40px color-mix(in srgb, var(--shell-ink) 28%, transparent);
+    display: flex; flex-direction: column; padding: 0 14px; box-sizing: border-box; }
+  .screw { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--screw-hi), var(--screw-lo) 75%);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.25); z-index: 8; }
+  .screw::after { content: ""; position: absolute; left: 1.5px; right: 1.5px; top: 3.5px; height: 1.5px; background: color-mix(in srgb, var(--shell-ink) 70%, transparent); border-radius: 1px; }
+  .screw.tl { top: 10px; left: 12px; } .screw.tr { top: 10px; right: 12px; }
+  .screw.bl { bottom: 10px; left: 12px; } .screw.br { bottom: 10px; right: 12px; }
+  .top-band { height: 64px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 12px 0; position: relative; }
+  .power { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+  .power .led { width: 9px; height: 9px; border-radius: 50%; background: #ff5a4e; box-shadow: 0 0 7px 2px rgba(255,90,78,.65), inset 0 -1px 1px rgba(0,0,0,.3); }
+  .power .lbl { font: 400 9px var(--shell); letter-spacing: .5px; color: var(--silk); opacity: .75; }
+  .logo { position: absolute; left: 50%; transform: translateX(-50%); font: 400 21px var(--shell); letter-spacing: 7px; text-indent: 7px;
+    color: color-mix(in srgb, var(--shell-ink) 28%, transparent); text-shadow: 0 -1px 0 color-mix(in srgb, var(--shell-ink) 30%, transparent); }
+  .grille { display: flex; gap: 6px; }
+  .grille span { width: 5px; height: 23px; background: color-mix(in srgb, var(--shell-ink) 40%, transparent); border-radius: 2px; transform: skewX(-22deg); box-shadow: inset 0 1px 1px rgba(0,0,0,.3); }
+  .screen-bezel { flex: 1 1 auto; min-height: 0; background: var(--bezel); border-radius: 20px; padding: 9px; box-sizing: border-box; position: relative; z-index: 2; }
+  .nav-band { flex: 0 0 auto; height: 128px; display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 6px 0; position: relative; z-index: 4; }
+  .nav-item { display: flex; flex-direction: column; align-items: center; width: 64px; }
+  .nav-lbl { height: 16px; font: 400 11px var(--shell); letter-spacing: .5px; color: var(--silk); display: flex; align-items: center; }
+  .nav-lbl.big { font-size: 11px; }
+  .nav-btn { width: 54px; height: 54px; border-radius: 15px; background: var(--cream); border: none; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 1px 0 rgba(255,255,255,.85); }
+  .nav-btn.store { background: var(--gold); }
+  .nav-btn.collection { background: var(--accent); }
+  .nav-item.active .nav-btn { transform: translateY(3px); box-shadow: 0 1px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 2px 3px rgba(0,0,0,.18); }
+  .pip { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; background: var(--pip-off); box-shadow: inset 0 1px 2px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.25); }
+  .nav-item.active .pip { background: var(--accent); box-shadow: 0 0 9px 2.5px rgba(255,61,119,.85), inset 0 -1px 1px rgba(0,0,0,.25); }
+  .nav-band .nav-item:nth-child(2) .nav-lbl:first-child,
+  .nav-band .nav-item:nth-child(4) .nav-lbl:first-child { transform: translateY(-8px); }
+
+  /* shell colourways + screen themes (real §1.1 values) */
+  .shell-grape  { --plastic:#8a76e8; --plastic-hi:#9f8df2; --plastic-lo:#7460cc; --silk:#392c7a; --shell-ink:#2d2164; --screw-hi:#7d6cd8; --screw-lo:#5b49b4; --pip-off:#5e4cb8; }
+  .shell-sunset { --plastic:#ff9051; --plastic-hi:#ffa76f; --plastic-lo:#ea7437; --silk:#7c3a12; --shell-ink:#6b2f0c; --screw-hi:#f08148; --screw-lo:#c75e26; --pip-off:#c96a2e; }
+  .shell-pink   { --plastic:#ff8ab0; --plastic-hi:#ffa5c4; --plastic-lo:#e96d96; --silk:#8a2247; --shell-ink:#76183a; --screw-hi:#f07da6; --screw-lo:#c75880; --pip-off:#c0577f; }
+  .shell-carbon { --plastic:#3a3a42; --plastic-hi:#4a4a54; --plastic-lo:#2c2c33; --silk:#b9b9c6; --shell-ink:#0a0a0e; --screw-hi:#45454f; --screw-lo:#26262d; --pip-off:#16161c; }
+  .scr-deepsea { --scr-bg:#0f2e2b; --scr-well:#173d38; --scr-tools:#0a1f1d; --scr-accent:#ffd23f; --scr-accent-ink:#3c2a09; --scr-dim:#84aaa2; --scr-soft:#bcd6cf; --scr-panel:rgba(255,255,255,.06); --scr-hairline:rgba(255,255,255,.08); --scr-grip:#3f655d; }
+
+  /* ── shared screen ── */
+  .screen { position: relative; height: 100%; border-radius: 13px; overflow: hidden; display: flex; flex-direction: column; background: var(--scr-bg); }
+  .screen-head { flex: 0 0 auto; display: flex; align-items: center; justify-content: flex-start; padding: 13px 16px 9px; }
+  .screen-head h2 { margin: 0; font: 700 19px/1 var(--pk); letter-spacing: 2.5px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); }
+  .fh-key { flex: 0 0 auto; width: 28px; height: 28px; border: none; background: var(--scr-chip); color: var(--navy);
+    font: 700 13px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; margin-right: 11px;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .fh-spacer { flex: 1 1 auto; }
+  .scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 12px 8px; scrollbar-width: none; display: flex; flex-direction: column; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .ccount { display: inline-flex; align-items: center; gap: 4px; background: var(--gold); color: #3c2a09; border: none; padding: 5px 8px; font: 700 11px/1 var(--pk); letter-spacing: .5px;
+    box-shadow: 0 2px 0 color-mix(in srgb, var(--gold) 45%, #000), inset 0 1px 0 rgba(255,255,255,.5); } .ccount svg { display: block; }
+  .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 11px 2px 7px; }
+  .sec h3 { margin: 0; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .hint { margin: 8px 1px 0; font: 600 9px/1.6 var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .hint b { color: var(--scr-soft); }
+  .filler { flex: 1 1 auto; min-height: 8px; }
+  .edit-readout { display: flex; align-items: center; gap: 8px; margin: 2px 1px 0; padding: 8px 10px; background: var(--scr-panel); border: 1px solid var(--scr-hairline); }
+  .edit-readout .er-t { font: 700 10px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .edit-readout .er-s { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .er-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--scr-accent); box-shadow: 0 0 7px rgba(255,159,67,.7); flex: 0 0 auto; }
+  .er-dot.ok { background: #7fe0c3; box-shadow: 0 0 7px rgba(127,224,195,.7); }
+  .sec-title { margin: 13px 2px 2px; font: 700 16px var(--pk); letter-spacing: .8px; color: var(--scr-text); }
+  .sec-sub { margin: 0 2px 4px; font: 500 10px/1.4 var(--pk); color: var(--scr-dim); } .sec-sub b { color: var(--scr-soft); }
+  /* buttons */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: none; box-sizing: border-box;
+    font: 700 11px var(--pk); letter-spacing: 1px; white-space: nowrap; cursor: default; width: fit-content; }
+  .btn.buy { background: var(--gold); color: #3c2a09; padding: 9px 13px; box-shadow: 0 3px 0 color-mix(in srgb, var(--gold) 45%, #000), inset 0 1px 0 rgba(255,255,255,.5); }
+  .btn.buy.holding { transform: translateY(2px); background: linear-gradient(90deg, #d9ad22 0 55%, var(--gold) 55%); box-shadow: 0 1px 0 color-mix(in srgb, var(--gold) 45%, #000), inset 0 1px 0 rgba(255,255,255,.35); }
+  .btn.act { background: var(--scr-accent); color: var(--scr-accent-ink); padding: 9px 13px; box-shadow: inset 0 1px 0 rgba(255,255,255,.45); filter: drop-shadow(0 3px 0 color-mix(in srgb, var(--scr-accent) 45%, #000)); }
+  .btn.secondary { background: var(--cream); color: var(--navy); padding: 9px 13px; box-shadow: 0 3px 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .btn.disabled { opacity: .4; box-shadow: 0 1px 0 color-mix(in srgb, var(--gold) 45%, #000); filter: none; }
+  .tert { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; } .tert.dim { color: var(--scr-dim); }
+  .price-chip { display: inline-flex; align-items: center; gap: 3px; background: var(--gold); color: #3c2a09; font: 700 9px/1 var(--pk); padding: 3px 5px; white-space: nowrap; } .price-chip svg { display: block; } .price-chip.big { font-size: 13px; padding: 4px 7px; gap: 4px; }
+  .tag-owned { display: inline-flex; align-items: center; gap: 3px; background: var(--cream); color: var(--navy); font: 700 9px/1 var(--pk); letter-spacing: .5px; padding: 2.5px 5px; white-space: nowrap; }
+  .tag-locked { display: inline-flex; align-items: center; gap: 3px; background: rgba(13,11,30,.72); color: var(--scr-soft); border: 1px solid var(--scr-hairline); font: 700 9px/1 var(--pk); letter-spacing: .5px; padding: 2.5px 5px; }
+
+  /* the section content trays */
+  .tray { display: flex; gap: 8px; flex-wrap: wrap; padding: 4px 1px 2px; }
+  .tile { position: relative; flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .tile .sw { width: 54px; height: 54px; display: flex; align-items: center; justify-content: center; background: var(--scr-panel); border: 1px solid var(--scr-hairline); box-sizing: border-box; }
+  .tile.sel .sw { border: 1.5px solid var(--scr-accent); box-shadow: 0 0 8px rgba(255,159,67,.35); }
+  .tile .sw.dev { width: 30px; height: 64px; border-radius: 7px; border: none; padding: 3px;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.4), inset 0 -1px 0 rgba(0,0,0,.18); flex-direction: column; }
+  .tile .sw.dev .ds { flex: 1 1 auto; margin: 4px 2px 3px; background: var(--scr-bg); border: 2px solid var(--bezel); border-radius: 3px; }
+  .tile .sw.dev .dn { height: 7px; display: flex; gap: 2px; align-items: center; justify-content: center; }
+  .tile .sw.dev .dn i { width: 3.5px; height: 3.5px; border-radius: 1px; background: var(--cream); } .tile .sw.dev .dn i.y { background: var(--gold); }
+  .tile .sw.glyph svg { width: 30px; height: 30px; }
+  .tile .sw.theme { padding: 5px; flex-direction: column; gap: 3px; }
+  .tile .sw.theme i { display: block; height: 9px; width: 100%; }
+  .tile .nm { font: 700 8px var(--pk); letter-spacing: .5px; color: var(--scr-soft); text-align: center; }
+  .tile .pc { position: absolute; top: -6px; right: -4px; }
+  .cur-ring { position: absolute; inset: -3px; border: 1.5px solid var(--gold); pointer-events: none; }
+
+  /* placed stickers (PLASTIC ONLY) + TransformBox */
+  .placed { position: absolute; z-index: 3; pointer-events: none; filter: drop-shadow(0 1.5px 1.5px rgba(0,0,0,.4)); }
+  .placed svg { display: block; width: 100%; height: 100%; }
+  .placed.cream svg { fill: var(--cream); } .placed.gold svg { fill: var(--gold); } .placed.pink svg { fill: #ff6f9d; }
+  .tbox { position: absolute; z-index: 6; border: 1.5px solid var(--scr-accent); box-shadow: 0 0 11px rgba(255,159,67,.45); pointer-events: none; }
+  .tbox .h { position: absolute; width: 11px; height: 11px; background: var(--cream); border: 1.5px solid var(--scr-accent); box-sizing: border-box; }
+  .tbox .h.tl { left: -6px; top: -6px; } .tbox .h.tr { right: -6px; top: -6px; }
+  .tbox .h.bl { left: -6px; bottom: -6px; } .tbox .h.br { right: -6px; bottom: -6px; }
+  .tbox .rot { position: absolute; left: 50%; top: -22px; width: 1.5px; height: 18px; background: var(--scr-accent); transform: translateX(-50%); }
+  .tbox .rot::after { content: ""; position: absolute; left: 50%; top: -8px; width: 13px; height: 13px; border-radius: 50%; background: var(--cream); border: 1.5px solid var(--scr-accent); transform: translateX(-50%); box-sizing: border-box; }
+  .decal-zone { position: absolute; z-index: 1; pointer-events: none; border: 1px dashed rgba(245,241,228,.45); background: rgba(245,241,228,.05); }
+  .decal-zone .zl { position: absolute; left: 5px; top: 3px; font: 700 7px/1 var(--shell); letter-spacing: 1px; color: var(--silk); opacity: .85; }
+  .ghost { position: absolute; z-index: 6; opacity: .45; filter: saturate(.4) drop-shadow(0 1px 1px rgba(0,0,0,.3)); } .ghost svg { display: block; width: 100%; height: 100%; fill: #ff8ab0; }
+  .block-tag { position: absolute; z-index: 7; background: rgba(13,11,30,.86); border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent); color: #ff8ab0; font: 700 8px/1.3 var(--pk); letter-spacing: .5px; padding: 4px 6px; white-space: nowrap; text-align: center; }
+  .nav-protect { position: absolute; left: 6px; right: 6px; top: 6px; bottom: 8px; z-index: 5; pointer-events: none; border: 1.5px dashed color-mix(in srgb, var(--accent) 65%, transparent); }
+  .nav-protect .npl { position: absolute; left: 50%; top: 4px; transform: translateX(-50%); white-space: nowrap; background: rgba(13,11,30,.78); color: #ff8ab0; font: 700 7.5px/1 var(--pk); letter-spacing: 1px; padding: 3px 6px; }
+
+  /* PreviewStrip (DEV-04 whole-page theme banner) + floor note */
+  .preview-strip { flex: 0 0 auto; display: flex; align-items: center; gap: 7px; padding: 7px 11px; background: var(--gold); color: #3c2a09; font: 700 9px var(--pk); letter-spacing: 1px; }
+  .preview-strip.accent { background: var(--scr-accent); color: var(--scr-accent-ink); }
+  .preview-strip .x { margin-left: auto; font: 700 10px var(--pk); letter-spacing: .5px; }
+  .floor-note { display: flex; align-items: center; gap: 7px; margin: 9px 1px 0; padding: 7px 9px; background: rgba(127,224,195,.1); border: 1px solid color-mix(in srgb, #7fe0c3 45%, transparent); font: 700 8.5px/1.4 var(--pk); letter-spacing: .5px; color: #7fe0c3; }
+
+  /* before→after MiniDevice pstage (shell switch) */
+  .pstage { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 8px; padding: 13px 10px 11px;
+    background: radial-gradient(circle at 50% 32%, rgba(255,210,63,.08) 0%, transparent 60%), var(--scr-well); border: 1px solid var(--scr-hairline); }
+  .pstage .ps-lbl { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); text-align: center; }
+  .pstage .swap { display: inline-flex; align-items: center; gap: 5px; font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-align: center; }
+  .mini-dev { position: relative; width: 56px; height: 122px; border-radius: 9px; padding: 4px; box-sizing: border-box;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%); display: flex; flex-direction: column; box-shadow: inset 0 1px 0 rgba(255,255,255,.4), inset 0 -1px 0 rgba(0,0,0,.18); }
+  .mini-dev .mscr { flex: 1 1 auto; margin: 6px 3px 4px; background: var(--scr-bg); border: 2px solid var(--bezel); border-radius: 4px; }
+  .mini-dev .mnav { height: 11px; display: flex; gap: 3px; align-items: center; justify-content: center; }
+  .mini-dev .mnav i { width: 5px; height: 5px; border-radius: 2px; background: var(--cream); } .mini-dev .mnav i.y { background: var(--gold); }
+  .mini-dev .mst { position: absolute; z-index: 2; filter: drop-shadow(0 1px 1px rgba(0,0,0,.4)); } .mini-dev .mst svg { display: block; width: 100%; height: 100%; }
+
+  /* the LOOKS section (saved shell+sticker+theme combos — identified by shell · theme, no custom name) */
+  .looks-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px 10px; padding: 6px 1px 2px; }
+  .look { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .look .lk-id { font: 700 8px var(--pk); letter-spacing: .5px; color: var(--scr-soft); text-align: center; line-height: 1.3; }
+  .look.cur .mini-dev { box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 0 0 1.5px var(--scr-accent), 0 0 11px rgba(255,159,67,.3); }
+  .look .on-tag { position: absolute; top: -7px; left: 50%; transform: translateX(-50%); z-index: 3; background: var(--scr-accent); color: var(--scr-accent-ink); font: 700 7px/1 var(--pk); letter-spacing: .5px; padding: 2.5px 5px; white-space: nowrap; }
+  .save-tile { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .save-tile .st-box { width: 56px; height: 122px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    background: rgba(255,159,67,.08); border: 1.5px dashed color-mix(in srgb, var(--scr-accent) 60%, transparent); }
+  .save-tile .st-plus { font: 700 22px/1 var(--pk); color: var(--scr-accent); }
+  .save-tile .st-l { font: 700 7px/1.2 var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-align: center; }
+  .save-tile.dis .st-box { opacity: .4; } .save-tile.dis .st-plus, .save-tile.dis .st-l { color: var(--scr-grip); }
+
+  /* the SectionSwitch · bottom-docked rail (no pip, icon inline, 4 sections) */
+  .rail-dock { flex: 0 0 auto; background: var(--scr-tools); border-top: 1px solid var(--scr-hairline); padding: 9px 10px 11px; }
+  .rail { display: flex; gap: 6px; }
+  .rail-card { flex: 1 1 0; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 6px; padding: 11px 4px; background: var(--scr-well); border: 1px solid var(--scr-hairline); }
+  .rail-card .r-ic { flex: 0 0 auto; display: inline-flex; } .rail-card .r-ic svg { width: 18px; height: 18px; stroke: var(--scr-soft); fill: none; }
+  .rail-card .r-l { font: 700 9.5px var(--pk); letter-spacing: .5px; color: var(--scr-soft); white-space: nowrap; }
+  .rail-card.on { border-color: var(--scr-accent); } .rail-card.on .r-ic svg { stroke: var(--scr-accent); } .rail-card.on .r-l { color: var(--scr-text); }
+  .rail-dock.dim { opacity: .5; }
+
+  /* ── ReconcileSheet (premium keep-gate) ── */
+  .scrim { position: absolute; inset: 0; z-index: 9; background: rgba(13,11,30,.62); }
+  .reconcile { position: absolute; left: 0; right: 0; bottom: 0; z-index: 10; background: var(--scr-tools); border-top: 1px solid var(--scr-hairline); padding: 11px 13px 13px; }
+  .reconcile .rc-h { padding: 0 1px 7px; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .rc-row { display: flex; align-items: center; gap: 9px; padding: 8px 2px; border-top: 1px solid var(--scr-hairline); }
+  .rc-sw { flex: 0 0 auto; width: 34px; height: 34px; background: var(--scr-panel); border: 1px solid var(--scr-hairline); display: flex; align-items: center; justify-content: center; } .rc-sw svg { width: 20px; height: 20px; }
+  .rc-name { font: 700 10px var(--pk); letter-spacing: .5px; color: var(--scr-text); } .rc-type { font: 600 8.5px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .rc-x { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; }
+  .rc-rm { width: 22px; height: 22px; border: 1px solid var(--scr-hairline); background: var(--scr-panel); color: var(--scr-soft); font: 700 10px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; }
+  .rc-total { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 9px 2px 0; font: 700 10px var(--pk); letter-spacing: 1.5px; color: var(--scr-soft); }
+  .short-strip { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 8px 11px; background: rgba(227,65,78,.1); border: 1px solid color-mix(in srgb, var(--alert) 55%, transparent); font: 700 10px var(--pk); letter-spacing: 1px; color: #ff8a93; }
+  .packs { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 10px; }
+  .pack { position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 9px 6px 8px; background: var(--scr-well); border: 1px solid color-mix(in srgb, var(--gold) 38%, transparent); }
+  .pack .amt { display: inline-flex; align-items: center; gap: 4px; font: 700 15px/1 var(--pk); color: var(--gold); letter-spacing: 1px; text-shadow: 0 0 9px rgba(255,210,63,.3); }
+  .pack .val { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); } .pack .val b { color: #58e0ff; font-weight: 700; }
+  .buybar { display: flex; align-items: center; gap: 10px; margin-top: 11px; padding: 10px 11px; background: var(--scr-bg); border: 1px solid var(--scr-hairline); }
+  .buybar .bb-have { font: 600 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); white-space: nowrap; } .buybar .bb-have b { color: var(--scr-soft); }
+  .buybar .spacer { flex: 1 1 auto; }
+  .rc-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+
+  /* ── §1.6 lifecycle: Skeleton · Offline · LoadError ── */
+  .sk-bar { background: var(--scr-panel); } .sk-block { background: var(--scr-panel); border: 1px solid var(--scr-hairline); }
+  .offline-strip { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; margin: 2px 1px 0; padding: 8px 11px; background: var(--scr-panel); border: 1px solid var(--scr-hairline); font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .offline-strip svg { width: 14px; height: 14px; flex: 0 0 auto; } .offline-strip svg path { stroke: var(--scr-dim); }
+  .offline-strip .sync { margin-left: auto; font-weight: 600; letter-spacing: .5px; color: var(--scr-grip); }
+  .gated-note { margin: 9px 1px 0; padding: 8px 10px; background: rgba(255,255,255,.04); border: 1px dashed var(--scr-hairline); font: 600 9px/1.5 var(--pk); letter-spacing: .5px; color: var(--scr-soft); }
+  .gated-note b { color: var(--scr-text); }
+  .err-wrap { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 9px; padding: 64px 18px 0; }
+  .err-card { position: relative; width: 96px; height: 134px; background: var(--scr-panel); margin-bottom: 8px;
+    clip-path: polygon(0 6px, 3px 6px, 3px 3px, 6px 3px, 6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 3px) calc(100% - 6px), calc(100% - 3px) calc(100% - 3px), calc(100% - 6px) calc(100% - 3px), calc(100% - 6px) 100%, 0 100%); }
+  .err-card::before { content: ""; position: absolute; inset: 6px; border: 2px dashed var(--scr-grip); opacity: .8; }
+  .err-card .bang { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 700 34px/1 var(--pk); color: var(--scr-accent); }
+  .err-eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .err-title { font: 700 17px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
+  .err-sub { font: 500 10.5px/1.55 var(--pk); color: var(--scr-soft); max-width: 250px; }
+  .err-retry { margin-top: 6px; clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px), calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="ic-pix" viewBox="0 0 40 40">
+      <path d="M20 5 L18 5 L18 9 L14 9 L14 13 L10 13 L10 17 L6 17 L6 20 L20 20 Z" fill="#ffe9a3"/>
+      <path d="M20 5 L22 5 L22 9 L26 9 L26 13 L30 13 L30 17 L34 17 L34 20 L20 20 Z" fill="#ffd23f"/>
+      <path d="M6 20 L6 23 L10 23 L10 27 L14 27 L14 31 L18 31 L18 35 L20 35 L20 20 Z" fill="#f0bf32"/>
+      <path d="M34 20 L34 23 L30 23 L30 27 L26 27 L26 31 L22 31 L22 35 L20 35 L20 20 Z" fill="#c8922a"/>
+      <rect x="15" y="11" width="3.5" height="3.5" fill="#fff"/><rect x="23" y="13" width="4" height="4" fill="#58e0ff"/>
+      <rect x="27" y="17" width="4" height="4" fill="#4a90ff"/><rect x="14" y="24" width="3.5" height="3.5" fill="#4a90ff"/>
+      <path d="M18 5 L22 5 L22 9 L26 9 L26 13 L30 13 L30 17 L34 17 L34 23 L30 23 L30 27 L26 27 L26 31 L22 31 L22 35 L18 35 L18 31 L14 31 L14 27 L10 27 L10 23 L6 23 L6 17 L10 17 L10 13 L14 13 L14 9 L18 9 Z" fill="none" stroke="#3c2a09" stroke-width="2.2"/>
+    </symbol>
+    <symbol id="gl-star" viewBox="0 0 20 20"><path d="M10 1 L12.4 7 L19 7.6 L14 12 L15.6 19 L10 15.2 L4.4 19 L6 12 L1 7.6 L7.6 7 Z"/></symbol>
+    <symbol id="gl-bolt" viewBox="0 0 20 20"><path d="M12 1 L4.5 11 L9 11 L8 19 L15.5 9 L11 9 Z"/></symbol>
+    <symbol id="gl-heart" viewBox="0 0 20 20"><path d="M10 18 C3 12 1 8 3.5 5 C5.5 2.8 9 3.5 10 6 C11 3.5 14.5 2.8 16.5 5 C19 8 17 12 10 18 Z"/></symbol>
+    <symbol id="gl-crown" viewBox="0 0 20 20"><path d="M2.5 16 L2.5 6 L7 10 L10 3 L13 10 L17.5 6 L17.5 16 Z"/></symbol>
+    <symbol id="gl-diamond" viewBox="0 0 20 20"><path d="M10 1 L17.5 10 L10 19 L2.5 10 Z"/></symbol>
+    <symbol id="gl-moon" viewBox="0 0 20 20"><path d="M12.5 2 A8.5 8.5 0 1 0 18 13.5 A7 7 0 0 1 12.5 2 Z"/></symbol>
+    <symbol id="gl-ring" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2 a8 8 0 1 0 .02 0 Z M10 5.6 a4.4 4.4 0 1 1 -.02 0 Z"/></symbol>
+    <symbol id="gl-invader" viewBox="0 0 20 20"><path d="M5 4 L7 4 L7 6 L13 6 L13 4 L15 4 L15 6 L17 6 L17 12 L15 12 L15 14 L13 14 L13 16 L11 16 L11 14 L9 14 L9 16 L7 16 L7 14 L5 14 L5 12 L3 12 L3 6 L5 6 Z M7 8 L7 10 L9 10 L9 8 Z M11 8 L11 10 L13 10 L13 8 Z" fill-rule="evenodd"/></symbol>
+    <symbol id="sec-shell" viewBox="0 0 22 22"><rect x="6" y="2.5" width="10" height="17" rx="3" stroke-width="1.6"/><rect x="8.2" y="5.5" width="5.6" height="7" rx="1" stroke-width="1.3"/><path d="M9.4 15.5h3.2" stroke-width="1.5"/></symbol>
+    <symbol id="sec-theme" viewBox="0 0 22 22"><rect x="2.5" y="4.5" width="17" height="13" rx="2" stroke-width="1.6"/><path d="M2.5 10.2h17" stroke-width="1.4"/><path d="M5.4 13.6h5" stroke-width="1.4"/></symbol>
+    <symbol id="sec-stickers" viewBox="0 0 22 22"><path d="M11 2.6 l2.5 5.1 5.6.8 -4.05 3.95 .95 5.55 -5-2.6 -5 2.6 .95 -5.55 -4.05 -3.95 5.6 -.8z" stroke-width="1.5"/></symbol>
+    <symbol id="sec-looks" viewBox="0 0 22 22"><rect x="3" y="6.5" width="11" height="13" rx="2" stroke-width="1.5"/><path d="M8 6.5V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1.5" stroke-width="1.5"/></symbol>
+    <symbol id="ic-wifi-off" viewBox="0 0 24 24"><path d="M3 4l18 18" fill="none" stroke-width="2" stroke-linecap="round"/><path d="M5 12.5a11 11 0 0 1 4-2.6M2 9a16 16 0 0 1 6-3.7M12 19l.01 0M8.5 15.5a5 5 0 0 1 4-1.4M19 9a16 16 0 0 0-5-3.4M21.5 12.5a11 11 0 0 0-2-1.4" fill="none" stroke-width="2" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<div class="canvas">
+  <div class="canvas-head">
+    <h1>Device editor (§4.5) &mdash; CONVERGED board (in-frame · SectionSwitch rail · LOOKS)</h1>
+    <p>The Device editor settled: <b>Draft A "in-frame live edit"</b> (the frame IS the canvas, controls dock
+    on-screen) + the chosen <b>SectionSwitch</b> as a <b>bottom-docked rail</b> (no pip · icon in-line · four
+    sections <b>SHELL · THEME · STICKERS · LOOKS</b>) + the owner refinements: <b>stickers go on the plastic
+    only</b> (forehead/chin; the screen &amp; the 5 keycaps are no-go, DEV-03/DEV-04/F-04) and a <b>LOOKS</b>
+    section that <b>saves shell + sticker + theme combos</b> (identified by <b>shell · theme</b>, no custom
+    name; <b>SAVE CURRENT</b> is the only save). Reached from Profile's MY DEVICE strip; a <code>FlowTakeover</code>
+    with PROFILE keycap active, frame + NavBand persistent. <b>Personal only.</b> Full §1.6 matrix (D1–D10):
+    editing · shell-switch · theme-preview · sticker place/scale/rotate · the OQ-045 on-shell preview ·
+    premium-reconcile · LOOKS · Skeleton · Offline (writes-gated, SYS-10) · LoadError. Tokens verbatim (5 shell
+    colourways · 6 screen themes); PIXELS / <code>ReconcileSheet</code> / <code>PreviewStrip</code> reused.
+    <i>New components for design-spec formalization (spec-owner): <code>SectionSwitch</code>/<code>SectionCard</code>
+    · <code>StickerStage</code>/<code>TransformBox</code>/<code>PlacedSticker</code>/<code>StickerTray</code> ·
+    <code>SavedLook</code>/<code>LooksGrid</code>. Behavior owed: OQ-045 (closed design-side) · OQ-062 (sticker
+    payload + zones) · OQ-063 (rail app-wide?) · OQ-064 (saved-look model). Values illustrative.</i></p>
+  </div>
+
+  <div class="stage-label">Editing the frame <small>D1 the landing (SHELL) · D2 shell-switch (one body, OQ-042) · D3 whole-page theme preview (DEV-04 floor)</small></div>
+  <div class="stage">
+
+    <!-- ═══ D1 · Editing landing (SHELL) ═══ -->
+    <div class="take">
+      <div class="artboard-label">D1 &middot; Editing &mdash; the in-frame landing (SHELL)</div>
+      <div class="device" data-screen-label="Device states · D1 — Editing (shell)">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="placed cream" style="left:62px; top:13px; width:34px; height:34px; transform:rotate(-9deg);"><svg viewBox="0 0 20 20"><use href="#gl-star"/></svg></div>
+        <div class="placed gold" style="left:290px; top:16px; width:24px; height:24px; transform:rotate(8deg);"><svg viewBox="0 0 20 20"><use href="#gl-crown"/></svg></div>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel"><div class="screen">
+          <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DEVICE</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>27</button></div>
+          <div class="scroll">
+            <div class="edit-readout"><span class="er-dot"></span><div style="display:flex;flex-direction:column;gap:2px;"><span class="er-t">EDITING YOUR DEVICE</span><span class="er-s">TEAL &middot; MIDNIGHT &middot; 2 STICKERS</span></div></div>
+            <div class="sec-title">SHELL</div>
+            <div class="sec-sub">Your colourway &mdash; one handheld, five wraps (DEV-02). A free default always renders (DEV-03).</div>
+            <div class="sec"><h3>YOUR COLOURWAY</h3></div>
+            <div class="tray">
+              <div class="tile sel"><div class="sw dev"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">TEAL</span></div>
+              <div class="tile"><div class="sw dev shell-grape"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">GRAPE</span><span class="pc"><span class="tag-owned">&#10003;</span></span></div>
+              <div class="tile"><div class="sw dev shell-carbon"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">CARBON</span><span class="pc"><span class="tag-owned">&#10003;</span></span></div>
+              <div class="tile"><div class="sw dev shell-sunset"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">SUNSET</span><span class="pc"><span class="price-chip">6 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></span></div>
+              <div class="tile"><div class="sw dev shell-pink"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">PINK</span><span class="pc"><span class="price-chip">6 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></span></div>
+            </div>
+            <div class="hint">Opened from Profile's MY DEVICE. The frame above <b>is</b> what you're editing &mdash; changes show live.</div>
+            <div class="filler"></div>
+          </div>
+          <div class="rail-dock"><div class="rail">
+            <div class="rail-card on"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-shell"/></svg></span><span class="r-l">SHELL</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-theme"/></svg></span><span class="r-l">THEME</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-stickers"/></svg></span><span class="r-l">STICKERS</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-looks"/></svg></span><span class="r-l">LOOKS</span></div>
+          </div></div>
+        </div></div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>D1 &mdash; Editing <em>(the in-frame landing)</em></h3>
+        <p>The device above is the live subject; controls dock on its screen. The bottom <b>SectionSwitch rail</b>
+        (SHELL · THEME · STICKERS · LOOKS) is the converged switcher &mdash; bottom-docked, icon in-line,
+        accent-border selection (no pip). SHELL opens the 5 §1.1 colourways (owned ✓ / premium PIXELS). The
+        forehead already wears two decals; the PIXELS counter rides the header.</p>
+      </div>
+    </div>
+
+    <!-- ═══ D2 · Shell-switch ═══ -->
+    <div class="take">
+      <div class="artboard-label">D2 &middot; Shell-switch &mdash; one body, new wrap (OQ-042)</div>
+      <div class="device shell-carbon" data-screen-label="Device states · D2 — Shell switch">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="placed cream" style="left:62px; top:13px; width:34px; height:34px; transform:rotate(-9deg);"><svg viewBox="0 0 20 20"><use href="#gl-star"/></svg></div>
+        <div class="placed gold" style="left:290px; top:16px; width:24px; height:24px; transform:rotate(8deg);"><svg viewBox="0 0 20 20"><use href="#gl-crown"/></svg></div>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel"><div class="screen">
+          <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DEVICE</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>27</button></div>
+          <div class="scroll">
+            <div class="edit-readout"><span class="er-dot"></span><div style="display:flex;flex-direction:column;gap:2px;"><span class="er-t">SWITCHED &mdash; CARBON WRAP</span><span class="er-s">SAME POCKET &middot; STICKERS + THEME RIDE ALONG</span></div></div>
+            <div class="pstage">
+              <span class="ps-lbl">SAME HANDHELD &mdash; NEW SHELL, LIVE ON YOUR DEVICE</span>
+              <div style="display:flex; align-items:flex-end; gap:20px; padding:6px 0 2px;">
+                <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+                  <div class="mini-dev"><div class="mscr"></div><div class="mnav"><i class="y"></i><i></i><i></i><i></i><i></i></div><span class="mst" style="left:30px; top:7px; width:13px; height:13px;"><svg viewBox="0 0 20 20" style="fill:var(--cream);"><use href="#gl-star"/></svg></span></div>
+                  <span class="ps-lbl">WAS &middot; TEAL</span>
+                </div>
+                <span style="color:var(--scr-accent); font:700 15px var(--pk); align-self:center;">&#10142;</span>
+                <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+                  <div class="mini-dev shell-carbon"><div class="mscr"></div><div class="mnav"><i class="y"></i><i></i><i></i><i></i><i></i></div><span class="mst" style="left:30px; top:7px; width:13px; height:13px;"><svg viewBox="0 0 20 20" style="fill:var(--cream);"><use href="#gl-star"/></svg></span></div>
+                  <span class="ps-lbl" style="color:var(--gold);">NOW &middot; CARBON</span>
+                </div>
+              </div>
+              <span class="swap">SHELLS ARE OUTFITS &mdash; ONE POCKET BODY (OQ-042)</span>
+            </div>
+            <div class="filler"></div>
+          </div>
+          <div class="rail-dock"><div class="rail">
+            <div class="rail-card on"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-shell"/></svg></span><span class="r-l">SHELL</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-theme"/></svg></span><span class="r-l">THEME</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-stickers"/></svg></span><span class="r-l">STICKERS</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-looks"/></svg></span><span class="r-l">LOOKS</span></div>
+          </div></div>
+        </div></div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>D2 &mdash; Shell-switch <em>(shells are outfits — OQ-042)</em></h3>
+        <p>CARBON re-wraps the live frame &mdash; same pocket body, the stickers and theme riding along
+        (decision 0017; DEV-02/03). The <code>PreviewStage</code> before→after pair confirms the swap on
+        <b>your</b> device; a free default always renders, so there's never a broken shell.</p>
+      </div>
+    </div>
+
+    <!-- ═══ D3 · Theme-preview (whole-page) ═══ -->
+    <div class="take">
+      <div class="artboard-label">D3 &middot; Screen theme &mdash; the whole page previews (DEV-04 floor)</div>
+      <div class="device" data-screen-label="Device states · D3 — Theme preview">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="placed cream" style="left:62px; top:13px; width:34px; height:34px; transform:rotate(-9deg);"><svg viewBox="0 0 20 20"><use href="#gl-star"/></svg></div>
+        <div class="placed gold" style="left:290px; top:16px; width:24px; height:24px; transform:rotate(8deg);"><svg viewBox="0 0 20 20"><use href="#gl-crown"/></svg></div>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel"><div class="screen scr-deepsea">
+          <div class="preview-strip">&#9686; PREVIEWING &mdash; DEEP SEA<span class="x">EXIT &#10005;</span></div>
+          <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DEVICE</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>27</button></div>
+          <div class="scroll">
+            <div class="edit-readout"><span class="er-dot"></span><div style="display:flex;flex-direction:column;gap:2px;"><span class="er-t">YOUR WHOLE SCREEN, RE-THEMED</span><span class="er-s">WELLS &middot; ACCENTS &middot; TOOLS &mdash; SWAPPED LIVE</span></div></div>
+            <div class="sec-title">THEME</div>
+            <div class="sec-sub">How the screen looks &mdash; a free baseline + premium (COSM-03).</div>
+            <div class="tray">
+              <div class="tile"><div class="sw theme" style="background:#232045;"><i style="background:#2c2950;"></i><i style="background:#ff9f43;"></i><i style="background:#1a1733;"></i></div><span class="nm">MIDNIGHT</span><span class="pc"><span class="tag-owned">&#10003;</span></span></div>
+              <div class="tile sel"><div class="sw theme" style="background:#0f2e2b;"><i style="background:#173d38;"></i><i style="background:#ffd23f;"></i><i style="background:#0a1f1d;"></i></div><span class="nm">DEEP SEA</span><span class="pc"><span class="price-chip">4 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></span></div>
+              <div class="tile"><div class="sw theme" style="background:#2f1733;"><i style="background:#3d2042;"></i><i style="background:#ff3d77;"></i><i style="background:#1f0e23;"></i></div><span class="nm">BERRY</span><span class="pc"><span class="price-chip">4 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></span></div>
+              <div class="tile"><div class="sw theme" style="background:#ece5d1;"><i style="background:#f9f5e9;"></i><i style="background:#c75c12;"></i><i style="background:#dfd6bd;"></i></div><span class="nm">PAPER</span><span class="pc"><span class="price-chip">4 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></span></div>
+              <div class="tile"><div class="sw theme" style="background:#ddeee9;"><i style="background:#f4faf7;"></i><i style="background:#117672;"></i><i style="background:#c8e0d8;"></i></div><span class="nm">MINT</span><span class="pc"><span class="price-chip">4 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></span></div>
+              <div class="tile"><div class="sw theme" style="background:#e6e1f4;"><i style="background:#f7f5fc;"></i><i style="background:#6c4fd8;"></i><i style="background:#d2c9ec;"></i></div><span class="nm">LILAC</span><span class="pc"><span class="price-chip">4 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></span></div>
+            </div>
+            <div class="floor-note">&#9745; LEGIBILITY FLOOR HELD (DEV-04) &middot; THE SHELL STAYS TEAL PLASTIC (F-04)</div>
+            <div class="filler"></div>
+            <div style="display:flex; align-items:center; gap:9px; padding:9px 11px; background:var(--scr-bg); border:1px solid var(--scr-hairline); margin-bottom:9px;">
+              <span class="bb-have" style="font:600 9px var(--pk); letter-spacing:1px; color:var(--scr-dim);">PREVIEW FREE &mdash; <b style="color:var(--scr-soft);">KEEP WITH BUY</b></span>
+              <span style="flex:1 1 auto;"></span>
+              <button class="btn buy">HOLD TO BUY &middot; 4 PX</button>
+            </div>
+          </div>
+          <div class="rail-dock"><div class="rail">
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-shell"/></svg></span><span class="r-l">SHELL</span></div>
+            <div class="rail-card on"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-theme"/></svg></span><span class="r-l">THEME</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-stickers"/></svg></span><span class="r-l">STICKERS</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-looks"/></svg></span><span class="r-l">LOOKS</span></div>
+          </div></div>
+        </div></div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>D3 &mdash; Screen theme <em>(whole page re-themes; the shell doesn't)</em></h3>
+        <p>DEEP SEA re-themes the entire screen live (the <code>PreviewStrip</code> + wells/accents/tools) under
+        preview-then-acquire (HOLD TO BUY, COSM-03). DEV-04 holds visibly: the <b>legibility floor</b> + the
+        <b>shell stays teal plastic</b> &mdash; a theme dresses the screen, never the body or the nav.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="stage-label">Stickers, the on-shell preview &amp; saved looks <small>D4 place/scale/rotate (plastic only) · D5 the OQ-045 on-shell preview · D6 LOOKS (saved combos)</small></div>
+  <div class="stage">
+
+    <!-- ═══ D4 · Sticker place/scale/rotate (plastic only) ═══ -->
+    <div class="take">
+      <div class="artboard-label">D4 &middot; Stickers &mdash; on the plastic only (screen + keys no-go)</div>
+      <div class="device" data-screen-label="Device states · D4 — Sticker place/scale/rotate">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="decal-zone" style="left:46px; top:8px; width:104px; height:50px;"><span class="zl">DECAL ZONE</span></div>
+        <div class="decal-zone" style="left:252px; top:8px; width:74px; height:50px;"></div>
+        <div class="placed cream" style="left:62px; top:13px; width:36px; height:36px; transform:rotate(-9deg);"><svg viewBox="0 0 20 20"><use href="#gl-star"/></svg></div>
+        <div class="tbox" style="left:60px; top:11px; width:40px; height:40px; transform:rotate(-9deg);"><span class="h tl"></span><span class="h tr"></span><span class="h bl"></span><span class="h br"></span><span class="rot"></span></div>
+        <div class="placed gold" style="left:288px; top:16px; width:26px; height:26px; transform:rotate(8deg);"><svg viewBox="0 0 20 20"><use href="#gl-crown"/></svg></div>
+        <div class="ghost" style="left:176px; top:500px; width:32px; height:32px; transform:rotate(-6deg);"><svg viewBox="0 0 20 20"><use href="#gl-heart"/></svg></div>
+        <div class="block-tag" style="left:150px; top:538px;">&#8856; SCREEN &mdash; DISPLAY ONLY</div>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel"><div class="screen">
+          <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DEVICE</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>27</button></div>
+          <div class="scroll">
+            <div class="edit-readout"><span class="er-dot"></span><div style="display:flex;flex-direction:column;gap:2px;"><span class="er-t">PLACING &mdash; STAR (124% &middot; -9&deg;)</span><span class="er-s">DECALS GO ON THE PLASTIC, NOT THE SCREEN</span></div></div>
+            <div class="sec-title">STICKERS</div>
+            <div class="sec-sub">Drag a decal onto the <b>plastic</b> &mdash; the forehead or chin. The screen &amp; the 5 keys stay clear.</div>
+            <div class="sec"><h3>FREE BASELINE (COSM-02)</h3></div>
+            <div class="tray">
+              <div class="tile sel"><div class="sw glyph"><svg viewBox="0 0 20 20" style="fill:var(--scr-soft);"><use href="#gl-star"/></svg></div><span class="nm">STAR</span></div>
+              <div class="tile"><div class="sw glyph"><svg viewBox="0 0 20 20" style="fill:var(--scr-soft);"><use href="#gl-bolt"/></svg></div><span class="nm">BOLT</span></div>
+              <div class="tile"><div class="sw glyph"><svg viewBox="0 0 20 20" style="fill:var(--scr-soft);"><use href="#gl-heart"/></svg></div><span class="nm">HEART</span></div>
+              <div class="tile"><div class="sw glyph"><svg viewBox="0 0 20 20" style="fill:var(--scr-soft);"><use href="#gl-diamond"/></svg></div><span class="nm">GEM</span></div>
+              <div class="tile"><div class="sw glyph"><svg viewBox="0 0 20 20" style="fill:var(--scr-soft);"><use href="#gl-moon"/></svg></div><span class="nm">MOON</span></div>
+              <div class="tile"><div class="sw glyph"><svg viewBox="0 0 20 20" style="fill:var(--scr-soft);"><use href="#gl-ring"/></svg></div><span class="nm">RING</span></div>
+            </div>
+            <div class="hint"><b>Off-limits:</b> the screen (DEV-04's theme surface) &amp; the 5 nav keys (DEV-03/F-04). Premium packs preview then acquire.</div>
+            <div class="filler"></div>
+          </div>
+          <div class="rail-dock"><div class="rail">
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-shell"/></svg></span><span class="r-l">SHELL</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-theme"/></svg></span><span class="r-l">THEME</span></div>
+            <div class="rail-card on"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-stickers"/></svg></span><span class="r-l">STICKERS</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-looks"/></svg></span><span class="r-l">LOOKS</span></div>
+          </div></div>
+        </div></div>
+        <div class="nav-band">
+          <div class="nav-protect"><span class="npl">NAV &mdash; KEEP CLEAR</span></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>D4 &mdash; Sticker place/scale/rotate <em>(plastic only)</em></h3>
+        <p>The <code>StickerTray</code> + the <code>TransformBox</code> (ring + corner handles + rotate stem,
+        kin to the Canvas <code>sel-ring</code>) place/scale/rotate on the <b>forehead plastic</b> (DECAL ZONE).
+        A decal dragged onto the <b>screen is refused</b> (⊘ DISPLAY ONLY) and the <b>5 nav keys</b> stay
+        protected (NAV — KEEP CLEAR) &mdash; decoration lives on the coloured plastic only (DEV-03/04/F-04).</p>
+      </div>
+    </div>
+
+    <!-- ═══ D5 · On-shell preview (OQ-045) ═══ -->
+    <div class="take">
+      <div class="artboard-label">D5 &middot; On-shell preview (OQ-045) &mdash; handles off, nav legible</div>
+      <div class="device" data-screen-label="Device states · D5 — On-shell preview (OQ-045)">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="placed cream" style="left:62px; top:13px; width:36px; height:36px; transform:rotate(-9deg);"><svg viewBox="0 0 20 20"><use href="#gl-star"/></svg></div>
+        <div class="placed gold" style="left:288px; top:16px; width:26px; height:26px; transform:rotate(8deg);"><svg viewBox="0 0 20 20"><use href="#gl-crown"/></svg></div>
+        <div class="placed pink" style="left:120px; top:18px; width:22px; height:22px; transform:rotate(-14deg);"><svg viewBox="0 0 20 20"><use href="#gl-bolt"/></svg></div>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel"><div class="screen">
+          <div class="preview-strip accent">&#9678; ON-SHELL PREVIEW &mdash; HOW IT WEARS<span class="x">EDIT &#9666;</span></div>
+          <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DEVICE</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>27</button></div>
+          <div class="scroll">
+            <div class="edit-readout"><span class="er-dot ok"></span><div style="display:flex;flex-direction:column;gap:2px;"><span class="er-t">YOUR DEVICE &mdash; AS IT WEARS</span><span class="er-s">3 STICKERS &middot; TEAL &middot; MIDNIGHT</span></div></div>
+            <div class="floor-note" style="color:#7fe0c3;">&#9745; OQ-045 &mdash; STICKERS RENDER ON THE REAL SHELL, NAV STILL FULLY LEGIBLE (DEV-03)</div>
+            <div class="hint">Handles hidden, controls quiet &mdash; the true on-shell preview. Saved live to your <b>stickerComposition</b>; personal only, never published.</div>
+            <div class="filler"></div>
+            <div style="display:flex; align-items:center; gap:9px; margin-bottom:9px;">
+              <span class="bb-have" style="font:600 9px var(--pk); letter-spacing:1px; color:var(--scr-dim);">SAVED LIVE</span>
+              <span style="flex:1 1 auto;"></span>
+              <button class="btn act">&#9666; KEEP EDITING</button>
+              <button class="btn secondary">DONE</button>
+            </div>
+          </div>
+          <div class="rail-dock"><div class="rail">
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-shell"/></svg></span><span class="r-l">SHELL</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-theme"/></svg></span><span class="r-l">THEME</span></div>
+            <div class="rail-card on"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-stickers"/></svg></span><span class="r-l">STICKERS</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-looks"/></svg></span><span class="r-l">LOOKS</span></div>
+          </div></div>
+        </div></div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>D5 &mdash; On-shell preview <em>(OQ-045 closed)</em></h3>
+        <p>Handles off, controls quiet &mdash; the <b>true preview of how the device wears</b>: every decal sits
+        on the real shell where you placed it (forehead plastic), and the nav keycaps stay fully legible
+        beneath the decoration (DEV-03). The continuous in-frame preview that closes the OQ-045 debt; saved live
+        to <code>stickerComposition</code>, personal only.</p>
+      </div>
+    </div>
+
+    <!-- ═══ D6 · LOOKS (saved combos) ═══ -->
+    <div class="take">
+      <div class="artboard-label">D6 &middot; LOOKS &mdash; saved shell · theme combos</div>
+      <div class="device" data-screen-label="Device states · D6 — LOOKS">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="placed cream" style="left:62px; top:14px; width:32px; height:32px; transform:rotate(-9deg);"><svg viewBox="0 0 20 20"><use href="#gl-star"/></svg></div>
+        <div class="placed gold" style="left:290px; top:17px; width:24px; height:24px; transform:rotate(8deg);"><svg viewBox="0 0 20 20"><use href="#gl-crown"/></svg></div>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel"><div class="screen">
+          <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DEVICE</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>27</button></div>
+          <div class="scroll">
+            <div class="edit-readout"><span class="er-dot"></span><div style="display:flex;flex-direction:column;gap:2px;"><span class="er-t">YOUR LOOKS &mdash; 4 SAVED</span><span class="er-s">SHELL + STICKERS + THEME, SAVED AS ONE</span></div></div>
+            <div class="sec-title">LOOKS</div>
+            <div class="sec-sub">Save the whole styled combo &mdash; shell, stickers &amp; theme &mdash; and re-apply it in a tap.</div>
+            <div class="sec"><h3>SAVED LOOKS</h3></div>
+            <div class="looks-grid">
+              <div class="look cur">
+                <span class="on-tag">ON NOW</span>
+                <div class="mini-dev"><div class="mscr"></div><div class="mnav"><i class="y"></i><i></i><i></i><i></i><i></i></div><span class="mst" style="left:30px; top:7px; width:12px; height:12px;"><svg viewBox="0 0 20 20" style="fill:var(--cream);"><use href="#gl-star"/></svg></span></div>
+                <span class="lk-id">TEAL<br/>MIDNIGHT</span>
+              </div>
+              <div class="look">
+                <div class="mini-dev shell-carbon"><div class="mscr" style="background:#0f2e2b;"></div><div class="mnav"><i class="y"></i><i></i><i></i><i></i><i></i></div><span class="mst" style="left:11px; top:8px; width:11px; height:11px;"><svg viewBox="0 0 20 20" style="fill:var(--gold);"><use href="#gl-bolt"/></svg></span></div>
+                <span class="lk-id">CARBON<br/>DEEP SEA</span>
+              </div>
+              <div class="look">
+                <div class="mini-dev shell-sunset"><div class="mscr" style="background:#2f1733;"></div><div class="mnav"><i class="y"></i><i></i><i></i><i></i><i></i></div><span class="mst" style="left:32px; top:8px; width:12px; height:12px;"><svg viewBox="0 0 20 20" style="fill:var(--cream);"><use href="#gl-heart"/></svg></span></div>
+                <span class="lk-id">SUNSET<br/>BERRY</span>
+              </div>
+              <div class="look">
+                <div class="mini-dev shell-grape"><div class="mscr" style="background:#e6e1f4;"></div><div class="mnav"><i class="y"></i><i></i><i></i><i></i><i></i></div><span class="mst" style="left:32px; top:7px; width:11px; height:11px;"><svg viewBox="0 0 20 20" style="fill:var(--cream);"><use href="#gl-moon"/></svg></span></div>
+                <span class="lk-id">GRAPE<br/>LILAC</span>
+              </div>
+              <div class="save-tile">
+                <div class="st-box"><span class="st-plus">&#10010;</span><span class="st-l">SAVE<br/>CURRENT</span></div>
+                <span class="lk-id" style="color:var(--scr-dim);">NEW</span>
+              </div>
+            </div>
+            <div class="hint">Tap a saved look to wear it instantly. <b>SAVE CURRENT</b> snapshots the live combo. Looks are personal only.</div>
+            <div class="filler"></div>
+          </div>
+          <div class="rail-dock"><div class="rail">
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-shell"/></svg></span><span class="r-l">SHELL</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-theme"/></svg></span><span class="r-l">THEME</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-stickers"/></svg></span><span class="r-l">STICKERS</span></div>
+            <div class="rail-card on"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-looks"/></svg></span><span class="r-l">LOOKS</span></div>
+          </div></div>
+        </div></div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>D6 &mdash; LOOKS <em>(save &amp; re-apply combos)</em></h3>
+        <p>The rail's 4th section: each <code>SavedLook</code> bundles <b>shell + sticker composition + theme</b>
+        into one re-applyable thumbnail, <b>identified by its shell · theme</b> (no custom name, per the owner).
+        The live combo is tagged <b>ON NOW</b>; <b>SAVE CURRENT</b> is the only save affordance. Tap any look to
+        wear it instantly &mdash; personal only. Data model logged as OQ-064.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="stage-label">Commerce &amp; lifecycle <small>D7 premium-reconcile · D8 Skeleton · D9 Offline (writes gated, SYS-10) · D10 LoadError</small></div>
+  <div class="stage">
+
+    <!-- ═══ D7 · Premium reconcile ═══ -->
+    <div class="take">
+      <div class="artboard-label">D7 &middot; Premium reconcile &mdash; ReconcileSheet + the bridge</div>
+      <div class="device" data-screen-label="Device states · D7 — Premium reconcile">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="placed cream" style="left:62px; top:13px; width:34px; height:34px; transform:rotate(-9deg);"><svg viewBox="0 0 20 20"><use href="#gl-invader"/></svg></div>
+        <div class="placed gold" style="left:290px; top:16px; width:24px; height:24px; transform:rotate(8deg);"><svg viewBox="0 0 20 20"><use href="#gl-ring"/></svg></div>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel"><div class="screen">
+          <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DEVICE</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button></div>
+          <div class="scroll" style="opacity:.5;">
+            <div class="edit-readout"><span class="er-dot"></span><div style="display:flex;flex-direction:column;gap:2px;"><span class="er-t">PREVIEWING PREMIUM &mdash; KEEP TO COMMIT</span><span class="er-s">NEON ZOO PACK + DEEP SEA THEME</span></div></div>
+            <div class="filler"></div>
+          </div>
+          <div class="scrim"></div>
+          <div class="reconcile">
+            <div class="rc-h">BEFORE IT'S YOURS &mdash; 2 PREMIUM PICKS ON YOUR DEVICE (COSM-03)</div>
+            <div class="rc-row">
+              <span class="rc-sw"><svg viewBox="0 0 20 20" style="fill:var(--scr-accent);"><use href="#gl-invader"/></svg></span>
+              <span><span class="rc-name">NEON ZOO</span><br/><span class="rc-type">SHELL STICKER PACK &middot; 8 GLYPHS</span></span>
+              <span class="rc-x"><span class="price-chip">6 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><button class="rc-rm">&#10005;</button></span>
+            </div>
+            <div class="rc-row">
+              <span class="rc-sw"><span style="width:18px;height:18px;background:#0f2e2b;border:1px solid #ffd23f;display:block;"></span></span>
+              <span><span class="rc-name">DEEP SEA</span><br/><span class="rc-type">SCREEN THEME</span></span>
+              <span class="rc-x"><span class="price-chip">4 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><button class="rc-rm">&#10005;</button></span>
+            </div>
+            <div class="rc-total">TOTAL <span class="price-chip big">10 <svg width="12" height="12" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span></div>
+            <div class="short-strip">&#9888; SHORT BY 5 PX &mdash; YOU HAVE 5</div>
+            <div class="packs">
+              <div class="pack"><span class="amt">+30 <svg width="13" height="13" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="val">10.0 PX / $</span><button class="btn secondary" style="padding:7px 10px; font-size:10px;">$2.99</button></div>
+              <div class="pack"><span class="amt">+80 <svg width="13" height="13" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="val"><b>+14% BETTER</b></span><button class="btn secondary" style="padding:7px 10px; font-size:10px;">$6.99</button></div>
+            </div>
+            <div class="buybar">
+              <div style="display:flex;flex-direction:column;gap:2px;"><span class="bb-have">YOU HAVE <b>5 PX</b></span><span class="bb-have" style="color:var(--scr-grip);">TOP UP TO ARM</span></div>
+              <span class="spacer"></span>
+              <button class="btn buy disabled">HOLD TO ACQUIRE ALL &middot; 10 PX</button>
+            </div>
+            <div class="rc-foot"><a class="tert" href="#">REMOVE ALL PREMIUM &mdash; KEEP IT FREE</a><a class="tert dim" href="#">CANCEL</a></div>
+          </div>
+        </div></div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>D7 &mdash; Premium reconcile <em>(the Store's grammar)</em></h3>
+        <p>KEEP with premiums live (a NEON ZOO pack + DEEP SEA theme) summons the <code>ReconcileSheet</code>
+        &mdash; the COSM-03/CARD-13 keep-gate: per-item ✕, TOTAL, the short-by-N strip, the <code>PackTile</code>
+        bridge (dollars only on the white keycap), HOLD TO ACQUIRE ALL, REMOVE ALL PREMIUM as the no-spend exit.
+        Rides <code>POST /cosmetics/acquire-batch</code>.</p>
+      </div>
+    </div>
+
+    <!-- ═══ D8 · Skeleton ═══ -->
+    <div class="take">
+      <div class="artboard-label">D8 &middot; Loading &mdash; Skeleton (solid fills)</div>
+      <div class="device" data-screen-label="Device states · D8 — Skeleton">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel"><div class="screen">
+          <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DEVICE</h2><span class="fh-spacer"></span><span class="sk-bar" style="width:36px; height:22px;"></span></div>
+          <div class="scroll">
+            <div class="sk-bar" style="height:38px; margin:2px 1px 0;"></div>
+            <div class="sk-bar" style="height:18px; width:46%; margin:13px 2px 0;"></div>
+            <div class="sk-bar" style="height:11px; width:74%; margin:8px 2px 0;"></div>
+            <div style="display:flex; gap:8px; margin-top:14px;">
+              <span class="sk-block" style="width:54px; height:54px;"></span><span class="sk-block" style="width:54px; height:54px;"></span><span class="sk-block" style="width:54px; height:54px;"></span><span class="sk-block" style="width:54px; height:54px;"></span><span class="sk-block" style="width:54px; height:54px;"></span>
+            </div>
+            <div class="filler"></div>
+          </div>
+          <div class="rail-dock"><div class="rail">
+            <div class="rail-card"><span class="sk-bar" style="width:54px; height:18px;"></span></div>
+            <div class="rail-card"><span class="sk-bar" style="width:54px; height:18px;"></span></div>
+            <div class="rail-card"><span class="sk-bar" style="width:54px; height:18px;"></span></div>
+            <div class="rail-card"><span class="sk-bar" style="width:54px; height:18px;"></span></div>
+          </div></div>
+        </div></div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>D8 &mdash; Loading <em>(`Skeleton`, solid fills)</em></h3>
+        <p>The §1.6 Skeleton: <b>solid fills</b> (never dashes, so loading never reads as an invitation) for the
+        header, the section title/sub, the colourway tray, and the rail. The frame + nav render immediately
+        (they're chrome); the cosmetics library fills in.</p>
+      </div>
+    </div>
+
+    <!-- ═══ D9 · Offline (writes gated) ═══ -->
+    <div class="take">
+      <div class="artboard-label">D9 &middot; Offline &mdash; browse from cache, writes gated (SYS-10)</div>
+      <div class="device" data-screen-label="Device states · D9 — Offline">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="placed cream" style="left:62px; top:13px; width:34px; height:34px; transform:rotate(-9deg);"><svg viewBox="0 0 20 20"><use href="#gl-star"/></svg></div>
+        <div class="placed gold" style="left:290px; top:16px; width:24px; height:24px; transform:rotate(8deg);"><svg viewBox="0 0 20 20"><use href="#gl-crown"/></svg></div>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel"><div class="screen">
+          <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DEVICE</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>27</button></div>
+          <div class="scroll">
+            <div class="offline-strip"><svg viewBox="0 0 24 24"><use href="#ic-wifi-off"/></svg>OFFLINE &mdash; CHANGES SYNC WHEN YOU'RE BACK<span class="sync">RETRYING&hellip;</span></div>
+            <div class="sec-title">SHELL</div>
+            <div class="sec-sub">Your owned wraps work from cache &mdash; applying a change waits for the network.</div>
+            <div class="tray">
+              <div class="tile sel"><div class="sw dev"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">TEAL</span></div>
+              <div class="tile"><div class="sw dev shell-grape"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">GRAPE</span><span class="pc"><span class="tag-owned">&#10003;</span></span></div>
+              <div class="tile"><div class="sw dev shell-carbon"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">CARBON</span><span class="pc"><span class="tag-owned">&#10003;</span></span></div>
+              <div class="tile" style="opacity:.5;"><div class="sw dev shell-sunset"><div class="ds"></div><div class="dn"><i class="y"></i><i></i><i></i><i></i><i></i></div></div><span class="nm">SUNSET</span><span class="pc"><span class="tag-locked">&#128274;</span></span></div>
+            </div>
+            <div class="gated-note">&#128274; <b>Buying &amp; saving wait for the network.</b> Premium wraps/themes/packs and SAVE CURRENT re-arm when you reconnect (SYS-10).</div>
+            <div class="filler"></div>
+          </div>
+          <div class="rail-dock"><div class="rail">
+            <div class="rail-card on"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-shell"/></svg></span><span class="r-l">SHELL</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-theme"/></svg></span><span class="r-l">THEME</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-stickers"/></svg></span><span class="r-l">STICKERS</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-looks"/></svg></span><span class="r-l">LOOKS</span></div>
+          </div></div>
+        </div></div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>D9 &mdash; Offline <em>(writes gated, SYS-10)</em></h3>
+        <p>The calm <code>OfflineStrip</code> (auto-recovers, never an alarm). Your <b>owned</b> wraps/themes/
+        stickers + saved looks browse from cache; the <b>writes are gated</b> &mdash; premium acquires and
+        SAVE CURRENT re-arm when you reconnect (locked tiles + the dashed note). Personal data stays
+        read-only-usable.</p>
+      </div>
+    </div>
+
+    <!-- ═══ D10 · LoadError ═══ -->
+    <div class="take">
+      <div class="artboard-label">D10 &middot; Error &mdash; LoadError "Signal Lost" + RETRY</div>
+      <div class="device" data-screen-label="Device states · D10 — LoadError">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="placed cream" style="left:62px; top:13px; width:34px; height:34px; transform:rotate(-9deg);"><svg viewBox="0 0 20 20"><use href="#gl-star"/></svg></div>
+        <div class="placed gold" style="left:290px; top:16px; width:24px; height:24px; transform:rotate(8deg);"><svg viewBox="0 0 20 20"><use href="#gl-crown"/></svg></div>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel"><div class="screen">
+          <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DEVICE</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>27</button></div>
+          <div class="scroll">
+            <div class="err-wrap">
+              <div class="err-card"><span class="bang">!</span></div>
+              <div class="err-eyebrow">COULDN'T LOAD COSMETICS</div>
+              <div class="err-title">SIGNAL LOST</div>
+              <div class="err-sub">Your device and its current look are safe &mdash; we just couldn't reach the cosmetics library. Try again.</div>
+              <button class="btn act err-retry">&#8635; RETRY</button>
+            </div>
+            <div class="filler"></div>
+          </div>
+          <div class="rail-dock dim"><div class="rail">
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-shell"/></svg></span><span class="r-l">SHELL</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-theme"/></svg></span><span class="r-l">THEME</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-stickers"/></svg></span><span class="r-l">STICKERS</span></div>
+            <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 22 22"><use href="#sec-looks"/></svg></span><span class="r-l">LOOKS</span></div>
+          </div></div>
+        </div></div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>D10 &mdash; Error <em>(`LoadError`, §1.6)</em></h3>
+        <p>The cosmetics library failed to load → the shared <code>LoadError</code> family: dashed stepped-card
+        silhouette + accent <b>!</b> + <b>SIGNAL LOST</b> + the orange <code>KeycapButton/action-alt</code>
+        <b>RETRY</b>. The copy reassures the device &amp; current look are safe; the rail dims while the library
+        is unreachable.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
