@@ -183,11 +183,13 @@ existing design system. Used the **brainstorming skill**. Outcome:
   the selected card's **options surface inline** (no drawer) — its `EquipReadout` loadout + **SET AS MAIN ·
   EDIT IN STYLER · DELETE** (red `/destructive`; DELETE → the `ConfirmSheet`, OQ-061). M3's caption + hint
   updated to the tap-select model.
-- **Follow-ups (owner, 2026-06-15):** **PLATFORMS now reads on the stats-back card** in the owned view
-  (M1 resting + M2 while editing — value `PC · PS`); it had only been expressed inside the edit form. Stays
-  **privacy-gated off the friend card** (M7 — notes/rating/platforms owner-only, COL-04/05). The redundant
-  **orange EDIT STATS button was removed** from the PLAY action row — the **EDIT STATS link in the YOUR PLAY
-  header** is now the single edit affordance (SWITCH CARD · SHARE remain).
+- **Follow-ups (owner, 2026-06-15):** **PLATFORMS now reads in the YOUR PLAY readout** (M1 — as `PC` / `PS`
+  chips beside RATING/NOTES, with a per-row edit pencil); it had only been expressed inside the edit form. It
+  was briefly placed on the card back, but the owner kept the **standardized card back clean** (HOURS · % ·
+  STATUS · SINCE only — provenance below, CARD-01); platforms live on the Play screen, not the trophy.
+  Still **privacy-gated off the friend card** (M7 — notes/rating/platforms owner-only, COL-04/05). The
+  redundant **orange EDIT STATS button was removed** from the PLAY action row — the **EDIT STATS link in the
+  YOUR PLAY header** is now the single edit affordance (SWITCH CARD · SHARE remain).
 - **Next:** **converge B (`dual-dossier`)** → `game-page-states.html` (full matrix + deferred lifecycle:
   soft-hidden · loading · offline), then Design-spec (formalize the `SectionSwitch` reuse + the dossier-form
   `PlayStats` edit) + API page-audit. Reconcile the **CARD-01 card-back adoption-count** at converge. (A
