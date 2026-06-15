@@ -129,6 +129,18 @@
   just write those three fields onto `/me/device` (a look = a saved snapshot; the live device is one of them)?
   Device cousin of the card editor's **OQ-056** (named saves + customizations gallery). **Personal-only**, like
   the rest of the device. (Device editor LOOKS, 2026-06-14) [behavior]
+- OQ-065: **Device editor — premium-preview persistence + the "cart" model.** The editor is a **live try-on**:
+  the converged board (`device-states.html` D7 + the `KeepBar`) lets you preview **unowned** premium shell ·
+  theme · stickers and assumes those previews **persist across section switches** (SHELL/THEME/STICKERS — the
+  rail changes what you edit, it doesn't strip what's applied) and **accumulate** into one `KeepBar` tally →
+  **KEEP → the `ReconcileSheet`** (acquire-batch, the "cart"). Mirrors the Styler's multi-premium →
+  reconcile-at-KEEP (CARD-13). **Spec owner to ratify (DEV-01/COSM-03):** (a) previews persist within the
+  editing session across sections — **yes** per the design; (b) **exit-with-pending** — leaving with premiums
+  in preview prompts the reconcile (keep) or discards them (the free default re-renders), never silently keeps
+  the unowned; (c) **per-item remove** in the reconcile reverts that facet to owned/free; (d) `/me/device`
+  (`activeShellId`·`screenThemeId`·`stickerComposition`) only ever references **owned** items — previews are
+  client-side until acquired; (e) any **cap** on simultaneous previews. Pairs with OQ-062/064.
+  (Device editor premium try-on, 2026-06-15) [behavior]
 
 ## Resolved
 - OQ-053 → **Upcoming notify-me has a backing endpoint** (Discover §3.2 page-audit, api-contract 0.21):
