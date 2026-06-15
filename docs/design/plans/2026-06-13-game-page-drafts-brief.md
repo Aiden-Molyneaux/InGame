@@ -173,6 +173,17 @@ existing design system. Used the **brainstorming skill**. Outcome:
   + `PresenceStats` + friends-who-own) · M6 neutral (PLAY locked) · M7 friend dual-face (privacy-gated +
   compare) · M8 upcoming/be-first. Carries OQ-058 (rating) · OQ-061 (delete/`ConfirmSheet`); the CARD-01
   card-back adoption-count reconcile is still pending at converge.
-- **Next:** owner **picks A (`trophy-dualface`) vs B (`dual-dossier`)** — or a blend — → converge the choice
-  → `game-page-states.html` (full matrix + deferred lifecycle), then Design-spec + API page-audit. (Earlier
-  trophy/draft-A files kept for history.)
+- **PICKED + refined → B wins (owner, 2026-06-15):** *"the dossier take looks better."* Owner chose **B
+  (`dual-dossier`)** over A (`trophy-dualface`) and asked for 3 refinements, now applied: **(1)** the bottom
+  **`SectionSwitch` buttons are one-line** (icon inline with the label) — and the **pink pip is dropped**
+  (matches the converged device-editor rail + the on-screen-marker audit; active = `scr.accent` border +
+  orange icon; locked PLAY shows an inline padlock instead of a badge). **(2)** the **CARDS switcher adopts
+  the dual-face draft's tap-select** — the selected card gets a **thin orange ring with a small gap** (a
+  responsive moat: an orange stepped `::before` + a screen-bg `::after`, so it works on the grid cells). **(3)**
+  the selected card's **options surface inline** (no drawer) — its `EquipReadout` loadout + **SET AS MAIN ·
+  EDIT IN STYLER · DELETE** (red `/destructive`; DELETE → the `ConfirmSheet`, OQ-061). M3's caption + hint
+  updated to the tap-select model.
+- **Next:** **converge B (`dual-dossier`)** → `game-page-states.html` (full matrix + deferred lifecycle:
+  soft-hidden · loading · offline), then Design-spec (formalize the `SectionSwitch` reuse + the dossier-form
+  `PlayStats` edit) + API page-audit. Reconcile the **CARD-01 card-back adoption-count** at converge. (A
+  `trophy-dualface` + the earlier trophy/draft-A files retired, kept for history.)
