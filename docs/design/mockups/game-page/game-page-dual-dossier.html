@@ -158,7 +158,7 @@
   .drow .dv { font: 700 13px var(--pk); letter-spacing: .5px; color: var(--scr-text); display: inline-flex; align-items: center; gap: 7px; text-align: right; }
   .drow .dv small { font: 600 9px var(--pk); color: var(--scr-dim); }
   .drow .dv .pen { width: 11px; height: 11px; opacity: .5; } .drow .dv .pen svg { width: 11px; height: 11px; } .drow .dv .pen svg path { stroke: var(--scr-soft); }
-  .drow.editing { background: rgba(255,159,67,.1); box-shadow: inset 2px 0 0 var(--scr-accent); }
+  .drow.editing { background: rgba(255,159,67,.1); box-shadow: inset 0 0 0 1.5px var(--scr-accent); }
   .drow.notes { align-items: flex-start; flex-direction: column; gap: 5px; }
   /* stacked field — label on top, the full option set wrapping below (for fields with more options than fit a row, e.g. STATUS) */
   .drow.stk { align-items: flex-start; flex-direction: column; gap: 7px; }
@@ -449,7 +449,7 @@
                 <div class="drow"><span class="dl">PLATFORMS</span><span class="dv"><span class="status-row"><span class="schip on">PC</span><span class="schip on">PS</span><span class="schip">XB</span></span></span></div>
                 <div class="drow"><span class="dl">OWNED SINCE</span><span class="dv"><span class="field-inline"><span class="q" style="font-size:11px;">SEP 2014</span></span></span></div>
                 <div class="drow" style="opacity:.6;"><span class="dl">RATING <span style="color:var(--scr-grip); font-weight:600;">PENDING (OQ-058)</span></span><span class="dv"><span class="stars" style="font-size:12px;">&#9733;&#9733;&#9733;&#9733;<span class="off">&#9733;</span></span></span></div>
-                <div class="drow notes editing"><span class="dl">NOTES</span><span class="field-inline note-field">Back for the new season &mdash; chasing the raid title.<span class="caret"></span></span></div>
+                <div class="drow notes"><span class="dl">NOTES</span><span class="field-inline note-field">Back for the new season &mdash; chasing the raid title.</span></div>
               </div>
               <div class="hint" style="text-align:left;"><b>Edited in a form, not on the card.</b> EDIT STATS flips the whole readout to fields &mdash; HOURS (editing) · % · STATUS · PLATFORMS · OWNED-SINCE · NOTES (`PATCH /me/collection/:entryId`). The <b>stats back reflects it live</b> (HOURS &rarr; 211). Provenance stays auto. RATING is PENDING (OQ-058).</div>
             </div>
