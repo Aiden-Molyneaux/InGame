@@ -188,8 +188,9 @@ existing design system. Used the **brainstorming skill**. Outcome:
   was briefly placed on the card back, but the owner kept the **standardized card back clean** (HOURS · % ·
   STATUS · SINCE only — provenance below, CARD-01); platforms live on the Play screen, not the trophy.
   Still **privacy-gated off the friend card** (M7 — notes/rating/platforms owner-only, COL-04/05). The
-  redundant **orange EDIT STATS button was removed** from the PLAY action row — the **EDIT STATS link in the
-  YOUR PLAY header** is now the single edit affordance (SWITCH CARD · SHARE remain).
+  duplicate EDIT STATS affordance was **de-duped to the orange `EDIT STATS` button** in the PLAY action row
+  (owner kept the button, dropped the text link from the YOUR PLAY header; SWITCH CARD · SHARE alongside).
+  The M2 form header's `COL-02..06` spec-ID tag was dropped (chrome, not content).
 - **Next:** **converge B (`dual-dossier`)** → `game-page-states.html` (full matrix + deferred lifecycle:
   soft-hidden · loading · offline), then Design-spec (formalize the `SectionSwitch` reuse + the dossier-form
   `PlayStats` edit) + API page-audit. Reconcile the **CARD-01 card-back adoption-count** at converge. (A
