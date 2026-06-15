@@ -198,6 +198,16 @@ existing design system. Used the **brainstorming skill**. Outcome:
   should appear.)* The **CARDS `SectionSwitch` count chip was removed** (the button reads just "CARDS"). The
   **DESIGN NEW tile now matches the card size** (`align-self: start` — it had stretched to the taller
   ADOPTED-cell row height).
+- **Bugfix #4 (owner, 2026-06-15) — button rows misaligned:** the action rows (M1 EDIT STATS/SWITCH/SHARE ·
+  M2 DONE EDITING/CANCEL · M3 SET-AS-MAIN/EDIT/DELETE) rendered the **colored button ~2× the cream ones**.
+  Inspected via a live preview server (`preview_eval`, getBoundingClientRect): the **`.btn.sec` cream buttons
+  were also matching the section-header `.sec` rule** (`.sec { margin: 15px 2px 8px; justify-content:
+  space-between }`) — a **class-name collision**. The stray margin inflated the cream buttons' *margin box* to
+  ~2×, which set the flex line height; the colored buttons (margin 0) then stretched to it. Fix: insulate the
+  base `.btn` from `.sec` — `margin: 0; justify-content: flex-start` (now `.btn` overrides every property
+  `.sec` sets). Verified: all rows equal height + identical tops. *(Same `.btn.sec`/`.sec` collision exists in
+  the other game-page mockups; at converge, the formalized `KeycapButton` must not reuse the `SectionHeader`
+  class — give the secondary keycap its own modifier.)*
 - **Next:** **converge B (`dual-dossier`)** → `game-page-states.html` (full matrix + deferred lifecycle:
   soft-hidden · loading · offline), then Design-spec (formalize the `SectionSwitch` reuse + the dossier-form
   `PlayStats` edit) + API page-audit. Reconcile the **CARD-01 card-back adoption-count** at converge. (A
