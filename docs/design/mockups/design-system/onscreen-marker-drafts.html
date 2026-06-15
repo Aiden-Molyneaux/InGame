@@ -98,11 +98,17 @@
   /* TODAY — the pink LED leaking onto the screen (round, glowing) */
   .led { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px 1.5px rgba(255,61,119,.85); }
 
-  /* A — orange square with one PIXEL removed from each corner as a SQUARE NOTCH (right angles, not a
-     diagonal chamfer) — a true pixel-art corner. 1px at the 9px native size (≈11.1%); the notch lands on
-     integer pixel boundaries so it stays crisp, and the % scales the block up on the enlarged glyph. */
+  /* A — orange pixel square, now HOLLOW: a square frame whose outer edge AND inner cut-out are both
+     pixel-notched squares (corner pixels removed as square notches, right angles — not chamfers). Built as
+     a single clip-path "keyhole": the outer ring (clockwise) + the inner hole (counter-wound) joined by a
+     zero-width seam down the centre of the top edge, so the centre is truly transparent (shows whatever is
+     behind it). 9px native; notches land on integer pixel boundaries to stay crisp; % scales on the glyph. */
   .sq { width: 9px; height: 9px; background: var(--scr-accent);
-    clip-path: polygon(11.1% 0, 88.9% 0, 88.9% 11.1%, 100% 11.1%, 100% 88.9%, 88.9% 88.9%, 88.9% 100%, 11.1% 100%, 11.1% 88.9%, 0 88.9%, 0 11.1%, 11.1% 11.1%); }
+    clip-path: polygon(
+      11.1% 0%, 50% 0%, 50% 22.2%, 33.3% 22.2%, 33.3% 33.3%, 22.2% 33.3%, 22.2% 66.7%, 33.3% 66.7%,
+      33.3% 77.8%, 66.7% 77.8%, 66.7% 66.7%, 77.8% 66.7%, 77.8% 33.3%, 66.7% 33.3%, 66.7% 22.2%, 50% 22.2%,
+      50% 0%, 88.9% 0%, 88.9% 11.1%, 100% 11.1%, 100% 88.9%, 88.9% 88.9%, 88.9% 100%, 11.1% 100%,
+      11.1% 88.9%, 0% 88.9%, 0% 11.1%, 11.1% 11.1%); }
 
   /* B — orange tick (a shape-coded "chosen", not just a colour) */
   .tick { display: block; }
@@ -199,9 +205,9 @@
           <div class="seg active">UP NEXT<span class="mk-corner sq"></span></div>
           <div class="seg">DISCOVER</div></div></div></div>
       <div class="notes">
-        <p><b>The direct swap</b> — same footprint as the pip, but square + orange + flat. <b>One pixel removed
-          from each corner</b> as a square notch (right angles, not a chamfer) — a true pixel-art corner in the retro
-          language the PIXELS mark speaks; unmistakably "ours" and on-screen.</p>
+        <p><b>The direct swap</b> — same footprint as the pip, now <b>hollow</b>: a square frame whose outer edge
+          and inner cut-out are both <b>pixel-notched squares</b> (corner pixels removed, right angles — not chamfers).
+          A crisp pixel-art reticle in the retro language the PIXELS mark speaks; unmistakably "ours" and on-screen.</p>
         <p>Role-agnostic: reads the same on a keycap corner, a row, or a segment. <b>Your orange square.</b></p>
         <p class="con">Still an abstract mark (colour + shape, no literal meaning).</p>
       </div>
