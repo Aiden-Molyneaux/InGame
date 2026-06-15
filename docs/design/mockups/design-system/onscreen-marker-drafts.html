@@ -98,9 +98,10 @@
   /* TODAY — the pink LED leaking onto the screen (round, glowing) */
   .led { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px 1.5px rgba(255,61,119,.85); }
 
-  /* A — orange C5 square (the GameCard silhouette in miniature; flat) */
-  .sq { width: 8px; height: 8px; background: var(--scr-accent);
-    clip-path: polygon(22% 0, 100% 0, 100% 78%, 78% 100%, 0 100%, 0 22%); }
+  /* A — orange square with PIXEL-STEP corners (the GameCard C5 double-step, TL+BR; flat).
+     2-step staircase per cut corner — reads as the retro pixel-cut the PIXELS mark speaks. */
+  .sq { width: 9px; height: 9px; background: var(--scr-accent);
+    clip-path: polygon(40% 0, 100% 0, 100% 60%, 80% 60%, 80% 80%, 60% 80%, 60% 100%, 0 100%, 0 40%, 20% 40%, 20% 20%, 40% 20%); }
 
   /* B — orange tick (a shape-coded "chosen", not just a colour) */
   .tick { display: block; }
@@ -197,8 +198,9 @@
           <div class="seg active">UP NEXT<span class="mk-corner sq"></span></div>
           <div class="seg">DISCOVER</div></div></div></div>
       <div class="notes">
-        <p><b>The direct swap</b> — same footprint as the pip, but square + orange + flat. The TL/BR step makes it
-          <b>the GameCard silhouette in miniature</b>, so the marker is unmistakably "ours" and on-screen.</p>
+        <p><b>The direct swap</b> — same footprint as the pip, but square + orange + flat. <b>Pixel-step TL/BR
+          corners</b> (the GameCard's C5 double-step) make it the card silhouette in miniature — the retro pixel-cut
+          the PIXELS mark already speaks, unmistakably "ours" and on-screen.</p>
         <p>Role-agnostic: reads the same on a keycap corner, a row, or a segment. <b>Your orange square.</b></p>
         <p class="con">Still an abstract mark (colour + shape, no literal meaning).</p>
       </div>
