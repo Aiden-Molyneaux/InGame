@@ -150,8 +150,8 @@
   .slip.r1 { transform: rotate(-2deg); } .slip.r2 { transform: rotate(1.5deg); } .slip.r3 { transform: rotate(-1deg); }
   .slip.pulled { transform: translateY(-10px); }
   .slip.pulled .pane { border: 1.5px solid var(--scr-accent); box-shadow: 0 8px 16px rgba(0,0,0,.5), 0 0 10px rgba(255,159,67,.3); }
-  .slip.pulled .spip { position: absolute; top: -4px; right: 0; width: 7px; height: 7px; border-radius: 50%; z-index: 3;
-    background: var(--accent); box-shadow: 0 0 6px 1.5px rgba(255,61,119,.8); }
+  .slip.pulled .spip { position: absolute; top: -4px; right: 0; width: 7px; height: 7px; z-index: 3;
+    background: var(--scr-accent); clip-path: polygon(11.1% 0, 88.9% 0, 88.9% 11.1%, 100% 11.1%, 100% 88.9%, 88.9% 88.9%, 88.9% 100%, 11.1% 100%, 11.1% 88.9%, 0 88.9%, 0 11.1%, 11.1% 11.1%); }
   .slip.hiddenly { opacity: .42; }
   .slip-ops { display: flex; gap: 5px; margin-top: 7px; flex-wrap: wrap; }
   .slip-ops .op { font: 700 7.5px/1 var(--pk); letter-spacing: .5px; color: var(--scr-soft); border: 1px solid var(--scr-hairline);
@@ -173,8 +173,8 @@
     font: 700 8.5px/1 var(--pk); letter-spacing: 1px;
     box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
   .cat.active { transform: translateY(2px); box-shadow: 0 0 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 2px 3px rgba(0,0,0,.22); }
-  .cat.active .cat-pip { position: absolute; top: -2.5px; right: -2.5px; width: 7px; height: 7px; border-radius: 50%;
-    background: var(--accent); box-shadow: 0 0 6px 1.5px rgba(255,61,119,.8); }
+  .cat.active .cat-pip { position: absolute; top: -2.5px; right: -2.5px; width: 7px; height: 7px;
+    background: var(--scr-accent); clip-path: polygon(11.1% 0, 88.9% 0, 88.9% 11.1%, 100% 11.1%, 100% 88.9%, 88.9% 88.9%, 88.9% 100%, 11.1% 100%, 11.1% 88.9%, 0 88.9%, 0 11.1%, 11.1% 11.1%); }
   .glyphs { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; }
   .gcell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
     background: var(--scr-panel); border: 1px solid var(--scr-hairline); }
@@ -183,8 +183,8 @@
   .base-row { display: flex; gap: 6px; align-items: center; margin-top: 8px; }
   .base-sw { width: 26px; height: 26px; border: 1px solid var(--scr-hairline); box-sizing: border-box; position: relative; }
   .base-sw.sel { border: 1.5px solid var(--scr-accent); }
-  .base-sw.sel::after { content: ""; position: absolute; top: -2.5px; right: -2.5px; width: 7px; height: 7px; border-radius: 50%;
-    background: var(--accent); box-shadow: 0 0 6px 1.5px rgba(255,61,119,.8); }
+  .base-sw.sel::after { content: ""; position: absolute; top: -2.5px; right: -2.5px; width: 7px; height: 7px;
+    background: var(--scr-accent); clip-path: polygon(11.1% 0, 88.9% 0, 88.9% 11.1%, 100% 11.1%, 100% 88.9%, 88.9% 88.9%, 88.9% 100%, 11.1% 100%, 11.1% 88.9%, 0 88.9%, 0 11.1%, 11.1% 11.1%); }
   .islider { display: flex; align-items: center; gap: 9px; margin: 8px 1px 0; }
   .islider .is-lbl { font: 700 8px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); flex: 0 0 62px; }
   .islider .is-track { position: relative; flex: 1 1 auto; height: 10px; background: var(--scr-panel); border: 1px solid var(--scr-hairline); }
@@ -198,8 +198,8 @@
   .swatches { display: flex; gap: 5px; }
   .csw { width: 22px; height: 22px; border: 1px solid rgba(255,255,255,.2); box-sizing: border-box; position: relative; }
   .csw.sel { border: 1.5px solid var(--scr-accent); }
-  .csw.sel::after { content: ""; position: absolute; top: -2.5px; right: -2.5px; width: 6px; height: 6px; border-radius: 50%;
-    background: var(--accent); box-shadow: 0 0 5px 1.5px rgba(255,61,119,.8); }
+  .csw.sel::after { content: ""; position: absolute; top: -2.5px; right: -2.5px; width: 6px; height: 6px;
+    background: var(--scr-accent); clip-path: polygon(11.1% 0, 88.9% 0, 88.9% 11.1%, 100% 11.1%, 100% 88.9%, 88.9% 88.9%, 88.9% 100%, 11.1% 100%, 11.1% 88.9%, 0 88.9%, 0 11.1%, 11.1% 11.1%); }
   .csw.eyedrop { display: flex; align-items: center; justify-content: center; background: var(--scr-panel); }
   .tog-row { display: inline-flex; gap: 5px; }
   .tog { font: 700 8px/1 var(--pk); letter-spacing: 1px; color: var(--scr-soft); border: 1px solid var(--scr-hairline);

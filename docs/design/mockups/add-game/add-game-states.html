@@ -184,8 +184,8 @@
   .sk2 .chip b { color: var(--navy); font-weight: 700; }
   .sk2 .chip.active { transform: translateY(2px);
     box-shadow: 0 0 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 2px 3px rgba(0,0,0,.22); }
-  .sk2 .chip .chip-pip { position: absolute; top: -2.5px; right: -2.5px; width: 7px; height: 7px; border-radius: 50%;
-    background: var(--accent); box-shadow: 0 0 6px 1.5px rgba(255,61,119,.8); }
+  .sk2 .chip .chip-pip { position: absolute; top: -2.5px; right: -2.5px; width: 7px; height: 7px;
+    background: var(--scr-accent); clip-path: polygon(11.1% 0, 88.9% 0, 88.9% 11.1%, 100% 11.1%, 100% 88.9%, 88.9% 88.9%, 88.9% 100%, 11.1% 100%, 11.1% 88.9%, 0 88.9%, 0 11.1%, 11.1% 11.1%); }
   .sk2 .count { background: var(--gold); color: #3c2a09; border-radius: 6px; padding: 4px 8px;
     font: 700 11px/1 var(--pk); }
 
@@ -401,8 +401,8 @@
   .drawer .dw-i.sel { border: 1.5px solid var(--scr-accent); padding: 7.5px 5.5px;
     background: rgba(255,159,67,.07); }
   .drawer .dw-i .dw-pip { position: absolute; top: 50%; right: 7px; transform: translateY(-50%);
-    width: 7px; height: 7px; border-radius: 50%;
-    background: var(--accent); box-shadow: 0 0 6px 1.5px rgba(255,61,119,.8); }
+    width: 7px; height: 7px;
+    background: var(--scr-accent); clip-path: polygon(11.1% 0, 88.9% 0, 88.9% 11.1%, 100% 11.1%, 100% 88.9%, 88.9% 88.9%, 88.9% 100%, 11.1% 100%, 11.1% 88.9%, 0 88.9%, 0 11.1%, 11.1% 11.1%); }
   .drawer .dw-i .oi { color: var(--scr-accent); font-weight: 700; }
   /* TextField/area — the cream inset (F-09's named exception); metrics exactly the report board's:
      ~3 rows (46px floor), 8/10px padding, 11px navy ink, the pink caret riding inline. The
