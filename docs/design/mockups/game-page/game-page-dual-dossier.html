@@ -95,8 +95,8 @@
   .gcard .art { position: absolute; inset: 7px; overflow: hidden; }
   .gcard .art svg { width: 100%; height: 100%; display: block; }
   .gcard .plate { position: absolute; left: 11px; right: 11px; bottom: 3px; padding: 5px 4px 4px; text-align: center; font: 700 10px/1.15 var(--pk); letter-spacing: .5px; text-transform: uppercase; z-index: 2; }
-  .gcard.hero { width: 168px; height: 235px; } .gcard.hero .art { inset: 9px; } .gcard.hero .plate { left: 14px; right: 14px; bottom: 4px; padding: 7px 4px 6px; font-size: 12px; }
-  .gcard.face2 { width: 146px; height: 204px; } .gcard.face2 .art { inset: 8px; } .gcard.face2 .plate { left: 12px; right: 12px; bottom: 4px; padding: 6px 4px 5px; font-size: 11px; }
+  /* /hero — the dual-face card size, aligned to the catalog GameCard /hero (138×193); inherits base art (inset 7px) + base plate */
+  .gcard.hero { width: 138px; height: 193px; }
   .gcard.pick { width: 108px; height: 151px; } .gcard.pick .art { inset: 6px; }
   .gcard.grid { width: 96px; height: 134px; } .gcard.grid .art { inset: 4.5px; } .gcard.grid .plate { left: 7px; right: 7px; bottom: 2px; padding: 3.5px 2px 3px; font-size: 10px; letter-spacing: .2px; }
   .gcard.cell { width: 78px; height: 109px; } .gcard.cell .art { inset: 4px; } .gcard.cell .plate { left: 5.5px; right: 5.5px; bottom: 1.5px; padding: 2.5px 1px 2px; font-size: 5.6px; letter-spacing: 0; }
@@ -353,11 +353,11 @@
               <div class="facts-line" style="margin-top:6px;">BUNGIE &middot; 2014 &middot; LOOTER-SHOOTER</div>
               <div class="dualface">
                 <div class="dface">
-                  <div class="gcard face2 fr-gilt fx-ember fin-holo"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div>
+                  <div class="gcard hero fr-gilt fx-ember fin-holo"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div>
                   <span class="dlbl">THE FACE</span>
                 </div>
                 <div class="dface">
-                  <div class="gcard face2 back flipy fr-gilt">
+                  <div class="gcard hero back flipy fr-gilt">
                     <div class="art">
                       <div class="cb-title">YOUR STATS</div>
                       <div class="cb-stats">
@@ -423,11 +423,11 @@
             <div class="scroll">
               <div class="dualface" style="padding-top:10px;">
                 <div class="dface">
-                  <div class="gcard face2 fr-gilt fx-ember fin-holo"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div>
+                  <div class="gcard hero fr-gilt fx-ember fin-holo"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div>
                   <span class="dlbl">THE FACE</span>
                 </div>
                 <div class="dface">
-                  <div class="gcard face2 back flipy fr-gilt">
+                  <div class="gcard hero back flipy fr-gilt">
                     <div class="art">
                       <div class="cb-title">YOUR STATS</div>
                       <div class="cb-stats">
@@ -751,11 +751,11 @@
               <div class="facts-line" style="margin-top:6px;">BUNGIE &middot; 2014 &middot; LOOTER-SHOOTER</div>
               <div class="dualface">
                 <div class="dface">
-                  <div class="gcard face2 fr-foil"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div>
+                  <div class="gcard hero fr-foil"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div>
                   <span class="dlbl">RIKO'S FACE</span>
                 </div>
                 <div class="dface">
-                  <div class="gcard face2 back flipy fr-foil">
+                  <div class="gcard hero back flipy fr-foil">
                     <div class="art">
                       <div class="cb-title">RIKO'S STATS</div>
                       <div class="cb-stats">
