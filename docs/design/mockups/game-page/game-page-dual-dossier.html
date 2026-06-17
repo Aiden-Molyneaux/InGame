@@ -95,7 +95,7 @@
   .gcard .art { position: absolute; inset: 7px; overflow: hidden; }
   .gcard .art svg { width: 100%; height: 100%; display: block; }
   .gcard .plate { position: absolute; left: 11px; right: 11px; bottom: 3px; padding: 5px 4px 4px; text-align: center; font: 700 10px/1.15 var(--pk); letter-spacing: .5px; text-transform: uppercase; z-index: 2; }
-  /* /hero — the dual-face card size, aligned to the catalog GameCard /hero (138×193); inherits base art (inset 7px) + base plate */
+  /* /hero — the catalog GameCard /hero token (138×193); base art (inset 7px) + base plate. Kept for reuse; the dual-face hero now uses the /grid 2-up size (see .dface .gcard). */
   .gcard.hero { width: 138px; height: 193px; }
   .gcard.pick { width: 108px; height: 151px; } .gcard.pick .art { inset: 6px; }
   .gcard.grid { width: 96px; height: 134px; } .gcard.grid .art { inset: 4.5px; } .gcard.grid .plate { left: 7px; right: 7px; bottom: 2px; padding: 3.5px 2px 3px; font-size: 10px; letter-spacing: .2px; }
@@ -138,8 +138,9 @@
   .cb-prov .p-name { font: 700 12px var(--pk); letter-spacing: .5px; color: var(--gold); }
 
   /* dual-face hero (kept from the dual-face draft) */
-  .dualface { display: flex; gap: 13px; justify-content: center; align-items: flex-start; padding: 14px 0 4px; position: relative; background: radial-gradient(ellipse 80% 48% at 50% 40%, rgba(255,255,255,.06), transparent 72%); }
-  .dface { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+  .dualface { display: flex; gap: 12px; justify-content: center; align-items: flex-start; padding: 14px 0 4px; position: relative; background: radial-gradient(ellipse 80% 48% at 50% 40%, rgba(255,255,255,.06), transparent 72%); }
+  .dface { display: flex; flex-direction: column; align-items: center; gap: 7px; flex: 1 1 0; min-width: 0; }
+  .dface .gcard { width: 100%; aspect-ratio: 63 / 88; height: auto; }
   .dface .dlbl { font: 700 7px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
   .dface .dlbl.acc { color: var(--scr-accent); }
   .hero-title { font: 700 20px/1 var(--pk); letter-spacing: .5px; color: var(--scr-text); text-align: center; }
@@ -194,14 +195,14 @@
   .tabsw-card.lock .tabsw-ic svg { stroke: var(--scr-grip); } .tabsw-card.lock .tabsw-l { color: var(--scr-grip); }
 
   /* CardSwitcher (CARDS tab · OQ-056) — state-tagged grid */
-  .swgrid { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; }
-  .swcard { position: relative; } .swcard .gcard, .gwrap .gcard { width: 100%; aspect-ratio: 63 / 88; height: auto; }
+  .swgrid { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; }
+  .swcard { position: relative; } .swcard .gcard { width: 100%; aspect-ratio: 96/134; height: auto; }
   /* tap-select (carried from the dual-face draft): the selected card gets a thin orange ring with a small gap.
      A responsive moat — ::before = orange stepped shape (inset -5px), ::after = screen-bg covering all but the
      outer ~3px band, leaving a 2px transparent gap to the card. Stepped clip matches the cell's C5 step. */
   .swcard.sel .gcard { position: relative; z-index: 2; }
-  .swcard.sel::before { content: ""; position: absolute; inset: -5px; background: var(--scr-accent); clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px), calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); z-index: 0; }
-  .swcard.sel::after { content: ""; position: absolute; inset: -2px; background: var(--scr-bg); clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px), calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); z-index: 1; }
+  .swcard.sel::before { content: ""; position: absolute; inset: -5px; background: var(--scr-accent); clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); z-index: 0; }
+  .swcard.sel::after { content: ""; position: absolute; inset: -2px; background: var(--scr-bg); clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); z-index: 1; }
   /* the selected card's inline options (no drawer — surfaced on the screen) */
   .card-opts { margin-top: 12px; padding: 11px; background: var(--scr-well); border: 1px solid var(--scr-hairline); display: flex; flex-direction: column; gap: 9px; }
   .card-opts .co-h { display: flex; align-items: center; gap: 8px; }
@@ -215,7 +216,7 @@
   .state-tag.private { background: var(--cream); color: var(--navy); }
   .state-tag.draft { background: rgba(13,11,30,.78); color: var(--scr-soft); border: 1px solid var(--scr-hairline); }
   .state-tag.adopted { background: var(--scr-panel); color: var(--scr-soft); border: 1px solid color-mix(in srgb, var(--scr-accent) 50%, transparent); }
-  .newtile { width: 100%; aspect-ratio: 63 / 88; height: auto; align-self: start; flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: 1.5px dashed var(--scr-accent); background: rgba(255,159,67,.05); color: var(--scr-accent); box-sizing: border-box; }
+  .newtile { width: 100%; aspect-ratio: 96/134; height: auto; align-self: start; flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: 1.5px dashed var(--scr-accent); background: rgba(255,159,67,.05); color: var(--scr-accent); box-sizing: border-box; }
   .newtile .plus { font: 700 26px/1 var(--pk); } .newtile .nl { font: 700 8px var(--pk); letter-spacing: 1px; }
   .gw-credit { font: 600 7.5px var(--pk); letter-spacing: .3px; color: var(--scr-dim); text-align: center; } .gw-credit b { color: var(--scr-soft); }
 
@@ -353,11 +354,11 @@
               <div class="facts-line" style="margin-top:6px;">BUNGIE &middot; 2014 &middot; LOOTER-SHOOTER</div>
               <div class="dualface">
                 <div class="dface">
-                  <div class="gcard hero fr-gilt fx-ember fin-holo"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div>
+                  <div class="gcard fr-gilt fx-ember fin-holo"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div>
                   <span class="dlbl">THE FACE</span>
                 </div>
                 <div class="dface">
-                  <div class="gcard hero back flipy fr-gilt">
+                  <div class="gcard back flipy fr-gilt">
                     <div class="art">
                       <div class="cb-title">YOUR STATS</div>
                       <div class="cb-stats">
@@ -423,11 +424,11 @@
             <div class="scroll">
               <div class="dualface" style="padding-top:10px;">
                 <div class="dface">
-                  <div class="gcard hero fr-gilt fx-ember fin-holo"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div>
+                  <div class="gcard fr-gilt fx-ember fin-holo"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div>
                   <span class="dlbl">THE FACE</span>
                 </div>
                 <div class="dface">
-                  <div class="gcard hero back flipy fr-gilt">
+                  <div class="gcard back flipy fr-gilt">
                     <div class="art">
                       <div class="cb-title">YOUR STATS</div>
                       <div class="cb-stats">
@@ -496,11 +497,11 @@
             <div class="scroll">
               <div class="sec" style="margin-top:13px;"><h3>YOUR CARDS FOR DESTINY &mdash; 5</h3><a href="#">&#8645; SORT</a></div>
               <div class="swgrid">
-                <div class="swcard"><span class="state-tag equipped">&#9670; EQUIPPED</span><div class="gcard fr-gilt fx-ember fin-holo"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div></div>
-                <div class="swcard"><span class="state-tag published">PUBLISHED</span><div class="gcard fr-gilt fx-ember"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div></div>
-                <div class="swcard sel"><span class="state-tag private">PRIVATE</span><div class="gcard fr-slate fx-ghost"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div></div>
-                <div class="swcard"><span class="state-tag draft">DRAFT</span><div class="gcard fr-scan" style="opacity:.85;"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div></div>
-                <div class="swcard"><span class="state-tag adopted">ADOPTED</span><div class="gcard fr-foil"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit" style="margin-top:3px; display:block;">BY <b>RIKO</b></span></div>
+                <div class="swcard"><span class="state-tag equipped">&#9670; EQUIPPED</span><div class="gcard cell fr-gilt fx-ember fin-holo"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div></div>
+                <div class="swcard"><span class="state-tag published">PUBLISHED</span><div class="gcard cell fr-gilt fx-ember"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div></div>
+                <div class="swcard sel"><span class="state-tag private">PRIVATE</span><div class="gcard cell fr-slate fx-ghost"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div></div>
+                <div class="swcard"><span class="state-tag draft">DRAFT</span><div class="gcard cell fr-scan" style="opacity:.85;"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div></div>
+                <div class="swcard"><span class="state-tag adopted">ADOPTED</span><div class="gcard cell fr-foil"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit" style="margin-top:3px; display:block;">BY <b>RIKO</b></span></div>
                 <div class="newtile"><span class="plus">&#43;</span><span class="nl">DESIGN NEW</span></div>
               </div>
               <div class="card-opts">
@@ -563,12 +564,12 @@
             <div class="scroll dimmed">
               <div class="sec" style="margin-top:13px;"><h3>COMMUNITY CARDS &mdash; 41</h3><a href="#">SORT &rsaquo;</a></div>
               <div class="swgrid">
-                <div class="gwrap"><div class="gcard fr-foil" style="outline:2px solid var(--scr-accent); outline-offset:2px;"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>RIKO</b></span><div class="gw-foot"><span class="adopt-chip">1 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="adopt-count">58&times;</span></div></div>
-                <div class="gwrap"><div class="gcard fr-teal fin-holo"><div class="art art-hue2"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>VANTA</b></span><div class="gw-foot"><span class="adopt-chip free">FREE</span><span class="adopt-count">31&times;</span></div></div>
-                <div class="gwrap"><div class="gcard fr-gilt fx-ember"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>MAVERICK</b></span><div class="gw-foot"><span class="adopt-chip">1 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="adopt-count">12&times;</span></div></div>
-                <div class="gwrap"><div class="gcard fr-slate fx-volt"><div class="art art-hue3"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>NOVA</b></span><div class="gw-foot"><span class="adopt-chip">1 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="adopt-count">7&times;</span></div></div>
-                <div class="gwrap"><div class="gcard fr-scan"><div class="art art-hue2"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>KAI</b></span><div class="gw-foot"><span class="adopt-chip free">FREE</span><span class="adopt-count">5&times;</span></div></div>
-                <div class="gwrap"><div class="gcard fr-foil"><span class="foil-band"></span><div class="art art-hue3"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>ORI</b></span><div class="gw-foot"><span class="adopt-chip">1 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="adopt-count">3&times;</span></div></div>
+                <div class="gwrap"><div class="gcard cell fr-foil" style="outline:2px solid var(--scr-accent); outline-offset:2px;"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>RIKO</b></span><div class="gw-foot"><span class="adopt-chip">1 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="adopt-count">58&times;</span></div></div>
+                <div class="gwrap"><div class="gcard cell fr-teal fin-holo"><div class="art art-hue2"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>VANTA</b></span><div class="gw-foot"><span class="adopt-chip free">FREE</span><span class="adopt-count">31&times;</span></div></div>
+                <div class="gwrap"><div class="gcard cell fr-gilt fx-ember"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>MAVERICK</b></span><div class="gw-foot"><span class="adopt-chip">1 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="adopt-count">12&times;</span></div></div>
+                <div class="gwrap"><div class="gcard cell fr-slate fx-volt"><div class="art art-hue3"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>NOVA</b></span><div class="gw-foot"><span class="adopt-chip">1 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="adopt-count">7&times;</span></div></div>
+                <div class="gwrap"><div class="gcard cell fr-scan"><div class="art art-hue2"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>KAI</b></span><div class="gw-foot"><span class="adopt-chip free">FREE</span><span class="adopt-count">5&times;</span></div></div>
+                <div class="gwrap"><div class="gcard cell fr-foil"><span class="foil-band"></span><div class="art art-hue3"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>ORI</b></span><div class="gw-foot"><span class="adopt-chip">1 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="adopt-count">3&times;</span></div></div>
               </div>
             </div>
             <div class="scrim"></div>
@@ -751,11 +752,11 @@
               <div class="facts-line" style="margin-top:6px;">BUNGIE &middot; 2014 &middot; LOOTER-SHOOTER</div>
               <div class="dualface">
                 <div class="dface">
-                  <div class="gcard hero fr-foil"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div>
+                  <div class="gcard fr-foil"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div>
                   <span class="dlbl">RIKO'S FACE</span>
                 </div>
                 <div class="dface">
-                  <div class="gcard hero back flipy fr-foil">
+                  <div class="gcard back flipy fr-foil">
                     <div class="art">
                       <div class="cb-title">RIKO'S STATS</div>
                       <div class="cb-stats">
