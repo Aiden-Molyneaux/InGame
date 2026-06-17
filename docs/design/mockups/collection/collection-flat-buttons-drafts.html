@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>InGame · Collection — Flat-Button Drafts (A · B · C) · Shelf main page</title>
+<title>InGame · Collection — Original vs Flat-Button Drafts (A · B · C) · Shelf main page</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
@@ -363,6 +363,22 @@
   .legend .lab { font: 700 8px var(--pk); letter-spacing: 1.2px; color: var(--scr-dim); }
   .legend p { margin: 9px 1px 0; font: 500 11px/1.5 var(--pk); color: #5d5870; }
   .legend p b { color: #2a2633; }
+
+  /* ── four columns now (Original + A/B/C) — widen the canvas so they sit in one row ── */
+  .canvas { max-width: 1800px; }
+  .orig .artboard-label { color: #b06a2a; }   /* tag the baseline column */
+
+  /* ════ ORIGINAL · 3D KEYCAP (current shadow.key) — shown for contrast; it MOVES on press ════
+     the resting state is the untouched base CSS (the 0 3px 0 raised edge). .is-pressed here
+     simulates the real keycap press: translate DOWN + collapse the edge to an inset — exactly
+     the motion the three flat drafts remove. */
+  .orig .sk2 .btn.is-pressed
+    { transform: translateY(3px); box-shadow: inset 0 2px 3px rgba(0,0,0,.22); }
+  .orig .sk2 .btn.add.is-pressed
+    { transform: translateY(3px); filter: none; box-shadow: inset 0 2px 3px rgba(0,0,0,.22); }
+  .orig .sk2 .chip.is-pressed
+    { transform: translateY(2px);
+      box-shadow: 0 0 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 2px 3px rgba(0,0,0,.22); }
 </style>
 </head>
 <body>
@@ -433,17 +449,148 @@
 
 <div class="canvas">
   <div class="canvas-head">
-    <h1>Collection · Shelf — Flat-Button Drafts (A · B · C)</h1>
-    <p>The Shelf main page, three ways to make the on-screen controls read <b>2D / non-3D</b>. Every draft removes
-    the raised keycap edge and the press-down motion; what differs is the <b>pressed/selected affordance</b>:
+    <h1>Collection · Shelf — Original vs Flat-Button Drafts (A · B · C)</h1>
+    <p>The leftmost column is the <b>current 3D implementation</b> (the live <i>shadow.key</i> keycaps), kept as a
+    baseline; the three to its right make the on-screen controls read <b>2D / non-3D</b>. Every draft removes the
+    raised keycap edge and the press-down motion; what differs is the <b>pressed/selected affordance</b>:
     <b>A</b> inverts the fill, <b>B</b> recesses it (depth, no movement), <b>C</b> rings the perimeter. Scope =
     in-screen controls only — <b>LOG HOURS</b>, the <b>sort / filter / view</b> chips, and <b>ADD</b>; the physical
-    nav keys below the screen stay as the device's hardware (unchanged). The sort chip shows each draft's pressed
-    state live, and the legend strip under every device shows IDLE vs PRESSED side by side.</p>
+    nav keys below the screen stay as the device's hardware (unchanged). The sort chip shows each column's pressed
+    state live, and the legend strip under every device shows RESTING vs PRESSED side by side — note the original
+    cap moves down where the drafts hold still.</p>
   </div>
-  <div class="stage-label">Flat-button drafts <small>same Shelf main page, three distinct 2D pressed-state treatments — no raised keycap edge, nothing moves on press. In-screen controls only (LOG HOURS · the sort/filter/view chips · ADD); the physical nav keys stay hardware. Hold any button, or watch the live sort chip + the legend strip under each device.</small></div>
+  <div class="stage-label">Original vs flat-button drafts <small>same Shelf main page ×4 — the current 3D keycaps (leftmost, for comparison) then three distinct 2D pressed-state treatments: no raised keycap edge, nothing moves on press. In-screen controls only (LOG HOURS · the sort/filter/view chips · ADD); the physical nav keys stay hardware. Hold any button, or watch the live sort chip + the legend strip under each device.</small></div>
   <div class="stage">
 
+    <div class="take orig">
+      <div class="artboard-label">Original — 3D keycaps (current)</div>
+      <div class="device" data-screen-label="Original - 3D keycaps (current)">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>COLLECTION</h2><span class="count">48 GAMES</span></div>
+            <div class="scroll">
+              <div class="hero">
+                <div class="gcard hero-size fr-marathon custom"><span class="custom-tag">&#9733; FOIL</span>
+                  <div class="art"><svg><use href="#art-marathon"/></svg></div>
+                  <div class="plate pl-marathon">Marathon</div>
+                </div>
+                <div class="hero-meta">
+                  <span class="npl">NOW PLAYING</span>
+                  <span class="stat-line">86 HRS &middot; PLAYING</span>
+                  <span class="hero-title">MARATHON</span>
+                  <span class="hero-sub">BUNGIE &middot; 2025 &middot; SHOOTER</span>
+                  <button class="btn"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>LOG HOURS</button>
+                </div>
+              </div>
+              <div class="shelf-stack">
+                <div class="hero">
+                  <div class="gcard hero-size fr-destiny">
+                    <div class="art"><svg><use href="#art-destiny"/></svg></div>
+                    <div class="plate pl-destiny">Destiny</div>
+                  </div>
+                  <div class="hero-meta">
+                    <span class="stat-line">210 HRS &middot; BEATEN</span>
+                    <span class="hero-title">DESTINY</span>
+                    <span class="hero-sub">BUNGIE &middot; 2014 &middot; SHOOTER</span>
+                  </div>
+                </div>
+                <div class="hero">
+                  <div class="gcard hero-size fr-marathon custom"><span class="now-tag">&#9654; NOW</span>
+                    <div class="art"><svg><use href="#art-marathon"/></svg></div>
+                    <div class="plate pl-marathon">Marathon</div>
+                  </div>
+                  <div class="hero-meta">
+                    <span class="stat-line">86 HRS &middot; PLAYING</span>
+                    <span class="hero-title">MARATHON</span>
+                    <span class="hero-sub">BUNGIE &middot; 2025 &middot; SHOOTER</span>
+                  </div>
+                </div>
+                <div class="hero">
+                  <div class="gcard hero-size fr-minecraft">
+                    <div class="art"><svg><use href="#art-minecraft"/></svg></div>
+                    <div class="plate pl-minecraft">Minecraft</div>
+                  </div>
+                  <div class="hero-meta">
+                    <span class="stat-line">132 HRS &middot; BEATEN</span>
+                    <span class="hero-title">MINECRAFT</span>
+                    <span class="hero-sub">MOJANG &middot; 2011 &middot; SANDBOX</span>
+                  </div>
+                </div>
+                <div class="hero">
+                  <div class="gcard hero-size fr-ratchet">
+                    <div class="art"><svg><use href="#art-ratchet"/></svg></div>
+                    <div class="plate pl-ratchet">Ratchet &amp; Clank</div>
+                  </div>
+                  <div class="hero-meta">
+                    <span class="stat-line">38 HRS &middot; 100%</span>
+                    <span class="hero-title">RATCHET &amp; CLANK</span>
+                    <span class="hero-sub">INSOMNIAC &middot; 2002 &middot; PLATFORMER</span>
+                  </div>
+                </div>
+                <div class="hero">
+                  <div class="gcard hero-size fr-re">
+                    <div class="art"><svg><use href="#art-re"/></svg></div>
+                    <div class="plate pl-re">Resident Evil</div>
+                  </div>
+                  <div class="hero-meta">
+                    <span class="stat-line">0 HRS &middot; BACKLOG</span>
+                    <span class="hero-title">RESIDENT EVIL</span>
+                    <span class="hero-sub">CAPCOM &middot; 2002 &middot; HORROR</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="tools">
+              <div class="grip"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.4" fill="none" stroke-width="1.6"/><path d="M7.8 7.8L11 11" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+              <div class="chip active"><span class="chip-pip"></span><svg width="11" height="12" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><b>A&ndash;Z &#8593;</b></div>
+              <div class="chip"><svg width="12" height="11" viewBox="0 0 12 11"><path d="M1 1.5h10L7.5 6v3.4L4.5 10V6L1 1.5z" fill="none" stroke-width="1.4" stroke-linejoin="round"/></svg><b>ALL</b></div>
+              <div class="chip"><svg width="10" height="12" viewBox="0 0 10 12"><path d="M1.5 1.5h7v9h-7z" fill="none" stroke-width="1.5" stroke-linejoin="round"/><path d="M2.8 8.6h4.4" stroke-width="1.3"/></svg></div>
+              <div class="spacer"></div>
+              <button class="btn add"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>ADD</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Original <em>— 3D keycaps (current)</em></h3>
+        <p><b>The baseline, unchanged.</b> The in-screen controls use the live <b>Keycap system</b>
+        (<i>shadow.key</i>): a solid <b>0 3px 0</b> raised edge (a clipped <i>drop-shadow</i> on the notched ADD)
+        plus a top bevel — so each button reads as a physical cap. <b>Pressed:</b> the cap <b>moves down</b> and
+        the edge collapses to an inset. The three drafts to the right keep the look but remove <i>both</i> the
+        raised edge and that downward motion.</p>
+      </div>
+      <div class="legend">
+        <h4>Press affordance <em>— hold a control: the cap presses DOWN:</em></h4>
+        <div class="well-demo sk2 c5">
+          <div class="pair"><span class="lab">RESTING</span>
+            <button class="btn"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>LOG HOURS</button></div>
+          <div class="pair"><span class="lab">PRESSED</span>
+            <button class="btn is-pressed"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>LOG HOURS</button></div>
+          <div class="pair"><span class="lab">RESTING</span>
+            <button class="btn add"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>ADD</button></div>
+          <div class="pair"><span class="lab">PRESSED</span>
+            <button class="btn add is-pressed"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>ADD</button></div>
+          <div class="pair"><span class="lab">RESTING</span>
+            <div class="chip"><svg width="12" height="11" viewBox="0 0 12 11"><path d="M1 1.5h10L7.5 6v3.4L4.5 10V6L1 1.5z" fill="none" stroke-width="1.4" stroke-linejoin="round"/></svg><b>ALL</b></div></div>
+          <div class="pair"><span class="lab">SELECTED</span>
+            <div class="chip is-pressed"><span class="chip-pip"></span><svg width="11" height="12" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><b>A&ndash;Z &#8593;</b></div></div>
+        </div>
+      </div>
+    </div>
     <div class="take flat flat-a">
       <div class="artboard-label">Draft A — tonal inversion</div>
       <div class="device" data-screen-label="Drafts - Flat A - tonal inversion">
