@@ -59,14 +59,6 @@
   `/me/cards` (shelf) + `GET /me/collection/:entryId/cards` (switcher) cover the gallery. **Drives
   the #3 Game-page card-gallery drafts** (3 distinct interfaces, owner-initiated). (from the
   save-model brainstorm, 2026-06-13) [behavior]
-- OQ-059: **Card peek-flip on the Collection screen?** Today the **card flip** (face → back: stats +
-  provenance, CARD-01) lives **only on the Game page** (§4.2 "hosts the card-object/flip view"); on
-  Collection, stats are scanned via the dense-list mode + the shelf stats-eyebrow (OQ-033) — §3.1 frames
-  dense-list as getting the answer "without flipping a single card." Question: do we *also* want a
-  **quick peek-flip in place** on Collection (e.g. long-press a card to glance its back — your own and a
-  friend's — without leaving the shelf), or keep flipping a Game-page-only deep-inspect interaction? A
-  peek-flip adds interaction load to a browse surface; the recommendation is **Game-page-only** unless
-  there's a strong scan-the-backs use-case. (Game-page draft A review, 2026-06-13) [presentation]
 - OQ-060: **InGame diagnostic-log bundle — structure, capture, redaction, retention (undefined in v2).**
   SYS-11's bug reports may **opt in** to attach the app's on-device diagnostic logs, but the **bundle
   format/schema, what it captures, size caps, PII redaction, upload mechanism** (inline vs presigned) **and
@@ -131,19 +123,6 @@
   (`activeShellId`·`screenThemeId`·`stickerComposition`) only ever references **owned** items — previews are
   client-side until acquired; (e) any **cap** on simultaneous previews. Pairs with OQ-062/064.
   (Device editor premium try-on, 2026-06-15) [behavior]
-- OQ-068: **Discover queue-add button colour — gold vs cream/orange.** `discover-states.html` uses
-  **gold** (`.btn.add`, card-creating intent) for **+ ADD FROM COLLECTION** — a queue build that creates
-  **no** card — while `discover-states-fan.html` uses **cream/orange** for the same Up-Next-add. The
-  true card-creating ADDs (ADD TO COLLECTION / ADD & DESIGN IT) are correctly gold on both. Per F-02 the
-  queue-add creates no card → it should **not** read gold; reconcile the two boards (recommend cream/
-  secondary or orange non-card). (state-file audit, 2026-06-16) [presentation]
-- OQ-070: **WISHLIST in the owned-entry editor?** The Game-page PLAY edit form (M2) shows STATUS as the COL-02
-  set **minus WISHLIST** (BACKLOG · PLAYING · BEATEN · COMPLETED · DROPPED) — WISHLIST being the
-  **unowned/discover** state (you wishlist a game you don't own; Up Next / Discover handle it, WTP-02). Decide
-  whether an **owned** entry's editor should offer WISHLIST at all (e.g. to shelve an owned game as "want to
-  replay / lapsed") or whether moving an owned entry to WISHLIST is nonsensical and handled only by removal /
-  Up-Next. The converged board omits it from the owned editor. Recommendation: **keep WISHLIST out of the owned
-  editor** (it is the pre-ownership state); confirm. (Game-page converge, 2026-06-17) [behavior]
 - OQ-071: **`GET /me/feed` aggregated item shape (the Friends-tab central contract gap).** api-contract
   (~line 123) names `/me/feed` as *"low-noise, aggregated friend activity (SOC-06)"* but **enumerates no
   payload** — yet the Friends feed (SOC-06) is the IA's landing surface. Propose the **actor+type
@@ -181,6 +160,17 @@
   pink* now scopes to the **shell LED** (`PipLight`) **only** — the on-screen "pips" were renamed, so
   there is no F-05 contradiction; the `discover-states` (square) vs retired `discover-states-fan` (round)
   disagreement is moot. OQ-067's round+pink recommendation **not** taken. (2026-06-18)
+- OQ-059 → **Card flip stays Game-page-only — no Collection peek-flip.** The face→back flip (stats +
+  provenance, CARD-01) remains a Game-page (§4.2) deep-inspect; Collection scans stats via dense-list +
+  the stats-eyebrow (OQ-033), per §3.1's "without flipping a single card." No board/spec change
+  (decision 0025). (2026-06-18)
+- OQ-068 → **Discover queue-add is NOT gold** — + ADD FROM COLLECTION creates no card, so it reads
+  cream/orange per F-02 (gold = card-creating only); the true card-creating ADDs stay gold. **Board
+  recolor OWED** — `discover-states.html` still renders `.btn.add` gold; deferred (the board had
+  uncommitted parallel changes), fold into the next discover pass / the OQ-066 sweep (decision 0025). (2026-06-18)
+- OQ-070 → **WISHLIST stays out of the owned-entry editor** — it is the pre-ownership/unowned state
+  (you wishlist a game you don't own; Up Next / Discover handle it, WTP-02); the converged Game-page
+  board (M2) already omits it. No spec change (decision 0025). (2026-06-18)
 - OQ-053 → **Upcoming notify-me has a backing endpoint** (Discover §3.2 page-audit, api-contract 0.21):
   `POST·DELETE /catalog/games/:id/notify` (subscribe/unsubscribe) + `notifyOnRelease` on
   `/catalog/upcoming` + the **`release`** `notification-prefs` type (DISC-01 → NOTIF-01/02). (2026-06-13)
