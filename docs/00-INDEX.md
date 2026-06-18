@@ -4,7 +4,7 @@
 > disagree, how changes flow between them, and how we keep four+ living documents from drifting.
 > Read this before editing anything else.
 
-**Last updated:** 2026-06-13 · **Maintainer:** Aiden (product) + Claude Code (spec/engineering)
+**Last updated:** 2026-06-18 · **Maintainer:** Aiden (product) + Claude Code (spec/engineering)
 
 ---
 
@@ -16,12 +16,12 @@ truth** for its concern. Other documents *reference* that truth by ID — they n
 | Document | Owns the truth for | Authored / edited by | Consumed by | Status |
 |---|---|---|---|---|
 | `00-INDEX.md` (this file) | Process, ID scheme, change protocol | Claude Code | Everyone | **Active** |
-| `spec/product-spec.md` | Behavior, data model, rules, economy — *what the app does* | Claude Code | Design, Planning | **v0.22 — draft** |
+| `spec/product-spec.md` | Behavior, data model, rules, economy — *what the app does* | Claude Code | Design, Planning | **v0.23 — draft** |
 | `spec/api-contract.md` | Endpoint + payload shapes — the **frontend↔backend seam** | Claude Code | Design, Planning | **v0.22 — draft** |
 | `spec/testing-strategy.md` | How we test — layers, tooling, rigor, CI | Claude Code | Planning, Implementation | **v0.1** |
 | `design/design-process.md` | How Claude Design works the brief — phases + reuse mandate | Claude Code → read by Claude Design | Claude Design | **Active** |
 | `design/ui-design-requirements.md` | What each screen must let users *do* (derived from spec) | Claude Code → handed to Claude Design | Claude Design | **v0.17 — all screens specified** |
-| `design/design-spec.md` | Screens, flows, components, visuals — *how you touch it* | Claude Design → committed here | Planning | **v0.17 — Foundations + Collection/Profile/Store/Add Game/Styler/Report/Discover/Settings** |
+| `design/design-spec.md` | Screens, flows, components, visuals — *how you touch it* | Claude Design → committed here | Planning | **v0.19 — Foundations + Collection/Profile/Store/Add Game/Styler/Report/Discover/Settings/Canvas** |
 | `planning/implementation-plan.md` | Build sequence and tasks | Claude Code | Implementation | *Not started* |
 | `decisions/*.md` | **Why** we chose what we chose (rationale, dated) | Claude Code | Everyone | **Active** |
 | `open-questions.md` | The **inbox** of unresolved questions | Anyone may append | Claude Code triages | **Active** |
