@@ -116,11 +116,14 @@
 - OQ-063: **A new `SectionSwitch` mode-switcher — does it replace the Segmented Toolbar app-wide?** The owner
   asked (reviewing Device Draft A) to rebuild the SHELL/THEME/STICKERS switcher as an **S8-style option-card**
   component (`device-switcher-takes.html`: T1 Section Stack · T2 Section Rail · T3 Section Hero; selection
-  moves to the **F-09 accent-border + pink-pip** tell, off the old F-03 pressed-keycap). The same convention
+  moves to the **F-09 accent-border + the orange `StateMark`** tell (the pink-pip was superseded by the `StateMark` rename, 0.18 · OQ-067), off the old F-03 pressed-keycap). The same convention
   lives on **converged** boards — Discover's `SegmentedKeycap` (2-way) and the Styler's `SectionChips` (5-way).
   Open: once the owner picks a take, **is it adopted on those boards too** (one shared component → design-spec
   §1.5, retiring/aliasing `SegmentedKeycap`+`SectionChips`), or scoped to the Device editor only? Cross-track /
-  spec-owner call — **not applied to Discover/Styler here**. (Device switcher exploration, 2026-06-14) [presentation]
+  spec-owner call — **not applied to Discover/Styler here**. **Marker sub-part now resolved** (the
+  selection tell is the `StateMark`, OQ-067); the open part is purely the **app-wide consolidation** —
+  owed at the **Device-editor formalization batch** (§4.5 design-spec + §1.5). (Device switcher
+  exploration, 2026-06-14; marker part 2026-06-18) [presentation]
 - OQ-064: **Saved device "looks" — the data model + scope.** The Device editor gains a **LOOKS** section
   (`device-draft-a-looks.html`, owner ask 2026-06-14) that saves a styled combo — **shell colour + the
   `stickerComposition` + screen theme** — as a named, re-applyable **`SavedLook`**, with **SAVE THIS LOOK** and
@@ -152,13 +155,6 @@
   `mini-button` role (the recurring 17/9px suggest uncodified roles)? Sub-call if conforming: error/
   empty **state-titles → emphasis 15 or display 21** (centered small-card titles read as 15). Worst
   offender = Settings; cleanest = Store/Collection/Report-sheet. (state-file audit, 2026-06-16) [presentation]
-- OQ-067: **Selection-pip colour & shape contradict F-05 (and disagree across boards).** Several boards
-  render the selected reason/row/chip pip as **orange `--scr-accent` + squared** (clip-path), where F-05
-  says *pips are always round* and the design-spec voices the selection LED as **pink `--accent`**;
-  `discover-states.html` (squared) vs `discover-states-fan.html` (**round**) disagree on the same
-  component. The flat F-09 border+pip *structure* is correct — only the pip's colour/shape drifts. Pairs
-  with **OQ-063** (the F-09 accent-border + **pink-pip** switcher rework). Recommendation: canonical
-  selection pip = **round + pink `--accent`**, rippled to all boards. (state-file audit, 2026-06-16) [presentation]
 - OQ-068: **Discover queue-add button colour — gold vs cream/orange.** `discover-states.html` uses
   **gold** (`.btn.add`, card-creating intent) for **+ ADD FROM COLLECTION** — a queue build that creates
   **no** card — while `discover-states-fan.html` uses **cream/orange** for the same Up-Next-add. The
@@ -197,6 +193,11 @@
   drawn **illustratively** on the drafts meanwhile. (Friends §3.3 track kickoff, 2026-06-17) [behavior]
 
 ## Resolved
+- OQ-067 → **On-screen selection marker = the orange `StateMark` square** (owner Draft A, 2026-06-15;
+  formalized design-spec F-09 + the `ChipPip`/`PipLight` → `StateMark` rename, 0.18). F-05's *round +
+  pink* now scopes to the **shell LED** (`PipLight`) **only** — the on-screen "pips" were renamed, so
+  there is no F-05 contradiction; the `discover-states` (square) vs retired `discover-states-fan` (round)
+  disagreement is moot. OQ-067's round+pink recommendation **not** taken. (2026-06-18)
 - OQ-053 → **Upcoming notify-me has a backing endpoint** (Discover §3.2 page-audit, api-contract 0.21):
   `POST·DELETE /catalog/games/:id/notify` (subscribe/unsubscribe) + `notifyOnRelease` on
   `/catalog/upcoming` + the **`release`** `notification-prefs` type (DISC-01 → NOTIF-01/02). (2026-06-13)
