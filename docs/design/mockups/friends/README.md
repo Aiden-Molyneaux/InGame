@@ -15,7 +15,7 @@ Each renders **P1 landing · P2 feed (SOC-06) · P3 roster (SOC-01) · P4 reques
 
 | File | Model | Thesis (the landing + the nav model) |
 |---|---|---|
-| [`friends-draft-a-feed.html`](friends-draft-a-feed.html) | **A · Feed-first** | The SOC-06 **aggregated feed IS the landing** — one low-noise scroll; roster = a slim `ONLINE NOW` rail, requests = an inline banner, find/add = a header key. No sub-tabs. The IA's stated default; the social-stream pole. |
+| [`friends-draft-a-feed.html`](friends-draft-a-feed.html) | **A · Feed-first** | The SOC-06 **aggregated feed IS the landing** — one low-noise scroll; roster = a slim friends rail, requests = an inline banner, find/add = a header key. No sub-tabs. The IA's stated default; the social-stream pole. **Presence + mutual-friend counts removed per owner (2026-06-18)** — roster reads hours + collection size; requests show arrival time. |
 | [`friends-draft-b-roster.html`](friends-draft-b-roster.html) | **B · Roster-first** | The friends **list is the body** (presence-sorted + a `PRESENCE / A–Z / RECENT` sort bar, active = orange accent border); the feed is a collapsed `RECENT` footer digest (→ SEE ALL), requests = a count-badged header key. The people-directory pole. |
 | [`friends-draft-c-connect.html`](friends-draft-c-connect.html) | **C · Connect-first** | A priority-stacked landing — a top `CONNECT` zone (**requests to act on** + the `InviteHook`: search · invite link · QR → 4.8) leads as the hero; `YOUR CIRCLE` (compact roster) + an `ACTIVITY` digest sit beneath. Tuned to the cold-start / low-friend reality. The growth pole. |
 

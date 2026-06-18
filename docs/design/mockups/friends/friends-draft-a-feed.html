@@ -20,7 +20,6 @@
     --scr-soft: #c9c5e6; --scr-panel: rgba(255,255,255,.065); --scr-hairline: rgba(255,255,255,.08);
     --scr-grip: #565178; --scr-chip: #f5f1e4; --scr-head-shadow: rgba(0,0,0,.45);
     --shell-ink: #08433f; --screw-hi: #2aa39d; --screw-lo: #137671; --pip-off: #117672;
-    --on: #46d39a; --away: #e0b552;
   }
   html, body { margin: 0; min-height: 100%; background: #efece6; font-family: var(--pk); }
   .canvas { max-width: 1348px; margin: 0 auto; padding: 40px 24px 60px; }
@@ -146,16 +145,11 @@
   .foil-band { position: absolute; inset: 0; z-index: 1; pointer-events: none;
     background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.34) 42%, rgba(255,220,120,.32) 50%, transparent 64%); }
 
-  /* ════ avatar (square monogram, PROF-08 grammar) + presence ════ */
+  /* ════ avatar (square monogram, PROF-08 grammar) ════ */
   .av { position: relative; flex: 0 0 auto; width: 38px; height: 38px; background: var(--scr-accent); color: var(--scr-accent-ink);
     font: 700 13px var(--pk); display: flex; align-items: center; justify-content: center; }
   .av.lg { width: 50px; height: 50px; font-size: 17px; }
   .av.sm { width: 30px; height: 30px; font-size: 11px; }
-  .pdot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; box-shadow: inset 0 1px 1px rgba(0,0,0,.35); }
-  .pdot.on { background: var(--on); box-shadow: 0 0 6px 1.5px rgba(70,211,154,.6); }
-  .pdot.away { background: var(--away); } .pdot.off { background: var(--scr-grip); }
-  .av .pdot { position: absolute; bottom: -2px; right: -2px; box-shadow: 0 0 0 2px var(--scr-bg); }
-  .av.on-well .pdot { box-shadow: 0 0 0 2px var(--scr-well); }
 
   /* ════ FeedRow / ActivityRow — SOC-06 aggregated item ════ */
   .feedrow { display: flex; gap: 11px; align-items: flex-start; padding: 12px 4px; border-bottom: 1px solid var(--scr-hairline); }
@@ -172,7 +166,7 @@
   .achv svg { width: 16px; height: 16px; fill: none; stroke: var(--gold); stroke-width: 1.6; }
   .c5 .achv { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
 
-  /* ════ presence rail (FriendTile mini) ════ */
+  /* ════ friends rail (FriendTile mini) ════ */
   .prail { display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 6px; scrollbar-width: none; }
   .prail::-webkit-scrollbar { display: none; }
   .ptile { flex: 0 0 auto; width: 52px; display: flex; flex-direction: column; align-items: center; gap: 5px; }
@@ -273,17 +267,17 @@
     <h1>Friends &mdash; Draft A <span style="color:var(--accent);">"Feed-first"</span> (the social-stream pole)</h1>
     <p><b>Direction A of 3</b> for the &sect;3.3 owner gate. <b>Thesis:</b> the <b>SOC-06 aggregated activity feed
     IS the landing</b> &mdash; one continuous, deliberately low-noise scroll. Everything else is a <b>peek or a
-    jump-off</b>: roster = a slim top <b>ONLINE&nbsp;NOW</b> presence rail (&rarr; ALL FRIENDS), requests = an
+    jump-off</b>: roster = a slim top <b>friends rail</b> (&rarr; ALL FRIENDS), requests = an
     <b>inline banner</b>, find/add = a <b>header key</b> (&rarr; 4.8). <b>No sub-tabs</b> &mdash; minimal chrome,
     the stream leads. The IA's stated default.</p>
     <p>Renders in-frame (DeviceShell + NavBand persist, <b>FRIENDS</b> keycap active = pressed + pink PipLight). Flat
     Inset-Recess keycaps (owner pick 2026-06-17); on-screen markers orange, never the pink shell pip. <b>No gold</b>
     (non-commerce); <b>no friend SHARE</b> (OQ-052 cut). Scope = the <b>tab</b> (feed + roster + requests + jump-offs);
     Compare 4.6 / Find-Add 4.8 are entry points. <i>Cast: Maverick=self · Riko/Vanta/Kai/Nova/Sable=friends;
-    presence/hours/counts illustrative (OQ-002/011; presence un-specced &rarr; OQ-071). Feed shape &rarr; OQ-071.</i></p>
+    hours/counts illustrative (OQ-002/011). <b>Presence (online/offline) + mutual-friend counts CUT per owner (2026-06-18)</b> &mdash; the roster reads hours + collection size; requests show when they arrived. Feed shape &rarr; OQ-071.</i></p>
   </div>
 
-  <div class="stage-label">P1 &mdash; the landing (the thesis) <small>the feed IS the screen · ONLINE NOW rail (roster peek) · inline requests banner · find/add header key</small></div>
+  <div class="stage-label">P1 &mdash; the landing (the thesis) <small>the feed IS the screen · friends rail (roster peek) · inline requests banner · find/add header key</small></div>
   <div class="stage">
 
     <!-- ═══ P1 · Feed-first landing ═══ -->
@@ -307,18 +301,18 @@
                 <span class="rb-go">&rsaquo;</span>
               </div>
 
-              <div class="sec"><h3>ONLINE NOW &middot; 3</h3><a href="#">ALL FRIENDS &middot; 14 &rsaquo;</a></div>
+              <div class="sec"><h3>YOUR FRIENDS</h3><a href="#">ALL 14 &rsaquo;</a></div>
               <div class="prail">
-                <div class="ptile"><div class="av on-well" style="background:#6c4fd8;color:#fff;">RI<span class="pdot on"></span></div><span class="pname">@riko</span></div>
-                <div class="ptile"><div class="av on-well" style="background:#3a3a42;color:#f5f1e4;">VA<span class="pdot on"></span></div><span class="pname">@vanta</span></div>
-                <div class="ptile"><div class="av on-well" style="background:#2a8a7a;color:#04211c;">KA<span class="pdot on"></span></div><span class="pname">@kai</span></div>
+                <div class="ptile"><div class="av" style="background:#6c4fd8;color:#fff;">RI</div><span class="pname">@riko</span></div>
+                <div class="ptile"><div class="av" style="background:#3a3a42;color:#f5f1e4;">VA</div><span class="pname">@vanta</span></div>
+                <div class="ptile"><div class="av" style="background:#2a8a7a;color:#04211c;">KA</div><span class="pname">@kai</span></div>
                 <div class="ptile allf"><div class="allbox">&rsaquo;</div><span class="pname">ALL 14</span></div>
               </div>
 
               <div class="sec"><h3>RECENT ACTIVITY</h3></div>
               <!-- FeedRow · added_games (aggregated + capped) -->
               <div class="feedrow">
-                <div class="av on-well" style="background:#6c4fd8;color:#fff;">RI<span class="pdot on"></span></div>
+                <div class="av" style="background:#6c4fd8;color:#fff;">RI</div>
                 <div class="fbody">
                   <div class="fline"><b>Riko</b> added <b>12 games</b> to their collection</div>
                   <div class="fpeek">
@@ -364,7 +358,7 @@
         <h3>P1 &mdash; feed landing <em>(the model thesis)</em></h3>
         <p><b>The feed IS the screen.</b> You land in the SOC-06 stream &mdash; <b>aggregated</b> rows (&ldquo;Riko added
         12 games&rdquo; as one capped item, +9 peek), beat/publish events, trivia excluded. The roster is a slim
-        <b>ONLINE&nbsp;NOW</b> rail (&rarr; ALL FRIENDS); requests are an <b>inline banner</b>; find/add is the
+        <b>friends rail</b> (&rarr; ALL FRIENDS); requests are an <b>inline banner</b>; find/add is the
         <b>header key</b>. No sub-tabs &mdash; one scroll.</p>
         <p><b>Best for:</b> an active social graph. <b>Weakest for:</b> the cold-start/0-friend reality &mdash; an empty
         feed is a dead landing (see P5 / Draft C).</p>
@@ -388,7 +382,7 @@
             <div class="scroll">
               <div class="sec"><h3>RECENT ACTIVITY</h3><span class="tert dim">LOW-NOISE</span></div>
               <div class="feedrow">
-                <div class="av on-well" style="background:#6c4fd8;color:#fff;">RI<span class="pdot on"></span></div>
+                <div class="av" style="background:#6c4fd8;color:#fff;">RI</div>
                 <div class="fbody"><div class="fline"><b>Riko</b> added <b>12 games</b> to their collection</div>
                   <div class="fpeek"><div class="gcard peek fr-hades"><div class="art"><svg><use href="#art-hades"/></svg></div></div><div class="gcard peek fr-celeste"><div class="art"><svg><use href="#art-celeste"/></svg></div></div><div class="gcard peek fr-outer"><div class="art"><svg><use href="#art-outer"/></svg></div></div><span class="fmore">+9</span></div>
                   <div class="ftime">2H AGO</div></div>
@@ -456,31 +450,30 @@
           <div class="screen c5">
             <div class="screen-head"><h2>FRIENDS<span class="h2sub">14</span></h2><div class="head-keys"><button class="head-act"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6"/><path d="M3.5 19.5a6 6 0 0 1 11 0"/><path d="M18.5 7.5v6M15.5 10.5h6"/></svg></button></div></div>
             <div class="scroll">
-              <div class="sec"><h3>ONLINE &middot; 3</h3></div>
+              <div class="sec"><h3>ALL FRIENDS &middot; 14</h3></div>
               <div class="frow">
-                <div class="av on-well" style="background:#6c4fd8;color:#fff;">RI<span class="pdot on"></span></div>
-                <div class="fmeta"><span class="fname">@riko</span><span class="fspeek"><b>IN HADES</b> &middot; 188 H</span></div>
+                <div class="av" style="background:#6c4fd8;color:#fff;">RI</div>
+                <div class="fmeta"><span class="fname">@riko</span><span class="fspeek"><b>188 H</b> &middot; 142 GAMES</span></div>
                 <div class="fright"><div class="cmp"><svg viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</div><span class="ovf">&#8942;</span></div>
               </div>
               <div class="frow">
-                <div class="av on-well" style="background:#3a3a42;color:#f5f1e4;">VA<span class="pdot on"></span></div>
-                <div class="fmeta"><span class="fname">@vanta</span><span class="fspeek">ONLINE &middot; <b>210 H</b> &middot; DESTINY</span></div>
+                <div class="av" style="background:#3a3a42;color:#f5f1e4;">VA</div>
+                <div class="fmeta"><span class="fname">@vanta</span><span class="fspeek"><b>210 H</b> &middot; 156 GAMES</span></div>
                 <div class="fright"><div class="cmp"><svg viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</div><span class="ovf">&#8942;</span></div>
               </div>
               <div class="frow">
-                <div class="av on-well" style="background:#2a8a7a;color:#04211c;">KA<span class="pdot on"></span></div>
-                <div class="fmeta"><span class="fname">@kai</span><span class="fspeek"><b>IN STARDEW VALLEY</b></span></div>
-                <div class="fright"><div class="cmp"><svg viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</div><span class="ovf">&#8942;</span></div>
-              </div>
-              <div class="sec"><h3>OFFLINE &middot; 11</h3></div>
-              <div class="frow">
-                <div class="av" style="background:#c8413a;color:#fff;">NO<span class="pdot off"></span></div>
-                <div class="fmeta"><span class="fname">@nova</span><span class="fspeek">LAST ON 2D &middot; 96 H</span></div>
+                <div class="av" style="background:#2a8a7a;color:#04211c;">KA</div>
+                <div class="fmeta"><span class="fname">@kai</span><span class="fspeek"><b>120 H</b> &middot; 98 GAMES</span></div>
                 <div class="fright"><div class="cmp"><svg viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</div><span class="ovf">&#8942;</span></div>
               </div>
               <div class="frow">
-                <div class="av" style="background:#b08a4a;color:#2a1408;">SA<span class="pdot off"></span></div>
-                <div class="fmeta"><span class="fname">@sable</span><span class="fspeek">LAST ON 1W &middot; 41 H</span></div>
+                <div class="av" style="background:#c8413a;color:#fff;">NO</div>
+                <div class="fmeta"><span class="fname">@nova</span><span class="fspeek"><b>96 H</b> &middot; 84 GAMES</span></div>
+                <div class="fright"><div class="cmp"><svg viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</div><span class="ovf">&#8942;</span></div>
+              </div>
+              <div class="frow">
+                <div class="av" style="background:#b08a4a;color:#2a1408;">SA</div>
+                <div class="fmeta"><span class="fname">@sable</span><span class="fspeek"><b>41 H</b> &middot; 31 GAMES</span></div>
                 <div class="fright"><div class="cmp"><svg viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</div><span class="ovf">&#8942;</span></div>
               </div>
               <div class="hint"><b>SOC-01 &middot; PROF-05 &middot; COL-10.</b> Tap a row &rarr; their Profile / read-only Collection. <b>COMPARE</b> &rarr; 4.6 (SOC-03). The <b>&#8942;</b> opens the actions sheet (P6).</div>
@@ -497,10 +490,11 @@
       </div>
       <div class="caption">
         <h3>P3 &mdash; the friends list <em>(SOC-01)</em></h3>
-        <p><b>FriendRow</b>: avatar + <b>PresenceDot</b> + username + <b>StatPeek</b> (now-playing / hours) + a
-        <b>COMPARE</b> jump-off (&rarr; 4.6) + overflow. Presence-grouped (ONLINE / OFFLINE). In Draft A this is a
-        <b>jump-off</b> from the feed (ALL FRIENDS) &mdash; Draft B makes it the landing.</p>
-        <p>Presence + now-playing visibility are <b>illustrative</b> (un-specced &rarr; OQ-071). Hours illustrative.</p>
+        <p><b>FriendRow</b>: avatar + username + <b>StatPeek</b> (<b>hours + collection size</b> &mdash; the compare
+        dimensions, SOC-03) + a <b>COMPARE</b> jump-off (&rarr; 4.6) + overflow. In Draft A this is a <b>jump-off</b>
+        from the feed (ALL FRIENDS) &mdash; Draft B makes it the landing.</p>
+        <p><b>Presence (online/offline) + now-playing were CUT</b> (owner, 2026-06-18) &mdash; no live status, no
+        <b>PresenceDot</b>; the row leads with hours + games so the COMPARE hook still reads. Counts illustrative.</p>
       </div>
     </div>
 
@@ -517,12 +511,12 @@
               <div class="sec"><h3>INCOMING &middot; 2</h3></div>
               <div class="reqrow incoming">
                 <div class="av" style="background:#c8413a;color:#fff;">NO</div>
-                <div class="rqmeta"><span class="rqname">@nova wants to connect</span><span class="rqsub">3 MUTUAL FRIENDS</span></div>
+                <div class="rqmeta"><span class="rqname">@nova wants to connect</span><span class="rqsub">REQUESTED 1D AGO</span></div>
                 <div class="rqacts"><button class="btn mini">ACCEPT</button><button class="btn mini alt">DECLINE</button></div>
               </div>
               <div class="reqrow incoming">
                 <div class="av" style="background:#b08a4a;color:#2a1408;">SA</div>
-                <div class="rqmeta"><span class="rqname">@sable_dev</span><span class="rqsub">1 MUTUAL &middot; RIKO</span></div>
+                <div class="rqmeta"><span class="rqname">@sable_dev</span><span class="rqsub">REQUESTED 3D AGO</span></div>
                 <div class="rqacts"><button class="btn mini">ACCEPT</button><button class="btn mini alt">DECLINE</button></div>
               </div>
               <div class="sec"><h3>OUTGOING &middot; 1</h3></div>
@@ -546,7 +540,7 @@
       <div class="caption">
         <h3>P4 &mdash; the requests inbox <em>(SOC-08)</em></h3>
         <p><b>RequestRow</b>: incoming (accent-edged) carries <b>ACCEPT</b> (primary flat) / <b>DECLINE</b> (low-emphasis
-        alt &mdash; decline is silent); outgoing carries <b>CANCEL</b>. Mutual-friend counts give trust context. In
+        alt &mdash; decline is silent); outgoing carries <b>CANCEL</b>. Rows show <b>when the request arrived</b>. In
         Draft A the inbox is reached from the <b>banner</b> (P1) &mdash; Draft C promotes it to the landing.</p>
       </div>
     </div>
@@ -613,15 +607,15 @@
           <div class="screen c5">
             <div class="screen-head"><h2>FRIENDS<span class="h2sub">14</span></h2><div class="head-keys"><button class="head-act"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6"/><path d="M3.5 19.5a6 6 0 0 1 11 0"/><path d="M18.5 7.5v6M15.5 10.5h6"/></svg></button></div></div>
             <div class="scroll">
-              <div class="sec"><h3>ONLINE &middot; 3</h3></div>
+              <div class="sec"><h3>ALL FRIENDS &middot; 14</h3></div>
               <div class="frow">
-                <div class="av on-well" style="background:#6c4fd8;color:#fff;">RI<span class="pdot on"></span></div>
-                <div class="fmeta"><span class="fname">@riko</span><span class="fspeek"><b>IN HADES</b> &middot; 188 H</span></div>
+                <div class="av" style="background:#6c4fd8;color:#fff;">RI</div>
+                <div class="fmeta"><span class="fname">@riko</span><span class="fspeek"><b>188 H</b> &middot; 142 GAMES</span></div>
                 <div class="fright"><div class="cmp"><svg viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</div><span class="ovf">&#8942;</span></div>
               </div>
               <div class="frow">
-                <div class="av on-well" style="background:#3a3a42;color:#f5f1e4;">VA<span class="pdot on"></span></div>
-                <div class="fmeta"><span class="fname">@vanta</span><span class="fspeek">ONLINE &middot; <b>210 H</b> &middot; DESTINY</span></div>
+                <div class="av" style="background:#3a3a42;color:#f5f1e4;">VA</div>
+                <div class="fmeta"><span class="fname">@vanta</span><span class="fspeek"><b>210 H</b> &middot; 156 GAMES</span></div>
                 <div class="fright"><div class="cmp"><svg viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</div><span class="ovf">&#8942;</span></div>
               </div>
             </div>
