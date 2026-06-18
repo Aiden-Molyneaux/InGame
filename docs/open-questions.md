@@ -31,8 +31,6 @@
   milestones, with cosmetic rewards — must be on that brainstorm's list (closes the create→earn loop).
 - OQ-005: Hidden easter-egg presentation — fully invisible until unlocked, or shown as a locked
   "???" mystery slot that hints something exists? (ACH-03) [presentation]
-- OQ-038: **Offline cache scope** — what renders read-only when offline: your own profile/collection
-  only, or also recently-viewed friends? (split from OQ-037 during the design-spec sync; SYS-10) [behavior]
 - OQ-045: **Sticker placed-on-shell preview** (owner deferral, store track 2026-06-12) — §4.11's
   sticker-preview case is NOT drawn on the converged Store board; design it with the **Device editor
   pass** (DEV-01). [presentation]
@@ -61,17 +59,6 @@
   `/me/cards` (shelf) + `GET /me/collection/:entryId/cards` (switcher) cover the gallery. **Drives
   the #3 Game-page card-gallery drafts** (3 distinct interfaces, owner-initiated). (from the
   save-model brainstorm, 2026-06-13) [behavior]
-- OQ-058: **Do we capture a personal *game* rating — and we explicitly do NOT rate cards.** Two parts.
-  **(a)** The collection entry already carries a `rating?` field (api-contract `PATCH
-  /me/collection/:entryId`, COL-02..06) and the Game-page draft surfaces it in the owned-state
-  `PlayStats` (your stars for the *game*) — but it was never deliberately confirmed, and the owner is
-  unsure it's wanted. Decide: keep a per-game personal rating (and is it private-only, or does it feed
-  any aggregate?), or drop it. **(b)** There is **no card rating** anywhere — individual or aggregate —
-  and the recommendation is to keep it that way: **adoption-count is deliberately the card's social
-  signal** (ECON-05 — creators earn *clout*, pointedly not ratings/currency), so a card rating would
-  create a competing popularity metric the spec avoided. Pending the ruling, the Game-page draft pulls
-  rating off the card-back and de-emphasizes it in PlayStats. (Game-page draft A review, 2026-06-13)
-  [behavior]
 - OQ-059: **Card peek-flip on the Collection screen?** Today the **card flip** (face → back: stats +
   provenance, CARD-01) lives **only on the Game page** (§4.2 "hosts the card-object/flip view"); on
   Collection, stats are scanned via the dense-list mode + the shelf stats-eyebrow (OQ-033) — §3.1 frames
@@ -144,33 +131,12 @@
   (`activeShellId`·`screenThemeId`·`stickerComposition`) only ever references **owned** items — previews are
   client-side until acquired; (e) any **cap** on simultaneous previews. Pairs with OQ-062/064.
   (Device editor premium try-on, 2026-06-15) [behavior]
-- OQ-066: **State-file type-scale drift vs F-06 ("law").** The 2026-06-16 DS-conformance audit
-  (`design/audit/2026-06-16/state-file-ds-conformance-audit.md`) found every `*-states.html` mockup
-  passes the **categorical** rules (GameCard sizes/ratio/no-crop, F-03 drop tiers, F-02 colour intent,
-  F-08 fonts, tokens) but consistently uses **off-scale on-screen type** against F-06's 21/15/11/9:
-  §1.6 **state-titles at 17px** (shared across ~7 screens), some titles **13px**, dense body/sub copy
-  **10–10.5px**, and "mini" **action buttons at 9px** (Settings SEND at **12px**). These are **shared
-  constructions** — one source fix ripples many screens. Default, since F-06 is *law* = **conform the
-  mockups** (recommended). Owner's call: instead **amend F-06** to carve out a `state-title` and/or
-  `mini-button` role (the recurring 17/9px suggest uncodified roles)? Sub-call if conforming: error/
-  empty **state-titles → emphasis 15 or display 21** (centered small-card titles read as 15). Worst
-  offender = Settings; cleanest = Store/Collection/Report-sheet. (state-file audit, 2026-06-16) [presentation]
 - OQ-068: **Discover queue-add button colour — gold vs cream/orange.** `discover-states.html` uses
   **gold** (`.btn.add`, card-creating intent) for **+ ADD FROM COLLECTION** — a queue build that creates
   **no** card — while `discover-states-fan.html` uses **cream/orange** for the same Up-Next-add. The
   true card-creating ADDs (ADD TO COLLECTION / ADD & DESIGN IT) are correctly gold on both. Per F-02 the
   queue-add creates no card → it should **not** read gold; reconcile the two boards (recommend cream/
   secondary or orange non-card). (state-file audit, 2026-06-16) [presentation]
-- OQ-069: **CARD-01 card-back provenance — the adoption count is dropped from the dual-face back.** The
-  Game-page converged board (`game-page/game-page-states.html`, candidate B) keeps the card-back **clean per
-  the owner** — **"CARD ART DESIGNED BY" + the account name** only — but CARD-01 names the standardized back's
-  printed provenance as **designer attribution + adoption count** (decision 0015). The count still surfaces in
-  the community gallery (`AdoptCount`) + the `CardDetail` inspect sheet ("ADOPTED 58×", drawn on M4). Decide the
-  canonical card-back wording: **(a)** amend CARD-01 so the standardized back is **designer-only**, with the
-  adoption-count living in the inspection/gallery surfaces (matches the owner's clean trophy back + the dual-face
-  brevity), or **(b)** restore the adoption count onto the back. Recommendation: **(a)** — the back is the
-  owner's trophy face; the social signal reads where adoption decisions happen. Not edited design-side.
-  (Game-page converge, 2026-06-17) [behavior]
 - OQ-070: **WISHLIST in the owned-entry editor?** The Game-page PLAY edit form (M2) shows STATUS as the COL-02
   set **minus WISHLIST** (BACKLOG · PLAYING · BEATEN · COMPLETED · DROPPED) — WISHLIST being the
   **unowned/discover** state (you wishlist a game you don't own; Up Next / Discover handle it, WTP-02). Decide
@@ -193,6 +159,23 @@
   drawn **illustratively** on the drafts meanwhile. (Friends §3.3 track kickoff, 2026-06-17) [behavior]
 
 ## Resolved
+- OQ-058 → **Personal *game* rating KEPT, private-only; NO card rating, ever.** The collection entry's
+  per-game ⭐ (the api `rating?` on `PATCH /me/collection/:entryId`) is a **private personal field** —
+  never shown to others, never aggregated (like notes COL-05); no api change. **No card rating anywhere**
+  — adoption-count (ECON-05) is the card's only social signal, pinned out so a future card rating isn't
+  introduced. product-spec COL-03 + CARD-05 (decision 0024). (2026-06-18)
+- OQ-069 → **Card-back prints DESIGNER ATTRIBUTION ONLY** ("CARD ART DESIGNED BY" + name); the
+  **adoption count is NOT on the back** — it surfaces only in the gallery `AdoptCount` + the `CardDetail`
+  inspect. Narrows decision 0015's "designer + adoption count on the back." product-spec CARD-01 +
+  design-spec §1.5 card-back gap note (decision 0024). (2026-06-18)
+- OQ-066 → **Conform the mockups to F-06; F-06 is NOT amended** (it stays law). Off-scale on-screen type
+  (17/13/12/10.5/10/9) snaps to the nearest of **21/15/11/9** — no `state-title`/`mini-button` role carved;
+  error/empty **state-titles → emphasis 15**. Recorded design-spec §1.2 + §1.6; the **~7-board conformance
+  SWEEP is a separate follow-up, flagged OWED** (no board edited). No product-spec change (decision 0024). (2026-06-18)
+- OQ-038 → **Offline cache scope = own data only.** When offline, only the user's **own profile +
+  collection** render read-only; **friends/feed/discover/store require a connection** (calm `Offline`,
+  writes gated); others' data is **not cached at rest**. Settles the OQ-037 split. product-spec SYS-10
+  (decision 0024). (2026-06-18)
 - OQ-067 → **On-screen selection marker = the orange `StateMark` square** (owner Draft A, 2026-06-15;
   formalized design-spec F-09 + the `ChipPip`/`PipLight` → `StateMark` rename, 0.18). F-05's *round +
   pink* now scopes to the **shell LED** (`PipLight`) **only** — the on-screen "pips" were renamed, so
