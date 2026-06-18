@@ -96,7 +96,7 @@
   .head-act svg { width: 18px; height: 18px; } .head-act svg circle, .head-act svg path, .head-act svg rect { stroke: var(--navy); fill: none; stroke-width: 2; }
   .head-act:active, .head-act.is-pressed { background: color-mix(in srgb, var(--scr-chip) 80%, #000); box-shadow: inset 0 2px 5px rgba(0,0,0,.4); }
   .head-act .ntag { position: absolute; top: -5px; right: -5px; min-width: 15px; height: 15px; padding: 0 3px; background: var(--scr-accent);
-    color: var(--scr-accent-ink); font: 700 8px/15px var(--pk); text-align: center; box-shadow: 0 0 0 2px var(--scr-bg); }
+    color: var(--scr-accent-ink); font: 700 9px/15px var(--pk); text-align: center; box-shadow: 0 0 0 2px var(--scr-bg); }
 
   /* ── flat buttons (owner pick: Inset Recess · B) — idle flat, pressed sinks IN, NO travel ── */
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: none; width: fit-content;
@@ -147,8 +147,8 @@
 
   /* ════ avatar (square monogram, PROF-08 grammar) ════ */
   .av { position: relative; flex: 0 0 auto; width: 38px; height: 38px; background: var(--scr-accent); color: var(--scr-accent-ink);
-    font: 700 13px var(--pk); display: flex; align-items: center; justify-content: center; }
-  .av.lg { width: 50px; height: 50px; font-size: 17px; }
+    font: 700 15px var(--pk); display: flex; align-items: center; justify-content: center; }
+  .av.lg { width: 50px; height: 50px; font-size: 21px; }
   .av.sm { width: 30px; height: 30px; font-size: 11px; }
 
   /* ════ FeedRow / ActivityRow — SOC-06 aggregated item ════ */
@@ -156,7 +156,7 @@
   .feedrow .fbody { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
   .feedrow .fline { font: 600 11px/1.45 var(--pk); letter-spacing: .2px; color: var(--scr-soft); }
   .feedrow .fline b { color: var(--scr-text); font-weight: 700; }
-  .feedrow .ftime { font: 700 8px var(--pk); letter-spacing: 1px; color: var(--scr-grip); margin-top: 1px; }
+  .feedrow .ftime { font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-grip); margin-top: 1px; }
   .fpeek { display: flex; gap: 5px; align-items: center; }
   .fmore { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 39px; padding: 0 5px;
     background: var(--scr-panel); border: 1px solid var(--scr-hairline); color: var(--scr-soft); font: 700 9px var(--pk); letter-spacing: .5px; }
@@ -170,10 +170,10 @@
   .prail { display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 6px; scrollbar-width: none; }
   .prail::-webkit-scrollbar { display: none; }
   .ptile { flex: 0 0 auto; width: 52px; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-  .ptile .pname { font: 700 8px var(--pk); letter-spacing: .5px; color: var(--scr-soft); max-width: 52px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ptile .pname { font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-soft); max-width: 52px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ptile.allf { justify-content: center; }
   .ptile .allbox { width: 38px; height: 38px; border: 1px dashed var(--scr-grip); display: flex; align-items: center; justify-content: center;
-    color: var(--scr-dim); font: 700 13px var(--pk); }
+    color: var(--scr-dim); font: 700 15px var(--pk); }
 
   /* ════ requests banner (inline) ════ */
   .reqbanner { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-top: 4px; background: var(--scr-well);
@@ -182,13 +182,13 @@
   .reqbanner .rb-stack .av { margin-left: -10px; box-shadow: 0 0 0 2px var(--scr-well); } .reqbanner .rb-stack .av:first-child { margin-left: 0; }
   .reqbanner .rb-tx { flex: 1 1 auto; min-width: 0; }
   .reqbanner .rb-t { font: 700 11px var(--pk); letter-spacing: .3px; color: var(--scr-text); }
-  .reqbanner .rb-s { font: 600 8.5px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
-  .reqbanner .rb-go { color: var(--scr-accent); font: 700 16px var(--pk); flex: 0 0 auto; }
+  .reqbanner .rb-s { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .reqbanner .rb-go { color: var(--scr-accent); font: 700 15px var(--pk); flex: 0 0 auto; }
 
   /* ════ FriendRow (roster) ════ */
   .frow { display: flex; gap: 11px; align-items: center; padding: 10px 4px; border-bottom: 1px solid var(--scr-hairline); }
   .frow .fmeta { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-  .frow .fname { font: 700 12px var(--pk); letter-spacing: .3px; color: var(--scr-text); }
+  .frow .fname { font: 700 11px var(--pk); letter-spacing: .3px; color: var(--scr-text); }
   .frow .fspeek { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); } .frow .fspeek b { color: var(--scr-soft); }
   .frow .fright { margin-left: auto; flex: 0 0 auto; display: flex; align-items: center; gap: 7px; }
   .cmp { display: inline-flex; align-items: center; gap: 5px; background: var(--scr-well); border: 1px solid color-mix(in srgb, var(--scr-accent) 45%, transparent);
@@ -204,7 +204,7 @@
   .reqrow.incoming { border-color: color-mix(in srgb, var(--scr-accent) 38%, transparent); border-left: 3px solid var(--scr-accent); }
   .reqrow .rqmeta { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
   .reqrow .rqname { font: 700 11px var(--pk); letter-spacing: .3px; color: var(--scr-text); }
-  .reqrow .rqsub { font: 600 8.5px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .reqrow .rqsub { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
   .reqrow .rqacts { display: flex; gap: 6px; flex: 0 0 auto; }
 
   /* ════ InviteHook (cold-start / find-more) ════ */
@@ -214,7 +214,7 @@
   .inv-card::before { content: ""; position: absolute; inset: 7px; border: 2px dashed var(--scr-grip); opacity: .8; border-radius: 50%; }
   .inv-card svg { width: 38px; height: 38px; stroke: var(--scr-accent); fill: none; stroke-width: 1.8; }
   .inv-eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
-  .inv-title { font: 700 17px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .inv-title { font: 700 21px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
   .inv-sub { font: 500 11px/1.55 var(--pk); color: var(--scr-soft); max-width: 250px; }
   .ihook { width: 100%; display: flex; flex-direction: column; gap: 9px; margin-top: 8px; }
   .ih-field { display: flex; align-items: center; gap: 8px; background: var(--scr-chip); padding: 10px 11px; box-shadow: inset 0 2px 3px rgba(0,0,0,.16); }
@@ -232,9 +232,9 @@
   .grabber { width: 36px; height: 4px; background: var(--scr-grip); border-radius: 2px; margin: 0 auto 11px; }
   .sheet-head { display: flex; gap: 11px; align-items: center; padding: 0 2px 11px; border-bottom: 1px solid var(--scr-hairline); margin-bottom: 4px; }
   .sheet-head .sh-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-  .sheet-head .sh-name { font: 700 14px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
-  .sheet-head .sh-sub { font: 600 8.5px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
-  .sheet-sec { font: 700 8px var(--pk); letter-spacing: 2px; color: var(--scr-grip); padding: 11px 4px 4px; }
+  .sheet-head .sh-name { font: 700 15px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .sheet-head .sh-sub { font: 600 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .sheet-sec { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-grip); padding: 11px 4px 4px; }
   .sa { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 6px; background: transparent; border: none; text-align: left; cursor: pointer;
     font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); border-bottom: 1px solid var(--scr-hairline); }
   .sa:last-child { border-bottom: none; }
@@ -245,7 +245,7 @@
 
   /* ── §1.6 lifecycle (caption-only nod this pass) ── */
   .offline-strip { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; margin: 10px 0 2px; padding: 7px 11px;
-    background: var(--scr-panel); border: 1px solid var(--scr-hairline); font: 700 8.5px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+    background: var(--scr-panel); border: 1px solid var(--scr-hairline); font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
   .gated { opacity: .4; }
 </style>
 </head>
@@ -506,7 +506,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen c5">
-            <div class="screen-head"><h2 style="font-size:17px;letter-spacing:2px;">REQUESTS</h2><div class="head-keys"><a class="tert dim" href="#" style="align-self:center;">&lsaquo; FRIENDS</a></div></div>
+            <div class="screen-head"><h2 style="letter-spacing:2px;">REQUESTS</h2><div class="head-keys"><a class="tert dim" href="#" style="align-self:center;">&lsaquo; FRIENDS</a></div></div>
             <div class="scroll">
               <div class="sec"><h3>INCOMING &middot; 2</h3></div>
               <div class="reqrow incoming">
