@@ -124,17 +124,14 @@
       100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
   .c5 .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
-  .c5 .gcard.peek { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
-      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
 
-  /* ── GameCard (thumb · peek) ── */
+  /* ── GameCard (thumb · catalog /thumb 44×62) ── */
   .gcard { position: relative; box-sizing: border-box; flex: 0 0 auto; overflow: hidden; }
   .gcard .art { position: absolute; inset: 2.5px; overflow: hidden; }
   .gcard .art svg { width: 100%; height: 100%; display: block; }
   .gcard .plate { position: absolute; left: 3.5px; right: 3.5px; bottom: 1px; padding: 1.5px 1px 1px; text-align: center;
     font: 700 3.2px/1.1 var(--pk); letter-spacing: 0; text-transform: uppercase; z-index: 2; }
   .gcard.thumb { width: 44px; height: 62px; }
-  .gcard.peek { width: 28px; height: 39px; } .gcard.peek .art { inset: 2px; } .gcard.peek .plate { display: none; }
   .fr-elden { background: linear-gradient(160deg, #e8c356, #b8881f); } .pl-elden { background: #f0d36e; color: #3c2a09; }
   .fr-hades { background: linear-gradient(160deg, #c8413a, #7e1f22); } .pl-hades { background: #3a1418; color: #ffb38a; }
   .fr-celeste { background: linear-gradient(160deg, #d86aa8, #7a3f9e); } .pl-celeste { background: #2e1840; color: #f0b0e0; }
@@ -158,10 +155,10 @@
   .feedrow .fline b { color: var(--scr-text); font-weight: 700; }
   .feedrow .ftime { font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-grip); margin-top: 1px; }
   .fpeek { display: flex; gap: 5px; align-items: center; }
-  .fmore { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 39px; padding: 0 5px;
+  .fmore { display: inline-flex; align-items: center; justify-content: center; min-width: 30px; height: 62px; padding: 0 5px;
     background: var(--scr-panel); border: 1px solid var(--scr-hairline); color: var(--scr-soft); font: 700 9px var(--pk); letter-spacing: .5px; }
   .c5 .fmore { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
-  .achv { position: relative; width: 28px; height: 39px; flex: 0 0 auto; background: var(--scr-panel); border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent);
+  .achv { position: relative; width: 44px; height: 62px; flex: 0 0 auto; background: var(--scr-panel); border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent);
     display: flex; align-items: center; justify-content: center; }
   .achv svg { width: 16px; height: 16px; fill: none; stroke: var(--gold); stroke-width: 1.6; }
   .c5 .achv { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
@@ -316,9 +313,9 @@
                 <div class="fbody">
                   <div class="fline"><b>Riko</b> added <b>12 games</b> to their collection</div>
                   <div class="fpeek">
-                    <div class="gcard peek fr-hades"><div class="art"><svg><use href="#art-hades"/></svg></div></div>
-                    <div class="gcard peek fr-celeste"><div class="art"><svg><use href="#art-celeste"/></svg></div></div>
-                    <div class="gcard peek fr-elden"><div class="art"><svg><use href="#art-elden"/></svg></div></div>
+                    <div class="gcard thumb fr-hades"><div class="art"><svg><use href="#art-hades"/></svg></div></div>
+                    <div class="gcard thumb fr-celeste"><div class="art"><svg><use href="#art-celeste"/></svg></div></div>
+                    <div class="gcard thumb fr-elden"><div class="art"><svg><use href="#art-elden"/></svg></div></div>
                     <span class="fmore">+9</span>
                   </div>
                   <div class="ftime">2H AGO</div>
@@ -384,7 +381,7 @@
               <div class="feedrow">
                 <div class="av" style="background:#6c4fd8;color:#fff;">RI</div>
                 <div class="fbody"><div class="fline"><b>Riko</b> added <b>12 games</b> to their collection</div>
-                  <div class="fpeek"><div class="gcard peek fr-hades"><div class="art"><svg><use href="#art-hades"/></svg></div></div><div class="gcard peek fr-celeste"><div class="art"><svg><use href="#art-celeste"/></svg></div></div><div class="gcard peek fr-outer"><div class="art"><svg><use href="#art-outer"/></svg></div></div><span class="fmore">+9</span></div>
+                  <div class="fpeek"><div class="gcard thumb fr-hades"><div class="art"><svg><use href="#art-hades"/></svg></div></div><div class="gcard thumb fr-celeste"><div class="art"><svg><use href="#art-celeste"/></svg></div></div><div class="gcard thumb fr-outer"><div class="art"><svg><use href="#art-outer"/></svg></div></div><span class="fmore">+9</span></div>
                   <div class="ftime">2H AGO</div></div>
               </div>
               <div class="feedrow">
@@ -414,7 +411,7 @@
               <div class="feedrow">
                 <div class="av" style="background:#3a3a42;color:#f5f1e4;">VA</div>
                 <div class="fbody"><div class="fline"><b>Vanta</b> added <b>4 games</b> to their collection</div>
-                  <div class="fpeek"><div class="gcard peek fr-elden"><div class="art"><svg><use href="#art-elden"/></svg></div></div><div class="gcard peek fr-hades"><div class="art"><svg><use href="#art-hades"/></svg></div></div><div class="gcard peek fr-stardew"><div class="art"><svg><use href="#art-stardew"/></svg></div></div><span class="fmore">+1</span></div>
+                  <div class="fpeek"><div class="gcard thumb fr-elden"><div class="art"><svg><use href="#art-elden"/></svg></div></div><div class="gcard thumb fr-hades"><div class="art"><svg><use href="#art-hades"/></svg></div></div><div class="gcard thumb fr-stardew"><div class="art"><svg><use href="#art-stardew"/></svg></div></div><span class="fmore">+1</span></div>
                   <div class="ftime">3D AGO</div></div>
               </div>
               <div class="hint"><b>Capped at a quiet cadence.</b> The initial collection import never floods (SOC-06); minor stat tweaks excluded.</div>
