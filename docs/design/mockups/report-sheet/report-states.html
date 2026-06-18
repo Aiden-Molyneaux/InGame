@@ -268,8 +268,8 @@
   .confirm .seal svg path { stroke: var(--scr-accent); }
   .confirm .seal.block svg circle, .confirm .seal.block svg path { stroke: var(--alert); }
   .confirm .c-eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
-  .confirm .c-title { font: 700 16px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
-  .confirm .c-sub { font: 500 10.5px/1.55 var(--pk); color: var(--scr-soft); max-width: 290px; }
+  .confirm .c-title { font: 700 15px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .confirm .c-sub { font: 500 11px/1.55 var(--pk); color: var(--scr-soft); max-width: 290px; }
   .confirm .c-acts { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 12px; width: 100%; }
   .confirm .c-done { border: none; min-width: 120px; font: 700 11px var(--pk); letter-spacing: 1px; padding: 9px 16px; text-align: center;
     background: var(--scr-chip); color: var(--navy); box-shadow: 0 3px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
@@ -284,7 +284,7 @@
   .toastb .t-t { font: 700 10px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
   .toastb .t-s { font: 600 8.5px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
   .toastb .btn.act { margin-left: auto; background: var(--scr-accent); color: var(--scr-accent-ink);
-    padding: 7px 10px; font: 700 9px var(--pk); letter-spacing: .5px;
+    padding: 7px 10px; font: 700 11px var(--pk); letter-spacing: .5px;
     box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-accent) 45%, #000), inset 0 1px 0 rgba(255,255,255,.4); }
 
   /* ── OfflineStrip — the lightweight offline indicator (SYS-10; verbatim from add-game/collection).
@@ -294,6 +294,65 @@
   .offline-strip svg { width: 13px; height: 13px; flex: 0 0 auto; }
   .offline-strip svg path { stroke: var(--scr-dim); }
   .offline-strip .sync { margin-left: auto; font-weight: 600; letter-spacing: .5px; color: var(--scr-grip); }
+
+  /* ════ FLAT BUTTONS + SCANLINE ENERGIZE (F-03, locked 2026-06-18) ════
+     On-screen ACTION buttons + TOOL keycaps go FLAT 2D (no raised-edge / drop-shadow), and on
+     PRESS/active show "Scanline Energize" — fine CRT scanlines over a hairline-darkened fill, NO
+     movement, no pip. Clip-path corner-notches kept (.btn.add). LEFT UNTOUCHED: physical .nav-btn
+     (stays 3D); no segmented/tab switchers, sliders or toggles exist on this board. The
+     .dw-submit.dormant / SUBMIT-WHEN-ONLINE muted key is intentionally non-pressable (a key with no
+     travel can't be pressed) — kept flat, NO scanline. */
+
+  /* 1) IDLE = flat fill (box-shadow:none; filter:none on the clipped gold — clip-path kept) */
+  .fh-key,
+  .ovf-key,
+  .btn.secondary,
+  .dw-submit,
+  .dw-cancel,
+  .confirm .c-done,
+  .toastb .btn.act { box-shadow: none; }
+  .sk2 .btn.add { box-shadow: inset 0 1px 0 rgba(255,255,255,.5); filter: none; }
+
+  /* 2) PRESS/active = Scanline Energize (NO motion) — replaces every translateY press
+        (.ovf-key.open, .dw-submit.busy) and adds a press to keys that had none (:active / .is-pressed) */
+
+  /* cream keys → INK rgba(29,42,74,.20) over a hairline-darkened cream fill (var(--scr-chip)) */
+  .fh-key:active, .fh-key.is-pressed,
+  .ovf-key:active, .ovf-key.is-pressed, .ovf-key.open,
+  .btn.secondary:active, .btn.secondary.is-pressed,
+  .dw-cancel:active, .dw-cancel.is-pressed,
+  .confirm .c-done:active, .confirm .c-done.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px);
+  }
+
+  /* gold key (.btn.add — clip-path kept) → INK rgba(60,42,9,.24) over a darkened gold fill */
+  .sk2 .btn.add:active, .sk2 .btn.add.is-pressed {
+    transform: none; box-shadow: none; filter: none;
+    background-color: color-mix(in srgb, var(--gold) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(60,42,9,.24) 0 1px, #0000 1px 2px);
+  }
+
+  /* orange action key (Toast RETRY) → INK rgba(0,0,0,.20) over a darkened orange fill */
+  .toastb .btn.act:active, .toastb .btn.act.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-accent) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, #0000 1px 2px);
+  }
+
+  /* red destructive SUBMIT → INK rgba(0,0,0,.22) over a darkened alert fill.
+     The .busy in-flight press uses the scanline too (keeps the spinner + gap layout). */
+  .dw-submit:active, .dw-submit.is-pressed, .dw-submit.busy {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--alert) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, #0000 1px 2px);
+  }
+  /* dormant SUBMIT is non-pressable — keep it flat & muted, never scanline */
+  .dw-submit.dormant:active, .dw-submit.dormant.is-pressed {
+    background-color: color-mix(in srgb, var(--alert) 30%, var(--scr-tools));
+    background-image: none; transform: none; box-shadow: none;
+  }
 </style>
 </head>
 <body>

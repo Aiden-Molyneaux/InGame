@@ -238,6 +238,60 @@
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
   .c5 .gcard.thumb .plate { clip-path: polygon(0 1px, 1px 1px, 1px 0, 100% 0,
       100% calc(100% - 1px), calc(100% - 1px) calc(100% - 1px), calc(100% - 1px) 100%, 0 100%); }
+
+  /* ════ FLAT BUTTONS + SCANLINE ENERGIZE (F-03, locked 2026-06-18) ════ */
+  /* On-screen KeycapButton + ToolKeycap family go flat 2D (idle = flat fill, no raised
+     edge / no drop-shadow) and on press/active show Scanline Energize — fine CRT scanlines
+     over a hairline-darkened fill, NO movement, no pip. Clip-path notches kept. The physical
+     NavBand keys (.nav-btn) stay 3D; there are no segmented/tab switchers or sliders here.
+     Selectors below match the base specificity (.sk2 …) so source-order wins. */
+
+  /* 1) IDLE = flat fill ─────────────────────────────────────────── */
+  .sk2 .btn,
+  .sk2 .btn.secondary,
+  .sk2 .chip,
+  .sk2 .priv,
+  .ric              { box-shadow: none; }
+  .sk2 .btn.add     { box-shadow: none; filter: none; }   /* keep clip-path */
+  .sk2 .count       { box-shadow: none; }                 /* flatten-only (not pressable) */
+
+  /* 2) PRESS/active = Scanline Energize, NO motion ──────────────── */
+  /* primary action button — peach (--scr-btn), orange ink */
+  .sk2 .btn:active, .sk2 .btn.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-btn) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, #0000 1px 2px);
+  }
+  /* ADD — gold, gold ink (keeps clip-path) */
+  .sk2 .btn.add:active, .sk2 .btn.add.is-pressed {
+    transform: none; box-shadow: none; filter: none;
+    background-color: color-mix(in srgb, var(--gold) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(60,42,9,.24) 0 1px, #0000 1px 2px);
+  }
+  /* secondary — cream, cream ink */
+  .sk2 .btn.secondary:active, .sk2 .btn.secondary.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--cream) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px);
+  }
+  /* tool chip — cream (--scr-chip), cream ink (covers .active press too) */
+  .sk2 .chip:active, .sk2 .chip.is-pressed, .sk2 .chip.active {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px);
+  }
+  /* privacy chip — cream (--scr-chip), cream ink */
+  .sk2 .priv:active, .sk2 .priv.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px);
+  }
+  /* row-icon keycap (.ric) — cream (--scr-chip), cream ink */
+  .ric:active, .ric.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px);
+  }
 </style>
 </head>
 <body>

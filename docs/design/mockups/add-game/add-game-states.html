@@ -177,7 +177,7 @@
     filter: drop-shadow(0 3px 0 color-mix(in srgb, var(--gold) 45%, #000)); }
   .sk2 .btn.secondary { background: var(--cream); color: var(--navy);
     box-shadow: 0 3px 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
-  .sk2 .btn.mini { padding: 6px 8px; font-size: 9px; }
+  .sk2 .btn.mini { padding: 6px 8px; font-size: 11px; }
   .sk2 .chip { position: relative; background: var(--scr-chip); border-radius: 7px; padding: 6px 8px;
     font: 600 11px var(--pk); letter-spacing: .5px; color: var(--navy);
     box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
@@ -463,7 +463,7 @@
   .gold-strip .gs-tx { display: flex; flex-direction: column; gap: 2px; }
   .gold-strip .gs-t { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--gold); }
   .gold-strip .gs-s { font: 600 9px/1.5 var(--pk); letter-spacing: .5px; color: var(--scr-soft); }
-  .half-panel .btn { padding: 7px 10px; font-size: 9px; }
+  .half-panel .btn { padding: 7px 10px; font-size: 11px; }
   .hp-acts { display: flex; align-items: center; gap: 10px; }
   /* create-form grid (P5) + the deal row (P8) */
   .fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 9px; }
@@ -506,8 +506,8 @@
   .err-card .void-ic svg { width: 42px; height: 42px; }
   .err-card .void-ic svg path { stroke: var(--scr-grip); }
   .err-eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
-  .err-title { font: 700 17px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
-  .err-sub { font: 500 10.5px/1.55 var(--pk); color: var(--scr-soft); max-width: 250px; }
+  .err-title { font: 700 15px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
+  .err-sub { font: 500 11px/1.55 var(--pk); color: var(--scr-soft); max-width: 250px; }
   .offline-strip { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; margin: 0 12px 2px; padding: 7px 11px;
     background: var(--scr-panel); border: 1px solid var(--scr-hairline); font: 700 8.5px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
   .offline-strip svg { width: 13px; height: 13px; flex: 0 0 auto; }
@@ -521,6 +521,64 @@
     clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
       100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
   .sk-fan.nbsz { width: 96px; height: 134px; }
+
+  /* ════ FLAT BUTTONS + SCANLINE ENERGIZE (F-03, locked 2026-06-18) ════════════════════════════
+     On-screen ACTION buttons + TOOL keycaps are flat 2D (no shadow.key 3D); on press/active they
+     show "Scanline Energize" — fine CRT scanlines over a hairline-darkened fill, NO movement, no
+     pip. Clip-path corner-notches kept; the physical NavBand keys stay 3D; the gold .count keycap
+     is already flat (left as-is); the OS keyboard .key glyphs are physical (left as-is). Selectors
+     match the base specificity above so source-order wins. ── */
+  /* IDLE = flat fill (strip the raised box-shadow; .btn.add also drops its drop-shadow, KEEPS clip) */
+  .sk2 .btn,
+  .sk2 .btn.secondary,
+  .sk2 .chip,
+  .fh-key,
+  .ovf-key,
+  .drawer .dw-submit,
+  .drawer .dw-cancel { box-shadow: none; }
+  .sk2 .btn.add { box-shadow: none; filter: none; }
+
+  /* PRESS/active = Scanline Energize, NO motion (replaces every translateY press + adds :active) */
+  /* accent-orange action button (.btn base · --scr-btn = orange) → ink rgba(0,0,0,.20) */
+  .sk2 .btn:active, .sk2 .btn.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-btn) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, #0000 1px 2px); }
+  /* gold ADD button (.btn.add) → ink rgba(60,42,9,.24); keep its clip-path */
+  .sk2 .btn.add:active, .sk2 .btn.add.is-pressed {
+    transform: none; box-shadow: none; filter: none;
+    background-color: color-mix(in srgb, var(--gold) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(60,42,9,.24) 0 1px, #0000 1px 2px); }
+  /* cream secondary button (.btn.secondary) → ink rgba(29,42,74,.20) */
+  .sk2 .btn.secondary:active, .sk2 .btn.secondary.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--cream) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
+  /* cream tool chip (.chip · was .chip.active translateY) → ink rgba(29,42,74,.20) */
+  .sk2 .chip:active, .sk2 .chip.is-pressed, .sk2 .chip.active {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
+  /* cream FlowHeader keycap (.fh-key) → ink rgba(29,42,74,.20) */
+  .fh-key:active, .fh-key.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
+  /* cream overflow keycap (.ovf-key · was .ovf-key.open translateY) → ink rgba(29,42,74,.20) */
+  .ovf-key:active, .ovf-key.is-pressed, .ovf-key.open {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
+  /* red/alert SUBMIT REPORT (.dw-submit) → ink rgba(0,0,0,.22) */
+  .drawer .dw-submit:active, .drawer .dw-submit.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--alert) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, #0000 1px 2px); }
+  /* cream CANCEL (.dw-cancel) → ink rgba(29,42,74,.20) */
+  .drawer .dw-cancel:active, .drawer .dw-cancel.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
 </style>
 </head>
 <body>
