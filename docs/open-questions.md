@@ -141,6 +141,47 @@
   (`activeShellId`·`screenThemeId`·`stickerComposition`) only ever references **owned** items — previews are
   client-side until acquired; (e) any **cap** on simultaneous previews. Pairs with OQ-062/064.
   (Device editor premium try-on, 2026-06-15) [behavior]
+- OQ-066: **State-file type-scale drift vs F-06 ("law").** The 2026-06-16 DS-conformance audit
+  (`design/audit/2026-06-16/state-file-ds-conformance-audit.md`) found every `*-states.html` mockup
+  passes the **categorical** rules (GameCard sizes/ratio/no-crop, F-03 drop tiers, F-02 colour intent,
+  F-08 fonts, tokens) but consistently uses **off-scale on-screen type** against F-06's 21/15/11/9:
+  §1.6 **state-titles at 17px** (shared across ~7 screens), some titles **13px**, dense body/sub copy
+  **10–10.5px**, and "mini" **action buttons at 9px** (Settings SEND at **12px**). These are **shared
+  constructions** — one source fix ripples many screens. Default, since F-06 is *law* = **conform the
+  mockups** (recommended). Owner's call: instead **amend F-06** to carve out a `state-title` and/or
+  `mini-button` role (the recurring 17/9px suggest uncodified roles)? Sub-call if conforming: error/
+  empty **state-titles → emphasis 15 or display 21** (centered small-card titles read as 15). Worst
+  offender = Settings; cleanest = Store/Collection/Report-sheet. (state-file audit, 2026-06-16) [presentation]
+- OQ-067: **Selection-pip colour & shape contradict F-05 (and disagree across boards).** Several boards
+  render the selected reason/row/chip pip as **orange `--scr-accent` + squared** (clip-path), where F-05
+  says *pips are always round* and the design-spec voices the selection LED as **pink `--accent`**;
+  `discover-states.html` (squared) vs `discover-states-fan.html` (**round**) disagree on the same
+  component. The flat F-09 border+pip *structure* is correct — only the pip's colour/shape drifts. Pairs
+  with **OQ-063** (the F-09 accent-border + **pink-pip** switcher rework). Recommendation: canonical
+  selection pip = **round + pink `--accent`**, rippled to all boards. (state-file audit, 2026-06-16) [presentation]
+- OQ-068: **Discover queue-add button colour — gold vs cream/orange.** `discover-states.html` uses
+  **gold** (`.btn.add`, card-creating intent) for **+ ADD FROM COLLECTION** — a queue build that creates
+  **no** card — while `discover-states-fan.html` uses **cream/orange** for the same Up-Next-add. The
+  true card-creating ADDs (ADD TO COLLECTION / ADD & DESIGN IT) are correctly gold on both. Per F-02 the
+  queue-add creates no card → it should **not** read gold; reconcile the two boards (recommend cream/
+  secondary or orange non-card). (state-file audit, 2026-06-16) [presentation]
+- OQ-069: **CARD-01 card-back provenance — the adoption count is dropped from the dual-face back.** The
+  Game-page converged board (`game-page/game-page-states.html`, candidate B) keeps the card-back **clean per
+  the owner** — **"CARD ART DESIGNED BY" + the account name** only — but CARD-01 names the standardized back's
+  printed provenance as **designer attribution + adoption count** (decision 0015). The count still surfaces in
+  the community gallery (`AdoptCount`) + the `CardDetail` inspect sheet ("ADOPTED 58×", drawn on M4). Decide the
+  canonical card-back wording: **(a)** amend CARD-01 so the standardized back is **designer-only**, with the
+  adoption-count living in the inspection/gallery surfaces (matches the owner's clean trophy back + the dual-face
+  brevity), or **(b)** restore the adoption count onto the back. Recommendation: **(a)** — the back is the
+  owner's trophy face; the social signal reads where adoption decisions happen. Not edited design-side.
+  (Game-page converge, 2026-06-17) [behavior]
+- OQ-070: **WISHLIST in the owned-entry editor?** The Game-page PLAY edit form (M2) shows STATUS as the COL-02
+  set **minus WISHLIST** (BACKLOG · PLAYING · BEATEN · COMPLETED · DROPPED) — WISHLIST being the
+  **unowned/discover** state (you wishlist a game you don't own; Up Next / Discover handle it, WTP-02). Decide
+  whether an **owned** entry's editor should offer WISHLIST at all (e.g. to shelve an owned game as "want to
+  replay / lapsed") or whether moving an owned entry to WISHLIST is nonsensical and handled only by removal /
+  Up-Next. The converged board omits it from the owned editor. Recommendation: **keep WISHLIST out of the owned
+  editor** (it is the pre-ownership state); confirm. (Game-page converge, 2026-06-17) [behavior]
 
 ## Resolved
 - OQ-053 → **Upcoming notify-me has a backing endpoint** (Discover §3.2 page-audit, api-contract 0.21):
