@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InGame · Button style spec — pixel-stepped corners · press fills orange · no pip</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" />
+<style>
+  /* tokens — Collection Midnight theme (verbatim from collection-states.html) */
+  :root {
+    --scr-bg: #232045; --scr-well: #2c2950; --scr-accent: #ff9f43; --scr-accent-ink: #2a1430;
+    --scr-chip: #f5f1e4; --navy: #1d2a4a; --scr-btn: #ffb38a; --scr-btn-ink: #2a1430;
+    --gold: #ffd23f; --cream: #f5f1e4; --scr-dim: #9b97c0; --scr-soft: #c9c5e6;
+    --scr-hairline: rgba(255,255,255,.08); --pk: 'Chakra Petch', sans-serif; --accent: #ff3d77;
+  }
+  html, body { margin: 0; background: #efece6; font-family: var(--pk); }
+  .canvas { max-width: 860px; margin: 0 auto; padding: 40px 24px 60px; }
+  h1 { font: 700 17px/1.3 var(--pk); letter-spacing: 1.5px; color: #2a2633; margin: 0 0 6px; text-transform: uppercase; }
+  .sub { font: 500 12.5px/1.6 var(--pk); color: #79748a; margin: 0 0 28px; max-width: 640px; }
+  .sub b { color: #2a2633; }
+
+  .panel { background: var(--scr-bg); border-radius: 14px; padding: 26px 26px 30px; box-shadow: 0 8px 30px rgba(42,38,51,.16); }
+  .panel h2 { font: 700 10px var(--pk); letter-spacing: 2px; color: var(--scr-dim); margin: 0 0 16px; text-transform: uppercase; }
+  .panel h2.mt { margin-top: 30px; }
+  .grid { display: grid; grid-template-columns: 120px 1fr 1fr; gap: 16px 22px; align-items: center; }
+  .rlab { font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-soft); }
+  .cell { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; }
+  .clab { font: 700 8px var(--pk); letter-spacing: 1.2px; color: var(--scr-dim); }
+
+  /* ── the new action-button style ─────────────────────────────────────────
+     Flat fill, NO 3D edge / bevel / drop-shadow / press-translate.
+     Pixel-stepped corners on TOP-LEFT + BOTTOM-RIGHT only (TR + BL square),
+     a clear 2-step 8px/4px pixel staircase (the C5 GameCard step, button-scaled).
+     PRESSED: the TL + BR stepped corners fill --scr-accent orange (triangles
+     trimmed by the button's own clip-path so they follow the staircase). No pip. */
+  .sbtn {
+    display: inline-flex; align-items: center; gap: 6px; border: none; cursor: pointer;
+    font: 700 11px var(--pk); letter-spacing: 1px; padding: 9px 13px; white-space: nowrap;
+    background: var(--fill); color: var(--ink);
+    clip-path: polygon(
+      0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0,
+      100% 0,
+      100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px), calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%,
+      0 100%);
+  }
+  .sbtn svg { flex: 0 0 auto; }
+  .sbtn.primary { --fill: var(--scr-btn); --ink: var(--scr-btn-ink); }
+  .sbtn.add     { --fill: var(--gold);    --ink: #3c2a09; }
+  .sbtn.sec     { --fill: var(--cream);   --ink: var(--navy); }
+  .sbtn.chip    { --fill: var(--scr-chip);--ink: var(--navy); padding: 7px 10px; }
+
+  /* PRESSED / SELECTED — orange fills the two stepped corners (TL + BR) */
+  .sbtn.pressed, .sbtn:active {
+    background:
+      linear-gradient(to bottom right, var(--scr-accent) 0 calc(50% - .5px), #0000 50%) top    left  / 14px 14px no-repeat,
+      linear-gradient(to top    left,  var(--scr-accent) 0 calc(50% - .5px), #0000 50%) bottom right / 14px 14px no-repeat,
+      var(--fill);
+  }
+
+  .zoomwrap { display: flex; flex-direction: column; gap: 26px; padding: 20px 0 8px 8px; }
+  .zrow { display: flex; align-items: center; gap: 26px; height: 116px; }
+  .zoom { transform: scale(2.6); transform-origin: left center; }
+  .zlab { flex: 0 0 64px; font: 700 8px var(--pk); letter-spacing: 1.2px; color: var(--scr-dim); }
+
+  .note { margin-top: 14px; font: 500 11px/1.6 var(--pk); color: var(--scr-soft); }
+  .note b { color: #fff; }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <h1>Collection — new action-button style</h1>
+  <p class="sub"><b>Pixel-stepped corners</b> on the top-left + bottom-right only (TR + BL stay square),
+  on <b>every</b> action button. Flat 2D — no raised edge, no bevel, nothing moves on press.
+  <b>Pressed/selected = the two stepped corners fill orange</b> (<code>--scr-accent</code>); the pip is
+  removed. First-draft specimen so you can confirm the look before I apply it to the board.</p>
+
+  <div class="panel">
+    <h2>Idle vs pressed — every fill</h2>
+    <div class="grid">
+      <span class="rlab">PRIMARY<br>(orange)</span>
+      <div class="cell"><span class="clab">IDLE</span>
+        <button class="sbtn primary"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>LOG HOURS</button></div>
+      <div class="cell"><span class="clab">PRESSED</span>
+        <button class="sbtn primary pressed"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>LOG HOURS</button></div>
+
+      <span class="rlab">ADD<br>(gold)</span>
+      <div class="cell"><span class="clab">IDLE</span>
+        <button class="sbtn add"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>ADD</button></div>
+      <div class="cell"><span class="clab">PRESSED</span>
+        <button class="sbtn add pressed"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>ADD</button></div>
+
+      <span class="rlab">SECONDARY<br>(cream)</span>
+      <div class="cell"><span class="clab">IDLE</span>
+        <button class="sbtn sec">SWITCH CARD</button></div>
+      <div class="cell"><span class="clab">PRESSED</span>
+        <button class="sbtn sec pressed">SWITCH CARD</button></div>
+
+      <span class="rlab">TOOL CHIP<br>(sort)</span>
+      <div class="cell"><span class="clab">IDLE</span>
+        <button class="sbtn chip"><svg width="11" height="12" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>A&ndash;Z</button></div>
+      <div class="cell"><span class="clab">SELECTED</span>
+        <button class="sbtn chip pressed"><svg width="11" height="12" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>A&ndash;Z</button></div>
+    </div>
+
+    <h2 class="mt">3&times; zoom — the stepped corners</h2>
+    <div class="zoomwrap">
+      <div class="zrow"><span class="zlab">IDLE</span><div class="zoom"><button class="sbtn primary"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>LOG HOURS</button></div></div>
+      <div class="zrow"><span class="zlab">PRESSED</span><div class="zoom"><button class="sbtn primary pressed"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>LOG HOURS</button></div></div>
+    </div>
+
+    <p class="note"><b>Reading:</b> idle buttons carry the two pixel-stepped corners (TL + BR) cut into the
+    screen; on press the corners flood <b>orange</b>. Knobs I can dial if this isn't quite it: the step size
+    (2-step 8px now), how far the orange triangle reaches in, and whether the body should also darken a touch.</p>
+  </div>
+</div>
+</body>
+</html>
