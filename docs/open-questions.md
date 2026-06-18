@@ -182,6 +182,19 @@
   replay / lapsed") or whether moving an owned entry to WISHLIST is nonsensical and handled only by removal /
   Up-Next. The converged board omits it from the owned editor. Recommendation: **keep WISHLIST out of the owned
   editor** (it is the pre-ownership state); confirm. (Game-page converge, 2026-06-17) [behavior]
+- OQ-071: **`GET /me/feed` aggregated item shape (the Friends-tab central contract gap).** api-contract
+  (~line 123) names `/me/feed` as *"low-noise, aggregated friend activity (SOC-06)"* but **enumerates no
+  payload** — yet the Friends feed (SOC-06) is the IA's landing surface. Propose the **actor+type
+  aggregated** item: `{ feedItemId, actor: { userId, username, avatarRef }, type ∈ added_games ·
+  beat_game · completed_game · published_card · unlocked_achievement, aggregateCount (the capped N, e.g.
+  12 — "Riko added 12 games" as one row), objects: [ { gameId?, title?, card?, achievementId?, label? } ]
+  (a **capped sample** for the row's peek — ≤3 thumbs + "+N"), occurredAt, windowStart/windowEnd (the
+  aggregation window) }`, cursor-paginated; **import-flood suppression + trivia exclusion enforced
+  server-side** (SOC-06). Also surfaces a **second, larger gap — presence/online state**: the roster's
+  `PresenceDot` ("ONLINE / recently / offline") + `StatPeek` ("IN HADES NOW") imply an online-status +
+  now-playing-visibility model that **neither the spec nor the contract defines** (privacy-gated by
+  PROF-03? a `presence` field on `/me/friends`? an opt-out?). Both for the API page-audit at converge;
+  drawn **illustratively** on the drafts meanwhile. (Friends §3.3 track kickoff, 2026-06-17) [behavior]
 
 ## Resolved
 - OQ-053 → **Upcoming notify-me has a backing endpoint** (Discover §3.2 page-audit, api-contract 0.21):
