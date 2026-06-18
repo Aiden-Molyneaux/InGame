@@ -51,11 +51,16 @@
   .sbtn.sec     { --fill: var(--cream);   --ink: var(--navy); }
   .sbtn.chip    { --fill: var(--scr-chip);--ink: var(--navy); padding: 7px 10px; }
 
-  /* PRESSED / SELECTED — orange fills the two stepped corners (TL + BR) */
+  /* PRESSED / SELECTED — the two stepped corner NOTCHES (TL + BR) FILL with orange.
+     Drop the clip (square the silhouette) and paint the exact staircase cut regions
+     --scr-accent: per corner an L of a 4×8 column + a 4×4 step = the same 8px/4px stair. */
   .sbtn.pressed, .sbtn:active {
+    clip-path: none;
     background:
-      linear-gradient(to bottom right, var(--scr-accent) 0 calc(50% - .5px), #0000 50%) top    left  / 14px 14px no-repeat,
-      linear-gradient(to top    left,  var(--scr-accent) 0 calc(50% - .5px), #0000 50%) bottom right / 14px 14px no-repeat,
+      linear-gradient(var(--scr-accent), var(--scr-accent)) left  0   top    0 / 4px 8px no-repeat,
+      linear-gradient(var(--scr-accent), var(--scr-accent)) left  4px top    0 / 4px 4px no-repeat,
+      linear-gradient(var(--scr-accent), var(--scr-accent)) right 0   bottom 0 / 4px 8px no-repeat,
+      linear-gradient(var(--scr-accent), var(--scr-accent)) right 4px bottom 0 / 4px 4px no-repeat,
       var(--fill);
   }
 
