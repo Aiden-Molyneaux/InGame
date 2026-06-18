@@ -226,7 +226,7 @@
   .sheet-scrim { position: absolute; inset: 0; z-index: 8; background: rgba(8,6,20,.6); }
   .sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 9; background: var(--scr-tools); border-top: 1px solid var(--scr-hairline);
     padding: 9px 12px 16px; box-shadow: 0 -10px 30px rgba(0,0,0,.5); }
-  .grabber { width: 36px; height: 4px; background: var(--scr-grip); border-radius: 2px; margin: 0 auto 11px; }
+  .grabber { width: 36px; height: 4px; background: var(--scr-grip); margin: 0 auto 11px; }
   .sheet-head { display: flex; gap: 11px; align-items: center; padding: 0 2px 11px; border-bottom: 1px solid var(--scr-hairline); margin-bottom: 4px; }
   .sheet-head .sh-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
   .sheet-head .sh-name { font: 700 15px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
@@ -264,8 +264,9 @@
     <h1>Friends &mdash; Draft A <span style="color:var(--accent);">"Feed-first"</span> (the social-stream pole)</h1>
     <p><b>Direction A of 3</b> for the &sect;3.3 owner gate. <b>Thesis:</b> the <b>SOC-06 aggregated activity feed
     IS the landing</b> &mdash; one continuous, deliberately low-noise scroll. Everything else is a <b>peek or a
-    jump-off</b>: roster = a slim top <b>friends rail</b> (&rarr; ALL FRIENDS), requests = an
-    <b>inline banner</b>, find/add = a <b>header key</b> (&rarr; 4.8). <b>No sub-tabs</b> &mdash; minimal chrome,
+    jump-off</b>: roster = a slim top <b>friends rail</b> (&rarr; ALL FRIENDS); find/add <i>and</i> requests share one
+    <b>persistent header key</b> (&rarr; the ADD&nbsp;FRIENDS hub, 4.8), with the requests <b>banner</b> a pending
+    fast-path. <b>No sub-tabs</b> &mdash; minimal chrome,
     the stream leads. The IA's stated default.</p>
     <p>Renders in-frame (DeviceShell + NavBand persist, <b>FRIENDS</b> keycap active = pressed + pink PipLight). Flat
     Inset-Recess keycaps (owner pick 2026-06-17); on-screen markers orange, never the pink shell pip. <b>No gold</b>
@@ -274,7 +275,7 @@
     hours/counts illustrative (OQ-002/011). <b>Presence (online/offline) + mutual-friend counts CUT per owner (2026-06-18)</b> &mdash; the roster reads hours + collection size; requests show when they arrived. Feed shape &rarr; OQ-071.</i></p>
   </div>
 
-  <div class="stage-label">P1 &mdash; the landing (the thesis) <small>the feed IS the screen · friends rail (roster peek) · inline requests banner · find/add header key</small></div>
+  <div class="stage-label">P1 &mdash; the landing (the thesis) <small>the feed IS the screen · friends rail (roster peek) · find/add + requests header key (→ ADD FRIENDS hub) · banner = pending fast-path</small></div>
   <div class="stage">
 
     <!-- ═══ P1 · Feed-first landing ═══ -->
@@ -288,7 +289,7 @@
             <div class="screen-head">
               <h2>FRIENDS</h2>
               <div class="head-keys">
-                <button class="head-act" title="Find / add friends"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6"/><path d="M3.5 19.5a6 6 0 0 1 11 0"/><path d="M18.5 7.5v6M15.5 10.5h6"/></svg></button>
+                <button class="head-act" title="Find, add &amp; requests"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6"/><path d="M3.5 19.5a6 6 0 0 1 11 0"/><path d="M18.5 7.5v6M15.5 10.5h6"/></svg><span class="ntag">2</span></button>
               </div>
             </div>
             <div class="scroll">
@@ -355,8 +356,9 @@
         <h3>P1 &mdash; feed landing <em>(the model thesis)</em></h3>
         <p><b>The feed IS the screen.</b> You land in the SOC-06 stream &mdash; <b>aggregated</b> rows (&ldquo;Riko added
         12 games&rdquo; as one capped item, +9 peek), beat/publish events, trivia excluded. The roster is a slim
-        <b>friends rail</b> (&rarr; ALL FRIENDS); requests are an <b>inline banner</b>; find/add is the
-        <b>header key</b>. No sub-tabs &mdash; one scroll.</p>
+        <b>friends rail</b> (&rarr; ALL FRIENDS). The <b>header key</b> (person-plus, badged with the pending count) is
+        the <b>persistent door to the ADD&nbsp;FRIENDS hub</b> &mdash; find/add <i>and</i> requests live there (P4), so
+        requests are always reachable; the <b>inline banner</b> is just the pending fast-path. No sub-tabs &mdash; one scroll.</p>
         <p><b>Best for:</b> an active social graph. <b>Weakest for:</b> the cold-start/0-friend reality &mdash; an empty
         feed is a dead landing (see P5 / Draft C).</p>
       </div>
@@ -364,7 +366,7 @@
 
   </div>
 
-  <div class="stage-label">P2&middot;P3&middot;P4 &mdash; the surfaces <small>the feed (SOC-06 · quiet vs active) · the friends list (SOC-01) · the requests inbox (SOC-08)</small></div>
+  <div class="stage-label">P2&middot;P3&middot;P4 &mdash; the surfaces <small>the feed (SOC-06 · quiet vs active) · the friends list (SOC-01) · the ADD FRIENDS hub: find/add + requests (SOC-07/08)</small></div>
   <div class="stage">
 
     <!-- ═══ P2 · the activity feed (active, full) ═══ -->
@@ -375,7 +377,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen c5">
-            <div class="screen-head"><h2>FRIENDS</h2><div class="head-keys"><button class="head-act"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6"/><path d="M3.5 19.5a6 6 0 0 1 11 0"/><path d="M18.5 7.5v6M15.5 10.5h6"/></svg></button></div></div>
+            <div class="screen-head"><h2>FRIENDS</h2><div class="head-keys"><button class="head-act" title="Find, add &amp; requests"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6"/><path d="M3.5 19.5a6 6 0 0 1 11 0"/><path d="M18.5 7.5v6M15.5 10.5h6"/></svg><span class="ntag">2</span></button></div></div>
             <div class="scroll">
               <div class="sec"><h3>RECENT ACTIVITY</h3><span class="tert dim">LOW-NOISE</span></div>
               <div class="feedrow">
@@ -445,7 +447,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen c5">
-            <div class="screen-head"><h2>FRIENDS<span class="h2sub">14</span></h2><div class="head-keys"><button class="head-act"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6"/><path d="M3.5 19.5a6 6 0 0 1 11 0"/><path d="M18.5 7.5v6M15.5 10.5h6"/></svg></button></div></div>
+            <div class="screen-head"><h2>FRIENDS<span class="h2sub">14</span></h2><div class="head-keys"><button class="head-act" title="Find, add &amp; requests"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6"/><path d="M3.5 19.5a6 6 0 0 1 11 0"/><path d="M18.5 7.5v6M15.5 10.5h6"/></svg><span class="ntag">2</span></button></div></div>
             <div class="scroll">
               <div class="sec"><h3>ALL FRIENDS &middot; 14</h3></div>
               <div class="frow">
@@ -495,17 +497,25 @@
       </div>
     </div>
 
-    <!-- ═══ P4 · the requests inbox ═══ -->
+    <!-- ═══ P4 · ADD FRIENDS hub (find/add + requests) ═══ -->
     <div class="take">
-      <div class="artboard-label">P4 &middot; the requests inbox</div>
-      <div class="device" data-screen-label="Friends A · P4 — requests">
+      <div class="artboard-label">P4 &middot; ADD FRIENDS hub (find/add + requests)</div>
+      <div class="device" data-screen-label="Friends A · P4 — add-friends hub">
         <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen c5">
-            <div class="screen-head"><h2 style="letter-spacing:2px;">REQUESTS</h2><div class="head-keys"><a class="tert dim" href="#" style="align-self:center;">&lsaquo; FRIENDS</a></div></div>
+            <div class="screen-head"><h2 style="letter-spacing:2px;">ADD FRIENDS</h2><div class="head-keys"><a class="tert dim" href="#" style="align-self:center;">&lsaquo; FRIENDS</a></div></div>
             <div class="scroll">
-              <div class="sec"><h3>INCOMING &middot; 2</h3></div>
+              <div class="sec"><h3>FIND SOMEONE</h3></div>
+              <div class="ihook">
+                <div class="ih-field"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span class="ph">Find by username&hellip;</span></div>
+                <div class="ih-row">
+                  <button class="btn secondary"><svg width="13" height="13" viewBox="0 0 24 24" style="stroke:var(--navy);fill:none;stroke-width:2;"><path d="M9 15l6-6M8 8H6a4 4 0 0 0 0 8h2M16 16h2a4 4 0 0 0 0-8h-2"/></svg>INVITE LINK</button>
+                  <button class="btn secondary"><svg width="13" height="13" viewBox="0 0 24 24" style="stroke:var(--navy);fill:none;stroke-width:2;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3M20 14v0M17 20h0M20 17v4" stroke-linecap="round"/></svg>QR CODE</button>
+                </div>
+              </div>
+              <div class="sec"><h3>INCOMING REQUESTS &middot; 2</h3></div>
               <div class="reqrow incoming">
                 <div class="av" style="background:#c8413a;color:#fff;">NO</div>
                 <div class="rqmeta"><span class="rqname">@nova wants to connect</span><span class="rqsub">REQUESTED 1D AGO</span></div>
@@ -513,16 +523,16 @@
               </div>
               <div class="reqrow incoming">
                 <div class="av" style="background:#b08a4a;color:#2a1408;">SA</div>
-                <div class="rqmeta"><span class="rqname">@sable_dev</span><span class="rqsub">REQUESTED 3D AGO</span></div>
+                <div class="rqmeta"><span class="rqname">@sable</span><span class="rqsub">REQUESTED 3D AGO</span></div>
                 <div class="rqacts"><button class="btn mini">ACCEPT</button><button class="btn mini alt">DECLINE</button></div>
               </div>
-              <div class="sec"><h3>OUTGOING &middot; 1</h3></div>
+              <div class="sec"><h3>SENT &middot; 1</h3></div>
               <div class="reqrow">
                 <div class="av" style="background:#2f7d8a;color:#04211c;">HX</div>
                 <div class="rqmeta"><span class="rqname">@hexandra</span><span class="rqsub">SENT 2D AGO</span></div>
                 <div class="rqacts"><button class="btn mini alt">CANCEL</button></div>
               </div>
-              <div class="hint"><b>SOC-08.</b> <b>Decline is silent</b> &mdash; the sender is never notified. <b>Cancel</b> withdraws your outgoing request. Re-requesting after a decline/cancel is <b>cooldown-limited</b> (SYS-04), so requests can&rsquo;t pester; persistent cases &rarr; <b>Block</b> (P6 / SOC-09).</div>
+              <div class="hint"><b>SOC-07 + SOC-08.</b> Reached from the <b>find/add key</b> on any Friends screen &mdash; <b>always present, even with nothing pending</b>, so your <b>SENT</b> requests are reachable too (the old banner-only path dead-ended here). Find by username &middot; invite link &middot; QR (&rarr; 4.8). <b>Decline is silent</b>; re-request is <b>cooldown-limited</b> (SYS-04); persistent cases &rarr; <b>Block</b> (P6 / SOC-09).</div>
             </div>
           </div>
         </div>
@@ -535,10 +545,15 @@
         </div>
       </div>
       <div class="caption">
-        <h3>P4 &mdash; the requests inbox <em>(SOC-08)</em></h3>
-        <p><b>RequestRow</b>: incoming (accent-edged) carries <b>ACCEPT</b> (primary flat) / <b>DECLINE</b> (low-emphasis
-        alt &mdash; decline is silent); outgoing carries <b>CANCEL</b>. Rows show <b>when the request arrived</b>. In
-        Draft A the inbox is reached from the <b>banner</b> (P1) &mdash; Draft C promotes it to the landing.</p>
+        <h3>P4 &mdash; ADD FRIENDS hub <em>(find/add + requests · SOC-07/08)</em></h3>
+        <p><b>The fix for A&rsquo;s one nav gap.</b> The find/add header key opens a <b>persistent connections hub</b>
+        hosting both <b>find/add</b> (username search · invite link · QR &rarr; 4.8, SOC-07) <b>and the requests inbox</b>
+        &mdash; INCOMING (<b>ACCEPT</b> / <b>DECLINE</b>-silent) + SENT (<b>CANCEL</b>), SOC-08. Because the key is always
+        present, <b>requests are reachable even with nothing pending</b> (to check/cancel a sent one) &mdash; the old
+        banner-only path left that a dead end. The P1 banner stays as the pending fast-path.</p>
+        <p>Co-locating requests with find/add keeps A&rsquo;s header at <b>one key</b> (its minimal-chrome thesis). <b>IA
+        note:</b> this places the requests inbox inside the <b>4.8 Find/Add</b> destination &mdash; a presentation call
+        to reconcile at converge (SOC-08 behaviour unchanged).</p>
       </div>
     </div>
 
@@ -555,7 +570,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen c5">
-            <div class="screen-head"><h2>FRIENDS</h2><div class="head-keys"><button class="head-act"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6"/><path d="M3.5 19.5a6 6 0 0 1 11 0"/><path d="M18.5 7.5v6M15.5 10.5h6"/></svg></button></div></div>
+            <div class="screen-head"><h2>FRIENDS</h2><div class="head-keys"><button class="head-act" title="Find, add &amp; requests"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6"/><path d="M3.5 19.5a6 6 0 0 1 11 0"/><path d="M18.5 7.5v6M15.5 10.5h6"/></svg><span class="ntag">2</span></button></div></div>
             <div class="scroll">
               <div class="invite">
                 <div class="inv-card"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6"/><path d="M3.5 19.5a6 6 0 0 1 11 0"/><path d="M18.5 7.5v6M15.5 10.5h6"/></svg></div>
@@ -602,7 +617,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen c5">
-            <div class="screen-head"><h2>FRIENDS<span class="h2sub">14</span></h2><div class="head-keys"><button class="head-act"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6"/><path d="M3.5 19.5a6 6 0 0 1 11 0"/><path d="M18.5 7.5v6M15.5 10.5h6"/></svg></button></div></div>
+            <div class="screen-head"><h2>FRIENDS<span class="h2sub">14</span></h2><div class="head-keys"><button class="head-act" title="Find, add &amp; requests"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6"/><path d="M3.5 19.5a6 6 0 0 1 11 0"/><path d="M18.5 7.5v6M15.5 10.5h6"/></svg><span class="ntag">2</span></button></div></div>
             <div class="scroll">
               <div class="sec"><h3>ALL FRIENDS &middot; 14</h3></div>
               <div class="frow">
