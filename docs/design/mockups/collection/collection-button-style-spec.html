@@ -46,14 +46,16 @@
       0 100%);
   }
   .sbtn svg { flex: 0 0 auto; }
-  .sbtn.primary { --fill: var(--scr-btn); --ink: var(--scr-btn-ink); }
-  .sbtn.add     { --fill: var(--gold);    --ink: #3c2a09; }
-  .sbtn.sec     { --fill: var(--cream);   --ink: var(--navy); }
-  .sbtn.chip    { --fill: var(--scr-chip);--ink: var(--navy); padding: 7px 10px; }
+  /* per-fill: --fill idle colour · --scan scanline ink · --scanbase the hairline-darkened pressed base */
+  .sbtn.primary { --fill: var(--scr-btn); --ink: var(--scr-btn-ink); --scan: rgba(0,0,0,.20);   --scanbase: color-mix(in srgb, var(--scr-btn) 88%, #000); }
+  .sbtn.add     { --fill: var(--gold);    --ink: #3c2a09;            --scan: rgba(60,42,9,.24);  --scanbase: color-mix(in srgb, var(--gold) 88%, #000); }
+  .sbtn.sec     { --fill: var(--cream);   --ink: var(--navy);        --scan: rgba(29,42,74,.20); --scanbase: color-mix(in srgb, var(--cream) 90%, var(--navy)); }
+  .sbtn.chip    { --fill: var(--scr-chip);--ink: var(--navy); padding: 7px 10px; --scan: rgba(29,42,74,.20); --scanbase: color-mix(in srgb, var(--scr-chip) 90%, var(--navy)); }
 
-  /* PRESSED / SELECTED — the two stepped corner NOTCHES (TL + BR) FILL with orange.
-     Drop the clip (square the silhouette) and paint the exact staircase cut regions
-     --scr-accent: per corner an L of a 4×8 column + a 4×4 step = the same 8px/4px stair. */
+  /* PRESSED / SELECTED — BOTH effects together:
+     (1) Scanline Energize — fine CRT scanlines over a hairline-darkened base (the body).
+     (2) the two stepped corner NOTCHES (TL + BR) FILL solid orange — layered ON TOP of the
+         scanlines so the corners read as clean accent pixel-steps; clip dropped to square the rim. */
   .sbtn.pressed, .sbtn:active {
     clip-path: none;
     background:
@@ -61,7 +63,8 @@
       linear-gradient(var(--scr-accent), var(--scr-accent)) left  4px top    0 / 4px 4px no-repeat,
       linear-gradient(var(--scr-accent), var(--scr-accent)) right 0   bottom 0 / 4px 8px no-repeat,
       linear-gradient(var(--scr-accent), var(--scr-accent)) right 4px bottom 0 / 4px 4px no-repeat,
-      var(--fill);
+      repeating-linear-gradient(0deg, var(--scan) 0 1px, #0000 1px 2px),
+      var(--scanbase);
   }
 
   .zoomwrap { display: flex; flex-direction: column; gap: 26px; padding: 20px 0 8px 8px; }
@@ -78,8 +81,9 @@
   <h1>Collection — new action-button style</h1>
   <p class="sub"><b>Pixel-stepped corners</b> on the top-left + bottom-right only (TR + BL stay square),
   on <b>every</b> action button. Flat 2D — no raised edge, no bevel, nothing moves on press.
-  <b>Pressed/selected = the two stepped corners fill orange</b> (<code>--scr-accent</code>); the pip is
-  removed. First-draft specimen so you can confirm the look before I apply it to the board.</p>
+  <b>Pressed/selected combines both effects:</b> the body gets <b>Scanline Energize</b> (fine CRT scanlines
+  over a hairline-darkened fill) <b>and</b> the two stepped corners <b>fill orange</b>
+  (<code>--scr-accent</code>); the pip is removed. Specimen for sign-off before it goes on the board.</p>
 
   <div class="panel">
     <h2>Idle vs pressed — every fill</h2>
@@ -115,9 +119,10 @@
       <div class="zrow"><span class="zlab">PRESSED</span><div class="zoom"><button class="sbtn primary pressed"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>LOG HOURS</button></div></div>
     </div>
 
-    <p class="note"><b>Reading:</b> idle buttons carry the two pixel-stepped corners (TL + BR) cut into the
-    screen; on press the corners flood <b>orange</b>. Knobs I can dial if this isn't quite it: the step size
-    (2-step 8px now), how far the orange triangle reaches in, and whether the body should also darken a touch.</p>
+    <p class="note"><b>Reading:</b> idle = flat fill with the two pixel-stepped corners (TL + BR) cut into the
+    screen. Pressed = <b>Scanline Energize</b> across the body <b>+</b> the two stepped corners flood
+    <b>orange</b>. Dials: scanline pitch (2px now), corner step size (2-step 8px), and the orange contrast on
+    the gold ADD (lowest-contrast pairing — can nudge darker there if you want it to pop).</p>
   </div>
 </div>
 </body>
