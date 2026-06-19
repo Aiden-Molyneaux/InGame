@@ -279,6 +279,51 @@
 
   .half-panel { margin-top: 14px; background: var(--scr-bg); border: 5px solid var(--bezel); border-radius: 8px; padding: 13px 14px; position: relative; }
   .dimmed { opacity: .42; }
+
+  /* ════ FLAT BUTTONS + SCANLINE ENERGIZE (F-03, locked 2026-06-18) ════
+     On-screen ACTION buttons (.btn family) + TOOL keycaps (.fh-key/.ovf-key) are FLAT 2D — no raised
+     keycap edge/drop-shadow. PRESS = "Scanline Energize": fine CRT scanlines over a hairline-darkened
+     fill, NO movement, no pip. Clip-path notches kept (.btn.add/.alt). LEAVE: .nav-btn (3D physical
+     keys), .tabsw-card (segmented/tab — accent-border), .schip/.gchip/.adopt-chip (status/price chips),
+     .swcard.sel ring, sliders/toggles. This file was still 3D → full flatten + scanline. */
+  /* (1) IDLE — flatten: kill the raised box-shadow / drop-shadow filter; KEEP clip-path on the clipped variants */
+  .btn { box-shadow: none; }
+  .btn.add { box-shadow: none; filter: none; }
+  .btn.alt { box-shadow: none; filter: none; }
+  .btn.sec { box-shadow: none; }
+  .btn.danger { box-shadow: none; }
+  .fh-key { box-shadow: none; }
+  .ovf-key { box-shadow: none; }
+
+  /* (2) PRESS — Scanline Energize, no motion. FILL = the keycap's idle background. */
+  .btn:active, .btn.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-accent) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, #0000 1px 2px); }
+  .btn.add:active, .btn.add.is-pressed {
+    transform: none; box-shadow: none; filter: none;
+    background-color: color-mix(in srgb, var(--gold) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(60,42,9,.24) 0 1px, #0000 1px 2px); }
+  .btn.alt:active, .btn.alt.is-pressed {
+    transform: none; box-shadow: none; filter: none;
+    background-color: color-mix(in srgb, var(--scr-accent) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, #0000 1px 2px); }
+  .btn.sec:active, .btn.sec.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--cream) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
+  .btn.danger:active, .btn.danger.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--alert) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, #0000 1px 2px); }
+  .fh-key:active, .fh-key.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
+  .ovf-key:active, .ovf-key.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
 </style>
 </head>
 <body>

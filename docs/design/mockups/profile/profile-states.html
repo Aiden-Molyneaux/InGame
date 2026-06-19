@@ -92,7 +92,7 @@
   .chip { display: inline-flex; align-items: center; gap: 5px; }
   .btn { display: inline-flex; align-items: center; gap: 6px; border: none; width: fit-content; }
   .chips { display: flex; flex-wrap: wrap; gap: 7px; }
-  .chips .chip { padding: 7px 9px; font-size: 10px; }
+  .chips .chip { padding: 7px 9px; font-size: 11px; }
   .hint { margin: 8px 1px 0; font: 600 9px/1.6 var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
   .hint b { color: var(--scr-soft); }
 
@@ -246,7 +246,7 @@
   .pen path { stroke: var(--scr-accent); }
   .efield { display: flex; align-items: center; gap: 7px; background: var(--scr-chip); padding: 9px 10px;
     box-shadow: inset 0 2px 3px rgba(0,0,0,.16); }
-  .efield .tx { font: 600 10.5px/1.4 var(--pk); letter-spacing: .3px; color: var(--navy); min-width: 0; }
+  .efield .tx { font: 600 11px/1.4 var(--pk); letter-spacing: .3px; color: var(--navy); min-width: 0; }
   .efield .caret { flex: 0 0 auto; width: 1.5px; height: 12px; background: var(--accent); }
   .efield .cnt { margin-left: auto; flex: 0 0 auto; font: 600 9px var(--pk); color: #8d889c; }
   .gtag .x { margin-left: 6px; color: var(--scr-dim); font: 700 9px/1 var(--pk); font-style: normal; }
@@ -271,7 +271,7 @@
   .ghost-mini::before { content: ""; position: absolute; inset: 5px; border: 1.5px dashed var(--scr-grip); opacity: .7; }
   .ghost-mini .plus { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
     font: 700 17px/1 var(--pk); color: var(--scr-grip); }
-  .ghost-line { border: 1px dashed var(--scr-grip); padding: 9px 10px; font: 600 9.5px var(--pk);
+  .ghost-line { border: 1px dashed var(--scr-grip); padding: 9px 10px; font: 600 9px var(--pk);
     letter-spacing: .5px; color: var(--scr-dim); }
   /* skeleton (loading) — solid quiet fills; dashes are reserved for invitations */
   .sk-bar { height: 9px; background: var(--scr-panel); }
@@ -288,14 +288,14 @@
   /* friend view */
   .exit-band { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 8px;
     background: var(--scr-accent); color: var(--scr-accent-ink); padding: 9px 13px;
-    font: 700 9.5px var(--pk); letter-spacing: 1px; }
+    font: 700 9px var(--pk); letter-spacing: 1px; }
   .ovf { letter-spacing: 2px; font-weight: 700; }
   /* privacy-limited */
   .lock-well { margin-top: 12px; border: 1px dashed var(--scr-grip); padding: 18px 14px; display: flex;
     flex-direction: column; align-items: center; gap: 7px; text-align: center; }
   .lock-well svg path, .lock-well svg rect { stroke: var(--scr-dim); }
-  .lock-well .lk-t { font: 700 10px var(--pk); letter-spacing: 1.5px; color: var(--scr-soft); }
-  .lock-well .lk-s { font: 500 9.5px/1.5 var(--pk); color: var(--scr-dim); max-width: 250px; }
+  .lock-well .lk-t { font: 700 11px var(--pk); letter-spacing: 1.5px; color: var(--scr-soft); }
+  .lock-well .lk-s { font: 500 9px/1.5 var(--pk); color: var(--scr-dim); max-width: 250px; }
   /* load-error */
   .err-wrap { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 9px; padding: 52px 18px 0; }
   .err-card { position: relative; width: 96px; height: 134px; background: var(--scr-panel); margin-bottom: 8px;
@@ -305,9 +305,9 @@
   .err-card::before { content: ""; position: absolute; inset: 6px; border: 2px dashed var(--scr-grip); opacity: .8; }
   .err-card .bang { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
     font: 700 34px/1 var(--pk); color: var(--scr-accent); }
-  .err-title { font: 700 17px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
-  .err-sub { font: 500 10.5px/1.55 var(--pk); color: var(--scr-soft); max-width: 240px; }
-  .err-wrap .ghost-link { margin-top: 6px; font: 600 10px var(--pk); letter-spacing: .8px; color: var(--scr-dim); text-decoration: none; }
+  .err-title { font: 700 15px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
+  .err-sub { font: 500 11px/1.55 var(--pk); color: var(--scr-soft); max-width: 240px; }
+  .err-wrap .ghost-link { margin-top: 6px; font: 600 11px var(--pk); letter-spacing: .8px; color: var(--scr-dim); text-decoration: none; }
   /* unavailable (terminal) — muted, no alarm: grip-grey glyph, not the accent ! */
   .err-card .void-ic { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
   .err-card .void-ic svg { width: 42px; height: 42px; } .err-card .void-ic svg path, .err-card .void-ic svg circle { stroke: var(--scr-grip); }
@@ -318,6 +318,51 @@
     font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
   .offline-strip svg { width: 13px; height: 13px; flex: 0 0 auto; } .offline-strip svg path { stroke: var(--scr-dim); }
   .offline-strip .sync { margin-left: auto; font-weight: 600; letter-spacing: .5px; color: var(--scr-grip); }
+
+  /* ════ FLAT BUTTONS + SCANLINE ENERGIZE (F-03, locked 2026-06-18) ════
+     On-screen KeycapButton + ToolKeycap family go FLAT 2D (no 3D shadow.key / no drop-shadow);
+     on press/active they show "Scanline Energize" — fine CRT scanlines over a hairline-darkened
+     fill, NO movement. Clip-path corner-notches kept. Physical .nav-btn stays 3D (untouched).
+     This board has no .count/.ccount, no segmented/tab switchers, no sliders/toggles. */
+  /* 1) IDLE = flat fill (keep clip-paths on .add/.act) */
+  .sk2 .btn { box-shadow: none; }
+  .sk2 .btn.add { box-shadow: none; filter: none; }
+  .sk2 .btn.act { box-shadow: none; filter: none; }
+  .sk2 .btn.secondary { box-shadow: none; }
+  .sk2 .chip { box-shadow: none; }
+  .chip.dim { box-shadow: none; }
+  .ric { box-shadow: none; }
+  /* 2) PRESS / active = Scanline Energize, NO motion (replaces the .chip.active translateY) */
+  /* peach base .btn — orange/peach ink */
+  .sk2 .btn:active, .sk2 .btn.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-btn) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, #0000 1px 2px); }
+  /* .btn.act — system orange — orange/peach ink */
+  .sk2 .btn.act:active, .sk2 .btn.act.is-pressed {
+    transform: none; box-shadow: none; filter: none;
+    background-color: color-mix(in srgb, var(--scr-accent) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, #0000 1px 2px); }
+  /* .btn.add — gold — gold ink */
+  .sk2 .btn.add:active, .sk2 .btn.add.is-pressed {
+    transform: none; box-shadow: none; filter: none;
+    background-color: color-mix(in srgb, var(--gold) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(60,42,9,.24) 0 1px, #0000 1px 2px); }
+  /* .btn.secondary — cream — cream ink */
+  .sk2 .btn.secondary:active, .sk2 .btn.secondary.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--cream) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
+  /* tool keycap .chip — cream — cream ink (covers .chip.active, :active, .is-pressed) */
+  .sk2 .chip:active, .sk2 .chip.is-pressed, .sk2 .chip.active {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
+  /* tool keycap .ric — cream — cream ink */
+  .ric:active, .ric.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
 </style>
 </head>
 <body>

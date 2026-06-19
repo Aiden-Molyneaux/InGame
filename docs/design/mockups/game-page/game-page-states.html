@@ -348,6 +348,45 @@
   .hidden-cell svg { position: relative; width: 22px; height: 22px; stroke: var(--scr-dim); fill: none; }
   .state-tag.review { background: var(--alert); color: #fff; }
   .gw-credit.unavail { color: var(--scr-grip); }
+
+  /* ════════════════════════════════════════════════════════════════════
+     FLAT BUTTONS + SCANLINE ENERGIZE (F-03, locked 2026-06-18)
+     This board was already FLAT with an INSET-RECESS press (see the "Inset
+     Recess" block above). Per the locked F-03 affordance, the recess press is
+     SWAPPED to "Scanline Energize": fine CRT scanlines over a hairline-darkened
+     fill — NO movement (no translate), no inset shadow, no pip. Idle stays flat
+     (box-shadow:none kept upstream). Scope = the KeycapButton family
+     (.btn + .add/.alt/.cream/.danger, with .mini/.block as size/layout-only) +
+     the tool keycaps .fh-key/.ovf-key. clip-path notches (.add/.alt) preserved.
+     LEFT 3D/accent-border (out of scope): .nav-btn (physical NavBand) · the
+     segmented status chips .schip/.schip.on · the bottom SectionSwitch
+     .tabsw-card/.tabsw-card.on (accent-border active, NOT a pressed keycap).
+     Real selectors at base specificity so source-order wins over the recess.
+     ──────────────────────────────────────────────────────────────────── */
+  .btn:active, .btn.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-accent) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, #0000 1px 2px); }
+  .btn.alt:active, .btn.alt.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-accent) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, #0000 1px 2px); }
+  .btn.add:active, .btn.add.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--gold) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(60,42,9,.24) 0 1px, #0000 1px 2px); }
+  .btn.cream:active, .btn.cream.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--cream) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
+  .btn.danger:active, .btn.danger.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--alert) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, #0000 1px 2px); }
+  .fh-key:active, .fh-key.is-pressed, .ovf-key:active, .ovf-key.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
 </style>
 </head>
 <body>

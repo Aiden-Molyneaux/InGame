@@ -173,7 +173,7 @@
     font: 700 36px/1 var(--pk); color: var(--scr-grip); }
   .empty-sub { font: 500 11px/1.55 var(--pk); color: var(--scr-soft); max-width: 250px; }
   .empty .btn.add { margin-top: 8px; }
-  .hook { display: block; text-align: center; margin: 18px 0 4px; font: 600 10px var(--pk); letter-spacing: .8px;
+  .hook { display: block; text-align: center; margin: 18px 0 4px; font: 600 11px var(--pk); letter-spacing: .8px;
     color: var(--scr-accent); text-decoration: none; }
   .suggest { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 24px; }
   .chip.dim, .grip.dim { opacity: .45; }
@@ -187,16 +187,16 @@
   .field { display: flex; align-items: center; gap: 7px; background: var(--scr-chip); padding: 9px 10px;
     box-shadow: inset 0 2px 3px rgba(0,0,0,.16); }
   .field svg circle, .field svg path { stroke: var(--navy); }
-  .field span { font: 600 10px var(--pk); letter-spacing: 1px; color: #8d889c; }
+  .field span { font: 600 11px var(--pk); letter-spacing: 1px; color: #8d889c; }
   .sheet .sec { margin: 12px 1px 7px; }
   .chips { display: flex; flex-wrap: wrap; gap: 7px; }
-  .chips .chip { padding: 7px 9px; font-size: 10px; }
+  .chips .chip { padding: 7px 9px; font-size: 11px; }
   .chip .mini-grip { display: grid; grid-template-columns: repeat(2, 2.5px); grid-auto-rows: 2.5px; gap: 2px; }
   .chip .mini-grip i { background: var(--navy); }
   .hint { margin: 8px 1px 0; font: 600 9px/1.6 var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
   .hint b { color: var(--scr-soft); }
   .sheet-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; }
-  .sheet-foot a { font: 600 10px var(--pk); letter-spacing: 1px; color: var(--scr-dim); text-decoration: none; }
+  .sheet-foot a { font: 600 11px var(--pk); letter-spacing: 1px; color: var(--scr-dim); text-decoration: none; }
 
   /* view-mode artboards (COL-07 made explicit) */
   .stage-label { font: 700 13px/1 var(--pk); letter-spacing: 2px; color: #2a2633; text-transform: uppercase; margin: 36px 2px 14px; }
@@ -281,9 +281,9 @@
   .err-card .void-ic { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
   .err-card .void-ic svg { width: 42px; height: 42px; } .err-card .void-ic svg path, .err-card .void-ic svg circle { stroke: var(--scr-grip); }
   .err-eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
-  .err-title { font: 700 17px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
-  .err-sub { font: 500 10.5px/1.55 var(--pk); color: var(--scr-soft); max-width: 250px; }
-  .err-wrap .ghost-link { margin-top: 6px; font: 600 10px var(--pk); letter-spacing: .8px; color: var(--scr-dim); text-decoration: none; }
+  .err-title { font: 700 15px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
+  .err-sub { font: 500 11px/1.55 var(--pk); color: var(--scr-soft); max-width: 250px; }
+  .err-wrap .ghost-link { margin-top: 6px; font: 600 11px var(--pk); letter-spacing: .8px; color: var(--scr-dim); text-decoration: none; }
   .offline-strip { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; margin: 0 12px 2px; padding: 7px 11px;
     background: var(--scr-panel); border: 1px solid var(--scr-hairline); font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
   .offline-strip svg { width: 13px; height: 13px; flex: 0 0 auto; } .offline-strip svg path { stroke: var(--scr-dim); }
@@ -298,6 +298,47 @@
     clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
       100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
       calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
+
+  /* ════ FLAT BUTTONS + SCANLINE ENERGIZE (F-03, locked 2026-06-18) ════
+     On-screen ACTION buttons (.btn family) + TOOL keycaps (.chip) go FLAT 2D
+     (no shadow.key 3D, no drop-shadow) and on PRESS/active show "Scanline
+     Energize" — fine CRT scanlines over a hairline-darkened fill, NO movement.
+     Clip-path corner-notches kept. .count is already flat (untouched). Physical
+     .nav-btn keys stay 3D; no segmented/tab switchers on this board. */
+  /* 1) IDLE = flat fill */
+  .sk2 .btn,
+  .sk2 .btn.secondary { box-shadow: none; }
+  .sk2 .btn.add,
+  .sk2 .btn.act { box-shadow: none; filter: none; }   /* KEEP clip-path */
+  .sk2 .chip { box-shadow: none; }
+  .chip.dim { box-shadow: none; }                      /* dimmed empty-state chip — flat too */
+
+  /* 2) PRESS/active = Scanline Energize, NO motion (replaces .chip.active translateY) */
+  /* peach primary .btn — fill var(--scr-btn) */
+  .sk2 .btn:active, .sk2 .btn.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-btn) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, #0000 1px 2px); }
+  /* gold .btn.add — fill var(--gold) */
+  .sk2 .btn.add:active, .sk2 .btn.add.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--gold) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(60,42,9,.24) 0 1px, #0000 1px 2px); }
+  /* cream .btn.secondary — fill var(--cream) */
+  .sk2 .btn.secondary:active, .sk2 .btn.secondary.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--cream) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
+  /* orange .btn.act — fill var(--scr-accent) */
+  .sk2 .btn.act:active, .sk2 .btn.act.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-accent) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, #0000 1px 2px); }
+  /* cream tool keycap .chip — fill var(--scr-chip) */
+  .sk2 .chip:active, .sk2 .chip.is-pressed, .sk2 .chip.active {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
 </style>
 </head>
 <body>

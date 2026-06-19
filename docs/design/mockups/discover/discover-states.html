@@ -94,18 +94,19 @@
   .head-act svg circle, .head-act svg path { stroke: var(--navy); }
   .head-act.on { transform: translateY(2px); box-shadow: 0 0 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 2px 3px rgba(0,0,0,.22); }
 
-  /* ════ SegmentedKeycap/pair — BOTTOM-DOCKED + smaller (owner ruling). Active segment pressed +
-     pink PipLight (F-03 keycap physics; F-09 pressed-keycap exception). Sits inside the screen's
-     bottom edge, above the plastic NavBand — the Up Next ↔ Discover sub-switch for the tab. ════ */
-  .seg-foot { flex: 0 0 auto; padding: 7px 12px 9px; background: var(--scr-tools); border-top: 1px solid var(--scr-hairline); }
-  .seg-pair { display: flex; gap: 3px; }
-  .seg-pair .seg { flex: 1 1 0; position: relative; text-align: center; padding: 9px 0;
-    background: var(--scr-chip); color: var(--navy); font: 700 10px var(--pk); letter-spacing: 2px;
-    box-shadow: 0 3px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
-  .c5 .seg-foot .seg { border-radius: 0; }
-  .seg-pair .seg.active { transform: translateY(3px); box-shadow: 0 0 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 2px 3px rgba(0,0,0,.22); }
-  .seg-pair .seg .sp { position: absolute; top: -3px; right: -3px; width: 7px; height: 7px;
-    background: var(--scr-accent); clip-path: polygon(11.1% 0, 88.9% 0, 88.9% 11.1%, 100% 11.1%, 100% 88.9%, 88.9% 88.9%, 88.9% 100%, 11.1% 100%, 11.1% 88.9%, 0 88.9%, 0 11.1%, 11.1% 11.1%); }
+  /* ════ Section nav-switch — flat in-screen cards, matching the Game-page tabsw nav buttons.
+     The Up Next ↔ Discover sub-switch for the tab: a hairline-bordered well card per segment; the
+     active card takes the accent border + brighter label. Sits inside the screen's bottom edge,
+     above the plastic NavBand. ════ */
+  .seg-foot { flex: 0 0 auto; padding: 9px 12px 11px; background: var(--scr-tools); border-top: 1px solid var(--scr-hairline); }
+  .seg-pair { display: flex; gap: 8px; }
+  .seg-pair .seg { flex: 1 1 0; position: relative; display: flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 11px 6px; background: var(--scr-well); border: 1px solid var(--scr-hairline);
+    color: var(--scr-soft); font: 700 11px var(--pk); letter-spacing: 1px; }
+  .seg-pair .seg.active { border-color: var(--scr-accent); color: var(--scr-text); }
+  .seg-ic { width: 18px; height: 18px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; }
+  .seg-ic svg { width: 18px; height: 18px; stroke: var(--scr-soft); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .seg-pair .seg.active .seg-ic svg { stroke: var(--scr-accent); }
 
   /* ── the Game Card ── */
   .gcard { position: relative; border-radius: 11px; box-sizing: border-box; flex: 0 0 auto; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
@@ -151,7 +152,7 @@
   .sk2 .btn.add { background: var(--gold); color: #3c2a09; filter: drop-shadow(0 3px 0 color-mix(in srgb, var(--gold) 45%, #000)); }
   .sk2 .btn.secondary { background: var(--cream); color: var(--navy); filter: none;
     box-shadow: 0 3px 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
-  .sk2 .btn.mini { padding: 6px 9px; font-size: 9px; }
+  .sk2 .btn.mini { padding: 6px 9px; font-size: 11px; }
 
   /* ── C5 ── */
   .c5 .btn { border-radius: 0; clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
@@ -190,7 +191,7 @@
   .grip i { width: 2px; height: 2px; background: var(--scr-grip); border-radius: 50%; }
   .qrank { flex: 0 0 auto; width: 14px; text-align: center; font: 700 11px var(--pk); color: var(--scr-soft); }
   .q-meta { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-  .q-title { font: 700 12px var(--pk); letter-spacing: .3px; color: var(--scr-text); }
+  .q-title { font: 700 11px var(--pk); letter-spacing: .3px; color: var(--scr-text); }
   .q-sub { font: 600 9px var(--pk); letter-spacing: .3px; color: var(--scr-dim); }
   .q-right { margin-left: auto; display: flex; align-items: center; gap: 7px; flex: 0 0 auto; }
   .qtag { font: 700 8px/1 var(--pk); letter-spacing: 1px; padding: 3px 5px; white-space: nowrap; }
@@ -207,7 +208,7 @@
   .rail { display: flex; gap: 10px; overflow-x: auto; padding: 2px 0 4px; scrollbar-width: none; }
   .rail::-webkit-scrollbar { display: none; }
   .rel { flex: 0 0 auto; width: 92px; display: flex; flex-direction: column; gap: 5px; align-items: flex-start; }
-  .rel .r-title { font: 700 10px var(--pk); letter-spacing: .2px; color: var(--scr-text); }
+  .rel .r-title { font: 700 11px var(--pk); letter-spacing: .2px; color: var(--scr-text); }
   .rel .r-studio { font: 600 8px var(--pk); letter-spacing: .5px; color: var(--scr-dim); margin-top: -3px; }
   .datechip { display: inline-flex; align-items: center; gap: 4px; background: var(--scr-panel); border: 1px solid var(--scr-hairline);
     color: var(--scr-soft); font: 700 8px/1 var(--pk); letter-spacing: 1px; padding: 3px 5px; }
@@ -222,7 +223,7 @@
   .rec-row .rc-meta { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .rec-row .rc-who { font: 700 8.5px var(--pk); letter-spacing: 1px; color: var(--scr-soft); }
   .rec-row .rc-who b { color: var(--scr-accent); }
-  .rec-row .rc-title { font: 700 12px var(--pk); letter-spacing: .3px; color: var(--scr-text); }
+  .rec-row .rc-title { font: 700 11px var(--pk); letter-spacing: .3px; color: var(--scr-text); }
   .rec-row .rc-note { font: 600 9px/1.35 var(--pk); letter-spacing: .2px; color: var(--scr-dim); font-style: italic; }
   /* trending row */
   .trend { display: flex; align-items: center; gap: 10px; padding: 9px; background: var(--scr-well); border: 1px solid var(--scr-hairline); }
@@ -232,7 +233,7 @@
   .c5 .rchip { border-radius: 0; }
   .rchip.first { background: var(--gold); color: #3c2a09; border-color: color-mix(in srgb, var(--gold) 60%, #000); box-shadow: 0 0 8px rgba(255,210,63,.45); }
   .trend .t-meta { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-  .trend .t-title { font: 700 12px var(--pk); letter-spacing: .3px; color: var(--scr-text); }
+  .trend .t-title { font: 700 11px var(--pk); letter-spacing: .3px; color: var(--scr-text); }
   .trend .t-by { font: 600 9px var(--pk); letter-spacing: .3px; color: var(--scr-dim); } .trend .t-by b { color: var(--scr-soft); }
   .adopt { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; background: rgba(255,210,63,.08);
     border: 1px solid color-mix(in srgb, var(--gold) 50%, transparent); color: var(--gold);
@@ -241,7 +242,7 @@
   /* ── search (DISC-03) — ResultRow + MatchTag + bottom-docked field ── */
   .rrow { display: flex; align-items: center; gap: 10px; padding: 9px 6px; border-bottom: 1px solid var(--scr-hairline); }
   .rrow .r-meta { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-  .rrow .r-title { font: 700 12px var(--pk); letter-spacing: .3px; color: var(--scr-text); }
+  .rrow .r-title { font: 700 11px var(--pk); letter-spacing: .3px; color: var(--scr-text); }
   .rrow .r-sub { font: 600 9px var(--pk); letter-spacing: .3px; color: var(--scr-dim); }
   .rrow .r-sub .incol { color: var(--gold); font-weight: 700; } .rrow .r-sub b { color: var(--scr-soft); }
   .matchtag { display: inline-flex; align-self: flex-start; background: var(--scr-panel);
@@ -259,7 +260,7 @@
   /* ── CardDetail ── */
   .crumb { display: flex; align-items: center; gap: 8px; margin: 2px 2px 8px; }
   .crumb .back { font: 700 14px var(--pk); color: var(--scr-soft); }
-  .crumb .crumb-t { font: 700 12px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .crumb .crumb-t { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
   .crumb .crumb-sub { margin-left: auto; font: 700 8px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
   .inspect { display: flex; justify-content: center; padding: 4px 0 0; }
   .inspect .gcard { filter: drop-shadow(0 10px 13px rgba(0,0,0,.5)); }
@@ -288,15 +289,15 @@
   .inv-card::before { content: ""; position: absolute; inset: 6px; border: 2px dashed var(--scr-grip); opacity: .85; }
   .inv-card .plus { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 700 28px/1 var(--pk); color: var(--scr-accent); }
   .inv-eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
-  .inv-title { font: 700 16px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
-  .inv-sub { font: 500 10.5px/1.55 var(--pk); color: var(--scr-soft); max-width: 250px; }
+  .inv-title { font: 700 15px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .inv-sub { font: 500 11px/1.55 var(--pk); color: var(--scr-soft); max-width: 250px; }
   .inv-cta { display: flex; gap: 8px; margin-top: 5px; flex-wrap: wrap; justify-content: center; }
   .hook-panel { margin-top: 14px; padding: 13px 12px; border: 1px solid color-mix(in srgb, var(--gold) 50%, transparent);
     border-top: 3px solid var(--gold); background: linear-gradient(180deg, rgba(255,210,63,.07), transparent 60%), var(--scr-well); }
   .hook-panel .hk-top { display: flex; align-items: center; gap: 9px; }
   .hook-panel .hk-tx { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-  .hook-panel .hk-t { font: 700 12px var(--pk); letter-spacing: .3px; color: var(--scr-text); } .hook-panel .hk-t b { color: var(--gold); }
-  .hook-panel .hk-s { font: 600 9.5px/1.5 var(--pk); letter-spacing: .2px; color: var(--scr-soft); }
+  .hook-panel .hk-t { font: 700 11px var(--pk); letter-spacing: .3px; color: var(--scr-text); } .hook-panel .hk-t b { color: var(--gold); }
+  .hook-panel .hk-s { font: 600 9px/1.5 var(--pk); letter-spacing: .2px; color: var(--scr-soft); }
   .hook-panel .hk-acts { display: flex; align-items: center; gap: 9px; margin-top: 11px; }
   .rankchip { display: inline-flex; align-items: center; gap: 4px; flex: 0 0 auto; background: var(--gold); color: #3c2a09; font: 700 9px/1 var(--pk); letter-spacing: 1px; padding: 5px 7px; }
 
@@ -309,8 +310,8 @@
   .err-card::before { content: ""; position: absolute; inset: 6px; border: 2px dashed var(--scr-grip); opacity: .8; }
   .err-card .bang { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 700 34px/1 var(--pk); color: var(--scr-accent); }
   .err-eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
-  .err-title { font: 700 17px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
-  .err-sub { font: 500 10.5px/1.55 var(--pk); color: var(--scr-soft); max-width: 250px; }
+  .err-title { font: 700 15px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
+  .err-sub { font: 500 11px/1.55 var(--pk); color: var(--scr-soft); max-width: 250px; }
   .offline-strip { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; margin: 0 0 8px; padding: 7px 11px;
     background: var(--scr-panel); border: 1px solid var(--scr-hairline); font: 700 8.5px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
   .offline-strip svg { width: 13px; height: 13px; flex: 0 0 auto; } .offline-strip svg path { stroke: var(--scr-dim); }
@@ -318,6 +319,53 @@
   .sk-bar { height: 10px; background: var(--scr-panel); }
   .sk-block { background: var(--scr-panel); }
   .gated { opacity: .4; }
+
+  /* ════════════════════════════════════════════════════════════════════════
+     FLAT BUTTONS + SCANLINE ENERGIZE (F-03, locked 2026-06-18)
+     On-screen ACTION buttons (.sk2 .btn family · .head-act) and TOOL keycaps
+     (.ovf-key) become FLAT 2D — no raised bottom edge, no drop-shadow — and on
+     PRESS/active show "Scanline Energize": fine CRT scanlines over a
+     hairline-darkened fill, NO movement, no pip. Clip-path notches kept.
+     LEFT 3D: physical .nav-btn. LEFT accent-border: .seg-pair .seg, .notify.
+     ──────────────────────────────────────────────────────────────────────── */
+  /* 1) IDLE = flat fill (kill raised box-shadows + clip drop-shadows; keep clip-path) */
+  .sk2 .btn            { box-shadow: none; filter: none; }
+  .sk2 .btn.add        { filter: none; }
+  .sk2 .btn.secondary  { box-shadow: none; filter: none; }
+  .head-act            { box-shadow: none; }
+  .ovf-key             { box-shadow: none; }
+
+  /* 2) PRESS/active = Scanline Energize (NO motion) — per-fill INK */
+  /* orange primary (.sk2 .btn, incl. .mini) — FILL var(--scr-accent), INK rgba(0,0,0,.20) */
+  .sk2 .btn:active, .sk2 .btn.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-accent) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, #0000 1px 2px);
+  }
+  /* gold (.sk2 .btn.add) — FILL var(--gold), INK rgba(60,42,9,.24) */
+  .sk2 .btn.add:active, .sk2 .btn.add.is-pressed {
+    transform: none; box-shadow: none; filter: none;
+    background-color: color-mix(in srgb, var(--gold) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(60,42,9,.24) 0 1px, #0000 1px 2px);
+  }
+  /* cream secondary (.sk2 .btn.secondary) — FILL var(--cream), INK rgba(29,42,74,.20) */
+  .sk2 .btn.secondary:active, .sk2 .btn.secondary.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--cream) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px);
+  }
+  /* cream ScreenHead key (.head-act) — FILL var(--scr-chip), INK rgba(29,42,74,.20); replaces .head-act.on translate */
+  .head-act:active, .head-act.is-pressed, .head-act.on {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px);
+  }
+  /* cream tool keycap (.ovf-key) — FILL var(--scr-chip), INK rgba(29,42,74,.20) */
+  .ovf-key:active, .ovf-key.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px);
+  }
 </style>
 </head>
 <body>
@@ -425,8 +473,8 @@
             </div>
             <div class="seg-foot">
               <div class="seg-pair">
-                <div class="seg active">UP NEXT<span class="sp"></span></div>
-                <div class="seg">DISCOVER</div>
+                <div class="seg active"><span class="seg-ic"><svg viewBox="0 0 24 24"><path d="M7 5.5v13l11-6.5z"/></svg></span>UP NEXT</div>
+                <div class="seg"><span class="seg-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z"/></svg></span>DISCOVER</div>
               </div>
             </div>
           </div>
@@ -497,8 +545,8 @@
             </div>
             <div class="seg-foot">
               <div class="seg-pair">
-                <div class="seg active">UP NEXT<span class="sp"></span></div>
-                <div class="seg">DISCOVER</div>
+                <div class="seg active"><span class="seg-ic"><svg viewBox="0 0 24 24"><path d="M7 5.5v13l11-6.5z"/></svg></span>UP NEXT</div>
+                <div class="seg"><span class="seg-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z"/></svg></span>DISCOVER</div>
               </div>
             </div>
           </div>
@@ -546,8 +594,8 @@
             </div>
             <div class="seg-foot">
               <div class="seg-pair">
-                <div class="seg active">UP NEXT<span class="sp"></span></div>
-                <div class="seg">DISCOVER</div>
+                <div class="seg active"><span class="seg-ic"><svg viewBox="0 0 24 24"><path d="M7 5.5v13l11-6.5z"/></svg></span>UP NEXT</div>
+                <div class="seg"><span class="seg-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z"/></svg></span>DISCOVER</div>
               </div>
             </div>
           </div>
@@ -636,8 +684,8 @@
             </div>
             <div class="seg-foot">
               <div class="seg-pair">
-                <div class="seg">UP NEXT</div>
-                <div class="seg active">DISCOVER<span class="sp"></span></div>
+                <div class="seg"><span class="seg-ic"><svg viewBox="0 0 24 24"><path d="M7 5.5v13l11-6.5z"/></svg></span>UP NEXT</div>
+                <div class="seg active"><span class="seg-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z"/></svg></span>DISCOVER</div>
               </div>
             </div>
           </div>
@@ -696,8 +744,8 @@
             </div>
             <div class="seg-foot">
               <div class="seg-pair">
-                <div class="seg">UP NEXT</div>
-                <div class="seg active">DISCOVER<span class="sp"></span></div>
+                <div class="seg"><span class="seg-ic"><svg viewBox="0 0 24 24"><path d="M7 5.5v13l11-6.5z"/></svg></span>UP NEXT</div>
+                <div class="seg active"><span class="seg-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z"/></svg></span>DISCOVER</div>
               </div>
             </div>
           </div>
@@ -831,8 +879,8 @@
             </div>
             <div class="seg-foot">
               <div class="seg-pair">
-                <div class="seg">UP NEXT</div>
-                <div class="seg active">DISCOVER<span class="sp"></span></div>
+                <div class="seg"><span class="seg-ic"><svg viewBox="0 0 24 24"><path d="M7 5.5v13l11-6.5z"/></svg></span>UP NEXT</div>
+                <div class="seg active"><span class="seg-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z"/></svg></span>DISCOVER</div>
               </div>
             </div>
           </div>
@@ -887,8 +935,8 @@
             </div>
             <div class="seg-foot">
               <div class="seg-pair">
-                <div class="seg">UP NEXT</div>
-                <div class="seg active">DISCOVER<span class="sp"></span></div>
+                <div class="seg"><span class="seg-ic"><svg viewBox="0 0 24 24"><path d="M7 5.5v13l11-6.5z"/></svg></span>UP NEXT</div>
+                <div class="seg active"><span class="seg-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z"/></svg></span>DISCOVER</div>
               </div>
             </div>
           </div>
@@ -934,8 +982,8 @@
             </div>
             <div class="seg-foot">
               <div class="seg-pair">
-                <div class="seg">UP NEXT</div>
-                <div class="seg active">DISCOVER<span class="sp"></span></div>
+                <div class="seg"><span class="seg-ic"><svg viewBox="0 0 24 24"><path d="M7 5.5v13l11-6.5z"/></svg></span>UP NEXT</div>
+                <div class="seg active"><span class="seg-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z"/></svg></span>DISCOVER</div>
               </div>
             </div>
           </div>
@@ -996,8 +1044,8 @@
             </div>
             <div class="seg-foot">
               <div class="seg-pair">
-                <div class="seg">UP NEXT</div>
-                <div class="seg active">DISCOVER<span class="sp"></span></div>
+                <div class="seg"><span class="seg-ic"><svg viewBox="0 0 24 24"><path d="M7 5.5v13l11-6.5z"/></svg></span>UP NEXT</div>
+                <div class="seg active"><span class="seg-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z"/></svg></span>DISCOVER</div>
               </div>
             </div>
           </div>
