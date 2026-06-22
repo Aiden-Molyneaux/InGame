@@ -136,6 +136,21 @@
   now-playing-visibility model that **neither the spec nor the contract defines** (privacy-gated by
   PROF-03? a `presence` field on `/me/friends`? an opt-out?). Both for the API page-audit at converge;
   drawn **illustratively** on the drafts meanwhile. (Friends §3.3 track kickoff, 2026-06-17) [behavior]
+- OQ-072: **`GET /users/search?username=` PersonRow response shape (the Find/Add 4.8 spine).** The
+  endpoint (api-contract ~line 118, SOC-07) enumerates no payload, yet **every person surface in 4.8**
+  (search result, requests row, invite-landing) renders a **relationship state → single action**. Propose
+  the PersonRow item: `{ userId, username, avatarRef, relationship ∈ none · outgoing · incoming · friends
+  · blocked · cooldown, cooldownUntil? (when relationship = cooldown, SOC-08/SYS-04) }` — `blocked`
+  surfaces are mutually-invisible per SOC-09 (won't appear in search; the enum value exists for the
+  shared component). For the API page-audit at converge. (Find/Add 4.8 track, 2026-06-22) [behavior]
+- OQ-073: **`GET /invites/:token` resolve shape + QR generation (SOC-10).** The endpoint (api-contract
+  ~line 125) names "sender summary + prefilled-request affordance" but enumerates no payload. Propose
+  `{ token, sender: { userId, username, avatarRef }, relationship (so an already-friend/pending link
+  resolves to the right action, not a duplicate ADD), prefilledRequest: { toUserId } }`; the landing
+  resolves **through the sender's Profile** (PROF-05 friend-view), no-app → store listing (SOC-10, §10).
+  **Second gap — QR generation:** `POST /me/invites` returns a **token**; whether the QR image is
+  **rendered client-side from the token** or **server-supplied** is unspecified — flag for the page-audit.
+  (Find/Add 4.8 track, 2026-06-22) [behavior]
 
 ## Resolved
 - OQ-058 → **Personal *game* rating KEPT, private-only; NO card rating, ever.** The collection entry's
