@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InGame · Find / Add Friends (4.8) — states board (off Friends draft A)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" /></noscript>
+<style>
+  /* ── tokens: verbatim from Friends draft A (Teal shell · Midnight theme) ── */
+  :root {
+    --plastic: #2bb6b0; --plastic-hi: #3ec9c2; --plastic-lo: #1f9a94; --silk: #0d524e;
+    --accent: #ff3d77; --gold: #ffd23f; --cream: #f5f1e4; --navy: #1d2a4a;
+    --bezel: #14122a; --alert: #e3414e;
+    --pk: 'Chakra Petch', sans-serif; --shell: 'Paytone One', sans-serif;
+    --scr-bg: #232045; --scr-well: #2c2950; --scr-tools: #1a1733; --scr-accent: #ff9f43;
+    --scr-accent-ink: #2a1430; --scr-head: #f5f1e4; --scr-text: #ffffff; --scr-dim: #9b97c0;
+    --scr-soft: #c9c5e6; --scr-panel: rgba(255,255,255,.065); --scr-hairline: rgba(255,255,255,.08);
+    --scr-grip: #565178; --scr-chip: #f5f1e4; --scr-head-shadow: rgba(0,0,0,.45);
+    --shell-ink: #08433f; --screw-hi: #2aa39d; --screw-lo: #137671; --pip-off: #117672;
+  }
+  html, body { margin: 0; min-height: 100%; background: #efece6; font-family: var(--pk); }
+  .canvas { max-width: 1348px; margin: 0 auto; padding: 40px 24px 60px; }
+  .canvas-head h1 { font: 700 17px/1.2 var(--pk); letter-spacing: 2.5px; color: #2a2633; margin: 0 0 6px; text-transform: uppercase; }
+  .canvas-head p { font: 500 12.5px/1.5 var(--pk); color: #79748a; margin: 0 0 8px; max-width: 760px; }
+  .canvas-head p b { color: #2a2633; }
+  .canvas-head p i { color: #5d5870; }
+  .stage { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+  .take { width: 404px; }
+  .artboard-label { font: 700 11px/1 var(--pk); letter-spacing: 1.5px; color: #8d889c; margin: 0 0 10px 2px; text-transform: uppercase; }
+  .caption { margin-top: 14px; background: #fff; border-radius: 12px; padding: 13px 15px; box-shadow: 0 2px 8px rgba(42,38,51,.08); }
+  .caption h3 { margin: 0 0 5px; font: 700 12.5px var(--pk); letter-spacing: .8px; color: #2a2633; text-transform: uppercase; }
+  .caption h3 em { font-style: normal; color: var(--accent); }
+  .caption p { margin: 0 0 4px; font: 500 11.8px/1.5 var(--pk); color: #5d5870; }
+  .caption p b { color: #2a2633; }
+  .stage-label { font: 700 13px/1 var(--pk); letter-spacing: 2px; color: #2a2633; text-transform: uppercase; margin: 36px 2px 14px; }
+  .stage-label small { display: block; margin-top: 5px; font: 500 11px/1.4 var(--pk); letter-spacing: .3px; color: #79748a; text-transform: none; }
+
+  /* ── device shell (physical) — verbatim ── */
+  .device { position: relative; width: 404px; height: 884px; border-radius: 30px; overflow: hidden;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.4), inset 0 -4px 0 rgba(0,0,0,.18), 0 18px 40px color-mix(in srgb, var(--shell-ink) 28%, transparent);
+    display: flex; flex-direction: column; padding: 0 14px; box-sizing: border-box; }
+  .screw { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--screw-hi), var(--screw-lo) 75%);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.25); }
+  .screw::after { content: ""; position: absolute; left: 1.5px; right: 1.5px; top: 3.5px; height: 1.5px; background: color-mix(in srgb, var(--shell-ink) 70%, transparent); border-radius: 1px; }
+  .screw.tl { top: 10px; left: 12px; } .screw.tr { top: 10px; right: 12px; }
+  .screw.bl { bottom: 10px; left: 12px; } .screw.br { bottom: 10px; right: 12px; }
+  .top-band { height: 64px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 12px 0; position: relative; }
+  .power { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+  .power .led { width: 9px; height: 9px; border-radius: 50%; background: #ff5a4e; box-shadow: 0 0 7px 2px rgba(255,90,78,.65), inset 0 -1px 1px rgba(0,0,0,.3); }
+  .power .lbl { font: 400 9px var(--shell); letter-spacing: .5px; color: var(--silk); opacity: .75; }
+  .logo { position: absolute; left: 50%; transform: translateX(-50%); font: 400 21px var(--shell); letter-spacing: 7px; text-indent: 7px;
+    color: color-mix(in srgb, var(--shell-ink) 28%, transparent); text-shadow: 0 -1px 0 color-mix(in srgb, var(--shell-ink) 30%, transparent); }
+  .grille { display: flex; gap: 6px; }
+  .grille span { width: 5px; height: 23px; background: color-mix(in srgb, var(--shell-ink) 40%, transparent); border-radius: 2px; transform: skewX(-22deg); box-shadow: inset 0 1px 1px rgba(0,0,0,.3); }
+  .screen-bezel { flex: 1 1 auto; min-height: 0; background: var(--bezel); border-radius: 20px; padding: 9px; box-sizing: border-box; }
+  .nav-band { flex: 0 0 auto; height: 128px; display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 6px 0; }
+  .nav-item { display: flex; flex-direction: column; align-items: center; width: 64px; }
+  .nav-lbl { height: 16px; font: 400 11px var(--shell); letter-spacing: .5px; color: var(--silk); display: flex; align-items: center; }
+  .nav-lbl.big { font-size: 11px; }
+  .nav-btn { width: 54px; height: 54px; border-radius: 15px; background: var(--cream); border: none;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 1px 0 rgba(255,255,255,.85); }
+  .nav-btn.store { background: var(--gold); }
+  .nav-btn.collection { background: var(--accent); }
+  .nav-item.active .nav-btn { transform: translateY(3px); box-shadow: 0 1px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 2px 3px rgba(0,0,0,.18); }
+  .pip { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; background: var(--pip-off);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.25); }
+  .nav-item.active .pip { background: var(--accent); box-shadow: 0 0 9px 2.5px rgba(255,61,119,.85), inset 0 -1px 1px rgba(0,0,0,.25); }
+  .nav-band .nav-item:nth-child(2) .nav-lbl:first-child,
+  .nav-band .nav-item:nth-child(4) .nav-lbl:first-child { transform: translateY(-8px); }
+
+  /* ── shared screen ── */
+  .screen { position: relative; height: 100%; border-radius: 13px; overflow: hidden; display: flex; flex-direction: column; background: var(--scr-bg); }
+  .scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 12px 14px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 15px 2px 8px; }
+  .sec:first-child { margin-top: 12px; }
+  .sec h3 { margin: 0; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .sec a, .tert { font: 600 9px var(--pk); letter-spacing: 1px; color: var(--scr-accent); text-decoration: none; }
+  .tert.dim { color: var(--scr-dim); }
+  .hint { margin: 11px 1px 2px; font: 600 9px/1.6 var(--pk); letter-spacing: .4px; color: var(--scr-dim); }
+  .hint b { color: var(--scr-soft); }
+
+  /* ════ standard ScreenHead ════ */
+  .screen-head { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; }
+  .screen-head h2 { margin: 0; font: 700 21px/1 var(--pk); letter-spacing: 3px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); }
+  .screen-head .h2sub { font: 700 9px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); margin-left: 9px; }
+  .head-keys { display: flex; align-items: center; gap: 8px; }
+  /* flat header key — square chip, accent-able, NO travel (Inset Recess on press) */
+  .head-act { position: relative; flex: 0 0 auto; width: 34px; height: 34px; border: none; background: var(--scr-chip); color: var(--navy);
+    display: inline-flex; align-items: center; justify-content: center; box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
+    transition: background .07s linear, box-shadow .07s linear; }
+  .head-act svg { width: 18px; height: 18px; } .head-act svg circle, .head-act svg path, .head-act svg rect { stroke: var(--navy); fill: none; stroke-width: 2; }
+  .head-act:active, .head-act.is-pressed { background: color-mix(in srgb, var(--scr-chip) 80%, #000); box-shadow: inset 0 2px 5px rgba(0,0,0,.4); }
+  .head-act .ntag { position: absolute; top: -5px; right: -5px; min-width: 15px; height: 15px; padding: 0 3px; background: var(--scr-accent);
+    color: var(--scr-accent-ink); font: 700 9px/15px var(--pk); text-align: center; box-shadow: 0 0 0 2px var(--scr-bg); }
+
+  /* ── flat buttons (inherited from draft A — Inset Recess · B; idle flat, pressed sinks IN, NO travel) ── */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: none; width: fit-content;
+    background: var(--scr-accent); color: var(--scr-accent-ink); padding: 9px 13px; font: 700 11px var(--pk); letter-spacing: 1px;
+    white-space: nowrap; box-shadow: inset 0 1px 0 rgba(255,255,255,.28); cursor: pointer;
+    transition: background .07s linear, box-shadow .07s linear, color .07s linear; }
+  .btn.secondary { background: var(--scr-chip); color: var(--navy); }
+  .btn.alt { background: var(--scr-well); color: var(--scr-soft); border: 1px solid var(--scr-hairline); box-shadow: none; }
+  .btn.mini { padding: 7px 10px; font-size: 9px; letter-spacing: .8px; }
+  .btn.is-disabled { opacity: .42; cursor: not-allowed; }
+  .btn:active, .btn.is-pressed { background: color-mix(in srgb, var(--scr-accent) 80%, #000); box-shadow: inset 0 2px 5px rgba(0,0,0,.5); }
+  .btn.secondary:active, .btn.secondary.is-pressed { background: color-mix(in srgb, var(--scr-chip) 80%, #000); box-shadow: inset 0 2px 5px rgba(0,0,0,.4); }
+  .btn.alt:active, .btn.alt.is-pressed { background: color-mix(in srgb, var(--scr-well) 70%, #000); box-shadow: inset 0 2px 5px rgba(0,0,0,.45); }
+
+  /* ── C5 square chrome (buttons only on 4.8 — no game cards here) ── */
+  .c5 .btn { border-radius: 0; clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+      100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
+      calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
+
+  /* ════ avatar (square monogram, PROF-08 grammar) — verbatim ════ */
+  .av { position: relative; flex: 0 0 auto; width: 38px; height: 38px; background: var(--scr-accent); color: var(--scr-accent-ink);
+    font: 700 15px var(--pk); display: flex; align-items: center; justify-content: center; }
+  .av.lg { width: 50px; height: 50px; font-size: 21px; }
+  .av.sm { width: 30px; height: 30px; font-size: 11px; }
+
+  /* ════ RequestRow (reused from draft A) ════ */
+  .reqrow { display: flex; gap: 11px; align-items: center; padding: 11px 10px; background: var(--scr-well); border: 1px solid var(--scr-hairline); }
+  .reqrow + .reqrow { margin-top: 6px; }
+  .reqrow.incoming { border-color: color-mix(in srgb, var(--scr-accent) 38%, transparent); }
+  .reqrow .rqmeta { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .reqrow .rqname { font: 700 11px var(--pk); letter-spacing: .3px; color: var(--scr-text); }
+  .reqrow .rqsub { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .reqrow .rqacts { display: flex; gap: 6px; flex: 0 0 auto; align-items: center; }
+
+  /* ════ PersonRow (.prow) — the person surface · search result · the state spine [NEW] ════ */
+  .prow { display: flex; gap: 11px; align-items: center; padding: 11px 6px; border-bottom: 1px solid var(--scr-hairline); }
+  .prow:last-of-type { border-bottom: none; }
+  .prow .pmeta { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .prow .pname { font: 700 11px var(--pk); letter-spacing: .3px; color: var(--scr-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .prow .psub { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .prow .psub b { color: var(--scr-soft); }
+  .prow .pact { margin-left: auto; flex: 0 0 auto; display: flex; align-items: center; gap: 7px; }
+  .prow.blocked { opacity: .5; }
+  .prow.blocked .pname { color: var(--scr-dim); }
+  /* relationship marker (the non-button states: friends / blocked) */
+  .relmark { display: inline-flex; align-items: center; gap: 6px; font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); padding: 6px 2px; }
+  .relmark.friends { color: var(--scr-soft); }
+  .relmark svg { width: 13px; height: 13px; fill: none; stroke: var(--scr-accent); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .relmark .go { font: 700 15px var(--pk); color: var(--scr-grip); margin-left: 1px; }
+  .cool-note { font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-grip); white-space: nowrap; }
+
+  /* ════ InviteHook (reused from draft A) — the resting search entry + invite keys ════ */
+  .ihook { width: 100%; display: flex; flex-direction: column; gap: 9px; margin-top: 4px; }
+  .ih-field { display: flex; align-items: center; gap: 8px; background: var(--scr-chip); padding: 10px 11px; box-shadow: inset 0 2px 3px rgba(0,0,0,.16); }
+  .ih-field svg { width: 15px; height: 15px; stroke: var(--navy); fill: none; stroke-width: 2; }
+  .ih-field .ph { font: 600 11px var(--pk); letter-spacing: .5px; color: #8d889c; }
+  .ih-field .val { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 11px var(--pk); letter-spacing: .5px; color: var(--navy); }
+  .ih-row { display: flex; gap: 8px; }
+  .ih-row .btn { flex: 1 1 0; }
+
+  /* ════ docked SearchField (.tools/.field) — OQ-035 bottom-docked, reused from the catalog [NEW here] ════ */
+  .tools { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--scr-tools); border-top: 1px solid var(--scr-hairline); }
+  .field { flex: 1 1 auto; display: flex; align-items: center; gap: 7px; background: var(--scr-chip); padding: 9px 10px; box-shadow: inset 0 2px 3px rgba(0,0,0,.16); }
+  .field svg { width: 14px; height: 14px; } .field svg circle, .field svg path { stroke: var(--navy); fill: none; stroke-width: 2; }
+  .field .q { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--navy); }
+  .field .ph { font: 600 11px var(--pk); letter-spacing: 1px; color: #8d889c; }
+  .field .caret { width: 1.5px; height: 13px; background: var(--scr-accent); margin-left: 1px; }
+  .field .clear { margin-left: auto; color: #8d889c; font: 700 11px var(--pk); }
+
+  /* ════ QrCard (.qrcard) — in-person add, SOC-07 [NEW] ════ */
+  .qrwrap { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 10px 0 2px; }
+  .qr-name { font: 700 11px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
+  .qrcard { width: 190px; height: 190px; box-sizing: border-box; background: var(--cream); padding: 13px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 3px 9px rgba(0,0,0,.32); }
+  .qrcard svg { width: 100%; height: 100%; display: block; }
+  .qr-cap { font: 600 9px/1.55 var(--pk); letter-spacing: .4px; color: var(--scr-dim); text-align: center; max-width: 244px; }
+  .qr-cap b { color: var(--scr-soft); }
+
+  /* ════ InviteLanding / SenderSummary (.land) — SOC-10 arrival [NEW] ════ */
+  .land { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 9px; padding: 28px 18px 4px; }
+  .land .lav { margin-bottom: 5px; box-shadow: 0 0 0 3px var(--scr-panel); }
+  .land .l-eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .land .l-name { font: 700 21px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .land .l-sub { font: 500 11px/1.55 var(--pk); color: var(--scr-soft); max-width: 252px; }
+  .land .l-cta { width: 100%; display: flex; flex-direction: column; gap: 9px; margin-top: 12px; }
+  .land .l-cta .btn { width: 100%; }
+  .land .l-foot { font: 600 9px/1.55 var(--pk); letter-spacing: .4px; color: var(--scr-dim); margin-top: 9px; max-width: 266px; }
+  .land .l-foot b { color: var(--scr-soft); }
+
+  /* ════ request-sent Toast (.toast) [NEW] ════ */
+  .toast { position: absolute; left: 12px; right: 12px; bottom: 14px; z-index: 9; display: flex; align-items: center; gap: 10px; padding: 11px 13px;
+    background: var(--scr-tools); border: 1px solid color-mix(in srgb, var(--scr-accent) 42%, transparent); border-left: 3px solid var(--scr-accent); box-shadow: 0 -6px 22px rgba(0,0,0,.45); }
+  .toast svg { width: 16px; height: 16px; fill: none; stroke: var(--scr-accent); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; }
+  .toast .tx { font: 700 11px var(--pk); letter-spacing: .3px; color: var(--scr-text); }
+  .toast .tx b { color: var(--scr-accent); }
+
+  /* ── §1.6 lifecycle — Skeleton + Signal-Lost + Offline (sibling grammar) ── */
+  .err-wrap { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 9px; padding: 46px 18px 0; }
+  .err-card { position: relative; width: 92px; height: 92px; background: var(--scr-panel); margin-bottom: 6px; }
+  .err-card::before { content: ""; position: absolute; inset: 6px; border: 2px dashed var(--scr-grip); opacity: .8; }
+  .err-card .bang { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 700 34px/1 var(--pk); color: var(--scr-accent); }
+  .err-eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .err-title { font: 700 15px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
+  .err-sub { font: 500 11px/1.55 var(--pk); color: var(--scr-soft); max-width: 252px; }
+  .offline-strip { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; margin: 10px 0 2px; padding: 7px 11px;
+    background: var(--scr-panel); border: 1px solid var(--scr-hairline); font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .offline-strip svg { width: 13px; height: 13px; flex: 0 0 auto; fill: none; stroke: var(--scr-dim); stroke-width: 2; }
+  .offline-strip .sync { margin-left: auto; font-weight: 600; letter-spacing: .5px; color: var(--scr-grip); }
+  .sk-bar { height: 10px; background: var(--scr-panel); }
+  .sk-block { background: var(--scr-panel); flex: 0 0 auto; }
+  .skrow { display: flex; gap: 11px; align-items: center; padding: 11px 6px; border-bottom: 1px solid var(--scr-hairline); }
+  .skrow .skm { flex: 1 1 auto; display: flex; flex-direction: column; gap: 6px; }
+  .gated { opacity: .4; }
+</style>
+</head>
+<body>
+
+<div class="canvas">
+  <div class="canvas-head">
+    <h1>Find / Add Friends &mdash; <span style="color:var(--accent);">4.8</span> states board (built off Friends draft A)</h1>
+    <p><b>The screen that populates the social graph</b> &mdash; the destination of the Friends tab&rsquo;s find/add hooks
+    (&sect;3.3 &rarr; the <b>ADD&nbsp;FRIENDS</b> header key). <b>One coherent build</b>, not a 3-direction exploration:
+    it inherits Friends <b>draft&nbsp;A</b> verbatim &mdash; the DeviceShell + NavBand (FRIENDS active), the tokens,
+    the flat <b>Inset-Recess</b> keycaps, the orange StateMark, the <b>F-06</b> type scale (21/15/11/9), and the
+    &sect;1.8 lifecycle grammar &mdash; so 4.8 reads as the same app.</p>
+    <p><b>The crux is the relationship-state machine:</b> every person surface shows one state &rarr; the single right
+    action &mdash; <b>NOT-CONNECTED&rarr;ADD</b> &middot; <b>SENT&rarr;CANCEL</b> &middot;
+    <b>INCOMING&rarr;ACCEPT/DECLINE</b> (silent) &middot; <b>FRIENDS&rarr;open profile</b> &middot;
+    <b>COOLDOWN&rarr;disabled+reason</b> (SOC-08) &middot; <b>BLOCKED&rarr;limited</b> (SOC-09). New components:
+    <b>PersonRow</b>, the bottom-docked <b>SearchField</b> (OQ-035), <b>QrCard</b>, <b>InviteLanding/SenderSummary</b>
+    (SOC-10). Reused from A: RequestRow, InviteHook, the avatar, the &sect;1.6 lifecycle family.</p>
+    <p><i>Non-commerce &mdash; <b>no gold</b> (adding a friend creates no card, F-02), <b>no friend SHARE</b> (OQ-052
+    cut), <b>no contacts-matching</b> (SOC-07); Block is a relationship state here, its LIST lives in Settings (4.15).
+    Cast: Maverick=self &middot; Riko/Vanta=friends &middot; Nova/Sable=incoming &middot; Hexandra=sent &middot;
+    strangers @pixeljune/@riptide/@hollowmatt&hellip; across the states. Counts illustrative. Shape gaps &rarr;
+    OQ-072 (/users/search) &middot; OQ-073 (/invites/:token + QR). Flat buttons = Inset Recess (matches draft A; the
+    friends/ family isn&rsquo;t yet rippled to the locked Scanline) &mdash; isolated to one rule.</i></p>
+  </div>
+
+  <!-- ════════════════════════════ P1 ════════════════════════════ -->
+  <div class="stage-label">P1 &mdash; the hub landing <small>the 4.8 entry: find by username &middot; your invite (link + QR) &middot; requests reachable &mdash; the same grammar as draft A&rsquo;s ADD FRIENDS hub</small></div>
+  <div class="stage">
+
+    <div class="take">
+      <div class="artboard-label">P1 &middot; ADD FRIENDS &mdash; the hub landing</div>
+      <div class="device" data-screen-label="Find/Add 4.8 · P1 — hub landing">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen c5">
+            <div class="screen-head"><h2 style="letter-spacing:2px;">ADD FRIENDS</h2><div class="head-keys"><a class="tert dim" href="#" style="align-self:center;">&lsaquo; FRIENDS</a></div></div>
+            <div class="scroll">
+              <div class="sec"><h3>FIND SOMEONE</h3></div>
+              <div class="ihook">
+                <div class="ih-field"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span class="ph">Find by username&hellip;</span></div>
+                <div class="ih-row">
+                  <button class="btn secondary"><svg width="13" height="13" viewBox="0 0 24 24" style="stroke:var(--navy);fill:none;stroke-width:2;"><path d="M9 15l6-6M8 8H6a4 4 0 0 0 0 8h2M16 16h2a4 4 0 0 0 0-8h-2"/></svg>INVITE LINK</button>
+                  <button class="btn secondary"><svg width="13" height="13" viewBox="0 0 24 24" style="stroke:var(--navy);fill:none;stroke-width:2;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3M20 14v0M17 20h0M20 17v4" stroke-linecap="round"/></svg>QR CODE</button>
+                </div>
+              </div>
+              <div class="sec"><h3>REQUESTS &middot; 3</h3><a href="#">ALL &rsaquo;</a></div>
+              <div class="reqrow incoming">
+                <div class="av" style="background:#c8413a;color:#fff;">NO</div>
+                <div class="rqmeta"><span class="rqname">@nova wants to connect</span><span class="rqsub">REQUESTED 1D AGO</span></div>
+                <div class="rqacts"><button class="btn mini">ACCEPT</button><button class="btn mini alt">DECLINE</button></div>
+              </div>
+              <div class="reqrow incoming">
+                <div class="av" style="background:#b08a4a;color:#2a1408;">SA</div>
+                <div class="rqmeta"><span class="rqname">@sable</span><span class="rqsub">REQUESTED 3D AGO</span></div>
+                <div class="rqacts"><button class="btn mini">ACCEPT</button><button class="btn mini alt">DECLINE</button></div>
+              </div>
+              <div class="hint"><b>SOC-07 + SOC-08.</b> The 4.8 hub &mdash; <b>find by username</b>, your <b>invite link</b> &amp; <b>QR</b> (SOC-07), and the <b>requests inbox</b> in one place. Decline is <b>silent</b>; re-request is <b>cooldown-limited</b> (SYS-04). 1 sent request + the cooldown state &rarr; the full inbox (P4).</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P1 &mdash; the hub landing <em>(the 4.8 entry)</em></h3>
+        <p><b>The three find paths + the requests inbox, in one scroll</b> &mdash; the same grammar draft A previewed
+        in its ADD&nbsp;FRIENDS hub. <b>FIND SOMEONE</b> is the resting <b>SearchField</b> (tap &rarr; the docked search,
+        P2); <b>INVITE LINK</b> + <b>QR</b> open your invite (P3, SOC-07). <b>REQUESTS</b> previews the incoming pair;
+        the full inbox (sent + cooldown) is P4.</p>
+        <p>Renders in-frame (FRIENDS keycap active, pressed + pink PipLight). <b>No gold, no SHARE</b> &mdash;
+        non-commerce.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════════ P2 · P2b · P3 ════════════════════════════ -->
+  <div class="stage-label">P2 &middot; P2b &middot; P3 &mdash; find &amp; invite <small>username SEARCH (docked field, results = PersonRows across the states) &middot; no-results &rarr; invite bridge &middot; your invite link + QR</small></div>
+  <div class="stage">
+
+    <!-- ═══ P2 · username search — results ═══ -->
+    <div class="take">
+      <div class="artboard-label">P2 &middot; username SEARCH &mdash; results (the state spine, live)</div>
+      <div class="device" data-screen-label="Find/Add 4.8 · P2 — search results">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen c5">
+            <div class="screen-head"><h2 style="letter-spacing:2px;">ADD FRIENDS</h2><div class="head-keys"><a class="tert dim" href="#" style="align-self:center;">CANCEL</a></div></div>
+            <div class="scroll">
+              <div class="sec"><h3>RESULTS FOR &ldquo;RI&rdquo; &middot; 4</h3></div>
+              <!-- friends -->
+              <div class="prow">
+                <div class="av" style="background:#6c4fd8;color:#fff;">RI</div>
+                <div class="pmeta"><span class="pname">@riko</span><span class="psub">ALREADY FRIENDS</span></div>
+                <div class="pact"><span class="relmark friends"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>FRIENDS<span class="go">&rsaquo;</span></span></div>
+              </div>
+              <!-- none -->
+              <div class="prow">
+                <div class="av" style="background:#2f8f6f;color:#04211c;">RP</div>
+                <div class="pmeta"><span class="pname">@riptide</span><span class="psub">NOT CONNECTED</span></div>
+                <div class="pact"><button class="btn mini">+ ADD</button></div>
+              </div>
+              <!-- outgoing -->
+              <div class="prow">
+                <div class="av" style="background:#2f7d8a;color:#04211c;">RN</div>
+                <div class="pmeta"><span class="pname">@rin_v</span><span class="psub">REQUEST PENDING &middot; SENT 1D AGO</span></div>
+                <div class="pact"><button class="btn mini alt">CANCEL</button></div>
+              </div>
+              <!-- none -->
+              <div class="prow">
+                <div class="av" style="background:#5566c0;color:#fff;">RL</div>
+                <div class="pmeta"><span class="pname">@riley</span><span class="psub">NOT CONNECTED</span></div>
+                <div class="pact"><button class="btn mini">+ ADD</button></div>
+              </div>
+              <div class="hint"><b>SOC-07.</b> Username search only &mdash; <b>no contacts-matching</b>; people-search lives here, not Discover (DISC-03 = games). Each result carries <b>your relationship + the one right action</b> &mdash; ADD &middot; CANCEL &middot; open profile. <b>GET /users/search?username=</b> &rarr; shape OQ-072.</div>
+            </div>
+            <div class="tools">
+              <div class="field">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke-width="2"/><path d="M16 16l5 5" stroke-width="2" stroke-linecap="round"/></svg>
+                <span class="q">ri</span><span class="caret"></span><span class="clear">&times;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P2 &mdash; username search <em>(results · the live spine)</em></h3>
+        <p>The <b>SearchField</b> docks at the foot (rides the keyboard, OQ-035; CANCEL returns), results stack above as
+        <b>PersonRows</b>. One results list shows the spine at work: <b>@riko</b> is FRIENDS (&rarr; open profile),
+        <b>@riptide / @riley</b> are NOT-CONNECTED (<b>+ ADD</b>), <b>@rin_v</b> is a pending outgoing (<b>CANCEL</b>).</p>
+      </div>
+    </div>
+
+    <!-- ═══ P2b · no-results ═══ -->
+    <div class="take">
+      <div class="artboard-label">P2b &middot; SEARCH &mdash; no results (the invite bridge)</div>
+      <div class="device" data-screen-label="Find/Add 4.8 · P2b — no results">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen c5">
+            <div class="screen-head"><h2 style="letter-spacing:2px;">ADD FRIENDS</h2><div class="head-keys"><a class="tert dim" href="#" style="align-self:center;">CANCEL</a></div></div>
+            <div class="scroll">
+              <div class="land" style="padding-top:40px;">
+                <div class="inv-noresult" style="width:84px;height:84px;position:relative;display:flex;align-items:center;justify-content:center;background:var(--scr-panel);margin-bottom:6px;">
+                  <span style="position:absolute;inset:7px;border:2px dashed var(--scr-grip);opacity:.8;"></span>
+                  <svg viewBox="0 0 24 24" style="width:34px;height:34px;stroke:var(--scr-accent);fill:none;stroke-width:1.8;"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+                </div>
+                <div class="l-eyebrow">NO ONE FOUND</div>
+                <div class="l-name" style="font-size:15px;letter-spacing:.5px;">@zzqx_99 isn&rsquo;t here</div>
+                <div class="l-sub">Check the spelling &mdash; usernames are exact. Or send your own invite link and add them once they join.</div>
+                <div class="l-cta">
+                  <button class="btn secondary"><svg width="13" height="13" viewBox="0 0 24 24" style="stroke:var(--navy);fill:none;stroke-width:2;"><path d="M9 15l6-6M8 8H6a4 4 0 0 0 0 8h2M16 16h2a4 4 0 0 0 0-8h-2"/></svg>SHARE AN INVITE LINK</button>
+                </div>
+              </div>
+              <div class="hint" style="text-align:center;"><b>SOC-07.</b> No fuzzy people-discovery in v2 &mdash; search is <b>exact username</b>. The dead end becomes an <b>invite</b>, never a scold.</div>
+            </div>
+            <div class="tools">
+              <div class="field">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke-width="2"/><path d="M16 16l5 5" stroke-width="2" stroke-linecap="round"/></svg>
+                <span class="q">zzqx_99</span><span class="caret"></span><span class="clear">&times;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P2b &mdash; no results <em>(the invite bridge)</em></h3>
+        <p>Search is <b>exact username</b> (no fuzzy discovery in v2). When nothing matches, the dead end routes to your
+        <b>invite link</b> &mdash; the search field stays docked so a re-try is one tap away.</p>
+      </div>
+    </div>
+
+    <!-- ═══ P3 · your invite (link + QR) ═══ -->
+    <div class="take">
+      <div class="artboard-label">P3 &middot; YOUR INVITE &mdash; link + QrCard (SOC-07)</div>
+      <div class="device" data-screen-label="Find/Add 4.8 · P3 — invite link + QR">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen c5">
+            <div class="screen-head"><h2 style="letter-spacing:2px;">YOUR INVITE</h2><div class="head-keys"><a class="tert dim" href="#" style="align-self:center;">&lsaquo; FRIENDS</a></div></div>
+            <div class="scroll">
+              <div class="sec"><h3>YOUR INVITE LINK</h3></div>
+              <div class="ihook">
+                <div class="ih-field"><svg viewBox="0 0 24 24"><path d="M9 15l6-6M8 8H6a4 4 0 0 0 0 8h2M16 16h2a4 4 0 0 0 0-8h-2"/></svg><span class="val">ingame.gg/i/MAVRK-7K2Q</span></div>
+                <div class="ih-row">
+                  <button class="btn secondary"><svg width="13" height="13" viewBox="0 0 24 24" style="stroke:var(--navy);fill:none;stroke-width:2;"><rect x="8" y="8" width="12" height="12"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>COPY LINK</button>
+                  <button class="btn secondary"><svg width="13" height="13" viewBox="0 0 24 24" style="stroke:var(--navy);fill:none;stroke-width:2;"><path d="M12 3v12M8 7l4-4 4 4" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 13v6a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-6"/></svg>SHARE&hellip;</button>
+                </div>
+              </div>
+              <div class="sec"><h3>OR SCAN IN PERSON</h3></div>
+              <div class="qrwrap">
+                <div class="qr-name">@MAVERICK</div>
+                <div class="qrcard">
+                  <svg viewBox="0 0 100 100" aria-label="QR code">
+                    <rect width="100" height="100" fill="#f5f1e4"/>
+                    <!-- finder TL -->
+                    <rect x="0" y="0" width="28" height="28" fill="#14122a"/><rect x="4" y="4" width="20" height="20" fill="#f5f1e4"/><rect x="8" y="8" width="12" height="12" fill="#14122a"/>
+                    <!-- finder TR -->
+                    <rect x="72" y="0" width="28" height="28" fill="#14122a"/><rect x="76" y="4" width="20" height="20" fill="#f5f1e4"/><rect x="80" y="8" width="12" height="12" fill="#14122a"/>
+                    <!-- finder BL -->
+                    <rect x="0" y="72" width="28" height="28" fill="#14122a"/><rect x="4" y="76" width="20" height="20" fill="#f5f1e4"/><rect x="8" y="80" width="12" height="12" fill="#14122a"/>
+                    <!-- data modules (stylised) -->
+                    <g fill="#14122a">
+                      <rect x="36" y="4" width="4" height="4"/><rect x="44" y="4" width="4" height="4"/><rect x="60" y="4" width="4" height="4"/>
+                      <rect x="40" y="8" width="4" height="4"/><rect x="52" y="8" width="4" height="4"/><rect x="64" y="8" width="4" height="4"/>
+                      <rect x="36" y="12" width="4" height="4"/><rect x="48" y="12" width="4" height="4"/><rect x="56" y="12" width="4" height="4"/>
+                      <rect x="44" y="16" width="4" height="4"/><rect x="60" y="16" width="4" height="4"/><rect x="64" y="16" width="4" height="4"/>
+                      <rect x="36" y="20" width="4" height="4"/><rect x="52" y="20" width="4" height="4"/>
+                      <rect x="32" y="28" width="4" height="4"/><rect x="40" y="28" width="4" height="4"/><rect x="48" y="28" width="4" height="4"/><rect x="56" y="28" width="4" height="4"/><rect x="64" y="28" width="4" height="4"/>
+                      <rect x="32" y="36" width="4" height="4"/><rect x="44" y="36" width="4" height="4"/><rect x="60" y="36" width="4" height="4"/><rect x="68" y="36" width="4" height="4"/>
+                      <rect x="36" y="40" width="4" height="4"/><rect x="52" y="40" width="4" height="4"/><rect x="64" y="40" width="4" height="4"/>
+                      <rect x="40" y="44" width="4" height="4"/><rect x="48" y="44" width="4" height="4"/><rect x="56" y="44" width="4" height="4"/>
+                      <rect x="32" y="48" width="4" height="4"/><rect x="60" y="48" width="4" height="4"/><rect x="68" y="48" width="4" height="4"/>
+                      <rect x="36" y="52" width="4" height="4"/><rect x="44" y="52" width="4" height="4"/><rect x="52" y="52" width="4" height="4"/><rect x="64" y="52" width="4" height="4"/>
+                      <rect x="32" y="56" width="4" height="4"/><rect x="48" y="56" width="4" height="4"/><rect x="56" y="56" width="4" height="4"/>
+                      <rect x="40" y="60" width="4" height="4"/><rect x="60" y="60" width="4" height="4"/><rect x="68" y="60" width="4" height="4"/>
+                      <rect x="36" y="64" width="4" height="4"/><rect x="44" y="64" width="4" height="4"/><rect x="52" y="64" width="4" height="4"/>
+                      <rect x="76" y="32" width="4" height="4"/><rect x="84" y="36" width="4" height="4"/><rect x="92" y="32" width="4" height="4"/>
+                      <rect x="72" y="40" width="4" height="4"/><rect x="80" y="44" width="4" height="4"/><rect x="88" y="40" width="4" height="4"/><rect x="96" y="44" width="4" height="4"/>
+                      <rect x="76" y="48" width="4" height="4"/><rect x="84" y="52" width="4" height="4"/><rect x="92" y="56" width="4" height="4"/>
+                      <rect x="72" y="56" width="4" height="4"/><rect x="80" y="60" width="4" height="4"/><rect x="88" y="64" width="4" height="4"/>
+                      <rect x="32" y="72" width="4" height="4"/><rect x="44" y="76" width="4" height="4"/><rect x="56" y="72" width="4" height="4"/><rect x="68" y="76" width="4" height="4"/><rect x="80" y="72" width="4" height="4"/><rect x="92" y="76" width="4" height="4"/>
+                      <rect x="36" y="80" width="4" height="4"/><rect x="48" y="84" width="4" height="4"/><rect x="60" y="80" width="4" height="4"/><rect x="72" y="84" width="4" height="4"/><rect x="84" y="80" width="4" height="4"/><rect x="96" y="88" width="4" height="4"/>
+                      <rect x="32" y="88" width="4" height="4"/><rect x="44" y="92" width="4" height="4"/><rect x="56" y="88" width="4" height="4"/><rect x="68" y="92" width="4" height="4"/><rect x="80" y="88" width="4" height="4"/><rect x="92" y="92" width="4" height="4"/>
+                      <rect x="40" y="96" width="4" height="4"/><rect x="64" y="96" width="4" height="4"/><rect x="88" y="96" width="4" height="4"/>
+                    </g>
+                  </svg>
+                </div>
+                <div class="qr-cap">Have someone scan this to send <b>you</b> a request &mdash; no link needed. <b>SOC-07.</b></div>
+              </div>
+              <div class="hint"><b>POST /me/invites</b> mints one token &mdash; surfaced as your <b>link</b> (copy/share) and this <b>QR</b>. Whether the QR is rendered <b>client-side from the token</b> or server-supplied &rarr; <b>OQ-073</b>. Non-commerce &mdash; no gold, sharing is self-only (your link, OQ-052).</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P3 &mdash; your invite <em>(link + QR · SOC-07)</em></h3>
+        <p>The two self-share paths: a <b>copyable/shareable link</b> and a <b>QrCard</b> for in-person adds. Both are the
+        <b>same token</b> (POST /me/invites). An opened link/QR lands the other person on P5 (SOC-10). <b>Self-only</b>
+        sharing &mdash; there is no friend-profile SHARE (OQ-052).</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════════ P4 · P5 · P6 ════════════════════════════ -->
+  <div class="stage-label">P4 &middot; P5 &middot; P6 &mdash; requests, the SOC-10 arrival &amp; the state spine <small>the full requests inbox (incoming/outgoing/cooldown) &middot; an opened invite link (SenderSummary + one-tap ADD) &middot; PersonRow across every relationship state + the sent-confirm</small></div>
+  <div class="stage">
+
+    <!-- ═══ P4 · requests inbox ═══ -->
+    <div class="take">
+      <div class="artboard-label">P4 &middot; REQUESTS inbox (incoming &middot; sent &middot; cooldown)</div>
+      <div class="device" data-screen-label="Find/Add 4.8 · P4 — requests inbox">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen c5">
+            <div class="screen-head"><h2 style="letter-spacing:2px;">REQUESTS</h2><div class="head-keys"><a class="tert dim" href="#" style="align-self:center;">&lsaquo; ADD FRIENDS</a></div></div>
+            <div class="scroll">
+              <div class="sec"><h3>INCOMING &middot; 2</h3></div>
+              <div class="reqrow incoming">
+                <div class="av" style="background:#c8413a;color:#fff;">NO</div>
+                <div class="rqmeta"><span class="rqname">@nova wants to connect</span><span class="rqsub">REQUESTED 1D AGO</span></div>
+                <div class="rqacts"><button class="btn mini">ACCEPT</button><button class="btn mini alt">DECLINE</button></div>
+              </div>
+              <div class="reqrow incoming">
+                <div class="av" style="background:#b08a4a;color:#2a1408;">SA</div>
+                <div class="rqmeta"><span class="rqname">@sable</span><span class="rqsub">REQUESTED 3D AGO</span></div>
+                <div class="rqacts"><button class="btn mini">ACCEPT</button><button class="btn mini alt">DECLINE</button></div>
+              </div>
+              <div class="sec"><h3>SENT &middot; 1</h3></div>
+              <div class="reqrow">
+                <div class="av" style="background:#2f7d8a;color:#04211c;">HX</div>
+                <div class="rqmeta"><span class="rqname">@hexandra</span><span class="rqsub">SENT 2D AGO</span></div>
+                <div class="rqacts"><button class="btn mini alt">CANCEL</button></div>
+              </div>
+              <div class="sec"><h3>CAN&rsquo;T RE-REQUEST YET</h3></div>
+              <div class="reqrow">
+                <div class="av" style="background:#b0593a;color:#fff;">KE</div>
+                <div class="rqmeta"><span class="rqname">@kestrel</span><span class="rqsub">RE-REQUEST COOLDOWN</span></div>
+                <div class="rqacts"><span class="cool-note">TRY AGAIN IN 26 D</span><button class="btn mini alt is-disabled">+ ADD</button></div>
+              </div>
+              <div class="hint"><b>SOC-08.</b> Incoming &rarr; <b>ACCEPT</b> / <b>DECLINE</b> (decline is <b>silent</b> &mdash; the sender isn&rsquo;t told). Outgoing &rarr; <b>CANCEL</b>. Re-requesting after a decline/cancel is <b>cooldown-limited</b> (SYS-04) so requests can&rsquo;t pester; persistent cases &rarr; <b>Block</b> (managed in Settings).</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P4 &mdash; requests inbox <em>(SOC-08)</em></h3>
+        <p>The full lifecycle in one list: <b>INCOMING</b> (ACCEPT / DECLINE-silent, reusing draft A&rsquo;s
+        <b>RequestRow</b>), <b>SENT</b> (CANCEL), and the <b>cooldown</b> state &mdash; a recently-requested person whose
+        re-request is <b>disabled with the reason</b> (TRY AGAIN IN 26 D). That cooldown row is the SOC-08 anti-pester
+        rule made visible.</p>
+      </div>
+    </div>
+
+    <!-- ═══ P5 · invite-landing (SOC-10) ═══ -->
+    <div class="take">
+      <div class="artboard-label">P5 &middot; INVITE-LANDING &mdash; SenderSummary + one-tap ADD (SOC-10)</div>
+      <div class="device" data-screen-label="Find/Add 4.8 · P5 — invite landing">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen c5">
+            <div class="screen-head"><h2 style="letter-spacing:2px;">INVITE</h2><div class="head-keys"><a class="tert dim" href="#" style="align-self:center;">&times;</a></div></div>
+            <div class="scroll">
+              <div class="land">
+                <div class="av lg lav" style="background:#6a5acd;color:#fff;">HM</div>
+                <div class="l-eyebrow">INVITED YOU TO CONNECT</div>
+                <div class="l-name">@hollowmatt</div>
+                <div class="l-sub">You opened @hollowmatt&rsquo;s invite link. Send a friend request &mdash; it&rsquo;s prefilled and ready, one tap.</div>
+                <div class="l-cta">
+                  <button class="btn"><svg width="13" height="13" viewBox="0 0 24 24" style="stroke:var(--scr-accent-ink);fill:none;stroke-width:2.4;stroke-linecap:round;"><path d="M9 8a3.5 3.5 0 1 0 0 .01M3.5 19a6 6 0 0 1 11 0M18 7v6M21 10h-6"/></svg>ADD @HOLLOWMATT</button>
+                  <button class="btn secondary"><svg width="13" height="13" viewBox="0 0 24 24" style="stroke:var(--navy);fill:none;stroke-width:2;"><circle cx="12" cy="8" r="4"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>VIEW THEIR PROFILE</button>
+                </div>
+                <div class="l-foot">Resolves through their <b>Profile</b> (friend-view) &mdash; one tap sends the request. No app installed? The link opens the <b>store listing</b>. <b>SOC-10.</b></div>
+              </div>
+              <div class="hint" style="text-align:center;"><b>GET /invites/:token</b> resolves the <b>sender summary</b> + the <b>prefilled one-tap request</b>. The resolve shape (incl. the sender&rsquo;s relationship, so an already-friend link doesn&rsquo;t offer a duplicate ADD) &rarr; <b>OQ-073</b>.</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P5 &mdash; invite-landing <em>(SOC-10)</em></h3>
+        <p>The arrival from an opened link/QR: a <b>SenderSummary</b> (their avatar + username) + a <b>prefilled one-tap
+        ADD</b>. It <b>resolves through their Profile</b> (so VIEW THEIR PROFILE opens PROF-05 friend-view); with no app
+        installed the link routes to the <b>store listing</b>. An invitation, never a scold.</p>
+      </div>
+    </div>
+
+    <!-- ═══ P6 · PersonRow state spine + sent-confirm ═══ -->
+    <div class="take">
+      <div class="artboard-label">P6 &middot; PersonRow &mdash; every relationship state + the sent-confirm</div>
+      <div class="device" data-screen-label="Find/Add 4.8 · P6 — state spine + toast">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen c5">
+            <div class="screen-head"><h2 style="letter-spacing:2px;">ADD FRIENDS</h2><div class="head-keys"><a class="tert dim" href="#" style="align-self:center;">&lsaquo; FRIENDS</a></div></div>
+            <div class="scroll">
+              <div class="sec"><h3>THE RELATIONSHIP SPINE</h3><span class="tert dim">STATE &rarr; ACTION</span></div>
+              <!-- none -->
+              <div class="prow">
+                <div class="av" style="background:#2f8f6f;color:#04211c;">RP</div>
+                <div class="pmeta"><span class="pname">@riptide</span><span class="psub">NOT CONNECTED</span></div>
+                <div class="pact"><button class="btn mini">+ ADD</button></div>
+              </div>
+              <!-- outgoing (just sent — see the toast) -->
+              <div class="prow">
+                <div class="av" style="background:#2f8f6f;color:#04211c;">PJ</div>
+                <div class="pmeta"><span class="pname">@pixeljune</span><span class="psub">REQUEST PENDING &middot; JUST NOW</span></div>
+                <div class="pact"><button class="btn mini alt">CANCEL</button></div>
+              </div>
+              <!-- incoming -->
+              <div class="prow">
+                <div class="av" style="background:#c8413a;color:#fff;">NO</div>
+                <div class="pmeta"><span class="pname">@nova</span><span class="psub">WANTS TO CONNECT</span></div>
+                <div class="pact"><button class="btn mini">ACCEPT</button><button class="btn mini alt">DECLINE</button></div>
+              </div>
+              <!-- friends -->
+              <div class="prow">
+                <div class="av" style="background:#6c4fd8;color:#fff;">RI</div>
+                <div class="pmeta"><span class="pname">@riko</span><span class="psub">ALREADY FRIENDS</span></div>
+                <div class="pact"><span class="relmark friends"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>FRIENDS<span class="go">&rsaquo;</span></span></div>
+              </div>
+              <!-- cooldown -->
+              <div class="prow">
+                <div class="av" style="background:#b0593a;color:#fff;">KE</div>
+                <div class="pmeta"><span class="pname">@kestrel</span><span class="psub">RE-REQUEST COOLDOWN &middot; 26 D</span></div>
+                <div class="pact"><button class="btn mini alt is-disabled">+ ADD</button></div>
+              </div>
+              <!-- blocked -->
+              <div class="prow blocked">
+                <div class="av" style="background:#4a4754;color:#9b97c0;">GR</div>
+                <div class="pmeta"><span class="pname">@grimsby</span><span class="psub">BLOCKED</span></div>
+                <div class="pact"><span class="relmark">MANAGE IN SETTINGS<span class="go">&rsaquo;</span></span></div>
+              </div>
+              <div class="hint"><b>One state, one action.</b> none&rarr;<b>ADD</b> &middot; outgoing&rarr;<b>CANCEL</b> &middot; incoming&rarr;<b>ACCEPT/DECLINE</b> &middot; friends&rarr;<b>open profile</b> &middot; cooldown&rarr;<b>disabled + reason</b> &middot; blocked&rarr;<b>limited</b> (mutually invisible, SOC-09 &mdash; shown here only to map the state; the block LIST lives in Settings 4.15).</div>
+            </div>
+            <!-- request-sent confirm -->
+            <div class="toast">
+              <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+              <span class="tx">Request sent to <b>@pixeljune</b></span>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P6 &mdash; the state spine <em>(+ sent-confirm)</em></h3>
+        <p>Every relationship state on one board &mdash; the same <b>PersonRow</b>, one action each. The <b>Toast</b>
+        confirms the moment a request fires: <b>@pixeljune</b> just flipped <b>none &rarr; outgoing</b>, so its row now
+        reads PENDING / CANCEL. <b>Blocked</b> is a limited, dimmed row (mutually invisible per SOC-09) whose only
+        affordance points to Settings.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════════ Lifecycle ════════════════════════════ -->
+  <div class="stage-label">Lifecycle <small>L1 Skeleton (loading) &middot; L2 &ldquo;Signal Lost&rdquo; + RETRY (load error) &middot; L3 Offline &mdash; read from cache, writes gated (SYS-10) &mdash; the sibling &sect;1.6 grammar</small></div>
+  <div class="stage">
+
+    <!-- ═══ L1 · Skeleton ═══ -->
+    <div class="take">
+      <div class="artboard-label">L1 &middot; Loading &mdash; Skeleton (solid fills, never an invite)</div>
+      <div class="device" data-screen-label="Find/Add 4.8 · L1 — Skeleton">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen c5">
+            <div class="screen-head"><h2 style="letter-spacing:2px;">ADD FRIENDS</h2><div class="head-keys"><span class="head-act" style="background:var(--scr-panel);box-shadow:none;"></span></div></div>
+            <div class="scroll">
+              <div class="sec"><h3>FIND SOMEONE</h3></div>
+              <div class="sk-bar" style="height:39px; margin:4px 0 2px;"></div>
+              <div class="sec"><h3>REQUESTS</h3></div>
+              <div class="skrow"><div class="sk-block" style="width:38px;height:38px;"></div><div class="skm"><div class="sk-bar" style="width:150px;height:9px;"></div><div class="sk-bar" style="width:90px;height:8px;"></div></div><div class="sk-block" style="width:60px;height:26px;"></div></div>
+              <div class="skrow"><div class="sk-block" style="width:38px;height:38px;"></div><div class="skm"><div class="sk-bar" style="width:120px;height:9px;"></div><div class="sk-bar" style="width:78px;height:8px;"></div></div><div class="sk-block" style="width:60px;height:26px;"></div></div>
+              <div class="skrow"><div class="sk-block" style="width:38px;height:38px;"></div><div class="skm"><div class="sk-bar" style="width:138px;height:9px;"></div><div class="sk-bar" style="width:84px;height:8px;"></div></div><div class="sk-block" style="width:60px;height:26px;"></div></div>
+              <div class="hint">SKELETON USES <b>SOLID</b> FILLS (NOT DASHES) &mdash; LOADING NEVER READS AS AN INVITATION (&sect;1.6).</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>L1 &mdash; Skeleton <em>(loading)</em></h3>
+        <p>The shared <b>Skeleton</b> family (&sect;1.6): <b>solid</b> placeholder fills for the search field and the
+        request rows &mdash; never the dashed silhouette (that reads as an invite). The header stays put so the page
+        doesn&rsquo;t reflow when content lands.</p>
+      </div>
+    </div>
+
+    <!-- ═══ L2 · Signal Lost ═══ -->
+    <div class="take">
+      <div class="artboard-label">L2 &middot; Load error &mdash; &ldquo;Signal Lost&rdquo; + RETRY</div>
+      <div class="device" data-screen-label="Find/Add 4.8 · L2 — Signal Lost">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen c5">
+            <div class="screen-head"><h2 style="letter-spacing:2px;">ADD FRIENDS</h2><div class="head-keys"><a class="tert dim" href="#" style="align-self:center;">&lsaquo; FRIENDS</a></div></div>
+            <div class="scroll">
+              <div class="err-wrap">
+                <div class="err-card"><span class="bang">!</span></div>
+                <span class="err-eyebrow">COULDN&rsquo;T REACH FRIENDS</span>
+                <span class="err-title">SIGNAL LOST</span>
+                <span class="err-sub">Search, your requests and your invite didn&rsquo;t load. Check your connection and try again.</span>
+                <button class="btn" style="margin-top:6px;">&#8635; RETRY</button>
+              </div>
+              <div class="hint">RETRYABLE FAILURE &mdash; THE ORANGE <b>RETRY</b> (KeycapButton) &middot; THE DASHED SILHOUETTE MARKS THE &sect;1.6 ERROR KIN.</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>L2 &mdash; Signal Lost <em>(load error)</em></h3>
+        <p>The retryable error from the &sect;1.6 family &mdash; the dashed silhouette + an accent <b>!</b> + the orange
+        <b>RETRY</b>. Clear first, arcade-flavoured second (&sect;1.1). Same grammar as the sibling boards.</p>
+      </div>
+    </div>
+
+    <!-- ═══ L3 · Offline (writes gated) ═══ -->
+    <div class="take">
+      <div class="artboard-label">L3 &middot; Offline &mdash; read from cache, writes gated (SYS-10)</div>
+      <div class="device" data-screen-label="Find/Add 4.8 · L3 — Offline">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen c5">
+            <div class="screen-head"><h2 style="letter-spacing:2px;">ADD FRIENDS</h2><div class="head-keys"><a class="tert dim" href="#" style="align-self:center;">&lsaquo; FRIENDS</a></div></div>
+            <div class="scroll">
+              <div class="offline-strip" style="margin-top:2px;">
+                <svg viewBox="0 0 24 24"><path d="M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M12 19.5h.01M3 3l18 18" stroke-linecap="round"/></svg>
+                OFFLINE &mdash; LAST SYNCED<span class="sync">JUST NOW</span>
+              </div>
+              <div class="sec"><h3>FIND SOMEONE</h3></div>
+              <div class="ih-field gated"><svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:var(--navy);fill:none;stroke-width:2;"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span class="ph">Reconnect to search&hellip;</span></div>
+              <div class="sec"><h3>INCOMING &middot; 2</h3></div>
+              <div class="reqrow incoming">
+                <div class="av" style="background:#c8413a;color:#fff;">NO</div>
+                <div class="rqmeta"><span class="rqname">@nova wants to connect</span><span class="rqsub">REQUESTED 1D AGO</span></div>
+                <div class="rqacts gated"><button class="btn mini">ACCEPT</button><button class="btn mini alt">DECLINE</button></div>
+              </div>
+              <div class="reqrow incoming">
+                <div class="av" style="background:#b08a4a;color:#2a1408;">SA</div>
+                <div class="rqmeta"><span class="rqname">@sable</span><span class="rqsub">REQUESTED 3D AGO</span></div>
+                <div class="rqacts gated"><button class="btn mini">ACCEPT</button><button class="btn mini alt">DECLINE</button></div>
+              </div>
+              <div class="sec"><h3>SENT &middot; 1</h3></div>
+              <div class="reqrow">
+                <div class="av" style="background:#2f7d8a;color:#04211c;">HX</div>
+                <div class="rqmeta"><span class="rqname">@hexandra</span><span class="rqsub">SENT 2D AGO</span></div>
+                <div class="rqacts gated"><button class="btn mini alt">CANCEL</button></div>
+              </div>
+              <div class="hint"><b>SYS-10.</b> Offline is a <b>calm</b> state, not an alarm &mdash; your requests stay <b>readable from cache</b>; the <b>writes are gated</b> (ACCEPT &middot; DECLINE &middot; CANCEL &middot; ADD &middot; search dimmed until you reconnect). Auto-recovers.</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>L3 &mdash; Offline <em>(writes gated · SYS-10)</em></h3>
+        <p>Last-synced requests stay <b>browseable from cache</b>; the <b>writes are gated</b> &mdash; ACCEPT, DECLINE,
+        CANCEL, ADD and the search field dim until you reconnect, with the calm OFFLINE strip up top. Same SYS-10
+        grammar as the sibling boards.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="caption" style="max-width:1100px;margin:34px auto 0;">
+    <h3>Built off Friends draft A <em>(the seam)</em></h3>
+    <p>This board inherits draft A verbatim &mdash; DeviceShell + NavBand (FRIENDS active), the Teal/Midnight tokens,
+    the flat <b>Inset-Recess</b> keycaps, the orange StateMark (never the pink shell pip), the <b>F-06</b> type scale,
+    and the &sect;1.8 lifecycle grammar. It <b>reuses</b> RequestRow, InviteHook, the avatar monogram, and the
+    &sect;1.6 lifecycle family; it <b>adds</b> PersonRow (the relationship spine), the bottom-docked SearchField, the
+    QrCard, and the InviteLanding/SenderSummary. <b>Non-commerce</b> &mdash; no gold, no friend SHARE, no
+    contacts-matching; Block&rsquo;s LIST lives in Settings (4.15). Shape gaps flagged: <b>OQ-072</b>
+    (/users/search PersonRow shape) &middot; <b>OQ-073</b> (/invites/:token resolve shape + QR generation).</p>
+  </div>
+
+</div>
+</body>
+</html>
