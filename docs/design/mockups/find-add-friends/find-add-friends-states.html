@@ -98,6 +98,9 @@
   .head-act:active, .head-act.is-pressed { background: color-mix(in srgb, var(--scr-chip) 80%, #000); box-shadow: inset 0 2px 5px rgba(0,0,0,.4); }
   .head-act .ntag { position: absolute; top: -5px; right: -5px; min-width: 15px; height: 15px; padding: 0 3px; background: var(--scr-accent);
     color: var(--scr-accent-ink); font: 700 9px/15px var(--pk); text-align: center; box-shadow: 0 0 0 2px var(--scr-bg); }
+  /* labelled back link under the header — collection-states friend-view grammar (the orange tertiary return) */
+  .return-link { flex: 0 0 auto; align-self: flex-start; display: inline-flex; align-items: center; gap: 5px;
+    margin: 0 16px 8px; font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
 
   /* ── flat buttons — Scanline Energize on press (F-03, locked 2026-06-18; idle flat, no travel) ── */
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: none; width: fit-content;
@@ -249,7 +252,8 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen c5">
-            <div class="screen-head"><h2 style="letter-spacing:2px;">ADD FRIENDS</h2><div class="head-keys"><a class="tert dim" href="#" style="align-self:center;">&lsaquo; FRIENDS</a></div></div>
+            <div class="screen-head"><h2 style="letter-spacing:2px;">ADD FRIENDS</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO FRIENDS</a>
             <div class="scroll">
               <div class="sec"><h3>FIND SOMEONE</h3></div>
               <div class="ihook">
@@ -415,7 +419,8 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen c5">
-            <div class="screen-head"><h2 style="letter-spacing:2px;">YOUR INVITE</h2><div class="head-keys"><a class="tert dim" href="#" style="align-self:center;">&lsaquo; FRIENDS</a></div></div>
+            <div class="screen-head"><h2 style="letter-spacing:2px;">YOUR INVITE</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO ADD FRIENDS</a>
             <div class="scroll">
               <div class="sec"><h3>YOUR INVITE LINK</h3></div>
               <div class="ihook">
@@ -500,7 +505,8 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen c5">
-            <div class="screen-head"><h2 style="letter-spacing:2px;">REQUESTS</h2><div class="head-keys"><a class="tert dim" href="#" style="align-self:center;">&lsaquo; ADD FRIENDS</a></div></div>
+            <div class="screen-head"><h2 style="letter-spacing:2px;">REQUESTS</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO ADD FRIENDS</a>
             <div class="scroll">
               <div class="sec"><h3>INCOMING &middot; 2</h3></div>
               <div class="reqrow incoming">
@@ -595,7 +601,8 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen c5">
-            <div class="screen-head"><h2 style="letter-spacing:2px;">ADD FRIENDS</h2><div class="head-keys"><a class="tert dim" href="#" style="align-self:center;">&lsaquo; FRIENDS</a></div></div>
+            <div class="screen-head"><h2 style="letter-spacing:2px;">ADD FRIENDS</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO FRIENDS</a>
             <div class="scroll">
               <div class="sec"><h3>THE RELATIONSHIP SPINE</h3><span class="tert dim">STATE &rarr; ACTION</span></div>
               <!-- none -->
@@ -674,7 +681,8 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen c5">
-            <div class="screen-head"><h2 style="letter-spacing:2px;">ADD FRIENDS</h2><div class="head-keys"><span class="head-act" style="background:var(--scr-panel);box-shadow:none;"></span></div></div>
+            <div class="screen-head"><h2 style="letter-spacing:2px;">ADD FRIENDS</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO FRIENDS</a>
             <div class="scroll">
               <div class="sec"><h3>FIND SOMEONE</h3></div>
               <div class="sk-bar" style="height:39px; margin:4px 0 2px;"></div>
@@ -710,7 +718,8 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen c5">
-            <div class="screen-head"><h2 style="letter-spacing:2px;">ADD FRIENDS</h2><div class="head-keys"><a class="tert dim" href="#" style="align-self:center;">&lsaquo; FRIENDS</a></div></div>
+            <div class="screen-head"><h2 style="letter-spacing:2px;">ADD FRIENDS</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO FRIENDS</a>
             <div class="scroll">
               <div class="err-wrap">
                 <div class="err-card"><span class="bang">!</span></div>
@@ -746,7 +755,8 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen c5">
-            <div class="screen-head"><h2 style="letter-spacing:2px;">ADD FRIENDS</h2><div class="head-keys"><a class="tert dim" href="#" style="align-self:center;">&lsaquo; FRIENDS</a></div></div>
+            <div class="screen-head"><h2 style="letter-spacing:2px;">ADD FRIENDS</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO FRIENDS</a>
             <div class="scroll">
               <div class="offline-strip" style="margin-top:2px;">
                 <svg viewBox="0 0 24 24"><path d="M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M12 19.5h.01M3 3l18 18" stroke-linecap="round"/></svg>

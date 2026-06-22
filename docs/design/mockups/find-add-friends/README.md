@@ -51,10 +51,18 @@ SHARE** (OQ-052 cut — sharing is self-only: your invite link) · **no contacts
 - **OQ-073** — `GET /invites/:token` resolve shape (SenderSummary + prefilled request) + the **QR
   generation** question (client-side from the token vs server-rendered); proposed in the inbox.
 
+## Back navigation (owner directive, 2026-06-22)
+The return-to-parent affordance uses the **collection-states friend-view grammar** — the orange
+`.return-link` tertiary ("‹ RETURN TO …") **under the ScreenHead**, not a top-right key. The hub (P1) +
+the demo/lifecycle screens (P6, L1–L3) **‹ RETURN TO FRIENDS**; the hub sub-screens (P3 invite, P4
+requests) **‹ RETURN TO ADD FRIENDS** (their immediate parent). P2/P2b keep **CANCEL** (search-dismiss);
+**P5 keeps ✕** — it's a deep-link arrival, so "return to Friends" doesn't fit (its takeover-vs-tab
+dismiss model is still open).
+
 ## Burt audit
-**PASS ✅** (0 blocker · 0 major), reconciled against Foundation Rules F-01..F-09 + the flat-F-03 /
-StateMark-F-09 in-flight directives. One minor fixed in-pass (the SearchField caret recolored pink →
-`--scr-accent`, so no on-screen pink remains). **Documented deviations kept:** flat buttons = **Inset
-Recess** (matches draft A; the `friends/` family isn't yet rippled to the locked Scanline — isolated to
-one `.btn`/`.head-act` rule) · the `.err-card .bang` 34px Signal-Lost glyph (verbatim §1.6 sibling
-grammar, app-wide consistent — owner-ratification).
+**PASS ✅** (0 blocker · 0 major · **0 deviations**), reconciled against Foundation Rules F-01..F-09 +
+the Scanline-F-03 / StateMark-F-09 in-flight directives. Fixed in-pass: the SearchField caret recolored
+pink → `--scr-accent` (no on-screen pink remains). **Both earlier deviations were resolved by the
+2026-06-18 design-system sweeps** (parallel sessions, on this board): flat buttons rippled **Inset Recess
+→ Scanline Energize** (locked F-03), and the `.err-card .bang` glyph snapped **34px → 21px** (F-06
+conformance, OQ-066). The board now carries **no kept deviations**.
