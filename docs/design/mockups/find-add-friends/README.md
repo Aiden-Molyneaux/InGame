@@ -55,9 +55,12 @@ SHARE** (OQ-052 cut — sharing is self-only: your invite link) · **no contacts
 The return-to-parent affordance uses the **collection-states friend-view grammar** — the orange
 `.return-link` tertiary ("‹ RETURN TO …") **under the ScreenHead**, not a top-right key. The hub (P1) +
 the demo/lifecycle screens (P6, L1–L3) **‹ RETURN TO FRIENDS**; the hub sub-screens (P3 invite, P4
-requests) **‹ RETURN TO ADD FRIENDS** (their immediate parent). P2/P2b keep **CANCEL** (search-dismiss);
-**P5 keeps ✕** — it's a deep-link arrival, so "return to Friends" doesn't fit (its takeover-vs-tab
-dismiss model is still open).
+requests) **‹ RETURN TO ADD FRIENDS** (their immediate parent). P2/P2b keep **CANCEL** (search-dismiss).
+**P5 is a `FlowTakeover`** (owner pick, 2026-06-22) — the add-game **FlowHeader** (a ✕ keycap + title,
+**NavBand untouched**), *not* a tab; the prefilled ADD resolves into the sender's Profile (PROF-05
+friend-view), and **✕ dismiss → app home on a cold open / back in-session**. (The "drop the NavBand"
+wording in the option was a mis-gloss — the app's FlowTakeover keeps the NavBand; the FlowHeader is what
+reads as a flow.)
 
 ## Burt audit
 **PASS ✅** (0 blocker · 0 major · **0 deviations**), reconciled against Foundation Rules F-01..F-09 +

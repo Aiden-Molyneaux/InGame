@@ -101,6 +101,10 @@
   /* labelled back link under the header — collection-states friend-view grammar (the orange tertiary return) */
   .return-link { flex: 0 0 auto; align-self: flex-start; display: inline-flex; align-items: center; gap: 5px;
     margin: 0 16px 8px; font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
+  /* FlowHeader (P5 SOC-10 takeover) — add-game grammar: ✕/back keycap on the left + flow title; NavBand untouched */
+  .fh-key { flex: 0 0 auto; width: 28px; height: 28px; border: none; background: var(--scr-chip); color: var(--navy);
+    font: 700 15px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; margin-right: 11px; }
+  .flow-head { justify-content: flex-start; }
 
   /* ── flat buttons — Scanline Energize on press (F-03, locked 2026-06-18; idle flat, no travel) ── */
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: none; width: fit-content;
@@ -560,7 +564,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen c5">
-            <div class="screen-head"><h2 style="letter-spacing:2px;">INVITE</h2><div class="head-keys"><a class="tert dim" href="#" style="align-self:center;">&times;</a></div></div>
+            <div class="screen-head flow-head"><button class="fh-key">&times;</button><h2 style="letter-spacing:2px;">INVITE</h2></div>
             <div class="scroll">
               <div class="land">
                 <div class="av lg lav" style="background:#6a5acd;color:#fff;">HM</div>
@@ -586,10 +590,12 @@
         </div>
       </div>
       <div class="caption">
-        <h3>P5 &mdash; invite-landing <em>(SOC-10)</em></h3>
-        <p>The arrival from an opened link/QR: a <b>SenderSummary</b> (their avatar + username) + a <b>prefilled one-tap
-        ADD</b>. It <b>resolves through their Profile</b> (so VIEW THEIR PROFILE opens PROF-05 friend-view); with no app
-        installed the link routes to the <b>store listing</b>. An invitation, never a scold.</p>
+        <h3>P5 &mdash; invite-landing <em>(SOC-10 · FlowTakeover)</em></h3>
+        <p>The arrival from an opened link/QR &mdash; a <b>FlowTakeover</b> (the add-game grammar: a <b>FlowHeader</b>
+        &#10005; + title, NavBand untouched), <b>not a tab</b>. A <b>SenderSummary</b> (avatar + username) + a
+        <b>prefilled one-tap ADD</b> that <b>resolves through their Profile</b> (VIEW THEIR PROFILE opens PROF-05
+        friend-view); no app &rarr; the <b>store listing</b>. <b>&#10005; dismiss</b> &rarr; the app home on a cold open,
+        or back in-session. An invitation, never a scold.</p>
       </div>
     </div>
 
