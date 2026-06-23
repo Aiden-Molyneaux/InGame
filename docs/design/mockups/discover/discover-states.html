@@ -89,10 +89,8 @@
   .screen-head { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; }
   .screen-head h2 { margin: 0; font: 700 21px/1 var(--pk); letter-spacing: 3px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); }
   .head-act { flex: 0 0 auto; width: 32px; height: 32px; border: none; background: var(--scr-chip); color: var(--navy);
-    display: inline-flex; align-items: center; justify-content: center;
-    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+    display: inline-flex; align-items: center; justify-content: center; }
   .head-act svg circle, .head-act svg path { stroke: var(--navy); }
-  .head-act.on { transform: translateY(2px); box-shadow: 0 0 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 2px 3px rgba(0,0,0,.22); }
 
   /* ════ Section nav-switch — flat in-screen cards, matching the Game-page tabsw nav buttons.
      The Up Next ↔ Discover sub-switch for the tab: a hairline-bordered well card per segment; the
@@ -109,10 +107,10 @@
   .seg-pair .seg.active .seg-ic svg { stroke: var(--scr-accent); }
 
   /* ── the Game Card ── */
-  .gcard { position: relative; border-radius: 11px; box-sizing: border-box; flex: 0 0 auto; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
-  .gcard .art { position: absolute; inset: 7px; border-radius: 5px; overflow: hidden; }
+  .gcard { position: relative; box-sizing: border-box; flex: 0 0 auto; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
+  .gcard .art { position: absolute; inset: 7px; overflow: hidden; }
   .gcard .art svg { width: 100%; height: 100%; display: block; }
-  .gcard .plate { position: absolute; left: 11px; right: 11px; bottom: 3px; border-radius: 4px; padding: 5px 4px 4px;
+  .gcard .plate { position: absolute; left: 11px; right: 11px; bottom: 3px; padding: 5px 4px 4px;
     text-align: center; font: 700 10px/1.15 var(--pk); letter-spacing: .5px; text-transform: uppercase; z-index: 2; }
   .gcard.hero-size { width: 138px; height: 193px; }
   .gcard.grid-size { width: 92px; height: 129px; }
@@ -146,12 +144,10 @@
 
   /* ── S2 base + buttons ── */
   .sk2 { background: var(--scr-bg); }
-  .sk2 .btn { background: var(--scr-accent); color: var(--scr-accent-ink); border-radius: 9px; padding: 9px 13px;
-    font: 700 11px var(--pk); letter-spacing: 1px; white-space: nowrap; box-shadow: inset 0 1px 0 rgba(255,255,255,.4);
-    filter: drop-shadow(0 3px 0 color-mix(in srgb, var(--scr-accent) 45%, #000)); }
-  .sk2 .btn.add { background: var(--gold); color: #3c2a09; filter: drop-shadow(0 3px 0 color-mix(in srgb, var(--gold) 45%, #000)); }
-  .sk2 .btn.secondary { background: var(--cream); color: var(--navy); filter: none;
-    box-shadow: 0 3px 0 color-mix(in srgb, var(--cream) 50%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .sk2 .btn { background: var(--scr-accent); color: var(--scr-accent-ink); padding: 9px 13px;
+    font: 700 11px var(--pk); letter-spacing: 1px; white-space: nowrap; }
+  .sk2 .btn.add { background: var(--gold); color: #3c2a09; }
+  .sk2 .btn.secondary { background: var(--cream); color: var(--navy); }
   .sk2 .btn.mini { padding: 6px 9px; font-size: 11px; }
 
   /* ── C5 ── */
@@ -254,7 +250,7 @@
   .field svg circle, .field svg path { stroke: var(--navy); }
   .field .q { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--navy); }
   .field .ph { font: 600 11px var(--pk); letter-spacing: 1px; color: #8d889c; }
-  .field .caret { width: 1.5px; height: 13px; background: var(--accent); margin-left: 1px; }
+  .field .caret { width: 1.5px; height: 13px; background: var(--scr-accent); margin-left: 1px; }
   .field .clear { margin-left: auto; color: #8d889c; font: 700 11px var(--pk); }
 
   /* ── CardDetail ── */
@@ -276,7 +272,7 @@
   .credit b { color: var(--scr-text); }
   .detail-actions { display: flex; align-items: center; justify-content: center; gap: 9px; margin-top: 10px; }
   .ovf-key { width: 30px; height: 30px; border: none; background: var(--scr-chip); color: var(--navy); font: 700 15px/1 var(--pk);
-    display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+    display: inline-flex; align-items: center; justify-content: center; }
   .route-hint { display: block; text-align: center; margin-top: 9px; font: 600 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
   .route-hint b { color: var(--scr-accent); }
 

@@ -90,10 +90,10 @@
   .sec h3 { margin: 0; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
 
   /* ── the Game Card (hero + thumb — backdrops, not the subject) ── */
-  .gcard { position: relative; border-radius: 11px; box-sizing: border-box; flex: 0 0 auto; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
-  .gcard .art { position: absolute; inset: 7px; border-radius: 5px; overflow: hidden; }
+  .gcard { position: relative; box-sizing: border-box; flex: 0 0 auto; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
+  .gcard .art { position: absolute; inset: 7px; overflow: hidden; }
   .gcard .art svg { width: 100%; height: 100%; display: block; }
-  .gcard .plate { position: absolute; left: 11px; right: 11px; bottom: 3px; border-radius: 4px; padding: 5px 4px 4px;
+  .gcard .plate { position: absolute; left: 11px; right: 11px; bottom: 3px; padding: 5px 4px 4px;
     text-align: center; font: 700 10px/1.15 var(--pk); letter-spacing: .5px; text-transform: uppercase; }
   .gcard.hero-size { width: 138px; height: 193px; }
   .gcard.thumb { width: 44px; height: 62px; }
@@ -132,14 +132,11 @@
 
   /* ── FlowHeader + keycaps (c5 chrome) ── */
   .fh-key { flex: 0 0 auto; width: 28px; height: 28px; border: none; background: var(--scr-chip); color: var(--navy);
-    font: 700 15px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; margin-right: 11px;
-    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+    font: 700 15px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; margin-right: 11px; }
   .flow-head { justify-content: flex-start; }
   .sk2 .screen-head h2 { margin: 0; font: 700 21px/1 var(--pk); letter-spacing: 3px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); }
   .ovf-key { width: 30px; height: 30px; border: none; background: var(--scr-chip); color: var(--navy);
-    font: 700 15px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center;
-    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
-  .ovf-key.open { transform: translateY(2px); box-shadow: 0 0 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 2px 3px rgba(0,0,0,.22); }
+    font: 700 15px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; }
   .tert { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
   .tert.dim { color: var(--scr-dim); }
 
@@ -147,10 +144,8 @@
   .sk2 { background: var(--scr-bg); }
   .sk2 .well { background: var(--scr-well); }
   .sk2 .btn.add { background: var(--gold); color: #3c2a09; padding: 9px 13px; font: 700 11px var(--pk); letter-spacing: 1px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
-    filter: drop-shadow(0 3px 0 color-mix(in srgb, var(--gold) 45%, #000)); }
-  .btn.secondary { background: var(--scr-chip); color: var(--navy); padding: 9px 13px; font: 700 11px var(--pk); letter-spacing: 1px;
-    box-shadow: 0 3px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.5); }
+  .btn.secondary { background: var(--scr-chip); color: var(--navy); padding: 9px 13px; font: 700 11px var(--pk); letter-spacing: 1px; }
 
   /* ── backdrop A — catalog GameDetail (card + meta ledger, from P3b) ── */
   .inspect { display: flex; justify-content: center; padding: 2px 0 0; }
@@ -221,25 +216,22 @@
   .tarea .box { background: var(--scr-chip); box-shadow: inset 0 2px 3px rgba(0,0,0,.16);
     padding: 8px 10px; min-height: 46px; font: 600 11px/1.5 var(--pk); letter-spacing: .5px; color: var(--navy); }
   .tarea .box .ph { color: #8d889c; }
-  .tarea .box .caret { display: inline-block; width: 1.5px; height: 12px; background: var(--accent); vertical-align: -2px; margin-left: 1px; }
+  .tarea .box .caret { display: inline-block; width: 1.5px; height: 12px; background: var(--scr-accent); vertical-align: -2px; margin-left: 1px; }
   .req-hint { margin: 6px 1px 0; font: 600 9px/1.5 var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
   .req-hint b { color: var(--scr-soft); }
 
   /* commit row — SUBMIT (KeycapButton/destructive) + CANCEL (cream) */
   .dw-btns { display: flex; gap: 8px; margin-top: 10px; }
   .dw-btns button { flex: 1 1 0; border: none; font: 700 11px var(--pk); letter-spacing: 1px; padding: 9px 0; text-align: center; }
-  .dw-submit { background: var(--alert); color: #fff;
-    box-shadow: 0 3px 0 color-mix(in srgb, var(--alert) 45%, #000), inset 0 1px 0 rgba(255,255,255,.25); }
+  .dw-submit { background: var(--alert); color: #fff; }
   .dw-submit.dormant { background: color-mix(in srgb, var(--alert) 30%, var(--scr-tools));
     color: rgba(255,255,255,.4); box-shadow: none; }
   /* in-flight — the keycap sits pressed (no travel) while the report files; a frozen progress ring */
   .dw-submit.busy { background: color-mix(in srgb, var(--alert) 74%, #000); color: rgba(255,255,255,.85);
-    transform: translateY(2px); box-shadow: inset 0 2px 4px rgba(0,0,0,.35);
     display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
   .dw-submit.busy .spin { width: 11px; height: 11px; border-radius: 50%;
     border: 2px solid rgba(255,255,255,.28); border-top-color: #fff; }
-  .dw-cancel { background: var(--scr-chip); color: var(--navy);
-    box-shadow: 0 3px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .dw-cancel { background: var(--scr-chip); color: var(--navy); }
   .dw-cancel.muted { opacity: .4; }
 
   /* the OR divider + BLOCK strip (SOC-09 — an exit, not a reason, not the commit) */
@@ -272,7 +264,7 @@
   .confirm .c-sub { font: 500 11px/1.55 var(--pk); color: var(--scr-soft); max-width: 290px; }
   .confirm .c-acts { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 12px; width: 100%; }
   .confirm .c-done { border: none; min-width: 120px; font: 700 11px var(--pk); letter-spacing: 1px; padding: 9px 16px; text-align: center;
-    background: var(--scr-chip); color: var(--navy); box-shadow: 0 3px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+    background: var(--scr-chip); color: var(--navy); }
 
   /* ── Toast — the §1.6/§1.8 transient-failure surface (B's under-header banner; copied verbatim
      from store-states). Edge-to-edge, plain words, orange RETRY (`KeycapButton/action-alt`). Offline
@@ -284,8 +276,7 @@
   .toastb .t-t { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
   .toastb .t-s { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
   .toastb .btn.act { margin-left: auto; background: var(--scr-accent); color: var(--scr-accent-ink);
-    padding: 7px 10px; font: 700 11px var(--pk); letter-spacing: .5px;
-    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-accent) 45%, #000), inset 0 1px 0 rgba(255,255,255,.4); }
+    padding: 7px 10px; font: 700 11px var(--pk); letter-spacing: .5px; }
 
   /* ── OfflineStrip — the lightweight offline indicator (SYS-10; verbatim from add-game/collection).
      Calm, auto-recovers, never an alarm: no red, no SIGNAL LOST, no RETRY. ── */

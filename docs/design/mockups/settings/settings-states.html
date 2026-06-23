@@ -79,7 +79,7 @@
   .scroll::-webkit-scrollbar { display: none; }
   .srail { position: absolute; right: 5px; top: 56px; bottom: 12px; width: 3px; background: var(--scr-panel); z-index: 3; }
   .srail .thumb { position: absolute; left: -0.5px; right: -0.5px; background: var(--scr-grip); box-shadow: 0 0 0 1px rgba(0,0,0,.2); }
-  .fh-key { flex: 0 0 auto; width: 28px; height: 28px; border: none; background: var(--scr-chip); color: var(--navy); font: 700 15px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; margin-right: 11px; box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .fh-key { flex: 0 0 auto; width: 28px; height: 28px; border: none; background: var(--scr-chip); color: var(--navy); font: 700 15px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; margin-right: 11px; }
   .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 15px 2px 7px; }
   .sec:first-child { margin-top: 4px; }
   .sec h3 { margin: 0; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
@@ -114,11 +114,11 @@
   .ibanner .ib-tx { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
   .ibanner .ib-t { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
   .ibanner .ib-s { font: 500 9px/1.5 var(--pk); letter-spacing: .3px; color: var(--scr-soft); } .ibanner .ib-s b { color: var(--scr-text); }
-  .ib-act { align-self: flex-start; margin-top: 5px; border: none; background: var(--scr-accent); color: var(--scr-accent-ink); font: 700 11px var(--pk); letter-spacing: .5px; padding: 6px 10px; box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-accent) 45%, #000), inset 0 1px 0 rgba(255,255,255,.4); }
+  .ib-act { align-self: flex-start; margin-top: 5px; border: none; background: var(--scr-accent); color: var(--scr-accent-ink); font: 700 11px var(--pk); letter-spacing: .5px; padding: 6px 10px; }
 
   .act-row { display: flex; padding: 11px 12px; }
   .act-key { flex: 1 1 0; border: none; text-align: center; font: 700 11px var(--pk); letter-spacing: 1px; padding: 10px 0; }
-  .act-key.secondary { background: var(--scr-chip); color: var(--navy); box-shadow: 0 3px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .act-key.secondary { background: var(--scr-chip); color: var(--navy); }
   .act-key.disabled { opacity: .42; }
   .footnote { margin: 12px 4px 4px; font: 500 9px/1.5 var(--pk); letter-spacing: .3px; color: var(--scr-grip); text-align: center; }
   .page-intro { font: 500 11px/1.55 var(--pk); letter-spacing: .2px; color: var(--scr-soft); margin: 2px 2px 12px; } .page-intro b { color: var(--scr-text); }
@@ -138,8 +138,8 @@
   .cs-body { font: 500 11px/1.6 var(--pk); color: var(--scr-soft); max-width: 300px; } .cs-body b { color: var(--scr-text); }
   .cs-btns { display: flex; gap: 8px; width: 100%; margin-top: 10px; }
   .cs-btns button { flex: 1 1 0; border: none; font: 700 11px var(--pk); letter-spacing: 1px; padding: 10px 0; text-align: center; }
-  .cs-del { background: var(--alert); color: #fff; box-shadow: 0 3px 0 color-mix(in srgb, var(--alert) 45%, #000), inset 0 1px 0 rgba(255,255,255,.25); }
-  .cs-cancel { background: var(--scr-chip); color: var(--navy); box-shadow: 0 3px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .cs-del { background: var(--alert); color: #fff; }
+  .cs-cancel { background: var(--scr-chip); color: var(--navy); }
 
   /* blocked-users page */
   .bu-note { display: flex; align-items: flex-start; gap: 8px; padding: 10px 11px; margin: 0 0 8px; background: var(--scr-panel); border: 1px solid var(--scr-hairline); font: 500 9px/1.5 var(--pk); letter-spacing: .3px; color: var(--scr-soft); } .bu-note b { color: var(--scr-text); }
@@ -149,7 +149,7 @@
   .bu-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   .bu-n { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
   .bu-d { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
-  .unblock { margin-left: auto; flex: 0 0 auto; border: none; background: var(--scr-chip); color: var(--navy); font: 700 11px var(--pk); letter-spacing: .5px; padding: 7px 11px; box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .unblock { margin-left: auto; flex: 0 0 auto; border: none; background: var(--scr-chip); color: var(--navy); font: 700 11px var(--pk); letter-spacing: .5px; padding: 7px 11px; }
 
   /* Skeleton */
   .sk-h { height: 9px; width: 84px; background: var(--scr-panel); margin: 16px 2px 9px; }
@@ -166,8 +166,7 @@
   .le-t { font: 700 15px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
   .le-s { font: 500 11px/1.55 var(--pk); color: var(--scr-dim); max-width: 250px; }
   .le-retry { margin-top: 6px; border: none; background: var(--scr-accent); color: var(--scr-accent-ink); font: 700 11px var(--pk); letter-spacing: 1px; padding: 10px 22px;
-    clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px), calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%);
-    filter: drop-shadow(0 3px 0 color-mix(in srgb, var(--scr-accent) 45%, #000)); }
+    clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px), calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
 
   /* OfflineStrip + Toast */
   .offline-strip { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; margin: 0 12px 6px; padding: 7px 11px; background: var(--scr-panel); border: 1px solid var(--scr-hairline); font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
@@ -178,7 +177,7 @@
   .toastb .t-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   .toastb .t-t { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
   .toastb .t-s { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
-  .toastb .t-key { margin-left: auto; background: var(--scr-accent); color: var(--scr-accent-ink); padding: 7px 10px; font: 700 11px var(--pk); letter-spacing: .5px; border: none; box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-accent) 45%, #000), inset 0 1px 0 rgba(255,255,255,.4); }
+  .toastb .t-key { margin-left: auto; background: var(--scr-accent); color: var(--scr-accent-ink); padding: 7px 10px; font: 700 11px var(--pk); letter-spacing: .5px; border: none; }
 
   /* ════ Feedback (C "type-first triage" — the chosen model) ════ */
   .triage-intro { margin: 6px 2px 16px; }
@@ -202,7 +201,7 @@
   .tarea .box { background: var(--scr-chip); box-shadow: inset 0 2px 3px rgba(0,0,0,.16); padding: 10px 12px; min-height: 88px; font: 600 11px/1.55 var(--pk); letter-spacing: .3px; color: var(--navy); }
   .tarea .box.short { min-height: 60px; }
   .tarea .box .ph { color: #8d889c; }
-  .tarea .box .caret { display: inline-block; width: 1.5px; height: 13px; background: var(--accent); vertical-align: -2px; margin-left: 1px; }
+  .tarea .box .caret { display: inline-block; width: 1.5px; height: 13px; background: var(--scr-accent); vertical-align: -2px; margin-left: 1px; }
   .diag { margin: 0 0 14px; }
   .diag-lbl { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); margin-bottom: 6px; }
   .diag-row { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -227,8 +226,8 @@
   .la-pl-link { font: 600 11px var(--pk); letter-spacing: .3px; color: var(--scr-accent); text-decoration: none; white-space: nowrap; }
   /* feedback SUBMIT — a MID-WIDTH `KeycapButton/primary` (on-theme orange, centered; owner 2026-06-14 —
      not the full-bleed red, so a support send doesn't read as an alarm). */
-  .fb-send { display: flex; align-items: center; justify-content: center; gap: 8px; width: fit-content; min-width: 190px; margin: 8px auto 0; border: none; background: var(--scr-accent); color: var(--scr-accent-ink); font: 700 11px var(--pk); letter-spacing: 1px; padding: 13px 34px; text-align: center; box-shadow: 0 3px 0 color-mix(in srgb, var(--scr-accent) 45%, #000), inset 0 1px 0 rgba(255,255,255,.45); }
-  .fb-send.busy { background: color-mix(in srgb, var(--scr-accent) 72%, #000); color: rgba(255,255,255,.92); transform: translateY(2px); box-shadow: inset 0 2px 4px rgba(0,0,0,.35); }
+  .fb-send { display: flex; align-items: center; justify-content: center; gap: 8px; width: fit-content; min-width: 190px; margin: 8px auto 0; border: none; background: var(--scr-accent); color: var(--scr-accent-ink); font: 700 11px var(--pk); letter-spacing: 1px; padding: 13px 34px; text-align: center; }
+  .fb-send.busy { background: color-mix(in srgb, var(--scr-accent) 72%, #000); color: rgba(255,255,255,.92); }
   .fb-send.busy .spin { width: 12px; height: 12px; border-radius: 50%; border: 2px solid rgba(255,255,255,.28); border-top-color: #fff; }
   .submit-hint { margin: 9px 2px 0; font: 600 9px/1.4 var(--pk); letter-spacing: .4px; color: var(--scr-dim); text-align: center; } .submit-hint b { color: var(--scr-soft); }
   .fbconfirm { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 7px; padding: 70px 22px 0; }
@@ -237,7 +236,7 @@
   .fbc-eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
   .fbc-title { font: 700 15px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
   .fbc-sub { font: 500 11px/1.6 var(--pk); color: var(--scr-soft); max-width: 290px; }
-  .fbc-done { margin-top: 14px; border: none; background: var(--scr-chip); color: var(--navy); font: 700 11px var(--pk); letter-spacing: 1px; padding: 11px 28px; box-shadow: 0 3px 0 color-mix(in srgb, var(--scr-chip) 55%, #000), inset 0 1px 0 rgba(255,255,255,.85); }
+  .fbc-done { margin-top: 14px; border: none; background: var(--scr-chip); color: var(--navy); font: 700 11px var(--pk); letter-spacing: 1px; padding: 11px 28px; }
 
   /* ════════════════════════════════════════════════════════════════════════════════════
      FLAT BUTTONS + SCANLINE ENERGIZE (F-03, locked 2026-06-18)
