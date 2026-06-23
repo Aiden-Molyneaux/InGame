@@ -161,6 +161,14 @@
   **Privacy-gated (PROF-03):** a friend who hides hours/games drops that axis — fields **omitted, not
   zeroed** (the screen degrades, never leaks); **read-only / non-commerce** (no adopt on this surface,
   ECON-01). For the API page-audit at converge. (Compare Hours 4.6 track, 2026-06-22) [behavior]
+- OQ-075: **SOC-05 recommend-a-game COMPOSE surface is undrawn (the homeless Friends-domain piece).** The
+  friend actions sheet (Friends tab P6 + the Game page) offers a **RECOMMEND A GAME** entry, but the actual
+  compose UI — **pick a game (your collection / catalog) + write a short note** → drops into the recipient's
+  What-to-Play (the Discover **FROM FRIENDS** feed; `POST /recommendations {toUserId, gameId, note}`, SOC-05/
+  WTP-) — is **drawn on no board**. The *receiving* end (Discover friend-recs) is converged; only the
+  *authoring* surface is missing. Decide its home — a bottom-sheet from the actions menu, or a small
+  game-picker micro-flow — and whether it's a Friends-tab state or a WTP-adjacent flow. Surfaced at the
+  Friends-tab (§3.3) convergence. (2026-06-22) [presentation]
 
 ## Resolved
 - OQ-058 → **Personal *game* rating KEPT, private-only; NO card rating, ever.** The collection entry's
