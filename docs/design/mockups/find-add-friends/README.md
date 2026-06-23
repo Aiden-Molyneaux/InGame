@@ -56,11 +56,14 @@ The return-to-parent affordance uses the **collection-states friend-view grammar
 `.return-link` tertiary ("‹ RETURN TO …") **under the ScreenHead**, not a top-right key. The hub (P1) +
 the demo/lifecycle screens (P6, L1–L3) **‹ RETURN TO FRIENDS**; the hub sub-screens (P3 invite, P4
 requests) **‹ RETURN TO ADD FRIENDS** (their immediate parent). P2/P2b keep **CANCEL** (search-dismiss).
-**P5 is a `FlowTakeover`** (owner pick, 2026-06-22) — the add-game **FlowHeader** (a ✕ keycap + title,
-**NavBand untouched**), *not* a tab; the prefilled ADD resolves into the sender's Profile (PROF-05
-friend-view), and **✕ dismiss → app home on a cold open / back in-session**. (The "drop the NavBand"
-wording in the option was a mis-gloss — the app's FlowTakeover keeps the NavBand; the FlowHeader is what
-reads as a flow.)
+**P5 is a `FlowTakeover`** (owner pick, 2026-06-22) — **NavBand untouched** (not a tab), a **✕ close
+keycap top-right** (owner placement, 2026-06-22 — diverges from add-game's FlowHeader-left); the prefilled
+ADD resolves into the sender's Profile (PROF-05 friend-view), and **✕ dismiss → app home on a cold open /
+back in-session**. (Note: the app's FlowTakeover keeps the NavBand — the "drop the NavBand" option wording
+was a mis-gloss.)
+
+The **request-sent Toast** (P6) was normalized to the canonical Toast (`scr-well` fill + a single
+hairline, edge-to-edge) — the orange left-accent + tinted border + drop-shadow removed.
 
 ## Burt audit
 **PASS ✅** (0 blocker · 0 major · **0 deviations**), reconciled against Foundation Rules F-01..F-09 +
