@@ -151,6 +151,16 @@
   **Second gap — QR generation:** `POST /me/invites` returns a **token**; whether the QR image is
   **rendered client-side from the token** or **server-supplied** is unspecified — flag for the page-audit.
   (Find/Add 4.8 track, 2026-06-22) [behavior]
+- OQ-074: **`GET /me/compare/:friendId` response shape (the Compare Hours 4.6 contract gap).** The endpoint
+  (api-contract ~line 119) names *"per-game + total hours, total-games comparison + leaderboard slice
+  (SOC-03)"* but **enumerates no payload** — yet Compare is the marquee social return-driver, drawn three
+  ways this pass. Propose the **totals** `{ yourHours, theirHours, yourGames, theirGames, leader ∈ you ·
+  them · tie }`; the **per-game pair** (games you BOTH own — the collection intersection) `{ gameId, title,
+  cardRef, yourHours, theirHours, leader }`; and the **leaderboard slice** (friend cohort, your row flagged)
+  `{ rank, user: { userId, username, avatarRef }, hours, games, isMe }`, sortable by `hours` or `games`.
+  **Privacy-gated (PROF-03):** a friend who hides hours/games drops that axis — fields **omitted, not
+  zeroed** (the screen degrades, never leaks); **read-only / non-commerce** (no adopt on this surface,
+  ECON-01). For the API page-audit at converge. (Compare Hours 4.6 track, 2026-06-22) [behavior]
 
 ## Resolved
 - OQ-058 → **Personal *game* rating KEPT, private-only; NO card rating, ever.** The collection entry's
