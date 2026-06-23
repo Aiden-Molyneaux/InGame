@@ -8,29 +8,43 @@ sub-screens themselves. Design-side only — §5.10 Social is specified; gaps go
 See **[`friends-drafts-brief.md`](friends-drafts-brief.md)** for the contract, the locked component
 names, the 3 directions, the P1–P6 panel contract, and the hard rules.
 
-## Drafts (for the owner gate — 2026-06-17)
-Three **distinct organizing models** (different default + different primary surface, not a recolor).
-Each renders **P1 landing · P2 feed (SOC-06) · P3 roster (SOC-01) · P4 requests (SOC-08) · P5 cold-start
-(SOC-07/10) · P6 friend actions sheet (MOD-01/SOC-09 — no share)**. Lifecycle deferred to converge.
+## CONVERGED → [`friends-states.html`](friends-states.html) (2026-06-23)
+Owner ruling (2026-06-22/23): **A "Feed-first" won**; **B / C retired to history** (kept for reference).
+The converged states board carries Draft A's **P1 landing · P2 active feed (SOC-06) · P3 roster (SOC-01) ·
+P4 ADD FRIENDS hub · P5 cold-start (SOC-07/10) · P6 friend actions sheet (MOD-01/SOC-09 — no share)** and
+adds, at converge:
+- **Lifecycle (now drawn):** **L1 Skeleton** (solid fills) · **L2 "Signal Lost" + RETRY** · **L3 Offline**
+  (feed + roster from cache, writes gated — SYS-10).
+- **Q1 quiet-feed / empty-requests** — the §3.3 "quiet vs active" state (thin window → digest + nudge; no
+  pending ⇒ no banner). Draft A only described these.
+- **Flat buttons rippled Inset-Recess → Scanline Energize** (F-03, locked 2026-06-18 — the *draft* was
+  skipped by that sweep); on-screen type held to **F-06** (no drift).
 
-| File | Model | Thesis (the landing + the nav model) |
+**IA seam:** the full **find/add + requests inbox = 4.8** ([`../find-add-friends/find-add-friends-states.html`](../find-add-friends/find-add-friends-states.html));
+the Friends tab's header key + requests banner jump there. The in-tab ADD FRIENDS hub (P4) is kept as
+drawn and cross-references 4.8 (no behavior duplication).
+
+| Draft | Model | Status |
 |---|---|---|
-| [`friends-draft-a-feed.html`](friends-draft-a-feed.html) | **A · Feed-first** | The SOC-06 **aggregated feed IS the landing** — one low-noise scroll; roster = a slim friends rail, requests = an inline banner, find/add = a header key. No sub-tabs. The IA's stated default; the social-stream pole. **Presence + mutual-friend counts removed per owner (2026-06-18)** — roster reads hours + collection size; requests show arrival time. |
-| [`friends-draft-b-roster.html`](friends-draft-b-roster.html) | **B · Roster-first** | The friends **list is the body** (presence-sorted + a `PRESENCE / A–Z / RECENT` sort bar, active = orange accent border); the feed is a collapsed `RECENT` footer digest (→ SEE ALL), requests = a count-badged header key. The people-directory pole. |
-| [`friends-draft-c-connect.html`](friends-draft-c-connect.html) | **C · Connect-first** | A priority-stacked landing — a top `CONNECT` zone (**requests to act on** + the `InviteHook`: search · invite link · QR → 4.8) leads as the hero; `YOUR CIRCLE` (compact roster) + an `ACTIVITY` digest sit beneath. Tuned to the cold-start / low-friend reality. The growth pole. |
+| [`friends-draft-a-feed.html`](friends-draft-a-feed.html) | **A · Feed-first** (the SOC-06 feed IS the landing; roster = a rail, requests = a banner, find/add = a header key) | **WON → converged** |
+| [`friends-draft-b-roster.html`](friends-draft-b-roster.html) | B · Roster-first (the list is the body) | retired (history) |
+| [`friends-draft-c-connect.html`](friends-draft-c-connect.html) | C · Connect-first (the CONNECT/InviteHook hero) | retired (history) |
 
-**Status:** in pass → owner gate. **Do not converge** until the owner picks a direction + gives
-iteration notes. Converge target (later): `friends-states.html` (full matrix incl. lifecycle).
+## Components (ratified into design-spec §1.5 at the spec-owner's formalization)
+`FeedRow`/`ActivityRow` · `FriendRow`/`FriendTile` · `RequestRow` · `InviteHook`. **`PresenceDot`/`StatPeek`
+were CUT** (owner 2026-06-18 — no presence/now-playing) and are not formalized. Reuse: `GameCard/thumb`,
+the avatar monogram (PROF-08), the sheet/drawer family, the flat **Scanline** `KeycapButton`/`ToolKeycap`,
+the COMPARE `chip`, `DeviceShell` + `NavBand`, the §1.6 lifecycle family.
 
-## New components introduced (form is each draft's; names locked, ratified at converge)
-`FeedRow`/`ActivityRow` · `FriendRow`/`FriendTile` · `RequestRow` · `PresenceDot`/`StatPeek` ·
-`InviteHook`. Reuse: `GameCard/thumb`, the avatar monogram (PROF-08), the sheet/drawer family, flat
-`KeycapButton`/`ToolKeycap` (Inset Recess), the COMPARE `chip`, the `DeviceShell` + `NavBand`, the §1.6
-lifecycle family.
+## Burt audit
+**PASS** (0 blocker · 0 major), reconciled against F-01..F-09 + the Scanline-F-03 / StateMark-F-09
+directives. **F-06 clean** (the historical drift is gone). One **owner-ratification**: `.achv` uses
+`--gold` for the **achievement-badge** glyph in the feed (the catalog classes gold-as-trophy a judgment
+call, not a violation) — inherited from Draft A; bless gold-as-achievement or recolor to `--scr-accent`.
 
 ## Flags raised (design-side only — never edited the spec)
 - **OQ-071** — `GET /me/feed` aggregated **item shape** is unenumerated (the central gap); proposed a
-  shape in the inbox. Also notes **presence/online state** is un-specced (the roster's `PresenceDot` +
-  `StatPeek` are drawn illustratively).
-- **OQ-052** (already resolved) — no friend-profile SHARE; honored everywhere (the actions sheet has no
-  share).
+  shape in the inbox. (Presence is no longer drawn — it was cut.)
+- **OQ-075** — **SOC-05 recommend-a-game compose surface** (pick game + note) is entry-only in the actions
+  sheet; drawn on no board. Deferred — decide its home at the spec-owner pass.
+- **OQ-052** (resolved) — no friend-profile SHARE; honored everywhere (the actions sheet has no share).

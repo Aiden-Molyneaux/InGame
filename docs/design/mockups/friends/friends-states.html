@@ -89,26 +89,27 @@
   .screen-head h2 { margin: 0; font: 700 21px/1 var(--pk); letter-spacing: 3px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); }
   .screen-head .h2sub { font: 700 9px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); margin-left: 9px; }
   .head-keys { display: flex; align-items: center; gap: 8px; }
-  /* flat header key — square chip, accent-able, NO travel (Inset Recess on press) */
+  /* flat header key — square chip, accent-able, NO travel (Scanline Energize on press, F-03 locked 2026-06-18) */
   .head-act { position: relative; flex: 0 0 auto; width: 34px; height: 34px; border: none; background: var(--scr-chip); color: var(--navy);
-    display: inline-flex; align-items: center; justify-content: center; box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
+    display: inline-flex; align-items: center; justify-content: center; box-shadow: none;
     transition: background .07s linear, box-shadow .07s linear; }
   .head-act svg { width: 18px; height: 18px; } .head-act svg circle, .head-act svg path, .head-act svg rect { stroke: var(--navy); fill: none; stroke-width: 2; }
-  .head-act:active, .head-act.is-pressed { background: color-mix(in srgb, var(--scr-chip) 80%, #000); box-shadow: inset 0 2px 5px rgba(0,0,0,.4); }
+  .head-act:active, .head-act.is-pressed { background-color: color-mix(in srgb, var(--scr-chip) 88%, #000); background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); box-shadow: none; }
   .head-act .ntag { position: absolute; top: -5px; right: -5px; min-width: 15px; height: 15px; padding: 0 3px; background: var(--scr-accent);
     color: var(--scr-accent-ink); font: 700 9px/15px var(--pk); text-align: center; box-shadow: 0 0 0 2px var(--scr-bg); }
 
-  /* ── flat buttons (owner pick: Inset Recess · B) — idle flat, pressed sinks IN, NO travel ── */
+  /* ── flat buttons — Scanline Energize on press (F-03, locked 2026-06-18; idle flat, no travel) ── */
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: none; width: fit-content;
     background: var(--scr-accent); color: var(--scr-accent-ink); padding: 9px 13px; font: 700 11px var(--pk); letter-spacing: 1px;
-    white-space: nowrap; box-shadow: inset 0 1px 0 rgba(255,255,255,.28); cursor: pointer;
+    white-space: nowrap; box-shadow: none; cursor: pointer;
     transition: background .07s linear, box-shadow .07s linear, color .07s linear; }
   .btn.secondary { background: var(--scr-chip); color: var(--navy); }
   .btn.alt { background: var(--scr-well); color: var(--scr-soft); border: 1px solid var(--scr-hairline); box-shadow: none; }
   .btn.mini { padding: 7px 10px; font-size: 9px; letter-spacing: .8px; }
-  .btn:active, .btn.is-pressed { background: color-mix(in srgb, var(--scr-accent) 80%, #000); box-shadow: inset 0 2px 5px rgba(0,0,0,.5); }
-  .btn.secondary:active, .btn.secondary.is-pressed { background: color-mix(in srgb, var(--scr-chip) 80%, #000); box-shadow: inset 0 2px 5px rgba(0,0,0,.4); }
-  .btn.alt:active, .btn.alt.is-pressed { background: color-mix(in srgb, var(--scr-well) 70%, #000); box-shadow: inset 0 2px 5px rgba(0,0,0,.45); }
+  /* Scanline Energize press (F-03, locked 2026-06-18) — no motion, no inset recess */
+  .btn:active, .btn.is-pressed { background-color: color-mix(in srgb, var(--scr-accent) 88%, #000); background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, #0000 1px 2px); box-shadow: none; }
+  .btn.secondary:active, .btn.secondary.is-pressed { background-color: color-mix(in srgb, var(--scr-chip) 88%, #000); background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); box-shadow: none; }
+  .btn.alt:active, .btn.alt.is-pressed { background-color: color-mix(in srgb, var(--scr-well) 84%, #000); background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 1px, #0000 1px 2px); box-shadow: none; }
 
   /* ── C5 square chrome ── */
   .c5 .btn { border-radius: 0; clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
@@ -235,10 +236,23 @@
   .sa .sago { margin-left: auto; color: var(--scr-grip); font: 700 9px var(--pk); letter-spacing: 1px; }
   .sa.danger { color: var(--alert); } .sa.danger .saic svg { stroke: var(--alert); }
 
-  /* ── §1.6 lifecycle (caption-only nod this pass) ── */
+  /* ── §1.6 lifecycle — Skeleton · Signal-Lost · Offline (sibling grammar, now drawn) ── */
   .offline-strip { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; margin: 10px 0 2px; padding: 7px 11px;
     background: var(--scr-panel); border: 1px solid var(--scr-hairline); font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .offline-strip svg { width: 13px; height: 13px; flex: 0 0 auto; fill: none; stroke: var(--scr-dim); stroke-width: 2; }
+  .offline-strip .sync { margin-left: auto; font-weight: 600; letter-spacing: .5px; color: var(--scr-grip); }
   .gated { opacity: .4; }
+  .err-wrap { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 9px; padding: 46px 18px 0; }
+  .err-card { position: relative; width: 92px; height: 92px; background: var(--scr-panel); margin-bottom: 6px; }
+  .err-card::before { content: ""; position: absolute; inset: 6px; border: 2px dashed var(--scr-grip); opacity: .8; }
+  .err-card .bang { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 700 21px/1 var(--pk); color: var(--scr-accent); }
+  .err-eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .err-title { font: 700 15px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
+  .err-sub { font: 500 11px/1.55 var(--pk); color: var(--scr-soft); max-width: 252px; }
+  .sk-bar { height: 10px; background: var(--scr-panel); }
+  .sk-block { background: var(--scr-panel); flex: 0 0 auto; }
+  .skrow { display: flex; gap: 11px; align-items: center; padding: 12px 4px; border-bottom: 1px solid var(--scr-hairline); }
+  .skrow .skm { flex: 1 1 auto; display: flex; flex-direction: column; gap: 6px; }
 </style>
 </head>
 <body>
@@ -256,18 +270,18 @@
 
 <div class="canvas">
   <div class="canvas-head">
-    <h1>Friends &mdash; Draft A <span style="color:var(--accent);">"Feed-first"</span> (the social-stream pole)</h1>
-    <p><b>Direction A of 3</b> for the &sect;3.3 owner gate. <b>Thesis:</b> the <b>SOC-06 aggregated activity feed
+    <h1>Friends &mdash; <span style="color:var(--accent);">&sect;3.3</span> converged states board <span style="color:var(--accent);">("Feed-first")</span></h1>
+    <p><b>Converged from Draft A</b> (owner ruling 2026-06-22 &mdash; A "Feed-first" won; B "Roster-first" / C
+    "Connect-first" retired to history). <b>Thesis:</b> the <b>SOC-06 aggregated activity feed
     IS the landing</b> &mdash; one continuous, deliberately low-noise scroll. Everything else is a <b>peek or a
     jump-off</b>: roster = a slim top <b>friends rail</b> (&rarr; ALL FRIENDS); find/add <i>and</i> requests share one
-    <b>persistent header key</b> (&rarr; the ADD&nbsp;FRIENDS hub, 4.8), with the requests <b>banner</b> a pending
-    fast-path. <b>No sub-tabs</b> &mdash; minimal chrome,
-    the stream leads. The IA's stated default.</p>
+    <b>persistent header key</b> (&rarr; the ADD&nbsp;FRIENDS hub = <b>4.8</b>, now a built states board), with the
+    requests <b>banner</b> a pending fast-path. <b>No sub-tabs</b> &mdash; minimal chrome, the stream leads.</p>
     <p>Renders in-frame (DeviceShell + NavBand persist, <b>FRIENDS</b> keycap active = pressed + pink PipLight). Flat
-    Inset-Recess keycaps (owner pick 2026-06-17); on-screen markers orange, never the pink shell pip. <b>No gold</b>
-    (non-commerce); <b>no friend SHARE</b> (OQ-052 cut). Scope = the <b>tab</b> (feed + roster + requests + jump-offs);
-    Compare 4.6 / Find-Add 4.8 are entry points. <i>Cast: Maverick=self · Riko/Vanta/Kai/Nova/Sable=friends;
-    hours/counts illustrative (OQ-002/011). <b>Presence (online/offline) + mutual-friend counts CUT per owner (2026-06-18)</b> &mdash; the roster reads hours + collection size; requests show when they arrived. Feed shape &rarr; OQ-071.</i></p>
+    <b>Scanline-Energize</b> keycaps (F-03 locked 2026-06-18); on-screen markers orange, never the pink shell pip. <b>No gold</b>
+    (non-commerce); <b>no friend SHARE</b> (OQ-052 cut). Scope = the <b>tab</b> (feed + roster + requests + actions + jump-offs);
+    <b>Compare 4.6 / Find-Add 4.8</b> are entry points. <i>Cast: Maverick=self · Riko/Vanta/Kai/Nova/Sable=friends;
+    hours/counts illustrative (OQ-002/011). <b>Presence (online/offline) + mutual-friend counts CUT per owner (2026-06-18)</b> &mdash; the roster reads hours + collection size; requests show when they arrived. Feed shape &rarr; OQ-071 · recommend-compose &rarr; OQ-075.</i></p>
   </div>
 
   <div class="stage-label">P1 &mdash; the landing (the thesis) <small>the feed IS the screen · friends rail (roster peek) · find/add + requests header key (→ ADD FRIENDS hub) · banner = pending fast-path</small></div>
@@ -656,7 +670,7 @@
       <div class="caption">
         <h3>P6 &mdash; a friend&rsquo;s actions <em>(a bottom sheet)</em></h3>
         <p>From the row <b>&#8942;</b>: <b>VIEW PROFILE</b> · <b>COMPARE HOURS</b> (&rarr;4.6, SOC-03) · <b>RECOMMEND A
-        GAME</b> (SOC-05 &rarr; their What-to-Play). <b>MANAGE</b>: <b>UNFRIEND</b> (silent, SOC-08). A divided
+        GAME</b> (SOC-05 &rarr; their What-to-Play; <b>compose surface deferred &rarr; OQ-075</b>). <b>MANAGE</b>: <b>UNFRIEND</b> (silent, SOC-08). A divided
         <b>SAFETY</b> section: <b>REPORT</b> (&rarr;4.16, MOD-01) + <b>BLOCK</b> (SOC-09, silent &mdash; severs the
         friendship + makes you mutually invisible).</p>
         <p><b>No SHARE anywhere</b> &mdash; sharing is self-only (OQ-052 cut). Block&rsquo;s blocked-list is managed in
@@ -666,12 +680,200 @@
 
   </div>
 
+  <div class="stage-label">Lifecycle (&sect;1.6 &middot; now drawn) <small>L1 Skeleton (loading) &middot; L2 &ldquo;Signal Lost&rdquo; + RETRY (load error) &middot; L3 Offline &mdash; feed + roster from cache, writes gated (SYS-10)</small></div>
+  <div class="stage">
+
+    <!-- ═══ L1 · Skeleton ═══ -->
+    <div class="take">
+      <div class="artboard-label">L1 &middot; Loading &mdash; Skeleton (solid fills, never an invite)</div>
+      <div class="device" data-screen-label="Friends · L1 — Skeleton">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen c5">
+            <div class="screen-head"><h2>FRIENDS</h2><div class="head-keys"><span class="head-act" style="background:var(--scr-panel);box-shadow:none;"></span></div></div>
+            <div class="scroll">
+              <div class="sec"><h3>YOUR FRIENDS</h3></div>
+              <div class="prail">
+                <div class="ptile"><div class="sk-block" style="width:38px;height:38px;"></div><div class="sk-bar" style="width:36px;height:8px;margin-top:6px;"></div></div>
+                <div class="ptile"><div class="sk-block" style="width:38px;height:38px;"></div><div class="sk-bar" style="width:36px;height:8px;margin-top:6px;"></div></div>
+                <div class="ptile"><div class="sk-block" style="width:38px;height:38px;"></div><div class="sk-bar" style="width:36px;height:8px;margin-top:6px;"></div></div>
+                <div class="ptile"><div class="sk-block" style="width:38px;height:38px;"></div><div class="sk-bar" style="width:36px;height:8px;margin-top:6px;"></div></div>
+              </div>
+              <div class="sec"><h3>RECENT ACTIVITY</h3></div>
+              <div class="skrow"><div class="sk-block" style="width:38px;height:38px;"></div><div class="skm"><div class="sk-bar" style="width:170px;height:9px;"></div><div class="sk-block" style="width:140px;height:62px;"></div><div class="sk-bar" style="width:56px;height:8px;"></div></div></div>
+              <div class="skrow"><div class="sk-block" style="width:38px;height:38px;"></div><div class="skm"><div class="sk-bar" style="width:150px;height:9px;"></div><div class="sk-block" style="width:44px;height:62px;"></div><div class="sk-bar" style="width:56px;height:8px;"></div></div></div>
+              <div class="hint">SKELETON USES <b>SOLID</b> FILLS (NOT DASHES) &mdash; LOADING NEVER READS AS AN INVITATION (&sect;1.6). HEADER + RAIL STAY PUT SO THE PAGE NEVER REFLOWS.</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>L1 &mdash; Skeleton <em>(loading)</em></h3>
+        <p>The shared <b>Skeleton</b> family (&sect;1.6): <b>solid</b> placeholder fills for the friends rail + the feed
+        rows (incl. the card-peek block) &mdash; never the dashed silhouette (that reads as an invite). Header + rail
+        stay put so nothing reflows when content lands.</p>
+      </div>
+    </div>
+
+    <!-- ═══ L2 · Signal Lost ═══ -->
+    <div class="take">
+      <div class="artboard-label">L2 &middot; Load error &mdash; &ldquo;Signal Lost&rdquo; + RETRY</div>
+      <div class="device" data-screen-label="Friends · L2 — Signal Lost">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen c5">
+            <div class="screen-head"><h2>FRIENDS</h2><div class="head-keys"><button class="head-act" title="Find, add &amp; requests"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6"/><path d="M3.5 19.5a6 6 0 0 1 11 0"/><path d="M18.5 7.5v6M15.5 10.5h6"/></svg></button></div></div>
+            <div class="scroll">
+              <div class="err-wrap">
+                <div class="err-card"><span class="bang">!</span></div>
+                <span class="err-eyebrow">COULDN&rsquo;T REACH FRIENDS</span>
+                <span class="err-title">SIGNAL LOST</span>
+                <span class="err-sub">Your feed and friends list didn&rsquo;t load. Check your connection and try again.</span>
+                <button class="btn" style="margin-top:6px;">&#8635; RETRY</button>
+              </div>
+              <div class="hint">RETRYABLE FAILURE &mdash; THE ORANGE <b>RETRY</b> (KeycapButton) &middot; THE DASHED SILHOUETTE MARKS THE &sect;1.6 ERROR KIN.</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>L2 &mdash; Signal Lost <em>(load error)</em></h3>
+        <p>The retryable error from the &sect;1.6 family &mdash; the dashed silhouette + an accent <b>!</b> + the orange
+        <b>RETRY</b>. Clear first, arcade-flavoured second (&sect;1.1). Same grammar as the sibling boards.</p>
+      </div>
+    </div>
+
+    <!-- ═══ L3 · Offline ═══ -->
+    <div class="take">
+      <div class="artboard-label">L3 &middot; Offline &mdash; feed + roster from cache, writes gated (SYS-10)</div>
+      <div class="device" data-screen-label="Friends · L3 — Offline">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen c5">
+            <div class="screen-head"><h2>FRIENDS</h2><div class="head-keys"><button class="head-act" title="Find, add &amp; requests"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6"/><path d="M3.5 19.5a6 6 0 0 1 11 0"/><path d="M18.5 7.5v6M15.5 10.5h6"/></svg><span class="ntag">2</span></button></div></div>
+            <div class="scroll">
+              <div class="offline-strip" style="margin-top:2px;"><svg viewBox="0 0 24 24"><path d="M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M12 19.5h.01M3 3l18 18" stroke-linecap="round"/></svg>OFFLINE &mdash; LAST SYNCED<span class="sync">2M AGO</span></div>
+              <div class="reqbanner">
+                <div class="rb-stack"><div class="av sm" style="background:#c8413a;color:#fff;">NO</div><div class="av sm" style="background:#b08a4a;color:#2a1408;">SA</div></div>
+                <div class="rb-tx"><div class="rb-t">2 FRIEND REQUESTS</div><div class="rb-s">RECONNECT TO RESPOND</div></div>
+                <span class="rb-go">&rsaquo;</span>
+              </div>
+              <div class="sec"><h3>YOUR FRIENDS</h3><a href="#">ALL 14 &rsaquo;</a></div>
+              <div class="prail">
+                <div class="ptile"><div class="av" style="background:#6c4fd8;color:#fff;">RI</div><span class="pname">@riko</span></div>
+                <div class="ptile"><div class="av" style="background:#3a3a42;color:#f5f1e4;">VA</div><span class="pname">@vanta</span></div>
+                <div class="ptile"><div class="av" style="background:#2a8a7a;color:#04211c;">KA</div><span class="pname">@kai</span></div>
+                <div class="ptile allf"><div class="allbox">&rsaquo;</div><span class="pname">ALL 14</span></div>
+              </div>
+              <div class="sec"><h3>RECENT ACTIVITY</h3><span class="tert dim">FROM CACHE</span></div>
+              <div class="feedrow">
+                <div class="av" style="background:#3a3a42;color:#f5f1e4;">VA</div>
+                <div class="fbody"><div class="fline"><b>Vanta</b> beat <b>Hollow Knight</b></div>
+                  <div class="fpeek"><div class="gcard thumb fr-hollow"><div class="art"><svg><use href="#art-hollow"/></svg></div><div class="plate pl-hollow">Hollow Knight</div></div></div>
+                  <div class="ftime">5H AGO</div></div>
+              </div>
+              <div class="hint"><b>SYS-10.</b> Offline is a <b>calm</b> state, not an alarm &mdash; the feed + roster read <b>from cache</b>; the <b>writes are gated</b> (accept/decline/cancel/recommend/block dim until you reconnect). Auto-recovers.</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>L3 &mdash; Offline <em>(writes gated · SYS-10)</em></h3>
+        <p>Last-synced feed + roster stay <b>browseable from cache</b> under a calm OFFLINE strip; the <b>writes are
+        gated</b> &mdash; respond-to-request, recommend, unfriend and block dim until you reconnect. Same SYS-10 grammar
+        as the sibling boards.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="stage-label">Quiet &amp; empty <small>Q1 the quiet feed (has friends, thin window) &mdash; a short digest + a gentle nudge; no pending = no banner (SOC-06)</small></div>
+  <div class="stage">
+
+    <!-- ═══ Q1 · quiet feed / empty requests ═══ -->
+    <div class="take">
+      <div class="artboard-label">Q1 &middot; Quiet feed (thin window) &middot; no pending requests</div>
+      <div class="device" data-screen-label="Friends · Q1 — quiet feed">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen c5">
+            <div class="screen-head"><h2>FRIENDS</h2><div class="head-keys"><button class="head-act" title="Find, add &amp; requests"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6"/><path d="M3.5 19.5a6 6 0 0 1 11 0"/><path d="M18.5 7.5v6M15.5 10.5h6"/></svg></button></div></div>
+            <div class="scroll">
+              <div class="sec"><h3>YOUR FRIENDS</h3><a href="#">ALL 14 &rsaquo;</a></div>
+              <div class="prail">
+                <div class="ptile"><div class="av" style="background:#6c4fd8;color:#fff;">RI</div><span class="pname">@riko</span></div>
+                <div class="ptile"><div class="av" style="background:#3a3a42;color:#f5f1e4;">VA</div><span class="pname">@vanta</span></div>
+                <div class="ptile"><div class="av" style="background:#2a8a7a;color:#04211c;">KA</div><span class="pname">@kai</span></div>
+                <div class="ptile allf"><div class="allbox">&rsaquo;</div><span class="pname">ALL 14</span></div>
+              </div>
+              <div class="sec"><h3>RECENT ACTIVITY</h3><span class="tert dim">QUIET</span></div>
+              <div class="feedrow">
+                <div class="av" style="background:#6c4fd8;color:#fff;">RI</div>
+                <div class="fbody"><div class="fline"><b>Riko</b> beat <b>Hades</b></div>
+                  <div class="fpeek"><div class="gcard thumb fr-hades"><div class="art"><svg><use href="#art-hades"/></svg></div><div class="plate pl-hades">Hades</div></div></div>
+                  <div class="ftime">3D AGO</div></div>
+              </div>
+              <div class="invite" style="padding:18px 18px 6px;">
+                <div class="inv-eyebrow">IT&rsquo;S QUIET IN HERE</div>
+                <div class="inv-sub">Your circle hasn&rsquo;t been busy lately. Add a few more people and the feed wakes up.</div>
+                <div class="ih-row" style="width:100%;margin-top:10px;"><button class="btn secondary" style="flex:1 1 0;">FIND FRIENDS &rsaquo;</button></div>
+              </div>
+              <div class="hint"><b>SOC-06.</b> The <b>quiet variant</b> &mdash; a thin window collapses to a short digest + a gentle nudge (never a dead scroll). With <b>nothing pending</b> there&rsquo;s <b>no requests banner</b> (the empty-requests state) &mdash; the full inbox lives in 4.8.</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Q1 &mdash; quiet feed <em>(thin window + empty requests)</em></h3>
+        <p>The §3.3 <b>quiet vs active</b> state: friends exist but the window is thin, so the feed collapses to a short
+        digest + an <b>InviteHook</b> nudge (&rarr; 4.8) rather than a dead scroll. Nothing pending &rArr; no banner
+        (the <b>empty-requests</b> state). Draft A only described this; now it&rsquo;s drawn.</p>
+      </div>
+    </div>
+
+  </div>
+
   <div class="caption" style="max-width:1100px;margin:34px auto 0;">
-    <h3>Deferred to converge <em>(reuse the sibling boards&rsquo; &sect;1.6 lifecycle grammar)</em></h3>
-    <p><b>Skeleton</b> (solid quiet fills) · <b>&ldquo;Signal Lost&rdquo; + RETRY</b> (the feed/roster failed to load) ·
-    <b>Offline</b> (SYS-10 &mdash; feed + roster read from cache; <b>writes gated</b>: accept/decline/cancel/recommend/
-    block dim with a &ldquo;reconnect to act&rdquo; note) · reduce-motion. Not drawn this pass &mdash; they land at
-    converge once the owner picks a direction.</p>
+    <h3>Converged <em>(Draft A &rarr; the &sect;3.3 states board)</em></h3>
+    <p><b>P1&ndash;P6</b> (feed landing &middot; active feed &middot; roster &middot; ADD&nbsp;FRIENDS hub &middot;
+    cold-start &middot; actions sheet) carried from Draft A; <b>flat buttons rippled to Scanline Energize</b> (F-03,
+    locked 2026-06-18) and the on-screen type held to <b>F-06</b> (21/15/11/9). <b>Lifecycle now drawn</b> (L1 Skeleton
+    &middot; L2 Signal-Lost+RETRY &middot; L3 Offline writes-gated) + the <b>quiet/empty</b> state (Q1). The full
+    find/add + requests inbox lives in <b>4.8</b> (the header key + banner jump there). <b>Deferred:</b> the SOC-05
+    <b>recommend-compose</b> surface (entry-only in the actions sheet) &rarr; <b>OQ-075</b>; feed item shape &rarr;
+    OQ-071. No gold, no friend SHARE (OQ-052), no contacts-matching.</p>
   </div>
 
 </div>

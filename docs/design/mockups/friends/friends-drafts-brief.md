@@ -165,4 +165,12 @@ lifecycle).
 
 ---
 
-## Owner gate ruling — (pending)
+## Owner gate ruling — A "Feed-first" WON (2026-06-22/23)
+Owner chose **A "Feed-first"** as-drawn (post the 2026-06-18 presence/mutual-count cuts); **B "Roster-first"
+/ C "Connect-first" retired to history**. Converged → **[`friends-states.html`](friends-states.html)**: P1–P6
+carried; **lifecycle drawn** (L1 Skeleton · L2 Signal-Lost+RETRY · L3 Offline writes-gated) + **Q1
+quiet-feed/empty-requests**; **flat buttons rippled to Scanline Energize** (F-03; the draft predated the
+sweep); F-06 clean. Find/add + full requests inbox = **4.8** (the header key + banner jump there). **SOC-05
+recommend-compose** surface deferred → **OQ-075**. Burt PASS (1 owner-ratification: `.achv` gold-as-achievement
+glyph). Design-spec §1.5 formalization + API page-audit (OQ-071/075) owed to the spec-owner. (No iteration
+notes given — converged A as-drawn.)
