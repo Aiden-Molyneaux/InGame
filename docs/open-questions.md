@@ -123,16 +123,6 @@
   (`activeShellId`·`screenThemeId`·`stickerComposition`) only ever references **owned** items — previews are
   client-side until acquired; (e) any **cap** on simultaneous previews. Pairs with OQ-062/064.
   (Device editor premium try-on, 2026-06-15) [behavior]
-- OQ-074: **`GET /me/compare/:friendId` response shape (the Compare Hours 4.6 contract gap).** The endpoint
-  (api-contract ~line 119) names *"per-game + total hours, total-games comparison + leaderboard slice
-  (SOC-03)"* but **enumerates no payload** — yet Compare is the marquee social return-driver, drawn three
-  ways this pass. Propose the **totals** `{ yourHours, theirHours, yourGames, theirGames, leader ∈ you ·
-  them · tie }`; the **per-game pair** (games you BOTH own — the collection intersection) `{ gameId, title,
-  cardRef, yourHours, theirHours, leader }`; and the **leaderboard slice** (friend cohort, your row flagged)
-  `{ rank, user: { userId, username, avatarRef }, hours, games, isMe }`, sortable by `hours` or `games`.
-  **Privacy-gated (PROF-03):** a friend who hides hours/games drops that axis — fields **omitted, not
-  zeroed** (the screen degrades, never leaks); **read-only / non-commerce** (no adopt on this surface,
-  ECON-01). For the API page-audit at converge. (Compare Hours 4.6 track, 2026-06-22) [behavior]
 - OQ-075: **SOC-05 recommend-a-game COMPOSE surface is undrawn (the homeless Friends-domain piece).** The
   friend actions sheet (Friends tab P6 + the Game page) offers a **RECOMMEND A GAME** entry, but the actual
   compose UI — **pick a game (your collection / catalog) + write a short note** → drops into the recipient's
@@ -146,10 +136,6 @@
   `StickerTray` · `SavedLook`/`LooksGrid`) + an **API page-audit** (`stickerComposition` shape · plastic-only
   zones · saved-looks model). Captured here so the obligation is durable, not SCREEN-STATUS prose only; the
   underlying behaviour gaps are **OQ-062/063/064/065**. (Governance go-green capture, 2026-06-24) [debt]
-- OQ-077: **Compare Hours (4.6) convergence + formalization is owed.** Converge the owner-picked Draft B →
-  `compare-states.html`, then **design-spec formalization** + an **API page-audit** (the
-  `/me/compare/:friendId` payload shape is **OQ-074**). Captured here so the obligation is durable, not
-  SCREEN-STATUS prose only. (Governance go-green capture, 2026-06-24) [debt]
 - OQ-078: **No left-edge accent rails — F-09 highlight-model clarification + ripple.** Owner ruling
   (2026-06-24): the one-sided **left-edge accent rail** (a `border-left: 3px solid var(--scr-accent)`
   stripe on a row / callout / toast) is **not** the highlight idiom — a highlighted row uses a flat
@@ -175,6 +161,19 @@
   `{ token, sender, relationship, prefilledRequest: { toUserId } }`; resolves through the sender's Profile,
   no-app → store; the **QR image is rendered client-side from the `POST /me/invites` token**. design-spec
   §2.11 · api 0.23. (Find/Add 4.8 converge, 2026-06-23)
+- OQ-074 → **`GET /me/compare/:friendId` payload shape enumerated** (api-contract 0.25): `{ friend, totals
+  { yourHours, theirHours, yourGames, theirGames, leader }, games[{ gameId, title, yourCard, theirCard,
+  yourHours, theirHours, leader }] (the **shared** intersection — the two cards back the card-vs-card
+  matchup, CARD-07/22), leaderboard[{ rank, user, hours, games, isMe }] }`; **PROF-03-gated** — a hidden
+  axis is **omitted** (hours hidden → `theirHours`/hours-`totals`/`leaderboard` dropped, games still
+  compare; collection hidden → `games`/`theirGames` dropped), block → unavailable (SOC-09); read-only,
+  non-commerce, completion % out. design-spec §2.12 · api 0.25. (Compare Hours 4.6 converge, 2026-06-24)
+- OQ-077 → **Compare Hours (4.6) converged + formalized** (design-spec 0.26 · api 0.25): the canonical
+  `compare-states.html` (P1 has-overlap · P2 no-shared-games · P3 leaderboard · P4 Skeleton · P5
+  privacy-limited · L1 Signal-Lost · L2 Offline); §1.5 **Compare set** (`CompareHeader`/`CompareTotals`/
+  `ComparePair`/`CompareRow`/`FriendsLeaderboard`/`LeaderRow`) + §2.12 composition; the payload shape is
+  **OQ-074**. Owner picked **B "Versus / head-to-head"**, A/C retired. design-spec §2.12 · api 0.25.
+  (Compare Hours 4.6 converge, 2026-06-24)
 - OQ-058 → **Personal *game* rating KEPT, private-only; NO card rating, ever.** The collection entry's
   per-game ⭐ (the api `rating?` on `PATCH /me/collection/:entryId`) is a **private personal field** —
   never shown to others, never aggregated (like notes COL-05); no api change. **No card rating anywhere**
@@ -200,7 +199,10 @@
 - OQ-059 → **Card flip stays Game-page-only — no Collection peek-flip.** The face→back flip (stats +
   provenance, CARD-01) remains a Game-page (§4.2) deep-inspect; Collection scans stats via dense-list +
   the stats-eyebrow (OQ-033), per §3.1's "without flipping a single card." No board/spec change
-  (decision 0025). (2026-06-18)
+  (decision 0025). (2026-06-18) — **SUPERSEDED 2026-06-24 → decision 0026 / COL-12:** the owner
+  reversed this on **experiential grounds** (a collectible card has a back you turn over); the
+  Collection **now gains** the peek-flip (shelf+grid · tap-to-flip · VIEW GAME → 4.2 · long-press
+  shortcut · friend-view privacy-gated). See product-spec COL-12 + design-spec §2.1 + api 0.24.
 - OQ-068 → **Discover queue-add is NOT gold** — + ADD FROM COLLECTION creates no card, so it reads
   cream/orange per F-02 (gold = card-creating only); the true card-creating ADDs stay gold. **Board
   recolor OWED** — `discover-states.html` still renders `.btn.add` gold; deferred (the board had
