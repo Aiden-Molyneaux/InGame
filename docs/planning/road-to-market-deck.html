@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>InGame — The Road to Market</title>
+<style>
+  :root{
+    --bg:#0f1117; --panel:#171a22; --panel2:#1e222d; --ink:#e8eaf0; --dim:#9aa3b2;
+    --line:#2a2f3c; --accent:#6ad1c9; --gold:#e8b341; --orange:#ff7a45; --good:#5fcf80;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);overflow:hidden}
+  #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:3.2rem 3.4rem 4.4rem}
+  .slide{display:none;width:100%;max-width:1080px;animation:fade .25s ease}
+  .slide.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h1{font-size:2.7rem;line-height:1.1;margin:.2rem 0 .6rem}
+  h2{font-size:1.9rem;line-height:1.15;margin:.1rem 0 1rem}
+  h2 .num{color:var(--accent);font-family:var(--mono);font-size:1.1rem;display:block;letter-spacing:.04em;margin-bottom:.35rem}
+  p{font-size:1.08rem;line-height:1.5;color:var(--ink)}
+  .lead{font-size:1.25rem;color:var(--dim);line-height:1.5;max-width:46ch}
+  .dim{color:var(--dim)}
+  .chip{display:inline-block;font-family:var(--mono);font-size:.78rem;letter-spacing:.06em;
+    padding:.22rem .55rem;border:1px solid var(--line);border-radius:999px;color:var(--dim);text-transform:uppercase}
+  .chip.gate{color:var(--gold);border-color:#5a4a1f}
+  .chip.star{color:var(--orange);border-color:#5a3320}
+  ul{margin:.4rem 0;padding-left:1.2rem}
+  li{font-size:1.05rem;line-height:1.5;margin:.28rem 0}
+  li b{color:#fff}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1rem 1.15rem}
+  .card h3{margin:.1rem 0 .5rem;font-size:1.05rem}
+  .card.accent{border-color:#2f5a56}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:.35rem .8rem;font-size:1rem}
+  .kv dt{color:var(--accent);font-family:var(--mono);font-size:.82rem;padding-top:.15rem}
+  .kv dd{margin:0}
+  table{width:100%;border-collapse:collapse;font-size:.96rem}
+  th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--dim);font-weight:600;font-size:.82rem;text-transform:uppercase;letter-spacing:.04em}
+  td b{color:#fff}
+  .map{font-family:var(--mono);font-size:clamp(.6rem,1.35vw,.88rem);line-height:1.55;white-space:pre;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.2rem;
+    overflow-x:auto;color:var(--ink)}
+  .map .g{color:var(--gold)} .map .o{color:var(--orange)} .map .a{color:var(--accent)} .map .d{color:var(--dim)}
+  .flow{display:flex;align-items:stretch;gap:.5rem;flex-wrap:wrap;margin:.6rem 0}
+  .step{flex:1 1 0;min-width:120px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:.7rem .75rem}
+  .step .id{font-family:var(--mono);color:var(--accent);font-size:.82rem}
+  .step .t{font-size:.95rem;margin-top:.15rem}
+  .step.beta{border-color:#5a3320} .step.v1{border-color:#5a4a1f}
+  .tagline{margin-top:.5rem;color:var(--dim);font-size:.95rem}
+  .pill{display:inline-block;font-size:.82rem;padding:.15rem .5rem;border-radius:6px;margin:.1rem .2rem .1rem 0}
+  .pill.auto{background:#16302c;color:var(--good)} .pill.agent{background:#1b2a3a;color:#7fb8e6}
+  .pill.owner{background:#332617;color:var(--gold)}
+  footer{position:fixed;left:0;right:0;bottom:0;height:3.2rem;display:flex;align-items:center;
+    justify-content:space-between;padding:0 1.4rem;border-top:1px solid var(--line);background:var(--panel)}
+  .nav{display:flex;gap:.5rem}
+  button{font-family:var(--sans);font-size:.95rem;color:var(--ink);background:var(--panel2);
+    border:1px solid var(--line);border-radius:8px;padding:.4rem .9rem;cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button:disabled{opacity:.35;cursor:default}
+  .counter{font-family:var(--mono);font-size:.9rem;color:var(--dim)}
+  .brand{font-family:var(--mono);font-size:.85rem;color:var(--accent);letter-spacing:.08em}
+  .progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);width:0;transition:width .25s}
+  .hint{position:fixed;bottom:3.5rem;right:1.4rem;font-size:.78rem;color:var(--dim);opacity:.7}
+  .two-col-list{columns:2;column-gap:2rem}
+  .small{font-size:.92rem}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div id="stage">
+
+  <!-- 1 — TITLE -->
+  <section class="slide active">
+    <div class="brand">INGAME · BUILD PLAN</div>
+    <h1>The Road to Market</h1>
+    <p class="lead">A mobile-first retro-arcade <b>trophy case</b> for the games you play — build,
+      customize, and share a personal collection.</p>
+    <div class="grid3" style="margin-top:1.6rem">
+      <div class="card"><h3>Where we are</h3><p class="small dim">Docs-only, design phase, ~2 weeks in. <b>No app code yet.</b></p></div>
+      <div class="card"><h3>What this is</h3><p class="small dim">The whole road from here to a market-ready app — for a <b>hands-off solo owner</b>.</p></div>
+      <div class="card accent"><h3>The bet</h3><p class="small dim">Agents + CI do the volume. You review at <b>7 well-chosen gates</b>.</p></div>
+    </div>
+    <p class="tagline">A view of <span class="brand">docs/planning/road-to-market.md</span> — same content, nothing new.</p>
+  </section>
+
+  <!-- 2 — THE FOUR ANSWERS -->
+  <section class="slide">
+    <h2><span class="num">§0 · INPUTS</span>Four answers re-size everything (defaults assumed)</h2>
+    <table>
+      <tr><th>Question</th><th>Working default — correct me</th></tr>
+      <tr><td><b>Recurring $ ceiling</b> + AI-token tolerance</td><td>~<b>$30–50/mo</b> build phase (+$99/yr Apple, $25 Google); free tiers first. Tokens heaviest M4–M7.</td></tr>
+      <tr><td><b>Hours/week</b> + launch window</td><td>~<b>12 hr/wk</b>, no hard date. Binding constraint = <b>review throughput at gates</b>, not code volume.</td></tr>
+      <tr><td><b>Feature-audit</b> outcome</td><td><b>RULED: full v1.0 scope</b> (decision 0027) — build the complete feature set; "defer" = build-order, de-risk via staged release.</td></tr>
+      <tr><td><b>Plan placement</b> + how hands-off</td><td><span class="brand">docs/planning/</span> · this file pair. Owner acts only at the gates. <b>Not committed — confirm names.</b></td></tr>
+    </table>
+    <p class="tagline">Plus one assumed: build both platforms from one Expo codebase, <b>iOS first</b> (Apple lead time is the critical path).</p>
+  </section>
+
+  <!-- 3 — THE MAP -->
+  <section class="slide">
+    <h2><span class="num">§1 · THE MAP</span>The whole road, on one screen</h2>
+<div class="map"> DESIGN  <span class="g">┌─ M0  Design close-out + FEATURE AUDIT  ◀ owner gate</span>
+ ────────┼──────────────────────────────────────────────────
+ BUILD   │  M1 Tooling ─▶ M2 Foundation ─▶ M3 Catalog+Coll
+         │   (the gate)    (auth + slice)   <span class="a">(core usable)</span>
+         │    ╲
+         │     ╲ <span class="d">M1-P  Provisioning (OWNER · parallel · long-lead)</span>
+         │
+         │  M4 Customization ─▶ M5 Economy+IAP ─▶ M6 ─▶ M7 ─▶ M8
+         │   <span class="o">("TROPHY CASE"</span>            Soc. Eng. <span class="o">Launch</span>
+         │    <span class="o">◆ closed beta)</span>                <span class="o">(full v1.0)</span>
+ ────────┴──────────────────────────────────────────────────
+  Spine: enforced merge gate — green CI + review + scans.
+  Owner sign-off: migrations · auth/SYS-01 · economy/IAP.</div>
+    <p class="tagline">v1.0 = the full feature set (M1→M7), built in order. Release in <b>stages</b>, not all at once (next slide).</p>
+  </section>
+
+  <!-- 4 — CUT LINES -->
+  <section class="slide">
+    <h2><span class="num">§2 · SCOPE</span>Full v1.0, staged release</h2>
+    <p class="small dim" style="margin:.2rem 0 .8rem">v1.0 is the <b>complete product</b> (M1→M7). "Defer" = build-order, not cut. De-risk via <b>how you release</b>, not how much you build.</p>
+    <table>
+      <tr><th>Stage</th><th>When</th><th>What testers get</th></tr>
+      <tr><td><b>On-device build</b></td><td>end of <b>M2</b></td><td>styled shell + profile on a real iPhone — kills "invisible for months" early</td></tr>
+      <tr><td><b>Closed beta</b> <span class="chip star">◆</span></td><td>~end of <b>M4</b></td><td>the trophy case — collection + full customization (morale + validation)</td></tr>
+      <tr><td><b>Public launch</b></td><td>after <b>M7</b> → M8</td><td>the complete v1.0 — launch when it's all in</td></tr>
+    </table>
+    <p class="tagline">Nothing cut for launch (only §10-parked stays out). Tradeoff = time-to-public; the staged releases are the mitigation. (decision 0027)</p>
+  </section>
+
+  <!-- 5 — TIMELINE / TANGIBLE WIN -->
+  <section class="slide">
+    <h2><span class="num">§4 · TIMELINE</span>The sequence — with the early tangible win marked</h2>
+    <div class="flow">
+      <div class="step"><div class="id">M0</div><div class="t">Design + audit</div></div>
+      <div class="step"><div class="id">M1</div><div class="t">Tooling gate</div></div>
+      <div class="step"><div class="id">M2 ★</div><div class="t">Foundation — <b>styled shelf on your phone</b></div></div>
+      <div class="step"><div class="id">M3</div><div class="t">Catalog + Collection</div></div>
+      <div class="step beta"><div class="id">M4 ◆</div><div class="t">Customization — <b>trophy case · closed beta</b></div></div>
+      <div class="step"><div class="id">M5</div><div class="t">Economy + IAP</div></div>
+      <div class="step"><div class="id">M6–M7</div><div class="t">Social · Engagement</div></div>
+      <div class="step v1"><div class="id">M8 ★</div><div class="t">Public launch — <b>full v1.0</b></div></div>
+    </div>
+    <div class="card accent" style="margin-top:1rem">
+      <h3>Anti-abandonment: pull the visual win forward</h3>
+      <p class="small">M2's vertical slice renders the seeded, <b>styled Collection shelf</b> (the HTML mockups already exist) so Foundation ends with something that <b>looks like InGame</b> on your device — not a login form. No stretch runs &gt;~2 weeks dark; the full aesthetic payoff lands at <b>M4</b>.</p>
+    </div>
+    <p class="tagline">Effort buckets (agent-accelerated): M4 (render pipeline) and M5 (real money) are the two genuinely hard milestones.</p>
+  </section>
+
+  <!-- 6 — M0 -->
+  <section class="slide">
+    <h2><span class="num">MILESTONE · M0</span>Design close-out + feature audit <span class="chip gate">owner gate</span></h2>
+    <dl class="kv">
+      <dt>Goal</dt><dd>Finish design — but cut scope <b>before</b> code exists.</dd>
+      <dt>Entry</dt><dd>Now.</dd>
+      <dt>Exit</dt><dd><b>Audit ruling first</b> (keep/cut/defer → a <span class="brand">decisions/</span> record); then design only the <b>surviving</b> not-started screens to converged + clear formalization debts. <span class="brand">SCREEN-STATUS.md</span> all ✅ or consciously deferred.</dd>
+      <dt>Verifier</dt><dd><span class="pill owner">owner</span> <span class="pill agent">agent: Burt DS audit · doc-fidelity</span></dd>
+      <dt>Gates</dt><dd>4.4 Admin/Mod · 4.7 Lists/Top-5 · 4.9 Contributor · 4.10 Achievements · 4.13 Welcome&amp;Auth · 4.14 Onboarding · 4.6 Compare Hours</dd>
+    </dl>
+    <p class="tagline">Audit <b>first</b>, then design the survivors — designing screens the audit would cut is the wasted-work risk.</p>
+  </section>
+
+  <!-- 7 — M1 + M1-P -->
+  <section class="slide">
+    <h2><span class="num">MILESTONE · M1 + M1-P</span>Tooling gate · Provisioning (parallel)</h2>
+    <div class="grid2">
+      <div class="card">
+        <h3>M1 — Tooling gate <span class="chip">small gate</span></h3>
+        <p class="small">Monorepo scaffold · Expo <b>Chrome+iPhone</b> loop · seed/mock layer · test harness + CI green (typecheck→lint→unit→integration/Testcontainers) · strict TS · <b>lockfile + SCA + secret-scan in CI</b>.</p>
+        <p class="small"><span class="pill auto">auto: CI green on hello-world</span> <span class="pill owner">owner: loop runs on your iPhone</span></p>
+        <p class="small dim">Delivers SYS-06 · SYS-03</p>
+      </div>
+      <div class="card">
+        <h3>M1-P — Provisioning <span class="chip gate">owner gate</span></h3>
+        <p class="small"><b>Starts WITH M1</b>, runs hidden under the build:</p>
+        <ul class="small">
+          <li>Apple Dev + Google Play enrollment <span class="dim">(weeks — identity check)</span></li>
+          <li>Bundle IDs + signing</li>
+          <li>RevenueCat acct + store products</li>
+          <li>APNs / FCM push creds</li>
+        </ul>
+        <p class="small dim">Unblocks IAP (M5) · push (M7) · ship (M8)</p>
+      </div>
+    </div>
+    <p class="tagline">Architecture (§3) is settled as a decisions/ record — M1's entry, not discovered mid-build.</p>
+  </section>
+
+  <!-- 8 — M2 -->
+  <section class="slide">
+    <h2><span class="num">MILESTONE · M2</span>Foundation + the first vertical slice <span class="chip gate">owner gate</span></h2>
+    <dl class="kv">
+      <dt>Goal</dt><dd>Prove the stack end-to-end and lay the cross-cutting law.</dd>
+      <dt>Entry</dt><dd>M1 green.</dd>
+      <dt>Exit</dt><dd>auth (refresh rotation + SIWA) · users/profile · migrations · <b>SYS-01 scoping w/ standing SYS-07 authz tests</b> · tab-nav shell · ACH-08 events. <b>Slice:</b> sign in → your profile → tested → green in CI → <b>on a physical iPhone, in the InGame aesthetic</b>.</dd>
+      <dt>Verifier</dt><dd><span class="pill auto">auto</span> <span class="pill agent">agent</span> <span class="pill owner">owner: authz seam + device smoke</span></dd>
+      <dt>Delivers</dt><dd class="brand">AUTH-* · PROF-01.. · SYS-01/02/06/07 · ACH-08</dd>
+    </dl>
+    <p class="tagline">Why the gate: the prototype's cross-user vuln lived in this seam — eyeball it once, here.</p>
+  </section>
+
+  <!-- 9 — M3 -->
+  <section class="slide">
+    <h2><span class="num">MILESTONE · M3</span>Catalog + Collection — "core usable" <span class="chip star">★</span></h2>
+    <dl class="kv">
+      <dt>Goal</dt><dd>You can build a <b>real collection on your phone</b>.</dd>
+      <dt>Entry</dt><dd>M2.</dd>
+      <dt>Exit</dt><dd>create / search / <b>dedup</b> catalog (CAT-03 test-first) · collection CRUD · status / hours / stats.</dd>
+      <dt>Verifier</dt><dd><span class="pill auto">auto</span> <span class="pill agent">agent</span> <span class="pill owner">owner: device feel</span></dd>
+      <dt>Delivers</dt><dd class="brand">CAT-* · COL-*</dd>
+    </dl>
+    <p class="tagline">First milestone where the app does the real job. No owner gate — agent + CI carry it.</p>
+  </section>
+
+  <!-- 10 — M4 -->
+  <section class="slide">
+    <h2><span class="num">MILESTONE · M4</span>Customization — the trophy case <span class="chip gate">owner gate</span> <span class="chip star">◆ closed beta</span></h2>
+    <dl class="kv">
+      <dt>Goal</dt><dd>The visually satisfying payoff — the product's soul.</dd>
+      <dt>Entry</dt><dd>M3.</dd>
+      <dt>Exit</dt><dd>Card editor (Styler+Canvas) + Device editor (free assets) · <b>composition→flatten render</b> (CARD-15) · effects/finishes.</dd>
+      <dt>Build-order</dt><dd>CARD-15 pipeline <b>before</b> the editor depth tails (CARD-09/10/11); CARD-16 non-gesture path is a launch gate.</dd>
+      <dt>Verifier</dt><dd><span class="pill auto">auto</span> <span class="pill agent">agent</span> <span class="pill owner">owner: aesthetic / "does it feel right"</span></dd>
+      <dt>Delivers</dt><dd class="brand">CARD-* · DEV-* · COSM-* (free)</dd>
+    </dl>
+    <p class="tagline">The render pipeline (react-native-skia) is the single hardest piece — prototype it early. <b>◆ Ship the closed beta here.</b></p>
+  </section>
+
+  <!-- 11 — M5 -->
+  <section class="slide">
+    <h2><span class="num">MILESTONE · M5</span>Community &amp; Economy — IAP <span class="chip gate">owner gate</span></h2>
+    <dl class="kv">
+      <dt>Goal</dt><dd>The cosmetic economy — real money, the highest-risk surface.</dd>
+      <dt>Entry</dt><dd>M4 <b>+ M1-P provisioning done</b>.</dd>
+      <dt>Exit</dt><dd>publish/adopt cards · wallet + ledger · store + <b>IAP + receipt validation (ECON-06) + refund reversal (ECON-09)</b> + restore. <b>Economy/IAP seam is test-first.</b></dd>
+      <dt>Notes</dt><dd>ECON-05 reward progressive (raw count now, prestige with ACH at M7) · non-hold purchase a11y (OQ-046) is a launch gate · ship SOC-09 block-a-designer.</dd>
+      <dt>Verifier</dt><dd><span class="pill auto">auto: idempotent grants · ledger reconciles · refund reverses</span> <span class="pill owner">owner: manual IAP sandbox pass</span></dd>
+      <dt>Delivers</dt><dd class="brand">CARD-15/19/20 · ECON-* · CAT-05/07</dd>
+    </dl>
+    <p class="tagline">Highest-risk milestone — real money. The first stage where the closed beta becomes monetized.</p>
+  </section>
+
+  <!-- 12 — M6 + M7 -->
+  <section class="slide">
+    <h2><span class="num">MILESTONE · M6 + M7</span>Social &amp; Engagement (in v1.0, late build-order)</h2>
+    <div class="grid2">
+      <div class="card">
+        <h3>M6 — Social</h3>
+        <p class="small">friends · profiles · <b>compare hours (SOC-03)</b> · Top-5 · recommendations · What to Play.</p>
+        <p class="small dim">Entry: M5; <b>resolve OQ-075</b> (recommend-compose) first.</p>
+        <p class="small"><span class="pill auto">auto</span> <span class="pill agent">agent</span> · no owner gate</p>
+        <p class="small dim brand">SOC-* · WTP-*</p>
+      </div>
+      <div class="card">
+        <h3>M7 — Engagement</h3>
+        <p class="small">push (expo-notifications) · activity feed · discovery · moderation console (MOD-04) · <b>achievements engine</b> (rides ACH-08).</p>
+        <p class="small dim">Entry: M6; <b>OQ-004/005 + OQ-060</b> first.</p>
+        <p class="small"><span class="pill auto">auto</span> <span class="pill agent">agent</span> <span class="pill owner">owner: push creds</span></p>
+        <p class="small dim brand">NOTIF-* · DISC-* · MOD-* · ACH-*</p>
+      </div>
+    </div>
+    <p class="tagline">In v1.0 — built late in the order. The friend graph (M6) flips as one bundle; push (M7) needs NOTIF-04 priming in lockstep.</p>
+  </section>
+
+  <!-- 13 — M8 -->
+  <section class="slide">
+    <h2><span class="num">MILESTONE · M8</span>Release readiness <span class="chip gate">owner gate</span></h2>
+    <dl class="kv">
+      <dt>Goal</dt><dd>Get the chosen cut line into testers' hands, then the store.</dd>
+      <dt>Entry</dt><dd>The chosen cut line is exit-green.</dd>
+      <dt>Exit</dt><dd>store requirements · <b>manual IAP sandbox pass</b> · privacy/ToS + App Privacy labels + 13+ (AUTH-10) · UGC compliance (SYS-09 + report/block) · TestFlight + Play internal beta · launch checklist.</dd>
+      <dt>Verifier</dt><dd><span class="pill owner">owner: submission</span> <span class="pill auto">auto: Maestro journeys</span></dd>
+    </dl>
+    <p class="tagline">Provisioning that gates all of this was started back at M1-P — nothing waits on enrollment here.</p>
+  </section>
+
+  <!-- 14 — ARCH + COST -->
+  <section class="slide">
+    <h2><span class="num">§3 · FOUNDATION</span>Stack verdict &amp; recurring cost</h2>
+    <div class="grid2">
+      <div class="card accent">
+        <h3>Verdict: keep the stack</h3>
+        <p class="small">Expo/RN · RTK Query · Express/TS · Drizzle/Postgres · zod · RevenueCat — boring on purpose, right for a solo hands-off build.</p>
+        <ul class="small">
+          <li><b>Monorepo</b>: apps/mobile · apps/api · packages/shared (zod = executable api-contract)</li>
+          <li><b>SYS-01</b> scoping helper + <b>SYS-07</b> authz test per endpoint</li>
+          <li><b>ACH-08</b> event bus in Foundation → feeds achievements + analytics</li>
+          <li><b>Migrations</b> reviewed in PR; destructive = owner gate</li>
+          <li><b>Backups</b> auto-daily + <b>one tested restore drill</b> before users</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Recurring ≈ $25–50/mo</h3>
+        <table class="small">
+          <tr><td>Apple Dev</td><td>$99/yr</td></tr>
+          <tr><td>Google Play</td><td>$25 once</td></tr>
+          <tr><td>Postgres + API host</td><td>~$14–25/mo</td></tr>
+          <tr><td>Object storage/CDN</td><td>~$0–5/mo</td></tr>
+          <tr><td>Sentry · PostHog · RevenueCat · EAS · CI</td><td>$0 (free tiers)</td></tr>
+        </table>
+      </div>
+    </div>
+    <p class="tagline">Token spend (Q1) is heaviest M4–M7 + a steady trickle from per-PR reviews and per-phase audits.</p>
+  </section>
+
+  <!-- 15 — GUARDRAILS -->
+  <section class="slide">
+    <h2><span class="num">§5 · THE SPINE</span>Hands-off guardrails (enforced, not advisory)</h2>
+    <div class="grid3">
+      <div class="card">
+        <h3>Enforced merge gate</h3>
+        <p class="small">Branch protection on main · required green CI + review · per-PR: typecheck→lint→unit→integration + <b>secret-scan + SCA</b>. E2E nightly.</p>
+      </div>
+      <div class="card">
+        <h3>3 owner-approval change-classes</h3>
+        <ul class="small"><li>Destructive migration</li><li>Auth / SYS-01</li><li>Economy / IAP / ledger</li></ul>
+        <p class="small dim">Everything else = agent review + green CI.</p>
+      </div>
+      <div class="card accent">
+        <h3>Agent review is BLIND to…</h3>
+        <p class="small">authz under concurrency · economy race/double-spend · real IAP/refund · spec-intent drift · <b>aesthetics</b>. → the manual gates cover exactly these.</p>
+      </div>
+    </div>
+    <p class="tagline">Definition-of-Done per task: spec-ID · risk-domain tests · SYS-07 authz test if mutating · zod input · no unjustified new dependency.</p>
+  </section>
+
+  <!-- 16 — OWNER GATES -->
+  <section class="slide">
+    <h2><span class="num">§11 · GATES</span>Owner decision-gates (ranked) — ~7, everything else automated</h2>
+    <table>
+      <tr><th>#</th><th>Gate</th><th>When</th><th>Why an agent can't own it</th></tr>
+      <tr><td>1</td><td><b>Feature-audit ruling</b></td><td>M0</td><td>Scope = judgment about worth, not correctness</td></tr>
+      <tr><td>2</td><td><b>Provisioning approvals</b></td><td>M1-P</td><td>Legal identity, payment, signing keys</td></tr>
+      <tr><td>3</td><td><b>Auth + SYS-01 seam</b></td><td>M2</td><td>The prototype's original sin lived here</td></tr>
+      <tr><td>4</td><td><b>Destructive migration</b></td><td>any</td><td>Data loss is unrecoverable from review</td></tr>
+      <tr><td>5</td><td><b>Render payoff (taste)</b></td><td>M4</td><td>"Feels like the trophy case" is aesthetic</td></tr>
+      <tr><td>6</td><td><b>IAP sandbox pass</b></td><td>M5 / M8</td><td>Real-money UX is automation's blind spot</td></tr>
+      <tr><td>7</td><td><b>Store submission</b></td><td>M8</td><td>The irreversible outward-facing act</td></tr>
+    </table>
+  </section>
+
+  <!-- 17 — TESTING JUNCTURES -->
+  <section class="slide">
+    <h2><span class="num">§6 · TESTING</span>The three critical junctures of testing</h2>
+    <div class="grid3">
+      <div class="card">
+        <h3><span class="pill auto">a · automated suites</span></h3>
+        <ul class="small">
+          <li>economy concurrency/ledger + IAP idempotency (mocked webhook) — <b>M5</b></li>
+          <li>per-endpoint authz — <b>M2+</b></li>
+          <li>catalog dedup — <b>M3</b></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span class="pill agent">b · agent review</span></h3>
+        <ul class="small">
+          <li>every PR</li>
+          <li>per-phase <b>doc↔code fidelity</b> audit</li>
+          <li>/code-review at high effort at each exit</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span class="pill owner">c · manual owner</span></h3>
+        <ul class="small">
+          <li><b>IAP sandbox pass</b> before M5 ships</li>
+          <li>device-feel at M3 / M4</li>
+          <li>TestFlight / Play beta at M8</li>
+        </ul>
+      </div>
+    </div>
+    <p class="tagline">Test-first: SYS-01/07 (M2+) · AUTH-* (M2) · CAT-03 (M3) · ECON-* (M5). Test-after, targeted: UI as screens settle.</p>
+  </section>
+
+  <!-- 18 — RISKS -->
+  <section class="slide">
+    <h2><span class="num">§11 · RISKS</span>Risk register (top handful)</h2>
+    <table>
+      <tr><th>Risk</th><th>Sev</th><th>Mitigation</th></tr>
+      <tr><td><b>Solo-builder abandonment</b> (#1)</td><td>High</td><td>Early visual win (M2 shelf, M4 trophy case) · &lt;2wk-payoff chunks · ship the M4 beta</td></tr>
+      <tr><td><b>Hands-off quality erosion</b></td><td>High</td><td>Enforced merge gate + CI + manual gates at the blind spots</td></tr>
+      <tr><td><b>Economy/IAP correctness</b></td><td>High</td><td>Test-first ledger/idempotency/refund + sandbox pass + change-class gate</td></tr>
+      <tr><td><b>Authorization regressions</b></td><td>High</td><td>Standing SYS-07 tests + integration vs real Postgres</td></tr>
+      <tr><td><b>Scope creep / design drift</b></td><td>Med</td><td>M0 audit cuts hard before code · SCREEN-STATUS tripwire · keep M6/M7 out of v1.0</td></tr>
+      <tr><td><b>Cost / token overrun</b></td><td>Med</td><td>Costed list · free tiers first · per-milestone token budget</td></tr>
+      <tr><td><b>Data loss / lock-in</b></td><td>Med</td><td>Managed auto-backups + the tested restore drill</td></tr>
+    </table>
+  </section>
+
+  <!-- 19 — NEXT ACTIONS -->
+  <section class="slide">
+    <h2><span class="num">§12 · NEXT</span>Immediate next 1–3 actions</h2>
+    <div class="flow" style="flex-direction:column;gap:.7rem">
+      <div class="step"><div class="id">1 · DECIDE</div><div class="t">Answer the four (§0) — budget · hours · audit bar · placement — and <b>confirm this file pair's names</b> (not committed).</div></div>
+      <div class="step beta"><div class="id">2 · AUDIT FIRST</div><div class="t">Run the <b>M0 feature audit before</b> finishing the not-started screens — rule keep/cut/defer (4.4 · 4.7 · 4.9 · 4.10 · 4.13 · 4.14 · 4.6), record in decisions/, <b>then design only the survivors</b>.</div></div>
+      <div class="step v1"><div class="id">3 · START THE CLOCK</div><div class="t">Begin <b>Apple Developer enrollment today</b> (M1-P) — its identity-verification lead time is the one clock you can't compress.</div></div>
+    </div>
+    <p class="tagline brand">docs/planning/road-to-market.md — the source of truth for this deck.</p>
+  </section>
+
+</div>
+
+<footer>
+  <div class="brand">INGAME · ROAD TO MARKET</div>
+  <div class="nav">
+    <button id="prev">‹ Prev</button>
+    <span class="counter"><span id="cur">1</span> / <span id="total">19</span></span>
+    <button id="next">Next ›</button>
+  </div>
+</footer>
+<div class="hint">← → arrows · click Prev/Next · space</div>
+
+<script>
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var i = 0;
+  var cur = document.getElementById('cur');
+  var total = document.getElementById('total');
+  var prev = document.getElementById('prev');
+  var next = document.getElementById('next');
+  var progress = document.getElementById('progress');
+  total.textContent = slides.length;
+  function show(n){
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach(function(s, idx){ s.classList.toggle('active', idx === i); });
+    cur.textContent = i + 1;
+    prev.disabled = (i === 0);
+    next.disabled = (i === slides.length - 1);
+    progress.style.width = ((i) / (slides.length - 1) * 100) + '%';
+  }
+  prev.addEventListener('click', function(){ show(i - 1); });
+  next.addEventListener('click', function(){ show(i + 1); });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { show(i + 1); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { show(i - 1); e.preventDefault(); }
+    else if (e.key === 'Home') { show(0); }
+    else if (e.key === 'End') { show(slides.length - 1); }
+  });
+  show(0);
+</script>
+</body>
+</html>
