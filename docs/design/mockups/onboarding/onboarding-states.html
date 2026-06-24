@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InGame · Onboarding States — FIRST-PASS (4.14 · AUTH-06 · NOTIF-04 · CAT-09 · COL-01/02)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" /></noscript>
+<style>
+  /* ── tokens: Teal shell · Midnight theme (verbatim from add-game-states.html /
+     collection-states.html — one token set app-wide). --scr-btn aliased to the accent
+     orange (one action orange, design-spec 0.11); --alert for any destructive keycap. ── */
+  :root {
+    --plastic: #2bb6b0; --plastic-hi: #3ec9c2; --plastic-lo: #1f9a94; --silk: #0d524e;
+    --accent: #ff3d77; --gold: #ffd23f; --cream: #f5f1e4; --navy: #1d2a4a;
+    --bezel: #14122a;
+    --pk: 'Chakra Petch', sans-serif; --shell: 'Paytone One', sans-serif;
+    --scr-bg: #232045; --scr-well: #2c2950; --scr-tools: #1a1733; --scr-accent: #ff9f43;
+    --scr-accent-ink: #2a1430; --scr-head: #f5f1e4; --scr-text: #ffffff; --scr-dim: #9b97c0;
+    --scr-soft: #c9c5e6; --scr-panel: rgba(255,255,255,.065); --scr-hairline: rgba(255,255,255,.08);
+    --scr-grip: #565178; --scr-chip: #f5f1e4; --scr-head-shadow: rgba(0,0,0,.45);
+    --scr-btn: var(--scr-accent); --scr-btn-ink: var(--scr-accent-ink); --alert: #e3414e;
+    --success: #7fcf9b;
+    --shell-ink: #08433f; --screw-hi: #2aa39d; --screw-lo: #137671; --pip-off: #117672;
+  }
+  html, body { margin: 0; min-height: 100%; background: #efece6; font-family: var(--pk); }
+  .canvas { max-width: 1348px; margin: 0 auto; padding: 40px 24px 60px; }
+  .canvas-head h1 { font: 700 21px/1.2 var(--pk); letter-spacing: 2.5px; color: #2a2633; margin: 0 0 6px; text-transform: uppercase; }
+  .canvas-head .tagpill { display: inline-block; background: #2a2633; color: #fff; font: 700 9px var(--pk); letter-spacing: 1.5px; padding: 4px 8px; margin-bottom: 10px; }
+  .canvas-head p { font: 500 11px/1.6 var(--pk); color: #79748a; margin: 0 0 10px; max-width: 760px; }
+  .canvas-head p b { color: #2a2633; }
+  .stage { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+  .take { width: 404px; }
+  .artboard-label { font: 700 11px/1 var(--pk); letter-spacing: 1.5px; color: #8d889c; margin: 0 0 10px 2px; text-transform: uppercase; }
+  .caption { margin-top: 14px; background: #fff; border-radius: 12px; padding: 13px 15px; box-shadow: 0 2px 8px rgba(42,38,51,.08); }
+  .caption h3 { margin: 0 0 5px; font: 700 11px var(--pk); letter-spacing: .8px; color: #2a2633; text-transform: uppercase; }
+  .caption h3 em { font-style: normal; color: var(--accent); }
+  .caption p { margin: 0 0 4px; font: 500 11px/1.5 var(--pk); color: #5d5870; }
+  .caption p b { color: #2a2633; }
+  .stage-label { font: 700 15px/1 var(--pk); letter-spacing: 2px; color: #2a2633; text-transform: uppercase; margin: 36px 2px 14px; }
+  .stage-label small { display: block; margin-top: 5px; font: 500 11px/1.4 var(--pk); letter-spacing: .3px; color: #79748a; text-transform: none; }
+
+  /* ── device shell (physical — verbatim) ─────────────────── */
+  .device { position: relative; width: 404px; height: 884px; border-radius: 30px; overflow: hidden;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.4), inset 0 -4px 0 rgba(0,0,0,.18), 0 18px 40px color-mix(in srgb, var(--shell-ink) 28%, transparent);
+    display: flex; flex-direction: column; padding: 0 14px; box-sizing: border-box; }
+  .screw { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--screw-hi), var(--screw-lo) 75%);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.25); }
+  .screw::after { content: ""; position: absolute; left: 1.5px; right: 1.5px; top: 3.5px; height: 1.5px; background: color-mix(in srgb, var(--shell-ink) 70%, transparent); border-radius: 1px; }
+  .screw.tl { top: 10px; left: 12px; } .screw.tr { top: 10px; right: 12px; }
+  .screw.bl { bottom: 10px; left: 12px; } .screw.br { bottom: 10px; right: 12px; }
+  .top-band { height: 64px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 12px 0; position: relative; }
+  .power { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+  .power .led { width: 9px; height: 9px; border-radius: 50%; background: #ff5a4e; box-shadow: 0 0 7px 2px rgba(255,90,78,.65), inset 0 -1px 1px rgba(0,0,0,.3); }
+  .power .lbl { font: 400 9px var(--shell); letter-spacing: .5px; color: var(--silk); opacity: .75; }
+  .logo { position: absolute; left: 50%; transform: translateX(-50%); font: 400 21px var(--shell); letter-spacing: 7px; text-indent: 7px;
+    color: color-mix(in srgb, var(--shell-ink) 28%, transparent); text-shadow: 0 -1px 0 color-mix(in srgb, var(--shell-ink) 30%, transparent); }
+  .grille { display: flex; gap: 6px; }
+  .grille span { width: 5px; height: 23px; background: color-mix(in srgb, var(--shell-ink) 40%, transparent); border-radius: 2px; transform: skewX(-22deg); box-shadow: inset 0 1px 1px rgba(0,0,0,.3); }
+  .screen-bezel { flex: 1 1 auto; min-height: 0; background: var(--bezel); border-radius: 20px; padding: 9px; box-sizing: border-box; }
+  .nav-band { flex: 0 0 auto; height: 128px; display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 6px 0; }
+  .nav-item { display: flex; flex-direction: column; align-items: center; width: 64px; }
+  .nav-lbl { height: 16px; font: 400 11px var(--shell); letter-spacing: .5px; color: var(--silk); display: flex; align-items: center; }
+  .nav-lbl.big { font-size: 11px; }
+  .nav-btn { width: 54px; height: 54px; border-radius: 15px; background: var(--cream); border: none;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 1px 0 rgba(255,255,255,.85); }
+  .nav-btn.store { background: var(--gold); }
+  .nav-btn.collection { background: var(--accent); }
+  .nav-item.active .nav-btn { transform: translateY(3px); box-shadow: 0 1px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 2px 3px rgba(0,0,0,.18); }
+  .pip { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; background: var(--pip-off);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.25); }
+  .nav-item.active .pip { background: var(--accent); box-shadow: 0 0 9px 2.5px rgba(255,61,119,.85), inset 0 -1px 1px rgba(0,0,0,.25); }
+  .nav-band .nav-item:nth-child(2) .nav-lbl:first-child,
+  .nav-band .nav-item:nth-child(4) .nav-lbl:first-child { transform: translateY(-8px); }
+
+  /* ── shared screen structure ────────────────────────────── */
+  .screen { position: relative; height: 100%; border-radius: 13px; overflow: hidden; display: flex; flex-direction: column; }
+  .screen-head { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 12px; }
+  .scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 12px 14px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; border: none; width: fit-content; }
+  .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 14px 2px 8px; }
+  .sec.tight { margin: 7px 2px 4px; }
+  .sec h3 { margin: 0; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .sec a { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
+
+  /* ── the Game Card (verbatim) ───────────────────────────── */
+  .gcard { position: relative; box-sizing: border-box; flex: 0 0 auto; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
+  .gcard .art { position: absolute; inset: 7px; overflow: hidden; }
+  .gcard .art svg { width: 100%; height: 100%; display: block; }
+  .gcard .plate { position: absolute; left: 11px; right: 11px; bottom: 3px; padding: 5px 4px 4px;
+    text-align: center; font: 700 10px/1.15 var(--pk); letter-spacing: .5px; text-transform: uppercase; }
+  .gcard.hero-size { width: 138px; height: 193px; }
+  .gcard.fan-size { width: 96px; height: 134px; }
+  .gcard.fan-size .art { inset: 4.5px; }
+  .gcard.fan-nb { width: 96px; height: 134px; }
+  .gcard.fan-nb .art { inset: 4.5px; }
+  .gcard.fan-size .plate { left: 7px; right: 7px; bottom: 2.5px; padding: 4px 2px 3.5px; font-size: 10px; letter-spacing: .2px; }
+  .gcard.fan-nb .plate { left: 6px; right: 6px; bottom: 2px; padding: 3.5px 2px 3px; font-size: 9px; letter-spacing: .2px; }
+  .gcard.grid-size { width: 100%; aspect-ratio: 63 / 88; }
+  .gcard.thumb { width: 44px; height: 62px; }
+  .gcard.thumb .art { inset: 2.5px; }
+  .gcard.thumb .plate { left: 3.5px; right: 3.5px; bottom: 1px; padding: 1.5px 1px 1px; font-size: 3.2px; letter-spacing: 0; }
+  /* roster frames + plates */
+  .fr-destiny { background: linear-gradient(160deg, #e8bc52, #c08a2a); }
+  .fr-marathon { background: linear-gradient(160deg, #64789f, #46587e); }
+  .fr-minecraft { background: linear-gradient(160deg, #ff5fae, #e23488); }
+  .fr-ratchet { background: linear-gradient(160deg, #4a3b30, #332821); }
+  .fr-re { background: linear-gradient(160deg, #221e2c, #121017); }
+  .fr-eld { background: linear-gradient(160deg, #d8c478, #9c7e34); }
+  .fr-erd { background: linear-gradient(160deg, #7e8e5a, #4c5a32); }
+  .fr-ngt { background: linear-gradient(160deg, #5a4a8e, #322758); }
+  .fr-blank { background: linear-gradient(160deg, #4a4677, #322e58); }
+  .pl-destiny { background: #f0cd6e; color: #3c2a09; }
+  .pl-marathon { background: #3d4f78; color: #e8eefc; }
+  .pl-minecraft { background: #8bd44a; color: #1f3505; }
+  .pl-ratchet { background: #2c2438; color: #f1ecdf; }
+  .pl-re { background: repeating-linear-gradient(45deg, #e8c83d 0 5px, #1c1a22 5px 10px); color: #fff; text-shadow: 0 1px 2px #000, 0 0 3px #000; }
+  .pl-eld { background: #1c1f2e; color: #e8c364; }
+  .pl-erd { background: #2a3320; color: #d9e8b0; }
+  .pl-ngt { background: #221a3e; color: #b9a8e8; }
+  .pl-blank { background: #d9d4ee; color: #2a2633; }
+
+  /* ── C5 · square chrome · stepped-diagonal cards (verbatim) ── */
+  .c5 .chip, .c5 .btn, .c5 .count { border-radius: 0; }
+  .c5 .btn.add { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+      100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
+      calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
+  .c5 .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
+    clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
+      100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
+      calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
+  .c5 .gcard .art { border-radius: 0;
+    clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+      100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .c5 .gcard .plate { border-radius: 0;
+    clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  .c5 .gcard.fan-size, .c5 .gcard.fan-nb { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+      100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .c5 .gcard.fan-size .art, .c5 .gcard.fan-nb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  .c5 .gcard.fan-size .plate, .c5 .gcard.fan-nb .plate { clip-path: polygon(0 1.5px, 1.5px 1.5px, 1.5px 0, 100% 0,
+      100% calc(100% - 1.5px), calc(100% - 1.5px) calc(100% - 1.5px), calc(100% - 1.5px) 100%, 0 100%); }
+  .c5 .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0,
+      100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
+  .c5 .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  .c5 .gcard.thumb .plate { clip-path: polygon(0 1px, 1px 1px, 1px 0, 100% 0,
+      100% calc(100% - 1px), calc(100% - 1px) calc(100% - 1px), calc(100% - 1px) 100%, 0 100%); }
+
+  /* ── base screen surface — flat floating panels (verbatim) ── */
+  .sk2 { background: var(--scr-bg); }
+  .sk2 .screen-head h2 { margin: 0; font: 700 21px/1 var(--pk); letter-spacing: 3px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); }
+  .sk2 .npl { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-accent); }
+  .sk2 .hero-title { font: 700 21px/1.05 var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .sk2 .hero-sub { font: 600 11px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .sk2 .btn { background: var(--scr-btn); color: var(--scr-btn-ink); padding: 9px 13px;
+    font: 700 11px var(--pk); letter-spacing: 1px; }
+  .sk2 .btn.add { background: var(--gold); color: #3c2a09; }
+  .sk2 .btn.secondary { background: var(--cream); color: var(--navy); }
+  .sk2 .btn.mini { padding: 6px 8px; font-size: 11px; }
+  .sk2 .btn.wide { width: 100%; justify-content: center; }
+  .sk2 .chip { position: relative; background: var(--scr-chip); padding: 6px 8px;
+    font: 600 11px var(--pk); letter-spacing: .5px; color: var(--navy); }
+  .sk2 .chip b { color: var(--navy); font-weight: 700; }
+  /* ToolKeycap glyph ink — navy on the cream chip (verbatim from the Collection
+     board, so the finale's tools bar renders identically: stroked glyphs stroke
+     navy, the view-mode 4-square rects fill navy). */
+  .sk2 .chip svg circle, .sk2 .chip svg path { stroke: var(--navy); }
+  .sk2 .chip svg rect { fill: var(--navy); }
+  .sk2 .count { background: var(--gold); color: #3c2a09; padding: 4px 8px; font: 700 11px/1 var(--pk); }
+  .count .ctick { display: inline-block; background: var(--navy); color: var(--gold); font: 700 9px/1 var(--pk); padding: 2.5px 4px; margin-left: 5px; }
+
+  /* ── StateMark — the on-screen selection marker (F-05/F-09): flat scr.accent
+     pixel-square, one-pixel-notched corners; NOT the pink LED. ── */
+  .statemark { position: absolute; top: -2.5px; right: -2.5px; width: 7px; height: 7px;
+    background: var(--scr-accent); clip-path: polygon(11.1% 0, 88.9% 0, 88.9% 11.1%, 100% 11.1%, 100% 88.9%, 88.9% 88.9%, 88.9% 100%, 11.1% 100%, 11.1% 88.9%, 0 88.9%, 0 11.1%, 11.1% 11.1%); }
+
+  /* ── FlowHeader (takeover chrome — verbatim) ────────────── */
+  .fh-key { flex: 0 0 auto; width: 28px; height: 28px; border: none; background: var(--scr-chip); color: var(--navy);
+    font: 700 15px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; margin-right: 11px; }
+  .flow-head { justify-content: flex-start; }
+  .flow-head .fh-spacer { flex: 1 1 auto; }
+  .flow-head .skip { font: 600 11px var(--pk); letter-spacing: 1px; color: var(--scr-dim); text-decoration: none; }
+
+  /* ── step rail (the onboarding-only chrome — built from the fan-nav dot idiom) ── */
+  .step-rail { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; padding: 2px 16px 10px; }
+  .step-rail .sr-lbl { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .step-rail .sr-dots { display: flex; gap: 6px; margin-left: auto; }
+  .step-rail .sd { width: 16px; height: 4px; background: var(--scr-grip); }
+  .step-rail .sd.on { background: var(--scr-accent); }
+  .step-rail .sd.done { background: color-mix(in srgb, var(--scr-accent) 55%, var(--scr-grip)); }
+
+  /* ── bottom-docked SearchField (OQ-035 posture — verbatim) ── */
+  .tools { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 8px 10px; }
+  .sk2 .tools { background: var(--scr-tools); border-top: 1px solid var(--scr-hairline); }
+  .search-bar .field { flex: 1 1 auto; }
+  .field { display: flex; align-items: center; gap: 7px; background: var(--scr-chip); padding: 9px 10px;
+    box-shadow: inset 0 2px 3px rgba(0,0,0,.16); }
+  .field svg circle, .field svg path { stroke: var(--navy); }
+  .field .ph { font: 600 11px var(--pk); letter-spacing: 1px; color: #8d889c; }
+  .field .q { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--navy); }
+  .field .caret { width: 1.5px; height: 13px; background: var(--scr-accent); margin-left: 1.5px; }
+  .field .clear { margin-left: auto; display: flex; }
+
+  /* ── CardFan (verbatim) ─────────────────────────────────── */
+  /* CardFan: the side cards are rotated + translateY(8px) DOWN, so their lower
+     corners sit ~12px below the forefront card. Reserve that band (padding-bottom)
+     so no card face overlaps the fan-meta / section text beneath it (F-01 — full
+     faces clear, never cropped). */
+  .cfan { display: flex; justify-content: center; align-items: flex-start; padding: 4px 0 16px; }
+  .cfan .nb { position: relative; z-index: 1; flex: 0 0 auto; }
+  .cfan .nb.l { transform: rotate(-4deg) translateY(8px); margin-right: 5px; }
+  .cfan .nb.r { transform: rotate(4deg) translateY(8px); margin-left: 5px; }
+  .cfan .fore { position: relative; z-index: 2; flex: 0 0 auto; }
+  .fan-nav { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 11px 0 0; }
+  .fan-nav .chev { font: 700 11px/1 var(--pk); color: var(--scr-dim); }
+  .fan-nav .fdot { width: 5px; height: 5px; border-radius: 50%; background: var(--scr-grip); }
+  .fan-nav .fdot.on { background: var(--scr-accent); box-shadow: 0 0 5px 1px rgba(255,159,67,.55); }
+  .fan-nav .swipe-lbl { font: 600 9px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); margin-left: 5px; }
+  .fan-meta { display: flex; justify-content: center; align-items: baseline; gap: 6px; padding: 7px 0 0;
+    font: 600 11px var(--pk); letter-spacing: 1px; color: var(--scr-soft); text-align: center; }
+  .fan-meta b { color: var(--scr-text); }
+  .fan-meta .incol { color: var(--gold); font-weight: 700; }
+  .fan-meta.sub { padding: 5px 0 2px; font: 700 9px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
+  .fan-meta.sub b { color: var(--scr-soft); }
+  /* the just-added confirm pill the forefront wears when tapped-to-add (COL-01) */
+  .added-tag { position: absolute; top: 6px; left: 6px; z-index: 3; display: inline-flex; align-items: center; gap: 3px;
+    background: var(--success); color: #0e2417; font: 700 9px/1 var(--pk); letter-spacing: .5px; padding: 3px 5px; }
+
+  /* ── onboarding step content ────────────────────────────── */
+  .step-title { font: 700 21px/1.05 var(--pk); letter-spacing: 1px; color: var(--scr-text); text-align: center; margin: 4px 6px 6px; }
+  .step-lead { font: 500 11px/1.55 var(--pk); color: var(--scr-soft); text-align: center; max-width: 290px; margin: 0 auto 8px; }
+  .step-lead b { color: var(--scr-text); }
+  .step-foot { flex: 0 0 auto; display: flex; flex-direction: column; gap: 9px; padding: 10px 14px 12px; border-top: 1px solid var(--scr-hairline); }
+
+  /* welcome — the hero card stack. The back cards are rotated + pushed DOWN
+     (translateY), so their lowest corners reach ~20px below the front card's
+     baseline; the padding-bottom reserves that band so the rotated faces sit
+     fully clear of the step-title below (F-01 — never crop, fix the spacing). */
+  .welcome-hero { display: flex; justify-content: center; align-items: flex-end; gap: -10px; padding: 26px 0 28px; }
+  .welcome-hero .wc { margin: 0 -14px; }
+  .welcome-hero .wc.back { transform: rotate(-8deg) translateY(14px); z-index: 1; opacity: .92; }
+  .welcome-hero .wc.front { z-index: 3; transform: translateY(-6px); }
+  .welcome-hero .wc.back2 { transform: rotate(8deg) translateY(14px); z-index: 1; opacity: .92; }
+
+  /* status chips (COL-02) + genre chips — selectable rows, F-09 StateMark selection */
+  .pickgrid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 4px 8px 0; }
+  .pchip { position: relative; background: var(--scr-chip); color: var(--navy); padding: 8px 11px;
+    font: 700 11px var(--pk); letter-spacing: .5px; }
+  .pchip.sel { background: rgba(255,159,67,.10); color: var(--scr-text); border: 1.5px solid var(--scr-accent); padding: 6.5px 9.5px; }
+  /* genre chips ride the panel ground so they read as on-screen content, not cream keycaps */
+  .gchip { position: relative; background: var(--scr-panel); border: 1px solid var(--scr-hairline); color: var(--scr-soft);
+    padding: 8px 12px; font: 700 11px var(--pk); letter-spacing: .5px; }
+  .gchip.sel { background: rgba(255,159,67,.12); border: 1.5px solid var(--scr-accent); color: var(--scr-text); padding: 7px 11px; }
+
+  /* the per-card status row (O3) — a small card thumb + its chip */
+  .statrow { display: flex; align-items: center; gap: 11px; margin: 0 2px 10px; padding: 9px 10px;
+    background: var(--scr-panel); border: 1px solid var(--scr-hairline); }
+  .statrow .gcard.thumb { flex: 0 0 auto; }
+  .statrow .sr-tx { min-width: 0; flex: 1 1 auto; display: flex; flex-direction: column; gap: 3px; }
+  .statrow .sr-t { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .statrow .sr-s { font: 600 9px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
+  .statrow .sr-pick { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+  .statrow .sr-pick .pchip { padding: 5px 8px; font-size: 9px; letter-spacing: 1px; }
+  .statrow .sr-pick .pchip.sel { padding: 3.5px 6.5px; }
+
+  /* design-a-card teaser (O5) — the GOLD step + the invite nudge */
+  .teaser-card { display: flex; justify-content: center; padding: 20px 0 4px; }
+  .teaser-card .gcard { filter: drop-shadow(0 12px 16px rgba(0,0,0,.5)); }
+  .gold-row { display: flex; flex-direction: column; gap: 8px; padding: 14px 14px 0; }
+  .btn.gold { background: var(--gold); color: #3c2a09; }
+  /* the gold 2/4 step (F-02 — only on the card-creating ADD & DESIGN) */
+  .c5 .btn.gold { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+      100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
+      calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
+  .invite-row { display: flex; align-items: center; gap: 10px; margin: 14px 14px 0; padding: 11px 12px;
+    background: var(--scr-panel); border: 1px solid var(--scr-hairline); }
+  .invite-row .ir-ic { width: 30px; height: 30px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
+    background: var(--scr-tools); }
+  .invite-row .ir-ic svg path, .invite-row .ir-ic svg circle { stroke: var(--scr-accent); }
+  .invite-row .ir-tx { min-width: 0; flex: 1 1 auto; display: flex; flex-direction: column; gap: 2px; }
+  .invite-row .ir-t { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .invite-row .ir-s { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  /* the prominent NON-acquisitive action: orange + 2/4 step (KeycapButton/action-alt) */
+  .btn.altstep { background: var(--scr-accent); color: var(--scr-accent-ink); }
+  .c5 .btn.altstep { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+      100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
+      calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
+
+  /* ── NOTIF-04 push pre-prompt (a summoned drawer over the dimmed flow) ── */
+  .scrim { position: absolute; inset: 0; z-index: 5; background: rgba(13,11,32,.62); }
+  .pre-prompt { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--scr-tools);
+    border-top: 1px solid var(--scr-hairline); box-shadow: 0 -12px 26px rgba(0,0,0,.55); padding: 16px 16px 16px; }
+  .pre-prompt .pp-bell { width: 46px; height: 46px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center;
+    background: var(--scr-bg); border: 1px solid var(--scr-hairline); }
+  .pre-prompt .pp-bell svg path { stroke: var(--scr-accent); }
+  .pre-prompt .pp-t { font: 700 15px var(--pk); letter-spacing: .8px; color: var(--scr-text); text-align: center; margin-bottom: 7px; }
+  .pre-prompt .pp-s { font: 500 11px/1.55 var(--pk); color: var(--scr-soft); text-align: center; max-width: 300px; margin: 0 auto 10px; }
+  .pre-prompt .pp-bullets { display: flex; flex-direction: column; gap: 6px; margin: 0 6px 14px; }
+  .pre-prompt .pp-b { display: flex; align-items: center; gap: 8px; font: 600 11px var(--pk); letter-spacing: .3px; color: var(--scr-soft); }
+  .pre-prompt .pp-b .dot { width: 6px; height: 6px; background: var(--scr-accent); flex: 0 0 auto;
+    clip-path: polygon(11.1% 0, 88.9% 0, 88.9% 11.1%, 100% 11.1%, 100% 88.9%, 88.9% 88.9%, 88.9% 100%, 11.1% 100%, 11.1% 88.9%, 0 88.9%, 0 11.1%, 11.1% 11.1%); }
+  .pre-prompt .pp-btns { display: flex; flex-direction: column; gap: 8px; }
+  .pre-prompt .pp-btns .btn { justify-content: center; }
+  .pre-prompt .pp-fine { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); text-align: center; margin-top: 9px; }
+
+  /* ── the native OS permission alert (ENABLE branch only) ── */
+  .os-alert { position: absolute; left: 50%; top: 42%; transform: translate(-50%,-50%); z-index: 7;
+    width: 250px; background: #f1f1f4; border-radius: 14px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,.5);
+    font-family: -apple-system, 'Chakra Petch', sans-serif; }
+  .os-alert .oa-body { padding: 17px 16px 14px; text-align: center; }
+  .os-alert .oa-t { font: 700 13px/1.3 var(--pk); color: #111; margin-bottom: 4px; }
+  .os-alert .oa-s { font: 500 11px/1.4 var(--pk); color: #333; }
+  .os-alert .oa-btns { display: flex; border-top: 1px solid #c6c6cc; }
+  .os-alert .oa-btn { flex: 1 1 0; text-align: center; padding: 11px 0; font: 600 13px var(--pk); color: #0a7aff; }
+  .os-alert .oa-btn.allow { font-weight: 700; border-left: 1px solid #c6c6cc; }
+  .os-note { position: absolute; left: 16px; right: 16px; bottom: 18px; z-index: 7; text-align: center;
+    font: 600 9px/1.5 var(--pk); letter-spacing: .5px; color: var(--scr-soft); }
+  .os-note b { color: var(--scr-accent); }
+
+  /* ── finale — populated collection (verbatim collection grid) ── */
+  .hero { display: flex; gap: 14px; align-items: stretch; padding: 12px; }
+  .hero-meta { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 7px; }
+  .sk2 .hero { background: var(--scr-well); }
+  .c5 .hero { border-radius: 0; border: 1px solid var(--scr-hairline); }
+  .stat-line { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-soft); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .sk2 .now-tag { position: absolute; top: 11px; left: 11px; z-index: 2; background: var(--scr-accent); color: var(--scr-accent-ink);
+    font: 700 9px/1 var(--pk); letter-spacing: .5px; padding: 4px 6px; display: inline-flex; align-items: center; gap: 3px; }
+  .c5 .now-tag { border-radius: 0; }
+  .grip { display: grid; grid-template-columns: repeat(2, 3px); grid-auto-rows: 3px; gap: 2.5px; padding: 6px 5px 6px 2px; }
+  .sk2 .grip i { background: var(--scr-grip); border-radius: 1px; }
+  .tools .spacer { flex: 1 1 auto; }
+  .chip.active .statemark { display: block; }
+  /* the dissolving "shelf is live" celebration banner atop the finale */
+  .live-banner { display: flex; align-items: center; gap: 9px; margin: 10px 2px 2px; padding: 10px 12px;
+    background: rgba(127,207,155,.10); border: 1px solid color-mix(in srgb, var(--success) 50%, transparent); }
+  .live-banner .lb-ic { width: 20px; height: 20px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; }
+  .live-banner .lb-ic svg path { stroke: var(--success); }
+  .live-banner .lb-tx { min-width: 0; flex: 1 1 auto; }
+  .live-banner .lb-t { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .live-banner .lb-s { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-soft); }
+  .live-banner .lb-x { font: 700 11px var(--pk); color: var(--scr-dim); }
+
+  /* ── empty / fallback (verbatim collection empty) ───────── */
+  .empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 20px 14px 0; }
+  .ghost-card { position: relative; width: 138px; height: 193px; margin-bottom: 10px; background: var(--scr-panel);
+    clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
+      100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
+      calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
+  .ghost-card::before { content: ""; position: absolute; inset: 8px; border: 2px dashed var(--scr-grip); opacity: .8; }
+  .ghost-card .plus { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font: 700 21px/1 var(--pk); color: var(--scr-grip); }
+  .empty-title { font: 700 15px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
+  .empty-sub { font: 500 11px/1.55 var(--pk); color: var(--scr-soft); max-width: 260px; }
+  .empty .btn.add { margin-top: 8px; }
+  /* the friendly push-to-add tail (verbatim Collection inviting-empty): a POPULAR
+     FIRST ADDS suggestion row + the BE-THE-FIRST contributor hook — gently routes
+     the skip-everything user back into the catalog. NO auto-seed / surprise-me. */
+  .suggest { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 24px; }
+  .hook { display: block; text-align: center; margin: 18px 0 4px; font: 600 11px var(--pk); letter-spacing: .8px;
+    color: var(--scr-accent); text-decoration: none; }
+
+  /* ── §1.6 / §1.8 lifecycle (verbatim) ───────────────────── */
+  .err-wrap { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 9px; padding: 52px 18px 0; }
+  .err-card { position: relative; width: 96px; height: 134px; background: var(--scr-panel); margin-bottom: 8px;
+    clip-path: polygon(0 6px, 3px 6px, 3px 3px, 6px 3px, 6px 0, 100% 0,
+      100% calc(100% - 6px), calc(100% - 3px) calc(100% - 6px), calc(100% - 3px) calc(100% - 3px),
+      calc(100% - 6px) calc(100% - 3px), calc(100% - 6px) 100%, 0 100%); }
+  .err-card::before { content: ""; position: absolute; inset: 6px; border: 2px dashed var(--scr-grip); opacity: .8; }
+  .err-card .bang { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font: 700 21px/1 var(--pk); color: var(--scr-accent); }
+  .err-card .void-ic { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .err-card .void-ic svg { width: 42px; height: 42px; }
+  .err-card .void-ic svg path { stroke: var(--scr-grip); }
+  .err-eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .err-title { font: 700 15px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
+  .err-sub { font: 500 11px/1.55 var(--pk); color: var(--scr-soft); max-width: 250px; }
+  .tert { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
+  .tert.dim { color: var(--scr-dim); }
+  .offline-strip { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; margin: 0 12px 2px; padding: 7px 11px;
+    background: var(--scr-panel); border: 1px solid var(--scr-hairline); font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .offline-strip svg { width: 13px; height: 13px; flex: 0 0 auto; }
+  .offline-strip svg path { stroke: var(--scr-dim); }
+  .offline-strip .sync { margin-left: auto; font-weight: 600; letter-spacing: .5px; color: var(--scr-grip); }
+  .sk-meta { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 9px 0 2px; }
+  .sk-bar { height: 9px; background: var(--scr-panel); }
+  .sk-fan { width: 96px; height: 134px; background: var(--scr-panel); flex: 0 0 auto;
+    clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+      100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+
+  /* ── FLAT BUTTONS + SCANLINE ENERGIZE (F-03, verbatim) ──── */
+  .sk2 .btn, .sk2 .btn.secondary, .sk2 .chip, .fh-key { box-shadow: none; }
+  .sk2 .btn.add, .sk2 .btn.gold, .sk2 .btn.altstep { box-shadow: none; filter: none; }
+  .sk2 .btn:active, .sk2 .btn.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-btn) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, #0000 1px 2px); }
+  .sk2 .btn.add:active, .sk2 .btn.add.is-pressed, .sk2 .btn.gold:active, .sk2 .btn.gold.is-pressed {
+    transform: none; box-shadow: none; filter: none;
+    background-color: color-mix(in srgb, var(--gold) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(60,42,9,.24) 0 1px, #0000 1px 2px); }
+  .pchip.is-pressed, .gchip.is-pressed { background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.14) 0 1px, #0000 1px 2px); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ shared SVG art roster (verbatim symbols from the reference boards) ═══════════ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="g-dst" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2156"/><stop offset="1" stop-color="#14102e"/></linearGradient>
+    <linearGradient id="g-dst2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#58e0d8"/><stop offset="1" stop-color="#2ba8a0"/></linearGradient>
+    <linearGradient id="g-mar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a4a70"/><stop offset="1" stop-color="#1f2840"/></linearGradient>
+    <linearGradient id="g-mc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff7ab1"/><stop offset="1" stop-color="#e2498e"/></linearGradient>
+    <linearGradient id="g-rat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8973f"/><stop offset="1" stop-color="#a8581b"/></linearGradient>
+    <linearGradient id="g-re" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7f4ec"/><stop offset="1" stop-color="#e3ddcc"/></linearGradient>
+    <linearGradient id="g-eld" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2e3146"/><stop offset="1" stop-color="#14121f"/></linearGradient>
+    <linearGradient id="g-erd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#222b1a"/><stop offset="1" stop-color="#0e130a"/></linearGradient>
+    <linearGradient id="g-ngt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#241a3e"/><stop offset="1" stop-color="#0e0a1c"/></linearGradient>
+    <clipPath id="c-mar"><circle cx="40" cy="30" r="14"/></clipPath>
+    <symbol id="art-destiny" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-dst)"/>
+      <circle cx="31.5" cy="38" r="17" fill="none" stroke="#d9a93f" stroke-width="1.2" opacity=".5"/>
+      <path d="M31.5 16 L48 38 L31.5 60 L15 38 Z" fill="url(#g-dst2)" stroke="#e8c364" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M31.5 24 L42.5 38 L31.5 52 L20.5 38 Z" fill="rgba(255,255,255,.18)"/>
+      <circle cx="31.5" cy="38" r="4" fill="#f4f9f8"/>
+      <circle cx="31.5" cy="13" r="1.8" fill="#e8c364"/><circle cx="51" cy="38" r="1.8" fill="#e8c364"/>
+      <circle cx="31.5" cy="63" r="1.8" fill="#e8c364"/><circle cx="12" cy="38" r="1.8" fill="#e8c364"/>
+    </symbol>
+    <symbol id="art-marathon" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-mar)"/>
+      <circle cx="40" cy="30" r="14" fill="#dfe6f0"/>
+      <g clip-path="url(#c-mar)"><rect x="24" y="25" width="32" height="7" fill="#35cfe0"/><rect x="24" y="31" width="32" height="2.5" fill="#1f93a6"/></g>
+      <ellipse cx="40" cy="30" rx="21" ry="6.5" fill="none" stroke="#8fa3c8" stroke-width="1" opacity=".7" transform="rotate(-18 40 30)"/>
+      <path d="M14 56 L23 60.5 L14 65 Z" fill="#ff5a4e"/>
+      <rect x="4" y="59.2" width="8" height="2.6" rx="1.3" fill="rgba(255,90,78,.45)"/>
+      <path d="M0 78 Q31.5 68 63 78 L63 88 L0 88 Z" fill="#2c3a5c"/>
+    </symbol>
+    <symbol id="art-minecraft" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-mc)"/>
+      <path d="M0 72 L63 66 L63 88 L0 88 Z" fill="rgba(86,12,46,.30)"/>
+      <rect x="12" y="18" width="39" height="39" rx="3" fill="#ff9cc4"/>
+      <rect x="12" y="18" width="39" height="10" rx="3" fill="#ffb1d2"/>
+      <rect x="17" y="34" width="5" height="7" fill="#471130"/><rect x="41" y="34" width="5" height="7" fill="#471130"/>
+      <rect x="24" y="42" width="15" height="11" rx="2" fill="#d12f72"/>
+      <rect x="27" y="45" width="3" height="5" fill="#6e1437"/><rect x="33" y="45" width="3" height="5" fill="#6e1437"/>
+    </symbol>
+    <symbol id="art-ratchet" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-rat)"/>
+      <path d="M0 76 Q31.5 70 63 76 L63 88 L0 88 Z" fill="rgba(60,26,8,.35)"/>
+      <rect x="18.5" y="27" width="26" height="26" rx="4" fill="#5a3414"/>
+      <rect x="18.5" y="27" width="26" height="26" rx="4" fill="#5a3414" transform="rotate(45 31.5 40)"/>
+      <circle cx="31.5" cy="40" r="11" fill="#f2c489"/>
+      <path d="M31.5 35 L36 37.5 L36 42.5 L31.5 45 L27 42.5 L27 37.5 Z" fill="#3c2410"/>
+    </symbol>
+    <symbol id="art-re" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-re)"/>
+      <g stroke="#2a2326" stroke-width=".7" stroke-linejoin="round">
+        <path d="M31.5 38 L31.5 22 A16 16 0 0 1 42.8 26.7 Z" fill="#d8262c"/>
+        <path d="M31.5 38 L42.8 26.7 A16 16 0 0 1 47.5 38 Z" fill="#f7f5ef"/>
+        <path d="M31.5 38 L47.5 38 A16 16 0 0 1 42.8 49.3 Z" fill="#d8262c"/>
+        <path d="M31.5 38 L42.8 49.3 A16 16 0 0 1 31.5 54 Z" fill="#f7f5ef"/>
+        <path d="M31.5 38 L31.5 54 A16 16 0 0 1 20.2 49.3 Z" fill="#d8262c"/>
+        <path d="M31.5 38 L20.2 49.3 A16 16 0 0 1 15.5 38 Z" fill="#f7f5ef"/>
+        <path d="M31.5 38 L15.5 38 A16 16 0 0 1 20.2 26.7 Z" fill="#d8262c"/>
+        <path d="M31.5 38 L20.2 26.7 A16 16 0 0 1 31.5 22 Z" fill="#f7f5ef"/>
+      </g>
+      <circle cx="31.5" cy="38" r="2" fill="#2a2326"/>
+      <rect x="14" y="64" width="35" height="3.5" fill="#1c1a22"/>
+      <rect x="14" y="70" width="35" height="1.6" fill="#d8262c" opacity=".55"/>
+    </symbol>
+    <symbol id="art-elden" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-eld)"/>
+      <circle cx="31.5" cy="36" r="16.5" fill="none" stroke="#e8c364" stroke-width="2.6" opacity=".92"/>
+      <circle cx="31.5" cy="36" r="16.5" fill="none" stroke="#fff0c0" stroke-width=".8" opacity=".4"/>
+      <path d="M31.5 16.5 L29 27 L31.5 36 L34.5 26 Z" fill="#1c1f2e" stroke="#e8c364" stroke-width="1" stroke-linejoin="round"/>
+      <circle cx="31.5" cy="36" r="2.2" fill="#f5e6b0"/>
+      <circle cx="14" cy="17" r="1.2" fill="#e8c364" opacity=".7"/><circle cx="50" cy="22" r="1" fill="#e8c364" opacity=".55"/>
+      <path d="M0 66 L14 58 L26 64 L40 56 L52 63 L63 58 L63 88 L0 88 Z" fill="#11131d"/>
+      <path d="M0 70 Q31.5 62 63 70 L63 88 L0 88 Z" fill="#0a0b12" opacity=".8"/>
+    </symbol>
+    <symbol id="art-erdtree" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-erd)"/>
+      <path d="M31.5 64 L31.5 34 M31.5 44 L22 32 M31.5 40 L41 29 M31.5 52 L24 44 M31.5 50 L40 42" fill="none" stroke="#e8c364" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="31.5" cy="27" r="11" fill="rgba(232,195,100,.22)"/>
+      <circle cx="31.5" cy="27" r="6.5" fill="rgba(245,230,176,.4)"/>
+      <circle cx="22" cy="32" r="1.4" fill="#f5e6b0"/><circle cx="41" cy="29" r="1.4" fill="#f5e6b0"/>
+      <circle cx="31.5" cy="18" r="1.4" fill="#f5e6b0"/>
+      <path d="M0 72 Q31.5 64 63 72 L63 88 L0 88 Z" fill="#0c100a"/>
+    </symbol>
+    <symbol id="art-nightreign" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-ngt)"/>
+      <circle cx="31.5" cy="34" r="14" fill="#0c0a16"/>
+      <circle cx="31.5" cy="34" r="14" fill="none" stroke="#b9a8e8" stroke-width="1.6"/>
+      <path d="M21 28 A14 14 0 0 1 38 22" fill="none" stroke="#e0d4ff" stroke-width="1.2" opacity=".7"/>
+      <circle cx="12" cy="15" r="1.2" fill="#b9a8e8"/><circle cx="52" cy="19" r="1" fill="#b9a8e8"/>
+      <circle cx="47" cy="52" r="1.2" fill="#b9a8e8" opacity=".7"/>
+      <path d="M0 70 L12 60 L20 66 L34 55 L46 64 L63 56 L63 88 L0 88 Z" fill="#100c1e"/>
+    </symbol>
+    <symbol id="art-blank" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="#3a3565"/>
+      <path d="M31.5 26 L43 40 L31.5 54 L20 40 Z" fill="none" stroke="#565178" stroke-width="2" stroke-linejoin="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="canvas">
+  <div class="canvas-head">
+    <h1>InGame · Onboarding (4.14) — States</h1>
+    <span class="tagpill">FIRST-PASS · FOR OWNER REVIEW · NOT YET CONVERGED</span>
+    <p><b>The defining constraint:</b> never land a new user on an empty Collection. Onboarding is a light,
+    fully-skippable guided seed that ends by depositing the user onto a <b>populated</b> Collection — built
+    from the same C5 grid the Collection board already draws. Grammar matched to <b>Add Game</b>
+    (FlowTakeover · FlowHeader · bottom-docked SearchField · CardFan) and <b>Collection</b> (the populated
+    landing) and <b>Discover</b> (the rail idiom).</p>
+    <p><b>IDs:</b> AUTH-06 (guided quick-start) · NOTIF-04 (push pre-prompt, both branches) · CAT-09
+    (the "popular" most-collected rail seeding the adds) · COL-01/COL-02 (add + status). <b>Gold only where
+    a step literally creates a card</b> (the ADD &amp; DESIGN teaser, F-02) — plain game-adds are orange/cream.</p>
+  </div>
+
+  <!-- ════════════════════════ STAGE 1 — the guided quick-start (AUTH-06) ════════════════════════ -->
+  <div class="stage-label">The guided quick-start (AUTH-06)
+    <small>A bounded, skippable FlowTakeover — the NavBand stays (F-04). The whole job is to fill the shelf before the user ever sees it.</small></div>
+  <div class="stage">
+
+    <!-- ═══ O1 · Welcome / start ═══ -->
+    <div class="take">
+      <div class="artboard-label">O1 · Welcome — the bounded front door (SKIP present)</div>
+      <div class="device" data-screen-label="Onboarding · O1 — Welcome">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><h2>WELCOME</h2><span class="fh-spacer"></span><a class="skip" href="#">SKIP &rsaquo;</a></div>
+            <div class="step-rail"><span class="sr-lbl">STEP 1 / 4</span><span class="sr-dots"><i class="sd on"></i><i class="sd"></i><i class="sd"></i><i class="sd"></i></span></div>
+            <div class="scroll">
+              <div class="welcome-hero">
+                <div class="wc back"><div class="gcard fan-size fr-eld"><div class="art"><svg><use href="#art-elden"/></svg></div><div class="plate pl-eld">Elden Ring</div></div></div>
+                <div class="wc front"><div class="gcard hero-size fr-destiny"><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div></div>
+                <div class="wc back2"><div class="gcard fan-size fr-minecraft"><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div></div>
+              </div>
+              <div class="step-title">LET'S BUILD YOUR SHELF</div>
+              <div class="step-lead">A couple quick taps and your collection is live — your games, as cards, in your device. <b>Takes about a minute, and you can skip any step.</b></div>
+            </div>
+            <div class="step-foot">
+              <button class="btn wide">START &rsaquo;</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>O1 — Welcome <em>(bounded + skippable from the first frame)</em></h3>
+        <p><b>FlowTakeover</b> (NavBand stays — F-04) + a <b>FlowHeader</b> carrying a persistent <b>SKIP &rsaquo;</b>
+        (dim tertiary) that jumps straight to O9's populated finale. The <b>STEP 1 / 4 rail</b> (the fan-nav dot
+        idiom) signals the flow is short — the antidote to onboarding dread.</p>
+        <p>The hero card stack sells the fantasy (full faces, F-01); START is a <b>plain orange</b> KeycapButton —
+        <b>not gold</b> (onboarding CTAs aren't acquisitive, F-02). Type is 21 / 11 / 9 only.</p>
+      </div>
+    </div>
+
+    <!-- ═══ O2 · Add a few games — the CAT-09 popular rail ═══ -->
+    <div class="take">
+      <div class="artboard-label">O2 · Add games — CAT-09 popular rail + docked search (COL-01)</div>
+      <div class="device" data-screen-label="Onboarding · O2 — Add games (popular rail)">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><h2>ADD GAMES</h2><span class="fh-spacer"></span><a class="skip" href="#">SKIP &rsaquo;</a></div>
+            <div class="step-rail"><span class="sr-lbl">STEP 1 / 4</span><span class="sr-dots"><i class="sd on"></i><i class="sd"></i><i class="sd"></i><i class="sd"></i></span><span class="count" style="margin-left:auto;">2 ADDED<span class="ctick">+2</span></span></div>
+            <div class="scroll">
+              <div class="step-lead" style="margin-top:2px;">Tap a card to add it — these are the games most players collect first.</div>
+              <div class="sec tight"><h3>POPULAR &middot; MOST COLLECTED</h3></div>
+              <div class="cfan">
+                <div class="nb l"><div class="gcard fan-nb fr-eld"><div class="art"><svg><use href="#art-elden"/></svg></div><div class="plate pl-eld">Elden Ring</div></div></div>
+                <div class="fore"><div class="gcard fan-size fr-destiny"><span class="added-tag">&#10003; ADDED</span><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div></div>
+                <div class="nb r"><div class="gcard fan-nb fr-minecraft"><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div></div>
+              </div>
+              <div class="fan-meta"><b>Destiny</b> &middot; Bungie &middot; 2017</div>
+              <div class="fan-meta sub"><b>IN 9.4K COLLECTIONS</b> &middot; <b>3</b> FRIENDS HAVE IT</div>
+              <div class="fan-nav"><span class="chev">&lsaquo;</span><span class="fdot"></span><span class="fdot on"></span><span class="fdot"></span><span class="chev">&rsaquo;</span><span class="swipe-lbl">SWIPE</span></div>
+              <div class="sec tight"><h3>FRIENDS ARE PLAYING</h3></div>
+              <div class="cfan">
+                <div class="nb l"><div class="gcard fan-nb fr-marathon"><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div></div>
+                <div class="fore"><div class="gcard fan-size fr-ratchet"><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div></div>
+                <div class="nb r"><div class="gcard fan-nb fr-re"><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div></div>
+              </div>
+              <div class="fan-nav"><span class="chev">&lsaquo;</span><span class="fdot"></span><span class="fdot on"></span><span class="fdot"></span><span class="chev">&rsaquo;</span><span class="swipe-lbl">SWIPE</span></div>
+            </div>
+            <div class="step-foot" style="border-top:none;padding-top:2px;">
+              <button class="btn wide">CONTINUE &middot; 2 ADDED &rsaquo;</button>
+            </div>
+            <div class="tools search-bar">
+              <div class="field">
+                <svg width="12" height="12" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.4" fill="none" stroke-width="1.6"/><path d="M7.8 7.8L11 11" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <span class="caret"></span><span class="ph">SEARCH FOR A GAME&hellip;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>O2 — Add a few games <em>(the load-bearing step — CAT-09 + COL-01)</em></h3>
+        <p>The <b>CAT-09 popular rail</b> (most-collected, capped, no paging) leads as a 3-up <b>CardFan</b> — verbatim
+        Add Game geometry (full faces, all plates legible, zero occlusion, F-01) — over <b>FRIENDS ARE PLAYING</b>, with the
+        <b>bottom-docked SearchField</b> riding the keyboard (OQ-035). Tapping the forefront <b>adds it</b> (COL-01) — the
+        green ADDED pill + the gold <b>CountKeycap</b> ticks (+2). The presence line is the CAT-09 read.</p>
+        <p><b>No gold CTA:</b> CONTINUE is orange (a plain add isn't card-creating, F-02). The header counter is gold only as
+        a <b>value marker</b> (the add count), which is allowed.</p>
+      </div>
+    </div>
+
+    <!-- ═══ O3 · Status (COL-02), lightweight ═══ -->
+    <div class="take">
+      <div class="artboard-label">O3 · Status — optional one-tap per added game (COL-02)</div>
+      <div class="device" data-screen-label="Onboarding · O3 — Status">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><button class="fh-key">&#8249;</button><h2>SET STATUS</h2><span class="fh-spacer"></span><a class="skip" href="#">SKIP &rsaquo;</a></div>
+            <div class="step-rail"><span class="sr-lbl">STEP 1 / 4</span><span class="sr-dots"><i class="sd on"></i><i class="sd"></i><i class="sd"></i><i class="sd"></i></span></div>
+            <div class="scroll">
+              <div class="step-lead" style="margin-top:2px;">Optional — tag where you're at with the ones you added. Anything you skip stays <b>BACKLOG</b>.</div>
+              <div class="statrow">
+                <div class="gcard thumb fr-destiny"><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="sr-tx"><span class="sr-t">DESTINY</span>
+                  <div class="sr-pick"><span class="pchip sel">PLAYING<span class="statemark"></span></span><span class="pchip">BACKLOG</span><span class="pchip">BEATEN</span><span class="pchip">100%</span><span class="pchip">DROPPED</span></div>
+                </div>
+              </div>
+              <div class="statrow">
+                <div class="gcard thumb fr-ratchet"><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet</div></div>
+                <div class="sr-tx"><span class="sr-t">RATCHET &amp; CLANK</span>
+                  <div class="sr-pick"><span class="pchip">PLAYING</span><span class="pchip sel">BACKLOG<span class="statemark"></span></span><span class="pchip">BEATEN</span><span class="pchip">100%</span><span class="pchip">DROPPED</span></div>
+                </div>
+              </div>
+              <div class="statrow">
+                <div class="gcard thumb fr-minecraft"><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
+                <div class="sr-tx"><span class="sr-t">MINECRAFT</span>
+                  <div class="sr-pick"><span class="pchip">PLAYING</span><span class="pchip">BACKLOG</span><span class="pchip sel">BEATEN<span class="statemark"></span></span><span class="pchip">100%</span><span class="pchip">DROPPED</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="step-foot">
+              <button class="btn wide">CONTINUE &rsaquo;</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>O3 — Status <em>(COL-02, defaulted so skipping is free)</em></h3>
+        <p>A sub-beat of the add step: the just-added games get an <b>optional one-tap status</b> — the six COL-02 chips
+        off-card. Selection is the orange <b>StateMark</b> pixel-square + accent border on a flat row
+        (F-05/F-09 — never the pink LED, never a sunken recess). Anything untouched stays <b>BACKLOG</b>, so SKIP costs
+        nothing. A &#8249; back keycap now appears (returning to O2).</p>
+      </div>
+    </div>
+
+    <!-- ═══ O4 · Pick a genre ═══ -->
+    <div class="take">
+      <div class="artboard-label">O4 · Pick a genre — controlled list, multi-select (PROF-01 / CAT-04)</div>
+      <div class="device" data-screen-label="Onboarding · O4 — Pick a genre">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><button class="fh-key">&#8249;</button><h2>YOUR GENRES</h2><span class="fh-spacer"></span><a class="skip" href="#">SKIP &rsaquo;</a></div>
+            <div class="step-rail"><span class="sr-lbl">STEP 2 / 4</span><span class="sr-dots"><i class="sd done"></i><i class="sd on"></i><i class="sd"></i><i class="sd"></i></span></div>
+            <div class="scroll">
+              <div class="step-title">WHAT DO YOU PLAY?</div>
+              <div class="step-lead">Pick a few — it tunes Discover and your recommendations. You can change these anytime in your profile.</div>
+              <div class="pickgrid" style="margin-top:10px;">
+                <span class="gchip sel">ACTION RPG<span class="statemark"></span></span>
+                <span class="gchip">SHOOTER</span>
+                <span class="gchip sel">METROIDVANIA<span class="statemark"></span></span>
+                <span class="gchip">PLATFORMER</span>
+                <span class="gchip">STRATEGY</span>
+                <span class="gchip sel">ROGUELIKE<span class="statemark"></span></span>
+                <span class="gchip">SIMULATION</span>
+                <span class="gchip">FIGHTING</span>
+                <span class="gchip">SURVIVAL</span>
+                <span class="gchip">PUZZLE</span>
+                <span class="gchip">RACING</span>
+                <span class="gchip">SPORTS</span>
+                <span class="gchip">HORROR</span>
+                <span class="gchip">SANDBOX</span>
+                <span class="gchip">MMO</span>
+              </div>
+            </div>
+            <div class="step-foot">
+              <button class="btn wide">CONTINUE &middot; 3 PICKED &rsaquo;</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>O4 — Pick a genre <em>(controlled list, multi-select, skippable)</em></h3>
+        <p>Favourite genre(s) (PROF-01) from the <b>controlled genre list</b> (CAT-04, not free text). Selectable
+        <b>GTag</b>-style chips ride the panel ground (so they read as on-screen content, not cream keycaps); selection =
+        accent border + the orange <b>StateMark</b> (F-09). Multi-select, fully skippable. The rail now shows STEP 2 / 4.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════ STAGE 2 — the optional card teaser + invite (AUTH-06) ═══════════════ -->
+  <div class="stage-label">The optional card teaser + invite (AUTH-06)
+    <small>The ONE gold moment — ADD &amp; DESIGN creates a card (F-02). The invite nudge is prominent-but-non-acquisitive (orange).</small></div>
+  <div class="stage">
+
+    <!-- ═══ O5 · Design-a-card teaser (gold) + invite ═══ -->
+    <div class="take">
+      <div class="artboard-label">O5 · Design-a-card teaser (GOLD, F-02) + invite-a-friend nudge</div>
+      <div class="device" data-screen-label="Onboarding · O5 — Card teaser + invite">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><button class="fh-key">&#8249;</button><h2>MAKE IT YOURS</h2><span class="fh-spacer"></span><a class="skip" href="#">SKIP &rsaquo;</a></div>
+            <div class="step-rail"><span class="sr-lbl">STEP 3 / 4</span><span class="sr-dots"><i class="sd done"></i><i class="sd done"></i><i class="sd on"></i><i class="sd"></i></span></div>
+            <div class="scroll">
+              <div class="teaser-card">
+                <div class="gcard hero-size fr-blank"><div class="art"><svg><use href="#art-blank"/></svg></div><div class="plate pl-blank">DESTINY</div></div>
+              </div>
+              <div class="step-title">DESIGN YOUR FIRST CARD</div>
+              <div class="step-lead">Every game wears a card. Design one now, or adopt a community card later — your shelf, your look.</div>
+              <div class="gold-row">
+                <button class="btn gold wide"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 1.2l1.5 3 3.3.5-2.4 2.3.6 3.3L6 8.9 2.9 10.3l.6-3.3L1 4.7l3.3-.5z" fill="none" stroke="#3c2a09" stroke-width="1.3" stroke-linejoin="round"/></svg>ADD &amp; DESIGN A CARD</button>
+              </div>
+              <div class="invite-row">
+                <div class="ir-ic"><svg width="16" height="16" viewBox="0 0 18 18"><circle cx="6.5" cy="6" r="3" fill="none" stroke-width="1.6"/><path d="M1.5 15a5 5 0 0 1 10 0" fill="none" stroke-width="1.6" stroke-linecap="round"/><path d="M14 5v6M11 8h6" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+                <div class="ir-tx"><span class="ir-t">BRING A FRIEND</span><span class="ir-s">COMPARE HOURS &middot; SEE THEIR SHELVES</span></div>
+                <button class="btn altstep mini">INVITE</button>
+              </div>
+            </div>
+            <div class="step-foot">
+              <button class="btn secondary wide">CONTINUE &rsaquo;</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>O5 — Card teaser <em>(the lone GOLD step) + the invite nudge</em></h3>
+        <p><b>ADD &amp; DESIGN A CARD</b> literally creates a card, so it earns <b>gold + the 2/4 corner-step</b> (F-02) →
+        the Styler (deferred). This is the <b>only</b> gold on the entire board. The <b>invite-a-friend</b> nudge
+        (AUTH-06 requirement) is folded in as a quiet row with a prominent-but-<b>non-acquisitive</b> orange
+        <b>action-alt</b> INVITE keycap (orange + step — never gold; adding a friend creates no card). CONTINUE is
+        the secondary footer advance (the teaser is optional; the one SKIP method lives in the header). STEP 3 / 4.</p>
+      </div>
+    </div>
+
+    <!-- ═══ O6 · NOTIF-04 push pre-prompt (the soft in-app ask) ═══ -->
+    <div class="take">
+      <div class="artboard-label">O6 · NOTIF-04 push PRE-PROMPT — the soft in-app ask (not the OS prompt)</div>
+      <div class="device" data-screen-label="Onboarding · O6 — Push pre-prompt">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><h2>ALMOST DONE</h2><span class="fh-spacer"></span></div>
+            <div class="step-rail"><span class="sr-lbl">STEP 4 / 4</span><span class="sr-dots"><i class="sd done"></i><i class="sd done"></i><i class="sd done"></i><i class="sd on"></i></span></div>
+            <div class="scroll" style="opacity:.4;">
+              <div class="sec tight"><h3>YOUR SHELF</h3></div>
+              <div class="grid">
+                <div class="gcard grid-size fr-destiny"><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="gcard grid-size fr-ratchet"><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
+              </div>
+            </div>
+            <div class="scrim"></div>
+            <div class="pre-prompt">
+              <div class="pp-bell"><svg width="22" height="22" viewBox="0 0 22 22"><path d="M11 3a5 5 0 0 1 5 5c0 5 2 6 2 6H4s2-1 2-6a5 5 0 0 1 5-5zM9 18a2 2 0 0 0 4 0" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div class="pp-t">STAY IN THE LOOP?</div>
+              <div class="pp-s">InGame is quiet by design — we only ping you for the moments that matter.</div>
+              <div class="pp-bullets">
+                <div class="pp-b"><span class="dot"></span>A friend beats your hours on a game you both own</div>
+                <div class="pp-b"><span class="dot"></span>A game on your wishlist finally drops</div>
+                <div class="pp-b"><span class="dot"></span>Someone adopts a card you designed</div>
+              </div>
+              <div class="pp-btns">
+                <button class="btn wide">ENABLE NOTIFICATIONS</button>
+                <button class="btn secondary wide">NOT NOW</button>
+              </div>
+              <div class="pp-fine">YOU CAN CHANGE THIS ANYTIME IN SETTINGS</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>O6 — Push PRE-PROMPT <em>(NOTIF-04 — the soft, value-framed in-app ask)</em></h3>
+        <p>A <b>summoned drawer</b> over the dimmed flow (kin to ReportSheet/ConfirmSheet — no grab handle). This is the
+        <b>pre-prompt, NOT the OS prompt</b>: concrete payoff bullets (the exact NOTIF-01 return triggers), then two keycaps
+        — orange <b>ENABLE NOTIFICATIONS</b> + cream <b>NOT NOW</b>. <b>ENABLE → O7</b> (fires the OS prompt). <b>NOT NOW → O8</b>
+        (lands the finale, OS prompt never fired). Neither is gold (enabling push isn't acquisitive, F-02).</p>
+      </div>
+    </div>
+
+    <!-- ═══ O7 · NOTIF-04 → OS prompt (ENABLE branch) ═══ -->
+    <div class="take">
+      <div class="artboard-label">O7 · ENABLE branch — the native OS prompt fires (one-shot spent)</div>
+      <div class="device" data-screen-label="Onboarding · O7 — OS prompt">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><h2>ALMOST DONE</h2><span class="fh-spacer"></span></div>
+            <div class="step-rail"><span class="sr-lbl">STEP 4 / 4</span><span class="sr-dots"><i class="sd done"></i><i class="sd done"></i><i class="sd done"></i><i class="sd on"></i></span></div>
+            <div class="scroll" style="opacity:.25;">
+              <div class="sec tight"><h3>YOUR SHELF</h3></div>
+              <div class="grid">
+                <div class="gcard grid-size fr-destiny"><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="gcard grid-size fr-ratchet"><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
+              </div>
+            </div>
+            <div class="scrim"></div>
+            <div class="os-alert">
+              <div class="oa-body">
+                <div class="oa-t">&ldquo;InGame&rdquo; Would Like to Send You Notifications</div>
+                <div class="oa-s">Notifications may include alerts, sounds, and icon badges. These can be configured in Settings.</div>
+              </div>
+              <div class="oa-btns"><div class="oa-btn">Don't Allow</div><div class="oa-btn allow">Allow</div></div>
+            </div>
+            <div class="os-note">THE <b>OS PROMPT IS THE ONE-SHOT</b> &mdash; FIRED ONLY AFTER AN EXPLICIT ENABLE (O6). EITHER OS ANSWER LANDS THE FINALE (O9).</div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>O7 — ENABLE branch <em>(the native OS prompt — the precious one-shot)</em></h3>
+        <p>Reached <b>only</b> by ENABLE on O6. The <b>real iOS permission alert</b> (system-rendered — not our chrome, so it's
+        the only non-InGame UI on the board, deliberately styled as the OS) fires now. This is the <b>one-shot</b> NOTIF-04
+        guards. Whatever the user answers, the flow lands O9. A declined <b>OS</b> answer later gets recovery guidance in
+        Settings (NOTIF-02) — distinct from the soft NOT NOW branch (O8).</p>
+      </div>
+    </div>
+
+    <!-- ═══ O8 · NOTIF-04 → decline branch (NOT NOW) ═══ -->
+    <div class="take">
+      <div class="artboard-label">O8 · NOT NOW branch — OS prompt NEVER fires (one-shot unspent)</div>
+      <div class="device" data-screen-label="Onboarding · O8 — Soft decline">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>COLLECTION</h2><span class="count">3 GAMES</span></div>
+            <div class="scroll">
+              <div class="live-banner" style="background:rgba(255,159,67,.08);border-color:color-mix(in srgb, var(--scr-accent) 40%, transparent);">
+                <div class="lb-ic"><svg width="16" height="16" viewBox="0 0 18 18"><path d="M9 3a4 4 0 0 1 4 4c0 4 1.5 5 1.5 5h-11S5 11 5 7a4 4 0 0 1 4-4zM7.5 15a1.5 1.5 0 0 0 3 0M3 3.5l12 11" stroke="var(--scr-accent)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                <div class="lb-tx"><div class="lb-t">NO NOTIFICATIONS &mdash; THAT'S OK</div><div class="lb-s">WE'LL ASK AGAIN AT A GOOD MOMENT &middot; OR TURN THEM ON IN SETTINGS</div></div>
+              </div>
+              <div class="hero">
+                <div class="gcard hero-size fr-destiny"><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="hero-meta">
+                  <span class="npl">NOW PLAYING</span>
+                  <span class="stat-line">0 HRS &middot; PLAYING</span>
+                  <span class="hero-title">DESTINY</span>
+                  <span class="hero-sub">BUNGIE &middot; 2017 &middot; SHOOTER</span>
+                  <button class="btn"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>LOG HOURS</button>
+                </div>
+              </div>
+              <div class="grid">
+                <div class="gcard grid-size fr-destiny"><span class="now-tag">&#9654; NOW</span><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="gcard grid-size fr-ratchet"><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
+                <div class="gcard grid-size fr-minecraft"><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
+              </div>
+            </div>
+            <div class="tools">
+              <div class="grip"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.4" fill="none" stroke-width="1.6"/><path d="M7.8 7.8L11 11" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+              <div class="chip active"><span class="statemark"></span><svg width="11" height="12" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><b>A&ndash;Z &#8593;</b></div>
+              <div class="chip"><svg width="12" height="11" viewBox="0 0 12 11"><path d="M1 1.5h10L7.5 6v3.4L4.5 10V6L1 1.5z" fill="none" stroke-width="1.4" stroke-linejoin="round"/></svg><b>ALL</b></div>
+              <div class="chip active"><span class="statemark"></span><svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="4.4" height="4.4" rx="1"/><rect x="6.6" y="1" width="4.4" height="4.4" rx="1"/><rect x="1" y="6.6" width="4.4" height="4.4" rx="1"/><rect x="6.6" y="6.6" width="4.4" height="4.4" rx="1"/></svg></div>
+              <div class="spacer"></div>
+              <button class="btn add"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>ADD</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>O8 — NOT NOW <em>(the soft decline — the OS one-shot is NOT spent)</em></h3>
+        <p><b>The correctness state.</b> NOT NOW on the pre-prompt lands the populated Collection <b>directly</b> — the
+        <b>OS prompt is never fired</b>, so the precious one-shot stays unspent (NOTIF-04). A calm orange (never alarm-red)
+        banner notes "we'll ask again at a good moment" (re-offer cadence, SYS-04) and points to Settings. The shelf is
+        populated either way: <b>onboarding's constraint holds on every branch.</b></p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════ STAGE 3 — the payoff: land on the real Collection ════════════════════════ -->
+  <div class="stage-label">The payoff — land on the real Collection
+    <small>The reward IS the shelf. The finale is the genuine Collection home (verbatim C5 grid + Now-Playing hero + the full browse/tools bar). If the user added games it's populated; if they skipped every add (owner ruling) they land on a friendly empty that pushes them to add — never a dead grid, never a machine-seed.</small></div>
+  <div class="stage">
+
+    <!-- ═══ O9 · Finale — populated collection ═══ -->
+    <div class="take">
+      <div class="artboard-label">O9 · Finale — the populated Collection (the ENABLE outcome)</div>
+      <div class="device" data-screen-label="Onboarding · O9 — Populated finale">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>COLLECTION</h2><span class="count">3 GAMES</span></div>
+            <div class="scroll">
+              <div class="live-banner">
+                <div class="lb-ic"><svg width="16" height="16" viewBox="0 0 18 18"><path d="M3.5 9.5l3.5 3.5 7.5-8" stroke="var(--success)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                <div class="lb-tx"><div class="lb-t">YOUR SHELF IS LIVE</div><div class="lb-s">3 GAMES &middot; NOTIFICATIONS ON &middot; WELCOME TO INGAME</div></div>
+                <span class="lb-x">&#10005;</span>
+              </div>
+              <div class="hero">
+                <div class="gcard hero-size fr-destiny"><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="hero-meta">
+                  <span class="npl">NOW PLAYING</span>
+                  <span class="stat-line">0 HRS &middot; PLAYING</span>
+                  <span class="hero-title">DESTINY</span>
+                  <span class="hero-sub">BUNGIE &middot; 2017 &middot; SHOOTER</span>
+                  <button class="btn"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>LOG HOURS</button>
+                </div>
+              </div>
+              <div class="grid">
+                <div class="gcard grid-size fr-destiny"><span class="now-tag">&#9654; NOW</span><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="gcard grid-size fr-ratchet"><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
+                <div class="gcard grid-size fr-minecraft"><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
+              </div>
+            </div>
+            <div class="tools">
+              <div class="grip"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.4" fill="none" stroke-width="1.6"/><path d="M7.8 7.8L11 11" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+              <div class="chip active"><span class="statemark"></span><svg width="11" height="12" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><b>A&ndash;Z &#8593;</b></div>
+              <div class="chip"><svg width="12" height="11" viewBox="0 0 12 11"><path d="M1 1.5h10L7.5 6v3.4L4.5 10V6L1 1.5z" fill="none" stroke-width="1.4" stroke-linejoin="round"/></svg><b>ALL</b></div>
+              <div class="chip active"><span class="statemark"></span><svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="4.4" height="4.4" rx="1"/><rect x="6.6" y="1" width="4.4" height="4.4" rx="1"/><rect x="1" y="6.6" width="4.4" height="4.4" rx="1"/><rect x="6.6" y="6.6" width="4.4" height="4.4" rx="1"/></svg></div>
+              <div class="spacer"></div>
+              <button class="btn add"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>ADD</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>O9 — Finale <em>(the payoff — a real, populated Collection)</em></h3>
+        <p><b>This is the whole point.</b> Onboarding ends on the actual Collection home (verbatim C5 grid + Now-Playing
+        hero from collection-states), <b>pre-seeded</b> with the added games, NowTag set, A&ndash;Z + grid tools already
+        active (orange StateMark). A green <b>YOUR SHELF IS LIVE</b> banner rides the top with a &#10005; — it dissolves,
+        leaving the user home. <b>Never a congratulations screen; never an empty grid.</b></p>
+      </div>
+    </div>
+
+    <!-- ═══ O10 · Zero-add fallback ═══ -->
+    <div class="take">
+      <div class="artboard-label">O10 · Zero-add fallback — skipped everything, a friendly push to add</div>
+      <div class="device" data-screen-label="Onboarding · O10 — Zero-add fallback">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>COLLECTION</h2><span class="count">0 GAMES</span></div>
+            <div class="scroll">
+              <div class="empty">
+                <div class="ghost-card"><span class="plus">+</span></div>
+                <span class="npl">YOUR SHELF AWAITS</span>
+                <span class="empty-title">LET'S ADD YOUR FIRST GAME</span>
+                <span class="empty-sub">Every game you add becomes a collectible card &mdash; yours to design, flip, and show off. Pick one and your shelf comes alive.</span>
+                <button class="btn add"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>ADD GAMES</button>
+              </div>
+              <div class="sec"><h3>POPULAR FIRST ADDS</h3><a href="#">SEE MORE &rsaquo;</a></div>
+              <div class="suggest">
+                <div class="gcard grid-size fr-destiny"><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="gcard grid-size fr-minecraft"><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
+                <div class="gcard grid-size fr-re"><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div>
+              </div>
+              <a class="hook" href="#">CAN'T FIND YOUR GAME? BE THE FIRST TO ADD IT &rsaquo;</a>
+            </div>
+            <div class="tools">
+              <div class="grip dim"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="chip" style="opacity:.45;"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.4" fill="none" stroke-width="1.6"/><path d="M7.8 7.8L11 11" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+              <div class="spacer"></div>
+              <button class="btn add"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>ADD</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>O10 — Zero-add fallback <em>(a friendly empty that pushes to add — no auto-seed)</em></h3>
+        <p>If the user skipped <b>every</b> add, they land on the Collection board's <b>inviting empty</b> verbatim — the
+        dashed ghost-card <b>doorway</b> (solid would read as loading), a warm headline, the gold <b>ADD GAMES</b> keycap
+        routing straight back into the add step / catalog (4.1), and the <b>POPULAR FIRST ADDS</b> row + BE-THE-FIRST
+        hook to make the next tap effortless. <b>Owner ruling (resolves OQ-B): no SURPRISE ME, no auto-seed</b> — a
+        skip-everything user lands on an empty-but-friendly Collection that gently <b>pushes</b> them to add, never a
+        machine-seeded shelf. It's a <b>doorway, not a dead end</b> (design-req §1.7).</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════════════════════════ STAGE 4 — lifecycle on the add step (§1.6 / §1.8 / SYS-10) ═══════════ -->
+  <div class="stage-label">Lifecycle on the add step (§1.6 / §1.8)
+    <small>The add step is the only network-bound read (the CAT-09 rail) + write (COL-01). One lifecycle language app-wide — verbatim from Add Game / Collection.</small></div>
+  <div class="stage">
+
+    <!-- ═══ L1 · Skeleton ═══ -->
+    <div class="take">
+      <div class="artboard-label">L1 · Loading — Skeleton in the exact fan shapes (§1.6)</div>
+      <div class="device" data-screen-label="Onboarding · L1 — Loading">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><h2>ADD GAMES</h2><span class="fh-spacer"></span><span class="count">0 ADDED</span></div>
+            <div class="step-rail"><span class="sr-lbl">STEP 1 / 4</span><span class="sr-dots"><i class="sd on"></i><i class="sd"></i><i class="sd"></i><i class="sd"></i></span></div>
+            <div class="scroll">
+              <div class="sec tight"><h3>POPULAR &middot; MOST COLLECTED</h3></div>
+              <div class="sk-meta"><span class="sk-bar" style="width:55%;"></span><span class="sk-bar" style="width:38%;"></span></div>
+              <div class="cfan">
+                <div class="nb l"><div class="sk-fan"></div></div>
+                <div class="fore"><div class="sk-fan" style="width:96px;height:134px;"></div></div>
+                <div class="nb r"><div class="sk-fan"></div></div>
+              </div>
+              <div class="sec tight" style="margin-top:18px;"><h3>FRIENDS ARE PLAYING</h3></div>
+              <div class="cfan">
+                <div class="nb l"><div class="sk-fan"></div></div>
+                <div class="fore"><div class="sk-fan" style="width:96px;height:134px;"></div></div>
+                <div class="nb r"><div class="sk-fan"></div></div>
+              </div>
+            </div>
+            <div class="tools search-bar">
+              <div class="field"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.4" fill="none" stroke-width="1.6"/><path d="M7.8 7.8L11 11" stroke-width="1.8" stroke-linecap="round"/></svg><span class="ph">SEARCH FOR A GAME&hellip;</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>L1 — Loading <em>(the CAT-09 rail is a read — §1.6 Skeleton)</em></h3>
+        <p><b>Solid quiet fills</b> in the exact fan + meta shapes, so nothing shifts when the rail deals. Verbatim from
+        Add Game / Collection — <b>solid = loading, dashed = invitation</b>, so this can never be misread as the O10 empty
+        doorway. The docked field stays usable (search isn't blocked by the rail loading).</p>
+      </div>
+    </div>
+
+    <!-- ═══ L2 · Signal Lost + RETRY ═══ -->
+    <div class="take">
+      <div class="artboard-label">L2 · Load-error — SIGNAL LOST + orange RETRY (§1.8)</div>
+      <div class="device" data-screen-label="Onboarding · L2 — Load error">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><h2>ADD GAMES</h2><span class="fh-spacer"></span><a class="skip" href="#">SKIP &rsaquo;</a></div>
+            <div class="step-rail"><span class="sr-lbl">STEP 1 / 4</span><span class="sr-dots"><i class="sd on"></i><i class="sd"></i><i class="sd"></i><i class="sd"></i></span></div>
+            <div class="scroll">
+              <div class="err-wrap">
+                <div class="err-card"><span class="bang">!</span></div>
+                <span class="err-eyebrow">SIGNAL LOST</span>
+                <span class="err-title">COULDN'T LOAD SUGGESTIONS</span>
+                <span class="err-sub">Check your connection and try again &mdash; or skip ahead and add games anytime from your shelf.</span>
+                <button class="btn altstep" style="margin-top:2px;"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M10.5 6a4.5 4.5 0 1 1-1.4-3.3M9.5 1v2.2H7.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>RETRY</button>
+                <a class="tert dim" href="#" style="margin-top:10px;">SKIP &mdash; FINISH SETUP &rsaquo;</a>
+              </div>
+            </div>
+            <div class="tools search-bar">
+              <div class="field"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.4" fill="none" stroke-width="1.6"/><path d="M7.8 7.8L11 11" stroke-width="1.8" stroke-linecap="round"/></svg><span class="ph">SEARCH FOR A GAME&hellip;</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>L2 — Load-error <em>(SIGNAL LOST — always a retry, §1.8)</em></h3>
+        <p>The §1.8 family verbatim: the <b>dashed stepped-card silhouette</b> + accent <b>!</b> + SIGNAL LOST eyebrow +
+        plain words, with an orange <b>RETRY</b> (KeycapButton/action-alt — orange + the 2/4 step, the F-02 non-card
+        prominent action). Crucially, onboarding adds a <b>SKIP &mdash; FINISH SETUP</b> escape: a rail fetch failure must
+        never trap the user; they can still reach the finale (populated if they added, the friendly empty-doorway if not).
+        Transient only — offline is L3.</p>
+      </div>
+    </div>
+
+    <!-- ═══ L3 · Offline writes-gate ═══ -->
+    <div class="take">
+      <div class="artboard-label">L3 · Offline — OfflineStrip + calm writes-gate (SYS-10)</div>
+      <div class="device" data-screen-label="Onboarding · L3 — Offline">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head flow-head"><h2>ADD GAMES</h2><span class="fh-spacer"></span><a class="skip" href="#">SKIP &rsaquo;</a></div>
+            <div class="offline-strip"><svg viewBox="0 0 24 24"><path d="M2.5 8.5a15 15 0 0 1 19 0M6 12a10 10 0 0 1 12 0M9.5 15.3a5 5 0 0 1 5 0M3 3.5l18 17" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg>OFFLINE &middot; ADDING NEEDS A CONNECTION<span class="sync">AUTO-RESUMES</span></div>
+            <div class="scroll">
+              <div class="err-wrap" style="padding-top:38px;">
+                <div class="err-card"><span class="void-ic"><svg viewBox="0 0 24 24"><path d="M2.5 8.5a15 15 0 0 1 19 0M6 12a10 10 0 0 1 12 0M9.5 15.3a5 5 0 0 1 5 0M3 3.5l18 17" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg></span></div>
+                <span class="err-eyebrow">OFFLINE</span>
+                <span class="err-title">A CONNECTION IS NEEDED TO ADD GAMES</span>
+                <span class="err-sub">Suggestions + adding need the catalog. This picks up the moment you're back &mdash; nothing to retry, it reconnects on its own.</span>
+                <a class="tert" href="#" style="margin-top:4px;">FINISH SETUP &mdash; ADD GAMES LATER &rsaquo;</a>
+              </div>
+            </div>
+            <div class="tools search-bar" style="opacity:.45;">
+              <div class="field"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.4" fill="none" stroke-width="1.6"/><path d="M7.8 7.8L11 11" stroke-width="1.8" stroke-linecap="round"/></svg><span class="ph">SEARCH FOR A GAME&hellip;</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>L3 — Offline <em>(the calm writes-gate — SYS-10, never an alarm)</em></h3>
+        <p>Adding is a <b>write</b> (and the rail is a read on the live catalog), so offline the step <b>gates</b> instead of
+        pretending. The same <b>OfflineStrip</b> + calm wifi-off panel as Add Game / Collection (one offline language):
+        grip-grey glyph in the dashed silhouette, plain words, <b>FINISH SETUP — ADD GAMES LATER</b> so the user still
+        reaches a (then-empty-doorway) finale. <b>No red, no SIGNAL LOST, no RETRY</b> — it auto-recovers; the docked field
+        sits dimmed with the other gated writes.</p>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</body>
+</html>
