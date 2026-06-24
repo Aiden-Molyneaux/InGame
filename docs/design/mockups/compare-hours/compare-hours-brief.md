@@ -189,6 +189,12 @@ Owner picked **B · Versus / head-to-head** as the direction. Iteration notes, a
   (their card · per-game compare · adopt, SOC-11 / decision 0020). No spec change (composes the existing
   §4.2 owned + friend-view states); noted on the board as a hint. Carry it to the converged board (and
   wherever a card appears in Compare).
+- **Real card art + two designs per matchup (owner, 2026-06-24):** the matchup cards now render each game's
+  **real art symbol** (the social-cluster `#art-*` library — destiny/elden/hades/hollow/stardew/celeste, from
+  `friends-draft-a` + collection) on its **per-game frame** (`fr-*`), replacing the flat glyph placeholders.
+  Since it's a versus, the two cards are **different designs of the same game** — **their** card on the game
+  frame, **your** card on a premium **slate frame + foil/holo finish** (`fr-slate.foil`, game-page grammar).
+  Same game art, distinct cosmetic — the authentic card model.
 The **face-off hero**, leaderboard, P2–P5 and lifecycle grammar are unchanged. Burt re-audited **clean**.
 Drafts A + C retained for history. **Next: converge B → `compare-states.html`** (full lifecycle matrix),
 then design-spec formalization + the API page-audit (OQ-074) — **not done this pass**.
