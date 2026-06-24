@@ -4,7 +4,7 @@
 > be refined alongside the design-spec, because screens reveal exactly what each call must return.
 > Behavior lives in [`product-spec.md`](product-spec.md); shapes live here. Referenced by ID.
 
-**Version:** 0.22 (draft) · **Last updated:** 2026-06-13 · **Owner:** Claude Code
+**Version:** 0.23 (draft) · **Last updated:** 2026-06-23 · **Owner:** Claude Code
 
 ---
 
@@ -115,14 +115,14 @@
 | DELETE | `/friends/requests/:id` | Cancel an outgoing request (SOC-08) |
 | DELETE | `/me/friends/:userId` | Unfriend (silent, SOC-08) |
 | GET/POST/DELETE | `/me/blocks` (+ `/:userId`) | Blocked-users list / block `{ userId }` / unblock (SOC-09) |
-| GET | `/users/search?username=` | Find people by username (SOC-07) |
+| GET | `/users/search?username=` | Find people by **exact username** (SOC-07; no contacts-matching). Item: `{ userId, username, avatarRef, relationship ∈ none·outgoing·incoming·friends·blocked·cooldown, cooldownUntil? }` — `relationship` drives the PersonRow action; `blocked` users are mutually-invisible (won't surface in results), the enum value exists for the shared component (OQ-072) |
 | GET | `/me/compare/:friendId` | Per-game + total hours, total-games comparison + leaderboard slice (SOC-03) |
 | GET/POST/PATCH/DELETE | `/me/lists` (+ `/:id/items`) | Lists incl. Top-5 (capped) (SOC-04); **Top-5 swap / re-rank** = `PATCH /me/lists/:id { orderedGameIds[] }` (the Profile edit-mode ARRANGE gesture) |
 | POST | `/recommendations` | `{ toUserId, gameId, note }` → lands in the recipient's **recommendations feed** (the Discover **FROM FRIENDS** section), **not auto-queued** — they add it from the feed (SOC-05) |
 | GET · DELETE | `/me/recommendations` (+ `/:recId`) | The friend-recs feed for the Discover section (SOC-05): `{ recId, game: { id, title, card }, fromUser: { userId, username }, note, createdAt }`; `DELETE` dismisses one. Adding to Up Next → `POST /me/queue { gameId, source: 'friend_rec', fromRecId }` |
-| GET | `/me/feed` | Low-noise, **aggregated** friend activity (SOC-06) |
+| GET | `/me/feed` | Low-noise, **aggregated** friend activity (SOC-06). Item: `{ feedItemId, actor: { userId, username, avatarRef }, type ∈ added_games·beat_game·completed_game·published_card·unlocked_achievement, aggregateCount, objects: [{ gameId?, title?, card?, achievementId?, label? }] (capped sample — ≤3 for the row peek), occurredAt, windowStart/windowEnd }`, cursor-paginated; **import-flood suppression + trivia exclusion enforced server-side** (OQ-071) |
 | POST | `/me/invites` | Create a share link / QR invite token (SOC-07) — the **self-Profile SHARE** chip (PROF-05's "Share profile"). *Friend-profile SHARE has no backing (deep links parked §10) → OQ-052* |
-| GET | `/invites/:token` | Resolve an invite → sender summary + prefilled-request affordance (SOC-10) |
+| GET | `/invites/:token` | Resolve an invite (SOC-10) → `{ token, sender: { userId, username, avatarRef }, relationship (so an already-friend/pending link resolves to the right action, not a duplicate ADD), prefilledRequest: { toUserId } }`; lands on the sender's Profile (friend-view) with a one-tap request; no app → store listing (§10). **QR image rendered client-side from the `POST /me/invites` token** (OQ-073) |
 
 *(Friend showcase + read-only collection are served by `/users/:id` and `/users/:id/collection`.)*
 
@@ -204,3 +204,4 @@
 | 2026-06-13 | 0.20 | **Friend-view browse parity** (decision 0021, COL-11): `/users/:id/collection` accepts the full `/me/collection` query set — `?q=` search (COL-09) · full `sort` enum + `order` · genre/status filter (COL-07) — over the friend-visible field set only, + `total`/`collectionTotal`; no write/reorder params. Supersedes 0.19's hours/owned-since-only note. | COL-11 |
 | 2026-06-13 | 0.21 | **Discover §3.2 page-audit (discover track):** the converged board reconciled to the contract — **`GET /me/queue` item shape enumerated** (`owned · source · recommendedBy · note` — the WISHLIST / REC'D-BY tags, **OQ-054**) + `POST /me/queue` source enum + `fromRecId`; **`GET /discover/trending-cards` shape** (`rank · card · game · designer · adoptionCount`, DISC-04/CARD-05/CAT-05, **OQ-055**); **upcoming notify-me** added — `POST·DELETE /catalog/games/:id/notify` + `notifyOnRelease` on `/catalog/upcoming` + the `release` `notification-prefs` type (DISC-01 → NOTIF-01/02, **OQ-053**); **friend-recs feed** — `GET·DELETE /me/recommendations` (the Discover FROM-FRIENDS section) + `POST /recommendations` lands in the **feed, not auto-queued** (SOC-05; gap surfaced by the audit); **`/discover/browse` parked** from the Discover landing (DISC-02 reached via Game page 4.2, **OQ-057**). No product-spec behavior change (SOC-05's "→ WTP" = the WTP/Discover surface). | WTP-01/02 · DISC-01/02/03/04 · CAT-08 · SOC-05 · NOTIF-01/02 |
 | 2026-06-13 | 0.22 | **Feedback & bug reporting** (decision 0022): **+`POST /feedback`** (type feedback/suggestion/bug + message; support-facing, outside MOD-07; rate-limited SYS-05) + **`POST /feedback/:id/logs`** — the opt-in diagnostic-log attach for bug reports (**opaque bundle, shape TBD → OQ-060**; access-controlled object storage, `log_ref`). | SYS-11 |
+| 2026-06-23 | 0.23 | **Friends §3.3 + Find/Add §4.8 page-audit (friends + find-add tracks):** the converged boards reconciled to the contract — **`GET /me/feed` item shape enumerated** (the actor+type **aggregated** SOC-06 item + capped object peek + aggregation window; flood-suppression/trivia-exclusion server-side, **OQ-071**); **`GET /users/search` PersonRow shape** + the **`relationship` enum** (none·outgoing·incoming·friends·blocked·cooldown) that drives every person surface (**OQ-072**); **`GET /invites/:token` resolve shape** (sender summary + relationship + prefilled request) + **QR rendered client-side from the token** (**OQ-073**). No product-spec behavior change (SOC-06/07/08/10 specify the behavior; these are payload shapes). The SOC-05 **recommend-compose** surface stays a **design** gap (OQ-075) — `POST /recommendations` already exists. | SOC-01/06/07/08/10 |

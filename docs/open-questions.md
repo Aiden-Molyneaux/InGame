@@ -123,34 +123,6 @@
   (`activeShellId`·`screenThemeId`·`stickerComposition`) only ever references **owned** items — previews are
   client-side until acquired; (e) any **cap** on simultaneous previews. Pairs with OQ-062/064.
   (Device editor premium try-on, 2026-06-15) [behavior]
-- OQ-071: **`GET /me/feed` aggregated item shape (the Friends-tab central contract gap).** api-contract
-  (~line 123) names `/me/feed` as *"low-noise, aggregated friend activity (SOC-06)"* but **enumerates no
-  payload** — yet the Friends feed (SOC-06) is the IA's landing surface. Propose the **actor+type
-  aggregated** item: `{ feedItemId, actor: { userId, username, avatarRef }, type ∈ added_games ·
-  beat_game · completed_game · published_card · unlocked_achievement, aggregateCount (the capped N, e.g.
-  12 — "Riko added 12 games" as one row), objects: [ { gameId?, title?, card?, achievementId?, label? } ]
-  (a **capped sample** for the row's peek — ≤3 thumbs + "+N"), occurredAt, windowStart/windowEnd (the
-  aggregation window) }`, cursor-paginated; **import-flood suppression + trivia exclusion enforced
-  server-side** (SOC-06). Also surfaces a **second, larger gap — presence/online state**: the roster's
-  `PresenceDot` ("ONLINE / recently / offline") + `StatPeek` ("IN HADES NOW") imply an online-status +
-  now-playing-visibility model that **neither the spec nor the contract defines** (privacy-gated by
-  PROF-03? a `presence` field on `/me/friends`? an opt-out?). Both for the API page-audit at converge;
-  drawn **illustratively** on the drafts meanwhile. (Friends §3.3 track kickoff, 2026-06-17) [behavior]
-- OQ-072: **`GET /users/search?username=` PersonRow response shape (the Find/Add 4.8 spine).** The
-  endpoint (api-contract ~line 118, SOC-07) enumerates no payload, yet **every person surface in 4.8**
-  (search result, requests row, invite-landing) renders a **relationship state → single action**. Propose
-  the PersonRow item: `{ userId, username, avatarRef, relationship ∈ none · outgoing · incoming · friends
-  · blocked · cooldown, cooldownUntil? (when relationship = cooldown, SOC-08/SYS-04) }` — `blocked`
-  surfaces are mutually-invisible per SOC-09 (won't appear in search; the enum value exists for the
-  shared component). For the API page-audit at converge. (Find/Add 4.8 track, 2026-06-22) [behavior]
-- OQ-073: **`GET /invites/:token` resolve shape + QR generation (SOC-10).** The endpoint (api-contract
-  ~line 125) names "sender summary + prefilled-request affordance" but enumerates no payload. Propose
-  `{ token, sender: { userId, username, avatarRef }, relationship (so an already-friend/pending link
-  resolves to the right action, not a duplicate ADD), prefilledRequest: { toUserId } }`; the landing
-  resolves **through the sender's Profile** (PROF-05 friend-view), no-app → store listing (SOC-10, §10).
-  **Second gap — QR generation:** `POST /me/invites` returns a **token**; whether the QR image is
-  **rendered client-side from the token** or **server-supplied** is unspecified — flag for the page-audit.
-  (Find/Add 4.8 track, 2026-06-22) [behavior]
 - OQ-074: **`GET /me/compare/:friendId` response shape (the Compare Hours 4.6 contract gap).** The endpoint
   (api-contract ~line 119) names *"per-game + total hours, total-games comparison + leaderboard slice
   (SOC-03)"* but **enumerates no payload** — yet Compare is the marquee social return-driver, drawn three
@@ -171,6 +143,19 @@
   Friends-tab (§3.3) convergence. (2026-06-22) [presentation]
 
 ## Resolved
+- OQ-071 → **`GET /me/feed` item shape enumerated** (api-contract 0.23): the actor+type **aggregated**
+  SOC-06 item `{ feedItemId, actor, type, aggregateCount, objects[capped ≤3 peek], occurredAt,
+  windowStart/windowEnd }`, cursor-paginated; flood-suppression + trivia-exclusion server-side. *(The
+  presence/online sub-gap is moot — `PresenceDot`/`StatPeek` were CUT, owner 2026-06-18.)* design-spec
+  §2.10 · api 0.23. (Friends 3.3 converge, 2026-06-23)
+- OQ-072 → **`GET /users/search` PersonRow shape enumerated** (api-contract 0.23): `{ userId, username,
+  avatarRef, relationship ∈ none·outgoing·incoming·friends·blocked·cooldown, cooldownUntil? }` — the
+  `relationship` drives the PersonRow action (the 4.8 spine); `blocked` are mutually-invisible. design-spec
+  §2.11 · api 0.23. (Find/Add 4.8 converge, 2026-06-23)
+- OQ-073 → **`GET /invites/:token` resolve shape enumerated + QR client-side** (api-contract 0.23):
+  `{ token, sender, relationship, prefilledRequest: { toUserId } }`; resolves through the sender's Profile,
+  no-app → store; the **QR image is rendered client-side from the `POST /me/invites` token**. design-spec
+  §2.11 · api 0.23. (Find/Add 4.8 converge, 2026-06-23)
 - OQ-058 → **Personal *game* rating KEPT, private-only; NO card rating, ever.** The collection entry's
   per-game ⭐ (the api `rating?` on `PATCH /me/collection/:entryId`) is a **private personal field** —
   never shown to others, never aggregated (like notes COL-05); no api change. **No card rating anywhere**
