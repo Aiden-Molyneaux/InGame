@@ -26,6 +26,11 @@ Still **in pass** — refining B before converge; **not yet converged**. Converg
 `compare-states.html` (full matrix incl. lifecycle), then the design-spec formalization + API page-audit
 (OQ-074).
 
+**Card-tap navigation (owner Q, 2026-06-23):** every matchup card is a doorway to the **Game page (§4.2)**
+for that game — **your** card opens your view, your **friend's** opens their **friend-view** (their card ·
+per-game compare · adopt, SOC-11 / decision 0020). Composes the existing §4.2 states — no spec change;
+noted on the board as a hint and carried to converge.
+
 ## New components introduced (form is each draft's; names locked, ratified at converge)
 `CompareHeader` (the who-vs-who — Avatars + names) · `CompareTotals` (total hours · total games ·
 who's-ahead) · `ComparePair`/`CompareRow` (per shared game — `GameCard`/thumb + your hrs | their hrs +

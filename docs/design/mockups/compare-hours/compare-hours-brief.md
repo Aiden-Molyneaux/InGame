@@ -182,6 +182,11 @@ Owner picked **B · Versus / head-to-head** as the direction. Iteration notes, a
   each card labelled with its owner).
 - **Up the card size for legibility** — matchup cards moved from `GameCard/thumb` (44×62) to
   **`GameCard/mini` (64×89)**, carrying the F-02 TL+BR step.
+- **Card-tap navigation seam (owner Q, 2026-06-23):** every matchup card is a **doorway to the Game page
+  (§4.2)** for that game — **your** card opens your view; your **friend's** opens their **friend-view**
+  (their card · per-game compare · adopt, SOC-11 / decision 0020). No spec change (composes the existing
+  §4.2 owned + friend-view states); noted on the board as a hint. Carry it to the converged board (and
+  wherever a card appears in Compare).
 The **face-off hero**, leaderboard, P2–P5 and lifecycle grammar are unchanged. Burt re-audited **clean**.
 Drafts A + C retained for history. **Next: converge B → `compare-states.html`** (full lifecycle matrix),
 then design-spec formalization + the API page-audit (OQ-074) — **not done this pass**.
