@@ -20,11 +20,14 @@ privacy-limited (PROF-03)**; Offline + LoadError deferred to converge (caption-n
 | [`compare-draft-b-versus.html`](compare-draft-b-versus.html) | **B · Versus / head-to-head** ← **OWNER PICK (2026-06-23)** | A **duel** framing: a big totals **face-off** at the top (both totals large + a split **margin bar** + a verdict pill — who's ahead, by how much), then per-game **card-vs-card matchups** — **their `GameCard`/cell (96×134) on the left, yours on the right, the two hour counts between them with the winner in orange** (owner refinement 2026-06-23: matchup UI swapped from paired bars to draft A's numeric stats in this card-flanked layout; cards up-sized to `/cell` for legibility; cards now render the **real `#art-*` symbols** on per-game frames, and since it's a versus the two cards are **different designs of the same game** — their game-frame card vs your slate+foil card, 2026-06-24). The **playful, competitive** pole. **Burt: clean** ✅. |
 | [`compare-draft-c-diff.html`](compare-draft-c-diff.html) | **C · Diff-first / overlap** | Leads with the **library overlap** (a three-segment *only-you · shared · only-them* bar) + the compact totals, then the shared games as **center-diverging deltas sorted by biggest gap** — orange = your turf, lavender = theirs — so you read **where you each dominate**; the leaderboard for context. The **insight / story** pole. **Burt: clean** ✅ (1 fix: removed a `<code>` monospace voice from a doc caption). |
 
-**Status:** **owner picked B (Versus) — 2026-06-23**, with the matchup UI reworked to the card-vs-card
-layout (their card · stats · your card, winner orange; cards up-sized). Drafts A + C kept for history.
-Still **in pass** — refining B before converge; **not yet converged**. Converge target (next):
-`compare-states.html` (full matrix incl. lifecycle), then the design-spec formalization + API page-audit
-(OQ-074).
+**Status:** **✅ CONVERGED — 2026-06-24 → [`compare-states.html`](compare-states.html)** (the owner-picked
+**Versus / head-to-head** direction). The canonical board the frontend composes from: **P1** has-overlap
+(totals face-off + per-game card-vs-card matchups — their game-frame card · the hours, winner orange · your
+slate+foil card, real `#art-*` symbols; card-tap → Game page §4.2) · **P2** no-shared-games · **P3** friends
+leaderboard · **P4** Skeleton · **P5** privacy-limited (PROF-03) · **L1** Signal-Lost+RETRY · **L2** Offline
+(read-from-cache, SYS-10). Drafts A + C + `compare-draft-b-versus` retained for history. **Owed (spec-owner):**
+design-spec formalization + the API page-audit — `/me/compare/:friendId` payload (**OQ-074**); convergence
+debt (**OQ-077**).
 
 **Card-tap navigation (owner Q, 2026-06-23):** every matchup card is a doorway to the **Game page (§4.2)**
 for that game — **your** card opens your view, your **friend's** opens their **friend-view** (their card ·

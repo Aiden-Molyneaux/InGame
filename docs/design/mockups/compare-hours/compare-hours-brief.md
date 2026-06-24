@@ -196,5 +196,13 @@ Owner picked **B · Versus / head-to-head** as the direction. Iteration notes, a
   frame, **your** card on a premium **slate frame + foil/holo finish** (`fr-slate.foil`, game-page grammar).
   Same game art, distinct cosmetic — the authentic card model.
 The **face-off hero**, leaderboard, P2–P5 and lifecycle grammar are unchanged. Burt re-audited **clean**.
-Drafts A + C retained for history. **Next: converge B → `compare-states.html`** (full lifecycle matrix),
-then design-spec formalization + the API page-audit (OQ-074) — **not done this pass**.
+
+## Converged — 2026-06-24 → `compare-states.html`
+Converged from Draft B into the canonical states board **[`compare-states.html`](compare-states.html)** —
+the **full matrix**: P1 has-overlap · P2 no-shared-games · P3 friends leaderboard · P4 Skeleton · P5
+privacy-limited (PROF-03) · **L1 Signal-Lost** (load error + RETRY) · **L2 Offline** (read-from-cache,
+SYS-10) — the §1.6 lifecycle ported verbatim from the sibling boards. Burt-clean. Drafts A + C +
+`compare-draft-b-versus` kept for history. **Owed (spec-owner):** the design-spec §1.5/§2.x formalization
+(`CompareHeader` · `CompareTotals` · `ComparePair`/`CompareRow` · `FriendsLeaderboard`/`LeaderRow`) + the
+API page-audit — `/me/compare/:friendId` payload (**OQ-074**), tracked with the convergence debt
+(**OQ-077**).
