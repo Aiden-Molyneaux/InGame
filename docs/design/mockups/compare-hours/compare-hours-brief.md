@@ -171,4 +171,17 @@ the pink shell LED (F-05/F-09). Shell `NavBand` keys stay **physical** (`0 4px 0
 
 ---
 
-## Owner gate ruling — (pending)
+## Owner gate ruling — B (Versus), with a matchup rework (2026-06-23)
+Owner picked **B · Versus / head-to-head** as the direction. Iteration notes, applied to
+`compare-draft-b-versus.html` this pass:
+- **Swap the matchup UI from draft A** — drop B's paired comparison bars; use draft A's **numeric**
+  per-game stats instead.
+- **New matchup layout:** the **friend's card on the left**, **your card on the right**, the **stats in
+  the middle** with the **winner highlighted in orange** (`ComparePair`/`CompareRow` → `.vsrow`:
+  `[their GameCard/mini] · [title + RIKO/YOU hours, winner orange + the gap] · [your GameCard/mini]`,
+  each card labelled with its owner).
+- **Up the card size for legibility** — matchup cards moved from `GameCard/thumb` (44×62) to
+  **`GameCard/mini` (64×89)**, carrying the F-02 TL+BR step.
+The **face-off hero**, leaderboard, P2–P5 and lifecycle grammar are unchanged. Burt re-audited **clean**.
+Drafts A + C retained for history. **Next: converge B → `compare-states.html`** (full lifecycle matrix),
+then design-spec formalization + the API page-audit (OQ-074) — **not done this pass**.

@@ -17,11 +17,14 @@ privacy-limited (PROF-03)**; Offline + LoadError deferred to converge (caption-n
 | File | Model | Thesis (how it reads the comparison) |
 |---|---|---|
 | [`compare-draft-a-ledger.html`](compare-draft-a-ledger.html) | **A · Side-by-side ledger** | Two aligned **YOU \| RIKO** columns — `CompareTotals` up top, then every shared game on its own row with both hour counts **aligned in the same two columns**, a quiet orange **StateMark** marking who leads each row; the leaderboard slice beneath. The **calm, scannable spreadsheet** pole — read top to bottom, no drama. **Burt: clean** ✅ (1 fix: GameCard snapped to the catalog `/thumb` 44×62 + the F-02 TL+BR step). |
-| [`compare-draft-b-versus.html`](compare-draft-b-versus.html) | **B · Versus / head-to-head** | A **duel** framing: a big totals **face-off** at the top (both totals large + a split **margin bar** + a verdict pill — who's ahead, by how much), then per-game **matchups** as paired bars where the **longer bar wins** (gap called out). The **playful, competitive** pole. **Burt: clean** ✅ (1 fix: dropped an off-definition ink StateMark inside the verdict pill — the orange NowTag fill carries the accent). |
+| [`compare-draft-b-versus.html`](compare-draft-b-versus.html) | **B · Versus / head-to-head** ← **OWNER PICK (2026-06-23)** | A **duel** framing: a big totals **face-off** at the top (both totals large + a split **margin bar** + a verdict pill — who's ahead, by how much), then per-game **card-vs-card matchups** — **their `GameCard`/mini (64×89) on the left, yours on the right, the two hour counts between them with the winner in orange** (owner refinement 2026-06-23: matchup UI swapped from paired bars to draft A's numeric stats in this card-flanked layout; cards up-sized for legibility). The **playful, competitive** pole. **Burt: clean** ✅. |
 | [`compare-draft-c-diff.html`](compare-draft-c-diff.html) | **C · Diff-first / overlap** | Leads with the **library overlap** (a three-segment *only-you · shared · only-them* bar) + the compact totals, then the shared games as **center-diverging deltas sorted by biggest gap** — orange = your turf, lavender = theirs — so you read **where you each dominate**; the leaderboard for context. The **insight / story** pole. **Burt: clean** ✅ (1 fix: removed a `<code>` monospace voice from a doc caption). |
 
-**Status:** in pass → owner gate. **Do not converge** until the owner picks a direction + gives
-iteration notes. Converge target (later): `compare-states.html` (full matrix incl. lifecycle).
+**Status:** **owner picked B (Versus) — 2026-06-23**, with the matchup UI reworked to the card-vs-card
+layout (their card · stats · your card, winner orange; cards up-sized). Drafts A + C kept for history.
+Still **in pass** — refining B before converge; **not yet converged**. Converge target (next):
+`compare-states.html` (full matrix incl. lifecycle), then the design-spec formalization + API page-audit
+(OQ-074).
 
 ## New components introduced (form is each draft's; names locked, ratified at converge)
 `CompareHeader` (the who-vs-who — Avatars + names) · `CompareTotals` (total hours · total games ·
