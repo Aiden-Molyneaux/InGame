@@ -141,6 +141,25 @@
   *authoring* surface is missing. Decide its home — a bottom-sheet from the actions menu, or a small
   game-picker micro-flow — and whether it's a Friends-tab state or a WTP-adjacent flow. Surfaced at the
   Friends-tab (§3.3) convergence. (2026-06-22) [presentation]
+- OQ-076: **Device editor (4.5) formalization is owed.** The converged `device-states.html` board needs its
+  **design-spec formalization** (`SectionSwitch`/`SectionCard` · `StickerStage`/`TransformBox`/`PlacedSticker`/
+  `StickerTray` · `SavedLook`/`LooksGrid`) + an **API page-audit** (`stickerComposition` shape · plastic-only
+  zones · saved-looks model). Captured here so the obligation is durable, not SCREEN-STATUS prose only; the
+  underlying behaviour gaps are **OQ-062/063/064/065**. (Governance go-green capture, 2026-06-24) [debt]
+- OQ-077: **Compare Hours (4.6) convergence + formalization is owed.** Converge the owner-picked Draft B →
+  `compare-states.html`, then **design-spec formalization** + an **API page-audit** (the
+  `/me/compare/:friendId` payload shape is **OQ-074**). Captured here so the obligation is durable, not
+  SCREEN-STATUS prose only. (Governance go-green capture, 2026-06-24) [debt]
+- OQ-078: **No left-edge accent rails — F-09 highlight-model clarification + ripple.** Owner ruling
+  (2026-06-24): the one-sided **left-edge accent rail** (a `border-left: 3px solid var(--scr-accent)`
+  stripe on a row / callout / toast) is **not** the highlight idiom — a highlighted row uses a flat
+  **accent-tint fill** (+ accent text), and selection a **full** accent border + the `StateMark`.
+  Noted in the catalog (**v0.9**, F-09 card). Owed: the **design-spec F-09 mirror** (wording), and the
+  **ripple** to live boards that still carry the rail — `discover-states.html` (the converged
+  offline/error toast: a `border-left: 3px` over its 1px accent border) and the **Friends drafts**
+  (`.reqrow.incoming` in `friends-draft-b/c`). The **Compare-hours** boards are de-railed this pass; the
+  retired `add-game-draft-b` / `store-draft-c` drafts are history (exempt), and doc-chrome left-borders
+  (e.g. `onscreen-marker-drafts` `.rule`) are not in scope. (Compare Hours 4.6 track, 2026-06-24) [presentation]
 
 ## Resolved
 - OQ-071 → **`GET /me/feed` item shape enumerated** (api-contract 0.23): the actor+type **aggregated**
