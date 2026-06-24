@@ -178,10 +178,12 @@ Owner picked **B · Versus / head-to-head** as the direction. Iteration notes, a
   per-game stats instead.
 - **New matchup layout:** the **friend's card on the left**, **your card on the right**, the **stats in
   the middle** with the **winner highlighted in orange** (`ComparePair`/`CompareRow` → `.vsrow`:
-  `[their GameCard/mini] · [title + RIKO/YOU hours, winner orange + the gap] · [your GameCard/mini]`,
+  `[their GameCard/cell] · [title + RIKO/YOU hours, winner orange + the gap] · [your GameCard/cell]`,
   each card labelled with its owner).
 - **Up the card size for legibility** — matchup cards moved from `GameCard/thumb` (44×62) to
-  **`GameCard/mini` (64×89)**, carrying the F-02 TL+BR step.
+  **`GameCard/cell` (96×134)** (the catalog 3-up cell size, v0.7), carrying the F-02 TL+BR step. (First
+  sized to `/mini` 64×89; owner asked for the next size up, 2026-06-24 — both cards + the middle stats
+  still hold on one line, the longest titles render without truncation.)
 - **Card-tap navigation seam (owner Q, 2026-06-23):** every matchup card is a **doorway to the Game page
   (§4.2)** for that game — **your** card opens your view; your **friend's** opens their **friend-view**
   (their card · per-game compare · adopt, SOC-11 / decision 0020). No spec change (composes the existing

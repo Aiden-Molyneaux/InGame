@@ -165,17 +165,17 @@
   .fo-sub .g .gl { display: block; margin-top: 2px; font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
   .fo-sub .gmid { font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-grip); padding: 0 6px; }
 
-  /* ════ /mini GameCard (F-01 — full face, never cropped) for the card-vs-card matchup ════ */
-  .gcard.mini { width: 64px; aspect-ratio: 63 / 88; }
-  .gcard.mini .art { inset: 3px; }
-  .gcard.mini .plate { left: 4px; right: 4px; bottom: 1.5px; padding: 2px 1px 1.5px; font-size: 4.5px; }
-  .c5 .gcard.mini { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
-  .c5 .gcard.mini .art { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0, 100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
-  .c5 .gcard.mini .plate { clip-path: polygon(0 1.5px, 1.5px 1.5px, 1.5px 0, 100% 0, 100% calc(100% - 1.5px), calc(100% - 1.5px) calc(100% - 1.5px), calc(100% - 1.5px) 100%, 0 100%); }
+  /* ════ /cell GameCard 96×134 (F-01 — catalog size, full face never cropped) for the card-vs-card matchup ════ */
+  .gcard.cell { width: 96px; height: 134px; }
+  .gcard.cell .art { inset: 4px; }
+  .gcard.cell .plate { left: 5px; right: 5px; bottom: 2px; padding: 2.5px 1px 2px; font-size: 6px; }
+  .c5 .gcard.cell { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .c5 .gcard.cell .art { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0, 100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
+  .c5 .gcard.cell .plate { clip-path: polygon(0 1.5px, 1.5px 1.5px, 1.5px 0, 100% 0, 100% calc(100% - 1.5px), calc(100% - 1.5px) calc(100% - 1.5px), calc(100% - 1.5px) 100%, 0 100%); }
   .vs-owner { font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); text-align: center; margin-top: 5px; }
 
   /* ════ ComparePair / CompareRow — card-vs-card matchup (their card · stats · your card; winner orange) ════ */
-  .vsrow { display: grid; grid-template-columns: 64px 1fr 64px; gap: 9px; align-items: center; padding: 12px 6px; border-bottom: 1px solid var(--scr-hairline); }
+  .vsrow { display: grid; grid-template-columns: 96px 1fr 96px; gap: 9px; align-items: center; padding: 12px 6px; border-bottom: 1px solid var(--scr-hairline); }
   .vsrow:last-of-type { border-bottom: none; }
   .vsrow .vside { display: flex; flex-direction: column; align-items: center; }
   .vsmid { display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 0; }
@@ -283,58 +283,58 @@
               <div class="sec"><h3>THE MATCHUPS &middot; 6 SHARED</h3><span class="tert dim">THEIR CARD &middot; YOURS</span></div>
               <div class="faceoff" style="padding:2px 8px;">
                 <div class="vsrow">
-                  <div class="vside"><div class="gcard mini"><div class="art art-destiny"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#fff"/><circle cx="12" cy="12" r="3" fill="#9c6e1e"/></svg></div><div class="plate">DESTINY 2</div></div><div class="vs-owner">RIKO</div></div>
+                  <div class="vside"><div class="gcard cell"><div class="art art-destiny"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#fff"/><circle cx="12" cy="12" r="3" fill="#9c6e1e"/></svg></div><div class="plate">DESTINY 2</div></div><div class="vs-owner">RIKO</div></div>
                   <div class="vsmid">
                     <div class="vtitle">Destiny 2</div>
                     <div class="vstats"><div class="vstat"><span class="vh">184</span><span class="vl">HRS</span></div><span class="vsep">&middot;</span><div class="vstat win"><span class="vh">210</span><span class="vl">HRS</span></div></div>
                     <div class="vlead"><span class="statemark"></span>YOU +26</div>
                   </div>
-                  <div class="vside"><div class="gcard mini"><div class="art art-destiny"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#fff"/><circle cx="12" cy="12" r="3" fill="#9c6e1e"/></svg></div><div class="plate">DESTINY 2</div></div><div class="vs-owner">YOU</div></div>
+                  <div class="vside"><div class="gcard cell"><div class="art art-destiny"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#fff"/><circle cx="12" cy="12" r="3" fill="#9c6e1e"/></svg></div><div class="plate">DESTINY 2</div></div><div class="vs-owner">YOU</div></div>
                 </div>
                 <div class="vsrow">
-                  <div class="vside"><div class="gcard mini"><div class="art art-elden"><svg viewBox="0 0 24 24"><path d="M12 3l3 6 6 .5-4.5 4 1.5 6L12 16l-5.5 3.5 1.5-6L3.5 9.5 9.5 9z" fill="#fff"/></svg></div><div class="plate">ELDEN RING</div></div><div class="vs-owner">RIKO</div></div>
+                  <div class="vside"><div class="gcard cell"><div class="art art-elden"><svg viewBox="0 0 24 24"><path d="M12 3l3 6 6 .5-4.5 4 1.5 6L12 16l-5.5 3.5 1.5-6L3.5 9.5 9.5 9z" fill="#fff"/></svg></div><div class="plate">ELDEN RING</div></div><div class="vs-owner">RIKO</div></div>
                   <div class="vsmid">
                     <div class="vtitle">Elden Ring</div>
                     <div class="vstats"><div class="vstat"><span class="vh">120</span><span class="vl">HRS</span></div><span class="vsep">&middot;</span><div class="vstat win"><span class="vh">140</span><span class="vl">HRS</span></div></div>
                     <div class="vlead"><span class="statemark"></span>YOU +20</div>
                   </div>
-                  <div class="vside"><div class="gcard mini"><div class="art art-elden"><svg viewBox="0 0 24 24"><path d="M12 3l3 6 6 .5-4.5 4 1.5 6L12 16l-5.5 3.5 1.5-6L3.5 9.5 9.5 9z" fill="#fff"/></svg></div><div class="plate">ELDEN RING</div></div><div class="vs-owner">YOU</div></div>
+                  <div class="vside"><div class="gcard cell"><div class="art art-elden"><svg viewBox="0 0 24 24"><path d="M12 3l3 6 6 .5-4.5 4 1.5 6L12 16l-5.5 3.5 1.5-6L3.5 9.5 9.5 9z" fill="#fff"/></svg></div><div class="plate">ELDEN RING</div></div><div class="vs-owner">YOU</div></div>
                 </div>
                 <div class="vsrow">
-                  <div class="vside"><div class="gcard mini"><div class="art art-hollow"><svg viewBox="0 0 24 24"><path d="M6 14c0-5 2.5-8 6-8s6 3 6 8" fill="none" stroke="#cdd8f0" stroke-width="2"/><circle cx="9.5" cy="12" r="1.3" fill="#cdd8f0"/><circle cx="14.5" cy="12" r="1.3" fill="#cdd8f0"/></svg></div><div class="plate">HOLLOW KNIGHT</div></div><div class="vs-owner">RIKO</div></div>
+                  <div class="vside"><div class="gcard cell"><div class="art art-hollow"><svg viewBox="0 0 24 24"><path d="M6 14c0-5 2.5-8 6-8s6 3 6 8" fill="none" stroke="#cdd8f0" stroke-width="2"/><circle cx="9.5" cy="12" r="1.3" fill="#cdd8f0"/><circle cx="14.5" cy="12" r="1.3" fill="#cdd8f0"/></svg></div><div class="plate">HOLLOW KNIGHT</div></div><div class="vs-owner">RIKO</div></div>
                   <div class="vsmid">
                     <div class="vtitle">Hollow Knight</div>
                     <div class="vstats"><div class="vstat win"><span class="vh">102</span><span class="vl">HRS</span></div><span class="vsep">&middot;</span><div class="vstat"><span class="vh">88</span><span class="vl">HRS</span></div></div>
                     <div class="vlead"><span class="statemark"></span>RIKO +14</div>
                   </div>
-                  <div class="vside"><div class="gcard mini"><div class="art art-hollow"><svg viewBox="0 0 24 24"><path d="M6 14c0-5 2.5-8 6-8s6 3 6 8" fill="none" stroke="#cdd8f0" stroke-width="2"/><circle cx="9.5" cy="12" r="1.3" fill="#cdd8f0"/><circle cx="14.5" cy="12" r="1.3" fill="#cdd8f0"/></svg></div><div class="plate">HOLLOW KNIGHT</div></div><div class="vs-owner">YOU</div></div>
+                  <div class="vside"><div class="gcard cell"><div class="art art-hollow"><svg viewBox="0 0 24 24"><path d="M6 14c0-5 2.5-8 6-8s6 3 6 8" fill="none" stroke="#cdd8f0" stroke-width="2"/><circle cx="9.5" cy="12" r="1.3" fill="#cdd8f0"/><circle cx="14.5" cy="12" r="1.3" fill="#cdd8f0"/></svg></div><div class="plate">HOLLOW KNIGHT</div></div><div class="vs-owner">YOU</div></div>
                 </div>
                 <div class="vsrow">
-                  <div class="vside"><div class="gcard mini"><div class="art art-hades"><svg viewBox="0 0 24 24"><path d="M7 4h10l-1 9a4 4 0 0 1-8 0z" fill="#fff"/><path d="M10 17v3M14 17v3" stroke="#fff" stroke-width="2"/></svg></div><div class="plate">HADES</div></div><div class="vs-owner">RIKO</div></div>
+                  <div class="vside"><div class="gcard cell"><div class="art art-hades"><svg viewBox="0 0 24 24"><path d="M7 4h10l-1 9a4 4 0 0 1-8 0z" fill="#fff"/><path d="M10 17v3M14 17v3" stroke="#fff" stroke-width="2"/></svg></div><div class="plate">HADES</div></div><div class="vs-owner">RIKO</div></div>
                   <div class="vsmid">
                     <div class="vtitle">Hades</div>
                     <div class="vstats"><div class="vstat win"><span class="vh">96</span><span class="vl">HRS</span></div><span class="vsep">&middot;</span><div class="vstat"><span class="vh">64</span><span class="vl">HRS</span></div></div>
                     <div class="vlead"><span class="statemark"></span>RIKO +32</div>
                   </div>
-                  <div class="vside"><div class="gcard mini"><div class="art art-hades"><svg viewBox="0 0 24 24"><path d="M7 4h10l-1 9a4 4 0 0 1-8 0z" fill="#fff"/><path d="M10 17v3M14 17v3" stroke="#fff" stroke-width="2"/></svg></div><div class="plate">HADES</div></div><div class="vs-owner">YOU</div></div>
+                  <div class="vside"><div class="gcard cell"><div class="art art-hades"><svg viewBox="0 0 24 24"><path d="M7 4h10l-1 9a4 4 0 0 1-8 0z" fill="#fff"/><path d="M10 17v3M14 17v3" stroke="#fff" stroke-width="2"/></svg></div><div class="plate">HADES</div></div><div class="vs-owner">YOU</div></div>
                 </div>
                 <div class="vsrow">
-                  <div class="vside"><div class="gcard mini"><div class="art art-stardew"><svg viewBox="0 0 24 24"><path d="M12 4v16M12 9l-4-3M12 12l4-3M12 15l-4-3" stroke="#fff" stroke-width="2" fill="none"/></svg></div><div class="plate">STARDEW</div></div><div class="vs-owner">RIKO</div></div>
+                  <div class="vside"><div class="gcard cell"><div class="art art-stardew"><svg viewBox="0 0 24 24"><path d="M12 4v16M12 9l-4-3M12 12l4-3M12 15l-4-3" stroke="#fff" stroke-width="2" fill="none"/></svg></div><div class="plate">STARDEW</div></div><div class="vs-owner">RIKO</div></div>
                   <div class="vsmid">
                     <div class="vtitle">Stardew Valley</div>
                     <div class="vstats"><div class="vstat win"><span class="vh">75</span><span class="vl">HRS</span></div><span class="vsep">&middot;</span><div class="vstat"><span class="vh">38</span><span class="vl">HRS</span></div></div>
                     <div class="vlead"><span class="statemark"></span>RIKO +37</div>
                   </div>
-                  <div class="vside"><div class="gcard mini"><div class="art art-stardew"><svg viewBox="0 0 24 24"><path d="M12 4v16M12 9l-4-3M12 12l4-3M12 15l-4-3" stroke="#fff" stroke-width="2" fill="none"/></svg></div><div class="plate">STARDEW</div></div><div class="vs-owner">YOU</div></div>
+                  <div class="vside"><div class="gcard cell"><div class="art art-stardew"><svg viewBox="0 0 24 24"><path d="M12 4v16M12 9l-4-3M12 12l4-3M12 15l-4-3" stroke="#fff" stroke-width="2" fill="none"/></svg></div><div class="plate">STARDEW</div></div><div class="vs-owner">YOU</div></div>
                 </div>
                 <div class="vsrow">
-                  <div class="vside"><div class="gcard mini"><div class="art art-celeste"><svg viewBox="0 0 24 24"><path d="M12 4l7 14H5z" fill="#fff"/></svg></div><div class="plate">CELESTE</div></div><div class="vs-owner">RIKO</div></div>
+                  <div class="vside"><div class="gcard cell"><div class="art art-celeste"><svg viewBox="0 0 24 24"><path d="M12 4l7 14H5z" fill="#fff"/></svg></div><div class="plate">CELESTE</div></div><div class="vs-owner">RIKO</div></div>
                   <div class="vsmid">
                     <div class="vtitle">Celeste</div>
                     <div class="vstats"><div class="vstat"><span class="vh">16</span><span class="vl">HRS</span></div><span class="vsep">&middot;</span><div class="vstat win"><span class="vh">22</span><span class="vl">HRS</span></div></div>
                     <div class="vlead"><span class="statemark"></span>YOU +6</div>
                   </div>
-                  <div class="vside"><div class="gcard mini"><div class="art art-celeste"><svg viewBox="0 0 24 24"><path d="M12 4l7 14H5z" fill="#fff"/></svg></div><div class="plate">CELESTE</div></div><div class="vs-owner">YOU</div></div>
+                  <div class="vside"><div class="gcard cell"><div class="art art-celeste"><svg viewBox="0 0 24 24"><path d="M12 4l7 14H5z" fill="#fff"/></svg></div><div class="plate">CELESTE</div></div><div class="vs-owner">YOU</div></div>
                 </div>
               </div>
               <div class="hint"><b>Tap a card &rarr; the Game page</b> for that game (&sect;4.2): <b>your</b> card opens your view; your <b>friend&rsquo;s</b> opens their <b>friend-view</b> (their card &middot; per-game compare &middot; adopt &mdash; SOC-11). Same target wherever a card appears in Compare.</div>
@@ -526,9 +526,9 @@
               </div>
               <div class="sec"><h3>THE MATCHUPS</h3></div>
               <div class="faceoff" style="padding:2px 10px;">
-                <div class="vsrow"><div class="vside"><div class="sk-block" style="width:64px;aspect-ratio:63/88;"></div></div><div class="vsmid" style="gap:8px;"><div class="sk-bar" style="width:98px;height:9px;"></div><div class="sk-bar" style="width:132px;height:15px;"></div></div><div class="vside"><div class="sk-block" style="width:64px;aspect-ratio:63/88;"></div></div></div>
-                <div class="vsrow"><div class="vside"><div class="sk-block" style="width:64px;aspect-ratio:63/88;"></div></div><div class="vsmid" style="gap:8px;"><div class="sk-bar" style="width:84px;height:9px;"></div><div class="sk-bar" style="width:132px;height:15px;"></div></div><div class="vside"><div class="sk-block" style="width:64px;aspect-ratio:63/88;"></div></div></div>
-                <div class="vsrow"><div class="vside"><div class="sk-block" style="width:64px;aspect-ratio:63/88;"></div></div><div class="vsmid" style="gap:8px;"><div class="sk-bar" style="width:92px;height:9px;"></div><div class="sk-bar" style="width:132px;height:15px;"></div></div><div class="vside"><div class="sk-block" style="width:64px;aspect-ratio:63/88;"></div></div></div>
+                <div class="vsrow"><div class="vside"><div class="sk-block" style="width:96px;height:134px;"></div></div><div class="vsmid" style="gap:8px;"><div class="sk-bar" style="width:98px;height:9px;"></div><div class="sk-bar" style="width:132px;height:15px;"></div></div><div class="vside"><div class="sk-block" style="width:96px;height:134px;"></div></div></div>
+                <div class="vsrow"><div class="vside"><div class="sk-block" style="width:96px;height:134px;"></div></div><div class="vsmid" style="gap:8px;"><div class="sk-bar" style="width:84px;height:9px;"></div><div class="sk-bar" style="width:132px;height:15px;"></div></div><div class="vside"><div class="sk-block" style="width:96px;height:134px;"></div></div></div>
+                <div class="vsrow"><div class="vside"><div class="sk-block" style="width:96px;height:134px;"></div></div><div class="vsmid" style="gap:8px;"><div class="sk-bar" style="width:92px;height:9px;"></div><div class="sk-bar" style="width:132px;height:15px;"></div></div><div class="vside"><div class="sk-block" style="width:96px;height:134px;"></div></div></div>
               </div>
               <div class="hint">SKELETON USES <b>SOLID</b> FILLS (NOT DASHES) &mdash; LOADING NEVER READS AS AN INVITATION (&sect;1.6). THE FACE-OFF FRAME STAYS PUT SO THE DUEL DOESN&rsquo;T REFLOW WHEN HOURS LAND.</div>
             </div>
@@ -609,7 +609,7 @@
     flat <b>Scanline-Energize</b> keycaps (F-03), the orange <b>StateMark</b>, the <b>F-06</b> type scale (21/15/11/9),
     and the §1.6 lifecycle. Same locked components as draft A, re-formed as a <b>face-off</b> (CompareHeader +
     CompareTotals fused) and per-game <b>card-vs-card matchups</b> (ComparePair/CompareRow &mdash; their
-    GameCard/mini (64×89) left, yours right, stats between, winner orange), with the shared
+    GameCard/cell (96×134) left, yours right, stats between, winner orange), with the shared
     FriendsLeaderboard. The verdict pill borrows the <b>NowTag</b> orange-fill grammar (a status mark, not a button).
     <b>Non-commerce</b> &mdash; no gold; completion % out (hours + games only). <b>Deferred to converge:</b> Offline +
     LoadError, the sibling §1.8 grammar. Shape gap flagged: <b>OQ-074</b>.</p>
