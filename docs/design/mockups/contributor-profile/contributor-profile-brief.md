@@ -189,12 +189,12 @@ hairline-darkened fill, no motion), isolated to a single `.btn:active` rule. The
 Owner picked **B · The Trophy Wall** + three changes, applied this pass to
 [`contributor-draft-b-trophy.html`](contributor-draft-b-trophy.html):
 - **Removed the contributor achievement badges** (CATALOGUER / ARTISAN / FIRST FINDER / PROLIFIC) entirely.
-- **Added a contributor STANDING bar** — percentile tiers **TOP 50% / 25% / 10% / 5%** (earned = gold
-  `PctPill`s, the catalog PROF-07 value-marker; the unreached next tier = a dim hairline chip) over an orange
-  progress bar, captioned with the precise percentile (*"You rank TOP 10% of all contributors — by cards
-  adopted"*). It **leads** P1/P3 (the new prestige hero, ahead of the signature card) and shows as a public
-  element on P4 (privacy-limited). *(Interpreted from the owner's "the screenshotted bar … top 25% / top 10%"
-  — **no image was attached**; a percentile-tier bar is the read. Form to be confirmed at next review.)*
+- **Added contributor percentile tags on the stat tiles** — small gold `PctPill`s on the contributor numbers,
+  **exactly the Profile PROF-07 pattern** (`<span class="pct">` inside `.stat`): e.g. GAMES 5 · **TOP 25%** ·
+  ADOPTIONS 424 · **TOP 10%** (CARDS untagged — tiles render cleanly without a chip). A contributor stat row
+  (GAMES · CARDS · ADOPTIONS) sits above the signature-card showcase on P1/P3, and the tags ride P4's public
+  totals. *(First take was a dedicated standing bar — owner redirected 2026-06-26 to the Profile-style
+  tags-on-numbers treatment.)*
 - **Dropped "field edits"** as a contributor field — removed the FIELD-EDITS footline (P1) + the EDITS totals
   tile (P4), everywhere.
 The signature-card showcase, games-added list, more-cards, P2 hook, and lifecycle grammar are unchanged.

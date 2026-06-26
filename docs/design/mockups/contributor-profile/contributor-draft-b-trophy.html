@@ -109,7 +109,7 @@
   .pl-celeste  { background: #8a4aa0; color: #f7e9f6; }
 
   /* ════ C5 · HYBRID — square chrome · stepped-diagonal cards ════ */
-  .c5 .well, .c5 .btn, .c5 .stat, .c5 .ric, .c5 .st-tiers .tier { border-radius: 0; }
+  .c5 .well, .c5 .btn, .c5 .stat, .c5 .ric, .c5 .pct { border-radius: 0; }
   .c5 .well { border: 1px solid var(--scr-hairline); }
   .c5 .btn.add, .c5 .btn.act { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
       100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
@@ -174,16 +174,8 @@
   .emore { padding: 8px 12px 0; font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-accent); }
   .footline { padding: 12px; font: 600 9px/1.5 var(--pk); letter-spacing: .5px; color: var(--scr-dim); text-align: center; }
   .footline b { color: var(--scr-soft); font-weight: 700; }
-  /* contributor standing — PROF-07-style percentile tiers (the gold tiers are PctPills, the catalog gold value-marker) */
-  .standing { padding: 13px 12px; display: flex; flex-direction: column; gap: 12px; }
-  .st-cap { font: 600 11px/1.45 var(--pk); letter-spacing: .3px; color: var(--scr-soft); }
-  .st-cap b { color: var(--scr-text); font-weight: 700; }
-  .st-bar { position: relative; height: 9px; background: var(--scr-panel); }
-  .st-fill { position: absolute; top: 0; bottom: 0; left: 0; background: var(--scr-accent); }
-  .st-tiers { display: flex; gap: 6px; }
-  .st-tiers .tier { flex: 1 1 0; text-align: center; font: 700 9px var(--pk); letter-spacing: .3px; padding: 4px 4px; }
-  .st-tiers .tier.on { background: var(--gold); color: #3c2a09; }
-  .st-tiers .tier.off { border: 1px solid var(--scr-hairline); color: var(--scr-dim); }
+  /* contributor percentile tag on a stat number — the PROF-07 PctPill (catalog gold value-marker), exactly as Profile */
+  .pct { margin-top: 2px; background: var(--gold); color: #3c2a09; padding: 2px 6px; font: 600 9px var(--pk); letter-spacing: .5px; }
   /* the prestige showcase — most-adopted card hero */
   .showcase { display: flex; gap: 16px; align-items: center; padding: 14px 12px; }
   .showcase .sx { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
@@ -265,13 +257,14 @@
 <div class="canvas">
   <div class="canvas-head">
     <h1>Contributor profile — Draft B · The Trophy Wall (by prestige)</h1>
-    <p>§4.9 "My Contributions" (CAT-07). Draft B organizes the record <b>by prestige</b> — your contributor
-    standing and most-adopted card lead as the heroes; the full lists collapse to secondary. The emotional
-    "look what I made that people love" hit. Same Teal/Midnight shell, flat keycaps, F-06 (21/15/11/9); the
-    <b>standing tiers are gold PctPills</b> (PROF-07 value-marker). Counts illustrative. NavBand: PROFILE active.</p>
+    <p>§4.9 "My Contributions" (CAT-07). Draft B organizes the record <b>by prestige</b> — your most-adopted
+    card leads as the signature showcase, and your contributor stats carry small <b>gold percentile tags</b>
+    (TOP 25% / TOP 10%, the PROF-07 PctPill, exactly as Profile); the full lists collapse to secondary. The
+    "look what I made that people love" hit. Same Teal/Midnight shell, flat keycaps, F-06 (21/15/11/9). Counts
+    illustrative. NavBand: PROFILE active.</p>
   </div>
 
-  <div class="stage-label">Self · populated &amp; empty <small>P1 the trophy wall (standing + signature card first) · P2 the new-user cold-start hook (the only gold — ADD A GAME / DESIGN A CARD, acquisitive, F-02)</small></div>
+  <div class="stage-label">Self · populated &amp; empty <small>P1 the trophy wall (signature card + percentile-tagged stats) · P2 the new-user cold-start hook (the only gold — ADD A GAME / DESIGN A CARD, acquisitive, F-02)</small></div>
   <div class="stage">
 
     <!-- ═══════════ P1 — SELF, POPULATED ═══════════ -->
@@ -297,18 +290,10 @@
                 </div>
               </div>
 
-              <div class="sec"><h3>CONTRIBUTOR STANDING</h3></div>
-              <div class="well">
-                <div class="standing">
-                  <div class="st-cap">You rank <b>TOP 10%</b> of all contributors — by cards adopted</div>
-                  <div class="st-bar"><div class="st-fill" style="width:88%;"></div></div>
-                  <div class="st-tiers">
-                    <span class="tier on">TOP 50%</span>
-                    <span class="tier on">TOP 25%</span>
-                    <span class="tier on">TOP 10%</span>
-                    <span class="tier off">TOP 5%</span>
-                  </div>
-                </div>
+              <div class="ctot">
+                <div class="stat"><span class="v">5</span><span class="l">GAMES</span><span class="pct">TOP 25%</span></div>
+                <div class="stat"><span class="v">3</span><span class="l">CARDS</span></div>
+                <div class="stat"><span class="v">424</span><span class="l">ADOPTIONS</span><span class="pct">TOP 10%</span></div>
               </div>
 
               <div class="sec"><h3>MOST ADOPTED CARD</h3></div>
@@ -365,9 +350,10 @@
       </div>
       <div class="caption">
         <h3>P1 — Self <em>(the trophy wall)</em></h3>
-        <p><b>The thesis:</b> prestige first — your <b>CONTRIBUTOR STANDING</b> (percentile tiers, gold PctPills)
-        leads, then your <b>most-adopted card</b> as a signature showcase (big <code>21px</code> adoption number,
-        orange). The full lists (more cards · games added) collapse to secondary. "Look what I made that people love."</p>
+        <p><b>The thesis:</b> prestige first — your contributor stats carry small <b>gold percentile tags</b>
+        (TOP 25% / TOP 10%, PROF-07 PctPills, exactly as Profile), then your <b>most-adopted card</b> leads as a
+        signature showcase (big <code>21px</code> adoption number, orange). The full lists (more cards · games
+        added) collapse to secondary. "Look what I made that people love."</p>
       </div>
     </div>
 
@@ -447,18 +433,10 @@
                 </div>
               </div>
 
-              <div class="sec"><h3>CONTRIBUTOR STANDING</h3></div>
-              <div class="well">
-                <div class="standing">
-                  <div class="st-cap">Riko ranks <b>TOP 40%</b> of all contributors — by cards adopted</div>
-                  <div class="st-bar"><div class="st-fill" style="width:38%;"></div></div>
-                  <div class="st-tiers">
-                    <span class="tier on">TOP 50%</span>
-                    <span class="tier off">TOP 25%</span>
-                    <span class="tier off">TOP 10%</span>
-                    <span class="tier off">TOP 5%</span>
-                  </div>
-                </div>
+              <div class="ctot">
+                <div class="stat"><span class="v">2</span><span class="l">GAMES</span><span class="pct">TOP 50%</span></div>
+                <div class="stat"><span class="v">1</span><span class="l">CARDS</span></div>
+                <div class="stat"><span class="v">47</span><span class="l">ADOPTIONS</span><span class="pct">TOP 40%</span></div>
               </div>
 
               <div class="sec"><h3>MOST ADOPTED CARD</h3></div>
@@ -501,7 +479,7 @@
       <div class="caption">
         <h3>P3 — Friend-view <em>(read-only)</em></h3>
         <p>RIKO's trophy wall via their Profile (<b>‹ RETURN TO RIKO</b>) — read-only, no management chrome,
-        no gold. Their standing + signature card + games, fewer items. Pride as <b>social proof</b> (PROF-05).</p>
+        no gold. Their percentile-tagged stats + signature card + games, fewer items. Pride as <b>social proof</b> (PROF-05).</p>
       </div>
     </div>
 
@@ -527,28 +505,15 @@
                   <div class="sub">CONTRIBUTOR · SINCE 2023</div>
                 </div>
               </div>
-              <div class="sec"><h3>CONTRIBUTOR STANDING</h3></div>
-              <div class="well">
-                <div class="standing">
-                  <div class="st-cap">Vanta ranks <b>TOP 5%</b> of all contributors — by cards adopted</div>
-                  <div class="st-bar"><div class="st-fill" style="width:96%;"></div></div>
-                  <div class="st-tiers">
-                    <span class="tier on">TOP 50%</span>
-                    <span class="tier on">TOP 25%</span>
-                    <span class="tier on">TOP 10%</span>
-                    <span class="tier on">TOP 5%</span>
-                  </div>
-                </div>
-              </div>
               <div class="ctot">
-                <div class="stat"><span class="v">8</span><span class="l">GAMES</span></div>
+                <div class="stat"><span class="v">8</span><span class="l">GAMES</span><span class="pct">TOP 10%</span></div>
                 <div class="stat"><span class="v">4</span><span class="l">CARDS</span></div>
-                <div class="stat"><span class="v">612</span><span class="l">ADOPTIONS</span></div>
+                <div class="stat"><span class="v">612</span><span class="l">ADOPTIONS</span><span class="pct">TOP 5%</span></div>
               </div>
               <div class="lock-well">
                 <svg width="26" height="26" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1.5" stroke-width="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke-width="2"/></svg>
                 <div class="lk-t">FRIENDS-ONLY DETAIL</div>
-                <div class="lk-s">VANTA's trophy wall — their signature card and games — is shared with friends. The standing and totals above are public.</div>
+                <div class="lk-s">VANTA's trophy wall — their signature card and games — is shared with friends. The totals above are public.</div>
                 <button class="btn act">＋ ADD FRIEND</button>
               </div>
             </div>
@@ -591,11 +556,8 @@
                   <div class="sk-bar" style="width:38%;"></div>
                 </div>
               </div>
-              <div class="sec"><h3 style="opacity:.5;">CONTRIBUTOR STANDING</h3></div>
-              <div class="well" style="display:flex; flex-direction:column; gap:12px; padding:14px 12px;">
-                <div class="sk-bar" style="width:70%;"></div>
-                <div class="sk-bar"></div>
-                <div style="display:flex; gap:6px;"><div class="sk-bar" style="flex:1; height:18px;"></div><div class="sk-bar" style="flex:1; height:18px;"></div><div class="sk-bar" style="flex:1; height:18px;"></div><div class="sk-bar" style="flex:1; height:18px;"></div></div>
+              <div class="ctot" style="padding-top:4px;">
+                <div class="sk-bar" style="height:50px;"></div><div class="sk-bar" style="height:50px;"></div><div class="sk-bar" style="height:50px;"></div>
               </div>
               <div class="sec"><h3 style="opacity:.5;">MOST ADOPTED CARD</h3></div>
               <div class="well" style="display:flex; gap:16px; align-items:center; padding:14px 12px;">
@@ -619,7 +581,7 @@
       </div>
       <div class="caption">
         <h3>P5 — Loading <em>(skeleton)</em></h3>
-        <p>The §1.6 <code>Skeleton</code> — solid quiet fills, no dashes. The standing bar + signature-card hero
+        <p>The §1.6 <code>Skeleton</code> — solid quiet fills, no dashes. The stats + signature-card hero
         block in. <b>Offline + LoadError</b> deferred to converge (sibling §1.8 grammar).</p>
       </div>
     </div>

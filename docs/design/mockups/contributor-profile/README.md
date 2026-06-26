@@ -2,14 +2,14 @@
 
 The §4.9 **Contributor profile** design track — the **pride surface** off Profile's `MY CONTRIBUTIONS`
 gateway. Three distinct organizing models → owner gate → converge. **Owner picked B (2026-06-26)** + iterated
-(a contributor STANDING bar replaces the achievement badges; field-edits dropped); not yet converged.
+(Profile-style percentile tags on the contributor stat tiles replace the achievement badges; field-edits dropped); not yet converged.
 
 ## File map
 | File | What |
 |---|---|
 | [`contributor-profile-brief.md`](contributor-profile-brief.md) | The track plan — contract, scope, the 3 models, panel contract, hard rules, sample data |
 | [`contributor-draft-a-record.html`](contributor-draft-a-record.html) | **A · The Record** — organized **by type** (totals → games added · cards designed · field edits · badges). The honest archive. |
-| [`contributor-draft-b-trophy.html`](contributor-draft-b-trophy.html) | **B · The Trophy Wall — PICKED** (2026-06-26) — **by prestige**: a contributor **STANDING bar** (percentile tiers TOP 50/25/10/5, gold PctPills) + the most-adopted card lead; lists demoted. **Badges + edits removed** (owner). |
+| [`contributor-draft-b-trophy.html`](contributor-draft-b-trophy.html) | **B · The Trophy Wall — PICKED** (2026-06-26) — **by prestige**: the most-adopted card lead + **percentile tags on the contributor stat tiles** (gold PctPills, Profile PROF-07: e.g. ADOPTIONS · TOP 10%); lists demoted. **Badges + edits removed** (owner). |
 | [`contributor-draft-c-impact.html`](contributor-draft-c-impact.html) | **C · The Impact Dashboard** — organized **by reach** (footprint heroes + items ranked by impact). The data-story. |
 | Converge target (later) | `contributor-states.html` — full matrix incl. lifecycle |
 
@@ -37,7 +37,7 @@ All three **PASS ✅** (0 blocker / 0 major), reconciled against F-01..F-09 + fl
 
 ## Flags
 - **Picked: B + standing rework (2026-06-26).** Achievement badges + field-edits removed; a contributor
-  percentile **STANDING bar** added (TOP 50/25/10/5, gold PctPills). The earlier badge-gold question is moot.
+  percentile **tags added on the contributor stat tiles** (gold PctPills, Profile PROF-07 pattern). The earlier badge-gold question is moot.
 - **Spec ripple — OQ-079:** dropping CAT-06 edits + achievement badges and adding a percentile standing
   **diverges from CAT-07's must-host list**; the spec-owner ripples product-spec CAT-07 + defines the
   percentile data model (metric · thresholds · honesty/threshold-gating · privacy, PROF-03/07).

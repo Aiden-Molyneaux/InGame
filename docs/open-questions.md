@@ -149,8 +149,8 @@
 - OQ-079: **Contributor profile (CAT-07) pride elements revised** — owner ruling (2026-06-26, design gate
   on the Contributor-profile track, draft B picked): the pride surface **drops "fields you added" (CAT-06
   edits) and "achievement badges"** as contributor-profile elements, and **adds a contributor percentile
-  STANDING** — PROF-07-style tiers (TOP 50% / 25% / 10% / 5%, rendered as gold `PctPill`s) ranking the
-  contributor among all contributors. The design now diverges from the **CAT-07** must-host list
+  STANDING** — PROF-07-style percentile **tags on the contributor stat tiles** (small gold `PctPill`s, exactly
+  as Profile — e.g. ADOPTIONS · TOP 10%, GAMES · TOP 25%) ranking the contributor among all contributors. The design now diverges from the **CAT-07** must-host list
   (*"fields you added … contributor achievement badges"*), so the spec-owner must ripple **product-spec
   CAT-07** (drop edits + badges from this surface; add the standing) and decide the **percentile data
   model**: the ranking **metric** (drafted = *cards adopted*; alts = games-reach or a blend), the **tier
