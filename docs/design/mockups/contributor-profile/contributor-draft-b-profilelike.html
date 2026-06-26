@@ -90,6 +90,12 @@
   .gcard.mini-size { width: 100%; aspect-ratio: 63 / 88; }
   .gcard.mini-size .art { inset: 3px; }
   .gcard.mini-size .plate { left: 4px; right: 4px; bottom: 1.5px; padding: 2px 1px 1.5px; font-size: 4.5px; letter-spacing: 0; }
+  .gcard.cell { width: 96px; height: 134px; }
+  .gcard.cell .art { inset: 4px; }
+  .gcard.cell .plate { left: 6px; right: 6px; bottom: 2px; padding: 3px 2px 2px; font-size: 6px; }
+  .gcard.thumb { width: 44px; height: 62px; }
+  .gcard.thumb .art { inset: 2.5px; }
+  .gcard.thumb .plate { left: 3.5px; right: 3.5px; bottom: 1px; padding: 1.5px 1px 1px; font-size: 3.2px; letter-spacing: 0; }
   /* frames + plates (Profile + Compare libraries) */
   .fr-marathon { background: linear-gradient(160deg, #64789f, #46587e); }
   .fr-destiny  { background: linear-gradient(160deg, #e8bc52, #c08a2a); }
@@ -128,6 +134,10 @@
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
   .c5 .gcard.mini-size .plate { clip-path: polygon(0 1.5px, 1.5px 1.5px, 1.5px 0, 100% 0,
       100% calc(100% - 1.5px), calc(100% - 1.5px) calc(100% - 1.5px), calc(100% - 1.5px) 100%, 0 100%); }
+  .c5 .gcard.cell { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .c5 .gcard.cell .art { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0, 100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
+  .c5 .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0, 100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
+  .c5 .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
 
   /* ════ S2 base — flat floating panels ════ */
   .sk2 { background: var(--scr-bg); }
@@ -144,6 +154,15 @@
   .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 16px 2px 8px; }
   .sec h3 { margin: 0; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
   .sec a { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
+
+  /* ── game rows (legible title) — the row style from -trophy ── */
+  .chev { margin-left: auto; color: var(--scr-grip); font: 700 15px var(--pk); flex: 0 0 auto; }
+  .crow { display: flex; gap: 11px; align-items: center; padding: 9px 12px; }
+  .crow + .crow { border-top: 1px solid var(--scr-hairline); }
+  .crow .cm { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .crow .gt { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .crow .reach { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .crow .reach b { color: var(--scr-soft); font-weight: 700; }
 
   /* ── identity block (Profile .id) ── */
   .id { padding: 12px; display: flex; flex-direction: column; gap: 9px; }
@@ -205,6 +224,8 @@
     clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px), calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
   .sk-mini { width: 64px; aspect-ratio: 63 / 88; background: var(--scr-panel);
     clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .sk-cell { width: 96px; height: 134px; background: var(--scr-panel);
+    clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
 
   /* ════ FLAT BUTTONS + SCANLINE ENERGIZE (F-03, locked 2026-06-18) ════ */
   .sk2 .btn:active, .sk2 .btn.is-pressed {
@@ -265,10 +286,10 @@
     <h1>Contributor profile — Draft B (Profile-like layout)</h1>
     <p>A copy of the picked Draft B (§4.9 "My Contributions", CAT-07) with the information laid out in
     <b>Profile's grammar</b> (<code>profile-states.html</code>): an <code>IdentityBlock</code> (avatar · name ·
-    bio · tags) → <code>STATS</code> well (tiles + gold PROF-07 percentile chips) → a <b>SIGNATURE CARD</b>
+    bio · tags) → boxless <code>STATS</code> tiles (gold PROF-07 percentile chips) → a <b>SIGNATURE CARD</b>
     hero in the <code>PINNED FAVOURITE</code> form (card + meta + <code>VIEW CARD</code>) → <b>CARDS DESIGNED</b>
-    and <b>GAMES ADDED</b> as <code>TOP&nbsp;5</code>-style mini-card grids (rank chips + a <code>VIEW ALL ›</code>
-    TertiaryLink). Counts illustrative. NavBand: PROFILE active.</p>
+    as a legible <code>/cell</code> card grid (rank chips) and <b>GAMES ADDED</b> as <b>title rows</b>
+    (thumb + name + reach), each with a <code>VIEW ALL ›</code> TertiaryLink. Counts illustrative. NavBand: PROFILE active.</p>
   </div>
 
   <div class="stage-label">Self · populated &amp; empty <small>P1 the record in Profile's layout · P2 the new-user cold-start hook (the only gold beyond the PROF-07 percentile chips + RankChip/first — ADD A GAME / DESIGN A CARD, acquisitive, F-02)</small></div>
@@ -328,26 +349,41 @@
 
               <div class="sec"><h3>CARDS DESIGNED</h3><a href="#">VIEW ALL &rsaquo;</a></div>
               <div class="minigrid">
-                <div class="gcard mini-size fr-marathon"><span class="rank first">1</span>
+                <div class="gcard cell fr-marathon"><span class="rank first">1</span>
                   <div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
-                <div class="gcard mini-size fr-destiny"><span class="rank">2</span>
+                <div class="gcard cell fr-destiny"><span class="rank">2</span>
                   <div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
-                <div class="gcard mini-size fr-elden"><span class="rank">3</span>
+                <div class="gcard cell fr-elden"><span class="rank">3</span>
                   <div class="art"><svg><use href="#art-elden"/></svg></div><div class="plate pl-elden">Elden Ring</div></div>
               </div>
 
               <div class="sec"><h3>GAMES ADDED</h3><a href="#">VIEW ALL &rsaquo;</a></div>
-              <div class="minigrid">
-                <div class="gcard mini-size fr-hollow"><span class="rank first">1</span>
-                  <div class="art"><svg><use href="#art-hollow"/></svg></div><div class="plate pl-hollow">Hollow</div></div>
-                <div class="gcard mini-size fr-hades"><span class="rank">2</span>
-                  <div class="art"><svg><use href="#art-hades"/></svg></div><div class="plate pl-hades">Hades</div></div>
-                <div class="gcard mini-size fr-celeste"><span class="rank">3</span>
-                  <div class="art"><svg><use href="#art-celeste"/></svg></div><div class="plate pl-celeste">Celeste</div></div>
-                <div class="gcard mini-size fr-stardew"><span class="rank">4</span>
-                  <div class="art"><svg><use href="#art-stardew"/></svg></div><div class="plate pl-stardew">Stardew</div></div>
-                <div class="gcard mini-size fr-marathon"><span class="rank">5</span>
-                  <div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
+              <div class="well">
+                <div class="crow">
+                  <div class="gcard thumb fr-hollow"><div class="art"><svg><use href="#art-hollow"/></svg></div><div class="plate pl-hollow">Hollow</div></div>
+                  <div class="cm"><span class="gt">HOLLOW KNIGHT</span><span class="reach">IN <b>1,240</b> COLLECTIONS</span></div>
+                  <span class="chev">&rsaquo;</span>
+                </div>
+                <div class="crow">
+                  <div class="gcard thumb fr-hades"><div class="art"><svg><use href="#art-hades"/></svg></div><div class="plate pl-hades">Hades</div></div>
+                  <div class="cm"><span class="gt">HADES</span><span class="reach">IN <b>980</b> COLLECTIONS</span></div>
+                  <span class="chev">&rsaquo;</span>
+                </div>
+                <div class="crow">
+                  <div class="gcard thumb fr-celeste"><div class="art"><svg><use href="#art-celeste"/></svg></div><div class="plate pl-celeste">Celeste</div></div>
+                  <div class="cm"><span class="gt">CELESTE</span><span class="reach">IN <b>410</b> COLLECTIONS</span></div>
+                  <span class="chev">&rsaquo;</span>
+                </div>
+                <div class="crow">
+                  <div class="gcard thumb fr-stardew"><div class="art"><svg><use href="#art-stardew"/></svg></div><div class="plate pl-stardew">Stardew</div></div>
+                  <div class="cm"><span class="gt">STARDEW VALLEY</span><span class="reach">IN <b>360</b> COLLECTIONS</span></div>
+                  <span class="chev">&rsaquo;</span>
+                </div>
+                <div class="crow">
+                  <div class="gcard thumb fr-marathon"><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
+                  <div class="cm"><span class="gt">MARATHON</span><span class="reach">IN <b>95</b> COLLECTIONS</span></div>
+                  <span class="chev">&rsaquo;</span>
+                </div>
               </div>
             </div>
           </div>
@@ -363,9 +399,9 @@
       <div class="caption">
         <h3>P1 — Self <em>(Profile layout)</em></h3>
         <p>The same contributor record as Draft B, re-laid in <b>Profile's grammar</b>: identity block →
-        STATS well (gold percentile chips) → <b>SIGNATURE CARD</b> as the PINNED-FAVOURITE hero (with a
-        <code>VIEW CARD</code> button) → CARDS DESIGNED &amp; GAMES ADDED as <b>Top-5-style mini grids</b>
-        (rank chips + <code>VIEW ALL ›</code>). Cards and games read equally — same mini-card + TertiaryLink.</p>
+        boxless STATS tiles (gold percentile chips) → <b>SIGNATURE CARD</b> as the PINNED-FAVOURITE hero (with a
+        <code>VIEW CARD</code> button) → <b>CARDS DESIGNED</b> as a legible <code>/cell</code> card grid and
+        <b>GAMES ADDED</b> as <b>title rows</b> (so the game name reads clearly), each + <code>VIEW ALL ›</code>.</p>
       </div>
     </div>
 
@@ -483,16 +519,22 @@
 
               <div class="sec"><h3>CARDS DESIGNED</h3><a href="#">VIEW ALL &rsaquo;</a></div>
               <div class="minigrid">
-                <div class="gcard mini-size fr-hades"><span class="rank first">1</span>
+                <div class="gcard cell fr-hades"><span class="rank first">1</span>
                   <div class="art"><svg><use href="#art-hades"/></svg></div><div class="plate pl-hades">Hades</div></div>
               </div>
 
               <div class="sec"><h3>GAMES ADDED</h3><a href="#">VIEW ALL &rsaquo;</a></div>
-              <div class="minigrid">
-                <div class="gcard mini-size fr-celeste"><span class="rank first">1</span>
-                  <div class="art"><svg><use href="#art-celeste"/></svg></div><div class="plate pl-celeste">Celeste</div></div>
-                <div class="gcard mini-size fr-stardew"><span class="rank">2</span>
-                  <div class="art"><svg><use href="#art-stardew"/></svg></div><div class="plate pl-stardew">Stardew</div></div>
+              <div class="well">
+                <div class="crow">
+                  <div class="gcard thumb fr-celeste"><div class="art"><svg><use href="#art-celeste"/></svg></div><div class="plate pl-celeste">Celeste</div></div>
+                  <div class="cm"><span class="gt">CELESTE</span><span class="reach">IN <b>410</b> COLLECTIONS</span></div>
+                  <span class="chev">&rsaquo;</span>
+                </div>
+                <div class="crow">
+                  <div class="gcard thumb fr-stardew"><div class="art"><svg><use href="#art-stardew"/></svg></div><div class="plate pl-stardew">Stardew</div></div>
+                  <div class="cm"><span class="gt">STARDEW VALLEY</span><span class="reach">IN <b>360</b> COLLECTIONS</span></div>
+                  <span class="chev">&rsaquo;</span>
+                </div>
               </div>
             </div>
           </div>
@@ -607,7 +649,7 @@
               </div>
               <div class="sec"><h3 style="opacity:.5;">CARDS DESIGNED</h3></div>
               <div class="minigrid">
-                <div class="sk-mini"></div><div class="sk-mini"></div><div class="sk-mini"></div>
+                <div class="sk-cell"></div><div class="sk-cell"></div><div class="sk-cell"></div>
               </div>
             </div>
           </div>
