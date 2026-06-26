@@ -146,6 +146,19 @@
   (`.reqrow.incoming` in `friends-draft-b/c`). The **Compare-hours** boards are de-railed this pass; the
   retired `add-game-draft-b` / `store-draft-c` drafts are history (exempt), and doc-chrome left-borders
   (e.g. `onscreen-marker-drafts` `.rule`) are not in scope. (Compare Hours 4.6 track, 2026-06-24) [presentation]
+- OQ-079: **Contributor profile (CAT-07) pride elements revised** — owner ruling (2026-06-26, design gate
+  on the Contributor-profile track, draft B picked): the pride surface **drops "fields you added" (CAT-06
+  edits) and "achievement badges"** as contributor-profile elements, and **adds a contributor percentile
+  STANDING** — PROF-07-style tiers (TOP 50% / 25% / 10% / 5%, rendered as gold `PctPill`s) ranking the
+  contributor among all contributors. The design now diverges from the **CAT-07** must-host list
+  (*"fields you added … contributor achievement badges"*), so the spec-owner must ripple **product-spec
+  CAT-07** (drop edits + badges from this surface; add the standing) and decide the **percentile data
+  model**: the ranking **metric** (drafted = *cards adopted*; alts = games-reach or a blend), the **tier
+  thresholds**, and **honesty/threshold-gating** (PROF-07 only shows a percentile above a cohort-size
+  floor — does contributor standing gate the same way, and is it friend-visible / privacy-gated like the
+  rest, PROF-03?). Pairs with the **`GET /users/:id/contributions` payload enumeration** owed at converge
+  (the endpoint is prose-only). Note: edits (CAT-06) remain a *catalog* behavior — only their *display on
+  the contributor pride surface* is dropped. (Contributor profile 4.9 track) [behavior/data]
 
 ## Resolved
 - OQ-071 → **`GET /me/feed` item shape enumerated** (api-contract 0.23): the actor+type **aggregated**

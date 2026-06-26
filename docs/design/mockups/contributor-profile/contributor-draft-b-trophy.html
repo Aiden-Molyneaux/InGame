@@ -109,7 +109,7 @@
   .pl-celeste  { background: #8a4aa0; color: #f7e9f6; }
 
   /* ════ C5 · HYBRID — square chrome · stepped-diagonal cards ════ */
-  .c5 .well, .c5 .btn, .c5 .stat, .c5 .ric, .c5 .badge .g { border-radius: 0; }
+  .c5 .well, .c5 .btn, .c5 .stat, .c5 .ric, .c5 .st-tiers .tier { border-radius: 0; }
   .c5 .well { border: 1px solid var(--scr-hairline); }
   .c5 .btn.add, .c5 .btn.act { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
       100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
@@ -159,7 +159,7 @@
   .cid { display: flex; gap: 12px; align-items: center; padding: 12px; }
   .cid .nm { font: 700 15px/1.1 var(--pk); letter-spacing: 1px; color: var(--scr-text); }
   .cid .sub { font: 600 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); margin-top: 4px; }
-  .ctot { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 0 12px; }
+  .ctot { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 0 12px; }
   .crow { display: flex; gap: 11px; align-items: center; padding: 9px 12px; }
   .crow + .crow { border-top: 1px solid var(--scr-hairline); }
   .crow .cm { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
@@ -174,19 +174,16 @@
   .emore { padding: 8px 12px 0; font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-accent); }
   .footline { padding: 12px; font: 600 9px/1.5 var(--pk); letter-spacing: .5px; color: var(--scr-dim); text-align: center; }
   .footline b { color: var(--scr-soft); font-weight: 700; }
-  /* badges — earned glyphs, NON-gold (orange accent); no level */
-  .badges { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; padding: 14px 12px; }
-  .badge { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
-  .badge .g { width: 50px; height: 50px; background: var(--scr-panel); border: 1px solid var(--scr-hairline);
-    display: flex; align-items: center; justify-content: center; }
-  .badge .g svg { width: 26px; height: 26px; }
-  .badge .g svg path, .badge .g svg rect, .badge .g svg circle { stroke: var(--scr-grip); fill: none; }
-  .badge.earned .g { background: rgba(255,159,67,.15); border-color: var(--scr-accent); }
-  .badge.earned .g svg path, .badge.earned .g svg rect, .badge.earned .g svg circle { stroke: var(--scr-accent); }
-  .badge .bl { font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-soft); }
-  .badge.locked .bl { color: var(--scr-dim); }
-  .badge .bp { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
-  .tlead { padding: 2px 2px 0; font: 600 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  /* contributor standing — PROF-07-style percentile tiers (the gold tiers are PctPills, the catalog gold value-marker) */
+  .standing { padding: 13px 12px; display: flex; flex-direction: column; gap: 12px; }
+  .st-cap { font: 600 11px/1.45 var(--pk); letter-spacing: .3px; color: var(--scr-soft); }
+  .st-cap b { color: var(--scr-text); font-weight: 700; }
+  .st-bar { position: relative; height: 9px; background: var(--scr-panel); }
+  .st-fill { position: absolute; top: 0; bottom: 0; left: 0; background: var(--scr-accent); }
+  .st-tiers { display: flex; gap: 6px; }
+  .st-tiers .tier { flex: 1 1 0; text-align: center; font: 700 9px var(--pk); letter-spacing: .3px; padding: 4px 4px; }
+  .st-tiers .tier.on { background: var(--gold); color: #3c2a09; }
+  .st-tiers .tier.off { border: 1px solid var(--scr-hairline); color: var(--scr-dim); }
   /* the prestige showcase — most-adopted card hero */
   .showcase { display: flex; gap: 16px; align-items: center; padding: 14px 12px; }
   .showcase .sx { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
@@ -212,7 +209,6 @@
   /* skeleton (loading) — solid quiet fills */
   .sk-av { flex: 0 0 auto; width: 46px; height: 46px; background: var(--scr-panel); }
   .sk-bar { height: 9px; background: var(--scr-panel); }
-  .sk-badge { width: 50px; height: 50px; background: var(--scr-panel); margin: 0 auto; }
   .sk-hero { width: 138px; height: 193px; background: var(--scr-panel);
     clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px), calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
 
@@ -269,13 +265,13 @@
 <div class="canvas">
   <div class="canvas-head">
     <h1>Contributor profile — Draft B · The Trophy Wall (by prestige)</h1>
-    <p>§4.9 "My Contributions" (CAT-07). Draft B organizes the record <b>by prestige</b> — the badge case
-    and your most-adopted card lead as the heroes; the full lists collapse to secondary. The emotional
-    "look what I made that people love" hit. Same Teal/Midnight shell, flat keycaps, F-06 (21/15/11/9),
-    badges <b>non-gold</b>. Counts illustrative. NavBand: PROFILE active.</p>
+    <p>§4.9 "My Contributions" (CAT-07). Draft B organizes the record <b>by prestige</b> — your contributor
+    standing and most-adopted card lead as the heroes; the full lists collapse to secondary. The emotional
+    "look what I made that people love" hit. Same Teal/Midnight shell, flat keycaps, F-06 (21/15/11/9); the
+    <b>standing tiers are gold PctPills</b> (PROF-07 value-marker). Counts illustrative. NavBand: PROFILE active.</p>
   </div>
 
-  <div class="stage-label">Self · populated &amp; empty <small>P1 the trophy wall (badges + signature card first) · P2 the new-user cold-start hook (the only gold — ADD A GAME / DESIGN A CARD, acquisitive, F-02)</small></div>
+  <div class="stage-label">Self · populated &amp; empty <small>P1 the trophy wall (standing + signature card first) · P2 the new-user cold-start hook (the only gold — ADD A GAME / DESIGN A CARD, acquisitive, F-02)</small></div>
   <div class="stage">
 
     <!-- ═══════════ P1 — SELF, POPULATED ═══════════ -->
@@ -301,25 +297,16 @@
                 </div>
               </div>
 
-              <div class="sec"><h3>CONTRIBUTOR BADGES</h3><span class="ct">3 EARNED</span></div>
+              <div class="sec"><h3>CONTRIBUTOR STANDING</h3></div>
               <div class="well">
-                <div class="badges">
-                  <div class="badge earned">
-                    <div class="g"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-width="2"/></svg></div>
-                    <span class="bl">CATALOGUER</span>
-                  </div>
-                  <div class="badge earned">
-                    <div class="g"><svg viewBox="0 0 24 24"><path d="M4 20l3-1L19 7l-2-2L5 17l-1 3z" stroke-width="2" stroke-linejoin="round"/><path d="M15 6l3 3" stroke-width="2"/></svg></div>
-                    <span class="bl">ARTISAN</span>
-                  </div>
-                  <div class="badge earned">
-                    <div class="g"><svg viewBox="0 0 24 24"><path d="M5 3v18" stroke-width="2" stroke-linecap="round"/><path d="M5 4h13l-3 4 3 4H5z" stroke-width="2" stroke-linejoin="round"/></svg></div>
-                    <span class="bl">FIRST FINDER</span>
-                  </div>
-                  <div class="badge locked">
-                    <div class="g"><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16" stroke-width="2" stroke-linecap="round"/></svg></div>
-                    <span class="bl">PROLIFIC</span>
-                    <span class="bp">5 / 25</span>
+                <div class="standing">
+                  <div class="st-cap">You rank <b>TOP 10%</b> of all contributors — by cards adopted</div>
+                  <div class="st-bar"><div class="st-fill" style="width:88%;"></div></div>
+                  <div class="st-tiers">
+                    <span class="tier on">TOP 50%</span>
+                    <span class="tier on">TOP 25%</span>
+                    <span class="tier on">TOP 10%</span>
+                    <span class="tier off">TOP 5%</span>
                   </div>
                 </div>
               </div>
@@ -364,7 +351,7 @@
                 <div class="emore">AND 3 MORE GAMES &rsaquo;</div>
               </div>
 
-              <div class="footline">9 FIELD EDITS ACROSS 6 GAMES · REACHING <b>3,085</b> COLLECTIONS IN ALL</div>
+              <div class="footline">YOUR CONTRIBUTIONS REACH <b>3,085</b> COLLECTIONS ACROSS THE COMMUNITY</div>
             </div>
           </div>
         </div>
@@ -378,9 +365,9 @@
       </div>
       <div class="caption">
         <h3>P1 — Self <em>(the trophy wall)</em></h3>
-        <p><b>The thesis:</b> prestige first — the <b>BADGE CASE</b> leads, then your <b>most-adopted card</b>
-        as a signature showcase (big <code>21px</code> adoption number, orange — not gold). The full lists
-        (more cards · games added · edits) collapse to secondary. "Look what I made that people love."</p>
+        <p><b>The thesis:</b> prestige first — your <b>CONTRIBUTOR STANDING</b> (percentile tiers, gold PctPills)
+        leads, then your <b>most-adopted card</b> as a signature showcase (big <code>21px</code> adoption number,
+        orange). The full lists (more cards · games added) collapse to secondary. "Look what I made that people love."</p>
       </div>
     </div>
 
@@ -409,7 +396,7 @@
               <div class="hook">
                 <div class="hic"><svg viewBox="0 0 24 24"><path d="M12 3l2.4 5 5.6.6-4.2 3.8 1.3 5.6L12 17.7 6.9 21l1.3-5.6L4 11.6l5.6-.6L12 3z" stroke-width="2" stroke-linejoin="round"/></svg></div>
                 <div class="ht">YOUR TROPHY WALL AWAITS</div>
-                <div class="hs">Bring a game to the catalog or design a card others adopt — earn badges and build your signature here.</div>
+                <div class="hs">Bring a game to the catalog or design a card others adopt — climb the contributor ranks and build your signature here.</div>
                 <div class="acts">
                   <button class="btn add">＋ ADD A GAME</button>
                   <button class="btn add">✦ DESIGN A CARD</button>
@@ -460,17 +447,16 @@
                 </div>
               </div>
 
-              <div class="sec"><h3>CONTRIBUTOR BADGES</h3><span class="ct">1 EARNED</span></div>
+              <div class="sec"><h3>CONTRIBUTOR STANDING</h3></div>
               <div class="well">
-                <div class="badges">
-                  <div class="badge earned">
-                    <div class="g"><svg viewBox="0 0 24 24"><path d="M5 3v18" stroke-width="2" stroke-linecap="round"/><path d="M5 4h13l-3 4 3 4H5z" stroke-width="2" stroke-linejoin="round"/></svg></div>
-                    <span class="bl">FIRST FINDER</span>
-                  </div>
-                  <div class="badge locked">
-                    <div class="g"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-width="2"/></svg></div>
-                    <span class="bl">CATALOGUER</span>
-                    <span class="bp">2 / 5</span>
+                <div class="standing">
+                  <div class="st-cap">Riko ranks <b>TOP 40%</b> of all contributors — by cards adopted</div>
+                  <div class="st-bar"><div class="st-fill" style="width:38%;"></div></div>
+                  <div class="st-tiers">
+                    <span class="tier on">TOP 50%</span>
+                    <span class="tier off">TOP 25%</span>
+                    <span class="tier off">TOP 10%</span>
+                    <span class="tier off">TOP 5%</span>
                   </div>
                 </div>
               </div>
@@ -515,7 +501,7 @@
       <div class="caption">
         <h3>P3 — Friend-view <em>(read-only)</em></h3>
         <p>RIKO's trophy wall via their Profile (<b>‹ RETURN TO RIKO</b>) — read-only, no management chrome,
-        no gold. Their badges + signature card + games, fewer items. Pride as <b>social proof</b> (PROF-05).</p>
+        no gold. Their standing + signature card + games, fewer items. Pride as <b>social proof</b> (PROF-05).</p>
       </div>
     </div>
 
@@ -541,16 +527,28 @@
                   <div class="sub">CONTRIBUTOR · SINCE 2023</div>
                 </div>
               </div>
+              <div class="sec"><h3>CONTRIBUTOR STANDING</h3></div>
+              <div class="well">
+                <div class="standing">
+                  <div class="st-cap">Vanta ranks <b>TOP 5%</b> of all contributors — by cards adopted</div>
+                  <div class="st-bar"><div class="st-fill" style="width:96%;"></div></div>
+                  <div class="st-tiers">
+                    <span class="tier on">TOP 50%</span>
+                    <span class="tier on">TOP 25%</span>
+                    <span class="tier on">TOP 10%</span>
+                    <span class="tier on">TOP 5%</span>
+                  </div>
+                </div>
+              </div>
               <div class="ctot">
                 <div class="stat"><span class="v">8</span><span class="l">GAMES</span></div>
                 <div class="stat"><span class="v">4</span><span class="l">CARDS</span></div>
                 <div class="stat"><span class="v">612</span><span class="l">ADOPTIONS</span></div>
-                <div class="stat"><span class="v">21</span><span class="l">EDITS</span></div>
               </div>
               <div class="lock-well">
                 <svg width="26" height="26" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1.5" stroke-width="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke-width="2"/></svg>
                 <div class="lk-t">FRIENDS-ONLY DETAIL</div>
-                <div class="lk-s">VANTA's trophy wall — their badges, signature card and games — is shared with friends. The totals above are public.</div>
+                <div class="lk-s">VANTA's trophy wall — their signature card and games — is shared with friends. The standing and totals above are public.</div>
                 <button class="btn act">＋ ADD FRIEND</button>
               </div>
             </div>
@@ -593,11 +591,11 @@
                   <div class="sk-bar" style="width:38%;"></div>
                 </div>
               </div>
-              <div class="sec"><h3 style="opacity:.5;">CONTRIBUTOR BADGES</h3></div>
-              <div class="well" style="padding:14px 12px;">
-                <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:9px;">
-                  <div class="sk-badge"></div><div class="sk-badge"></div><div class="sk-badge"></div><div class="sk-badge"></div>
-                </div>
+              <div class="sec"><h3 style="opacity:.5;">CONTRIBUTOR STANDING</h3></div>
+              <div class="well" style="display:flex; flex-direction:column; gap:12px; padding:14px 12px;">
+                <div class="sk-bar" style="width:70%;"></div>
+                <div class="sk-bar"></div>
+                <div style="display:flex; gap:6px;"><div class="sk-bar" style="flex:1; height:18px;"></div><div class="sk-bar" style="flex:1; height:18px;"></div><div class="sk-bar" style="flex:1; height:18px;"></div><div class="sk-bar" style="flex:1; height:18px;"></div></div>
               </div>
               <div class="sec"><h3 style="opacity:.5;">MOST ADOPTED CARD</h3></div>
               <div class="well" style="display:flex; gap:16px; align-items:center; padding:14px 12px;">
@@ -621,7 +619,7 @@
       </div>
       <div class="caption">
         <h3>P5 — Loading <em>(skeleton)</em></h3>
-        <p>The §1.6 <code>Skeleton</code> — solid quiet fills, no dashes. The badge case + signature-card hero
+        <p>The §1.6 <code>Skeleton</code> — solid quiet fills, no dashes. The standing bar + signature-card hero
         block in. <b>Offline + LoadError</b> deferred to converge (sibling §1.8 grammar).</p>
       </div>
     </div>

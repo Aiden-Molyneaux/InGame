@@ -182,3 +182,30 @@ hairline-darkened fill, no motion), isolated to a single `.btn:active` rule. The
    outcome + the badge-gold question; the owner opens the HTML directly. **Do not converge** — that's the next
    pass after the owner picks (converge → `contributor-states.html` + design-spec formalization + the API
    page-audit / OQ to enumerate `GET /users/:id/contributions`).
+
+---
+
+## Owner gate ruling — B · The Trophy Wall, with a standing-bar rework (2026-06-26)
+Owner picked **B · The Trophy Wall** + three changes, applied this pass to
+[`contributor-draft-b-trophy.html`](contributor-draft-b-trophy.html):
+- **Removed the contributor achievement badges** (CATALOGUER / ARTISAN / FIRST FINDER / PROLIFIC) entirely.
+- **Added a contributor STANDING bar** — percentile tiers **TOP 50% / 25% / 10% / 5%** (earned = gold
+  `PctPill`s, the catalog PROF-07 value-marker; the unreached next tier = a dim hairline chip) over an orange
+  progress bar, captioned with the precise percentile (*"You rank TOP 10% of all contributors — by cards
+  adopted"*). It **leads** P1/P3 (the new prestige hero, ahead of the signature card) and shows as a public
+  element on P4 (privacy-limited). *(Interpreted from the owner's "the screenshotted bar … top 25% / top 10%"
+  — **no image was attached**; a percentile-tier bar is the read. Form to be confirmed at next review.)*
+- **Dropped "field edits"** as a contributor field — removed the FIELD-EDITS footline (P1) + the EDITS totals
+  tile (P4), everywhere.
+The signature-card showcase, games-added list, more-cards, P2 hook, and lifecycle grammar are unchanged.
+**Burt re-audited clean** — and the change **resolves the prior badge-gold flag**: percentile tiers are gold
+`PctPill`s (catalog-blessed), so the non-gold-achievement-glyph ambiguity is gone.
+
+**Spec ripple flagged — OQ-079:** dropping CAT-06 edits + achievement badges and adding a percentile standing
+**diverges from CAT-07's must-host list**; the spec-owner must ripple product-spec CAT-07 + define the
+percentile data model (metric · thresholds · honesty-gating · privacy, PROF-03/07). The
+`GET /users/:id/contributions` payload enumeration stays owed at converge.
+
+**Next:** owner confirms the standing-bar form → **converge B → `contributor-states.html`** (full matrix incl.
+Offline/LoadError) + design-spec formalization (the standing/showcase/row components + the §2.x page) + the API
+page-audit (OQ-079 + the payload). **Not done this pass.** Drafts A + C retained for history.

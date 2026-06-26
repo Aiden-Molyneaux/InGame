@@ -1,15 +1,15 @@
 # Contributor profile — "My Contributions" (§4.9 · CAT-07) — mockups
 
 The §4.9 **Contributor profile** design track — the **pride surface** off Profile's `MY CONTRIBUTIONS`
-gateway. Three distinct organizing models → owner gate → converge. **In pass** (drafts built; not yet
-converged).
+gateway. Three distinct organizing models → owner gate → converge. **Owner picked B (2026-06-26)** + iterated
+(a contributor STANDING bar replaces the achievement badges; field-edits dropped); not yet converged.
 
 ## File map
 | File | What |
 |---|---|
 | [`contributor-profile-brief.md`](contributor-profile-brief.md) | The track plan — contract, scope, the 3 models, panel contract, hard rules, sample data |
 | [`contributor-draft-a-record.html`](contributor-draft-a-record.html) | **A · The Record** — organized **by type** (totals → games added · cards designed · field edits · badges). The honest archive. |
-| [`contributor-draft-b-trophy.html`](contributor-draft-b-trophy.html) | **B · The Trophy Wall** — organized **by prestige** (badge case + most-adopted card lead; lists demoted). The pride hit. |
+| [`contributor-draft-b-trophy.html`](contributor-draft-b-trophy.html) | **B · The Trophy Wall — PICKED** (2026-06-26) — **by prestige**: a contributor **STANDING bar** (percentile tiers TOP 50/25/10/5, gold PctPills) + the most-adopted card lead; lists demoted. **Badges + edits removed** (owner). |
 | [`contributor-draft-c-impact.html`](contributor-draft-c-impact.html) | **C · The Impact Dashboard** — organized **by reach** (footprint heroes + items ranked by impact). The data-story. |
 | Converge target (later) | `contributor-states.html` — full matrix incl. lifecycle |
 
@@ -29,21 +29,22 @@ All three **PASS ✅** (0 blocker / 0 major), reconciled against F-01..F-09 + fl
 - **F-02 gold discipline held:** the only gold on each surface is the **P2 empty-state hooks** (ADD A GAME /
   DESIGN A CARD — acquisitive: catalog-/card-creating) + the **Store NavBand key** (shell). Draft C also uses
   the **`RankChip`/first** gold — the **catalog value-marker** (design-spec token table), not a button.
-- **Badges drawn NON-gold** (orange `--scr-accent` accent) — earned glyphs aren't acquisitive per the
-  F-02-clarified letter. **⚠ Owner-ratification flagged** (see below).
+- **B's standing tiers = gold `PctPill`s** (PROF-07 value-marker, catalog-blessed gold) — the prior
+  badge-gold question is **resolved** by the badges→percentile-standing change. Drafts A/C retain the
+  non-gold achievement badges (history).
 - Fixes applied pre-gate: draft A retlink chevron 13→15px (F-06) + dead `.grip` rule removed; draft B dead
   `.rk` rule removed.
 
-## Flags for the owner gate
-- **Badge gold (cross-screen):** earned contributor badges render **non-gold** here. The Friends board
-  carries an inherited **gold** `.achv` achievement glyph (owner-ratified there). **Pick one treatment across
-  both surfaces** — keep badges non-gold (F-02-clarified), or bless gold-as-achievement.
-- **API gap (defer to converge):** `GET /users/:id/contributions` (CAT-07) is **prose-only — no enumerated
-  payload**. The drafts render a proposed shape (games-added+reach · cards-designed+adoptions · field-edit
-  log · badges · totals/footprint). **The API page-audit + an OQ to enumerate it is owed at converge** (the
-  Compare/OQ-074 precedent).
+## Flags
+- **Picked: B + standing rework (2026-06-26).** Achievement badges + field-edits removed; a contributor
+  percentile **STANDING bar** added (TOP 50/25/10/5, gold PctPills). The earlier badge-gold question is moot.
+- **Spec ripple — OQ-079:** dropping CAT-06 edits + achievement badges and adding a percentile standing
+  **diverges from CAT-07's must-host list**; the spec-owner ripples product-spec CAT-07 + defines the
+  percentile data model (metric · thresholds · honesty/threshold-gating · privacy, PROF-03/07).
+- **API gap (defer to converge):** `GET /users/:id/contributions` (CAT-07) is **prose-only**. The page-audit
+  + payload enumeration is owed at converge (pairs with OQ-079).
 
 ## Next
-Owner picks a direction → converge to `contributor-states.html` (full matrix incl. Offline/LoadError) →
-design-spec formalization (§1.5 `ContribTotals`/`ContribRow`/`ContribBadge`/`EditLogRow` + the §2.x page) →
-API page-audit (the OQ above).
+**B picked + iterated.** Owner confirms the standing-bar form → converge **B** → `contributor-states.html`
+(full matrix incl. Offline/LoadError) → design-spec formalization (the standing / showcase / contrib-row
+components + the §2.x page) → API page-audit (OQ-079 + the payload).
