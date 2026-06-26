@@ -1,8 +1,9 @@
 # Contributor profile — "My Contributions" (§4.9 · CAT-07) — mockups
 
 The §4.9 **Contributor profile** design track — the **pride surface** off Profile's `MY CONTRIBUTIONS`
-gateway. Three distinct organizing models → owner gate → converge. **Owner picked B (2026-06-26)** + iterated
-(Profile-style percentile tags on the contributor stat tiles replace the achievement badges; field-edits dropped); not yet converged.
+gateway. Three distinct organizing models → owner gate → converge. **CONVERGED (2026-06-26)** → owner picked **B**,
+iterated to the **Profile-like layout**, now the canonical **[`contributor-states.html`](contributor-states.html)**
+(full matrix + lifecycle; **Burt PASS**). Design-spec formalization + API page-audit owed (spec-owner, **OQ-079**).
 
 ## File map
 | File | What |
@@ -12,7 +13,7 @@ gateway. Three distinct organizing models → owner gate → converge. **Owner p
 | [`contributor-draft-b-trophy.html`](contributor-draft-b-trophy.html) | **B · The Trophy Wall — PICKED** (2026-06-26) — **by prestige**: the most-adopted card lead + **percentile tags on the contributor stat tiles** (gold PctPills, Profile PROF-07: e.g. ADOPTIONS · TOP 10%); lists demoted. **Badges + edits removed** (owner). |
 | [`contributor-draft-b-profilelike.html`](contributor-draft-b-profilelike.html) | **B (Profile-like layout)** — a copy of B re-laid in **Profile's grammar** (owner ask, 2026-06-26): `IdentityBlock` (avatar·name·bio·tags) → **boxless STATS tiles** (PROF-07 chips) → `SIGNATURE CARD` as the PINNED-FAVOURITE hero (+ `VIEW CARD`) → **CARDS DESIGNED as a legible `/cell` (96×134) card grid** (rank chips) + **GAMES ADDED as title rows** (thumb + name + reach, so the game name reads), each with `VIEW ALL ›`. **Owner to compare with `-trophy`.** |
 | [`contributor-draft-c-impact.html`](contributor-draft-c-impact.html) | **C · The Impact Dashboard** — organized **by reach** (footprint heroes + items ranked by impact). The data-story. |
-| Converge target (later) | `contributor-states.html` — full matrix incl. lifecycle |
+| [`contributor-states.html`](contributor-states.html) | **✅ CONVERGED board** (the implements-from) — the Profile-like B layout, full matrix: P1 self · P2 empty · P3 friend-view · P4 privacy-limited + lifecycle **L1 Skeleton · L2 Signal-Lost+RETRY · L3 Offline** (SYS-10). CARDS DESIGNED = `/cell` grid · GAMES ADDED = title rows. **Burt PASS** (dead mini/sk CSS pruned). |
 
 Each draft renders **P1** self/populated · **P2** empty (new-user contributor hook) · **P3** friend-view
 (read-only) · **P4** privacy-limited (PROF-03 `lock-well`) · **P5** loading Skeleton. **Offline + LoadError

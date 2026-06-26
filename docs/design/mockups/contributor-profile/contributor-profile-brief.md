@@ -215,3 +215,23 @@ navigable rows — reverted per owner; cards stay showcase + grid.)* Burt clean.
 **Next:** **converge B → `contributor-states.html`** (full matrix incl. Offline/LoadError) + design-spec
 formalization (the showcase / contrib-row / pct-tag components + the §2.x page) + the API page-audit (OQ-079 +
 the payload). **Not done this pass.** Drafts A + C retained for history.
+
+---
+
+## Converged → `contributor-states.html` (2026-06-26)
+Owner picked **B** → iterated to the **Profile-like layout** (the `-profilelike` source draft) → **converged**
+to the canonical states board **[`contributor-states.html`](contributor-states.html)**. Composition (Profile
+grammar): `IdentityBlock` (avatar · name · bio · genre tags) → **boxless `STATS` tiles** (gold PROF-07
+`PctPill`s — GAMES·TOP 25%, ADOPTIONS·TOP 10%) → **SIGNATURE CARD** PINNED-FAVOURITE hero (`GameCard/hero` +
+meta + cream `VIEW CARD`) → **CARDS DESIGNED** as a legible `/cell` (96×134) grid (rank chips) → **GAMES ADDED**
+as title rows (`GameCard/thumb` + name + reach + chevron), each section with a `VIEW ALL ›` TertiaryLink.
+**Full matrix:** P1 self · P2 empty (gold be-first hooks) · P3 friend-view · P4 privacy-limited (`lock-well`) +
+**lifecycle L1 Skeleton · L2 Signal-Lost+RETRY · L3 Offline** (cached, read-only, SYS-10 — reused §1.8 verbatim).
+**Burt review: PASS** (0 blocker/major; the one nit — dead `mini-size`/`sk-mini` CSS orphaned by the
+cells→`/cell`, games→`/thumb` change — patched at converge).
+
+**Still owed (spec-owner) — OQ-079:** ripple **product-spec CAT-07** (drop "fields you added" + achievement
+badges from this surface; add the **percentile standing** — define the ranking metric / tier thresholds /
+honesty-gating / privacy, PROF-03/07) + **design-spec formalization** (the new components: `IdentityBlock`
+reuse, `StatTile`+`PctPill`, the SignatureHero, the contrib `/cell` grid + RankChip, the game title `ContribRow`,
+TertiaryLink, the §1.8 lifecycle) + **API page-audit** (enumerate `GET /users/:id/contributions`).
