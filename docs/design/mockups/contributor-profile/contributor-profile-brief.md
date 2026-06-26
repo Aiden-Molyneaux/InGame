@@ -206,6 +206,11 @@ The signature-card showcase, games-added list, more-cards, P2 hook, and lifecycl
 percentile data model (metric · thresholds · honesty-gating · privacy, PROF-03/07). The
 `GET /users/:id/contributions` payload enumeration stays owed at converge.
 
-**Next:** owner confirms the standing-bar form → **converge B → `contributor-states.html`** (full matrix incl.
-Offline/LoadError) + design-spec formalization (the standing/showcase/row components + the §2.x page) + the API
-page-audit (OQ-079 + the payload). **Not done this pass.** Drafts A + C retained for history.
+**Card/game navigation parity (owner, 2026-06-26):** the contributor's **cards and games are presented equally**
+— both as navigable `crow` rows (`GameCard/thumb` + name + metric + `›` chevron → that card's / game's entry),
+and the signature-card showcase gained a `›` too. "MORE CARDS" moved from a 2-up grid to rows matching GAMES
+ADDED; the dead `.cgrid`/`.ccell`/`.adopt` CSS was pruned. Burt clean.
+
+**Next:** **converge B → `contributor-states.html`** (full matrix incl. Offline/LoadError) + design-spec
+formalization (the showcase / contrib-row / pct-tag components + the §2.x page) + the API page-audit (OQ-079 +
+the payload). **Not done this pass.** Drafts A + C retained for history.

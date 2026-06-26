@@ -166,11 +166,6 @@
   .crow .gt { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
   .crow .reach { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
   .crow .reach b { color: var(--scr-soft); font-weight: 700; }
-  .cgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 12px 12px 4px; justify-items: center; }
-  .cgrid.two { grid-template-columns: repeat(2, 1fr); justify-items: start; padding-left: 18px; }
-  .ccell { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-  .adopt { font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-soft); text-align: center; }
-  .adopt b { color: var(--scr-accent); }
   .emore { padding: 8px 12px 0; font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-accent); }
   .footline { padding: 12px; font: 600 9px/1.5 var(--pk); letter-spacing: .5px; color: var(--scr-dim); text-align: center; }
   .footline b { color: var(--scr-soft); font-weight: 700; }
@@ -306,18 +301,21 @@
                     <span class="lbl">ADOPTIONS</span>
                     <span class="cn">Your MARATHON card — equipped by 312 players.</span>
                   </div>
+                  <span class="chev">&rsaquo;</span>
                 </div>
               </div>
 
               <div class="sec"><h3>MORE CARDS</h3><span class="ct">2</span></div>
-              <div class="cgrid two">
-                <div class="ccell">
-                  <div class="gcard cell fr-destiny"><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
-                  <span class="adopt"><b>88</b> ADOPTIONS</span>
+              <div class="well">
+                <div class="crow">
+                  <div class="gcard thumb fr-destiny"><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                  <div class="cm"><span class="gt">DESTINY</span><span class="reach"><b>88</b> ADOPTIONS</span></div>
+                  <span class="chev">&rsaquo;</span>
                 </div>
-                <div class="ccell">
-                  <div class="gcard cell fr-elden"><div class="art"><svg><use href="#art-elden"/></svg></div><div class="plate pl-elden">Elden Ring</div></div>
-                  <span class="adopt"><b>24</b> ADOPTIONS</span>
+                <div class="crow">
+                  <div class="gcard thumb fr-elden"><div class="art"><svg><use href="#art-elden"/></svg></div><div class="plate pl-elden">Elden Ring</div></div>
+                  <div class="cm"><span class="gt">ELDEN RING</span><span class="reach"><b>24</b> ADOPTIONS</span></div>
+                  <span class="chev">&rsaquo;</span>
                 </div>
               </div>
 
@@ -353,7 +351,9 @@
         <p><b>The thesis:</b> prestige first — your contributor stats carry small <b>gold percentile tags</b>
         (TOP 25% / TOP 10%, PROF-07 PctPills, exactly as Profile), then your <b>most-adopted card</b> leads as a
         signature showcase (big <code>21px</code> adoption number, orange). The full lists (more cards · games
-        added) collapse to secondary. "Look what I made that people love."</p>
+        added) collapse to secondary. <b>Cards and games are presented equally</b> — both as navigable rows
+        (+ the signature showcase), each with a <code>&rsaquo;</code> link to that card's or game's entry.
+        "Look what I made that people love."</p>
       </div>
     </div>
 
@@ -449,6 +449,7 @@
                     <span class="lbl">ADOPTIONS</span>
                     <span class="cn">Riko's HADES card — equipped by 47 players.</span>
                   </div>
+                  <span class="chev">&rsaquo;</span>
                 </div>
               </div>
 
