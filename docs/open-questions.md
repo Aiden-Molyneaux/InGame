@@ -95,29 +95,22 @@
   (`.reqrow.incoming` in `friends-draft-b/c`). The **Compare-hours** boards are de-railed this pass; the
   retired `add-game-draft-b` / `store-draft-c` drafts are history (exempt), and doc-chrome left-borders
   (e.g. `onscreen-marker-drafts` `.rule`) are not in scope. (Compare Hours 4.6 track, 2026-06-24) [presentation]
-- OQ-079: **Contributor profile (CAT-07) pride elements revised** — owner ruling (2026-06-26, design gate
-  on the Contributor-profile track, draft B picked): the pride surface **drops "fields you added" (CAT-06
-  edits) and "achievement badges"** as contributor-profile elements, and **adds a contributor percentile
-  STANDING** — PROF-07-style percentile **tags on the contributor stat tiles** (small gold `PctPill`s, exactly
-  as Profile — e.g. ADOPTIONS · TOP 10%, GAMES · TOP 25%) ranking the contributor among all contributors. The design now diverges from the **CAT-07** must-host list
-  (*"fields you added … contributor achievement badges"*), so the spec-owner must ripple **product-spec
-  CAT-07** (drop edits + badges from this surface; add the standing) and decide the **percentile data
-  model**: the ranking **metric** (drafted = *cards adopted*; alts = games-reach or a blend), the **tier
-  thresholds**, and **honesty/threshold-gating** (PROF-07 only shows a percentile above a cohort-size
-  floor — does contributor standing gate the same way, and is it friend-visible / privacy-gated like the
-  rest, PROF-03?). Pairs with the **`GET /users/:id/contributions` payload enumeration** owed at converge
-  (the endpoint is prose-only) — **now including the VIEW ALL full-list views** (converged board added them,
-  owner 2026-06-27: dedicated *all-cards* `/cell` grid + *all-games* title-row sub-screens reached from the
-  profile's `VIEW ALL ›`; the profile shows a **top-N summary**, the full lists show everything): the
-  contributions payload **and the full/paginated list shape** for those views must be enumerated together
-  (incl. the **friend-view VIEW ALL** — same screen, read-only — and a **VIEW ALL load-more** loader for very
-  prolific contributors). Also confirm two edges flagged by the completeness pass (2026-06-27): **(a)** the
-  **percentile-standing visibility** on the privacy-limited / non-friend view (the board shows the chip; PROF-07
-  says a chip attaches only to stats the viewer can already see, PROF-03); **(b)** how a contributor's **own
-  MOD-02 soft-hidden card** reads on their profile. Note: edits (CAT-06) remain a *catalog* behavior — only their
-  *display on the contributor pride surface* is dropped. (Contributor profile 4.9 track) [behavior/data]
-
 ## Resolved
+- OQ-079 → **Contributor profile (4.9) revised + formalized** (decision 0032; design-spec **0.31** · product-spec
+  **0.28** · api **0.28**): the pride surface **drops CAT-06 field-edits + achievement badges** and **adds a
+  contributor STANDING** — the Profile **`PctPill`** percentile tags on the contributor `StatTile`s. Rulings:
+  **product-spec CAT-07** revised (drop edits/badges, add the standing + collections-reached + VIEW ALL); new
+  **CAT-10** — the standing is computed against the **contributor cohort** (users with ≥1 contribution, *not* the
+  whole population), **threshold-gated** (PROF-07/SYS-04 — no chip below the floor) and **privacy-gated**
+  (PROF-03). **API enumerated:** `GET /users/:id/contributions` (friend/full vs non-friend/limited shapes) +
+  the paginated **`…/contributions/cards?cursor=`** (adoption-sorted) and **`…/games?cursor=`** (reach-sorted)
+  VIEW-ALL endpoints (same read-only screen for friend-view; cursor = the load-more for prolific contributors).
+  **Design-spec:** §1.5 **Contributor-profile set** (one new component `SectionEmpty`; the rest a Profile-grammar
+  reuse) + **§2.16** page. The two completeness-pass edges ruled in 0032: **(a)** the standing rides the honest
+  aggregates so the chip shows on the privacy-limited view (only item-detail withheld, PROF-03); **(b)** an own
+  MOD-02 soft-hidden card inherits MOD-02 (absent from other viewers' lists/counts, owner still sees it). Gate:
+  owner picked **B · The Trophy Wall**, iterated to the Profile-like layout; A/C retired. Source:
+  `contributor-profile/contributor-states.html`. (Contributor profile 4.9 track, 2026-06-27)
 - OQ-045 → **Sticker placed-on-shell preview drawn** (decision 0030): the `PlacedSticker` renders a
   sticker transformed in its real spot on the shell plastic (Device board D5), nav keycaps z-ordered
   above; closed design-side at the Device-editor converge. design-spec §2.15. (Device editor
