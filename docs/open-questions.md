@@ -134,8 +134,10 @@
   screen**, which F-05 reserved for shell LEDs only; define the token + amend the **F-05** wording (shell LEDs
   stay round/pink; the secret tier is a flat on-screen magenta, distinct hue from the `--accent` LED). [presentation]
   **(d)** the STANDARD tier rides **`--scr-accent`** on purpose → it **re-themes with the screen theme (DEV-04)** —
-  note the dependency. Pairs with **OQ-005** (egg presentation) + **OQ-004** (content). (Achievements §4.10
-  tier pass, 2026-06-27) [behavior + presentation]
+  note the dependency. Pairs with **OQ-004** (content). **OQ-005 (egg presentation) is now design-resolved →
+  pole A** (the `???` mystery slot — "hint something exists") by the owner picking **Draft A · Trophy Case** +
+  converging to `achievements-states.html` (2026-06-27); spec-owner to move OQ-005 → Resolved with this pass.
+  (Achievements §4.10 tier pass + converge, 2026-06-27) [behavior + presentation]
 ## Resolved
 - OQ-079 → **Contributor profile (4.9) revised + formalized** (decision 0032; design-spec **0.31** · product-spec
   **0.28** · api **0.28**): the pride surface **drops CAT-06 field-edits + achievement badges** and **adds a
