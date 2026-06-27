@@ -64,4 +64,12 @@ takeover).
 - **Draft A · Trophy Case — PASS ✅** (0 blocker / 0 major). F-06 type scale clean (21/15/11/9), F-07 square
   on-screen chrome, F-08 one-font, F-03 flat Scanline keycaps, shell NavBand physical (PROFILE active). Earned
   badges non-gold (flag #2). Gold limited to the Store nav key + the PIXELS `◆` currency mark (reward chip).
-- **Draft B · Quest Log — _pending build_.**
+- **Draft B · Quest Log — PASS ✅** (0 blocker / 0 major). Same foundation: F-06 clean (21/15/11/9),
+  F-07 square chrome, F-08 one-font, F-03 flat Scanline keycaps, shell NavBand physical (PROFILE active).
+  Earned/quest glyphs non-gold (flag #2). Gold limited to the Store nav key + the PIXELS `◆` currency mark
+  (quest PRIZE preview + reward recap).
+
+## Verified (headless render walk)
+Both drafts walked panel-by-panel in the browser (every P1–P5, inner-scroll sections included). All five
+artboards render per intent; the QuestRow momentum layout (B) and the trophy-grid + `???` mystery slots (A)
+both confirmed; the ACH-06 celebration takeover renders on both. No PNG artifacts committed (HTML-only).

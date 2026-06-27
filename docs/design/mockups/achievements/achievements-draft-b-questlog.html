@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InGame · Achievements — Draft B · Quest Log (§4.10 · ACH-03/05)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" /></noscript>
+<style>
+  /* ── tokens: verbatim from profile/contributor-states (Teal shell · Midnight screen) ── */
+  :root {
+    --plastic: #2bb6b0; --plastic-hi: #3ec9c2; --plastic-lo: #1f9a94; --silk: #0d524e;
+    --accent: #ff3d77; --gold: #ffd23f; --cream: #f5f1e4; --navy: #1d2a4a;
+    --bezel: #14122a;
+    --pk: 'Chakra Petch', sans-serif; --shell: 'Paytone One', sans-serif;
+    --scr-bg: #232045; --scr-well: #2c2950; --scr-tools: #1a1733; --scr-accent: #ff9f43;
+    --scr-accent-ink: #2a1430; --scr-head: #f5f1e4; --scr-text: #ffffff; --scr-dim: #9b97c0;
+    --scr-soft: #c9c5e6; --scr-panel: rgba(255,255,255,.065); --scr-hairline: rgba(255,255,255,.08);
+    --scr-grip: #565178; --scr-chip: #f5f1e4; --scr-head-shadow: rgba(0,0,0,.45);
+    --scr-btn: #ffb38a; --scr-btn-ink: #2a1430;
+    --shell-ink: #08433f; --screw-hi: #2aa39d; --screw-lo: #137671; --pip-off: #117672;
+  }
+  html, body { margin: 0; min-height: 100%; background: #efece6; font-family: var(--pk); }
+  .canvas { max-width: 920px; margin: 0 auto; padding: 40px 24px 60px; }
+  .canvas-head h1 { font: 700 17px/1.2 var(--pk); letter-spacing: 2.5px; color: #2a2633; margin: 0 0 6px; text-transform: uppercase; }
+  .canvas-head p { font: 500 12.5px/1.5 var(--pk); color: #79748a; margin: 0 0 8px; max-width: 680px; }
+  .canvas-head code { font-family: var(--pk); background: #ece9e2; padding: 1px 4px; font-size: 11.5px; color: #4a4658; }
+  .stage { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+  .stage-label { font: 700 13px/1 var(--pk); letter-spacing: 2px; color: #2a2633; text-transform: uppercase; margin: 36px 2px 14px; }
+  .stage-label small { display: block; margin-top: 5px; font: 500 11px/1.4 var(--pk); letter-spacing: .3px; color: #79748a; text-transform: none; max-width: 860px; }
+  .take { width: 404px; }
+  .artboard-label { font: 700 11px/1 var(--pk); letter-spacing: 1.5px; color: #8d889c; margin: 0 0 10px 2px; text-transform: uppercase; }
+  .caption { margin-top: 14px; background: #fff; border-radius: 12px; padding: 13px 15px; box-shadow: 0 2px 8px rgba(42,38,51,.08); }
+  .caption h3 { margin: 0 0 5px; font: 700 12.5px var(--pk); letter-spacing: .8px; color: #2a2633; text-transform: uppercase; }
+  .caption h3 em { font-style: normal; color: var(--accent); }
+  .caption p { margin: 0 0 4px; font: 500 11.8px/1.5 var(--pk); color: #5d5870; }
+  .caption p b { color: #2a2633; }
+  .caption code { font-family: var(--pk); background: #f0ede6; padding: 1px 4px; font-size: 11px; color: #4a4658; }
+
+  /* ── device shell (physical — verbatim) ─────────────────── */
+  .device { position: relative; width: 404px; height: 884px; border-radius: 30px; overflow: hidden;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.4), inset 0 -4px 0 rgba(0,0,0,.18), 0 18px 40px color-mix(in srgb, var(--shell-ink) 28%, transparent);
+    display: flex; flex-direction: column; padding: 0 14px; box-sizing: border-box; }
+  .screw { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--screw-hi), var(--screw-lo) 75%);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.25); }
+  .screw::after { content: ""; position: absolute; left: 1.5px; right: 1.5px; top: 3.5px; height: 1.5px; background: color-mix(in srgb, var(--shell-ink) 70%, transparent); border-radius: 1px; }
+  .screw.tl { top: 10px; left: 12px; } .screw.tr { top: 10px; right: 12px; }
+  .screw.bl { bottom: 10px; left: 12px; } .screw.br { bottom: 10px; right: 12px; }
+  .top-band { height: 64px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 12px 0; position: relative; }
+  .power { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+  .power .led { width: 9px; height: 9px; border-radius: 50%; background: #ff5a4e; box-shadow: 0 0 7px 2px rgba(255,90,78,.65), inset 0 -1px 1px rgba(0,0,0,.3); }
+  .power .lbl { font: 400 9px var(--shell); letter-spacing: .5px; color: var(--silk); opacity: .75; }
+  .logo { position: absolute; left: 50%; transform: translateX(-50%); font: 400 21px var(--shell); letter-spacing: 7px; text-indent: 7px;
+    color: color-mix(in srgb, var(--shell-ink) 28%, transparent); text-shadow: 0 -1px 0 color-mix(in srgb, var(--shell-ink) 30%, transparent); }
+  .grille { display: flex; gap: 6px; }
+  .grille span { width: 5px; height: 23px; background: color-mix(in srgb, var(--shell-ink) 40%, transparent); border-radius: 2px; transform: skewX(-22deg); box-shadow: inset 0 1px 1px rgba(0,0,0,.3); }
+  .screen-bezel { flex: 1 1 auto; min-height: 0; background: var(--bezel); border-radius: 20px; padding: 9px; box-sizing: border-box; }
+  .nav-band { flex: 0 0 auto; height: 128px; display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 6px 0; }
+  .nav-item { display: flex; flex-direction: column; align-items: center; width: 64px; }
+  .nav-lbl { height: 16px; font: 400 11px var(--shell); letter-spacing: .5px; color: var(--silk); display: flex; align-items: center; }
+  .nav-lbl.big { font-size: 11px; }
+  .nav-btn { width: 54px; height: 54px; border-radius: 15px; background: var(--cream); border: none;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 1px 0 rgba(255,255,255,.85); }
+  .nav-btn.store { background: var(--gold); }
+  .nav-btn.collection { background: var(--accent); }
+  .nav-item.active .nav-btn { transform: translateY(3px); box-shadow: 0 1px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 2px 3px rgba(0,0,0,.18); }
+  .pip { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; background: var(--pip-off);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.25); }
+  .nav-item.active .pip { background: var(--accent); box-shadow: 0 0 9px 2.5px rgba(255,61,119,.85), inset 0 -1px 1px rgba(0,0,0,.25); }
+  .nav-band .nav-item:nth-child(2) .nav-lbl:first-child,
+  .nav-band .nav-item:nth-child(4) .nav-lbl:first-child { transform: translateY(-8px); }
+
+  /* ── shared screen structure ────────────────────────────── */
+  .screen { position: relative; height: 100%; border-radius: 13px; overflow: hidden; display: flex; flex-direction: column; }
+  .screen-head { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 8px; }
+  .scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 12px 14px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+
+  /* ════ C5 · HYBRID — square chrome ════ */
+  .c5 .well, .c5 .btn, .c5 .stat, .c5 .badge, .c5 .rchip, .c5 .bglyph, .c5 .ri, .c5 .cnt, .c5 .qrow, .c5 .qglyph, .c5 .pv { border-radius: 0; }
+  .c5 .well, .c5 .qrow { border: 1px solid var(--scr-hairline); }
+  .c5 .btn.add, .c5 .btn.act { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+      100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
+      calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
+
+  /* ════ S2 base — flat floating panels ════ */
+  .sk2 { background: var(--scr-bg); }
+  .sk2 .screen-head h2 { margin: 0; font: 700 21px/1 var(--pk); letter-spacing: 2px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); }
+  .sk2 .well { background: var(--scr-well); }
+  .sk2 .btn { display: inline-flex; align-items: center; gap: 6px; border: none; width: fit-content;
+    background: var(--scr-btn); color: var(--scr-btn-ink); padding: 9px 13px; font: 700 11px var(--pk); letter-spacing: 1px; box-shadow: none; }
+  .sk2 .btn.act { background: var(--scr-accent); color: var(--scr-accent-ink); }
+  .sk2 .btn.secondary { background: var(--cream); color: var(--navy); }
+  .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 16px 2px 8px; }
+  .sec h3 { margin: 0; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .sec .cnt { font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-grip); background: var(--scr-panel); padding: 2px 6px; }
+
+  /* ── identity block (Profile .id) ── */
+  .id { padding: 12px; display: flex; flex-direction: column; gap: 9px; }
+  .id-top { display: flex; gap: 12px; align-items: center; }
+  .avatar { position: relative; flex: 0 0 auto; width: 46px; height: 46px; border-radius: 0; background: var(--scr-accent); color: var(--scr-accent-ink);
+    font: 700 15px var(--pk); display: flex; align-items: center; justify-content: center; }
+  .avatar.riko { background: #6c4fd8; color: #fff; }
+  .id-name { font: 700 21px/1.1 var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .id-sub { font: 600 11px var(--pk); letter-spacing: 1px; color: var(--scr-dim); margin-top: 3px; }
+
+  /* ════ QuestRow — the NEXT-UP momentum unit (prominent bar + prize preview) ════ */
+  .qrow { display: flex; gap: 11px; align-items: flex-start; background: var(--scr-well); padding: 12px; }
+  .qrow + .qrow { margin-top: 8px; }
+  .qglyph { width: 40px; height: 40px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
+    background: rgba(255,159,67,.12); border: 1px solid color-mix(in srgb, var(--scr-accent) 45%, transparent); }
+  .qglyph svg { width: 22px; height: 22px; fill: none; stroke: var(--scr-accent); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .qbody { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+  .qup { font: 700 9px var(--pk); letter-spacing: 1.5px; color: var(--scr-accent); }
+  .qhead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .qname { font: 700 15px/1 var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .qcount { font: 700 15px/1 var(--pk); color: var(--scr-accent); flex: 0 0 auto; }
+  /* prominent progress bar (taller than A's tile meter; not an edge-rail, F-09) */
+  .qmeter { width: 100%; height: 8px; background: rgba(255,255,255,.09); }
+  .qmeter span { display: block; height: 100%; background: var(--scr-accent); }
+  .qprize { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .qprize .pl { font: 700 9px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
+  .pv { display: inline-flex; align-items: center; gap: 6px; background: var(--scr-panel); padding: 4px 8px; font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-soft); }
+  .pv svg { width: 13px; height: 13px; fill: none; stroke: var(--scr-accent); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; }
+  .pv.pix svg { stroke: none; fill: var(--gold); }
+  .pv .eo { font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-accent); }
+
+  /* ════ BadgeTile (earned archive — compact, no bars) ════ */
+  .bgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 0 2px; }
+  .badge { background: var(--scr-panel); padding: 10px 4px 8px; display: flex; flex-direction: column; align-items: center; gap: 5px; text-align: center; }
+  .bglyph { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
+    background: rgba(255,159,67,.12); border: 1px solid color-mix(in srgb, var(--scr-accent) 45%, transparent); }
+  .bglyph svg { width: 18px; height: 18px; fill: none; stroke: var(--scr-accent); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .blabel { font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-text); line-height: 1.2; }
+
+  /* ════ RewardChip — the ACH-04 earned-payout recap (de-emphasized in B) ════ */
+  .rwrap { display: flex; flex-direction: column; gap: 7px; }
+  .rchip { display: flex; align-items: center; gap: 10px; background: var(--scr-panel); padding: 9px 11px; }
+  .rchip .ri { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
+    border: 1px solid color-mix(in srgb, var(--scr-accent) 40%, transparent); }
+  .rchip .ri svg { width: 15px; height: 15px; fill: none; stroke: var(--scr-accent); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .rchip .rt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .rchip .rn { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .rchip .rs { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .rchip .tag { margin-left: auto; flex: 0 0 auto; font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-accent);
+    border: 1px solid color-mix(in srgb, var(--scr-accent) 40%, transparent); padding: 2px 6px; }
+  .rchip.pix .ri { border-color: color-mix(in srgb, var(--gold) 50%, transparent); }
+  .rchip.pix .ri svg { stroke: none; fill: var(--gold); }
+
+  /* ── friend-view back-seam ── */
+  .retlink { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 0 16px 10px;
+    font: 700 9px var(--pk); letter-spacing: 1.2px; color: var(--scr-dim); }
+  .retlink .bk { color: var(--scr-accent); font: 700 15px/1 var(--pk); }
+
+  /* ── empty-state cold-start (P2 — NON-gold; the surface is a record) ── */
+  .hook { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 11px; padding: 40px 22px 0; }
+  .hook .hic { width: 58px; height: 58px; border: 2px dashed var(--scr-grip); display: flex; align-items: center; justify-content: center; }
+  .hook .hic svg { width: 28px; height: 28px; fill: none; stroke: var(--scr-grip); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .hook .ht { font: 700 15px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .hook .hs { font: 500 11px/1.6 var(--pk); color: var(--scr-soft); max-width: 250px; }
+  .hook .acts { display: flex; flex-direction: column; gap: 9px; margin-top: 6px; width: 210px; }
+  .hook .acts .btn { width: auto; justify-content: center; }
+
+  /* ── privacy lock-well (P4) ── */
+  .lock-well { margin: 12px; border: 1px dashed var(--scr-grip); padding: 22px 16px; display: flex;
+    flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+  .lock-well svg { width: 26px; height: 26px; fill: none; stroke: var(--scr-dim); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .lock-well .lk-t { font: 700 11px var(--pk); letter-spacing: 1.5px; color: var(--scr-soft); }
+  .lock-well .lk-s { font: 500 9px/1.55 var(--pk); color: var(--scr-dim); max-width: 250px; }
+
+  /* ════ CelebrationMoment — the ACH-06 arcade takeover (P5; shared grammar across drafts) ════ */
+  .celebrate { position: absolute; inset: 0; overflow: hidden; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 13px; padding: 28px 24px;
+    background: radial-gradient(circle at 50% 36%, #322c63 0%, var(--scr-bg) 66%); }
+  .celebrate::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .45;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, #0000 1px 3px); }
+  .cel-rays { position: absolute; top: 33%; left: 50%; transform: translate(-50%, -50%); width: 260px; height: 260px; opacity: .5; }
+  .cel-rays line { stroke: var(--scr-accent); stroke-width: 2.5; }
+  .cel-eyebrow { z-index: 1; font: 700 11px var(--pk); letter-spacing: 5px; color: var(--scr-accent); }
+  .cel-badge { z-index: 1; position: relative; width: 96px; height: 96px; display: flex; align-items: center; justify-content: center;
+    background: rgba(255,159,67,.14); border: 2px solid var(--scr-accent);
+    clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px), calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
+  .cel-badge svg { width: 46px; height: 46px; fill: none; stroke: var(--scr-accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .cel-title { z-index: 1; font: 700 21px/1.1 var(--pk); letter-spacing: 1.5px; color: var(--scr-text); text-align: center; }
+  .cel-sub { z-index: 1; font: 500 11px/1.5 var(--pk); color: var(--scr-soft); text-align: center; max-width: 250px; }
+  .cel-rewards { z-index: 1; display: flex; flex-direction: column; gap: 7px; width: 248px; margin-top: 2px; }
+  .cel-cont { z-index: 1; margin-top: 8px; }
+
+  /* ════ FLAT BUTTONS + SCANLINE ENERGIZE (F-03, locked 2026-06-18) ════ */
+  .sk2 .btn:active, .sk2 .btn.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-btn) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, #0000 1px 2px); }
+  .sk2 .btn.act:active, .sk2 .btn.act.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-accent) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, #0000 1px 2px); }
+  .sk2 .btn.secondary:active, .sk2 .btn.secondary.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--cream) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
+</style>
+</head>
+<body>
+
+<div class="canvas">
+  <div class="canvas-head">
+    <h1>Achievements — Draft B · Quest Log (§4.10 · ACH-03/05)</h1>
+    <p><b>Draft B · QUEST LOG — by momentum (the engagement pole).</b> <b>NEXT UP</b> front-and-centre &mdash;
+    the in-progress milestones (<code>QuestRow</code>) with prominent progress bars + a <b>PRIZE preview</b>
+    (what you&rsquo;ll win), ordered closest-first &mdash; then <b>EARNED</b> archived beneath (compact) and a
+    quiet <b>REWARDS UNLOCKED</b> recap. Easter eggs are <b>FULLY HIDDEN</b> &mdash; no mystery slots, no count
+    of unknowns; an egg only appears <i>after</i> it fires (here NIGHT OWL sits in the earned archive, a past
+    surprise). <b>OQ-005 = "invisible until unlocked."</b> Reached from <b>Profile only</b>; friend-view shows
+    <b>earned only</b> (a friend never sees what you&rsquo;re working toward). <b>Panels:</b> P1 self · P2 empty
+    (NON-gold) · P3 friend-view (Riko) · P4 privacy-limited (<code>lock-well</code>) · P5 <b>unlock celebration</b>
+    (ACH-06). Skeleton/LoadError/Offline deferred to converge. NavBand: <b>PROFILE active</b>. <i>All content
+    illustrative — ACH-04 deferred (OQ-004). Earned badges NON-gold — badge-gold flagged. API payload
+    prose-only — page-audit owed at converge.</i></p>
+  </div>
+
+  <div class="stage-label">Self · populated &amp; empty <small>P1 the quest log — NEXT UP in-progress milestones with prominent bars + prize previews (closest first) · the earned archive (compact, no bars) · the rewards recap · P2 the new-user cold-start (NON-gold)</small></div>
+  <div class="stage">
+
+    <!-- ═══════════ P1 — SELF, POPULATED ═══════════ -->
+    <div class="take">
+      <div class="artboard-label">P1 — Self · populated (the quest log)</div>
+      <div class="device">
+        <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">PWR</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>ACHIEVEMENTS</h2></div>
+            <div class="retlink"><span class="bk">&lsaquo;</span> RETURN TO PROFILE</div>
+            <div class="scroll">
+              <div class="well id">
+                <div class="id-top">
+                  <div class="avatar">MV</div>
+                  <div>
+                    <div class="id-name">MAVERICK</div>
+                    <div class="id-sub">8 EARNED &middot; 3 IN PROGRESS</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="sec"><h3>NEXT UP</h3><span class="cnt">3</span></div>
+              <div class="qrow">
+                <span class="qglyph"><svg viewBox="0 0 24 24"><path d="M4 20l4-1 9.5-9.5-3-3L5 16z"/><path d="M14.5 6.5l3 3"/></svg></span>
+                <div class="qbody">
+                  <span class="qup">CLOSEST &mdash; ALMOST THERE</span>
+                  <div class="qhead"><span class="qname">CURATOR</span><span class="qcount">2 / 5</span></div>
+                  <span class="qmeter"><span style="width:40%"></span></span>
+                  <div class="qprize"><span class="pl">PRIZE</span><span class="pv"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><rect x="8.5" y="8.5" width="7" height="7"/></svg> ARTISAN FRAME <span class="eo">&middot; EARN-ONLY</span></span></div>
+                </div>
+              </div>
+              <div class="qrow">
+                <span class="qglyph"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="17.5" cy="9" r="2.6"/><path d="M16 19a5 5 0 0 1 6-4.8"/></svg></span>
+                <div class="qbody">
+                  <div class="qhead"><span class="qname">SOCIAL</span><span class="qcount">3 / 10</span></div>
+                  <span class="qmeter"><span style="width:30%"></span></span>
+                  <div class="qprize"><span class="pl">PRIZE</span><span class="pv pix"><svg viewBox="0 0 24 24"><path d="M12 3l8 9-8 9-8-9z"/></svg> +75 PIXELS</span></div>
+                </div>
+              </div>
+              <div class="qrow">
+                <span class="qglyph"><svg viewBox="0 0 24 24"><rect x="4" y="6" width="12" height="14"/><path d="M8 4h12v14"/></svg></span>
+                <div class="qbody">
+                  <div class="qhead"><span class="qname">PROLIFIC</span><span class="qcount">5 / 25</span></div>
+                  <span class="qmeter"><span style="width:20%"></span></span>
+                  <div class="qprize"><span class="pl">PRIZE</span><span class="pv"><svg viewBox="0 0 24 24"><path d="M7 4h10v4a5 5 0 0 1-10 0V4z"/><path d="M9 18h6M10 14v4M14 14v4"/></svg> PROLIFIC TROPHY <span class="eo">&middot; EARN-ONLY</span></span></div>
+                </div>
+              </div>
+
+              <div class="sec"><h3>EARNED</h3><span class="cnt">8</span></div>
+              <div class="bgrid">
+                <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span><span class="blabel">COLLECTOR</span></div>
+                <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 16V5"/><path d="M7 10l5-5 5 5"/><path d="M5 19h14"/></svg></span><span class="blabel">FIRST PUBLISH</span></div>
+                <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.5A3.5 3.5 0 0 1 12 9a3.5 3.5 0 0 1 7 1.5C19 15.6 12 20 12 20z"/></svg></span><span class="blabel">ADOPTED 100&times;</span></div>
+                <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z"/></svg></span><span class="blabel">EXPLORER</span></div>
+                <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="17.5" cy="9" r="2.6"/><path d="M16 19a5 5 0 0 1 6-4.8"/></svg></span><span class="blabel">FIRST FRIEND</span></div>
+                <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 3l2.5 6 6.5.5-5 4.2 1.6 6.3L12 17.5 6.4 20.5 8 14.2l-5-4.2 6.5-.5z"/></svg></span><span class="blabel">TASTEMAKER</span></div>
+                <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M20 13.5A8 8 0 1 1 10.5 4 6.2 6.2 0 0 0 20 13.5z"/></svg></span><span class="blabel">NIGHT OWL</span></div>
+                <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M5 19V8l7-4 7 4v11"/><path d="M9 19v-6h6v6"/></svg></span><span class="blabel">HOMECOMING</span></div>
+              </div>
+
+              <div class="sec"><h3>REWARDS UNLOCKED</h3></div>
+              <div class="rwrap">
+                <div class="rchip">
+                  <span class="ri"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><rect x="8.5" y="8.5" width="7" height="7"/></svg></span>
+                  <div class="rt"><span class="rn">GOLD-FOIL FRAME</span><span class="rs">FROM ADOPTED 100&times;</span></div>
+                  <span class="tag">EARN-ONLY</span>
+                </div>
+                <div class="rchip">
+                  <span class="ri"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></span>
+                  <div class="rt"><span class="rn">SCANLINE FINISH</span><span class="rs">FROM NIGHT OWL</span></div>
+                  <span class="tag">EARN-ONLY</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P1 — Self <em>(the quest log)</em></h3>
+        <p>Organized <b>by momentum</b>: <b>NEXT UP</b> leads &mdash; each <code>QuestRow</code> is a milestone
+        with a prominent <code>ProgressMeter</code> + a <b>PRIZE preview</b> (<code>RewardChip</code> as a
+        carrot), ordered closest-first (CURATOR flagged <code>CLOSEST</code>). <b>EARNED</b> is the compact
+        archive beneath, then a quiet <b>REWARDS UNLOCKED</b> recap. <b>No SECRETS section</b> &mdash; eggs are
+        invisible; NIGHT OWL only shows because it already fired (<b>OQ-005 pole B</b>). Glyphs orange, not gold.</p>
+      </div>
+    </div>
+
+    <!-- ═══════════ P2 — EMPTY (new user) ═══════════ -->
+    <div class="take">
+      <div class="artboard-label">P2 — Empty (new user · NON-gold)</div>
+      <div class="device">
+        <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">PWR</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>ACHIEVEMENTS</h2></div>
+            <div class="retlink"><span class="bk">&lsaquo;</span> RETURN TO PROFILE</div>
+            <div class="scroll">
+              <div class="well id">
+                <div class="id-top">
+                  <div class="avatar">MV</div>
+                  <div>
+                    <div class="id-name">MAVERICK</div>
+                    <div class="id-sub">0 EARNED</div>
+                  </div>
+                </div>
+              </div>
+              <div class="hook">
+                <div class="hic"><svg viewBox="0 0 24 24"><path d="M9 5H5v6c0 7 7 9 7 9s7-2 7-9V5h-4"/><path d="M9 5V3h6v2"/><path d="M9 5h6"/></svg></div>
+                <div class="ht">YOUR QUEST LOG IS EMPTY</div>
+                <div class="hs">Your next milestones appear here the moment you start &mdash; collect games, add friends, design a card. Each one tracks its progress and its prize.</div>
+                <div class="acts">
+                  <button class="btn secondary">VIEW MY COLLECTION</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P2 — Empty <em>(NON-gold cold-start)</em></h3>
+        <p>A friendly quest-log explainer. <b>No gold</b> (F-02): achievements aren&rsquo;t bought or added
+        here &mdash; they&rsquo;re earned by activity <i>elsewhere</i>, so the only nudge is a cream
+        <code>KeycapButton/secondary</code> back to where earning happens. Not a dead end.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="stage-label">Friend-view &amp; privacy <small>P3 a friend&rsquo;s EARNED archive only — NO NEXT-UP quests (a friend never sees what they&rsquo;re working toward) and no hidden eggs leak · P4 a non-friend / restricted view (honest count reads; detail locked, PROF-03)</small></div>
+  <div class="stage">
+
+    <!-- ═══════════ P3 — FRIEND-VIEW (Riko) ═══════════ -->
+    <div class="take">
+      <div class="artboard-label">P3 — Friend-view (Riko · earned only)</div>
+      <div class="device">
+        <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">PWR</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>ACHIEVEMENTS</h2></div>
+            <div class="retlink"><span class="bk">&lsaquo;</span> RETURN TO RIKO</div>
+            <div class="scroll">
+              <div class="well id">
+                <div class="id-top">
+                  <div class="avatar riko">RI</div>
+                  <div>
+                    <div class="id-name">RIKO</div>
+                    <div class="id-sub">5 EARNED</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="sec"><h3>EARNED</h3><span class="cnt">5</span></div>
+              <div class="bgrid">
+                <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span><span class="blabel">SHELF LIFE</span></div>
+                <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span><span class="blabel">COLLECTOR</span></div>
+                <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 16V5"/><path d="M7 10l5-5 5 5"/><path d="M5 19h14"/></svg></span><span class="blabel">FIRST PUBLISH</span></div>
+                <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="17.5" cy="9" r="2.6"/><path d="M16 19a5 5 0 0 1 6-4.8"/></svg></span><span class="blabel">SOCIAL</span></div>
+                <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M20 13.5A8 8 0 1 1 10.5 4 6.2 6.2 0 0 0 20 13.5z"/></svg></span><span class="blabel">NIGHT OWL</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P3 — Friend-view <em>(earned only)</em></h3>
+        <p>Riko&rsquo;s <b>EARNED</b> archive, read-only, with a <code>‹ RETURN TO RIKO</code> back-seam.
+        <b>No NEXT UP quests</b> &mdash; a friend never sees what someone is working toward (and no hidden egg
+        leaks; NIGHT OWL shows only because Riko already earned it). Quest log&rsquo;s no-leak is structural:
+        the whole momentum half is self-only.</p>
+      </div>
+    </div>
+
+    <!-- ═══════════ P4 — PRIVACY-LIMITED ═══════════ -->
+    <div class="take">
+      <div class="artboard-label">P4 — Privacy-limited (PROF-03)</div>
+      <div class="device">
+        <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">PWR</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>ACHIEVEMENTS</h2></div>
+            <div class="retlink"><span class="bk">&lsaquo;</span> RETURN TO RIKO</div>
+            <div class="scroll">
+              <div class="well id">
+                <div class="id-top">
+                  <div class="avatar riko">RI</div>
+                  <div>
+                    <div class="id-name">RIKO</div>
+                    <div class="id-sub">12 EARNED</div>
+                  </div>
+                </div>
+              </div>
+              <div class="lock-well">
+                <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                <div class="lk-t">ACHIEVEMENTS HIDDEN</div>
+                <div class="lk-s">Riko keeps their quest log private. The headline count is public &mdash; the badges themselves are only visible to friends.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P4 — Privacy-limited <em>(PROF-03)</em></h3>
+        <p>A non-friend / restricted view: the <b>honest headline count</b> still reads (12 EARNED), but the
+        badge detail is sealed behind the <code>lock-well</code> grammar (verbatim from
+        <code>profile-states</code>). Hidden detail <b>never leaks</b>.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="stage-label">Unlock celebration (ACH-06) <small>P5 the in-app arcade celebration takeover — shared grammar with Draft A (it&rsquo;s the same ACH-06 moment, so it reads identically across directions). Push/notification-driven; unlocks are server-side</small></div>
+  <div class="stage">
+
+    <!-- ═══════════ P5 — UNLOCK CELEBRATION MOMENT ═══════════ -->
+    <div class="take">
+      <div class="artboard-label">P5 — Unlock celebration (ACH-06)</div>
+      <div class="device">
+        <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">PWR</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="celebrate">
+              <svg class="cel-rays" viewBox="-130 -130 260 260" aria-hidden="true">
+                <g>
+                  <line x1="0" y1="-66" x2="0" y2="-104"/>
+                  <line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(30)"/>
+                  <line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(60)"/>
+                  <line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(90)"/>
+                  <line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(120)"/>
+                  <line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(150)"/>
+                  <line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(180)"/>
+                  <line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(210)"/>
+                  <line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(240)"/>
+                  <line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(270)"/>
+                  <line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(300)"/>
+                  <line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(330)"/>
+                </g>
+              </svg>
+              <div class="cel-eyebrow">ACHIEVEMENT UNLOCKED</div>
+              <div class="cel-badge">
+                <svg viewBox="0 0 24 24"><path d="M4 20l4-1 9.5-9.5-3-3L5 16z"/><path d="M14.5 6.5l3 3"/></svg>
+              </div>
+              <div class="cel-title">CURATOR</div>
+              <div class="cel-sub">You&rsquo;ve designed 5 cards. Your shelf has a signature style now.</div>
+              <div class="cel-rewards">
+                <div class="rchip">
+                  <span class="ri"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><rect x="8.5" y="8.5" width="7" height="7"/></svg></span>
+                  <div class="rt"><span class="rn">ARTISAN FRAME</span><span class="rs">UNLOCKED FOR YOUR CARDS</span></div>
+                  <span class="tag">EARN-ONLY</span>
+                </div>
+                <div class="rchip pix">
+                  <span class="ri"><svg viewBox="0 0 24 24"><path d="M12 3l8 9-8 9-8-9z"/></svg></span>
+                  <div class="rt"><span class="rn">+60 PIXELS</span><span class="rs">ADDED TO YOUR WALLET</span></div>
+                </div>
+              </div>
+              <button class="btn act cel-cont">CONTINUE</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P5 — Unlock celebration <em>(ACH-06)</em></h3>
+        <p>The arcade <b>takeover</b> &mdash; the <b>same</b> <code>CelebrationMoment</code> grammar as Draft A
+        (it&rsquo;s the one ACH-06 moment, so it stays consistent across directions): burst-ray + scanline
+        backdrop, the badge in a spotlight, the name + flavor, the <code>RewardChip</code> payout (ACH-04), and
+        a flat <code>CONTINUE</code> keycap. Push-driven (NOTIF-01); unlocks are server-side.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
