@@ -14,6 +14,14 @@ it kicks off as **distinct organizing models → owner gate → converge** (do *
 **Owner ruling at kickoff (2026-06-27):** build **TWO** drafts (A · Trophy Case · B · Quest Log) — the brief's
 draft-C "Showcase" pole was undefined and the owner chose to drop it.
 
+> **★ Update — 3-TIER colour system (owner direction, 2026-06-27), applied to BOTH drafts.** Every achievement
+> wears one of **three tiers**: **PRESTIGE = gold** (`--gold`, rare/marquee) · **STANDARD = the theme accent**
+> (`--scr-accent` — rides the theme so it re-themes with the screen theme, DEV-04) · **SECRET = magenta** (a new
+> on-screen token `--scr-secret` `#e85ad0`, for easter eggs). This **supersedes the "render non-gold" guidance
+> in the F-02 section below** — gold-for-achievements is now owner-ratified (the PRESTIGE tier), which
+> **resolves the badge-gold flag**. The ripple (new ACH `tier` attribute · F-02 carve-out for gold-as-prestige ·
+> F-05 carve-out for magenta on-screen) is captured at **OQ-082**, owed at converge. "Simple but rewarding."
+
 **Design-side only.** §5.15 behavior (ACH-01..08) is fully specified; the drafts render the **page**, never the
 behavior. Any shape/behavior gap → an append to `docs/open-questions.md` (the achievements payload shape is the
 one already in view — see API below). The spec is never hand-patched. Achievement **content** (which

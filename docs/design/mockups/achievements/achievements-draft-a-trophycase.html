@@ -16,6 +16,7 @@
     --bezel: #14122a;
     --pk: 'Chakra Petch', sans-serif; --shell: 'Paytone One', sans-serif;
     --scr-bg: #232045; --scr-well: #2c2950; --scr-tools: #1a1733; --scr-accent: #ff9f43;
+    --scr-secret: #e85ad0; /* achievement SECRET tier — magenta (new on-screen token; F-05 carve-out, owner 2026-06-27) */
     --scr-accent-ink: #2a1430; --scr-head: #f5f1e4; --scr-text: #ffffff; --scr-dim: #9b97c0;
     --scr-soft: #c9c5e6; --scr-panel: rgba(255,255,255,.065); --scr-hairline: rgba(255,255,255,.08);
     --scr-grip: #565178; --scr-chip: #f5f1e4; --scr-head-shadow: rgba(0,0,0,.45);
@@ -121,25 +122,42 @@
   .bglyph svg { width: 21px; height: 21px; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
   .blabel { font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-text); line-height: 1.25; }
   .bstate { font: 600 9px var(--pk); letter-spacing: .5px; }
-  /* earned — lit, NON-gold (orange accent; badge-gold flagged at the gate) */
-  .badge.earned .bglyph { background: rgba(255,159,67,.12); border-color: color-mix(in srgb, var(--scr-accent) 45%, transparent); }
-  .badge.earned .bglyph svg { stroke: var(--scr-accent); }
-  .badge.earned .bstate { color: var(--scr-accent); }
-  /* in-progress — dim + meter */
-  .badge.prog .bglyph svg { stroke: var(--scr-dim); }
+  /* ── THREE-TIER colour system (owner, 2026-06-27): gold = PRESTIGE · theme-accent = STANDARD · magenta = SECRET ──
+     The STANDARD tier rides --scr-accent (the THEME accent) on purpose — it re-themes with the screen theme (DEV-04). */
+  .badge { --tier: var(--scr-accent); }
+  .badge.t-gold { --tier: var(--gold); }
+  .badge.t-secret { --tier: var(--scr-secret); }
+  /* earned — lit in its tier colour */
+  .badge.earned .bglyph { background: color-mix(in srgb, var(--tier) 13%, transparent); border-color: color-mix(in srgb, var(--tier) 45%, transparent); }
+  .badge.earned .bglyph svg { stroke: var(--tier); }
+  .badge.earned .bstate { color: var(--tier); }
+  /* in-progress — dim glyph + tier-coloured meter (you see which tier you're climbing) */
+  .badge.prog .bglyph { border-color: color-mix(in srgb, var(--tier) 30%, transparent); }
+  .badge.prog .bglyph svg { stroke: color-mix(in srgb, var(--tier) 65%, var(--scr-dim)); }
   .badge.prog .blabel { color: var(--scr-soft); }
   .badge.prog .bstate { color: var(--scr-dim); }
-  /* mystery (egg, OQ-005 pole A — hint it exists) */
-  .badge.mystery .bglyph svg { stroke: var(--scr-grip); }
-  .badge.mystery .blabel { color: var(--scr-grip); letter-spacing: 3px; }
-  .badge.mystery .bstate { color: var(--scr-grip); }
-  /* reward dot on an earned milestone that paid a cosmetic */
-  .badge .rwd { font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-accent); display: inline-flex; align-items: center; gap: 3px; }
-  .badge .rwd svg { width: 10px; height: 10px; fill: none; stroke: var(--scr-accent); stroke-width: 1.8; }
+  /* mystery (secret egg, OQ-005 pole A — hint it exists; dim magenta so a secret reads as its tier) */
+  .badge.mystery { --tier: var(--scr-secret); }
+  .badge.mystery .bglyph { border-color: color-mix(in srgb, var(--tier) 30%, transparent); }
+  .badge.mystery .bglyph svg { stroke: color-mix(in srgb, var(--tier) 55%, var(--scr-grip)); }
+  .badge.mystery .blabel { color: color-mix(in srgb, var(--tier) 55%, var(--scr-grip)); letter-spacing: 3px; }
+  .badge.mystery .bstate { color: color-mix(in srgb, var(--tier) 55%, var(--scr-grip)); }
+  /* reward dot on an earned achievement that paid a cosmetic */
+  .badge .rwd { font: 700 9px var(--pk); letter-spacing: .5px; color: var(--tier); display: inline-flex; align-items: center; gap: 3px; }
+  .badge .rwd svg { width: 10px; height: 10px; fill: none; stroke: var(--tier); stroke-width: 1.8; }
 
-  /* ── ProgressMeter — flat fill bar (NON-gold; not an edge-rail, F-09) ── */
+  /* ── tier legend (teaches the 3-tier colour system; square on-screen swatches, F-07) ── */
+  .tiers { display: flex; gap: 12px; flex-wrap: wrap; padding: 9px 2px 0; }
+  .tg { display: inline-flex; align-items: center; gap: 5px; font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .tg i { width: 9px; height: 9px; flex: 0 0 auto; }
+  .tg.gold i { background: var(--gold); }
+  .tg.theme i { background: var(--scr-accent); }
+  .tg.secret i { background: var(--scr-secret); }
+
+  /* ── ProgressMeter — flat fill bar (tier-coloured; not an edge-rail, F-09) ── */
   .pmeter { width: 100%; height: 5px; background: rgba(255,255,255,.09); }
   .pmeter span { display: block; height: 100%; background: var(--scr-accent); }
+  .badge .pmeter span { background: var(--tier); }
 
   /* ════ RewardChip — the ACH-04 payout readout ════ */
   .rwrap { display: flex; flex-direction: column; gap: 7px; }
@@ -178,18 +196,20 @@
   .lock-well .lk-s { font: 500 9px/1.55 var(--pk); color: var(--scr-dim); max-width: 250px; }
 
   /* ════ CelebrationMoment — the ACH-06 arcade takeover (P5) ════ */
-  .celebrate { position: absolute; inset: 0; overflow: hidden; display: flex; flex-direction: column;
+  .celebrate { --cel: var(--scr-accent); position: absolute; inset: 0; overflow: hidden; display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 13px; padding: 28px 24px;
     background: radial-gradient(circle at 50% 36%, #322c63 0%, var(--scr-bg) 66%); }
+  .celebrate.t-gold { --cel: var(--gold); }
+  .celebrate.t-secret { --cel: var(--scr-secret); }
   .celebrate::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .45;
     background: repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, #0000 1px 3px); }
   .cel-rays { position: absolute; top: 33%; left: 50%; transform: translate(-50%, -50%); width: 260px; height: 260px; opacity: .5; }
-  .cel-rays line { stroke: var(--scr-accent); stroke-width: 2.5; }
-  .cel-eyebrow { z-index: 1; font: 700 11px var(--pk); letter-spacing: 5px; color: var(--scr-accent); }
+  .cel-rays line { stroke: var(--cel); stroke-width: 2.5; }
+  .cel-eyebrow { z-index: 1; font: 700 11px var(--pk); letter-spacing: 5px; color: var(--cel); }
   .cel-badge { z-index: 1; position: relative; width: 96px; height: 96px; display: flex; align-items: center; justify-content: center;
-    background: rgba(255,159,67,.14); border: 2px solid var(--scr-accent);
+    background: color-mix(in srgb, var(--cel) 14%, transparent); border: 2px solid var(--cel);
     clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px), calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
-  .cel-badge svg { width: 46px; height: 46px; fill: none; stroke: var(--scr-accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .cel-badge svg { width: 46px; height: 46px; fill: none; stroke: var(--cel); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
   .cel-title { z-index: 1; font: 700 21px/1.1 var(--pk); letter-spacing: 1.5px; color: var(--scr-text); text-align: center; }
   .cel-sub { z-index: 1; font: 500 11px/1.5 var(--pk); color: var(--scr-soft); text-align: center; max-width: 250px; }
   .cel-rewards { z-index: 1; display: flex; flex-direction: column; gap: 7px; width: 248px; margin-top: 2px; }
@@ -224,8 +244,12 @@
     (<code>lock-well</code>) · P5 <b>unlock celebration</b> (ACH-06 arcade takeover). Skeleton/LoadError/Offline
     deferred to converge (reuse §1.8 verbatim). NavBand: <b>PROFILE active</b>. New components:
     <code>BadgeTile</code> · <code>MysterySlot</code> · <code>ProgressMeter</code> · <code>RewardChip</code> ·
-    <code>CelebrationMoment</code>. <i>All content illustrative — ACH-04 deferred (OQ-004). Earned badges
-    rendered NON-gold — badge-gold reconcile flagged. API payload prose-only — page-audit owed at converge.</i></p>
+    <code>CelebrationMoment</code>. <b>THREE-TIER colour system (owner, 2026-06-27):</b> <b>gold</b> = PRESTIGE
+    (rare/marquee) · the <b>theme accent</b> = STANDARD milestones (rides <code>--scr-accent</code>, so it
+    re-themes with the screen theme, DEV-04) · <b>magenta</b> = SECRET eggs. <i>All content illustrative —
+    ACH-04 deferred (OQ-004). Gold-for-achievements is now owner-ratified (an F-02 carve-out) + magenta
+    on-screen (an F-05 carve-out) + a new achievement <code>tier</code> attribute → all captured at
+    <b>OQ-082</b>. API payload prose-only — page-audit owed at converge.</i></p>
   </div>
 
   <div class="stage-label">Self · populated &amp; empty <small>P1 the trophy case in full — earned grid (hero) · in-progress milestones with bars · the SECRETS row (1 revealed + 2 ??? mystery slots) · the earned rewards · P2 the new-user cold-start (NON-gold — achievements are earned by playing elsewhere)</small></div>
@@ -262,10 +286,15 @@
                 <div class="stat"><span class="v">3</span><span class="l">IN PROGRESS</span></div>
                 <div class="stat"><span class="v">1 / 3</span><span class="l">SECRETS</span></div>
               </div>
+              <div class="tiers">
+                <span class="tg gold"><i></i> PRESTIGE</span>
+                <span class="tg theme"><i></i> STANDARD</span>
+                <span class="tg secret"><i></i> SECRET</span>
+              </div>
 
               <div class="sec"><h3>EARNED</h3><span class="cnt">8</span></div>
               <div class="bgrid">
-                <div class="badge earned">
+                <div class="badge earned t-gold">
                   <span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span>
                   <span class="blabel">COLLECTOR</span>
                   <span class="bstate">50 GAMES</span>
@@ -275,7 +304,7 @@
                   <span class="blabel">FIRST PUBLISH</span>
                   <span class="bstate">EARNED</span>
                 </div>
-                <div class="badge earned">
+                <div class="badge earned t-gold">
                   <span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.5A3.5 3.5 0 0 1 12 9a3.5 3.5 0 0 1 7 1.5C19 15.6 12 20 12 20z"/></svg></span>
                   <span class="blabel">ADOPTED 100&times;</span>
                   <span class="rwd"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><rect x="8.5" y="8.5" width="7" height="7"/></svg> REWARD</span>
@@ -290,7 +319,7 @@
                   <span class="blabel">FIRST FRIEND</span>
                   <span class="bstate">EARNED</span>
                 </div>
-                <div class="badge earned">
+                <div class="badge earned t-gold">
                   <span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 3l2.5 6 6.5.5-5 4.2 1.6 6.3L12 17.5 6.4 20.5 8 14.2l-5-4.2 6.5-.5z"/></svg></span>
                   <span class="blabel">TASTEMAKER</span>
                   <span class="bstate">EARNED</span>
@@ -299,7 +328,7 @@
 
               <div class="sec"><h3>IN PROGRESS</h3><span class="cnt">3</span></div>
               <div class="bgrid">
-                <div class="badge prog">
+                <div class="badge prog t-gold">
                   <span class="bglyph"><svg viewBox="0 0 24 24"><rect x="4" y="6" width="12" height="14"/><path d="M8 4h12v14"/></svg></span>
                   <span class="blabel">PROLIFIC</span>
                   <span class="pmeter"><span style="width:20%"></span></span>
@@ -321,7 +350,7 @@
 
               <div class="sec"><h3>SECRETS</h3><span class="cnt">1 / 3</span></div>
               <div class="bgrid">
-                <div class="badge earned">
+                <div class="badge earned t-secret">
                   <span class="bglyph"><svg viewBox="0 0 24 24"><path d="M20 13.5A8 8 0 1 1 10.5 4 6.2 6.2 0 0 0 20 13.5z"/></svg></span>
                   <span class="blabel">NIGHT OWL</span>
                   <span class="bstate">UNLOCKED!</span>
@@ -372,7 +401,9 @@
         (<code>BadgeTile</code>, lit) → <b>IN PROGRESS</b> milestones with a <code>ProgressMeter</code> each →
         <b>SECRETS</b> = 1 revealed egg + 2 locked <code>???</code> <code>MysterySlot</code>s
         (<b>OQ-005 pole A</b>) → <b>REWARDS</b> (<code>RewardChip</code>s; ACH-04 earn-only cosmetics + a
-        currency drop). Earned glyphs are <b>orange, not gold</b> — badge-gold flagged.</p>
+        currency drop). Badges wear the <b>three tiers</b> (legend up top): <b>gold</b> prestige (COLLECTOR ·
+        ADOPTED 100× · TASTEMAKER · PROLIFIC) · the <b>theme accent</b> standard (FIRST PUBLISH · EXPLORER ·
+        FIRST FRIEND) · <b>magenta</b> secret (the eggs / <code>???</code>).</p>
       </div>
     </div>
 
@@ -465,12 +496,12 @@
 
               <div class="sec"><h3>EARNED</h3><span class="cnt">5</span></div>
               <div class="bgrid">
-                <div class="badge earned">
+                <div class="badge earned t-gold">
                   <span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span>
                   <span class="blabel">SHELF LIFE</span>
                   <span class="bstate">100 GAMES</span>
                 </div>
-                <div class="badge earned">
+                <div class="badge earned t-gold">
                   <span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span>
                   <span class="blabel">COLLECTOR</span>
                   <span class="bstate">50 GAMES</span>
@@ -485,7 +516,7 @@
                   <span class="blabel">SOCIAL</span>
                   <span class="bstate">10 FRIENDS</span>
                 </div>
-                <div class="badge earned">
+                <div class="badge earned t-secret">
                   <span class="bglyph"><svg viewBox="0 0 24 24"><path d="M20 13.5A8 8 0 1 1 10.5 4 6.2 6.2 0 0 0 20 13.5z"/></svg></span>
                   <span class="blabel">NIGHT OWL</span>
                   <span class="bstate">EARNED</span>
@@ -584,7 +615,7 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="celebrate">
+            <div class="celebrate t-gold">
               <svg class="cel-rays" viewBox="-130 -130 260 260" aria-hidden="true">
                 <g>
                   <line x1="0" y1="-66" x2="0" y2="-104"/>

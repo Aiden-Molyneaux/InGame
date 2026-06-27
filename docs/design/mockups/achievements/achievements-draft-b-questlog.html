@@ -16,6 +16,7 @@
     --bezel: #14122a;
     --pk: 'Chakra Petch', sans-serif; --shell: 'Paytone One', sans-serif;
     --scr-bg: #232045; --scr-well: #2c2950; --scr-tools: #1a1733; --scr-accent: #ff9f43;
+    --scr-secret: #e85ad0; /* achievement SECRET tier — magenta (new on-screen token; F-05 carve-out, owner 2026-06-27) */
     --scr-accent-ink: #2a1430; --scr-head: #f5f1e4; --scr-text: #ffffff; --scr-dim: #9b97c0;
     --scr-soft: #c9c5e6; --scr-panel: rgba(255,255,255,.065); --scr-hairline: rgba(255,255,255,.08);
     --scr-grip: #565178; --scr-chip: #f5f1e4; --scr-head-shadow: rgba(0,0,0,.45);
@@ -108,34 +109,49 @@
   .id-name { font: 700 21px/1.1 var(--pk); letter-spacing: 1px; color: var(--scr-text); }
   .id-sub { font: 600 11px var(--pk); letter-spacing: 1px; color: var(--scr-dim); margin-top: 3px; }
 
-  /* ════ QuestRow — the NEXT-UP momentum unit (prominent bar + prize preview) ════ */
-  .qrow { display: flex; gap: 11px; align-items: flex-start; background: var(--scr-well); padding: 12px; }
+  /* ── THREE-TIER colour system (owner, 2026-06-27): gold = PRESTIGE · theme-accent = STANDARD · magenta = SECRET ──
+     STANDARD rides --scr-accent (the THEME accent) so it re-themes with the screen theme (DEV-04). */
+
+  /* ════ QuestRow — the NEXT-UP momentum unit (prominent bar + prize preview; tier-coloured) ════ */
+  .qrow { --tier: var(--scr-accent); display: flex; gap: 11px; align-items: flex-start; background: var(--scr-well); padding: 12px; }
+  .qrow.t-gold { --tier: var(--gold); }
+  .qrow.t-secret { --tier: var(--scr-secret); }
   .qrow + .qrow { margin-top: 8px; }
   .qglyph { width: 40px; height: 40px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
-    background: rgba(255,159,67,.12); border: 1px solid color-mix(in srgb, var(--scr-accent) 45%, transparent); }
-  .qglyph svg { width: 22px; height: 22px; fill: none; stroke: var(--scr-accent); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    background: color-mix(in srgb, var(--tier) 12%, transparent); border: 1px solid color-mix(in srgb, var(--tier) 45%, transparent); }
+  .qglyph svg { width: 22px; height: 22px; fill: none; stroke: var(--tier); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
   .qbody { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
-  .qup { font: 700 9px var(--pk); letter-spacing: 1.5px; color: var(--scr-accent); }
+  .qup { font: 700 9px var(--pk); letter-spacing: 1.5px; color: var(--tier); }
   .qhead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
   .qname { font: 700 15px/1 var(--pk); letter-spacing: .5px; color: var(--scr-text); }
-  .qcount { font: 700 15px/1 var(--pk); color: var(--scr-accent); flex: 0 0 auto; }
+  .qcount { font: 700 15px/1 var(--pk); color: var(--tier); flex: 0 0 auto; }
   /* prominent progress bar (taller than A's tile meter; not an edge-rail, F-09) */
   .qmeter { width: 100%; height: 8px; background: rgba(255,255,255,.09); }
-  .qmeter span { display: block; height: 100%; background: var(--scr-accent); }
+  .qmeter span { display: block; height: 100%; background: var(--tier); }
   .qprize { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .qprize .pl { font: 700 9px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
   .pv { display: inline-flex; align-items: center; gap: 6px; background: var(--scr-panel); padding: 4px 8px; font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-soft); }
-  .pv svg { width: 13px; height: 13px; fill: none; stroke: var(--scr-accent); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; }
+  .pv svg { width: 13px; height: 13px; fill: none; stroke: var(--tier); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; }
   .pv.pix svg { stroke: none; fill: var(--gold); }
-  .pv .eo { font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-accent); }
+  .pv .eo { font: 700 9px var(--pk); letter-spacing: .5px; color: var(--tier); }
 
-  /* ════ BadgeTile (earned archive — compact, no bars) ════ */
+  /* ════ BadgeTile (earned archive — compact, no bars; tier-coloured) ════ */
   .bgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 0 2px; }
-  .badge { background: var(--scr-panel); padding: 10px 4px 8px; display: flex; flex-direction: column; align-items: center; gap: 5px; text-align: center; }
+  .badge { --tier: var(--scr-accent); background: var(--scr-panel); padding: 10px 4px 8px; display: flex; flex-direction: column; align-items: center; gap: 5px; text-align: center; }
+  .badge.t-gold { --tier: var(--gold); }
+  .badge.t-secret { --tier: var(--scr-secret); }
   .bglyph { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
-    background: rgba(255,159,67,.12); border: 1px solid color-mix(in srgb, var(--scr-accent) 45%, transparent); }
-  .bglyph svg { width: 18px; height: 18px; fill: none; stroke: var(--scr-accent); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    background: color-mix(in srgb, var(--tier) 13%, transparent); border: 1px solid color-mix(in srgb, var(--tier) 45%, transparent); }
+  .bglyph svg { width: 18px; height: 18px; fill: none; stroke: var(--tier); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
   .blabel { font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-text); line-height: 1.2; }
+
+  /* ── tier legend (teaches the 3-tier colour system; square on-screen swatches, F-07) ── */
+  .tiers { display: flex; gap: 12px; flex-wrap: wrap; padding: 9px 2px 2px; }
+  .tg { display: inline-flex; align-items: center; gap: 5px; font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .tg i { width: 9px; height: 9px; flex: 0 0 auto; }
+  .tg.gold i { background: var(--gold); }
+  .tg.theme i { background: var(--scr-accent); }
+  .tg.secret i { background: var(--scr-secret); }
 
   /* ════ RewardChip — the ACH-04 earned-payout recap (de-emphasized in B) ════ */
   .rwrap { display: flex; flex-direction: column; gap: 7px; }
@@ -173,18 +189,20 @@
   .lock-well .lk-s { font: 500 9px/1.55 var(--pk); color: var(--scr-dim); max-width: 250px; }
 
   /* ════ CelebrationMoment — the ACH-06 arcade takeover (P5; shared grammar across drafts) ════ */
-  .celebrate { position: absolute; inset: 0; overflow: hidden; display: flex; flex-direction: column;
+  .celebrate { --cel: var(--scr-accent); position: absolute; inset: 0; overflow: hidden; display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 13px; padding: 28px 24px;
     background: radial-gradient(circle at 50% 36%, #322c63 0%, var(--scr-bg) 66%); }
+  .celebrate.t-gold { --cel: var(--gold); }
+  .celebrate.t-secret { --cel: var(--scr-secret); }
   .celebrate::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .45;
     background: repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, #0000 1px 3px); }
   .cel-rays { position: absolute; top: 33%; left: 50%; transform: translate(-50%, -50%); width: 260px; height: 260px; opacity: .5; }
-  .cel-rays line { stroke: var(--scr-accent); stroke-width: 2.5; }
-  .cel-eyebrow { z-index: 1; font: 700 11px var(--pk); letter-spacing: 5px; color: var(--scr-accent); }
+  .cel-rays line { stroke: var(--cel); stroke-width: 2.5; }
+  .cel-eyebrow { z-index: 1; font: 700 11px var(--pk); letter-spacing: 5px; color: var(--cel); }
   .cel-badge { z-index: 1; position: relative; width: 96px; height: 96px; display: flex; align-items: center; justify-content: center;
-    background: rgba(255,159,67,.14); border: 2px solid var(--scr-accent);
+    background: color-mix(in srgb, var(--cel) 14%, transparent); border: 2px solid var(--cel);
     clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px), calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
-  .cel-badge svg { width: 46px; height: 46px; fill: none; stroke: var(--scr-accent); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .cel-badge svg { width: 46px; height: 46px; fill: none; stroke: var(--cel); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
   .cel-title { z-index: 1; font: 700 21px/1.1 var(--pk); letter-spacing: 1.5px; color: var(--scr-text); text-align: center; }
   .cel-sub { z-index: 1; font: 500 11px/1.5 var(--pk); color: var(--scr-soft); text-align: center; max-width: 250px; }
   .cel-rewards { z-index: 1; display: flex; flex-direction: column; gap: 7px; width: 248px; margin-top: 2px; }
@@ -218,9 +236,12 @@
     surprise). <b>OQ-005 = "invisible until unlocked."</b> Reached from <b>Profile only</b>; friend-view shows
     <b>earned only</b> (a friend never sees what you&rsquo;re working toward). <b>Panels:</b> P1 self · P2 empty
     (NON-gold) · P3 friend-view (Riko) · P4 privacy-limited (<code>lock-well</code>) · P5 <b>unlock celebration</b>
-    (ACH-06). Skeleton/LoadError/Offline deferred to converge. NavBand: <b>PROFILE active</b>. <i>All content
-    illustrative — ACH-04 deferred (OQ-004). Earned badges NON-gold — badge-gold flagged. API payload
-    prose-only — page-audit owed at converge.</i></p>
+    (ACH-06). Skeleton/LoadError/Offline deferred to converge. NavBand: <b>PROFILE active</b>.
+    <b>THREE-TIER colour system (owner, 2026-06-27):</b> <b>gold</b> = PRESTIGE · the <b>theme accent</b> =
+    STANDARD (rides <code>--scr-accent</code> → re-themes with the screen theme, DEV-04) · <b>magenta</b> =
+    SECRET. <i>All content illustrative — ACH-04 deferred (OQ-004). Gold-for-achievements now owner-ratified
+    (F-02 carve-out) + magenta on-screen (F-05 carve-out) + new <code>tier</code> attribute → <b>OQ-082</b>.
+    API payload prose-only — page-audit owed at converge.</i></p>
   </div>
 
   <div class="stage-label">Self · populated &amp; empty <small>P1 the quest log — NEXT UP in-progress milestones with prominent bars + prize previews (closest first) · the earned archive (compact, no bars) · the rewards recap · P2 the new-user cold-start (NON-gold)</small></div>
@@ -251,6 +272,12 @@
                 </div>
               </div>
 
+              <div class="tiers">
+                <span class="tg gold"><i></i> PRESTIGE</span>
+                <span class="tg theme"><i></i> STANDARD</span>
+                <span class="tg secret"><i></i> SECRET</span>
+              </div>
+
               <div class="sec"><h3>NEXT UP</h3><span class="cnt">3</span></div>
               <div class="qrow">
                 <span class="qglyph"><svg viewBox="0 0 24 24"><path d="M4 20l4-1 9.5-9.5-3-3L5 16z"/><path d="M14.5 6.5l3 3"/></svg></span>
@@ -269,7 +296,7 @@
                   <div class="qprize"><span class="pl">PRIZE</span><span class="pv pix"><svg viewBox="0 0 24 24"><path d="M12 3l8 9-8 9-8-9z"/></svg> +75 PIXELS</span></div>
                 </div>
               </div>
-              <div class="qrow">
+              <div class="qrow t-gold">
                 <span class="qglyph"><svg viewBox="0 0 24 24"><rect x="4" y="6" width="12" height="14"/><path d="M8 4h12v14"/></svg></span>
                 <div class="qbody">
                   <div class="qhead"><span class="qname">PROLIFIC</span><span class="qcount">5 / 25</span></div>
@@ -280,13 +307,13 @@
 
               <div class="sec"><h3>EARNED</h3><span class="cnt">8</span></div>
               <div class="bgrid">
-                <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span><span class="blabel">COLLECTOR</span></div>
+                <div class="badge t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span><span class="blabel">COLLECTOR</span></div>
                 <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 16V5"/><path d="M7 10l5-5 5 5"/><path d="M5 19h14"/></svg></span><span class="blabel">FIRST PUBLISH</span></div>
-                <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.5A3.5 3.5 0 0 1 12 9a3.5 3.5 0 0 1 7 1.5C19 15.6 12 20 12 20z"/></svg></span><span class="blabel">ADOPTED 100&times;</span></div>
+                <div class="badge t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.5A3.5 3.5 0 0 1 12 9a3.5 3.5 0 0 1 7 1.5C19 15.6 12 20 12 20z"/></svg></span><span class="blabel">ADOPTED 100&times;</span></div>
                 <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z"/></svg></span><span class="blabel">EXPLORER</span></div>
                 <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="17.5" cy="9" r="2.6"/><path d="M16 19a5 5 0 0 1 6-4.8"/></svg></span><span class="blabel">FIRST FRIEND</span></div>
-                <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 3l2.5 6 6.5.5-5 4.2 1.6 6.3L12 17.5 6.4 20.5 8 14.2l-5-4.2 6.5-.5z"/></svg></span><span class="blabel">TASTEMAKER</span></div>
-                <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M20 13.5A8 8 0 1 1 10.5 4 6.2 6.2 0 0 0 20 13.5z"/></svg></span><span class="blabel">NIGHT OWL</span></div>
+                <div class="badge t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 3l2.5 6 6.5.5-5 4.2 1.6 6.3L12 17.5 6.4 20.5 8 14.2l-5-4.2 6.5-.5z"/></svg></span><span class="blabel">TASTEMAKER</span></div>
+                <div class="badge t-secret"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M20 13.5A8 8 0 1 1 10.5 4 6.2 6.2 0 0 0 20 13.5z"/></svg></span><span class="blabel">NIGHT OWL</span></div>
                 <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M5 19V8l7-4 7 4v11"/><path d="M9 19v-6h6v6"/></svg></span><span class="blabel">HOMECOMING</span></div>
               </div>
 
@@ -320,7 +347,10 @@
         with a prominent <code>ProgressMeter</code> + a <b>PRIZE preview</b> (<code>RewardChip</code> as a
         carrot), ordered closest-first (CURATOR flagged <code>CLOSEST</code>). <b>EARNED</b> is the compact
         archive beneath, then a quiet <b>REWARDS UNLOCKED</b> recap. <b>No SECRETS section</b> &mdash; eggs are
-        invisible; NIGHT OWL only shows because it already fired (<b>OQ-005 pole B</b>). Glyphs orange, not gold.</p>
+        invisible; NIGHT OWL only shows because it already fired, in <b>magenta</b> (its secret tier;
+        <b>OQ-005 pole B</b>). Badges + quests wear the <b>three tiers</b> (legend up top): <b>gold</b> prestige
+        (COLLECTOR · ADOPTED 100× · TASTEMAKER · the PROLIFIC quest) · the <b>theme accent</b> standard ·
+        <b>magenta</b> secret.</p>
       </div>
     </div>
 
@@ -407,11 +437,11 @@
 
               <div class="sec"><h3>EARNED</h3><span class="cnt">5</span></div>
               <div class="bgrid">
-                <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span><span class="blabel">SHELF LIFE</span></div>
-                <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span><span class="blabel">COLLECTOR</span></div>
+                <div class="badge t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span><span class="blabel">SHELF LIFE</span></div>
+                <div class="badge t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span><span class="blabel">COLLECTOR</span></div>
                 <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 16V5"/><path d="M7 10l5-5 5 5"/><path d="M5 19h14"/></svg></span><span class="blabel">FIRST PUBLISH</span></div>
                 <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="17.5" cy="9" r="2.6"/><path d="M16 19a5 5 0 0 1 6-4.8"/></svg></span><span class="blabel">SOCIAL</span></div>
-                <div class="badge"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M20 13.5A8 8 0 1 1 10.5 4 6.2 6.2 0 0 0 20 13.5z"/></svg></span><span class="blabel">NIGHT OWL</span></div>
+                <div class="badge t-secret"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M20 13.5A8 8 0 1 1 10.5 4 6.2 6.2 0 0 0 20 13.5z"/></svg></span><span class="blabel">NIGHT OWL</span></div>
               </div>
             </div>
           </div>
