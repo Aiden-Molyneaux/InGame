@@ -80,8 +80,6 @@
   .scroll::-webkit-scrollbar { display: none; }
   .srail { position: absolute; right: 5px; top: 56px; bottom: 12px; width: 3px; background: var(--scr-panel); z-index: 3; }
   .srail .thumb { position: absolute; left: -0.5px; right: -0.5px; background: var(--scr-grip); box-shadow: 0 0 0 1px rgba(0,0,0,.2); }
-  .fh-key { flex: 0 0 auto; width: 28px; height: 28px; border: none; background: var(--scr-chip); color: var(--navy); font: 700 15px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; margin-right: 11px; }
-  .fh-spacer { flex: 1 1 auto; }
   .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 15px 2px 7px; }
   .sec:first-child { margin-top: 4px; }
   .sec h3 { margin: 0; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
@@ -321,10 +319,10 @@
      Physical .nav-btn stays 3D. INK per fill: orange rgba(0,0,0,.20) · cream rgba(29,42,74,.20)
      · red rgba(0,0,0,.22).
      ════════════════════════════════════════════════════════════════════════════════════ */
-  .fh-key, .actk, .rrow .rr-restore, .rem .rem-act, .cs-del, .cs-cancel, .le-retry, .ctag { box-shadow: none; }
+  .actk, .rrow .rr-restore, .rem .rem-act, .cs-del, .cs-cancel, .le-retry, .ctag { box-shadow: none; }
   .le-retry { filter: none; }
   /* cream fills */
-  .fh-key:active, .actk.secondary:active, .rrow .rr-restore:active, .cs-cancel:active {
+  .actk.secondary:active, .rrow .rr-restore:active, .cs-cancel:active {
     transform: none; box-shadow: none;
     background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
     background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
@@ -414,7 +412,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>ADMIN</h2></div>
+            <div class="screen-head"><h2>ADMIN</h2></div>
             <div class="scroll">
               <a class="return-link" href="#">&#9666; SETTINGS</a>
               <div class="tierband">
@@ -462,7 +460,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>ADMIN</h2></div>
+            <div class="screen-head"><h2>ADMIN</h2></div>
             <div class="scroll">
               <a class="return-link" href="#">&#9666; SETTINGS</a>
               <div class="tierband">
@@ -510,7 +508,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>REPORTS</h2></div>
+            <div class="screen-head"><h2>REPORTS</h2></div>
             <div class="scroll">
               <a class="return-link" href="#">&#9666; HUB</a>
               <div class="sec"><h3>CARD REPORTS &mdash; 5 OPEN</h3></div>
@@ -564,7 +562,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>REPORTS</h2></div>
+            <div class="screen-head"><h2>REPORTS</h2></div>
             <div class="scroll">
               <a class="return-link" href="#">&#9666; HUB</a>
               <div class="sec"><h3>USER REPORTS &mdash; 4 OPEN</h3></div>
@@ -617,7 +615,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>REPORTS</h2></div>
+            <div class="screen-head"><h2>REPORTS</h2></div>
             <div class="scroll">
               <a class="return-link" href="#">&#9666; HUB</a>
               <div class="empty">
@@ -661,7 +659,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>REVIEW</h2></div>
+            <div class="screen-head"><h2>REVIEW</h2></div>
             <div class="scroll">
               <a class="return-link" href="#">&#9666; CARD REPORTS</a>
               <div class="rv-obj">
@@ -711,7 +709,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>REVIEW</h2></div>
+            <div class="screen-head"><h2>REVIEW</h2></div>
             <div class="scroll">
               <a class="return-link" href="#">&#9666; CARD REPORTS</a>
               <div class="rv-obj">
@@ -757,7 +755,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>REVIEW</h2></div>
+            <div class="screen-head"><h2>REVIEW</h2></div>
             <div class="scroll">
               <a class="return-link" href="#">&#9666; USER REPORTS</a>
               <div class="rv-obj">
@@ -806,7 +804,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>REVIEW</h2></div>
+            <div class="screen-head"><h2>REVIEW</h2></div>
             <div class="scroll">
               <a class="return-link" href="#">&#9666; USER REPORTS</a>
               <div class="rv-obj">
@@ -859,7 +857,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>SUGGESTIONS</h2></div>
+            <div class="screen-head"><h2>SUGGESTIONS</h2></div>
             <div class="scroll">
               <a class="return-link" href="#">&#9666; HUB</a>
               <div class="sec"><h3>EDIT SUGGESTION &mdash; 1 OF 4</h3></div>
@@ -915,7 +913,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DEDUP</h2></div>
+            <div class="screen-head"><h2>DEDUP</h2></div>
             <div class="scroll">
               <a class="return-link" href="#">&#9666; HUB</a>
               <div class="page-intro">Merge a <b>duplicate</b> into the <b>canonical</b> entry. Collections &amp; cards on the duplicate re-point automatically &mdash; no user is orphaned.</div>
@@ -965,7 +963,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DEDUP</h2></div>
+            <div class="screen-head"><h2>DEDUP</h2></div>
             <div class="scroll">
               <a class="return-link" href="#">&#9666; HUB</a>
               <div class="merge-slot"><span class="gthumb"><svg viewBox="0 0 24 24"><use href="#ic-game"/></svg></span><span class="ms-tx"><span class="ms-role dup">DUPLICATE</span><span class="ms-n">HALO</span></span></div>
@@ -1009,7 +1007,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DEDUP</h2></div>
+            <div class="screen-head"><h2>DEDUP</h2></div>
             <div class="scroll">
               <a class="return-link" href="#">&#9666; HUB</a>
               <div class="sec"><h3>RESTORE WINDOW &mdash; 2 SOFT-DELETED</h3></div>
@@ -1053,7 +1051,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>CATALOG OPS</h2></div>
+            <div class="screen-head"><h2>CATALOG OPS</h2></div>
             <div class="scroll">
               <a class="return-link" href="#">&#9666; HUB</a>
               <div class="page-intro"><b>P2 · Admin II.</b> Proposed surfaces &mdash; <b>IDs minted at converge (OQ-081)</b>. These have no enumerated `/admin/*` endpoints yet (flagged for the page-audit).</div>
@@ -1107,7 +1105,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DOSSIER</h2></div>
+            <div class="screen-head"><h2>DOSSIER</h2></div>
             <div class="scroll">
               <a class="return-link" href="#">&#9666; USER REPORTS</a>
               <div class="rv-obj">
@@ -1164,7 +1162,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>REMEDIATE</h2></div>
+            <div class="screen-head"><h2>REMEDIATE</h2></div>
             <div class="scroll">
               <a class="return-link" href="#">&#9666; DOSSIER</a>
               <div class="page-intro"><b>@pixelpirate</b> &mdash; a remedy <b>short of suspension</b>: reset the offending field, leave the account active. Each reset is logged (MOD-10).</div>
@@ -1208,7 +1206,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>NOTIFY</h2></div>
+            <div class="screen-head"><h2>NOTIFY</h2></div>
             <div class="scroll">
               <a class="return-link" href="#">&#9666; DOSSIER</a>
               <div class="page-intro">Send <b>@pixelpirate</b> a notice explaining a moderation action &mdash; the <b>&ldquo;why&rdquo;</b> + a pointer to the appeal channel (SYS-09). Composed by the admin, logged (MOD-10).</div>
@@ -1258,7 +1256,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>ADMIN</h2></div>
+            <div class="screen-head"><h2>ADMIN</h2></div>
             <div class="scroll">
               <div class="sk-band"></div>
               <div class="sk-h"></div>
@@ -1297,7 +1295,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>ADMIN</h2></div>
+            <div class="screen-head"><h2>ADMIN</h2></div>
             <div class="scroll">
               <div class="loaderr">
                 <span class="le-badge">!</span>
@@ -1331,7 +1329,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>ADMIN</h2></div>
+            <div class="screen-head"><h2>ADMIN</h2></div>
             <div class="offline-strip"><svg viewBox="0 0 24 24"><use href="#ic-wifi-off"/></svg>OFFLINE<span class="sync">CONSOLE NEEDS A CONNECTION</span></div>
             <div class="scroll">
               <div class="offline-block">
