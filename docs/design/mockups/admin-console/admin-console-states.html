@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InGame · Admin console (§4.4 · MOD-04) — tier-adaptive (Admin I / II · P1+P2 only)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" /></noscript>
+<style>
+  /* ── tokens: Teal shell · Midnight screen (verbatim from settings/device). UTILITY surface — NO gold
+        on screen chrome (F-02); the physical shell STORE keycap stays gold (shell, not screen). ── */
+  :root {
+    --plastic: #2bb6b0; --plastic-hi: #3ec9c2; --plastic-lo: #1f9a94; --silk: #0d524e;
+    --accent: #ff3d77; --gold: #ffd23f; --cream: #f5f1e4; --navy: #1d2a4a;
+    --bezel: #14122a; --alert: #e3414e;
+    --pk: 'Chakra Petch', sans-serif; --shell: 'Paytone One', sans-serif;
+    --scr-bg: #232045; --scr-well: #2c2950; --scr-tools: #1a1733; --scr-accent: #ff9f43;
+    --scr-accent-ink: #2a1430; --scr-head: #f5f1e4; --scr-text: #ffffff; --scr-dim: #9b97c0;
+    --scr-soft: #c9c5e6; --scr-panel: rgba(255,255,255,.065); --scr-hairline: rgba(255,255,255,.08);
+    --scr-grip: #565178; --scr-chip: #f5f1e4; --scr-head-shadow: rgba(0,0,0,.45);
+    --shell-ink: #08433f; --screw-hi: #2aa39d; --screw-lo: #137671; --pip-off: #117672;
+  }
+  html, body { margin: 0; min-height: 100%; background: #efece6; font-family: var(--pk); }
+  .canvas { max-width: 1860px; margin: 0 auto; padding: 40px 24px 60px; }
+  .canvas-head h1 { font: 700 17px/1.2 var(--pk); letter-spacing: 2.5px; color: #2a2633; margin: 0 0 6px; text-transform: uppercase; }
+  .canvas-head p { font: 500 12.5px/1.5 var(--pk); color: #79748a; margin: 0 0 14px; max-width: 1080px; }
+  .canvas-head p b { color: #2a2633; }
+  .matrix { margin: 0 0 30px; background: #fff; border-radius: 12px; padding: 14px 16px; box-shadow: 0 2px 8px rgba(42,38,51,.08); max-width: 1080px; }
+  .matrix h2 { margin: 0 0 7px; font: 700 11px var(--pk); letter-spacing: 1.5px; color: #2a2633; text-transform: uppercase; }
+  .matrix p { margin: 0 0 4px; font: 500 11.5px/1.6 var(--pk); color: #5d5870; }
+  .matrix p b { color: #2a2633; }
+  .matrix .ok { color: #2c8a5a; font-weight: 700; }
+  .matrix .rule { margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; }
+  .stage { display: flex; gap: 40px; justify-content: flex-start; flex-wrap: wrap; align-items: flex-start; }
+  .take { width: 404px; }
+  .artboard-label { font: 700 11px/1 var(--pk); letter-spacing: 1.5px; color: #8d889c; margin: 0 0 10px 2px; text-transform: uppercase; }
+  .caption { margin-top: 14px; background: #fff; border-radius: 12px; padding: 13px 15px; box-shadow: 0 2px 8px rgba(42,38,51,.08); }
+  .caption h3 { margin: 0 0 5px; font: 700 12.5px var(--pk); letter-spacing: .8px; color: #2a2633; text-transform: uppercase; }
+  .caption h3 em { font-style: normal; color: var(--accent); }
+  .caption p { margin: 0 0 4px; font: 500 11.8px/1.5 var(--pk); color: #5d5870; }
+  .caption p b { color: #2a2633; }
+  .stage-label { font: 700 13px/1 var(--pk); letter-spacing: 2px; color: #2a2633; text-transform: uppercase; margin: 40px 2px 14px; width: 100%; }
+  .stage-label small { display: block; margin-top: 5px; font: 500 11px/1.4 var(--pk); letter-spacing: .3px; color: #79748a; text-transform: none; max-width: 1080px; }
+
+  /* ── device shell (verbatim) ── */
+  .device { position: relative; width: 404px; height: 884px; border-radius: 30px; overflow: hidden;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.4), inset 0 -4px 0 rgba(0,0,0,.18), 0 18px 40px color-mix(in srgb, var(--shell-ink) 28%, transparent);
+    display: flex; flex-direction: column; padding: 0 14px; box-sizing: border-box; }
+  .screw { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--screw-hi), var(--screw-lo) 75%); box-shadow: inset 0 1px 2px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.25); }
+  .screw::after { content: ""; position: absolute; left: 1.5px; right: 1.5px; top: 3.5px; height: 1.5px; background: color-mix(in srgb, var(--shell-ink) 70%, transparent); border-radius: 1px; }
+  .screw.tl { top: 10px; left: 12px; } .screw.tr { top: 10px; right: 12px; } .screw.bl { bottom: 10px; left: 12px; } .screw.br { bottom: 10px; right: 12px; }
+  .top-band { height: 64px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 12px 0; position: relative; }
+  .power { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+  .power .led { width: 9px; height: 9px; border-radius: 50%; background: #ff5a4e; box-shadow: 0 0 7px 2px rgba(255,90,78,.65), inset 0 -1px 1px rgba(0,0,0,.3); }
+  .power .lbl { font: 400 9px var(--shell); letter-spacing: .5px; color: var(--silk); opacity: .75; }
+  .logo { position: absolute; left: 50%; transform: translateX(-50%); font: 400 21px var(--shell); letter-spacing: 7px; text-indent: 7px; color: color-mix(in srgb, var(--shell-ink) 28%, transparent); text-shadow: 0 -1px 0 color-mix(in srgb, var(--shell-ink) 30%, transparent); }
+  .grille { display: flex; gap: 6px; }
+  .grille span { width: 5px; height: 23px; background: color-mix(in srgb, var(--shell-ink) 40%, transparent); border-radius: 2px; transform: skewX(-22deg); box-shadow: inset 0 1px 1px rgba(0,0,0,.3); }
+  .screen-bezel { flex: 1 1 auto; min-height: 0; background: var(--bezel); border-radius: 20px; padding: 9px; box-sizing: border-box; }
+  .nav-band { flex: 0 0 auto; height: 128px; display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 6px 0; }
+  .nav-item { display: flex; flex-direction: column; align-items: center; width: 64px; }
+  .nav-lbl { height: 16px; font: 400 11px var(--shell); letter-spacing: .5px; color: var(--silk); display: flex; align-items: center; }
+  .nav-lbl.big { font-size: 11px; }
+  .nav-btn { width: 54px; height: 54px; border-radius: 15px; background: var(--cream); border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 1px 0 rgba(255,255,255,.85); }
+  .nav-btn.store { background: var(--gold); } .nav-btn.collection { background: var(--accent); }
+  .nav-item.active .nav-btn { transform: translateY(3px); box-shadow: 0 1px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 2px 3px rgba(0,0,0,.18); }
+  .pip { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; background: var(--pip-off); box-shadow: inset 0 1px 2px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.25); }
+  .nav-item.active .pip { background: var(--accent); box-shadow: 0 0 9px 2.5px rgba(255,61,119,.85), inset 0 -1px 1px rgba(0,0,0,.25); }
+  .nav-band .nav-item:nth-child(2) .nav-lbl:first-child, .nav-band .nav-item:nth-child(4) .nav-lbl:first-child { transform: translateY(-8px); }
+
+  /* ── screen + furniture (verbatim base) ── */
+  .screen { position: relative; height: 100%; border-radius: 13px; overflow: hidden; display: flex; flex-direction: column; }
+  .sk2 { background: var(--scr-bg); }
+  .screen-head { flex: 0 0 auto; display: flex; align-items: center; justify-content: flex-start; padding: 16px 16px 12px; }
+  .sk2 .screen-head h2 { margin: 0; font: 700 21px/1 var(--pk); letter-spacing: 3px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); }
+  .scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 12px 16px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .srail { position: absolute; right: 5px; top: 56px; bottom: 12px; width: 3px; background: var(--scr-panel); z-index: 3; }
+  .srail .thumb { position: absolute; left: -0.5px; right: -0.5px; background: var(--scr-grip); box-shadow: 0 0 0 1px rgba(0,0,0,.2); }
+  .fh-key { flex: 0 0 auto; width: 28px; height: 28px; border: none; background: var(--scr-chip); color: var(--navy); font: 700 15px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; margin-right: 11px; }
+  .fh-spacer { flex: 1 1 auto; }
+  .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 15px 2px 7px; }
+  .sec:first-child { margin-top: 4px; }
+  .sec h3 { margin: 0; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .sec .tlink { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
+  .well { background: var(--scr-well); border: 1px solid var(--scr-hairline); }
+  .row { display: flex; gap: 11px; align-items: center; padding: 11px 12px; }
+  .row + .row { border-top: 1px solid var(--scr-hairline); }
+  .ric { flex: 0 0 auto; width: 30px; height: 30px; background: var(--scr-chip); display: flex; align-items: center; justify-content: center; }
+  .ric svg path, .ric svg rect, .ric svg circle, .ric svg line, .ric svg polyline { stroke: var(--navy); fill: none; }
+  .ric.tx { font: 800 15px var(--pk); color: var(--navy); }
+  .ric.alert { background: color-mix(in srgb, var(--alert) 22%, var(--scr-well)); }
+  .ric.alert svg path, .ric.alert svg rect, .ric.alert svg circle, .ric.alert svg line { stroke: var(--alert); }
+  .rl-wrap { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .rl { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .rl.alert { color: var(--alert); }
+  .rsub { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .rsub.ok { color: #7fcf9b; } .rsub.warn { color: var(--scr-accent); } .rsub.alert { color: var(--alert); }
+  .rv { margin-left: auto; font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-dim); text-align: right; }
+  .rv.strong { color: var(--scr-soft); }
+  .chev { margin-left: auto; color: var(--scr-grip); font: 700 15px var(--pk); flex: 0 0 auto; }
+  .rv + .chev { margin-left: 8px; }
+
+  /* StateMark — the orange pixel-square on-screen active marker (F-05/F-09; never pink on screen) */
+  .smark { width: 7px; height: 7px; background: var(--scr-accent); flex: 0 0 auto; display: inline-block;
+    clip-path: polygon(11.1% 0, 88.9% 0, 88.9% 11.1%, 100% 11.1%, 100% 88.9%, 88.9% 88.9%, 88.9% 100%, 11.1% 100%, 11.1% 88.9%, 0 88.9%, 0 11.1%, 11.1% 11.1%); }
+
+  /* return-link — the back-seam under the header (‹ SETTINGS / ‹ HUB) */
+  .return-link { display: inline-flex; align-items: center; gap: 6px; margin: -2px 2px 10px; font: 700 11px var(--pk); letter-spacing: 1px; color: var(--scr-accent); text-decoration: none; }
+
+  /* page intro */
+  .page-intro { font: 500 11px/1.55 var(--pk); letter-spacing: .2px; color: var(--scr-soft); margin: 2px 2px 12px; } .page-intro b { color: var(--scr-text); }
+
+  /* ════ TierBanner — the hub tier marker (utility · no gold) ════ */
+  .tierband { display: flex; align-items: center; gap: 11px; padding: 12px 13px; margin: 2px 2px 14px; background: var(--scr-panel); border: 1px solid var(--scr-hairline); border-left: 3px solid var(--scr-accent); }
+  .tierband .tb-g { flex: 0 0 auto; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: var(--scr-well); border: 1px solid var(--scr-hairline); }
+  .tierband .tb-g svg { width: 17px; height: 17px; } .tierband .tb-g svg path { stroke: var(--scr-accent); fill: none; }
+  .tierband .tb-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .tierband .tb-eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .tierband .tb-tier { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--scr-text); } .tierband .tb-tier b { color: var(--scr-accent); }
+  .tierband .tb-who { margin-left: auto; text-align: right; display: flex; flex-direction: column; gap: 2px; }
+  .tierband .tb-name { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .tierband .tb-scope { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+
+  /* CountTag — pending count (orange square; utility, NOT gold) */
+  .ctag { margin-left: auto; flex: 0 0 auto; min-width: 22px; height: 20px; padding: 0 6px; background: var(--scr-accent); color: var(--scr-accent-ink); font: 700 11px var(--pk); letter-spacing: .5px; display: inline-flex; align-items: center; justify-content: center;
+    clip-path: polygon(0 3px, 3px 3px, 3px 0, calc(100% - 3px) 0, calc(100% - 3px) 3px, 100% 3px, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 3px 100%, 3px calc(100% - 3px), 0 calc(100% - 3px)); }
+  .ctag.zero { background: var(--scr-panel); color: var(--scr-dim); }
+  .row .ctag + .chev { margin-left: 8px; }
+
+  /* big function row (hub) */
+  .fnr { display: flex; gap: 12px; align-items: center; padding: 14px 13px; }
+  .fnr + .fnr { border-top: 1px solid var(--scr-hairline); }
+  .fnr .fic { flex: 0 0 auto; width: 36px; height: 36px; background: var(--scr-chip); display: flex; align-items: center; justify-content: center; }
+  .fnr .fic svg { width: 19px; height: 19px; } .fnr .fic svg path, .fnr .fic svg rect, .fnr .fic svg circle, .fnr .fic svg line { stroke: var(--navy); fill: none; }
+  .fnr .ftx { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .fnr .ft { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .fnr .fs { font: 600 9px var(--pk); letter-spacing: .4px; color: var(--scr-dim); }
+
+  /* ════ QueueRow — a reported object in a target queue ════ */
+  .qrow { display: flex; gap: 11px; align-items: center; padding: 11px 12px; }
+  .qrow + .qrow { border-top: 1px solid var(--scr-hairline); }
+  .qrow .q-thumb { flex: 0 0 auto; }
+  .qrow .q-tx { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1 1 auto; }
+  .qrow .q-tt { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .qrow .q-reason { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-accent); }
+  .qrow .q-meta { font: 600 9px var(--pk); letter-spacing: .4px; color: var(--scr-dim); }
+  .qrow .q-right { margin-left: auto; flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+  .qrow .chev { margin-left: 0; }
+  /* soft-hidden flag (MOD-02) */
+  .hflag { display: inline-flex; align-items: center; gap: 4px; font: 700 9px var(--pk); letter-spacing: .5px; color: var(--alert); border: 1px solid color-mix(in srgb, var(--alert) 45%, transparent); padding: 2px 5px; }
+  .hflag svg { width: 9px; height: 9px; } .hflag svg path { stroke: var(--alert); fill: none; }
+  /* count of reports against the target */
+  .qcount { font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); border: 1px solid var(--scr-hairline); padding: 2px 5px; }
+
+  /* card thumb (card reports) */
+  .cthumb { width: 44px; height: 62px; background: linear-gradient(160deg, #3a3568, #272350); border: 1px solid var(--scr-hairline); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 4px; box-sizing: border-box; position: relative; overflow: hidden; }
+  .cthumb .ct-art { position: absolute; inset: 4px 4px 14px; background: rgba(255,255,255,.05); display: flex; align-items: center; justify-content: center; } .cthumb .ct-art svg { width: 18px; height: 18px; opacity: .5; } .cthumb .ct-art svg path { stroke: var(--scr-soft); fill: none; }
+  .cthumb .ct-plate { position: relative; z-index: 1; font: 700 9px var(--pk); letter-spacing: .3px; color: var(--scr-soft); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 3px; }
+  /* game thumb (game reports / dedup) */
+  .gthumb { width: 40px; height: 40px; background: var(--scr-chip); display: flex; align-items: center; justify-content: center; } .gthumb svg { width: 20px; height: 20px; } .gthumb svg path, .gthumb svg rect, .gthumb svg circle { stroke: var(--navy); fill: none; }
+  /* avatar (user reports / dossier) */
+  .uav { flex: 0 0 auto; width: 40px; height: 40px; background: var(--scr-grip); color: var(--scr-chip); font: 700 15px var(--pk); display: flex; align-items: center; justify-content: center; }
+  .uav.big { width: 52px; height: 52px; font-size: 21px; }
+
+  /* ════ ReviewPanel — report detail ════ */
+  .rv-obj { display: flex; gap: 13px; align-items: center; padding: 13px; background: var(--scr-well); border: 1px solid var(--scr-hairline); margin-bottom: 11px; }
+  .rv-obj .ro-tx { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .rv-obj .ro-t { font: 700 15px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .rv-obj .ro-s { font: 600 9px var(--pk); letter-spacing: .4px; color: var(--scr-dim); }
+  .panel { background: var(--scr-well); border: 1px solid var(--scr-hairline); padding: 12px; margin-bottom: 11px; }
+  .panel.alert { border-color: color-mix(in srgb, var(--alert) 38%, transparent); }
+  .p-lbl { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); margin-bottom: 7px; display: flex; align-items: center; gap: 6px; }
+  .p-lbl .tag { margin-left: auto; font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-accent); border: 1px solid color-mix(in srgb, var(--scr-accent) 45%, transparent); padding: 2px 5px; }
+  .p-reason { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .p-note { font: 500 11px/1.55 var(--pk); letter-spacing: .2px; color: var(--scr-soft); } .p-note b { color: var(--scr-text); }
+  .metaline { display: flex; flex-wrap: wrap; gap: 6px; }
+  .mchip { display: inline-flex; align-items: center; gap: 5px; background: var(--scr-panel); border: 1px solid var(--scr-hairline); padding: 5px 8px; font: 600 9px var(--pk); letter-spacing: .3px; color: var(--scr-soft); } .mchip b { color: var(--scr-text); font-weight: 700; }
+
+  /* action keycaps (flat) — primary orange · cream secondary · danger red */
+  .acts { display: flex; gap: 8px; margin: 4px 0 4px; }
+  .actk { flex: 1 1 0; border: none; text-align: center; font: 700 11px var(--pk); letter-spacing: 1px; padding: 12px 0; }
+  .actk.primary { background: var(--scr-accent); color: var(--scr-accent-ink); }
+  .actk.secondary { background: var(--scr-chip); color: var(--navy); }
+  .actk.danger { background: var(--alert); color: #fff; }
+  .actk.ghost { background: var(--scr-panel); color: var(--scr-soft); border: 1px solid var(--scr-hairline); }
+  .actk.disabled { opacity: .42; }
+  .actk.mini { padding: 9px 12px; flex: 0 0 auto; }
+  .reason-hint { margin: 7px 2px 0; font: 600 9px/1.4 var(--pk); letter-spacing: .4px; color: var(--scr-grip); text-align: center; } .reason-hint b { color: var(--scr-soft); }
+  .footnote { margin: 14px 4px 4px; font: 500 9px/1.5 var(--pk); letter-spacing: .3px; color: var(--scr-grip); text-align: center; }
+
+  /* ════ SectionSwitch · bottom-docked rail (device grammar) — flat · icon in-line · NO pip ·
+        active = accent border + accent icon/label + the orange StateMark ════ */
+  .rail-dock { flex: 0 0 auto; background: var(--scr-tools); border-top: 1px solid var(--scr-hairline); padding: 9px 10px 11px; }
+  .rail { display: flex; gap: 6px; }
+  .rail-card { position: relative; flex: 1 1 0; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 6px; padding: 11px 4px; background: var(--scr-well); border: 1px solid var(--scr-hairline); }
+  .rail-card .r-ic { flex: 0 0 auto; display: inline-flex; } .rail-card .r-ic svg { width: 17px; height: 17px; stroke: var(--scr-soft); fill: none; }
+  .rail-card .r-l { font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-soft); white-space: nowrap; }
+  .rail-card .r-ct { font: 700 9px var(--pk); letter-spacing: .3px; color: var(--scr-dim); }
+  .rail-card.on { border-color: var(--scr-accent); } .rail-card.on .r-ic svg { stroke: var(--scr-accent); } .rail-card.on .r-l { color: var(--scr-text); } .rail-card.on .r-ct { color: var(--scr-accent); }
+  .rail-card.on .smark { position: absolute; top: 4px; right: 4px; }
+  .rail-dock.dim { opacity: .5; }
+
+  /* empty queue */
+  .empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 9px; padding: 70px 24px 0; }
+  .empty .e-badge { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; border: 1.5px solid color-mix(in srgb, #7fcf9b 55%, transparent); color: #7fcf9b;
+    clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px), calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
+  .empty .e-badge svg { width: 28px; height: 28px; } .empty .e-badge svg path { stroke: #7fcf9b; fill: none; }
+  .empty .e-t { font: 700 15px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
+  .empty .e-s { font: 500 11px/1.55 var(--pk); color: var(--scr-dim); max-width: 250px; }
+
+  /* ════ MergePicker (P2 · dedup) ════ */
+  .merge-slot { background: var(--scr-well); border: 1px solid var(--scr-hairline); padding: 11px 12px; display: flex; gap: 11px; align-items: center; }
+  .merge-slot.canonical { border-color: color-mix(in srgb, var(--scr-accent) 45%, transparent); }
+  .merge-slot .ms-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .merge-slot .ms-role { font: 700 9px var(--pk); letter-spacing: 1.5px; }
+  .merge-slot .ms-role.dup { color: var(--alert); } .merge-slot .ms-role.canon { color: var(--scr-accent); }
+  .merge-slot .ms-n { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .merge-slot .ms-s { font: 600 9px var(--pk); letter-spacing: .4px; color: var(--scr-dim); }
+  .merge-slot .ms-pick { margin-left: auto; font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-accent); border: 1px solid color-mix(in srgb, var(--scr-accent) 45%, transparent); padding: 4px 7px; }
+  .merge-arrow { text-align: center; color: var(--scr-accent); font: 700 15px var(--pk); margin: 7px 0; }
+  .merge-warn { display: flex; gap: 9px; align-items: flex-start; background: rgba(227,65,78,.08); border: 1px solid color-mix(in srgb, var(--alert) 38%, transparent); padding: 10px 11px; margin: 11px 0; }
+  .merge-warn svg { flex: 0 0 auto; width: 16px; height: 16px; margin-top: 1px; } .merge-warn svg path { stroke: var(--alert); fill: none; }
+  .merge-warn .mw-tx { font: 500 9px/1.5 var(--pk); letter-spacing: .2px; color: var(--scr-soft); } .merge-warn .mw-tx b { color: var(--scr-text); }
+
+  /* ════ RestoreRow — soft-deleted dup in the 3-day restore window ════ */
+  .rrow { display: flex; gap: 11px; align-items: center; padding: 11px 12px; }
+  .rrow + .rrow { border-top: 1px solid var(--scr-hairline); }
+  .rrow .rr-tx { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1 1 auto; }
+  .rrow .rr-n { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-soft); text-decoration: line-through; }
+  .rrow .rr-s { font: 600 9px var(--pk); letter-spacing: .4px; color: var(--scr-dim); }
+  .rrow .rr-cd { font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-accent); }
+  .rrow .rr-restore { margin-left: auto; flex: 0 0 auto; border: none; background: var(--scr-chip); color: var(--navy); font: 700 11px var(--pk); letter-spacing: .5px; padding: 8px 11px; }
+
+  /* ════ field-level remediation rows ════ */
+  .rem { background: var(--scr-well); border: 1px solid var(--scr-hairline); padding: 11px 12px; }
+  .rem + .rem { margin-top: 8px; }
+  .rem .rem-top { display: flex; align-items: center; gap: 10px; }
+  .rem .rem-lbl { font: 700 9px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
+  .rem .rem-val { font: 600 11px var(--pk); letter-spacing: .3px; color: var(--scr-text); } .rem .rem-val.flagged { color: var(--alert); }
+  .rem .rem-act { margin-left: auto; flex: 0 0 auto; border: none; background: var(--alert); color: #fff; font: 700 9px var(--pk); letter-spacing: .5px; padding: 6px 9px; }
+  .rem .rem-input { margin-top: 9px; background: var(--scr-chip); box-shadow: inset 0 2px 3px rgba(0,0,0,.16); padding: 9px 11px; font: 600 11px var(--pk); letter-spacing: .3px; color: var(--navy); }
+  .rem .rem-input .ph { color: #8d889c; } .rem .rem-input .caret { display: inline-block; width: 1.5px; height: 12px; background: var(--scr-accent); vertical-align: -2px; margin-left: 1px; }
+
+  /* TextField/area — cream inset (the named F-09 exception · reason note) */
+  .tarea .box { background: var(--scr-chip); box-shadow: inset 0 2px 3px rgba(0,0,0,.16); padding: 10px 12px; min-height: 70px; font: 600 11px/1.55 var(--pk); letter-spacing: .3px; color: var(--navy); }
+  .tarea .box.short { min-height: 48px; }
+  .tarea .box .ph { color: #8d889c; }
+  .tarea .box .caret { display: inline-block; width: 1.5px; height: 13px; background: var(--scr-accent); vertical-align: -2px; margin-left: 1px; }
+  .ffield { display: flex; flex-direction: column; gap: 5px; margin: 0 0 12px; }
+  .flabel { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+
+  /* moderation-action notice — the user-facing message preview */
+  .notice-prev { background: var(--scr-panel); border: 1px solid var(--scr-hairline); border-left: 3px solid var(--scr-accent); padding: 12px; }
+  .notice-prev .np-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .notice-prev .np-g { flex: 0 0 auto; width: 24px; height: 24px; background: var(--scr-well); display: flex; align-items: center; justify-content: center; } .notice-prev .np-g svg { width: 13px; height: 13px; } .notice-prev .np-g svg path { stroke: var(--scr-accent); fill: none; }
+  .notice-prev .np-h { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .notice-prev .np-body { font: 500 11px/1.6 var(--pk); letter-spacing: .2px; color: var(--scr-soft); } .notice-prev .np-body b { color: var(--scr-text); }
+  .notice-prev .np-appeal { margin-top: 9px; padding-top: 9px; border-top: 1px dashed color-mix(in srgb, var(--scr-grip) 60%, transparent); font: 600 9px/1.5 var(--pk); letter-spacing: .3px; color: var(--scr-dim); } .notice-prev .np-appeal b { color: var(--scr-accent); }
+
+  /* segment (temp/indefinite) — flat F-09: accent border active + StateMark, NO pip */
+  .seg2 { display: flex; gap: 8px; }
+  .seg-opt { position: relative; flex: 1 1 0; padding: 11px 4px; text-align: center; background: var(--scr-well); border: 1px solid var(--scr-hairline); font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-soft); }
+  .seg-opt.on { border-color: var(--scr-accent); color: var(--scr-text); }
+  .seg-opt.on .smark { position: absolute; top: 4px; right: 4px; }
+
+  /* ════ ConfirmSheet / SuspendSheet — bottom drawer (settings grammar) ════ */
+  .scrim { position: absolute; inset: 0; z-index: 5; background: rgba(13,11,32,.62); }
+  .confirm-sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--scr-tools); border-top: 1px solid var(--scr-hairline); box-shadow: 0 -12px 26px rgba(0,0,0,.55); padding: 18px 18px 16px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 7px; }
+  .seal { width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; background: var(--scr-panel); border: 1px solid var(--scr-hairline); margin-bottom: 3px;
+    clip-path: polygon(0 5px, 3px 5px, 3px 3px, 5px 3px, 5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 3px) calc(100% - 5px), calc(100% - 3px) calc(100% - 3px), calc(100% - 5px) calc(100% - 3px), calc(100% - 5px) 100%, 0 100%); }
+  .seal svg { width: 27px; height: 27px; }
+  .seal.alert { border-color: color-mix(in srgb, var(--alert) 55%, transparent); background: rgba(227,65,78,.08); } .seal.alert svg path { stroke: var(--alert); fill: none; }
+  .seal.ok svg path { stroke: var(--scr-accent); fill: none; }
+  .cs-eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--alert); }
+  .cs-title { font: 700 15px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .cs-body { font: 500 11px/1.6 var(--pk); color: var(--scr-soft); max-width: 320px; } .cs-body b { color: var(--scr-text); }
+  .cs-btns { display: flex; gap: 8px; width: 100%; margin-top: 10px; }
+  .cs-btns button { flex: 1 1 0; border: none; font: 700 11px var(--pk); letter-spacing: 1px; padding: 11px 0; text-align: center; }
+  .cs-del { background: var(--alert); color: #fff; }
+  .cs-cancel { background: var(--scr-chip); color: var(--navy); }
+  /* SuspendSheet form fields (left-aligned within the sheet) */
+  .susp-form { width: 100%; text-align: left; display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
+  .susp-form .flabel { margin-bottom: 5px; }
+  .susp-note { display: flex; align-items: flex-start; gap: 8px; font: 500 9px/1.5 var(--pk); letter-spacing: .2px; color: var(--scr-dim); } .susp-note b { color: var(--scr-soft); }
+
+  /* Skeleton */
+  .sk-h { height: 9px; width: 90px; background: var(--scr-panel); margin: 16px 2px 9px; }
+  .sk-well { background: var(--scr-well); border: 1px solid var(--scr-hairline); padding: 4px 0; }
+  .sk-row { display: flex; align-items: center; gap: 11px; padding: 12px; }
+  .sk-row + .sk-row { border-top: 1px solid var(--scr-hairline); }
+  .sk-ic { width: 40px; height: 40px; background: var(--scr-panel); flex: 0 0 auto; }
+  .sk-bar { height: 9px; background: var(--scr-panel); }
+  .sk-band { height: 56px; background: var(--scr-panel); border: 1px solid var(--scr-hairline); margin: 2px 2px 14px; }
+
+  /* LoadError */
+  .loaderr { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 9px; padding: 78px 24px 0; }
+  .le-badge { width: 66px; height: 66px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; border: 1.5px dashed color-mix(in srgb, var(--scr-accent) 62%, transparent); color: var(--scr-accent); font: 700 21px/1 var(--pk);
+    clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px), calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
+  .le-t { font: 700 15px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
+  .le-s { font: 500 11px/1.55 var(--pk); color: var(--scr-dim); max-width: 250px; }
+  .le-retry { margin-top: 6px; border: none; background: var(--scr-accent); color: var(--scr-accent-ink); font: 700 11px var(--pk); letter-spacing: 1px; padding: 10px 22px;
+    clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px), calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
+
+  /* OfflineStrip */
+  .offline-strip { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; margin: 0 12px 6px; padding: 7px 11px; background: var(--scr-panel); border: 1px solid var(--scr-hairline); font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .offline-strip svg { width: 13px; height: 13px; flex: 0 0 auto; } .offline-strip svg path { stroke: var(--scr-dim); fill: none; }
+  .offline-strip .sync { margin-left: auto; font-weight: 600; letter-spacing: .5px; color: var(--scr-grip); }
+  .offline-block { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 9px; padding: 60px 24px 0; }
+  .ob-badge { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; border: 1.5px solid var(--scr-grip); color: var(--scr-dim); }
+  .ob-badge svg { width: 28px; height: 28px; } .ob-badge svg path { stroke: var(--scr-dim); fill: none; }
+  .ob-t { font: 700 15px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
+  .ob-s { font: 500 11px/1.55 var(--pk); color: var(--scr-dim); max-width: 260px; } .ob-s b { color: var(--scr-soft); }
+
+  /* ════════════════════════════════════════════════════════════════════════════════════
+     FLAT BUTTONS + SCANLINE ENERGIZE (F-03, locked 2026-06-18) — idle flat (no 3D key shadow);
+     PRESS/active = fine CRT scanlines over a hairline-darkened fill, NO motion, no pip.
+     Physical .nav-btn stays 3D. INK per fill: orange rgba(0,0,0,.20) · cream rgba(29,42,74,.20)
+     · red rgba(0,0,0,.22).
+     ════════════════════════════════════════════════════════════════════════════════════ */
+  .fh-key, .actk, .rrow .rr-restore, .rem .rem-act, .cs-del, .cs-cancel, .le-retry, .ctag { box-shadow: none; }
+  .le-retry { filter: none; }
+  /* cream fills */
+  .fh-key:active, .actk.secondary:active, .rrow .rr-restore:active, .cs-cancel:active {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
+  /* orange fills */
+  .actk.primary:active, .le-retry:active {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-accent) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, #0000 1px 2px); }
+  /* red/alert fills */
+  .actk.danger:active, .cs-del:active, .rem .rem-act:active {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--alert) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, #0000 1px 2px); }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="ic-shield" viewBox="0 0 24 24"><path d="M12 2.5l8 3v6c0 5-3.6 8.5-8 10-4.4-1.5-8-5-8-10v-6l8-3z" fill="none" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 12l2.4 2.4L16 9" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-flag" viewBox="0 0 24 24"><path d="M6 22V3M6 4h12l-2.5 4L18 12H6" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-card" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2" fill="none" stroke-width="1.8"/><rect x="8" y="6" width="8" height="6" rx="1" fill="none" stroke-width="1.6"/><path d="M8 15h8M8 18h5" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="ic-game" viewBox="0 0 24 24"><rect x="2.5" y="7" width="19" height="11" rx="4" fill="none" stroke-width="1.8"/><path d="M7 10.5v3M5.5 12h3" stroke-width="1.8" stroke-linecap="round"/><circle cx="16" cy="11.5" r="1.1" fill="none" stroke-width="1.6"/><circle cx="18.5" cy="14" r="1.1" fill="none" stroke-width="1.6"/></symbol>
+  <symbol id="ic-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke-width="1.8"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0" fill="none" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="ic-edit" viewBox="0 0 24 24"><path d="M4 20h16" stroke-width="1.8" stroke-linecap="round"/><path d="M14 5l4 4-9 9-4 1 1-4 8-10z" fill="none" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-merge" viewBox="0 0 24 24"><path d="M6 3v6a6 6 0 0 0 6 6h6" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 12l3 3-3 3" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 3v6a6 6 0 0 1-2 4.4" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-restore" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 1 2.3 5.6" fill="none" stroke-width="1.8" stroke-linecap="round"/><path d="M4 20v-4h4" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-trash" viewBox="0 0 24 24"><path d="M4 6h16M9 6V4h6v2M6 6l1 14h10l1-14" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-takedown" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke-width="1.8"/><path d="M5.6 5.6l12.8 12.8" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="ic-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke-width="1.8"/><path d="M12 7v5l3.5 2" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-bang" viewBox="0 0 24 24"><path d="M12 3l9 16H3z" fill="none" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 9v5M12 16.5v.4" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="ic-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z" fill="none" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="none" stroke-width="1.8"/></symbol>
+  <symbol id="ic-eye-off" viewBox="0 0 24 24"><path d="M4 4l16 16" stroke-width="1.8" stroke-linecap="round"/><path d="M9.5 5.2A10.5 10.5 0 0 1 12 5c6 0 9.5 7 9.5 7a17 17 0 0 1-3 3.8M6.2 7.3A17 17 0 0 0 2.5 12S6 19 12 19a9.7 9.7 0 0 0 3.3-.6" fill="none" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="ic-megaphone" viewBox="0 0 24 24"><path d="M4 10v4h3l8 4V6l-8 4H4z" fill="none" stroke-width="1.8" stroke-linejoin="round"/><path d="M18 9a4 4 0 0 1 0 6" fill="none" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="ic-folder" viewBox="0 0 24 24"><path d="M3 6h6l2 2.5h10V19H3z" fill="none" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-history" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 1 2.3 5.6" fill="none" stroke-width="1.8" stroke-linecap="round"/><path d="M4 20v-4h4" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8v4l3 2" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ic-wifi-off" viewBox="0 0 24 24"><path d="M2.5 8.5a15 15 0 0 1 19 0M6 12a10 10 0 0 1 12 0M9.5 15.3a5 5 0 0 1 5 0M3 3.5l18 17" fill="none" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="ic-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke-width="1.8"/><path d="M9 9l6 6M15 9l-6 6" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <!-- nav glyphs (shell) -->
+  <symbol id="nav-store" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="nav-discover" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></symbol>
+  <symbol id="nav-collection" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></symbol>
+  <symbol id="nav-profile" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="nav-friends" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></symbol>
+</defs></svg>
+
+<div class="canvas">
+  <div class="canvas-head">
+    <h1>Admin console (&sect;4.4 &middot; MOD-04) &mdash; tier-adaptive · P1 Content + P2 Catalog only</h1>
+    <p><b>IA + role model OWNER-SETTLED</b> (decisions 0033 / 0034 / 0035) &mdash; so this is <b>ONE coherent,
+    tier-adaptive direction</b>, not a multi-draft pass. The in-app console hosts <b>P1 Content + P2 Catalog</b>
+    (tiers <b>Admin&nbsp;I / II</b>); economy/config/governance (P3&ndash;P5, tiers III/IV) live in the
+    <b>external operator tool</b> and are <b>never drawn in-app</b>. Reached via <b>Settings &rarr; Admin console</b>
+    (gated <code>adminTier&nbsp;&ge;&nbsp;1</code>); <b>no role-management UI</b> (grant/revoke out-of-band, SYS-08).
+    Every action is <b>audit-logged</b> (MOD-10) &mdash; the ledger viewer is external, but each action carries a
+    <b>reason</b>. Operator = <b>Maverick, Admin&nbsp;II</b>; an <b>Admin&nbsp;I</b> hub cut proves tier-adaptivity.
+    <b>UTILITY surface &mdash; NO gold on screen</b> (the physical shell STORE keycap is shell, not screen);
+    destructive actions = <code>ConfirmSheet</code> + alert-red. Flat <b>Scanline Energize</b> (F-03) · orange
+    <code>StateMark</code> (F-05/F-09) · <b>F-06 21/15/11/9</b>. <b>PROFILE</b> tab active (a Settings sub-surface).</p>
+  </div>
+
+  <div class="matrix">
+    <h2>State coverage &mdash; the tier-adaptive board</h2>
+    <p><b>Hub:</b> Admin&nbsp;II (REPORTS · EDIT SUGGESTIONS · CATALOG + pending counts) <b>&middot;</b> Admin&nbsp;I
+    (catalog section <b>ABSENT</b>). <span class="ok">&#10003;</span></p>
+    <p><b>Reports queue (split by target · `SectionSwitch /rail`):</b> CARDS · GAMES · USERS · empty "queue clear"
+    &middot; report detail + <b>hide / restore / resolve</b> (MOD-01/02/03) + staff details note · user report &rarr;
+    <b>Suspend</b> `SuspendSheet` (MOD-09) + <b>Unsuspend</b>. <span class="ok">&#10003;</span></p>
+    <p><b>Edit suggestions</b> (MOD-06 · old&rarr;new, attributed, approve/reject) &middot; <b>Catalog (P2)</b>:
+    dedup `MergePicker` &rarr; merge confirm &rarr; restore-window `RestoreRow` (countdown) (MOD-05) · catalog ops
+    (direct edit · junk removal · takedown by ID, MOD-08). <span class="ok">&#10003;</span></p>
+    <p><b>OQ-081 remediation (proposed surfaces &mdash; IDs at converge):</b> user investigation dossier ·
+    field-level remediation (reset/force-rename) · moderation-action notice (why + appeal). <span class="ok">&#10003;</span></p>
+    <p class="rule"><b>Lifecycle (&sect;1.8 verbatim):</b> Skeleton · LoadError "Signal Lost"+RETRY · <b>Offline</b>
+    (the console needs connectivity &mdash; reads + writes gated, SYS-10). The console shows admins the <b>TRUE</b>
+    account state (the MOD-09 non-disclosure collapse is for public viewers, not here).</p>
+  </div>
+
+  <!-- ════════════════════ STAGE 1 — THE HUB (tier-adaptive) ════════════════════ -->
+  <div class="stage-label">Stage 1 &mdash; The Hub (role-gated landing · tier-adaptive) <small>Reached from <b>Settings &rarr; Admin console</b> (the `‹ SETTINGS` back-seam). A <b>`TierBanner`</b> states who you are + your scope; each function row carries a <b>pending `CountTag`</b>. The console <b>gates its own sections by tier</b>: <b>H1 Admin&nbsp;II</b> sees REPORTS + EDIT SUGGESTIONS + <b>CATALOG (P2)</b>; <b>H2 Admin&nbsp;I</b> sees the same minus CATALOG &mdash; the P2 section is <b>ABSENT</b> (not locked-with-a-teaser). Counts illustrative.</small></div>
+  <div class="stage">
+
+    <!-- ═══ H1 · Hub — Admin II (full P1+P2) ═══ -->
+    <div class="take">
+      <div class="artboard-label">H1 · Hub &mdash; Admin II (P1 Content + P2 Catalog)</div>
+      <div class="device" data-screen-label="Admin console · H1 — Hub (Admin II)">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>ADMIN</h2></div>
+            <div class="scroll">
+              <a class="return-link" href="#">&#9666; SETTINGS</a>
+              <div class="tierband">
+                <span class="tb-g"><svg viewBox="0 0 24 24"><use href="#ic-shield"/></svg></span>
+                <span class="tb-tx"><span class="tb-eyebrow">YOUR ACCESS</span><span class="tb-tier">ADMIN <b>II</b> &mdash; CATALOG</span></span>
+                <span class="tb-who"><span class="tb-name">@maverick</span><span class="tb-scope">P1 + P2</span></span>
+              </div>
+              <div class="page-intro">Content &amp; catalog moderation. Money, config, and roles aren&rsquo;t here &mdash; <b>they live in the operator tool</b>.</div>
+              <div class="sec"><h3>CONTENT &mdash; P1</h3></div>
+              <div class="well">
+                <div class="fnr"><span class="fic"><svg viewBox="0 0 24 24"><use href="#ic-flag"/></svg></span><span class="ftx"><span class="ft">REPORTS</span><span class="fs">CARDS · GAMES · USERS &mdash; HIDE / RESTORE / RESOLVE</span></span><span class="ctag">12</span><span class="chev">&rsaquo;</span></div>
+                <div class="fnr"><span class="fic"><svg viewBox="0 0 24 24"><use href="#ic-edit"/></svg></span><span class="ftx"><span class="ft">EDIT SUGGESTIONS</span><span class="fs">APPROVE / REJECT CANONICAL FIELD CHANGES</span></span><span class="ctag">4</span><span class="chev">&rsaquo;</span></div>
+              </div>
+              <div class="sec"><h3>CATALOG &mdash; P2</h3></div>
+              <div class="well">
+                <div class="fnr"><span class="fic"><svg viewBox="0 0 24 24"><use href="#ic-merge"/></svg></span><span class="ftx"><span class="ft">DEDUP / MERGE</span><span class="fs">MERGE DUPLICATES · 3-DAY RESTORE WINDOW</span></span><span class="ctag">3</span><span class="chev">&rsaquo;</span></div>
+                <div class="fnr"><span class="fic"><svg viewBox="0 0 24 24"><use href="#ic-folder"/></svg></span><span class="ftx"><span class="ft">CATALOG OPS</span><span class="fs">DIRECT EDIT · JUNK REMOVAL · TAKEDOWN BY ID</span></span><span class="chev">&rsaquo;</span></div>
+              </div>
+              <div class="footnote">Every action is logged &mdash; actor · action · target · reason · time (MOD-10). The audit ledger lives in the operator tool.</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24"><use href="#nav-store"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-discover"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24"><use href="#nav-collection"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-profile"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24"><use href="#nav-friends"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>H1 &mdash; Hub · Admin II <em>(P1 + P2)</em></h3>
+        <p><b>The full console.</b> `TierBanner` reads <b>ADMIN II — CATALOG</b>. Two grouped sections:
+        <b>CONTENT (P1)</b> — REPORTS (12 pending) + EDIT SUGGESTIONS (4) — and <b>CATALOG (P2)</b> —
+        DEDUP/MERGE (3) + CATALOG OPS. Pending counts ride the orange `CountTag` (utility, <b>not gold</b>).</p>
+        <p>The footnote states the MOD-10 audit invariant without drawing the ledger (it&rsquo;s external).</p>
+      </div>
+    </div>
+
+    <!-- ═══ H2 · Hub — Admin I (P1 only · CATALOG ABSENT) ═══ -->
+    <div class="take">
+      <div class="artboard-label">H2 · Hub &mdash; Admin I (P1 Content only · CATALOG absent)</div>
+      <div class="device" data-screen-label="Admin console · H2 — Hub (Admin I)">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>ADMIN</h2></div>
+            <div class="scroll">
+              <a class="return-link" href="#">&#9666; SETTINGS</a>
+              <div class="tierband">
+                <span class="tb-g"><svg viewBox="0 0 24 24"><use href="#ic-shield"/></svg></span>
+                <span class="tb-tx"><span class="tb-eyebrow">YOUR ACCESS</span><span class="tb-tier">ADMIN <b>I</b> &mdash; CONTENT</span></span>
+                <span class="tb-who"><span class="tb-name">@nova</span><span class="tb-scope">P1</span></span>
+              </div>
+              <div class="page-intro">Front-line content moderation. Catalog structure (merge, direct edit) needs <b>Admin II</b> &mdash; so that section isn&rsquo;t shown.</div>
+              <div class="sec"><h3>CONTENT &mdash; P1</h3></div>
+              <div class="well">
+                <div class="fnr"><span class="fic"><svg viewBox="0 0 24 24"><use href="#ic-flag"/></svg></span><span class="ftx"><span class="ft">REPORTS</span><span class="fs">CARDS · GAMES · USERS &mdash; HIDE / RESTORE / RESOLVE</span></span><span class="ctag">12</span><span class="chev">&rsaquo;</span></div>
+                <div class="fnr"><span class="fic"><svg viewBox="0 0 24 24"><use href="#ic-edit"/></svg></span><span class="ftx"><span class="ft">EDIT SUGGESTIONS</span><span class="fs">APPROVE / REJECT CANONICAL FIELD CHANGES</span></span><span class="ctag">4</span><span class="chev">&rsaquo;</span></div>
+              </div>
+              <div class="footnote">No CATALOG section &mdash; dedup/merge, direct edit, junk removal and takedown are <b>P2 (Admin II+)</b>. Economy / config / governance are never in the app at any tier.</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24"><use href="#nav-store"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-discover"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24"><use href="#nav-collection"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-profile"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24"><use href="#nav-friends"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>H2 &mdash; Hub · Admin I <em>(P1 only · catalog ABSENT)</em></h3>
+        <p><b>Tier-adaptivity, proven.</b> Same console, same shell &mdash; the `TierBanner` reads <b>ADMIN I —
+        CONTENT</b> and the <b>CATALOG (P2) section is simply not rendered</b> (decision 0035: gated by tier,
+        absent not teased). REPORTS + EDIT SUGGESTIONS are P1, so they stay.</p>
+        <p>The footnote names what&rsquo;s gated and reaffirms P3&ndash;P5 are never in-app at any tier.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════ STAGE 2 — REPORTS QUEUE (split by target · rail) ════════════════════ -->
+  <div class="stage-label">Stage 2 &mdash; Reports queue · split by target type (`SectionSwitch /rail`) <small>One report-queue per target type &mdash; <b>CARDS · GAMES · USERS</b> &mdash; switched by a <b>bottom-docked `SectionSwitch /rail`</b> (flat · icon in-line · <b>no pip</b> · the active card wears the orange <b>`StateMark`</b> + accent border, the device-editor grammar). Each `QueueRow` carries the reported object, its reason, the reporter + age, the report count, and the <b>soft-hidden flag</b> (MOD-02). Q3 shows the <b>empty "queue clear"</b> state. Counts illustrative.</small></div>
+  <div class="stage">
+
+    <!-- ═══ Q1 · CARDS queue (populated) ═══ -->
+    <div class="take">
+      <div class="artboard-label">Q1 · CARDS queue &mdash; populated</div>
+      <div class="device" data-screen-label="Admin console · Q1 — CARDS queue">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>REPORTS</h2></div>
+            <div class="scroll">
+              <a class="return-link" href="#">&#9666; HUB</a>
+              <div class="sec"><h3>CARD REPORTS &mdash; 5 OPEN</h3></div>
+              <div class="well">
+                <div class="qrow">
+                  <span class="q-thumb"><span class="cthumb"><span class="ct-art"><svg viewBox="0 0 24 24"><use href="#ic-card"/></svg></span><span class="ct-plate">[hidden]</span></span></span>
+                  <span class="q-tx"><span class="q-tt">&ldquo;SL*YER_69&rdquo; &mdash; Elden Ring</span><span class="q-reason">OFFENSIVE OR NSFW</span><span class="q-meta">@riko &middot; 2H AGO &middot; designed by @zed</span></span>
+                  <span class="q-right"><span class="hflag"><svg viewBox="0 0 24 24"><use href="#ic-eye-off"/></svg>HIDDEN</span><span class="chev">&rsaquo;</span></span>
+                </div>
+                <div class="qrow">
+                  <span class="q-thumb"><span class="cthumb"><span class="ct-art"><svg viewBox="0 0 24 24"><use href="#ic-card"/></svg></span><span class="ct-plate">Halo</span></span></span>
+                  <span class="q-tx"><span class="q-tt">Master Chief tribute</span><span class="q-reason">SPAM OR LOW-EFFORT</span><span class="q-meta">@maverick &middot; 6H AGO &middot; designed by @nova</span></span>
+                  <span class="q-right"><span class="qcount">3&times;</span><span class="chev">&rsaquo;</span></span>
+                </div>
+                <div class="qrow">
+                  <span class="q-thumb"><span class="cthumb"><span class="ct-art"><svg viewBox="0 0 24 24"><use href="#ic-card"/></svg></span><span class="ct-plate">Hades</span></span></span>
+                  <span class="q-tx"><span class="q-tt">Zagreus run</span><span class="q-reason">WRONG GAME</span><span class="q-meta">@kai &middot; 1D AGO &middot; designed by @riko</span></span>
+                  <span class="q-right"><span class="qcount">1&times;</span><span class="chev">&rsaquo;</span></span>
+                </div>
+              </div>
+            </div>
+            <div class="rail-dock"><div class="rail">
+              <div class="rail-card on"><span class="smark"></span><span class="r-ic"><svg viewBox="0 0 24 24"><use href="#ic-card"/></svg></span><span class="r-l">CARDS</span><span class="r-ct">5</span></div>
+              <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 24 24"><use href="#ic-game"/></svg></span><span class="r-l">GAMES</span><span class="r-ct">3</span></div>
+              <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 24 24"><use href="#ic-user"/></svg></span><span class="r-l">USERS</span><span class="r-ct">4</span></div>
+            </div></div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24"><use href="#nav-store"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-discover"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24"><use href="#nav-collection"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-profile"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24"><use href="#nav-friends"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Q1 &mdash; CARDS queue <em>(rail active = orange StateMark)</em></h3>
+        <p><b>Split by target type.</b> The bottom `SectionSwitch /rail` switches CARDS · GAMES · USERS; the active
+        card wears the orange <b>`StateMark`</b> + accent border (no pip). Card `QueueRow`s show a card thumb,
+        reason (orange), reporter + age + designer, and either a <b>soft-hidden flag</b> (MOD-02, row 1, already
+        auto-hidden) or a report count.</p>
+      </div>
+    </div>
+
+    <!-- ═══ Q2 · USERS queue (populated) ═══ -->
+    <div class="take">
+      <div class="artboard-label">Q2 · USERS queue &mdash; populated</div>
+      <div class="device" data-screen-label="Admin console · Q2 — USERS queue">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>REPORTS</h2></div>
+            <div class="scroll">
+              <a class="return-link" href="#">&#9666; HUB</a>
+              <div class="sec"><h3>USER REPORTS &mdash; 4 OPEN</h3></div>
+              <div class="well">
+                <div class="qrow">
+                  <span class="uav">Z</span>
+                  <span class="q-tx"><span class="q-tt">@zed_xx</span><span class="q-reason">HARASSMENT</span><span class="q-meta">@riko &middot; 1H AGO &middot; +details note</span></span>
+                  <span class="q-right"><span class="qcount">4&times;</span><span class="chev">&rsaquo;</span></span>
+                </div>
+                <div class="qrow">
+                  <span class="uav">P</span>
+                  <span class="q-tx"><span class="q-tt">@pixelpirate</span><span class="q-reason">IMPERSONATION</span><span class="q-meta">@kai &middot; 8H AGO</span></span>
+                  <span class="q-right"><span class="hflag"><svg viewBox="0 0 24 24"><use href="#ic-ban"/></svg>SUSPENDED</span><span class="chev">&rsaquo;</span></span>
+                </div>
+                <div class="qrow">
+                  <span class="uav">G</span>
+                  <span class="q-tx"><span class="q-tt">@grieflord</span><span class="q-reason">SPAM OR LOW-EFFORT</span><span class="q-meta">@nova &middot; 2D AGO</span></span>
+                  <span class="q-right"><span class="qcount">1&times;</span><span class="chev">&rsaquo;</span></span>
+                </div>
+              </div>
+            </div>
+            <div class="rail-dock"><div class="rail">
+              <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 24 24"><use href="#ic-card"/></svg></span><span class="r-l">CARDS</span><span class="r-ct">5</span></div>
+              <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 24 24"><use href="#ic-game"/></svg></span><span class="r-l">GAMES</span><span class="r-ct">3</span></div>
+              <div class="rail-card on"><span class="smark"></span><span class="r-ic"><svg viewBox="0 0 24 24"><use href="#ic-user"/></svg></span><span class="r-l">USERS</span><span class="r-ct">4</span></div>
+            </div></div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24"><use href="#nav-store"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-discover"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24"><use href="#nav-collection"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-profile"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24"><use href="#nav-friends"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Q2 &mdash; USERS queue <em>(equivalent screen · same rail)</em></h3>
+        <p><b>The same screen, different target.</b> User `QueueRow`s use the square `Avatar` monogram; row 1
+        (@zed_xx, harassment) carries a <b>+details note</b> hint (the MOD-01 staff-facing note). Row 2 shows an
+        <b>already-suspended</b> flag (MOD-09) &mdash; the console shows admins the true state.</p>
+      </div>
+    </div>
+
+    <!-- ═══ Q3 · GAMES queue — empty ("queue clear") ═══ -->
+    <div class="take">
+      <div class="artboard-label">Q3 · GAMES queue &mdash; empty ("queue clear")</div>
+      <div class="device" data-screen-label="Admin console · Q3 — GAMES queue empty">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>REPORTS</h2></div>
+            <div class="scroll">
+              <a class="return-link" href="#">&#9666; HUB</a>
+              <div class="empty">
+                <span class="e-badge"><svg viewBox="0 0 24 24"><use href="#ic-shield"/></svg></span>
+                <span class="e-t">QUEUE CLEAR</span>
+                <span class="e-s">No open game reports. New reports (incl. &ldquo;report duplicate&rdquo;) land here as they&rsquo;re filed.</span>
+              </div>
+            </div>
+            <div class="rail-dock"><div class="rail">
+              <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 24 24"><use href="#ic-card"/></svg></span><span class="r-l">CARDS</span><span class="r-ct">5</span></div>
+              <div class="rail-card on"><span class="smark"></span><span class="r-ic"><svg viewBox="0 0 24 24"><use href="#ic-game"/></svg></span><span class="r-l">GAMES</span><span class="r-ct">0</span></div>
+              <div class="rail-card"><span class="r-ic"><svg viewBox="0 0 24 24"><use href="#ic-user"/></svg></span><span class="r-l">USERS</span><span class="r-ct">4</span></div>
+            </div></div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24"><use href="#nav-store"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-discover"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24"><use href="#nav-collection"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-profile"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24"><use href="#nav-friends"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Q3 &mdash; GAMES queue · empty <em>(calm, not a dead end)</em></h3>
+        <p><b>"Queue clear."</b> A calm green-accent badge, no alarm. The rail count for GAMES reads <b>0</b>; the
+        other targets keep their counts so the moderator can switch straight to live work.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════ STAGE 3 — REPORT DETAIL + ACTION ════════════════════ -->
+  <div class="stage-label">Stage 3 &mdash; Report detail + action (`ReviewPanel`) <small>Tapping a `QueueRow` opens the <b>`ReviewPanel`</b>: the reported object, its reason, the <b>staff-facing details note</b> (MOD-01 &mdash; never shown to other users), and the report meta. Actions: <b>RESOLVE</b> (orange) · <b>HIDE / RESTORE</b> (MOD-01/02/03 &mdash; hide is destructive &rarr; alert-red `ConfirmSheet`). A <b>USER</b> report adds <b>SUSPEND</b> (MOD-09 &rarr; `SuspendSheet`) + <b>INVESTIGATE</b> (the OQ-081 dossier). Every action carries a <b>reason</b> because it&rsquo;s logged (MOD-10).</small></div>
+  <div class="stage">
+
+    <!-- ═══ R1 · card report detail ═══ -->
+    <div class="take">
+      <div class="artboard-label">R1 · card report &mdash; detail + action</div>
+      <div class="device" data-screen-label="Admin console · R1 — card report detail">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>REVIEW</h2></div>
+            <div class="scroll">
+              <a class="return-link" href="#">&#9666; CARD REPORTS</a>
+              <div class="rv-obj">
+                <span class="cthumb"><span class="ct-art"><svg viewBox="0 0 24 24"><use href="#ic-card"/></svg></span><span class="ct-plate">Halo</span></span>
+                <span class="ro-tx"><span class="ro-t">Master Chief tribute</span><span class="ro-s">PUBLISHED CARD · designed by @nova · adopted 41&times;</span></span>
+              </div>
+              <div class="panel"><div class="p-lbl">REPORTED FOR</div><div class="p-reason">SPAM OR LOW-EFFORT</div></div>
+              <div class="panel"><div class="p-lbl">DETAILS NOTE<span class="tag">STAFF-ONLY</span></div><div class="p-note">&ldquo;Same screenshot reposted across 6 games with no edits &mdash; karma farming.&rdquo;</div></div>
+              <div class="sec"><h3>REPORT META</h3></div>
+              <div class="metaline">
+                <span class="mchip">REPORTS <b>3&times;</b></span>
+                <span class="mchip">FIRST <b>@maverick</b></span>
+                <span class="mchip">AGE <b>6H</b></span>
+                <span class="mchip">STATE <b>VISIBLE</b></span>
+              </div>
+              <div class="sec"><h3>ACTION</h3></div>
+              <div class="acts">
+                <button class="actk primary">RESOLVE</button>
+                <button class="actk danger">HIDE</button>
+              </div>
+              <div class="acts"><button class="actk secondary disabled">RESTORE</button></div>
+              <div class="reason-hint">RESTORE is dim &mdash; the card isn&rsquo;t hidden. <b>HIDE</b> + <b>RESOLVE</b> each ask for a reason (logged, MOD-10).</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24"><use href="#nav-store"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-discover"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24"><use href="#nav-collection"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-profile"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24"><use href="#nav-friends"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>R1 &mdash; card report · detail <em>(hide / restore / resolve · MOD-01/02/03)</em></h3>
+        <p><b>The `ReviewPanel`.</b> Object header (card thumb + provenance) → reason → the <b>STAFF-ONLY details
+        note</b> (MOD-01, never rendered to users) → report meta chips. Positive <b>RESOLVE</b> = orange;
+        consequential <b>HIDE</b> = alert-red (→ R2); <b>RESTORE</b> is dim because the card is currently visible.</p>
+      </div>
+    </div>
+
+    <!-- ═══ R2 · hide confirm (ConfirmSheet + reason) ═══ -->
+    <div class="take">
+      <div class="artboard-label">R2 · HIDE confirm &mdash; `ConfirmSheet` + reason (logged)</div>
+      <div class="device" data-screen-label="Admin console · R2 — hide confirm">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>REVIEW</h2></div>
+            <div class="scroll">
+              <a class="return-link" href="#">&#9666; CARD REPORTS</a>
+              <div class="rv-obj">
+                <span class="cthumb"><span class="ct-art"><svg viewBox="0 0 24 24"><use href="#ic-card"/></svg></span><span class="ct-plate">Halo</span></span>
+                <span class="ro-tx"><span class="ro-t">Master Chief tribute</span><span class="ro-s">PUBLISHED CARD · designed by @nova · adopted 41&times;</span></span>
+              </div>
+              <div class="panel"><div class="p-lbl">REPORTED FOR</div><div class="p-reason">SPAM OR LOW-EFFORT</div></div>
+            </div>
+            <div class="scrim"></div>
+            <div class="confirm-sheet">
+              <span class="seal alert"><svg viewBox="0 0 24 24"><use href="#ic-eye-off"/></svg></span>
+              <span class="cs-eyebrow">SOFT-HIDE THIS CARD</span>
+              <span class="cs-title">Hide &ldquo;Master Chief tribute&rdquo;?</span>
+              <span class="cs-body">It&rsquo;s removed from galleries pending review; <b>existing adopters fall back to a default card</b> (CARD-18). Reversible &mdash; you can RESTORE.</span>
+              <div class="susp-form">
+                <div class="ffield tarea"><div class="flabel">REASON &mdash; LOGGED (MOD-10)</div><div class="box short"><span>Duplicate/low-effort repost<span class="caret"></span></span></div></div>
+              </div>
+              <div class="cs-btns"><button class="cs-del">HIDE CARD</button><button class="cs-cancel">CANCEL</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24"><use href="#nav-store"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-discover"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24"><use href="#nav-collection"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-profile"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24"><use href="#nav-friends"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>R2 &mdash; HIDE confirm <em>(destructive grammar · alert-red `ConfirmSheet`)</em></h3>
+        <p><b>The destructive-confirm grammar.</b> A bottom `ConfirmSheet` (the app&rsquo;s one-drawer idiom) with an
+        alert seal, the CARD-18 fall-back consequence stated plainly, and a <b>reason field (logged, MOD-10)</b>.
+        HIDE CARD = red; CANCEL = cream. Same pattern for Reject · Merge · Suspend · remediate · takedown.</p>
+      </div>
+    </div>
+
+    <!-- ═══ R3 · user report detail (+ Suspend / Investigate) ═══ -->
+    <div class="take">
+      <div class="artboard-label">R3 · user report &mdash; detail (+ Suspend · Investigate)</div>
+      <div class="device" data-screen-label="Admin console · R3 — user report detail">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>REVIEW</h2></div>
+            <div class="scroll">
+              <a class="return-link" href="#">&#9666; USER REPORTS</a>
+              <div class="rv-obj">
+                <span class="uav big">Z</span>
+                <span class="ro-tx"><span class="ro-t">@zed_xx</span><span class="ro-s">USER · joined 2024 · 18 cards · STATE: ACTIVE</span></span>
+              </div>
+              <div class="panel alert"><div class="p-lbl">REPORTED FOR</div><div class="p-reason">HARASSMENT</div></div>
+              <div class="panel"><div class="p-lbl">DETAILS NOTE<span class="tag">STAFF-ONLY</span></div><div class="p-note">&ldquo;Repeatedly DMing slurs to @riko after they declined a card trade. Screenshots in ticket.&rdquo;</div></div>
+              <div class="sec"><h3>REPORT META</h3></div>
+              <div class="metaline">
+                <span class="mchip">REPORTS <b>4&times;</b></span>
+                <span class="mchip">BY <b>@riko</b></span>
+                <span class="mchip">AGE <b>1H</b></span>
+              </div>
+              <div class="sec"><h3>ACTION</h3></div>
+              <div class="acts">
+                <button class="actk ghost">INVESTIGATE</button>
+                <button class="actk primary">RESOLVE</button>
+              </div>
+              <div class="acts"><button class="actk danger">SUSPEND ACCOUNT</button></div>
+              <div class="reason-hint"><b>INVESTIGATE</b> opens the user dossier (history + content). <b>SUSPEND</b> invalidates sessions &mdash; reversible &amp; logged (MOD-09).</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24"><use href="#nav-store"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-discover"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24"><use href="#nav-collection"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-profile"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24"><use href="#nav-friends"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>R3 &mdash; user report · detail <em>(adds Suspend + Investigate)</em></h3>
+        <p><b>User reports carry more.</b> The reason panel is alert-bordered; the staff note holds the specifics.
+        Beyond RESOLVE, a user report offers <b>INVESTIGATE</b> (→ the OQ-081 dossier, M1) and <b>SUSPEND ACCOUNT</b>
+        (→ the `SuspendSheet`, R4). An already-suspended user swaps SUSPEND → <b>UNSUSPEND</b> (shown in M1).</p>
+      </div>
+    </div>
+
+    <!-- ═══ R4 · SuspendSheet ═══ -->
+    <div class="take">
+      <div class="artboard-label">R4 · `SuspendSheet` &mdash; temp / indefinite + reason (MOD-09)</div>
+      <div class="device" data-screen-label="Admin console · R4 — SuspendSheet">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>REVIEW</h2></div>
+            <div class="scroll">
+              <a class="return-link" href="#">&#9666; USER REPORTS</a>
+              <div class="rv-obj">
+                <span class="uav big">Z</span>
+                <span class="ro-tx"><span class="ro-t">@zed_xx</span><span class="ro-s">USER · joined 2024 · STATE: ACTIVE</span></span>
+              </div>
+              <div class="panel alert"><div class="p-lbl">REPORTED FOR</div><div class="p-reason">HARASSMENT</div></div>
+            </div>
+            <div class="scrim"></div>
+            <div class="confirm-sheet">
+              <span class="seal alert"><svg viewBox="0 0 24 24"><use href="#ic-ban"/></svg></span>
+              <span class="cs-eyebrow">ACCOUNT SUSPENSION</span>
+              <span class="cs-title">Suspend @zed_xx?</span>
+              <div class="susp-form">
+                <div><div class="flabel">DURATION</div><div class="seg2"><span class="seg-opt on"><span class="smark"></span>TEMPORARY</span><span class="seg-opt">INDEFINITE</span></div></div>
+                <div class="ffield"><div class="flabel">UNTIL</div><div class="rem-input"><span>2026-07-11<span class="caret"></span></span></div></div>
+                <div class="ffield tarea"><div class="flabel">REASON &mdash; LOGGED (MOD-10)</div><div class="box short"><span>Harassment of @riko &mdash; repeated DM abuse<span class="caret"></span></span></div></div>
+                <div class="susp-note"><span class="smark" style="margin-top:3px;"></span><span><b>Invalidates sessions</b> &middot; the user gets a suspension notice + the Help/Contact appeal channel &middot; <b>reversible</b> (you can Unsuspend) &middot; logged (MOD-09).</span></div>
+              </div>
+              <div class="cs-btns"><button class="cs-del">SUSPEND</button><button class="cs-cancel">CANCEL</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24"><use href="#nav-store"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-discover"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24"><use href="#nav-collection"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-profile"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24"><use href="#nav-friends"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>R4 &mdash; `SuspendSheet` <em>(MOD-09 · temp / indefinite + reason)</em></h3>
+        <p><b>A deliberate, destructive sheet.</b> Duration = a flat <b>TEMPORARY / INDEFINITE</b> segment (F-09
+        accent border + `StateMark`, no pip); TEMPORARY reveals an UNTIL date. A required <b>reason</b> (logged),
+        and the consequence note: invalidates sessions, the user gets a notice + appeal channel, reversible.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════ STAGE 4 — EDIT-SUGGESTION REVIEW (MOD-06 · P1) ════════════════════ -->
+  <div class="stage-label">Stage 4 &mdash; Edit-suggestion review (MOD-06 · P1) <small>A community <b>edit suggestion</b> (CAT-06) on a canonical catalog field, shown as an <b>old &rarr; new diff</b>, <b>attributed</b> to its author &rarr; <b>Approve</b> (orange) / <b>Reject</b> (alert-red). Approving writes the canonical field; both are logged (MOD-10). P1, so it appears for <b>both</b> tiers.</small></div>
+  <div class="stage">
+
+    <!-- ═══ D1 · edit-suggestion review ═══ -->
+    <div class="take">
+      <div class="artboard-label">D1 · edit-suggestion review &mdash; old → new (attributed)</div>
+      <div class="device" data-screen-label="Admin console · D1 — edit suggestion review">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>SUGGESTIONS</h2></div>
+            <div class="scroll">
+              <a class="return-link" href="#">&#9666; HUB</a>
+              <div class="sec"><h3>EDIT SUGGESTION &mdash; 1 OF 4</h3></div>
+              <div class="rv-obj">
+                <span class="gthumb"><svg viewBox="0 0 24 24"><use href="#ic-game"/></svg></span>
+                <span class="ro-tx"><span class="ro-t">Hollow Knight</span><span class="ro-s">CATALOG ENTRY · field: STUDIO</span></span>
+              </div>
+              <div class="panel"><div class="p-lbl">CURRENT</div><div class="p-reason" style="color:var(--scr-soft);text-decoration:line-through;">Team Cherry Inc.</div></div>
+              <div class="merge-arrow">&#8595;</div>
+              <div class="panel" style="border-color:color-mix(in srgb, var(--scr-accent) 45%, transparent);"><div class="p-lbl">SUGGESTED<span class="tag">@kai</span></div><div class="p-reason">Team Cherry</div></div>
+              <div class="sec"><h3>SUGGESTER&rsquo;S NOTE</h3></div>
+              <div class="panel"><div class="p-note">&ldquo;Official studio name is just &lsquo;Team Cherry&rsquo; &mdash; no &lsquo;Inc.&rsquo; on the store page.&rdquo;</div></div>
+              <div class="metaline">
+                <span class="mchip">BY <b>@kai</b></span>
+                <span class="mchip">AGE <b>3D</b></span>
+                <span class="mchip">SCREENED <b>&#10003; MOD-07</b></span>
+              </div>
+              <div class="sec"><h3>ACTION</h3></div>
+              <div class="acts">
+                <button class="actk primary">APPROVE</button>
+                <button class="actk danger">REJECT</button>
+              </div>
+              <div class="reason-hint"><b>APPROVE</b> writes the canonical STUDIO field. Both outcomes ask for a reason and are logged (MOD-10).</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24"><use href="#nav-store"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-discover"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24"><use href="#nav-collection"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-profile"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24"><use href="#nav-friends"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>D1 &mdash; edit-suggestion review <em>(MOD-06 · approve / reject)</em></h3>
+        <p><b>Old → new, attributed.</b> The current value (struck through) over the suggested value (accent panel,
+        tagged with the author), plus the suggester&rsquo;s note (screened, MOD-07). <b>APPROVE</b> = orange writes
+        the canonical field; <b>REJECT</b> = alert-red. P1 &mdash; visible to Admin I and II alike.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════ STAGE 5 — CATALOG (P2 · Admin II only) ════════════════════ -->
+  <div class="stage-label">Stage 5 &mdash; Catalog tools (P2 &middot; Admin&nbsp;II only) <small>The P2 section absent from the Admin&nbsp;I hub. <b>Dedup = merge then soft-delete</b> (MOD-05): a <b>`MergePicker`</b> picks the duplicate + the canonical &rarr; <b>Merge</b> (a consequential confirm &mdash; it re-points collections + cards) &rarr; the dup enters a <b>3-day restore window</b> (`RestoreRow` with a countdown). <b>Catalog ops</b>: direct canonical edit · junk-entry removal · <b>proactive takedown by ID</b> (MOD-08). Halo vs HALO duplicate; counts illustrative.</small></div>
+  <div class="stage">
+
+    <!-- ═══ C1 · MergePicker ═══ -->
+    <div class="take">
+      <div class="artboard-label">C1 · `MergePicker` &mdash; pick duplicate + canonical</div>
+      <div class="device" data-screen-label="Admin console · C1 — MergePicker">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DEDUP</h2></div>
+            <div class="scroll">
+              <a class="return-link" href="#">&#9666; HUB</a>
+              <div class="page-intro">Merge a <b>duplicate</b> into the <b>canonical</b> entry. Collections &amp; cards on the duplicate re-point automatically &mdash; no user is orphaned.</div>
+              <div class="sec"><h3>DUPLICATE &mdash; WILL BE SOFT-DELETED</h3></div>
+              <div class="merge-slot">
+                <span class="gthumb"><svg viewBox="0 0 24 24"><use href="#ic-game"/></svg></span>
+                <span class="ms-tx"><span class="ms-role dup">DUPLICATE</span><span class="ms-n">HALO</span><span class="ms-s">added @zed · 1 game · 4 collections</span></span>
+                <span class="ms-pick">CHANGE</span>
+              </div>
+              <div class="merge-arrow">&#8595; MERGE INTO &#8595;</div>
+              <div class="sec"><h3>CANONICAL &mdash; KEPT</h3></div>
+              <div class="merge-slot canonical">
+                <span class="gthumb"><svg viewBox="0 0 24 24"><use href="#ic-game"/></svg></span>
+                <span class="ms-tx"><span class="ms-role canon">CANONICAL</span><span class="ms-n">Halo: Combat Evolved</span><span class="ms-s">added @nova · 1.4K collections</span></span>
+                <span class="ms-pick">CHANGE</span>
+              </div>
+              <div class="merge-warn">
+                <svg viewBox="0 0 24 24"><use href="#ic-bang"/></svg>
+                <span class="mw-tx"><b>Re-points 4 collections + their cards</b> onto the canonical entry, then soft-deletes HALO with a <b>3-day restore window</b>. Reversible until the window closes.</span>
+              </div>
+              <div class="acts"><button class="actk danger">MERGE</button></div>
+              <div class="reason-hint">MERGE asks for a reason and is logged (MOD-10) &rarr; the confirm sheet (C2).</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24"><use href="#nav-store"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-discover"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24"><use href="#nav-collection"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-profile"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24"><use href="#nav-friends"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>C1 &mdash; `MergePicker` <em>(MOD-05 · P2)</em></h3>
+        <p><b>Pick duplicate + canonical.</b> Two slots — the DUPLICATE (red role label, soft-deleted) merging into
+        the CANONICAL (accent-bordered, kept). The warn panel states the blast radius (re-points collections +
+        cards). <b>MERGE</b> = alert-red → the confirm (C2). Each slot has a CHANGE affordance to re-pick.</p>
+      </div>
+    </div>
+
+    <!-- ═══ C2 · merge confirm ═══ -->
+    <div class="take">
+      <div class="artboard-label">C2 · MERGE confirm &mdash; re-points collections + cards</div>
+      <div class="device" data-screen-label="Admin console · C2 — merge confirm">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DEDUP</h2></div>
+            <div class="scroll">
+              <a class="return-link" href="#">&#9666; HUB</a>
+              <div class="merge-slot"><span class="gthumb"><svg viewBox="0 0 24 24"><use href="#ic-game"/></svg></span><span class="ms-tx"><span class="ms-role dup">DUPLICATE</span><span class="ms-n">HALO</span></span></div>
+              <div class="merge-arrow">&#8595;</div>
+              <div class="merge-slot canonical"><span class="gthumb"><svg viewBox="0 0 24 24"><use href="#ic-game"/></svg></span><span class="ms-tx"><span class="ms-role canon">CANONICAL</span><span class="ms-n">Halo: Combat Evolved</span></span></div>
+            </div>
+            <div class="scrim"></div>
+            <div class="confirm-sheet">
+              <span class="seal alert"><svg viewBox="0 0 24 24"><use href="#ic-merge"/></svg></span>
+              <span class="cs-eyebrow">MERGE &amp; SOFT-DELETE</span>
+              <span class="cs-title">Merge HALO into Halo: Combat Evolved?</span>
+              <span class="cs-body"><b>Re-points 4 collections + their cards</b>, then soft-deletes HALO. A <b>3-day restore window</b> opens before the scheduled purge.</span>
+              <div class="susp-form">
+                <div class="ffield tarea"><div class="flabel">REASON &mdash; LOGGED (MOD-10)</div><div class="box short"><span>Duplicate of canonical Halo entry<span class="caret"></span></span></div></div>
+              </div>
+              <div class="cs-btns"><button class="cs-del">MERGE</button><button class="cs-cancel">CANCEL</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24"><use href="#nav-store"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-discover"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24"><use href="#nav-collection"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-profile"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24"><use href="#nav-friends"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>C2 &mdash; MERGE confirm <em>(consequential · re-points)</em></h3>
+        <p><b>The merge confirm.</b> Same `ConfirmSheet` grammar — the re-point consequence and the 3-day restore
+        window stated, a logged reason captured. MERGE = red. After this, the dup appears in the restore-window
+        list (C3).</p>
+      </div>
+    </div>
+
+    <!-- ═══ C3 · restore-window list ═══ -->
+    <div class="take">
+      <div class="artboard-label">C3 · restore window &mdash; `RestoreRow` + countdown</div>
+      <div class="device" data-screen-label="Admin console · C3 — restore window">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DEDUP</h2></div>
+            <div class="scroll">
+              <a class="return-link" href="#">&#9666; HUB</a>
+              <div class="sec"><h3>RESTORE WINDOW &mdash; 2 SOFT-DELETED</h3></div>
+              <div class="well">
+                <div class="rrow">
+                  <span class="gthumb"><svg viewBox="0 0 24 24"><use href="#ic-clock"/></svg></span>
+                  <span class="rr-tx"><span class="rr-n">HALO</span><span class="rr-s">merged into Halo: Combat Evolved · by @maverick</span><span class="rr-cd">2D 14H LEFT &mdash; PURGES AFTER</span></span>
+                  <button class="rr-restore">RESTORE</button>
+                </div>
+                <div class="rrow">
+                  <span class="gthumb"><svg viewBox="0 0 24 24"><use href="#ic-clock"/></svg></span>
+                  <span class="rr-tx"><span class="rr-n">Stardew Valley (dup)</span><span class="rr-s">merged into Stardew Valley · by @nova</span><span class="rr-cd">7H LEFT &mdash; PURGES AFTER</span></span>
+                  <button class="rr-restore">RESTORE</button>
+                </div>
+              </div>
+              <div class="footnote">After the 3-day window a scheduled job purges the soft-deleted entry. RESTORE re-opens it and reverses the merge.</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24"><use href="#nav-store"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-discover"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24"><use href="#nav-collection"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-profile"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24"><use href="#nav-friends"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>C3 &mdash; restore window <em>(MOD-05 · 3-day countdown)</em></h3>
+        <p><b>The grace window.</b> Each `RestoreRow` shows the struck-through soft-deleted name, what it merged
+        into + who merged it, and an orange <b>countdown</b> to the purge. <b>RESTORE</b> (cream) reverses the
+        merge while the window is open.</p>
+      </div>
+    </div>
+
+    <!-- ═══ C4 · catalog ops (direct edit · junk removal · takedown by ID) ═══ -->
+    <div class="take">
+      <div class="artboard-label">C4 · catalog ops &mdash; direct edit · junk removal · takedown</div>
+      <div class="device" data-screen-label="Admin console · C4 — catalog ops">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>CATALOG OPS</h2></div>
+            <div class="scroll">
+              <a class="return-link" href="#">&#9666; HUB</a>
+              <div class="page-intro"><b>P2 · Admin II.</b> Proposed surfaces &mdash; <b>IDs minted at converge (OQ-081)</b>. These have no enumerated `/admin/*` endpoints yet (flagged for the page-audit).</div>
+              <div class="sec"><h3>DIRECT CANONICAL EDIT</h3></div>
+              <div class="well">
+                <div class="row"><span class="ric"><svg width="16" height="16" viewBox="0 0 24 24"><use href="#ic-edit"/></svg></span><span class="rl-wrap"><span class="rl">EDIT AN ENTRY</span><span class="rsub">FIX A CANONICAL FIELD DIRECTLY (NAME · STUDIO · GENRE)</span></span><span class="chev">&rsaquo;</span></div>
+              </div>
+              <div class="sec"><h3>JUNK / NON-DUP REMOVAL</h3></div>
+              <div class="well">
+                <div class="qrow">
+                  <span class="gthumb"><svg viewBox="0 0 24 24"><use href="#ic-game"/></svg></span>
+                  <span class="q-tx"><span class="q-tt">&ldquo;asdfgh test entry&rdquo;</span><span class="q-reason">JUNK &mdash; NOT A REAL GAME</span><span class="q-meta">added @zed · 0 collections</span></span>
+                  <span class="q-right"><button class="actk danger mini">REMOVE</button></span>
+                </div>
+              </div>
+              <div class="sec"><h3>PROACTIVE TAKEDOWN BY ID</h3></div>
+              <div class="rem">
+                <div class="ffield"><div class="flabel">CARD OR GAME ID</div><div class="rem-input"><span>card_8f3a&hellip;<span class="caret"></span></span></div></div>
+                <div class="susp-note" style="margin-top:9px;"><span class="smark" style="margin-top:3px;"></span><span>A <b>moderation/legal pull</b> (MOD-08) hides the item; cards fall back to a default (CARD-18). Logged with a reason.</span></div>
+                <div class="acts" style="margin-top:10px;"><button class="actk danger">TAKE DOWN BY ID</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24"><use href="#nav-store"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-discover"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24"><use href="#nav-collection"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-profile"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24"><use href="#nav-friends"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>C4 &mdash; catalog ops <em>(OQ-081 · P2 · direct edit · junk · takedown)</em></h3>
+        <p><b>Three P2 capabilities.</b> <b>Direct canonical edit</b> (fix a field without an edit-suggestion),
+        <b>junk-entry removal</b> (a non-dup test/garbage entry, red REMOVE), and <b>proactive takedown by ID</b>
+        (MOD-08 legal pull → CARD-18 fall-back). Proposed surfaces; <b>IDs + endpoints owed at converge</b>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════ STAGE 6 — OQ-081 REMEDIATION (P1 · proposed surfaces) ════════════════════ -->
+  <div class="stage-label">Stage 6 &mdash; In-app remediation additions (OQ-081 &middot; P1 &middot; <b>proposed &mdash; IDs at converge</b>) <small>The new P1 content-remediation capabilities named by decision 0034, drawn as <b>proposals</b> for the owner to ratify &rarr; minted as IDs at converge (no IDs this pass). <b>M1</b> a <b>user investigation dossier</b> (report history + prior actions + their content; carries <b>Unsuspend</b> for a suspended user) · <b>M2</b> <b>field-level remediation</b> (reset an offensive username/bio/avatar; <b>force-rename</b> &mdash; a remedy short of suspension) · <b>M3</b> the <b>moderation-action notice</b> to the affected user (the &ldquo;why&rdquo; + appeal pointer, SYS-09).</small></div>
+  <div class="stage">
+
+    <!-- ═══ M1 · user investigation dossier ═══ -->
+    <div class="take">
+      <div class="artboard-label">M1 · user investigation dossier (+ Unsuspend)</div>
+      <div class="device" data-screen-label="Admin console · M1 — user dossier">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>DOSSIER</h2></div>
+            <div class="scroll">
+              <a class="return-link" href="#">&#9666; USER REPORTS</a>
+              <div class="rv-obj">
+                <span class="uav big">P</span>
+                <span class="ro-tx"><span class="ro-t">@pixelpirate</span><span class="ro-s">USER · joined 2023 · 31 cards · 12 games added</span><span class="rsub alert">SUSPENDED UNTIL 2026-07-02 · by @maverick</span></span>
+              </div>
+              <div class="sec"><h3>REPORT HISTORY</h3></div>
+              <div class="well">
+                <div class="row"><span class="ric alert"><svg width="15" height="15" viewBox="0 0 24 24"><use href="#ic-flag"/></svg></span><span class="rl-wrap"><span class="rl">IMPERSONATION</span><span class="rsub">@kai · 8H AGO · OPEN</span></span><span class="chev">&rsaquo;</span></div>
+                <div class="row"><span class="ric"><svg width="15" height="15" viewBox="0 0 24 24"><use href="#ic-flag"/></svg></span><span class="rl-wrap"><span class="rl">OFFENSIVE USERNAME</span><span class="rsub">@riko · 3D AGO · RESOLVED</span></span><span class="chev">&rsaquo;</span></div>
+              </div>
+              <div class="sec"><h3>PRIOR ACTIONS TAKEN</h3></div>
+              <div class="well">
+                <div class="row"><span class="ric"><svg width="15" height="15" viewBox="0 0 24 24"><use href="#ic-ban"/></svg></span><span class="rl-wrap"><span class="rl">SUSPENDED 7 DAYS</span><span class="rsub">@maverick · 8H AGO · &ldquo;impersonation&rdquo;</span></span></div>
+                <div class="row"><span class="ric"><svg width="15" height="15" viewBox="0 0 24 24"><use href="#ic-eye-off"/></svg></span><span class="rl-wrap"><span class="rl">CARD HIDDEN</span><span class="rsub">@nova · 3D AGO · &ldquo;offensive title&rdquo;</span></span></div>
+              </div>
+              <div class="sec"><h3>THEIR CONTENT</h3></div>
+              <div class="metaline">
+                <span class="mchip">CARDS <b>31</b></span>
+                <span class="mchip">GAMES ADDED <b>12</b></span>
+                <span class="mchip">HIDDEN <b>1</b></span>
+              </div>
+              <div class="sec"><h3>ACTION</h3></div>
+              <div class="acts">
+                <button class="actk ghost">REMEDIATE FIELDS</button>
+                <button class="actk primary">NOTIFY</button>
+              </div>
+              <div class="acts"><button class="actk secondary">UNSUSPEND</button></div>
+              <div class="reason-hint">A suspended user shows <b>UNSUSPEND</b> (lifts + restores sessions, logged). REMEDIATE / NOTIFY open M2 / M3.</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24"><use href="#nav-store"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-discover"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24"><use href="#nav-collection"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-profile"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24"><use href="#nav-friends"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>M1 &mdash; user dossier <em>(OQ-081 · investigation view)</em></h3>
+        <p><b>Context before consequence.</b> The true account state (SUSPENDED — shown to admins, not the public
+        collapse), report history, prior actions taken (with actor + reason), and a content summary. Actions:
+        REMEDIATE FIELDS (M2), NOTIFY (M3), and <b>UNSUSPEND</b> (this user is suspended).</p>
+      </div>
+    </div>
+
+    <!-- ═══ M2 · field-level remediation ═══ -->
+    <div class="take">
+      <div class="artboard-label">M2 · field-level remediation (reset · force-rename)</div>
+      <div class="device" data-screen-label="Admin console · M2 — field remediation">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>REMEDIATE</h2></div>
+            <div class="scroll">
+              <a class="return-link" href="#">&#9666; DOSSIER</a>
+              <div class="page-intro"><b>@pixelpirate</b> &mdash; a remedy <b>short of suspension</b>: reset the offending field, leave the account active. Each reset is logged (MOD-10).</div>
+              <div class="sec"><h3>PROFILE FIELDS</h3></div>
+              <div class="rem">
+                <div class="rem-top"><span class="rem-lbl">USERNAME</span><span class="rem-val flagged">@pixelp&#42;&#42;ate</span><button class="rem-act">FORCE RENAME</button></div>
+                <div class="rem-input"><span>player_8821 (system handle)<span class="caret"></span></span></div>
+              </div>
+              <div class="rem">
+                <div class="rem-top"><span class="rem-lbl">BIO</span><span class="rem-val flagged">&ldquo;dm me for &#42;&#42;&#42;&#42;&hellip;&rdquo;</span><button class="rem-act">CLEAR</button></div>
+              </div>
+              <div class="rem">
+                <div class="rem-top"><span class="rem-lbl">AVATAR</span><span class="rem-val">monogram &mdash; nothing to reset</span><button class="rem-act" style="background:var(--scr-panel);color:var(--scr-soft);border:1px solid var(--scr-hairline);">RESET</button></div>
+              </div>
+              <div class="susp-note" style="margin:14px 2px 0;"><span class="smark" style="margin-top:3px;"></span><span>A <b>force-rename</b> frees the offending handle and assigns a neutral system handle; the user can rename later (PROF-06). The account stays active &mdash; no sign-out.</span></div>
+              <div class="footnote">Each remediation opens an alert-red `ConfirmSheet` with a reason (logged) &mdash; same grammar as HIDE / SUSPEND / MERGE.</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24"><use href="#nav-store"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-discover"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24"><use href="#nav-collection"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-profile"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24"><use href="#nav-friends"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>M2 &mdash; field-level remediation <em>(OQ-081 · short of suspension)</em></h3>
+        <p><b>Surgical, not nuclear.</b> Reset just the offending field — <b>FORCE RENAME</b> a username (assigns a
+        neutral system handle), <b>CLEAR</b> a bio, <b>RESET</b> an avatar — while the account stays active. Each
+        flagged value is alert-coloured; each action runs the destructive `ConfirmSheet` + reason grammar.</p>
+      </div>
+    </div>
+
+    <!-- ═══ M3 · moderation-action notice ═══ -->
+    <div class="take">
+      <div class="artboard-label">M3 · moderation-action notice (the why + appeal)</div>
+      <div class="device" data-screen-label="Admin console · M3 — action notice">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>NOTIFY</h2></div>
+            <div class="scroll">
+              <a class="return-link" href="#">&#9666; DOSSIER</a>
+              <div class="page-intro">Send <b>@pixelpirate</b> a notice explaining a moderation action &mdash; the <b>&ldquo;why&rdquo;</b> + a pointer to the appeal channel (SYS-09). Composed by the admin, logged (MOD-10).</div>
+              <div class="sec"><h3>ABOUT THE ACTION</h3></div>
+              <div class="metaline">
+                <span class="mchip">ACTION <b>SUSPENDED 7D</b></span>
+                <span class="mchip">REASON <b>IMPERSONATION</b></span>
+              </div>
+              <div class="ffield tarea" style="margin-top:11px;"><div class="flabel">MESSAGE TO THE USER</div><div class="box"><span>Your account was suspended for impersonating another player. Suspensions are temporary &mdash; access returns on the date below.<span class="caret"></span></span></div></div>
+              <div class="sec"><h3>WHAT THEY&rsquo;LL SEE</h3></div>
+              <div class="notice-prev">
+                <div class="np-top"><span class="np-g"><svg viewBox="0 0 24 24"><use href="#ic-megaphone"/></svg></span><span class="np-h">A NOTICE FROM INGAME</span></div>
+                <div class="np-body">Your account was suspended for <b>impersonating another player</b>. Suspensions are temporary &mdash; access returns on <b>2026-07-02</b>.</div>
+                <div class="np-appeal">Think this was a mistake? <b>Help &amp; Contact &rsaquo;</b> &mdash; the appeal channel (SYS-09).</div>
+              </div>
+              <div class="acts" style="margin-top:12px;"><button class="actk primary">SEND NOTICE</button><button class="actk secondary">CANCEL</button></div>
+              <div class="reason-hint">The appeal pointer is auto-attached. Sending is logged (MOD-10) &mdash; the user already holds this knowledge, so no non-disclosure applies.</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24"><use href="#nav-store"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-discover"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24"><use href="#nav-collection"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-profile"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24"><use href="#nav-friends"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>M3 &mdash; moderation-action notice <em>(OQ-081 · the "why" + appeal)</em></h3>
+        <p><b>Transparency to the affected user.</b> The admin composes the message; a live <b>preview</b> shows what
+        the user receives — the action, the reason, and an auto-attached <b>appeal pointer</b> (Help &amp; Contact,
+        SYS-09). SEND = orange; logged. (No non-disclosure — the user already knows the action hit them.)</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════ STAGE 7 — LIFECYCLE (§1.8 verbatim) ════════════════════ -->
+  <div class="stage-label">Stage 7 &mdash; Lifecycle (&sect;1.8 reused verbatim) <small>The console is a network surface &mdash; SYS-10 caches only the user&rsquo;s OWN profile + collection, so the console&rsquo;s <b>reads and writes are both gated</b> offline. <b>L1 Skeleton</b> (solid fills) · <b>L2 LoadError</b> ("Signal Lost" + RETRY) · <b>L3 Offline</b> (calm, can&rsquo;t-work-offline). Same grammar as the sibling boards.</small></div>
+  <div class="stage">
+
+    <!-- ═══ L1 · Skeleton ═══ -->
+    <div class="take">
+      <div class="artboard-label">L1 · Skeleton &mdash; hub loading</div>
+      <div class="device" data-screen-label="Admin console · L1 — Skeleton">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>ADMIN</h2></div>
+            <div class="scroll">
+              <div class="sk-band"></div>
+              <div class="sk-h"></div>
+              <div class="sk-well">
+                <div class="sk-row"><span class="sk-ic"></span><span style="flex:1 1 auto;display:flex;flex-direction:column;gap:7px;"><span class="sk-bar" style="width:55%;"></span><span class="sk-bar" style="width:80%;"></span></span></div>
+                <div class="sk-row"><span class="sk-ic"></span><span style="flex:1 1 auto;display:flex;flex-direction:column;gap:7px;"><span class="sk-bar" style="width:48%;"></span><span class="sk-bar" style="width:72%;"></span></span></div>
+              </div>
+              <div class="sk-h"></div>
+              <div class="sk-well">
+                <div class="sk-row"><span class="sk-ic"></span><span style="flex:1 1 auto;display:flex;flex-direction:column;gap:7px;"><span class="sk-bar" style="width:52%;"></span><span class="sk-bar" style="width:76%;"></span></span></div>
+                <div class="sk-row"><span class="sk-ic"></span><span style="flex:1 1 auto;display:flex;flex-direction:column;gap:7px;"><span class="sk-bar" style="width:60%;"></span><span class="sk-bar" style="width:68%;"></span></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24"><use href="#nav-store"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-discover"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24"><use href="#nav-collection"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-profile"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24"><use href="#nav-friends"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>L1 &mdash; Skeleton <em>(§1.6 solid fills)</em></h3>
+        <p>The hub loading — a placeholder `TierBanner` band + two grouped wells of solid-fill rows. No spinners,
+        no shimmer — the catalog&rsquo;s calm skeleton grammar.</p>
+      </div>
+    </div>
+
+    <!-- ═══ L2 · LoadError ═══ -->
+    <div class="take">
+      <div class="artboard-label">L2 · LoadError &mdash; "Signal Lost" + RETRY</div>
+      <div class="device" data-screen-label="Admin console · L2 — LoadError">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>ADMIN</h2></div>
+            <div class="scroll">
+              <div class="loaderr">
+                <span class="le-badge">!</span>
+                <span class="le-t">SIGNAL LOST</span>
+                <span class="le-s">Couldn&rsquo;t load the moderation queue. Check your connection and try again.</span>
+                <button class="le-retry">RETRY</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24"><use href="#nav-store"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-discover"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24"><use href="#nav-collection"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-profile"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24"><use href="#nav-friends"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>L2 &mdash; LoadError <em>(Signal Lost + RETRY)</em></h3>
+        <p>A fetch failed (not offline). The dashed accent badge, "SIGNAL LOST", a plain-words line, and a single
+        orange <b>RETRY</b> keycap — the §1.8 error grammar verbatim.</p>
+      </div>
+    </div>
+
+    <!-- ═══ L3 · Offline ═══ -->
+    <div class="take">
+      <div class="artboard-label">L3 · Offline &mdash; reads + writes gated (SYS-10)</div>
+      <div class="device" data-screen-label="Admin console · L3 — Offline">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>ADMIN</h2></div>
+            <div class="offline-strip"><svg viewBox="0 0 24 24"><use href="#ic-wifi-off"/></svg>OFFLINE<span class="sync">CONSOLE NEEDS A CONNECTION</span></div>
+            <div class="scroll">
+              <div class="offline-block">
+                <span class="ob-badge"><svg viewBox="0 0 24 24"><use href="#ic-wifi-off"/></svg></span>
+                <span class="ob-t">CAN&rsquo;T MODERATE OFFLINE</span>
+                <span class="ob-s">The console reads and writes live data &mdash; it can&rsquo;t run from cache. Only <b>your own profile + collection</b> work offline (SYS-10). Reconnect to pick up the queue.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24"><use href="#nav-store"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-discover"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24"><use href="#nav-collection"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24"><use href="#nav-profile"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24"><use href="#nav-friends"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>L3 &mdash; Offline <em>(reads + writes gated · SYS-10)</em></h3>
+        <p>Unlike a personal screen, the console <b>can&rsquo;t fall back to cache</b> — SYS-10 caches only own
+        profile + collection. A calm offline strip + a clear "can&rsquo;t moderate offline" block, no dead end.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
