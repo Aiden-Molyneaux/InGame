@@ -204,13 +204,17 @@
   .celebrate.t-secret { --cel: var(--scr-secret); }
   .celebrate::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .45;
     background: repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, #0000 1px 3px); }
-  .cel-rays { position: absolute; top: 33%; left: 50%; transform: translate(-50%, -50%); width: 260px; height: 260px; opacity: .5; }
+  /* badge sits at the centre of the glamor — rays are centred on the badge via the wrap */
+  .cel-badge-wrap { z-index: 1; position: relative; display: flex; align-items: center; justify-content: center; }
+  .cel-rays { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 260px; height: 260px; opacity: .5; pointer-events: none; }
   .cel-rays line { stroke: var(--cel); stroke-width: 2.5; }
   .cel-eyebrow { z-index: 1; font: 700 11px var(--pk); letter-spacing: 5px; color: var(--cel); }
-  .cel-badge { z-index: 1; position: relative; width: 96px; height: 96px; display: flex; align-items: center; justify-content: center;
-    background: color-mix(in srgb, var(--cel) 14%, transparent); border: 2px solid var(--cel);
-    clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px), calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
+  /* plain square container (no corner clip) */
+  .cel-badge { position: relative; z-index: 1; width: 96px; height: 96px; display: flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, var(--cel) 14%, transparent); border: 2px solid var(--cel); }
   .cel-badge svg { width: 46px; height: 46px; fill: none; stroke: var(--cel); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  /* reward tag drops to its own row under the reward text */
+  .cel-rewards .rchip .tag { margin-left: 0; align-self: flex-start; margin-top: 4px; }
   .cel-title { z-index: 1; font: 700 21px/1.1 var(--pk); letter-spacing: 1.5px; color: var(--scr-text); text-align: center; }
   .cel-sub { z-index: 1; font: 500 11px/1.5 var(--pk); color: var(--scr-soft); text-align: center; max-width: 250px; }
   .cel-rewards { z-index: 1; display: flex; flex-direction: column; gap: 7px; width: 248px; margin-top: 2px; }
@@ -609,15 +613,17 @@
         <div class="screen-bezel">
           <div class="screen sk2 c5">
             <div class="celebrate t-gold">
-              <svg class="cel-rays" viewBox="-130 -130 260 260" aria-hidden="true"><g>
-                <line x1="0" y1="-66" x2="0" y2="-104"/><line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(30)"/><line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(60)"/><line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(90)"/><line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(120)"/><line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(150)"/><line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(180)"/><line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(210)"/><line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(240)"/><line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(270)"/><line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(300)"/><line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(330)"/>
-              </g></svg>
               <div class="cel-eyebrow">ACHIEVEMENT UNLOCKED</div>
-              <div class="cel-badge"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.5A3.5 3.5 0 0 1 12 9a3.5 3.5 0 0 1 7 1.5C19 15.6 12 20 12 20z"/></svg></div>
+              <div class="cel-badge-wrap">
+                <svg class="cel-rays" viewBox="-130 -130 260 260" aria-hidden="true"><g>
+                  <line x1="0" y1="-66" x2="0" y2="-104"/><line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(30)"/><line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(60)"/><line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(90)"/><line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(120)"/><line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(150)"/><line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(180)"/><line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(210)"/><line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(240)"/><line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(270)"/><line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(300)"/><line x1="0" y1="-66" x2="0" y2="-104" transform="rotate(330)"/>
+                </g></svg>
+                <div class="cel-badge"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.5A3.5 3.5 0 0 1 12 9a3.5 3.5 0 0 1 7 1.5C19 15.6 12 20 12 20z"/></svg></div>
+              </div>
               <div class="cel-title">ADOPTED 100&times;</div>
               <div class="cel-sub">Your card art is equipped by 100 players. The community loves what you made.</div>
               <div class="cel-rewards">
-                <div class="rchip"><span class="ri"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><rect x="8.5" y="8.5" width="7" height="7"/></svg></span><div class="rt"><span class="rn">GOLD-FOIL FRAME</span><span class="rs">UNLOCKED FOR YOUR CARDS</span></div><span class="tag">EARN-ONLY</span></div>
+                <div class="rchip"><span class="ri"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><rect x="8.5" y="8.5" width="7" height="7"/></svg></span><div class="rt"><span class="rn">GOLD-FOIL FRAME</span><span class="rs">UNLOCKED FOR YOUR CARDS</span><span class="tag">EARN-ONLY</span></div></div>
                 <div class="rchip pix"><span class="ri"><svg viewBox="0 0 24 24"><path d="M12 3l8 9-8 9-8-9z"/></svg></span><div class="rt"><span class="rn">+100 PIXELS</span><span class="rs">ADDED TO YOUR WALLET</span></div></div>
               </div>
               <button class="btn act cel-cont">CONTINUE</button>
