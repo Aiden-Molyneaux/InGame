@@ -24,12 +24,20 @@ SUMMARY counts → **EARNED** trophy grid → **IN PROGRESS** bars → **SECRETS
 full-list state view (owner ask, 2026-06-27). **OQ-005 resolved → pole A** ("hint something exists" — `???`
 mystery slots; the unknown-count is the only tell).
 
-**Artboards (11):**
-- **P1** self · populated (top-N summary + the 3 VIEW ALL links + tier legend) · **P2** empty (new user, NON-gold)
+**Tiles are uniform — glyph + label only.** The earned tiles previously mixed three kinds of sub-text
+("EARNED" / "REWARD" / "50 GAMES"); that's dropped (owner, 2026-06-27). The tier colour carries
+prestige/standard/secret, and the criterion · reward · earned-date moved into a **node-detail bottom sheet on
+tap** (D1–D3). In-progress tiles keep their live progress bar + count; locked secrets stay `???`.
+
+**Artboards (14):**
+- **P1** self · populated (top-N summary + the 3 VIEW ALL links + tier legend; uniform tiles) · **P2** empty (NON-gold)
 - **V1** VIEW ALL · Earned (all 8) · **V2** VIEW ALL · In progress (all 5, closest-first) · **V3** VIEW ALL ·
   Secrets (2 found + 4 hidden `???`) — each with a `‹ ACHIEVEMENTS` back-seam + a summary line
+- **D1** node detail · earned + reward (tier · what for · when earned · the `RewardChip`) · **D2** node detail ·
+  in-progress (criterion + progress + the prize) · **D3** node detail · locked secret (a deliberately sealed
+  sheet — tapping a `???` doesn't spoil it; OQ-005 pole A) — the app bottom-sheet drawer grammar
 - **P3** friend-view (Riko · earned only — in-progress + eggs never leak; its VIEW ALL reuses V1 with a friend
-  back-seam) · **P4** privacy-limited (`lock-well`; honest count reads)
+  back-seam; tap → read-only detail) · **P4** privacy-limited (`lock-well`; honest count reads)
 - **P5** unlock celebration (ACH-06 arcade takeover, tier-coloured — a gold ADOPTED 100× unlock)
 - **L1** Skeleton · **L2** Signal Lost + RETRY · **L3** Offline (read-from-cache, SYS-10)
 
@@ -47,8 +55,9 @@ small tier legend sits on the self panel. *Which* achievement is which tier = co
 `BadgeTile` (glyph + label + earned/in-progress + progress + tier — the home of badge composition,
 reconciling the contributor track's dropped `ContribBadge`) · `MysterySlot` (the locked `???` secret) ·
 `ProgressMeter` (tier-coloured bar) · `RewardChip` (ACH-04 payout; marks `EARN-ONLY`) · `CelebrationMoment`
-(ACH-06 takeover) · the **tier legend** + the `--scr-secret` token · the `VIEW ALL` TertiaryLink + the
-full-list view header/`listsum`/back-seam.
+(ACH-06 takeover) · **`AchievementSheet`** (the node-detail bottom sheet — tier glyph · title · criterion ·
+earned-date / progress / sealed · reward; the app drawer grammar) · the **tier legend** + the `--scr-secret`
+token · the `VIEW ALL` TertiaryLink + the full-list view header/`listsum`/back-seam.
 
 ## Burt (DS compliance)
 - **`achievements-states.html` — PASS ✅** (0 blocker / 0 major). F-06 type scale clean (21/15/11/9), F-07
@@ -56,7 +65,7 @@ full-list view header/`listsum`/back-seam.
   F-01 n/a (no GameCards). **Owner-ratified carve-outs (not violations):** gold-on-achievement (F-02, the
   PRESTIGE tier) + magenta-on-screen (F-05, the SECRET tier) → tracked at **OQ-082**. Other gold stays scoped
   to the Store nav key + the PIXELS `◆` currency mark.
-- Verified panel-by-panel (all 11 artboards rendered). No PNG artifacts (HTML-only).
+- Verified panel-by-panel (all 14 artboards rendered). No PNG artifacts (HTML-only).
 
 ## Owed at the spec-owner pass (not this pass)
 1. **product-spec ACH-** — add the **`tier`** attribute to the achievement definition (OQ-082); record **OQ-005
@@ -65,9 +74,10 @@ full-list view header/`listsum`/back-seam.
    magenta = the on-screen secret tier; shell LEDs stay round/pink). OQ-082.
 3. **design-spec §1.x + §4.10 page** — formalize the components above + the VIEW ALL full-list pattern.
 4. **API page-audit** — enumerate the prose-only `GET /achievements` · `/me/achievements` ·
-   `/users/:id/achievements` payloads (milestone+progress · egg-visibility · reward badge/currency/cosmetic ·
-   tier · unlocked-at) + the friend/privacy shape + the VIEW-ALL/pagination shape (the Contributor/Compare
-   precedent). No new endpoint minted.
+   `/users/:id/achievements` payloads. Must cover the **node-detail** fields (the sheet reads them): **title ·
+   description/criterion · tier · reward (badge/currency/cosmetic + `earnOnly`) · progress · `unlockedAt`** ·
+   egg-visibility (locked = no detail leaks). Plus the friend/privacy shape + the VIEW-ALL/pagination shape (the
+   Contributor/Compare precedent). No new endpoint minted.
 
 ## History
 Draft A (picked → converged) · Draft B Quest Log (not picked). The kickoff brief, the two-direction gate, and

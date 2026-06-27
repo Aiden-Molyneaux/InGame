@@ -82,7 +82,7 @@
   .scroll::-webkit-scrollbar { display: none; }
 
   /* ════ C5 · HYBRID — square chrome ════ */
-  .c5 .well, .c5 .btn, .c5 .stat, .c5 .badge, .c5 .rchip, .c5 .bglyph, .c5 .ri, .c5 .err-card { border-radius: 0; }
+  .c5 .well, .c5 .btn, .c5 .stat, .c5 .badge, .c5 .rchip, .c5 .bglyph, .c5 .ri, .c5 .err-card, .c5 .dt-glyph { border-radius: 0; }
   .c5 .well { border: 1px solid var(--scr-hairline); }
   .c5 .btn.add, .c5 .btn.act { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
       100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
@@ -116,34 +116,30 @@
   .stat .l { font: 600 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
 
   /* ════ THREE-TIER colour system (owner, 2026-06-27 · OQ-082): gold = PRESTIGE · theme-accent = STANDARD · magenta = SECRET ══
-     STANDARD rides --scr-accent (the THEME accent) → it re-themes with the screen theme (DEV-04). */
+     STANDARD rides --scr-accent (the THEME accent) → it re-themes with the screen theme (DEV-04).
+     Tiles are UNIFORM: glyph + label only (the criterion / reward / earned-date live in the node-detail sheet, D1–D3).
+     In-progress keeps its live progress; locked secrets stay ???. */
   .bgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; padding: 0 2px; }
-  .badge { --tier: var(--scr-accent); background: var(--scr-panel); padding: 12px 6px 9px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+  .badge { --tier: var(--scr-accent); background: var(--scr-panel); padding: 13px 6px 11px; display: flex; flex-direction: column; align-items: center; gap: 7px; text-align: center; cursor: pointer; }
   .badge.t-gold { --tier: var(--gold); }
   .badge.t-secret { --tier: var(--scr-secret); }
   .bglyph { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--scr-hairline); flex: 0 0 auto; }
   .bglyph svg { width: 21px; height: 21px; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
   .blabel { font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-text); line-height: 1.25; }
-  .bstate { font: 600 9px var(--pk); letter-spacing: .5px; }
-  /* earned — lit in its tier colour */
+  .bstate { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  /* earned / revealed-secret — lit in its tier colour (uniform: glyph + label) */
   .badge.earned .bglyph { background: color-mix(in srgb, var(--tier) 13%, transparent); border-color: color-mix(in srgb, var(--tier) 45%, transparent); }
   .badge.earned .bglyph svg { stroke: var(--tier); }
-  .badge.earned .bstate { color: var(--tier); }
-  /* in-progress — dim glyph + tier-coloured meter */
+  /* in-progress — dim glyph + tier-coloured meter + live count */
   .badge.prog .bglyph { border-color: color-mix(in srgb, var(--tier) 30%, transparent); }
   .badge.prog .bglyph svg { stroke: color-mix(in srgb, var(--tier) 65%, var(--scr-dim)); }
   .badge.prog .blabel { color: var(--scr-soft); }
-  .badge.prog .bstate { color: var(--scr-dim); }
   .badge .pmeter span { background: var(--tier); }
-  /* mystery (secret egg hidden — OQ-005 = "hint something exists"; dim magenta) */
+  /* locked secret (OQ-005 = "hint something exists"; dim magenta ???) */
   .badge.mystery { --tier: var(--scr-secret); }
   .badge.mystery .bglyph { border-color: color-mix(in srgb, var(--tier) 30%, transparent); }
   .badge.mystery .bglyph svg { stroke: color-mix(in srgb, var(--tier) 55%, var(--scr-grip)); }
   .badge.mystery .blabel { color: color-mix(in srgb, var(--tier) 55%, var(--scr-grip)); letter-spacing: 3px; }
-  .badge.mystery .bstate { color: color-mix(in srgb, var(--tier) 55%, var(--scr-grip)); }
-  /* reward dot on an earned achievement that paid a cosmetic */
-  .badge .rwd { font: 700 9px var(--pk); letter-spacing: .5px; color: var(--tier); display: inline-flex; align-items: center; gap: 3px; }
-  .badge .rwd svg { width: 10px; height: 10px; fill: none; stroke: var(--tier); stroke-width: 1.8; }
 
   /* ── tier legend (square on-screen swatches, F-07) ── */
   .tiers { display: flex; gap: 12px; flex-wrap: wrap; padding: 9px 2px 0; }
@@ -196,29 +192,31 @@
   .lock-well .lk-t { font: 700 11px var(--pk); letter-spacing: 1.5px; color: var(--scr-soft); }
   .lock-well .lk-s { font: 500 9px/1.55 var(--pk); color: var(--scr-dim); max-width: 250px; }
 
-  /* ════ CelebrationMoment — the ACH-06 arcade takeover (P5; tier-coloured) ════ */
-  .celebrate { --cel: var(--scr-accent); position: absolute; inset: 0; overflow: hidden; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 13px; padding: 28px 24px;
-    background: radial-gradient(circle at 50% 36%, #322c63 0%, var(--scr-bg) 66%); }
-  .celebrate.t-gold { --cel: var(--gold); }
-  .celebrate.t-secret { --cel: var(--scr-secret); }
-  .celebrate::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .45;
-    background: repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, #0000 1px 3px); }
-  /* badge sits at the centre of the glamor — rays are centred on the badge via the wrap */
-  .cel-badge-wrap { z-index: 1; position: relative; display: flex; align-items: center; justify-content: center; }
-  .cel-rays { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 260px; height: 260px; opacity: .5; pointer-events: none; }
-  .cel-rays line { stroke: var(--cel); stroke-width: 2.5; }
-  .cel-eyebrow { z-index: 1; font: 700 11px var(--pk); letter-spacing: 5px; color: var(--cel); }
-  /* plain square container (no corner clip) */
-  .cel-badge { position: relative; z-index: 1; width: 96px; height: 96px; display: flex; align-items: center; justify-content: center;
-    background: color-mix(in srgb, var(--cel) 14%, transparent); border: 2px solid var(--cel); }
-  .cel-badge svg { width: 46px; height: 46px; fill: none; stroke: var(--cel); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-  /* reward tag drops to its own row under the reward text */
-  .cel-rewards .rchip .tag { margin-left: 0; align-self: flex-start; margin-top: 4px; }
-  .cel-title { z-index: 1; font: 700 21px/1.1 var(--pk); letter-spacing: 1.5px; color: var(--scr-text); text-align: center; }
-  .cel-sub { z-index: 1; font: 500 11px/1.5 var(--pk); color: var(--scr-soft); text-align: center; max-width: 250px; }
-  .cel-rewards { z-index: 1; display: flex; flex-direction: column; gap: 7px; width: 248px; margin-top: 2px; }
-  .cel-cont { z-index: 1; margin-top: 8px; }
+  /* ════ Node-detail bottom sheet (the app drawer grammar; on-tap of any node) ════ */
+  .sheet-scrim { position: absolute; inset: 0; z-index: 5; background: rgba(10,8,24,.62); }
+  .sheet { --tier: var(--scr-accent); position: absolute; left: 0; right: 0; bottom: 0; z-index: 6;
+    background: var(--scr-bg); border-top: 1px solid var(--scr-hairline); padding: 10px 18px 18px;
+    display: flex; flex-direction: column; align-items: center; gap: 9px; text-align: center; }
+  .sheet.t-gold { --tier: var(--gold); }
+  .sheet.t-secret { --tier: var(--scr-secret); }
+  .sheet .grab { width: 38px; height: 4px; background: var(--scr-grip); margin-bottom: 6px; flex: 0 0 auto; }
+  .dt-glyph { width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
+    background: color-mix(in srgb, var(--tier) 13%, transparent); border: 2px solid var(--tier); }
+  .dt-glyph svg { width: 34px; height: 34px; fill: none; stroke: var(--tier); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .dt-glyph.locked { background: color-mix(in srgb, var(--tier) 8%, transparent); border-color: color-mix(in srgb, var(--tier) 35%, transparent); }
+  .dt-glyph.locked svg { stroke: color-mix(in srgb, var(--tier) 55%, var(--scr-grip)); }
+  .dt-tier { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--tier); }
+  .dt-title { font: 700 21px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .dt-desc { font: 500 11px/1.5 var(--pk); color: var(--scr-soft); max-width: 280px; }
+  .dt-meta { font: 600 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .dt-prog { width: 100%; max-width: 300px; display: flex; flex-direction: column; gap: 6px; margin-top: 2px; }
+  .dt-prog .pmeter { height: 8px; }
+  .dt-prog .pmeter span { background: var(--tier); }
+  .dt-prog .pline { display: flex; justify-content: space-between; font: 700 11px var(--pk); color: var(--scr-text); }
+  .dt-prog .pline .to { color: var(--scr-dim); font-weight: 600; }
+  .dt-sec { width: 100%; max-width: 300px; margin-top: 4px; }
+  .dt-sec .rhead { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); text-align: left; margin-bottom: 6px; }
+  .sheet .btn { margin-top: 8px; justify-content: center; }
 
   /* ── lifecycle: skeleton · load-error · offline (§1.8, reused from sibling boards) ── */
   .sk-av { flex: 0 0 auto; width: 46px; height: 46px; background: var(--scr-panel); }
@@ -255,20 +253,20 @@
 <div class="canvas">
   <div class="canvas-head">
     <h1>Achievements — States (§4.10 · ACH-03/05)</h1>
-    <p>The <b>converged states board</b> for §4.10 Achievements — the owner-picked <b>Trophy Case (Draft A,
-    by status)</b>: SUMMARY counts → <b>EARNED</b> trophy grid → <b>IN PROGRESS</b> bars → <b>SECRETS</b> (the
-    <code>???</code> mystery-slot model — <b>OQ-005 resolved → pole A</b>) → <b>REWARDS</b>. Each of the three
-    sections is a <b>top-N summary with a <code>VIEW ALL ›</code></b> opening a full-list view (V1 earned · V2
-    in-progress · V3 secrets). <b>★ Three-tier colour system (OQ-082):</b> gold = PRESTIGE · the theme accent =
-    STANDARD (re-themes, DEV-04) · magenta = SECRET. Reached from <b>Profile only</b>; friend-view = earned
-    only. <b>Full matrix:</b> P1 self · P2 empty · <b>V1/V2/V3 VIEW ALL</b> · P3 friend-view · P4
-    privacy-limited · P5 unlock celebration (ACH-06) · lifecycle <b>L1 Skeleton · L2 Signal-Lost+RETRY · L3
-    Offline</b> (SYS-10). NavBand: <b>PROFILE active</b>. <i>Content illustrative — ACH-04 deferred (OQ-004).
-    Design-spec formalization + API page-audit (the prose-only <code>/me/achievements</code> shape) + OQ-082 /
-    OQ-005 resolution owed at the spec-owner pass.</i></p>
+    <p>The <b>converged states board</b> for §4.10 Achievements — the owner-picked <b>Trophy Case (by status)</b>:
+    SUMMARY counts → <b>EARNED</b> grid → <b>IN PROGRESS</b> bars → <b>SECRETS</b> (the <code>???</code>
+    mystery-slot model, <b>OQ-005 → pole A</b>) → <b>REWARDS</b>. Each section is a top-N summary with a
+    <code>VIEW ALL ›</code> → its full-list view (V1/V2/V3). <b>Tiles are uniform</b> — glyph + label only; the
+    criterion, reward, and earned-date live in a <b>node-detail bottom sheet</b> on tap (D1 earned · D2
+    in-progress · D3 locked-secret). In-progress keeps its live progress; locked secrets stay <code>???</code>.
+    <b>★ Three tiers (OQ-082):</b> gold = PRESTIGE · theme accent = STANDARD (re-themes, DEV-04) · magenta =
+    SECRET. <b>Matrix:</b> P1 self · P2 empty · V1/V2/V3 VIEW ALL · D1/D2/D3 node detail · P3 friend-view · P4
+    privacy-limited · P5 unlock celebration (ACH-06) · L1 Skeleton · L2 Signal-Lost+RETRY · L3 Offline (SYS-10).
+    NavBand: <b>PROFILE active</b>. <i>Content illustrative — ACH-04 deferred (OQ-004). Design-spec + API
+    page-audit (incl. the detail payload: criterion · unlockedAt · reward) owed at the spec-owner pass (OQ-082).</i></p>
   </div>
 
-  <div class="stage-label">Self · populated &amp; empty <small>P1 the trophy case as a top-N summary — EARNED · IN PROGRESS · SECRETS each with a VIEW ALL · the rewards · the tier legend · P2 the new-user cold-start (NON-gold)</small></div>
+  <div class="stage-label">Self · populated &amp; empty <small>P1 the trophy case as a top-N summary — uniform tiles (glyph + label), each section with a VIEW ALL · the rewards · the tier legend · tap any node → its detail sheet (D1–D3) · P2 the new-user cold-start (NON-gold)</small></div>
   <div class="stage">
 
     <!-- ═══════════ P1 — SELF, POPULATED ═══════════ -->
@@ -303,12 +301,12 @@
 
               <div class="sec"><h3>EARNED</h3><a href="#v1">VIEW ALL &rsaquo;</a></div>
               <div class="bgrid">
-                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span><span class="blabel">COLLECTOR</span><span class="bstate">50 GAMES</span></div>
-                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.5A3.5 3.5 0 0 1 12 9a3.5 3.5 0 0 1 7 1.5C19 15.6 12 20 12 20z"/></svg></span><span class="blabel">ADOPTED 100&times;</span><span class="rwd"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><rect x="8.5" y="8.5" width="7" height="7"/></svg> REWARD</span></div>
-                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 3l2.5 6 6.5.5-5 4.2 1.6 6.3L12 17.5 6.4 20.5 8 14.2l-5-4.2 6.5-.5z"/></svg></span><span class="blabel">TASTEMAKER</span><span class="bstate">EARNED</span></div>
-                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 16V5"/><path d="M7 10l5-5 5 5"/><path d="M5 19h14"/></svg></span><span class="blabel">FIRST PUBLISH</span><span class="bstate">EARNED</span></div>
-                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z"/></svg></span><span class="blabel">EXPLORER</span><span class="bstate">EARNED</span></div>
-                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="17.5" cy="9" r="2.6"/><path d="M16 19a5 5 0 0 1 6-4.8"/></svg></span><span class="blabel">FIRST FRIEND</span><span class="bstate">EARNED</span></div>
+                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span><span class="blabel">COLLECTOR</span></div>
+                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.5A3.5 3.5 0 0 1 12 9a3.5 3.5 0 0 1 7 1.5C19 15.6 12 20 12 20z"/></svg></span><span class="blabel">ADOPTED 100&times;</span></div>
+                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 3l2.5 6 6.5.5-5 4.2 1.6 6.3L12 17.5 6.4 20.5 8 14.2l-5-4.2 6.5-.5z"/></svg></span><span class="blabel">TASTEMAKER</span></div>
+                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 16V5"/><path d="M7 10l5-5 5 5"/><path d="M5 19h14"/></svg></span><span class="blabel">FIRST PUBLISH</span></div>
+                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z"/></svg></span><span class="blabel">EXPLORER</span></div>
+                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="17.5" cy="9" r="2.6"/><path d="M16 19a5 5 0 0 1 6-4.8"/></svg></span><span class="blabel">FIRST FRIEND</span></div>
               </div>
 
               <div class="sec"><h3>IN PROGRESS</h3><a href="#v2">VIEW ALL &rsaquo;</a></div>
@@ -320,9 +318,9 @@
 
               <div class="sec"><h3>SECRETS</h3><a href="#v3">VIEW ALL &rsaquo;</a></div>
               <div class="bgrid">
-                <div class="badge earned t-secret"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M20 13.5A8 8 0 1 1 10.5 4 6.2 6.2 0 0 0 20 13.5z"/></svg></span><span class="blabel">NIGHT OWL</span><span class="bstate">UNLOCKED!</span></div>
-                <div class="badge mystery"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><span class="blabel">? ? ?</span><span class="bstate">SECRET</span></div>
-                <div class="badge mystery"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><span class="blabel">? ? ?</span><span class="bstate">SECRET</span></div>
+                <div class="badge earned t-secret"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M20 13.5A8 8 0 1 1 10.5 4 6.2 6.2 0 0 0 20 13.5z"/></svg></span><span class="blabel">NIGHT OWL</span></div>
+                <div class="badge mystery"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><span class="blabel">? ? ?</span></div>
+                <div class="badge mystery"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><span class="blabel">? ? ?</span></div>
               </div>
 
               <div class="sec"><h3>REWARDS EARNED</h3></div>
@@ -344,9 +342,10 @@
       </div>
       <div class="caption">
         <h3>P1 — Self <em>(top-N summary)</em></h3>
-        <p>By status, as a <b>summary</b>: EARNED (6 of 8), IN PROGRESS (3 of 5), SECRETS (3 of 6) each carry a
-        <code>VIEW ALL ›</code> → its full-list view (V1/V2/V3). Tier legend up top; the three tiers run through
-        every badge. SECRETS shows the unlocked egg + <code>???</code> teasers (OQ-005 pole A).</p>
+        <p>By status: EARNED · IN PROGRESS · SECRETS, each + <code>VIEW ALL ›</code>. <b>Tiles are uniform now —
+        glyph + label only</b> (no mixed "EARNED / REWARD / 50 GAMES" sub-text); the tier colour carries
+        prestige/standard/secret, rewards live in REWARDS EARNED + the detail sheet. <b>Tap any node → its
+        detail sheet</b> (D1–D3). In-progress keeps its live bar.</p>
       </div>
     </div>
 
@@ -407,17 +406,17 @@
           <div class="screen sk2 c5">
             <div class="screen-head"><h2>EARNED</h2></div>
             <div class="retlink"><span class="bk">&lsaquo;</span> ACHIEVEMENTS</div>
-            <div class="listsum">All <b>8</b> earned &middot; <b>gold</b> prestige first, then <b>standard</b></div>
+            <div class="listsum">All <b>8</b> earned &middot; <b>gold</b> prestige first, then <b>standard</b> &middot; tap any for detail</div>
             <div class="scroll">
               <div class="bgrid">
-                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span><span class="blabel">COLLECTOR</span><span class="bstate">50 GAMES</span></div>
-                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.5A3.5 3.5 0 0 1 12 9a3.5 3.5 0 0 1 7 1.5C19 15.6 12 20 12 20z"/></svg></span><span class="blabel">ADOPTED 100&times;</span><span class="rwd"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><rect x="8.5" y="8.5" width="7" height="7"/></svg> REWARD</span></div>
-                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 3l2.5 6 6.5.5-5 4.2 1.6 6.3L12 17.5 6.4 20.5 8 14.2l-5-4.2 6.5-.5z"/></svg></span><span class="blabel">TASTEMAKER</span><span class="bstate">EARNED</span></div>
-                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 16V5"/><path d="M7 10l5-5 5 5"/><path d="M5 19h14"/></svg></span><span class="blabel">FIRST PUBLISH</span><span class="bstate">EARNED</span></div>
-                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z"/></svg></span><span class="blabel">EXPLORER</span><span class="bstate">EARNED</span></div>
-                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="17.5" cy="9" r="2.6"/><path d="M16 19a5 5 0 0 1 6-4.8"/></svg></span><span class="blabel">FIRST FRIEND</span><span class="bstate">EARNED</span></div>
-                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M5 19V8l7-4 7 4v11"/><path d="M9 19v-6h6v6"/></svg></span><span class="blabel">HOMECOMING</span><span class="bstate">EARNED</span></div>
-                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/><rect x="8.5" y="4" width="7" height="7"/></svg></span><span class="blabel">FULLY STOCKED</span><span class="bstate">EARNED</span></div>
+                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span><span class="blabel">COLLECTOR</span></div>
+                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.5A3.5 3.5 0 0 1 12 9a3.5 3.5 0 0 1 7 1.5C19 15.6 12 20 12 20z"/></svg></span><span class="blabel">ADOPTED 100&times;</span></div>
+                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 3l2.5 6 6.5.5-5 4.2 1.6 6.3L12 17.5 6.4 20.5 8 14.2l-5-4.2 6.5-.5z"/></svg></span><span class="blabel">TASTEMAKER</span></div>
+                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 16V5"/><path d="M7 10l5-5 5 5"/><path d="M5 19h14"/></svg></span><span class="blabel">FIRST PUBLISH</span></div>
+                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z"/></svg></span><span class="blabel">EXPLORER</span></div>
+                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="17.5" cy="9" r="2.6"/><path d="M16 19a5 5 0 0 1 6-4.8"/></svg></span><span class="blabel">FIRST FRIEND</span></div>
+                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M5 19V8l7-4 7 4v11"/><path d="M9 19v-6h6v6"/></svg></span><span class="blabel">HOMECOMING</span></div>
+                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/><rect x="8.5" y="4" width="7" height="7"/></svg></span><span class="blabel">FULLY STOCKED</span></div>
               </div>
             </div>
           </div>
@@ -432,8 +431,8 @@
       </div>
       <div class="caption">
         <h3>V1 — VIEW ALL · Earned</h3>
-        <p>Every earned achievement (8) in the same <code>BadgeTile</code> grid, gold prestige first. Header
-        echoes the section + a <code>‹ ACHIEVEMENTS</code> back-seam. P1 showed the top 6.</p>
+        <p>Every earned achievement (8) in the same uniform grid, gold prestige first. Header echoes the section
+        + a <code>‹ ACHIEVEMENTS</code> back-seam. P1 showed the top 6; tap any for its detail sheet.</p>
       </div>
     </div>
 
@@ -469,8 +468,8 @@
       </div>
       <div class="caption">
         <h3>V2 — VIEW ALL · In progress</h3>
-        <p>Every in-progress milestone (5) with its <code>ProgressMeter</code>, ordered closest-first. Gold ones
-        (PROLIFIC, MARATHONER) carry a gold bar — you can see which tier you&rsquo;re climbing.</p>
+        <p>Every in-progress milestone (5) with its <code>ProgressMeter</code> + live count, closest-first. Gold
+        ones (PROLIFIC, MARATHONER) carry a gold bar. Tap → detail (criterion + what&rsquo;s left + the prize).</p>
       </div>
     </div>
 
@@ -487,12 +486,12 @@
             <div class="listsum"><b>2</b> of <b>6</b> found &middot; the rest are still hidden &mdash; keep playing</div>
             <div class="scroll">
               <div class="bgrid">
-                <div class="badge earned t-secret"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M20 13.5A8 8 0 1 1 10.5 4 6.2 6.2 0 0 0 20 13.5z"/></svg></span><span class="blabel">NIGHT OWL</span><span class="bstate">UNLOCKED!</span></div>
-                <div class="badge earned t-secret"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="1"/><path d="M4 9h16M8 3v4M16 3v4"/><path d="M9 14l2 2 4-4"/></svg></span><span class="blabel">PERFECT WEEK</span><span class="bstate">UNLOCKED!</span></div>
-                <div class="badge mystery"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><span class="blabel">? ? ?</span><span class="bstate">SECRET</span></div>
-                <div class="badge mystery"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><span class="blabel">? ? ?</span><span class="bstate">SECRET</span></div>
-                <div class="badge mystery"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><span class="blabel">? ? ?</span><span class="bstate">SECRET</span></div>
-                <div class="badge mystery"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><span class="blabel">? ? ?</span><span class="bstate">SECRET</span></div>
+                <div class="badge earned t-secret"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M20 13.5A8 8 0 1 1 10.5 4 6.2 6.2 0 0 0 20 13.5z"/></svg></span><span class="blabel">NIGHT OWL</span></div>
+                <div class="badge earned t-secret"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="1"/><path d="M4 9h16M8 3v4M16 3v4"/><path d="M9 14l2 2 4-4"/></svg></span><span class="blabel">PERFECT WEEK</span></div>
+                <div class="badge mystery"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><span class="blabel">? ? ?</span></div>
+                <div class="badge mystery"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><span class="blabel">? ? ?</span></div>
+                <div class="badge mystery"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><span class="blabel">? ? ?</span></div>
+                <div class="badge mystery"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><span class="blabel">? ? ?</span></div>
               </div>
             </div>
           </div>
@@ -508,14 +507,166 @@
       <div class="caption">
         <h3>V3 — VIEW ALL · Secrets</h3>
         <p>The full secret board (6): the found eggs revealed in <b>magenta</b> (NIGHT OWL, PERFECT WEEK) + the
-        still-hidden <code>???</code> <code>MysterySlot</code>s. The count of unknowns is the only hint
-        (<b>OQ-005 pole A</b>) — identities stay sealed until unlocked.</p>
+        still-hidden <code>???</code>. The count of unknowns is the only hint (<b>OQ-005 pole A</b>); tapping a
+        <code>???</code> opens D3 (it stays sealed).</p>
       </div>
     </div>
 
   </div>
 
-  <div class="stage-label">Friend-view &amp; privacy <small>P3 a friend&rsquo;s EARNED achievements only (its own VIEW ALL reuses V1 with a friend back-seam — not separately drawn); no in-progress, no ??? leak · P4 a non-friend / restricted view (honest count reads; detail locked, PROF-03)</small></div>
+  <div class="stage-label">Node detail (on tap) <small>tapping any node opens a bottom sheet (the app drawer grammar) with its tier · what it was for · when earned · reward — D1 earned+reward · D2 in-progress (criterion + progress + the prize) · D3 locked secret (stays sealed; the mystery isn&rsquo;t spoiled)</small></div>
+  <div class="stage">
+
+    <!-- ═══════════ D1 — DETAIL · EARNED + REWARD ═══════════ -->
+    <div class="take">
+      <div class="artboard-label">D1 — Node detail · earned + reward</div>
+      <div class="device">
+        <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">PWR</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>ACHIEVEMENTS</h2></div>
+            <div class="scroll">
+              <div class="well id"><div class="id-top"><div class="avatar">MV</div><div><div class="id-name">MAVERICK</div><div class="id-sub">8 EARNED</div></div></div></div>
+              <div class="sec"><h3>EARNED</h3></div>
+              <div class="bgrid">
+                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span><span class="blabel">COLLECTOR</span></div>
+                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.5A3.5 3.5 0 0 1 12 9a3.5 3.5 0 0 1 7 1.5C19 15.6 12 20 12 20z"/></svg></span><span class="blabel">ADOPTED 100&times;</span></div>
+                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 3l2.5 6 6.5.5-5 4.2 1.6 6.3L12 17.5 6.4 20.5 8 14.2l-5-4.2 6.5-.5z"/></svg></span><span class="blabel">TASTEMAKER</span></div>
+              </div>
+            </div>
+            <div class="sheet-scrim"></div>
+            <div class="sheet t-gold">
+              <span class="grab"></span>
+              <div class="dt-glyph"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.5A3.5 3.5 0 0 1 12 9a3.5 3.5 0 0 1 7 1.5C19 15.6 12 20 12 20z"/></svg></div>
+              <div class="dt-tier">PRESTIGE</div>
+              <div class="dt-title">ADOPTED 100&times;</div>
+              <div class="dt-desc">Your card art has been equipped by 100 players across the community.</div>
+              <div class="dt-meta">EARNED &middot; 12 MAR 2026</div>
+              <div class="dt-sec">
+                <div class="rhead">REWARD</div>
+                <div class="rchip"><span class="ri"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><rect x="8.5" y="8.5" width="7" height="7"/></svg></span><div class="rt"><span class="rn">GOLD-FOIL FRAME</span><span class="rs">UNLOCKED FOR YOUR CARDS</span></div><span class="tag">EARN-ONLY</span></div>
+              </div>
+              <button class="btn secondary">DONE</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>D1 — Node detail <em>(earned + reward)</em></h3>
+        <p>Tap a node → a bottom sheet (the app drawer grammar) over the dimmed grid: tier · title · <b>what it
+        was for</b> · <b>when earned</b> · the <b>reward</b> (a <code>RewardChip</code>). Dismiss via the grab
+        handle, scrim, or <code>DONE</code>. This is where the old per-tile sub-text went.</p>
+      </div>
+    </div>
+
+    <!-- ═══════════ D2 — DETAIL · IN PROGRESS ═══════════ -->
+    <div class="take">
+      <div class="artboard-label">D2 — Node detail · in progress</div>
+      <div class="device">
+        <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">PWR</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>ACHIEVEMENTS</h2></div>
+            <div class="scroll">
+              <div class="well id"><div class="id-top"><div class="avatar">MV</div><div><div class="id-name">MAVERICK</div><div class="id-sub">5 IN PROGRESS</div></div></div></div>
+              <div class="sec"><h3>IN PROGRESS</h3></div>
+              <div class="bgrid">
+                <div class="badge prog t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="4" y="6" width="12" height="14"/><path d="M8 4h12v14"/></svg></span><span class="blabel">PROLIFIC</span><span class="pmeter"><span style="width:20%"></span></span><span class="bstate">5 / 25 GAMES</span></div>
+                <div class="badge prog"><span class="bglyph"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="17.5" cy="9" r="2.6"/><path d="M16 19a5 5 0 0 1 6-4.8"/></svg></span><span class="blabel">SOCIAL</span><span class="pmeter"><span style="width:30%"></span></span><span class="bstate">3 / 10 FRIENDS</span></div>
+                <div class="badge prog"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M4 20l4-1 9.5-9.5-3-3L5 16z"/><path d="M14.5 6.5l3 3"/></svg></span><span class="blabel">CURATOR</span><span class="pmeter"><span style="width:40%"></span></span><span class="bstate">2 / 5 CARDS</span></div>
+              </div>
+            </div>
+            <div class="sheet-scrim"></div>
+            <div class="sheet t-gold">
+              <span class="grab"></span>
+              <div class="dt-glyph"><svg viewBox="0 0 24 24"><rect x="4" y="6" width="12" height="14"/><path d="M8 4h12v14"/></svg></div>
+              <div class="dt-tier">PRESTIGE &middot; IN PROGRESS</div>
+              <div class="dt-title">PROLIFIC</div>
+              <div class="dt-desc">Bring 25 games to the catalog and your collection.</div>
+              <div class="dt-prog">
+                <div class="pmeter"><span style="width:20%"></span></div>
+                <div class="pline"><span>5 / 25 GAMES</span><span class="to">20 TO GO</span></div>
+              </div>
+              <div class="dt-sec">
+                <div class="rhead">PRIZE</div>
+                <div class="rchip"><span class="ri"><svg viewBox="0 0 24 24"><path d="M7 4h10v4a5 5 0 0 1-10 0V4z"/><path d="M9 18h6M10 14v4M14 14v4"/></svg></span><div class="rt"><span class="rn">PROLIFIC TROPHY</span><span class="rs">UNLOCKS AT 25 GAMES</span></div><span class="tag">EARN-ONLY</span></div>
+              </div>
+              <button class="btn secondary">DONE</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>D2 — Node detail <em>(in progress)</em></h3>
+        <p>The in-progress variant: criterion + a full <b>progress</b> readout (bar · count · "20 TO GO") + the
+        <b>PRIZE</b> it unlocks (a <code>RewardChip</code> preview). No earned-date yet.</p>
+      </div>
+    </div>
+
+    <!-- ═══════════ D3 — DETAIL · LOCKED SECRET ═══════════ -->
+    <div class="take">
+      <div class="artboard-label">D3 — Node detail · locked secret</div>
+      <div class="device">
+        <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">PWR</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>ACHIEVEMENTS</h2></div>
+            <div class="scroll">
+              <div class="well id"><div class="id-top"><div class="avatar">MV</div><div><div class="id-name">MAVERICK</div><div class="id-sub">2 / 6 SECRETS</div></div></div></div>
+              <div class="sec"><h3>SECRETS</h3></div>
+              <div class="bgrid">
+                <div class="badge earned t-secret"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M20 13.5A8 8 0 1 1 10.5 4 6.2 6.2 0 0 0 20 13.5z"/></svg></span><span class="blabel">NIGHT OWL</span></div>
+                <div class="badge mystery"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><span class="blabel">? ? ?</span></div>
+                <div class="badge mystery"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><span class="blabel">? ? ?</span></div>
+              </div>
+            </div>
+            <div class="sheet-scrim"></div>
+            <div class="sheet t-secret">
+              <span class="grab"></span>
+              <div class="dt-glyph locked"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
+              <div class="dt-tier">SECRET</div>
+              <div class="dt-title">? ? ?</div>
+              <div class="dt-desc">This one&rsquo;s a secret. Keep playing &mdash; you&rsquo;ll know it when you unlock it. (Its reward stays hidden too.)</div>
+              <button class="btn secondary">DONE</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>D3 — Node detail <em>(locked secret)</em></h3>
+        <p>Tapping a <code>???</code> opens a deliberately <b>sealed</b> sheet — no criterion, no reward, no
+        date revealed. It only confirms a secret exists and nudges "keep playing" (preserves <b>OQ-005 pole
+        A</b>). The dim-magenta lock glyph carries the tier.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="stage-label">Friend-view &amp; privacy <small>P3 a friend&rsquo;s EARNED achievements only (its VIEW ALL reuses V1 with a friend back-seam; tap → read-only detail) — no in-progress, no ??? leak · P4 a non-friend / restricted view (honest count reads; detail locked, PROF-03)</small></div>
   <div class="stage">
 
     <!-- ═══════════ P3 — FRIEND-VIEW (Riko) ═══════════ -->
@@ -532,11 +683,11 @@
               <div class="well id"><div class="id-top"><div class="avatar riko">RI</div><div><div class="id-name">RIKO</div><div class="id-sub">5 EARNED</div></div></div></div>
               <div class="sec"><h3>EARNED</h3><a href="#v1">VIEW ALL &rsaquo;</a></div>
               <div class="bgrid">
-                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span><span class="blabel">SHELF LIFE</span><span class="bstate">100 GAMES</span></div>
-                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span><span class="blabel">COLLECTOR</span><span class="bstate">50 GAMES</span></div>
-                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 16V5"/><path d="M7 10l5-5 5 5"/><path d="M5 19h14"/></svg></span><span class="blabel">FIRST PUBLISH</span><span class="bstate">EARNED</span></div>
-                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="17.5" cy="9" r="2.6"/><path d="M16 19a5 5 0 0 1 6-4.8"/></svg></span><span class="blabel">SOCIAL</span><span class="bstate">10 FRIENDS</span></div>
-                <div class="badge earned t-secret"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M20 13.5A8 8 0 1 1 10.5 4 6.2 6.2 0 0 0 20 13.5z"/></svg></span><span class="blabel">NIGHT OWL</span><span class="bstate">EARNED</span></div>
+                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span><span class="blabel">SHELF LIFE</span></div>
+                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span><span class="blabel">COLLECTOR</span></div>
+                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 16V5"/><path d="M7 10l5-5 5 5"/><path d="M5 19h14"/></svg></span><span class="blabel">FIRST PUBLISH</span></div>
+                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="17.5" cy="9" r="2.6"/><path d="M16 19a5 5 0 0 1 6-4.8"/></svg></span><span class="blabel">SOCIAL</span></div>
+                <div class="badge earned t-secret"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M20 13.5A8 8 0 1 1 10.5 4 6.2 6.2 0 0 0 20 13.5z"/></svg></span><span class="blabel">NIGHT OWL</span></div>
               </div>
             </div>
           </div>
@@ -551,9 +702,9 @@
       </div>
       <div class="caption">
         <h3>P3 — Friend-view <em>(earned only)</em></h3>
-        <p>Riko&rsquo;s <b>EARNED</b> grid, read-only, with a <code>‹ RETURN TO RIKO</code> back-seam + a
-        VIEW ALL (reuses V1 with a friend back-seam). <b>No IN-PROGRESS, no SECRETS row</b> — what a friend is
-        working toward, and that a <code>???</code> exists, never leaks (PROF-05).</p>
+        <p>Riko&rsquo;s <b>EARNED</b> grid, read-only, <code>‹ RETURN TO RIKO</code> back-seam + VIEW ALL
+        (reuses V1). Tap → a read-only detail. <b>No IN-PROGRESS, no SECRETS</b> — what a friend is working
+        toward, and that a <code>???</code> exists, never leaks (PROF-05).</p>
       </div>
     </div>
 
@@ -640,10 +791,9 @@
       </div>
       <div class="caption">
         <h3>P5 — Unlock celebration <em>(ACH-06)</em></h3>
-        <p>The arcade <b>takeover</b> when an achievement fires, <b>tier-coloured</b> (here a <b>gold</b>
-        prestige unlock): burst-rays + scanline backdrop, the badge in a spotlight, the
-        <code>RewardChip</code> payout, a flat <code>CONTINUE</code>. Push-driven (NOTIF-01); unlocks are
-        server-side — no client &ldquo;unlock&rdquo; call.</p>
+        <p>The arcade <b>takeover</b> when an achievement fires, <b>tier-coloured</b> (a <b>gold</b> prestige
+        unlock): burst-rays centred on the icon, the badge in a spotlight, the <code>RewardChip</code> payout
+        (tag on its own row), a flat <code>CONTINUE</code>. Push-driven (NOTIF-01); unlocks are server-side.</p>
       </div>
     </div>
 
@@ -678,8 +828,7 @@
       </div>
       <div class="caption">
         <h3>L1 — Skeleton</h3>
-        <p>Solid quiet fills (never an invite) while the achievements load — §1.6 grammar, reused verbatim from
-        the sibling boards.</p>
+        <p>Solid quiet fills (never an invite) while the achievements load — §1.6 grammar, reused verbatim.</p>
       </div>
     </div>
 
@@ -712,8 +861,7 @@
       </div>
       <div class="caption">
         <h3>L2 — Load error <em>(Signal Lost)</em></h3>
-        <p>Retryable §1.8 error: &ldquo;SIGNAL LOST&rdquo; + a <code>RETRY</code> (orange action). Reused
-        verbatim from the sibling boards.</p>
+        <p>Retryable §1.8 error: &ldquo;SIGNAL LOST&rdquo; + a <code>RETRY</code> (orange action).</p>
       </div>
     </div>
 
@@ -735,12 +883,12 @@
               <div class="well id"><div class="id-top"><div class="avatar">MV</div><div><div class="id-name">MAVERICK</div><div class="id-sub">8 EARNED</div></div></div></div>
               <div class="sec"><h3>EARNED</h3></div>
               <div class="bgrid">
-                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span><span class="blabel">COLLECTOR</span><span class="bstate">50 GAMES</span></div>
-                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.5A3.5 3.5 0 0 1 12 9a3.5 3.5 0 0 1 7 1.5C19 15.6 12 20 12 20z"/></svg></span><span class="blabel">ADOPTED 100&times;</span><span class="bstate">EARNED</span></div>
-                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 3l2.5 6 6.5.5-5 4.2 1.6 6.3L12 17.5 6.4 20.5 8 14.2l-5-4.2 6.5-.5z"/></svg></span><span class="blabel">TASTEMAKER</span><span class="bstate">EARNED</span></div>
-                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 16V5"/><path d="M7 10l5-5 5 5"/><path d="M5 19h14"/></svg></span><span class="blabel">FIRST PUBLISH</span><span class="bstate">EARNED</span></div>
-                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z"/></svg></span><span class="blabel">EXPLORER</span><span class="bstate">EARNED</span></div>
-                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="17.5" cy="9" r="2.6"/><path d="M16 19a5 5 0 0 1 6-4.8"/></svg></span><span class="blabel">FIRST FRIEND</span><span class="bstate">EARNED</span></div>
+                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7"/><rect x="13.5" y="3.5" width="7" height="7"/><rect x="3.5" y="13.5" width="7" height="7"/><rect x="13.5" y="13.5" width="7" height="7"/></svg></span><span class="blabel">COLLECTOR</span></div>
+                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9.5A3.5 3.5 0 0 1 12 9a3.5 3.5 0 0 1 7 1.5C19 15.6 12 20 12 20z"/></svg></span><span class="blabel">ADOPTED 100&times;</span></div>
+                <div class="badge earned t-gold"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 3l2.5 6 6.5.5-5 4.2 1.6 6.3L12 17.5 6.4 20.5 8 14.2l-5-4.2 6.5-.5z"/></svg></span><span class="blabel">TASTEMAKER</span></div>
+                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><path d="M12 16V5"/><path d="M7 10l5-5 5 5"/><path d="M5 19h14"/></svg></span><span class="blabel">FIRST PUBLISH</span></div>
+                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z"/></svg></span><span class="blabel">EXPLORER</span></div>
+                <div class="badge earned"><span class="bglyph"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="17.5" cy="9" r="2.6"/><path d="M16 19a5 5 0 0 1 6-4.8"/></svg></span><span class="blabel">FIRST FRIEND</span></div>
               </div>
             </div>
           </div>
@@ -755,8 +903,8 @@
       </div>
       <div class="caption">
         <h3>L3 — Offline <em>(cached)</em></h3>
-        <p>Your own achievements read from cache (SYS-10) under a calm OFFLINE strip; in-progress/secrets that
-        weren&rsquo;t cached are simply absent. No writes here anyway — achievements are server-side.</p>
+        <p>Your own achievements read from cache (SYS-10) under a calm OFFLINE strip; uncached in-progress/secrets
+        are simply absent. No writes here anyway — achievements are server-side.</p>
       </div>
     </div>
 
