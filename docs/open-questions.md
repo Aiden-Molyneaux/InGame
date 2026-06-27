@@ -157,8 +157,12 @@
   thresholds**, and **honesty/threshold-gating** (PROF-07 only shows a percentile above a cohort-size
   floor — does contributor standing gate the same way, and is it friend-visible / privacy-gated like the
   rest, PROF-03?). Pairs with the **`GET /users/:id/contributions` payload enumeration** owed at converge
-  (the endpoint is prose-only). Note: edits (CAT-06) remain a *catalog* behavior — only their *display on
-  the contributor pride surface* is dropped. (Contributor profile 4.9 track) [behavior/data]
+  (the endpoint is prose-only) — **now including the VIEW ALL full-list views** (converged board added them,
+  owner 2026-06-27: dedicated *all-cards* `/cell` grid + *all-games* title-row sub-screens reached from the
+  profile's `VIEW ALL ›`; the profile shows a **top-N summary**, the full lists show everything): the
+  contributions payload **and the full/paginated list shape** for those views must be enumerated together.
+  Note: edits (CAT-06) remain a *catalog* behavior — only their *display on the contributor pride surface* is
+  dropped. (Contributor profile 4.9 track) [behavior/data]
 
 ## Resolved
 - OQ-071 → **`GET /me/feed` item shape enumerated** (api-contract 0.23): the actor+type **aggregated**

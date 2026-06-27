@@ -180,6 +180,14 @@
 
   /* ── card grid (Profile Top-5 .rank grammar; CARDS DESIGNED uses GameCard/cell) ── */
   .minigrid { display: flex; flex-wrap: wrap; gap: 7px; padding: 0 2px; }
+
+  /* ── VIEW ALL full-list views (V1 cards · V2 games) ── */
+  .listsum { padding: 4px 14px 2px; font: 600 9px/1.45 var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+  .listsum b { color: var(--scr-soft); font-weight: 700; }
+  .fullgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 10px 12px 4px; justify-items: center; }
+  .cardcell { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .cardcell .adopt { font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-soft); text-align: center; }
+  .cardcell .adopt b { color: var(--scr-accent); }
   .rank { position: absolute; top: 4px; left: 4px; z-index: 2; width: 13px; height: 13px;
     background: var(--scr-chip); color: var(--navy); font: 700 9px/13px var(--pk); text-align: center; }
   .rank.first { background: var(--gold); color: #3c2a09; }
@@ -289,9 +297,10 @@
     layout</b> (<code>profile-states.html</code> grammar): an <code>IdentityBlock</code> → boxless
     <code>STATS</code> tiles (gold PROF-07 chips) → a <b>SIGNATURE CARD</b> PINNED-FAVOURITE hero → <b>CARDS
     DESIGNED</b> as a legible <code>/cell</code> grid + <b>GAMES ADDED</b> as title rows, each with a
-    <code>VIEW ALL ›</code> TertiaryLink. <b>Full matrix:</b> P1 self · P2 empty · P3 friend-view · P4
-    privacy-limited + lifecycle L1 Skeleton · L2 Signal Lost · L3 Offline (§1.8 / SYS-10). Counts illustrative.
-    NavBand: PROFILE active. <i>Design-side converge; design-spec + API formalization (OQ-079) owed.</i></p>
+    <code>VIEW ALL ›</code> TertiaryLink → the full-list views. <b>Full matrix:</b> P1 self · P2 empty · P3
+    friend-view · P4 privacy-limited · <b>V1/V2 VIEW ALL</b> (all cards / all games) + lifecycle L1 Skeleton ·
+    L2 Signal Lost · L3 Offline (§1.8 / SYS-10). Counts illustrative. NavBand: PROFILE active.
+    <i>Design-side converge; design-spec + API formalization (OQ-079) owed.</i></p>
   </div>
 
   <div class="stage-label">Self · populated &amp; empty <small>P1 the record in Profile's layout · P2 the new-user cold-start hook (the only gold beyond the PROF-07 percentile chips + RankChip/first — ADD A GAME / DESIGN A CARD, acquisitive, F-02)</small></div>
@@ -330,9 +339,9 @@
 
               <div class="sec"><h3>STATS</h3></div>
               <div class="stats">
-                <div class="stat"><span class="v">5</span><span class="l">GAMES</span><span class="pct">TOP 25%</span></div>
-                <div class="stat"><span class="v">3</span><span class="l">CARDS</span></div>
-                <div class="stat"><span class="v">424</span><span class="l">ADOPTIONS</span><span class="pct">TOP 10%</span></div>
+                <div class="stat"><span class="v">7</span><span class="l">GAMES</span><span class="pct">TOP 25%</span></div>
+                <div class="stat"><span class="v">7</span><span class="l">CARDS</span></div>
+                <div class="stat"><span class="v">586</span><span class="l">ADOPTIONS</span><span class="pct">TOP 10%</span></div>
               </div>
 
               <div class="sec"><h3>SIGNATURE CARD</h3></div>
@@ -612,6 +621,97 @@
     </div>
   </div>
 
+  <div class="stage-label">VIEW ALL · full lists <small>reached from the profile's CARDS DESIGNED / GAMES ADDED VIEW&nbsp;ALL&nbsp;› — the complete, scrollable list of that contributor's cards / games; each item a doorway to its entry. Back-seam ‹ CONTRIBUTIONS</small></div>
+  <div class="stage">
+
+    <!-- ═══════════ V1 — VIEW ALL CARDS ═══════════ -->
+    <div class="take">
+      <div class="artboard-label">V1 — View all (cards designed)</div>
+      <div class="device">
+        <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">PWR</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>CARDS DESIGNED</h2></div>
+            <div class="retlink"><span class="bk">&lsaquo;</span> CONTRIBUTIONS</div>
+            <div class="scroll">
+              <div class="listsum">All <b>7</b> cards Maverick has designed · <b>586</b> adoptions in all</div>
+              <div class="fullgrid">
+                <div class="cardcell"><div class="gcard cell fr-marathon"><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div><span class="adopt"><b>312</b> ADOPTIONS</span></div>
+                <div class="cardcell"><div class="gcard cell fr-destiny"><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div><span class="adopt"><b>88</b> ADOPTIONS</span></div>
+                <div class="cardcell"><div class="gcard cell fr-elden"><div class="art"><svg><use href="#art-elden"/></svg></div><div class="plate pl-elden">Elden Ring</div></div><span class="adopt"><b>64</b> ADOPTIONS</span></div>
+                <div class="cardcell"><div class="gcard cell fr-hollow"><div class="art"><svg><use href="#art-hollow"/></svg></div><div class="plate pl-hollow">Hollow</div></div><span class="adopt"><b>42</b> ADOPTIONS</span></div>
+                <div class="cardcell"><div class="gcard cell fr-hades"><div class="art"><svg><use href="#art-hades"/></svg></div><div class="plate pl-hades">Hades</div></div><span class="adopt"><b>38</b> ADOPTIONS</span></div>
+                <div class="cardcell"><div class="gcard cell fr-celeste"><div class="art"><svg><use href="#art-celeste"/></svg></div><div class="plate pl-celeste">Celeste</div></div><span class="adopt"><b>24</b> ADOPTIONS</span></div>
+                <div class="cardcell"><div class="gcard cell fr-stardew"><div class="art"><svg><use href="#art-stardew"/></svg></div><div class="plate pl-stardew">Stardew</div></div><span class="adopt"><b>18</b> ADOPTIONS</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>V1 — View all <em>(cards designed)</em></h3>
+        <p>Reached from the profile's CARDS DESIGNED <code>VIEW ALL ›</code> — the <b>complete</b>
+        <code>/cell</code> grid of every card this contributor designed (sorted by adoption), each a doorway to
+        its <code>CardDetail</code>. Back-seam <b>‹ CONTRIBUTIONS</b>.</p>
+      </div>
+    </div>
+
+    <!-- ═══════════ V2 — VIEW ALL GAMES ═══════════ -->
+    <div class="take">
+      <div class="artboard-label">V2 — View all (games added)</div>
+      <div class="device">
+        <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">PWR</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>GAMES ADDED</h2></div>
+            <div class="retlink"><span class="bk">&lsaquo;</span> CONTRIBUTIONS</div>
+            <div class="scroll">
+              <div class="listsum">All <b>7</b> games Maverick brought to the catalog · in <b>3,200</b> collections in all</div>
+              <div class="well">
+                <div class="crow"><div class="gcard thumb fr-hollow"><div class="art"><svg><use href="#art-hollow"/></svg></div><div class="plate pl-hollow">Hollow</div></div><div class="cm"><span class="gt">HOLLOW KNIGHT</span><span class="reach">IN <b>1,240</b> COLLECTIONS</span></div><span class="chev">&rsaquo;</span></div>
+                <div class="crow"><div class="gcard thumb fr-hades"><div class="art"><svg><use href="#art-hades"/></svg></div><div class="plate pl-hades">Hades</div></div><div class="cm"><span class="gt">HADES</span><span class="reach">IN <b>980</b> COLLECTIONS</span></div><span class="chev">&rsaquo;</span></div>
+                <div class="crow"><div class="gcard thumb fr-celeste"><div class="art"><svg><use href="#art-celeste"/></svg></div><div class="plate pl-celeste">Celeste</div></div><div class="cm"><span class="gt">CELESTE</span><span class="reach">IN <b>410</b> COLLECTIONS</span></div><span class="chev">&rsaquo;</span></div>
+                <div class="crow"><div class="gcard thumb fr-stardew"><div class="art"><svg><use href="#art-stardew"/></svg></div><div class="plate pl-stardew">Stardew</div></div><div class="cm"><span class="gt">STARDEW VALLEY</span><span class="reach">IN <b>360</b> COLLECTIONS</span></div><span class="chev">&rsaquo;</span></div>
+                <div class="crow"><div class="gcard thumb fr-marathon"><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div><div class="cm"><span class="gt">MARATHON</span><span class="reach">IN <b>95</b> COLLECTIONS</span></div><span class="chev">&rsaquo;</span></div>
+                <div class="crow"><div class="gcard thumb fr-destiny"><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div><div class="cm"><span class="gt">DESTINY</span><span class="reach">IN <b>70</b> COLLECTIONS</span></div><span class="chev">&rsaquo;</span></div>
+                <div class="crow"><div class="gcard thumb fr-elden"><div class="art"><svg><use href="#art-elden"/></svg></div><div class="plate pl-elden">Elden Ring</div></div><div class="cm"><span class="gt">ELDEN RING</span><span class="reach">IN <b>45</b> COLLECTIONS</span></div><span class="chev">&rsaquo;</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>V2 — View all <em>(games added)</em></h3>
+        <p>Reached from GAMES ADDED <code>VIEW ALL ›</code> — every game this contributor brought to the catalog
+        as title rows (sorted by reach), each → the <b>Game page</b> (4.2). Back-seam <b>‹ CONTRIBUTIONS</b>.</p>
+      </div>
+    </div>
+  </div>
+
   <div class="stage-label">Lifecycle (§1.8) <small>L1 loading Skeleton · L2 Signal Lost + RETRY · L3 Offline — read from cache, read-only (SYS-10); sibling grammar reused verbatim</small></div>
   <div class="stage">
 
@@ -745,9 +845,9 @@
               </div>
               <div class="sec"><h3>STATS</h3></div>
               <div class="stats">
-                <div class="stat"><span class="v">5</span><span class="l">GAMES</span><span class="pct">TOP 25%</span></div>
-                <div class="stat"><span class="v">3</span><span class="l">CARDS</span></div>
-                <div class="stat"><span class="v">424</span><span class="l">ADOPTIONS</span><span class="pct">TOP 10%</span></div>
+                <div class="stat"><span class="v">7</span><span class="l">GAMES</span><span class="pct">TOP 25%</span></div>
+                <div class="stat"><span class="v">7</span><span class="l">CARDS</span></div>
+                <div class="stat"><span class="v">586</span><span class="l">ADOPTIONS</span><span class="pct">TOP 10%</span></div>
               </div>
               <div class="sec"><h3>SIGNATURE CARD</h3></div>
               <div class="hero">
