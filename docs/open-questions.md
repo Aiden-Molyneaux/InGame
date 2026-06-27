@@ -31,9 +31,6 @@
   milestones, with cosmetic rewards — must be on that brainstorm's list (closes the create→earn loop).
 - OQ-005: Hidden easter-egg presentation — fully invisible until unlocked, or shown as a locked
   "???" mystery slot that hints something exists? (ACH-03) [presentation]
-- OQ-045: **Sticker placed-on-shell preview** (owner deferral, store track 2026-06-12) — §4.11's
-  sticker-preview case is NOT drawn on the converged Store board; design it with the **Device editor
-  pass** (DEV-01). [presentation]
 - OQ-056: **Modular card saving — explicit named saves + reusable style presets + the customizations
   gallery.** Owner ruling (2026-06-13, brainstormed; chose "parts + presets" over full
   style×canvas decomposition and over anxiety-fix-only). The **card stays the atomic
@@ -80,49 +77,6 @@
   component** reconciled with the Settings track's `ConfirmDialog` (centered modal vs the page's
   bottom-sheet grammar). (Game-page A×B mix, 2026-06-14) [behavior]
 
-- OQ-062: **`stickerComposition` payload shape + the nav-exclusion enforcement boundary.** The Device-editor
-  drafts (§4.5, `DEV-01`) draw **place / scale / rotate** stickers on the shell, so the opaque
-  `stickerComposition` (api-contract `PATCH /me/device`) needs a defined per-sticker shape — at minimum
-  `{ stickerId/assetId, x, y, scale, rotation }` in a **defined coordinate space** (normalized to the shell
-  body? which decoratable zones?) — and a ruling on **where the `DEV-03`/`F-04` nav-no-go is enforced**:
-  client-only (the UI refuses placement over the 5 keycaps, as all three drafts show) vs **server-validated**
-  on write (reject/clamp compositions that overlap the nav or the screen). Device analogue of the editor's
-  composition payloads; pairs with the OQ-045 on-shell preview this pass closes. **Owner clarified
-  (2026-06-14): the decoratable surface is the coloured plastic only — the forehead (top-band) + the chin
-  (nav-band margins); the screen (DEV-04's theme surface) AND the 5 nav keycaps are both off-limits.** So the
-  coordinate space is plastic-zones-only; the open part is just the per-sticker shape + where that exclusion
-  is enforced (client vs server). (Device-editor drafts, 2026-06-14) [behavior]
-- OQ-063: **A new `SectionSwitch` mode-switcher — does it replace the Segmented Toolbar app-wide?** The owner
-  asked (reviewing Device Draft A) to rebuild the SHELL/THEME/STICKERS switcher as an **S8-style option-card**
-  component (`device-switcher-takes.html`: T1 Section Stack · T2 Section Rail · T3 Section Hero; selection
-  moves to the **F-09 accent-border + the orange `StateMark`** tell (the pink-pip was superseded by the `StateMark` rename, 0.18 · OQ-067), off the old F-03 pressed-keycap). The same convention
-  lives on **converged** boards — Discover's `SegmentedKeycap` (2-way) and the Styler's `SectionChips` (5-way).
-  Open: once the owner picks a take, **is it adopted on those boards too** (one shared component → design-spec
-  §1.5, retiring/aliasing `SegmentedKeycap`+`SectionChips`), or scoped to the Device editor only? Cross-track /
-  spec-owner call — **not applied to Discover/Styler here**. **Marker sub-part now resolved** (the
-  selection tell is the `StateMark`, OQ-067); the open part is purely the **app-wide consolidation** —
-  owed at the **Device-editor formalization batch** (§4.5 design-spec + §1.5). (Device switcher
-  exploration, 2026-06-14; marker part 2026-06-18) [presentation]
-- OQ-064: **Saved device "looks" — the data model + scope.** The Device editor gains a **LOOKS** section
-  (`device-draft-a-looks.html`, owner ask 2026-06-14) that saves a styled combo — **shell colour + the
-  `stickerComposition` + screen theme** — as a named, re-applyable **`SavedLook`**, with **SAVE THIS LOOK** and
-  an **ON-NOW** tag. Open: is this a **new entity** (e.g. `device_looks`: user × `{ name, activeShellId,
-  stickerComposition, screenThemeId }`) — a **cap** on count — **rename/delete** — and does *applying* a look
-  just write those three fields onto `/me/device` (a look = a saved snapshot; the live device is one of them)?
-  Device cousin of the card editor's **OQ-056** (named saves + customizations gallery). **Personal-only**, like
-  the rest of the device. (Device editor LOOKS, 2026-06-14) [behavior]
-- OQ-065: **Device editor — premium-preview persistence + the "cart" model.** The editor is a **live try-on**:
-  the converged board (`device-states.html` D7 + the `KeepBar`) lets you preview **unowned** premium shell ·
-  theme · stickers and assumes those previews **persist across section switches** (SHELL/THEME/STICKERS — the
-  rail changes what you edit, it doesn't strip what's applied) and **accumulate** into one `KeepBar` tally →
-  **KEEP → the `ReconcileSheet`** (acquire-batch, the "cart"). Mirrors the Styler's multi-premium →
-  reconcile-at-KEEP (CARD-13). **Spec owner to ratify (DEV-01/COSM-03):** (a) previews persist within the
-  editing session across sections — **yes** per the design; (b) **exit-with-pending** — leaving with premiums
-  in preview prompts the reconcile (keep) or discards them (the free default re-renders), never silently keeps
-  the unowned; (c) **per-item remove** in the reconcile reverts that facet to owned/free; (d) `/me/device`
-  (`activeShellId`·`screenThemeId`·`stickerComposition`) only ever references **owned** items — previews are
-  client-side until acquired; (e) any **cap** on simultaneous previews. Pairs with OQ-062/064.
-  (Device editor premium try-on, 2026-06-15) [behavior]
 - OQ-075: **SOC-05 recommend-a-game COMPOSE surface is undrawn (the homeless Friends-domain piece).** The
   friend actions sheet (Friends tab P6 + the Game page) offers a **RECOMMEND A GAME** entry, but the actual
   compose UI — **pick a game (your collection / catalog) + write a short note** → drops into the recipient's
@@ -131,11 +85,6 @@
   *authoring* surface is missing. Decide its home — a bottom-sheet from the actions menu, or a small
   game-picker micro-flow — and whether it's a Friends-tab state or a WTP-adjacent flow. Surfaced at the
   Friends-tab (§3.3) convergence. (2026-06-22) [presentation]
-- OQ-076: **Device editor (4.5) formalization is owed.** The converged `device-states.html` board needs its
-  **design-spec formalization** (`SectionSwitch`/`SectionCard` · `StickerStage`/`TransformBox`/`PlacedSticker`/
-  `StickerTray` · `SavedLook`/`LooksGrid`) + an **API page-audit** (`stickerComposition` shape · plastic-only
-  zones · saved-looks model). Captured here so the obligation is durable, not SCREEN-STATUS prose only; the
-  underlying behaviour gaps are **OQ-062/063/064/065**. (Governance go-green capture, 2026-06-24) [debt]
 - OQ-078: **No left-edge accent rails — F-09 highlight-model clarification + ripple.** Owner ruling
   (2026-06-24): the one-sided **left-edge accent rail** (a `border-left: 3px solid var(--scr-accent)`
   stripe on a row / callout / toast) is **not** the highlight idiom — a highlighted row uses a flat
@@ -160,11 +109,40 @@
   (the endpoint is prose-only) — **now including the VIEW ALL full-list views** (converged board added them,
   owner 2026-06-27: dedicated *all-cards* `/cell` grid + *all-games* title-row sub-screens reached from the
   profile's `VIEW ALL ›`; the profile shows a **top-N summary**, the full lists show everything): the
-  contributions payload **and the full/paginated list shape** for those views must be enumerated together.
-  Note: edits (CAT-06) remain a *catalog* behavior — only their *display on the contributor pride surface* is
-  dropped. (Contributor profile 4.9 track) [behavior/data]
+  contributions payload **and the full/paginated list shape** for those views must be enumerated together
+  (incl. the **friend-view VIEW ALL** — same screen, read-only — and a **VIEW ALL load-more** loader for very
+  prolific contributors). Also confirm two edges flagged by the completeness pass (2026-06-27): **(a)** the
+  **percentile-standing visibility** on the privacy-limited / non-friend view (the board shows the chip; PROF-07
+  says a chip attaches only to stats the viewer can already see, PROF-03); **(b)** how a contributor's **own
+  MOD-02 soft-hidden card** reads on their profile. Note: edits (CAT-06) remain a *catalog* behavior — only their
+  *display on the contributor pride surface* is dropped. (Contributor profile 4.9 track) [behavior/data]
 
 ## Resolved
+- OQ-045 → **Sticker placed-on-shell preview drawn** (decision 0030): the `PlacedSticker` renders a
+  sticker transformed in its real spot on the shell plastic (Device board D5), nav keycaps z-ordered
+  above; closed design-side at the Device-editor converge. design-spec §2.15. (Device editor
+  formalization, 2026-06-27)
+- OQ-062 → **`stickerComposition` shape + nav-exclusion enforcement ruled** (decision 0030 · api 0.27):
+  `{ version, stickers[{ id, assetId, zone ∈ forehead\|chin, x, y, scale, rotation }] }`, `x,y`
+  zone-normalized [0,1]; **belt-and-suspenders** enforcement — the client refuses placement + the nav
+  keycaps z-order **above** any sticker + the **server validates** zone membership & transformed bounds
+  (DEV-03/F-04); all referenced ids must be owned. product-spec 0.27 (DEV-01/03) · api 0.27 · design-spec §2.15.
+- OQ-063 → **`SectionSwitch` unified, variants kept** (decision 0030): one §1.5 grammar with **`/pair`**
+  (Discover) · **`/chips`** (Styler) · **`/rail`** (Device + Game-page) variants; the selection tell is
+  the `StateMark` (already rippled, OQ-067); `SegmentedKeycap` + `SectionChips` **retained as aliases**
+  (names append-only), the converged Discover/Styler boards **untouched**. design-spec §1.5.
+- OQ-064 → **Saved-looks data model ruled** (decision 0030 · **DEV-05** · api 0.27): a new `device_looks`
+  entity (shell + sticker composition + screen theme **snapshot**; **no name** — identified by shell·theme);
+  **ON NOW** computed (facets == live device); **apply = `PATCH /me/device`** (no apply endpoint); **delete**
+  supported + **cap ~12**; endpoints `GET·POST /me/device/looks` + `DELETE /me/device/looks/:id`. The board
+  is owed a per-tile delete affordance (follow-up). product-spec 0.27 · api 0.27.
+- OQ-065 → **Premium live try-on / "cart" ratified** (decision 0030): previews persist across the editor's
+  sections → exit-with-pending prompts KEEP-or-discard (never silently keeps unowned) → per-item remove
+  reverts a facet → **`/me/device` references owned items only** (KEEP commits via `POST /cosmetics/acquire-batch`,
+  ECON-07); no hard preview cap. Mirrors the Styler reconcile-at-KEEP (CARD-13). product-spec 0.27 (DEV-01) · api 0.27.
+- OQ-076 → **Device editor (4.5) formalization done** (decision 0030): design-spec **§1.5 Device-editor set
+  + §2.15** composition (0.30) + **API page-audit** (api 0.27); the behaviour gaps OQ-062/063/064/065 ruled,
+  OQ-045 closed. The go-green debt is cleared. (Device editor formalization, 2026-06-27)
 - OQ-071 → **`GET /me/feed` item shape enumerated** (api-contract 0.23): the actor+type **aggregated**
   SOC-06 item `{ feedItemId, actor, type, aggregateCount, objects[capped ≤3 peek], occurredAt,
   windowStart/windowEnd }`, cursor-paginated; flood-suppression + trivia-exclusion server-side. *(The

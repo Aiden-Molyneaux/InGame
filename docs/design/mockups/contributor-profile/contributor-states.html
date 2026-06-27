@@ -168,11 +168,17 @@
   .gtag b { color: var(--scr-text); font-weight: 700; margin-right: 4px; }
 
   /* ── stats grid (Profile .stats) ── */
-  .stats { padding: 12px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
   .stat { background: var(--scr-panel); padding: 9px 6px 8px; display: flex; flex-direction: column; gap: 3px; align-items: center; }
   .stat .v { font: 700 15px/1 var(--pk); color: var(--scr-text); }
   .stat .l { font: 600 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
   .pct { margin-top: 2px; background: var(--gold); color: #3c2a09; padding: 2px 6px; font: 600 9px var(--pk); letter-spacing: .5px; }
+
+  /* ── per-section empty (a contributor with games-but-no-cards, etc.) ── */
+  .secempty { margin: 2px 12px 6px; border: 1px dashed var(--scr-grip); padding: 18px 14px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+  .secempty .se-t { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--scr-soft); }
+  .secempty .se-s { font: 500 9px/1.5 var(--pk); color: var(--scr-dim); max-width: 230px; }
+  .secempty .btn { margin-top: 2px; }
 
   /* ── pinned-favourite hero (Profile .hero) ── */
   .hero { display: flex; gap: 14px; align-items: stretch; padding: 12px; }
@@ -297,13 +303,15 @@
     layout</b> (<code>profile-states.html</code> grammar): an <code>IdentityBlock</code> → boxless
     <code>STATS</code> tiles (gold PROF-07 chips) → a <b>SIGNATURE CARD</b> PINNED-FAVOURITE hero → <b>CARDS
     DESIGNED</b> as a legible <code>/cell</code> grid + <b>GAMES ADDED</b> as title rows, each with a
-    <code>VIEW ALL ›</code> TertiaryLink → the full-list views. <b>Full matrix:</b> P1 self · P2 empty · P3
-    friend-view · P4 privacy-limited · <b>V1/V2 VIEW ALL</b> (all cards / all games) + lifecycle L1 Skeleton ·
-    L2 Signal Lost · L3 Offline (§1.8 / SYS-10). Counts illustrative. NavBand: PROFILE active.
+    <code>VIEW ALL ›</code> TertiaryLink → the full-list views. STATS now carry a 4th tile — **REACHED**
+    (the games-side impact: total collections reached). <b>Full matrix:</b> P1 self · P2 empty · <b>P2b self ·
+    partial</b> (games, no cards — per-section empty + below-threshold no-chip stats) · P3 friend-view ·
+    <b>P3b friend · empty</b> · P4 privacy-limited · <b>V1/V2 VIEW ALL</b> (all cards / all games) + lifecycle
+    L1 Skeleton · L2 Signal Lost · L3 Offline (§1.8 / SYS-10). Counts illustrative. NavBand: PROFILE active.
     <i>Design-side converge; design-spec + API formalization (OQ-079) owed.</i></p>
   </div>
 
-  <div class="stage-label">Self · populated &amp; empty <small>P1 the record in Profile's layout · P2 the new-user cold-start hook (the only gold beyond the PROF-07 percentile chips + RankChip/first — ADD A GAME / DESIGN A CARD, acquisitive, F-02)</small></div>
+  <div class="stage-label">Self · populated, empty &amp; partial <small>P1 the record in Profile's layout · P2 the new-user cold-start hook (gold ADD A GAME / DESIGN A CARD) · P2b the partial contributor — games added but no cards yet (per-section empty + PROF-07 below-threshold, no chips)</small></div>
   <div class="stage">
 
     <!-- ═══════════ P1 — SELF, POPULATED ═══════════ -->
@@ -342,6 +350,7 @@
                 <div class="stat"><span class="v">7</span><span class="l">GAMES</span><span class="pct">TOP 25%</span></div>
                 <div class="stat"><span class="v">7</span><span class="l">CARDS</span></div>
                 <div class="stat"><span class="v">586</span><span class="l">ADOPTIONS</span><span class="pct">TOP 10%</span></div>
+                <div class="stat"><span class="v">3,200</span><span class="l">REACHED</span></div>
               </div>
 
               <div class="sec"><h3>SIGNATURE CARD</h3></div>
@@ -445,6 +454,7 @@
                 <div class="stat"><span class="v">0</span><span class="l">GAMES</span></div>
                 <div class="stat"><span class="v">0</span><span class="l">CARDS</span></div>
                 <div class="stat"><span class="v">0</span><span class="l">ADOPTIONS</span></div>
+                <div class="stat"><span class="v">0</span><span class="l">REACHED</span></div>
               </div>
               <div class="hook">
                 <div class="hic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-width="2"/><path d="M17.5 14.5v6M14.5 17.5h6" stroke-width="2" stroke-linecap="round"/></svg></div>
@@ -472,9 +482,72 @@
         <b>DESIGN A CARD</b>, the only gold here (acquisitive — catalog/card-creating, F-02).</p>
       </div>
     </div>
+
+    <!-- ═══════════ P2b — SELF · PARTIAL (games, no cards yet) ═══════════ -->
+    <div class="take">
+      <div class="artboard-label">P2b — Self · partial (games, no cards yet)</div>
+      <div class="device">
+        <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">PWR</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>CONTRIBUTIONS</h2></div>
+            <div class="retlink"><span class="bk">&lsaquo;</span> RETURN TO PROFILE</div>
+            <div class="scroll">
+              <div class="well id">
+                <div class="id-top">
+                  <div class="avatar">NV</div>
+                  <div>
+                    <div class="id-name">NOVA</div>
+                    <div class="id-sub">CONTRIBUTOR SINCE '25 &middot; NEW FINDER</div>
+                  </div>
+                </div>
+                <div class="bio">A few finds into the catalog — no cards designed yet.</div>
+              </div>
+              <div class="sec"><h3>STATS</h3></div>
+              <div class="stats">
+                <div class="stat"><span class="v">3</span><span class="l">GAMES</span></div>
+                <div class="stat"><span class="v">0</span><span class="l">CARDS</span></div>
+                <div class="stat"><span class="v">0</span><span class="l">ADOPTIONS</span></div>
+                <div class="stat"><span class="v">540</span><span class="l">REACHED</span></div>
+              </div>
+              <div class="sec"><h3>CARDS DESIGNED</h3></div>
+              <div class="secempty">
+                <div class="se-t">NO CARDS YET</div>
+                <div class="se-s">Design a card for one of your games — others can adopt it, and it shows up here.</div>
+                <button class="btn add">✦ DESIGN A CARD</button>
+              </div>
+              <div class="sec"><h3>GAMES ADDED</h3><a href="#">VIEW ALL &rsaquo;</a></div>
+              <div class="well">
+                <div class="crow"><div class="gcard thumb fr-hollow"><div class="art"><svg><use href="#art-hollow"/></svg></div><div class="plate pl-hollow">Hollow</div></div><div class="cm"><span class="gt">HOLLOW KNIGHT</span><span class="reach">IN <b>280</b> COLLECTIONS</span></div><span class="chev">&rsaquo;</span></div>
+                <div class="crow"><div class="gcard thumb fr-hades"><div class="art"><svg><use href="#art-hades"/></svg></div><div class="plate pl-hades">Hades</div></div><div class="cm"><span class="gt">HADES</span><span class="reach">IN <b>160</b> COLLECTIONS</span></div><span class="chev">&rsaquo;</span></div>
+                <div class="crow"><div class="gcard thumb fr-celeste"><div class="art"><svg><use href="#art-celeste"/></svg></div><div class="plate pl-celeste">Celeste</div></div><div class="cm"><span class="gt">CELESTE</span><span class="reach">IN <b>100</b> COLLECTIONS</span></div><span class="chev">&rsaquo;</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P2b — Self · partial <em>(games, no cards yet)</em></h3>
+        <p>A common partial: games added but <b>no cards designed</b>. The CARDS DESIGNED section shows a gold
+        <b>DESIGN A CARD</b> nudge (acquisitive); GAMES ADDED is populated. The inverse (cards, no games) is
+        symmetric. Also the PROF-07 <b>below-threshold</b> case — stats render with <b>no percentile chips</b>.</p>
+      </div>
+    </div>
   </div>
 
-  <div class="stage-label">Friend-view &amp; privacy <small>P3 a friend's contributions in Profile's layout, read-only · P4 a non-friend / privacy-limited view — STATS persist (honest aggregates), detail locks (PROF-03)</small></div>
+  <div class="stage-label">Friend-view &amp; privacy <small>P3 a friend's contributions in Profile's layout, read-only · P3b a friend who hasn't contributed yet (quiet empty, no create-hooks) · P4 a non-friend / privacy-limited view — STATS persist (honest aggregates), detail locks (PROF-03)</small></div>
   <div class="stage">
 
     <!-- ═══════════ P3 — FRIEND-VIEW (RIKO) ═══════════ -->
@@ -512,6 +585,7 @@
                 <div class="stat"><span class="v">2</span><span class="l">GAMES</span><span class="pct">TOP 50%</span></div>
                 <div class="stat"><span class="v">1</span><span class="l">CARDS</span></div>
                 <div class="stat"><span class="v">47</span><span class="l">ADOPTIONS</span><span class="pct">TOP 40%</span></div>
+                <div class="stat"><span class="v">770</span><span class="l">REACHED</span></div>
               </div>
 
               <div class="sec"><h3>SIGNATURE CARD</h3></div>
@@ -595,6 +669,7 @@
                 <div class="stat"><span class="v">8</span><span class="l">GAMES</span><span class="pct">TOP 10%</span></div>
                 <div class="stat"><span class="v">4</span><span class="l">CARDS</span></div>
                 <div class="stat"><span class="v">612</span><span class="l">ADOPTIONS</span><span class="pct">TOP 5%</span></div>
+                <div class="stat"><span class="v">5,140</span><span class="l">REACHED</span></div>
               </div>
               <div class="lock-well">
                 <svg width="26" height="26" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="1.5" stroke-width="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke-width="2"/></svg>
@@ -617,6 +692,60 @@
         <h3>P4 — Privacy-limited <em>(non-friend, PROF-03)</em></h3>
         <p>The <b>STATS tiles persist</b> (honest aggregates + percentile chips); the contribution detail
         <b>locks</b> (<code>lock-well</code>). <b>ADD FRIEND</b> is orange, not gold. Nothing hidden leaks.</p>
+      </div>
+    </div>
+
+    <!-- ═══════════ P3b — FRIEND-VIEW · EMPTY (no contributions) ═══════════ -->
+    <div class="take">
+      <div class="artboard-label">P3b — Friend-view · empty (no contributions)</div>
+      <div class="device">
+        <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">PWR</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>CONTRIBUTIONS</h2></div>
+            <div class="retlink"><span class="bk">&lsaquo;</span> RETURN TO VESPER</div>
+            <div class="scroll">
+              <div class="well id">
+                <div class="id-top">
+                  <div class="avatar">VS</div>
+                  <div>
+                    <div class="id-name">VESPER</div>
+                    <div class="id-sub">CONTRIBUTOR</div>
+                  </div>
+                </div>
+              </div>
+              <div class="sec"><h3>STATS</h3></div>
+              <div class="stats">
+                <div class="stat"><span class="v">0</span><span class="l">GAMES</span></div>
+                <div class="stat"><span class="v">0</span><span class="l">CARDS</span></div>
+                <div class="stat"><span class="v">0</span><span class="l">ADOPTIONS</span></div>
+                <div class="stat"><span class="v">0</span><span class="l">REACHED</span></div>
+              </div>
+              <div class="hook">
+                <div class="hic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-width="2"/></svg></div>
+                <div class="ht">NOTHING HERE YET</div>
+                <div class="hs">When VESPER brings a game to the catalog or designs a card, their contributions will show up here.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P3b — Friend-view · empty <em>(no contributions)</em></h3>
+        <p>A friend who hasn't contributed yet — a <b>quiet</b> message with <b>no gold create-hooks</b> (you
+        can't add for them). Contrast P2, the <i>self</i>-empty, which prompts you with ADD A GAME / DESIGN A CARD.</p>
       </div>
     </div>
   </div>
@@ -742,7 +871,7 @@
               </div>
               <div class="sec"><h3 style="opacity:.5;">STATS</h3></div>
               <div class="stats">
-                <div class="sk-tile"></div><div class="sk-tile"></div><div class="sk-tile"></div>
+                <div class="sk-tile"></div><div class="sk-tile"></div><div class="sk-tile"></div><div class="sk-tile"></div>
               </div>
               <div class="sec"><h3 style="opacity:.5;">SIGNATURE CARD</h3></div>
               <div class="hero">
@@ -848,6 +977,7 @@
                 <div class="stat"><span class="v">7</span><span class="l">GAMES</span><span class="pct">TOP 25%</span></div>
                 <div class="stat"><span class="v">7</span><span class="l">CARDS</span></div>
                 <div class="stat"><span class="v">586</span><span class="l">ADOPTIONS</span><span class="pct">TOP 10%</span></div>
+                <div class="stat"><span class="v">3,200</span><span class="l">REACHED</span></div>
               </div>
               <div class="sec"><h3>SIGNATURE CARD</h3></div>
               <div class="hero">

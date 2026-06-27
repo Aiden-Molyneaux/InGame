@@ -237,6 +237,22 @@ by reach; each → the Game page 4.2); header echoes the section + a `‹ CONTRI
 is now a top-N summary** (sample: Maverick 7 cards / 7 games — shows top 3 cards / top 5 games, VIEW ALL reveals
 the rest). The full/paginated list shape is part of the **`GET /users/:id/contributions` enumeration → OQ-079**.
 
+**Completeness pass (owner ask, 2026-06-27).** Walked CAT-07 + the sibling conventions (PROF-03/07, §4.5
+friend-view, MOD-01) for missing functionality and **amended the board**:
+- **REACHED stat** — a 4th STATS tile (the games-side impact = total collections reached), symmetric to
+  ADOPTIONS (the cards-side); rounds out the two contribution types.
+- **P2b — self · partial** — the common *games-but-no-cards* contributor: the CARDS DESIGNED section shows a
+  gold **DESIGN A CARD** nudge (acquisitive), GAMES ADDED populated (the inverse is symmetric). Doubles as the
+  **PROF-07 below-threshold** case — stats render with **no percentile chips** ("every tile renders cleanly
+  without its chip").
+- **P3b — friend · empty** — a friend who hasn't contributed: a **quiet** message, **no gold create-hooks**
+  (you can't add for them), contrasting the self-empty P2.
+- **Considered → covered / noted:** reporting (covered — report-user on the parent Profile, "reachable from
+  Profile only" §4.5; report-card/game downstream on its detail — *assumes the CAT-05 "designed-by" credit
+  routes via Profile*); **friend-view VIEW ALL** (same V1/V2 pattern with a friend back-seam — not separately
+  drawn); **VIEW ALL pagination** + **MOD-02 soft-hidden own-content** edge — all **→ OQ-079** / the spec-owner
+  pass. Share is consistently omitted (self-share = the Profile invite link, decision 0019). **Burt PASS.**
+
 **Still owed (spec-owner) — OQ-079:** ripple **product-spec CAT-07** (drop "fields you added" + achievement
 badges from this surface; add the **percentile standing** — define the ranking metric / tier thresholds /
 honesty-gating / privacy, PROF-03/07) + **design-spec formalization** (the new components: `IdentityBlock`
