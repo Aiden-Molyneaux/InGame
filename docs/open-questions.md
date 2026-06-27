@@ -95,6 +95,47 @@
   (`.reqrow.incoming` in `friends-draft-b/c`). The **Compare-hours** boards are de-railed this pass; the
   retired `add-game-draft-b` / `store-draft-c` drafts are history (exempt), and doc-chrome left-borders
   (e.g. `onscreen-marker-drafts` `.rule`) are not in scope. (Compare Hours 4.6 track, 2026-06-24) [presentation]
+- OQ-080: **External admin operator tool (parked — owner: "think on it more later").** A tool **outside the
+  consumer app** hosting the **Admin III/IV** powers that should not live on a phone (decision 0034) — **P3
+  Economy/Support** (manual Pixel adjustment · refund/dispute · entitlement claw-back · wallet/purchase
+  visibility) · **P4 Config/Authoring** (store/cosmetic authoring + pricing + drops · achievement/egg
+  authoring + thresholds · banned-word list MOD-07 · economy levers SYS-04 · controlled lists CAT-04/PROF-02)
+  · **P5 Governance** (**role/tier grant/revoke** · the **audit-ledger viewer** over MOD-10 · the
+  **active-staff roster**). **What's now SPECCED (decision 0035 — not parked):** the **data foundations** —
+  **MOD-10** the append-only audit log, **ECON-11** the operator Pixel/entitlement adjustments + the
+  `admin_adjustment` ledger type, and the **audited service-layer ops** (Stage 0+2) — so the economy is
+  operable + auditable at IAP launch (IAP refunds stay platform/RevenueCat-owned, ECON-09). **What stays
+  PARKED here:** the **operator UI** (Stage 3 — a thin internal web tool wrapping the ops + read views) and
+  the P4 config/authoring surfaces. Decide scope/shape when the operator pool or support volume justifies a
+  UI. (Admin console §4.4 prep, decisions 0033/0034/0035, 2026-06-27) [behavior]
+- OQ-081: **In-app Admin-console remediation additions — IDs + design owed (the §4.4 pass).** The critical
+  pass (decision 0034) found the in-app P1/P2 set is missing behaviors beyond today's five actions, to be
+  given **MOD-** IDs and drawn when §4.4 is designed: **(P1)** field-level remediation (reset an offensive
+  username/bio/avatar; force-rename — a remedy short of suspension) · a **user investigation view** (report
+  history + prior actions + their content, to act on a reported user) · a **moderation-action notice** to the
+  affected user (the "why" + appeal pointer; the consumer-facing complement to MOD-09's non-disclosure, which
+  governs *other* viewers) · **(P2)** **direct canonical entry edit** (fix data with no user suggestion,
+  distinct from MOD-06) · **junk/non-dup entry removal** (distinct from MOD-05 merge) · **proactive takedown
+  by ID** (the MOD-08 legal pull, actioned without waiting for a report). Spec each (owning doc first) +
+  reconcile the destructive-confirm grammar with `ConfirmSheet` (cf. OQ-061) at the §4.4 formalization.
+  (Admin model critical pass, decision 0034, 2026-06-27) [behavior]
+- OQ-082: **Achievement TIER system — 3 tiers (owner direction, 2026-06-27).** Achievements gain a **`tier`**:
+  **PRESTIGE = gold** (`--gold`, rare/marquee) · **STANDARD = the theme accent** (`--scr-accent`) · **SECRET =
+  magenta** (a new on-screen token `--scr-secret` `#e85ad0`, for easter eggs). Drawn on the §4.10 Achievements
+  drafts (`mockups/achievements/`, `BadgeTile`/`QuestRow`/`MysterySlot`/`CelebrationMoment`); "simple but
+  rewarding." **Ripples owed (spec-owner, at the §4.10 converge):**
+  **(a) product-spec ACH-** — add the **`tier`** attribute to the data-driven definition (ACH-01/03); *which*
+  achievement is which tier = content (**OQ-004**). [behavior/data]
+  **(b) F-02 carve-out** — **gold now also = achievement PRESTIGE tier** (non-acquisitive). This **resolves the
+  long-standing badge-gold cross-screen flag** (gold-as-achievement, owner-ratified) — reconcile with the
+  Friends `.achv` gold glyph + the future Profile achievements teaser; amend the Catalog/design-spec **F-02**
+  wording. [presentation]
+  **(c) F-05 carve-out** — **magenta on-screen** (`--scr-secret`) for the SECRET tier is **pink-family on the
+  screen**, which F-05 reserved for shell LEDs only; define the token + amend the **F-05** wording (shell LEDs
+  stay round/pink; the secret tier is a flat on-screen magenta, distinct hue from the `--accent` LED). [presentation]
+  **(d)** the STANDARD tier rides **`--scr-accent`** on purpose → it **re-themes with the screen theme (DEV-04)** —
+  note the dependency. Pairs with **OQ-005** (egg presentation) + **OQ-004** (content). (Achievements §4.10
+  tier pass, 2026-06-27) [behavior + presentation]
 ## Resolved
 - OQ-079 → **Contributor profile (4.9) revised + formalized** (decision 0032; design-spec **0.31** · product-spec
   **0.28** · api **0.28**): the pride surface **drops CAT-06 field-edits + achievement badges** and **adds a
