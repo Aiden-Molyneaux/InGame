@@ -137,7 +137,12 @@
   note the dependency. Pairs with **OQ-004** (content). **OQ-005 (egg presentation) is now design-resolved →
   pole A** (the `???` mystery slot — "hint something exists") by the owner picking **Draft A · Trophy Case** +
   converging to `achievements-states.html` (2026-06-27); spec-owner to move OQ-005 → Resolved with this pass.
-  (Achievements §4.10 tier pass + converge, 2026-06-27) [behavior + presentation]
+  **(e) Node-detail + uniform tiles (owner, 2026-06-27):** earned tiles are now **glyph + label only** (the old
+  mixed "EARNED / REWARD / 50 GAMES" sub-text dropped); tapping a node opens a **detail bottom sheet**
+  (`AchievementSheet`) holding **title · description/criterion · tier · reward (+`earnOnly`) · `unlockedAt` /
+  progress**; a locked `???` opens a deliberately **sealed** sheet (no leak). The **API enumeration must include
+  these node-detail fields**, and design-spec must add the `AchievementSheet` component. (Achievements §4.10
+  tier pass + converge, 2026-06-27) [behavior + presentation]
 ## Resolved
 - OQ-079 → **Contributor profile (4.9) revised + formalized** (decision 0032; design-spec **0.31** · product-spec
   **0.28** · api **0.28**): the pride surface **drops CAT-06 field-edits + achievement badges** and **adds a
