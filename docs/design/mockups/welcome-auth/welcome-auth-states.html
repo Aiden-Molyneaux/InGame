@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
 <noscript><link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" /></noscript>
 <style>
-  /* ── tokens: Teal shell · Midnight (verbatim from collection-states.html). Auth screen-surfaces are non-commerce/non-acquisitive — NO on-screen GOLD on any auth surface (F-02): the stats/showcase/tagline are informational, every auth CTA stays orange/cream. Gold appears only on the shell Store nav key. ── */
+  /* ── tokens: Teal shell · Midnight (verbatim from collection-states.html). Auth screen-surfaces are non-commerce/non-acquisitive — on-screen GOLD is reserved (F-02): the stats/tagline/CTAs stay orange/cream; the ONLY on-screen gold is the card-artist credit (gold = card authorship, matching the collection card-back CARD ARTIST). Gold otherwise appears only on the shell Store nav key. ── */
   :root {
     --plastic: #2bb6b0; --plastic-hi: #3ec9c2; --plastic-lo: #1f9a94; --silk: #0d524e;
     --accent: #ff3d77; --gold: #ffd23f; --cream: #f5f1e4; --navy: #1d2a4a;
@@ -85,7 +85,6 @@
   .nav-band.locked .nav-btn svg path, .nav-band.locked .nav-btn svg rect, .nav-band.locked .nav-btn svg circle { stroke: color-mix(in srgb, var(--navy) 55%, transparent); fill: var(--navy); fill-opacity: .55; }
   .nav-band.locked .nav-btn svg [stroke] { stroke: color-mix(in srgb, var(--navy) 55%, transparent); }
   .nav-band.locked .pip { background: var(--pip-off); box-shadow: inset 0 1px 2px rgba(0,0,0,.5); }
-  .nav-lock-note { flex: 0 0 auto; text-align: center; margin: 0 0 6px; font: 400 9px var(--shell); letter-spacing: 1.5px; color: var(--silk); opacity: .7; }
 
   /* ── screen + furniture ── */
   .screen { position: relative; height: 100%; border-radius: 13px; overflow: hidden; display: flex; flex-direction: column; }
@@ -94,7 +93,10 @@
   .sk2 .screen-head h2 { margin: 0; font: 700 21px/1 var(--pk); letter-spacing: 3px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); }
   .scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 16px 18px; scrollbar-width: none; }
   .scroll::-webkit-scrollbar { display: none; }
-  .fh-key { flex: 0 0 auto; width: 28px; height: 28px; border: none; background: var(--scr-chip); color: var(--navy); font: 700 15px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; margin-right: 11px; }
+  /* labelled back link under the header — the shared `.return-link` tertiary (orange ‹ RETURN TO …),
+     same grammar as find-add-friends / collection / compare; replaces the old white fh-key back keycap. */
+  .return-link { flex: 0 0 auto; align-self: flex-start; display: inline-flex; align-items: center; gap: 5px;
+    margin: 0 16px 10px; font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
 
   .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 16px 2px 8px; }
   .sec:first-child { margin-top: 4px; }
@@ -104,6 +106,7 @@
   /* ── TextField — cream inset · navy ink + caret (F-09 named exception; catalog v0.4) ── */
   .field { display: flex; flex-direction: column; gap: 5px; margin: 0 0 13px; }
   .flabel { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .flabel-row { display: flex; align-items: baseline; justify-content: space-between; }  /* label left, inline FORGOT? right (Draft A) */
   .input { display: flex; align-items: center; gap: 7px; background: var(--scr-chip); box-shadow: inset 0 2px 3px rgba(0,0,0,.16); padding: 11px 12px; }
   .input .val { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--navy); }
   .input .ph { font: 600 11px var(--pk); letter-spacing: 1px; color: #8d889c; }
@@ -133,6 +136,10 @@
   .apple { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; box-sizing: border-box; border: none; background: #000; color: #fff; font: 600 13px var(--pk); letter-spacing: .3px; padding: 13px 0; margin: 0 0 10px; }
   .apple svg { width: 16px; height: 16px; }
   .apple svg path { fill: #fff; }
+  /* Draft A — compact Apple: hugs its content + centred, so it's no longer a full-width black slab */
+  .apple-row { display: flex; justify-content: center; margin: 0 0 10px; }
+  .apple.compact { width: auto; padding: 10px 20px; margin: 0; font-size: 11px; gap: 8px; }
+  .apple.compact svg { width: 14px; height: 14px; }
 
   /* divider OR */
   .ordiv { display: flex; align-items: center; gap: 10px; margin: 4px 0 12px; }
@@ -142,6 +149,7 @@
   /* tertiary link */
   .tlink { display: inline-block; background: none; border: none; padding: 0; font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
   .tlink.dim { color: var(--scr-dim); }
+  .tlink.mini { font-size: 9px; font-weight: 700; letter-spacing: 1px; }  /* inline FORGOT? on the label row (Draft A) */
   .swap-foot { text-align: center; margin: 6px 0 2px; font: 500 11px var(--pk); letter-spacing: .3px; color: var(--scr-soft); }
   .swap-foot .tlink { margin-left: 4px; }
   .footnote { margin: 14px 4px 4px; font: 500 9px/1.5 var(--pk); letter-spacing: .3px; color: var(--scr-grip); text-align: center; }
@@ -160,8 +168,11 @@
   /* ── InlineBanner (verify notice · linking notice · auth-fail) ── */
   .ibanner { display: flex; align-items: flex-start; gap: 9px; padding: 11px 12px; margin: 0 0 14px; background: rgba(255,159,67,.09); border: 1px solid color-mix(in srgb, var(--scr-accent) 45%, transparent); }
   .ibanner.info { background: rgba(255,255,255,.05); border-color: var(--scr-hairline); }
-  .ibanner .ib-g { flex: 0 0 auto; margin-top: 1px; } .ibanner .ib-g svg { width: 17px; height: 17px; } .ibanner .ib-g svg path, .ibanner .ib-g svg circle { stroke: var(--scr-accent); fill: none; }
-  .ibanner.info .ib-g svg path, .ibanner.info .ib-g svg circle { stroke: var(--scr-soft); }
+  /* colour set on the SVG element so it inherits into the <use> shadow tree (descendant `path` selectors don't pierce <use>) — no more default-black glyphs */
+  .ibanner .ib-g { flex: 0 0 auto; margin-top: 1px; } .ibanner .ib-g svg { width: 17px; height: 17px; stroke: var(--scr-accent); fill: none; } .ibanner .ib-g svg path, .ibanner .ib-g svg circle { stroke: var(--scr-accent); fill: none; }
+  .ibanner.info .ib-g svg { stroke: var(--scr-soft); } .ibanner.info .ib-g svg path, .ibanner.info .ib-g svg circle { stroke: var(--scr-soft); }
+  /* the Apple mark is a FILLED silhouette, not line-art — give it a soft screen fill (never black) */
+  .ibanner .ib-g svg.applemark { fill: var(--scr-soft); stroke: none; }
   .ibanner .ib-tx { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .ibanner .ib-t { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
   .ibanner .ib-s { font: 500 9px/1.55 var(--pk); letter-spacing: .3px; color: var(--scr-soft); } .ibanner .ib-s b { color: var(--scr-text); }
@@ -174,9 +185,10 @@
 
   /* ── confirm seal (reset-sent · email-sent) ── */
   .seal-block { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 54px 22px 0; }
-  .seal { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; background: var(--scr-panel); border: 1px solid var(--scr-hairline); margin-bottom: 3px;
-    clip-path: polygon(0 5px, 3px 5px, 3px 3px, 5px 3px, 5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 3px) calc(100% - 5px), calc(100% - 3px) calc(100% - 3px), calc(100% - 5px) calc(100% - 3px), calc(100% - 5px) 100%, 0 100%); }
-  .seal svg { width: 32px; height: 32px; } .seal svg path, .seal svg rect, .seal svg circle { stroke: var(--scr-accent); fill: none; }
+  .seal { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; background: var(--scr-panel); border: 1px solid var(--scr-hairline); margin-bottom: 3px; }  /* full square — chrome is square (F-02); the step belongs to GameCards, not lifecycle chrome */
+  /* stroke/fill set on the svg itself so it INHERITS into the <use> shadow tree (descendant selectors
+     like `.seal svg path` do NOT cross the <use> boundary — that was leaving the glyphs solid-black). */
+  .seal svg { width: 32px; height: 32px; stroke: var(--scr-accent); fill: none; } .seal svg path, .seal svg rect, .seal svg circle { stroke: var(--scr-accent); fill: none; }
   .seal-eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
   .seal-title { font: 700 15px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
   .seal-sub { font: 500 11px/1.6 var(--pk); color: var(--scr-soft); max-width: 290px; } .seal-sub b { color: var(--scr-text); }
@@ -191,16 +203,22 @@
   /* ════════════ DRAFT B — GAMES-FORWARD LANDING HERO ════════════ */
   /* Replaces the W1/W1b mini-device hero. Leads with the catalog: a showcase of community-built
      GameCards + two SYSTEM-WIDE stat readouts + a contribution-inviting tagline. The auth form
-     still rides below. No on-screen GOLD (F-02): the stats/showcase/tagline are informational,
-     not acquisitive; every auth CTA stays orange/cream. Square on-screen chrome (F-07). */
+     still rides below. On-screen GOLD is reserved (F-02): the stats/tagline/CTAs stay orange/cream;
+     the sole on-screen gold is the card-artist credit (gold = card authorship, per collection card
+     backs). Square on-screen chrome (F-07). */
   .ghero { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 26px 6px 4px; }
   .ghero .wordmark { font: 400 34px var(--shell); letter-spacing: 8px; text-indent: 8px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); margin: 0 0 6px; }
   /* eyebrow — what InGame IS, F-06 9px */
   .ghero .eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-accent); margin: 0 0 14px; }
 
-  /* the catalog showcase — 3 real GameCards, NEVER cropped (F-01); cards keep their full 63/88 face.
-     Sized so three fit the 372px screen width with gaps. C5 stepped-diagonal chrome (F-02 step). */
-  .showcase { display: flex; gap: 8px; justify-content: center; align-items: flex-end; margin: 0 0 6px; }
+  /* the catalog showcase — rendered as the add-game `CardFan` (3-up: forefront full in the centre,
+     both neighbours genuinely visible but recessed a step lower + slightly rotated, z-under). Faces
+     never cropped (F-01) — the cards do not overlap. Geometry ported verbatim from add-game-states.html. */
+  .cfan { display: flex; justify-content: center; align-items: flex-start; padding: 4px 0 0; margin: 0 0 16px; }
+  .cfan .nb { position: relative; z-index: 1; flex: 0 0 auto; }
+  .cfan .nb.l { transform: rotate(-4deg) translateY(8px); margin-right: 5px; }
+  .cfan .nb.r { transform: rotate(4deg) translateY(8px); margin-left: 5px; }
+  .cfan .fore { position: relative; z-index: 2; flex: 0 0 auto; }
   .gcard { position: relative; box-sizing: border-box; flex: 0 0 auto; overflow: hidden; }
   .gcard .art { position: absolute; inset: 6px; overflow: hidden; }
   .gcard .art svg { width: 100%; height: 100%; display: block; }
@@ -229,17 +247,18 @@
       100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
   .gcard.show-size .plate { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
-  /* a "designed by a player" creator credit under the showcase — sells the user-built catalog */
+  /* a "designed by a player" creator credit under the showcase — sells the user-built catalog.
+     Artist handles render GOLD + all-caps — the card-authorship value cue, matching the collection
+     card-back CARD ARTIST credit (.cb-prov .p-name); the one sanctioned on-screen gold on this board. */
   .show-credit { font: 500 9px var(--pk); letter-spacing: .3px; color: var(--scr-dim); margin: 0 0 16px; }
-  .show-credit b { color: var(--scr-soft); font-weight: 700; }
+  .show-credit b { color: var(--gold); font-weight: 700; text-transform: uppercase; letter-spacing: .6px; }
 
   /* SYSTEM-WIDE StatTile pair — total catalog games + total hours across all users.
      Clean stat readout on the F-06 scale; NOT gold (these are aggregates, not the visitor's PIXELS). */
-  .sys-stats { display: flex; gap: 9px; width: 100%; box-sizing: border-box; margin: 0 0 6px; }
-  .stat-tile { flex: 1 1 0; background: var(--scr-well); border: 1px solid var(--scr-hairline); padding: 11px 10px 10px; text-align: center; }
-  .stat-tile .stat-num { font: 700 21px/1 var(--pk); letter-spacing: 1px; color: var(--scr-text); }
-  .stat-tile .stat-lbl { display: block; margin-top: 5px; font: 700 9px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
-  .sys-foot { font: 500 9px var(--pk); letter-spacing: .3px; color: var(--scr-grip); margin: 0 0 18px; }
+  .sys-stats { display: flex; gap: 9px; width: 100%; box-sizing: border-box; margin: 0 0 18px; }
+  .stat-tile { flex: 1 1 0; background: var(--scr-well); border: 1px solid var(--scr-hairline); padding: 8px 9px 7px; text-align: center; }
+  .stat-tile .stat-num { font: 700 15px/1 var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .stat-tile .stat-lbl { display: block; margin-top: 4px; font: 700 9px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
 
   /* the contribution-inviting catch line — embraces InGame as a USER-DRIVEN app */
   .invite { font: 600 11px/1.55 var(--pk); letter-spacing: .2px; color: var(--scr-soft); max-width: 300px; margin: 0 0 20px; }
@@ -253,8 +272,7 @@
 
   /* ── LoadError ── */
   .loaderr { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 9px; padding: 90px 24px 0; }
-  .le-badge { width: 66px; height: 66px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; border: 1.5px dashed color-mix(in srgb, var(--scr-accent) 62%, transparent); color: var(--scr-accent); font: 700 21px/1 var(--pk);
-    clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px), calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
+  .le-badge { width: 66px; height: 66px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; border: 1.5px dashed color-mix(in srgb, var(--scr-accent) 62%, transparent); color: var(--scr-accent); font: 700 21px/1 var(--pk); }  /* full square — chrome is square (F-02), no chipped corners */
   .le-t { font: 700 15px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
   .le-s { font: 500 11px/1.55 var(--pk); color: var(--scr-dim); max-width: 250px; }
   .le-retry { margin-top: 6px; border: none; background: var(--scr-accent); color: var(--scr-accent-ink); font: 700 11px var(--pk); letter-spacing: 1px; padding: 11px 24px;
@@ -262,7 +280,7 @@
 
   /* ── OfflineStrip + Toast ── */
   .offline-strip { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; margin: 0 16px 8px; padding: 8px 11px; background: var(--scr-panel); border: 1px solid var(--scr-hairline); font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
-  .offline-strip svg { width: 13px; height: 13px; flex: 0 0 auto; } .offline-strip svg path { stroke: var(--scr-dim); fill: none; }
+  .offline-strip svg { width: 13px; height: 13px; flex: 0 0 auto; stroke: var(--scr-dim); fill: none; } .offline-strip svg path { stroke: var(--scr-dim); fill: none; }
   .offline-strip .sync { margin-left: auto; font-weight: 600; letter-spacing: .5px; color: var(--scr-grip); }
   .toastb { display: flex; align-items: center; gap: 9px; padding: 11px 14px; background: var(--scr-well); border-bottom: 1px solid var(--scr-hairline); }
   .toastb .bang { flex: 0 0 auto; color: var(--scr-accent); font: 700 15px/1 var(--pk); }
@@ -272,7 +290,7 @@
   .toastb .t-key { margin-left: auto; background: var(--scr-accent); color: var(--scr-accent-ink); padding: 8px 11px; font: 700 11px var(--pk); letter-spacing: .5px; border: none; }
 
   /* ════ FLAT BUTTONS + SCANLINE ENERGIZE (F-03, locked 2026-06-18) ════ */
-  .kc, .apple, .ib-act, .le-retry, .toastb .t-key, .fh-key { box-shadow: none; }
+  .kc, .apple, .ib-act, .le-retry, .toastb .t-key { box-shadow: none; }
   /* press/active = scanline energize, no motion */
   .kc.primary:active, .kc.primary.is-pressed,
   .ib-act:active, .ib-act.is-pressed,
@@ -283,8 +301,7 @@
     background-color: color-mix(in srgb, var(--scr-accent) 88%, #000);
     background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, #0000 1px 2px);
   }
-  .kc.secondary:active, .kc.secondary.is-pressed,
-  .fh-key:active, .fh-key.is-pressed {
+  .kc.secondary:active, .kc.secondary.is-pressed {
     transform: none;
     background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
     background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px);
@@ -379,34 +396,34 @@
     <p><b>DRAFT B leads with the GAMES, not a mini-device.</b> The alternative direction to the current
     board (which leads with an on-screen mini-DEVICE hero). The W1/W1b landing now <b>sells what InGame IS</b>
     &mdash; a player-built catalog of games and custom cards &mdash; right from the logged-out front door: a
-    <b>showcase of real community-built `GameCard`s</b> (faces never cropped, F-01), <b>two system-wide stat
+    <b>`CardFan` of real community-built `GameCard`s</b> (the add-game 3-up fan; faces never cropped, F-01), <b>two system-wide stat
     readouts</b> (total games in the catalog + total hours logged across all players &mdash; framed as
     community aggregates, NOT the visitor's own), and a <b>contribution-inviting tagline</b> that makes the
     visitor feel invited to add their games and design their cards. <b>Everything else is UNCHANGED from the
     source board</b> &mdash; the sign-in-first form still rides below the hero on the landing, and W2&hellip;W11
     (create-account, username availability, SIWA linking, password reset, verify-email, Signal Lost, Offline)
-    plus the grayed/locked NavBand are carried verbatim. <b>No on-screen gold (F-02)</b>: the stats, showcase
-    and tagline are informational, not acquisitive; every auth CTA stays orange/cream. <b>No pink on any
+    plus the grayed/locked NavBand are carried verbatim. <b>Gold is reserved (F-02)</b>: the stats, showcase
+    and tagline stay orange/cream and CTAs stay orange &mdash; the only on-screen gold is the <b>card-artist
+    credit</b> (gold = card authorship, matching collection card backs). <b>No pink on any
     screen surface</b> (F-05) &mdash; pink is the physical shell LED only. Square on-screen chrome (F-07),
     F-06 type only (21/15/11/9), one font per surface (F-08). Composed from the &sect;1.5 catalog.</p>
   </div>
 
   <div class="matrix">
     <h2>State matrix &mdash; DRAFT B (games-forward landing)</h2>
-    <p><b>Entry / front door (games-forward landing):</b> landing = catalog showcase + system-wide stats + invite tagline, then the sign-in form + CREATE ACCOUNT/Apple secondary (iOS, W1) &middot; same hero, no SIWA (Android, W1b). FORGOT PASSWORD on the main landing. <span class="ok">&#10003;</span></p>
+    <p><b>Entry / front door (games-forward landing):</b> landing = catalog showcase + system-wide stats + invite tagline, then the Draft A sign-in form (SIGN IN primary &middot; compact Apple &middot; CREATE ACCOUNT footer link; iOS, W1) &middot; same hero, no SIWA (Android, W1b). FORGOT PASSWORD on the main landing. <span class="ok">&#10003;</span></p>
     <p><b>Create account (AUTH-01 · AUTH-10 · MOD-07):</b> the form + age-13/ToS acceptance (W2) &middot; live
     username availability, screened (W3) &middot; field validation incl. the <b>MOD-07 rejected-username</b> error (W4). <span class="ok">&#10003;</span></p>
-    <p><b>Sign in + Apple (AUTH-02/03/09):</b> the front-door sign-in lives on W1/W1b; W5 carries the <b>wrong-credentials</b> inline fail &middot; the <b>SIWA username-completion + account-linking</b> step (W6). <span class="ok">&#10003;</span></p>
-    <p><b>Password reset (AUTH-04):</b> request (W7) &middot; email-sent + set-new-password confirm (W8). <span class="ok">&#10003;</span></p>
-    <p><b>Post-signup + lifecycle:</b> the soft verify-email notice + resend (AUTH-08, W9) &middot; <b>Signal Lost</b>+RETRY (W10) &middot; <b>Offline</b> writes-gated (SYS-10, W11). <span class="ok">&#10003;</span></p>
-    <p class="rule"><b>Flagged for the owner (full list in the brief):</b> the two system-wide stats need a real data
-    source &mdash; a <b>PUBLIC (unauthenticated) aggregate-stats endpoint</b> exposing total-catalog-games +
-    total-hours-logged-across-users (new behaviour/API, needs a stable ID; logged to the inbox, NOT yet in any
-    shared doc) &middot; the <b>grayed-when-logged-out NavBand</b> is a new pattern owed to design-spec
-    formalization &middot; a debounced <b>username-availability endpoint</b> would make W3's live beat real
-    (drawn as desired-state) &middot; the AUTH-10 age gate is a <b>13+ acceptance assertion</b>, not a
-    birth-date control ("no birth-date in v2") &middot; the Apple button is the one token-exempt platform
-    control (HIG), like the system keyboard.</p>
+    <p><b>Sign in + Apple (AUTH-02/03/09 · SYS-05 · MOD-09):</b> the front-door sign-in lives on W1/W1b; W5 <b>wrong-credentials</b> &middot; W5b <b>rate-limited cooldown</b> (SYS-05) &middot; W5c <b>suspended / catch-all submit error</b> (MOD-09) &middot; W12 <b>submitting / in-flight</b> (no double-submit) &middot; the <b>SIWA username-completion + account-linking</b> step (W6). <span class="ok">&#10003;</span></p>
+    <p><b>Password reset (AUTH-04):</b> request (W7) &middot; link-sent confirm (W8a) &middot; set-new-password (W8b) &middot; <b>expired / used-link</b> sad path (W8c &rarr; loops to W7). <span class="ok">&#10003;</span></p>
+    <p><b>Post-signup + lifecycle (&sect;1.6):</b> the soft verify-email notice + resend (AUTH-08, W9) &middot; <b>Signal Lost</b>+RETRY (W10) &middot; <b>Offline</b> writes-gated (SYS-10, W11) &middot; <b>Skeleton</b> / first-paint cold open (W13). <span class="ok">&#10003;</span></p>
+    <p class="rule"><b>Formalized since the first pass (decision 0029, 2026-06-25):</b> the two system-wide stats
+    ride a <b>PUBLIC aggregate-stats endpoint</b> &mdash; now <b>SYS-12</b> (product-spec + `GET /stats/public`,
+    api 0.26) &middot; the live username beat is backed by <b>AUTH-11</b> (`GET /auth/username-available`, advisory
+    pre-check; authoritative at register / `PATCH /me`) &middot; the <b>grayed-when-logged-out NavBand</b> is the
+    catalog <b>`NavKeycap /locked`</b> pattern (design-spec &sect;1.5 + &sect;2.13). <b>Token-exempt by rule:</b>
+    the AUTH-10 age gate is a <b>13+ acceptance assertion</b>, not a birth-date control ("no birth-date in v2")
+    &middot; the Apple button is the one HIG-mandated platform control, like the system keyboard.</p>
   </div>
 
   <!-- ════════════════════ STAGE 1 — ENTRY ════════════════════ -->
@@ -425,34 +442,29 @@
               <div class="ghero">
                 <div class="wordmark">INGAME</div>
                 <div class="eyebrow">A PLAYER-BUILT GAME CATALOG</div>
-                <div class="showcase">
-                  <div class="gcard show-size fr-ratchet"><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet</div></div>
-                  <div class="gcard show-size feat fr-destiny"><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
-                  <div class="gcard show-size fr-minecraft"><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
+                <div class="cfan">
+                  <div class="nb l"><div class="gcard show-size fr-ratchet"><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet</div></div></div>
+                  <div class="fore"><div class="gcard show-size feat fr-destiny"><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div></div>
+                  <div class="nb r"><div class="gcard show-size fr-minecraft"><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div></div>
                 </div>
-                <div class="show-credit">Cards above designed by <b>@retroratchet</b>, <b>@vaultdweller</b> &amp; <b>@blockcraft</b></div>
+                <div class="show-credit">Cards above designed by <b>retroratchet</b>, <b>vaultdweller</b> &amp; <b>blockcraft</b></div>
                 <div class="sys-stats">
-                  <div class="stat-tile"><span class="stat-num">12,840</span><span class="stat-lbl">GAMES IN THE CATALOG</span></div>
+                  <div class="stat-tile"><span class="stat-num">12,840</span><span class="stat-lbl">GAMES CATALOGED</span></div>
                   <div class="stat-tile"><span class="stat-num">2.3M</span><span class="stat-lbl">HOURS LOGGED</span></div>
-                </div>
-                <div class="sys-foot">Community totals across every player &mdash; and growing.</div>
-                <div class="invite">Built by players, for players. <b>Add your games, design your cards</b>, and the catalog grows with you. Make an account to start your cabinet.</div>
+                </div>                <div class="invite">Built by players, for players. <b>Add your games, design your cards</b>, and the catalog grows with you.</div>
               </div>
               <div style="padding:0 4px;">
                 <div class="field"><span class="flabel">EMAIL</span><div class="input"><span class="val">aiden@ingame.app</span><span class="caret"></span></div></div>
-                <div class="field"><span class="flabel">PASSWORD</span><div class="input"><span class="val">&bull;&bull;&bull;&bull;&bull;&bull;</span><span class="reveal">SHOW</span></div></div>
-                <div style="text-align:right; margin:-4px 2px 12px;"><button class="tlink">FORGOT PASSWORD?</button></div>
+                <div class="field"><div class="flabel-row"><span class="flabel">PASSWORD</span><button class="tlink mini">FORGOT?</button></div><div class="input"><span class="val">&bull;&bull;&bull;&bull;&bull;&bull;</span><span class="reveal">SHOW</span></div></div>
                 <button class="kc primary">SIGN IN</button>
-                <div class="ordiv"><span class="ln"></span><span class="or">OR</span><span class="ln"></span></div>
-                <button class="kc secondary">CREATE ACCOUNT</button>
-                <button class="apple"><svg viewBox="0 0 24 24"><use href="#apple"/></svg>Sign in with Apple</button>
+                <div class="ordiv"><span class="ln"></span><span class="or">OR CONTINUE WITH</span><span class="ln"></span></div>
+                <div class="apple-row"><button class="apple compact"><svg viewBox="0 0 24 24"><use href="#apple"/></svg>Sign in with Apple</button></div>
+                <div class="swap-foot">New to InGame?<button class="tlink">CREATE ACCOUNT</button></div>
                 <div class="footnote">By continuing you confirm you're <b style="color:var(--scr-soft)">13 or older</b> and agree to our Terms &amp; Privacy Policy.</div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="nav-lock-note">SIGN IN TO UNLOCK</div>
-        <div class="nav-band locked">
+        </div>        <div class="nav-band locked">
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
           <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
@@ -462,15 +474,19 @@
       </div>
       <div class="caption">
         <h3>W1 &mdash; games-forward landing <em>(iOS)</em></h3>
-        <p><b>DRAFT B leads with the catalog.</b> Above the fold: a <b>showcase of three real community-built
-        `GameCard`s</b> (full faces, never cropped &mdash; F-01; stepped-diagonal silhouette, F-02), a
-        <b>"designed by @player"</b> credit, and <b>two system-wide `StatTile`s</b> &mdash; GAMES IN THE CATALOG
+        <p><b>DRAFT B leads with the catalog.</b> Above the fold: a <b>`CardFan` of three real community-built
+        `GameCard`s</b> (the add-game 3-up fan &mdash; forefront centred, two neighbours fanned &amp; recessed;
+        full faces, never cropped &mdash; F-01; stepped-diagonal silhouette, F-02), a
+        <b>"designed by @player"</b> credit, and <b>two system-wide `StatTile`s</b> &mdash; GAMES CATALOGED
         (12,840) + HOURS LOGGED (2.3M), framed as community totals, NOT the visitor's own. A
         contribution-inviting tagline (<i>"add your games, design your cards"</i>) sells InGame as user-driven.
-        <b>The sign-in form still rides below</b> &mdash; EMAIL + PASSWORD `TextField`s, FORGOT PASSWORD?, the
-        orange <b>SIGN IN</b> keycap, then CREATE ACCOUNT + iOS <b>Sign in with Apple</b> under an OR divider.
-        No gold on screen (F-02) &mdash; stats/showcase are informational, CTAs stay orange/cream. The real
-        NavBand sits at the bottom, <b>grayed + locked</b> ("SIGN IN TO UNLOCK"), keys physical 3D (F-03).</p>
+        <b>The sign-in form still rides below</b> (Draft A &mdash; declunked) &mdash; EMAIL + PASSWORD
+        `TextField`s with <b>FORGOT? inline</b> on the password label, the orange <b>SIGN IN</b> as the lone
+        full-width primary, a <b>compact Sign in with Apple</b> under OR CONTINUE WITH, and <b>CREATE ACCOUNT</b>
+        demoted to a "New to InGame?" footer link &mdash; no more three-button wall.
+        Gold is reserved (F-02) &mdash; the <b>card-artist credit</b> goes gold + all-caps (card authorship,
+        like collection card backs); stats/CTAs stay orange/cream. The real
+        NavBand sits at the bottom, <b>grayed + locked</b>, keys physical 3D (F-03).</p>
       </div>
     </div>
 
@@ -486,33 +502,27 @@
               <div class="ghero">
                 <div class="wordmark">INGAME</div>
                 <div class="eyebrow">A PLAYER-BUILT GAME CATALOG</div>
-                <div class="showcase">
-                  <div class="gcard show-size fr-marathon"><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
-                  <div class="gcard show-size feat fr-re"><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-marathon">Resident Evil</div></div>
-                  <div class="gcard show-size fr-destiny"><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="cfan">
+                  <div class="nb l"><div class="gcard show-size fr-marathon"><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div></div>
+                  <div class="fore"><div class="gcard show-size feat fr-re"><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-marathon">Resident Evil</div></div></div>
+                  <div class="nb r"><div class="gcard show-size fr-destiny"><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div></div>
                 </div>
-                <div class="show-credit">Cards above designed by <b>@cabinetcurator</b>, <b>@s.t.a.r.s</b> &amp; <b>@guardian</b></div>
+                <div class="show-credit">Cards above designed by <b>cabinetcurator</b>, <b>s.t.a.r.s</b> &amp; <b>guardian</b></div>
                 <div class="sys-stats">
-                  <div class="stat-tile"><span class="stat-num">12,840</span><span class="stat-lbl">GAMES IN THE CATALOG</span></div>
+                  <div class="stat-tile"><span class="stat-num">12,840</span><span class="stat-lbl">GAMES CATALOGED</span></div>
                   <div class="stat-tile"><span class="stat-num">2.3M</span><span class="stat-lbl">HOURS LOGGED</span></div>
-                </div>
-                <div class="sys-foot">Community totals across every player &mdash; and growing.</div>
-                <div class="invite">Built by players, for players. <b>Add your games, design your cards</b>, and the catalog grows with you. Make an account to start your cabinet.</div>
+                </div>                <div class="invite">Built by players, for players. <b>Add your games, design your cards</b>, and the catalog grows with you.</div>
               </div>
               <div style="padding:0 4px;">
                 <div class="field"><span class="flabel">EMAIL</span><div class="input"><span class="val">aiden@ingame.app</span><span class="caret"></span></div></div>
-                <div class="field"><span class="flabel">PASSWORD</span><div class="input"><span class="val">&bull;&bull;&bull;&bull;&bull;&bull;</span><span class="reveal">SHOW</span></div></div>
-                <div style="text-align:right; margin:-4px 2px 12px;"><button class="tlink">FORGOT PASSWORD?</button></div>
+                <div class="field"><div class="flabel-row"><span class="flabel">PASSWORD</span><button class="tlink mini">FORGOT?</button></div><div class="input"><span class="val">&bull;&bull;&bull;&bull;&bull;&bull;</span><span class="reveal">SHOW</span></div></div>
                 <button class="kc primary">SIGN IN</button>
-                <div class="ordiv"><span class="ln"></span><span class="or">OR</span><span class="ln"></span></div>
-                <button class="kc secondary">CREATE ACCOUNT</button>
+                <div class="swap-foot">New to InGame?<button class="tlink">CREATE ACCOUNT</button></div>
                 <div class="footnote">By continuing you confirm you're <b style="color:var(--scr-soft)">13 or older</b> and agree to our Terms &amp; Privacy Policy.</div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="nav-lock-note">SIGN IN TO UNLOCK</div>
-        <div class="nav-band locked">
+        </div>        <div class="nav-band locked">
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
           <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
@@ -523,8 +533,9 @@
       <div class="caption">
         <h3>W1b &mdash; games-forward landing <em>(Android · the platform fork)</em></h3>
         <p><b>The AUTH-03 platform fork, made explicit.</b> Identical games-forward hero (a different trio of
-        community cards, same system-wide stats + invite) and the same sign-in form below &mdash; but the
-        <b>Sign in with Apple button is gone</b> (the OR divider now leads only to CREATE ACCOUNT). Android
+        community cards, same system-wide stats + invite) and the same Draft A sign-in form below &mdash; but
+        <b>Sign in with Apple is gone</b> (and with it the OR CONTINUE WITH row): just <b>SIGN IN</b> + the
+        "New to InGame? CREATE ACCOUNT" footer link. Android
         registers <b>email + password only</b> in v2; Google Sign-In is parked (&sect;10). Same grayed,
         locked NavBand. This is the one structural difference between the two platforms' landings, so it's
         drawn as its own artboard.</p>
@@ -534,7 +545,7 @@
   </div>
 
   <!-- ════════════════════ STAGE 2 — CREATE ACCOUNT ════════════════════ -->
-  <div class="stage-label">Stage 2 &mdash; Create account (AUTH-01 · AUTH-10 · MOD-07) <small>W2 the form + the age-13 / ToS&amp;Privacy acceptance block (AUTH-10) &middot; W3 live username availability (screened, MOD-07) &middot; W4 field validation incl. the MOD-07 rejected-username error. FlowHeader &#9666; returns to W1.</small></div>
+  <div class="stage-label">Stage 2 &mdash; Create account (AUTH-01 · AUTH-10 · MOD-07) <small>W2 the form + the age-13 / ToS&amp;Privacy acceptance block (AUTH-10) &middot; W3 live username availability (screened, MOD-07) &middot; W4 field validation incl. the MOD-07 rejected-username error. The &lsaquo; RETURN TO SIGN IN link returns to the landing.</small></div>
   <div class="stage">
 
     <!-- ═══ W2 · create account resting ═══ -->
@@ -545,7 +556,8 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>CREATE ACCOUNT</h2></div>
+            <div class="screen-head"><h2>CREATE ACCOUNT</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO SIGN IN</a>
             <div class="scroll">
               <div class="page-intro">Make your cabinet. You'll pick a few games next &mdash; this takes about a minute.</div>
               <div class="field"><span class="flabel">EMAIL</span><div class="input"><span class="val">aiden@ingame.app</span><span class="caret"></span></div></div>
@@ -559,9 +571,7 @@
               <div class="swap-foot">Already have one?<button class="tlink">SIGN IN</button></div>
             </div>
           </div>
-        </div>
-        <div class="nav-lock-note">SIGN IN TO UNLOCK</div>
-        <div class="nav-band locked">
+        </div>        <div class="nav-band locked">
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
           <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
@@ -588,7 +598,8 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>CREATE ACCOUNT</h2></div>
+            <div class="screen-head"><h2>CREATE ACCOUNT</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO SIGN IN</a>
             <div class="scroll">
               <div class="page-intro">Make your cabinet. You'll pick a few games next &mdash; this takes about a minute.</div>
               <div class="field"><span class="flabel">EMAIL</span><div class="input"><span class="val">aiden@ingame.app</span></div></div>
@@ -599,9 +610,7 @@
               <button class="kc primary">CREATE ACCOUNT</button>
             </div>
           </div>
-        </div>
-        <div class="nav-lock-note">SIGN IN TO UNLOCK</div>
-        <div class="nav-band locked">
+        </div>        <div class="nav-band locked">
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
           <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
@@ -614,8 +623,8 @@
         <p><b>Username entry routes through MOD-07 screening.</b> Two cells of the live beat shown stacked:
         the <b>CHECKING</b> state (debounced spinner) and the <b>AVAILABLE</b> state (the input gains a
         `brand.success` hairline + a green &#10003; AVAILABLE; the hint confirms it "passed our name check").
-        Availability + screening run together server-side (MOD-07). <i>Drawn as desired-state &mdash; a debounced
-        `GET /auth/username-available` would back this without a failed register round-trip (flagged for the inbox).</i></p>
+        Availability + screening run together server-side (MOD-07). <i>Backed by <b>AUTH-11</b> &mdash; the debounced
+        public `GET /auth/username-available` pre-check (advisory; authoritative at register / `PATCH /me`), decision 0029.</i></p>
       </div>
     </div>
 
@@ -627,7 +636,8 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>CREATE ACCOUNT</h2></div>
+            <div class="screen-head"><h2>CREATE ACCOUNT</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO SIGN IN</a>
             <div class="scroll">
               <div class="field"><span class="flabel">EMAIL</span><div class="input err"><span class="val">aiden@ingame.app</span></div><span class="ferr">THAT EMAIL ALREADY HAS AN ACCOUNT &mdash; SIGN IN INSTEAD?</span></div>
               <div class="field"><span class="flabel">USERNAME</span><div class="input err"><span class="val">@xXsl4yer666</span><span class="caret"></span><span class="stat bad">&#10005; NOT ALLOWED</span></div><span class="ferr">THAT USERNAME ISN'T ALLOWED &mdash; PICK ANOTHER. (NAMES ARE SCREENED FOR EVERYONE.)</span></div>
@@ -637,9 +647,7 @@
               <div class="fhint" style="text-align:center; margin-top:2px;">Accept the terms to continue.</div>
             </div>
           </div>
-        </div>
-        <div class="nav-lock-note">SIGN IN TO UNLOCK</div>
-        <div class="nav-band locked">
+        </div>        <div class="nav-band locked">
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
           <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
@@ -661,7 +669,7 @@
   </div>
 
   <!-- ════════════════════ STAGE 3 — SIGN IN + APPLE ════════════════════ -->
-  <div class="stage-label">Stage 3 &mdash; Sign in + Apple (AUTH-02 · AUTH-03 · AUTH-09) <small>The sign-in form now lives on the W1/W1b landing (front door); W5 shows that same form in its AUTH-02 <b>wrong-credentials</b> error beat &middot; W6 the AUTH-09 first-Apple username-completion step (+ the account-linking variant). Logout is NOT here &mdash; it lives in Settings (&sect;4.13).</small></div>
+  <div class="stage-label">Stage 3 &mdash; Sign in + Apple (AUTH-02 · AUTH-03 · AUTH-09 · SYS-05 · MOD-09) <small>The sign-in form now lives on the W1/W1b landing (front door); W5 the AUTH-02 <b>wrong-credentials</b> beat &middot; <b>W5b</b> the SYS-05 <b>rate-limited cooldown</b> (calm, auto-clears) &middot; <b>W5c</b> the MOD-09 <b>suspended / catch-all submit error</b> &middot; W6 the AUTH-09 first-Apple username-completion (+ the account-linking variant). Logout is NOT here &mdash; it lives in Settings (&sect;4.15).</small></div>
   <div class="stage">
 
     <!-- ═══ W5 · sign in ═══ -->
@@ -676,17 +684,14 @@
             <div class="scroll">
               <div class="authfail"><span class="bang">&#9888;</span><span class="af-t">EMAIL OR PASSWORD DON'T MATCH &mdash; TRY AGAIN</span></div>
               <div class="field"><span class="flabel">EMAIL</span><div class="input"><span class="val">aiden@ingame.app</span></div></div>
-              <div class="field"><span class="flabel">PASSWORD</span><div class="input"><span class="val">&bull;&bull;&bull;&bull;&bull;&bull;</span><span class="caret"></span><span class="reveal">SHOW</span></div></div>
-              <div style="text-align:right; margin:-2px 2px 14px;"><button class="tlink">FORGOT PASSWORD?</button></div>
+              <div class="field"><div class="flabel-row"><span class="flabel">PASSWORD</span><button class="tlink mini">FORGOT?</button></div><div class="input"><span class="val">&bull;&bull;&bull;&bull;&bull;&bull;</span><span class="caret"></span><span class="reveal">SHOW</span></div></div>
               <button class="kc primary">SIGN IN</button>
-              <div class="ordiv"><span class="ln"></span><span class="or">OR</span><span class="ln"></span></div>
-              <button class="kc secondary">CREATE ACCOUNT</button>
-              <button class="apple"><svg viewBox="0 0 24 24"><use href="#apple"/></svg>Sign in with Apple</button>
+              <div class="ordiv"><span class="ln"></span><span class="or">OR CONTINUE WITH</span><span class="ln"></span></div>
+              <div class="apple-row"><button class="apple compact"><svg viewBox="0 0 24 24"><use href="#apple"/></svg>Sign in with Apple</button></div>
+              <div class="swap-foot">New to InGame?<button class="tlink">CREATE ACCOUNT</button></div>
             </div>
           </div>
-        </div>
-        <div class="nav-lock-note">SIGN IN TO UNLOCK</div>
-        <div class="nav-band locked">
+        </div>        <div class="nav-band locked">
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
           <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
@@ -698,11 +703,80 @@
         <h3>W5 &mdash; wrong credentials <em>(AUTH-02 · the auth-fail beat)</em></h3>
         <p><b>The landing sign-in form, in its error state.</b> Since the front door (W1) already carries the
         sign-in form, W5 is no longer a separate page &mdash; it's the <b>wrong-credentials beat</b> of that same
-        form (no FlowHeader; it's the root). The fail is a calm inline strip at the top (alert-tinted, plain
+        form (no back link; it's the root). The fail is a calm inline strip at the top (alert-tinted, plain
         words) &mdash; <b>deliberately not field-level</b> (we don't say <i>which</i> was wrong, an auth
-        convention), and not a toast. Same FORGOT PASSWORD → W7, CREATE ACCOUNT + Apple secondaries. Rides
+        convention), and not a toast. Same Draft A block: the inline FORGOT? → W7, compact Apple, CREATE ACCOUNT footer link. Rides
         `POST /auth/login`; a suspended account returns `ACCOUNT_SUSPENDED` (MOD-09) which would surface the same
         calm strip with its reason.</p>
+      </div>
+    </div>
+
+    <!-- ═══ W5b · rate-limited / cooldown (SYS-05) ═══ -->
+    <div class="take">
+      <div class="artboard-label">W5b · landing sign-in — rate-limited / cooldown (SYS-05)</div>
+      <div class="device" data-screen-label="Welcome · W5b — too many attempts">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><h2>SIGN IN</h2></div>
+            <div class="scroll">
+              <div class="ibanner"><span class="ib-g"><svg viewBox="0 0 15 15"><use href="#lock"/></svg></span><span class="ib-tx"><span class="ib-t">TOO MANY ATTEMPTS</span><span class="ib-s">For your security, sign-in is paused for a moment. <b>Try again in a few minutes</b> &mdash; it clears on its own.</span></span></div>
+              <div class="field"><span class="flabel">EMAIL</span><div class="input"><span class="val">aiden@ingame.app</span></div></div>
+              <div class="field"><div class="flabel-row"><span class="flabel">PASSWORD</span><button class="tlink mini">FORGOT?</button></div><div class="input"><span class="val">&bull;&bull;&bull;&bull;&bull;&bull;</span><span class="caret"></span><span class="reveal">SHOW</span></div></div>
+              <button class="kc primary disabled">SIGN IN</button>
+              <div class="ordiv"><span class="ln"></span><span class="or">OR CONTINUE WITH</span><span class="ln"></span></div>
+              <div class="apple-row"><button class="apple compact"><svg viewBox="0 0 24 24"><use href="#apple"/></svg>Sign in with Apple</button></div>
+              <div class="swap-foot">New to InGame?<button class="tlink">CREATE ACCOUNT</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band locked">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>W5b &mdash; too many attempts <em>(SYS-05 · the cooldown beat)</em></h3>
+        <p><b>The landing sign-in form, throttled.</b> After repeated failed sign-ins the server returns a <b>429</b> (SYS-05 rate-limit) &mdash; distinct from W5's per-attempt wrong-credentials <b>401</b> and from W10's network <b>5xx</b> Signal Lost. So it stays the <i>same focused SIGN IN form</i> (no back link; it's the root), but the top strip is a <b>calm cooldown notice</b>, not an error: the orange `InlineBanner` (warning variant) &mdash; same inline-strip grammar as W5's auth-fail, deliberately <b>not</b> red, since a throttle isn't a genuine error. Plain words: it's paused for a moment and <b>auto-clears after the cooldown</b>. The <b>SIGN IN</b> primary gates (`disabled`) while it counts down; <b>FORGOT?</b> stays live (a forgotten password is the likely fix), as do the compact Apple + CREATE ACCOUNT routes. Rides `POST /auth/login` returning the SYS-05 throttle.</p>
+      </div>
+    </div>
+
+    <!-- ═══ W5c · suspended / server error (MOD-09 + catch-all) ═══ -->
+    <div class="take">
+      <div class="artboard-label">W5c · sign-in — account suspended / server error (MOD-09 + catch-all)</div>
+      <div class="device" data-screen-label="Welcome · W5c — account suspended">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><h2>SIGN IN</h2></div>
+            <div class="scroll">
+              <div class="authfail"><span class="bang">&#9888;</span><span class="af-t">THIS ACCOUNT IS SUSPENDED &mdash; CONTACT SUPPORT</span></div>
+              <div class="field"><span class="flabel">EMAIL</span><div class="input"><span class="val">aiden@ingame.app</span></div></div>
+              <div class="field"><div class="flabel-row"><span class="flabel">PASSWORD</span><button class="tlink mini">FORGOT?</button></div><div class="input"><span class="val">&bull;&bull;&bull;&bull;&bull;&bull;</span><span class="caret"></span><span class="reveal">SHOW</span></div></div>
+              <button class="kc primary">SIGN IN</button>
+              <div class="ordiv"><span class="ln"></span><span class="or">OR CONTINUE WITH</span><span class="ln"></span></div>
+              <div class="apple-row"><button class="apple compact"><svg viewBox="0 0 24 24"><use href="#apple"/></svg>Sign in with Apple</button></div>
+              <div class="swap-foot">New to InGame?<button class="tlink">CREATE ACCOUNT</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band locked">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>W5c &mdash; account suspended / server error <em>(MOD-09 &middot; the catch-all submit error)</em></h3>
+        <p><b>The suspended-account terminal that W5 promised &mdash; and the home for generic non-credential submit errors.</b> Same root SIGN IN form as W5 (no back link), but the inline `authfail` strip carries the <b>reason</b> instead of the wrong-credentials line: a suspended account returns <b>`ACCOUNT_SUSPENDED`</b> (MOD-09) and surfaces here with plain, non-alarmist words and a <b>CONTACT SUPPORT</b> direction. The SIGN IN primary stays <b>enabled</b> so support can re-try once the account is cleared.</p>
+        <p><b>Routing (so build isn't guessing):</b> a <b>terminal/blocked</b> outcome &mdash; suspended (MOD-09), or a generic <b>500 that returns <i>after</i> validation</b> (the request reached the server and was rejected) &mdash; collapses to <b>this same calm strip</b>, reason-first. A <b>retryable transport</b> failure (the request never landed &mdash; timeout, offline mid-submit, service unreachable) routes to <b>W10 Signal Lost + RETRY</b> instead. Rule of thumb: <i>got an answer we can't act on &rarr; here; couldn't get an answer &rarr; W10</i>.</p>
       </div>
     </div>
 
@@ -714,17 +788,16 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>PICK A USERNAME</h2></div>
+            <div class="screen-head"><h2>PICK A USERNAME</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO SIGN IN</a>
             <div class="scroll">
-              <div class="ibanner info"><span class="ib-g"><svg viewBox="0 0 15 15"><use href="#apple" /></svg></span><span class="ib-tx"><span class="ib-t">SIGNED IN WITH APPLE</span><span class="ib-s">One last step before your cabinet &mdash; <b>choose how friends will find you</b>. We never post anything to Apple.</span></span></div>
+              <div class="ibanner info"><span class="ib-g"><svg viewBox="0 0 15 15" class="applemark"><use href="#apple" /></svg></span><span class="ib-tx"><span class="ib-t">SIGNED IN WITH APPLE</span><span class="ib-s">One last step before your cabinet &mdash; <b>choose how friends will find you</b>. We never post anything to Apple.</span></span></div>
               <div class="field"><span class="flabel">USERNAME &mdash; AVAILABLE</span><div class="input ok"><span class="val">@pixelpilgrim</span><span class="caret"></span><span class="stat ok"><svg viewBox="0 0 24 24" width="12" height="12"><use href="#check" stroke="#2c8a5a"/></svg>AVAILABLE</span></div><span class="fhint">Screened for everyone (MOD-07). You can change it later.</span></div>
               <button class="kc primary">ENTER INGAME</button>
               <div class="ibanner" style="margin-top:16px;"><span class="ib-g"><svg viewBox="0 0 15 15"><use href="#link"/></svg></span><span class="ib-tx"><span class="ib-t">VARIANT &mdash; ACCOUNT LINKED</span><span class="ib-s">If your Apple email <b>matches an account you already made</b>, we <b>link Apple to it</b> instead &mdash; one account, two ways in. This step is skipped; you go straight to your cabinet (AUTH-09).</span></span></div>
             </div>
           </div>
-        </div>
-        <div class="nav-lock-note">SIGN IN TO UNLOCK</div>
-        <div class="nav-band locked">
+        </div>        <div class="nav-band locked">
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
           <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
@@ -746,7 +819,7 @@
   </div>
 
   <!-- ════════════════════ STAGE 4 — PASSWORD RESET ════════════════════ -->
-  <div class="stage-label">Stage 4 &mdash; Password reset (AUTH-04) <small>W7 request (enter email → send link) &middot; W8 the email-sent confirm beat, then the set-new-password panel reached from the emailed link (`POST /auth/password-reset/confirm`).</small></div>
+  <div class="stage-label">Stage 4 &mdash; Password reset (AUTH-04) <small>W7 request (enter email → send link) &middot; W8a the link-sent confirm beat &middot; W8b the set-new-password panel reached from the emailed link (`POST /auth/password-reset/confirm`) &middot; <b>W8c</b> the <b>expired / already-used link</b> sad path (loops back to W7) &mdash; split so each beat is one clear screen.</small></div>
   <div class="stage">
 
     <!-- ═══ W7 · reset request ═══ -->
@@ -757,7 +830,8 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>RESET PASSWORD</h2></div>
+            <div class="screen-head"><h2>RESET PASSWORD</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO SIGN IN</a>
             <div class="scroll">
               <div class="page-intro">Enter the email on your account and we'll send a link to set a new password.</div>
               <div class="field"><span class="flabel">EMAIL</span><div class="input"><span class="val">aiden@ingame.app</span><span class="caret"></span></div></div>
@@ -765,9 +839,7 @@
               <div class="swap-foot">Remembered it?<button class="tlink">SIGN IN</button></div>
             </div>
           </div>
-        </div>
-        <div class="nav-lock-note">SIGN IN TO UNLOCK</div>
-        <div class="nav-band locked">
+        </div>        <div class="nav-band locked">
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
           <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
@@ -785,32 +857,64 @@
 
     <!-- ═══ W8 · email sent + set new password ═══ -->
     <div class="take">
-      <div class="artboard-label">W8 · reset — sent confirm + set-new-password</div>
-      <div class="device" data-screen-label="Welcome · W8 — reset confirm">
+      <div class="artboard-label">W8a · reset — link sent (confirm)</div>
+      <div class="device" data-screen-label="Welcome · W8a — reset link sent">
         <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>RESET PASSWORD</h2></div>
+            <div class="screen-head"><h2>RESET PASSWORD</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO SIGN IN</a>
             <div class="scroll">
-              <div class="seal-block" style="padding-top:30px;">
+              <div class="seal-block" style="padding-top:64px;">
                 <div class="seal"><svg viewBox="0 0 24 24" width="32" height="32"><use href="#mailsent"/></svg></div>
                 <span class="seal-eyebrow">CHECK YOUR INBOX</span>
                 <span class="seal-title">LINK SENT</span>
-                <span class="seal-sub">We sent a reset link to <b>aiden@ingame.app</b>. It expires in an hour. Didn't get it?</span>
-                <button class="ib-act" style="margin-top:4px;">RESEND LINK</button>
+                <span class="seal-sub">We sent a reset link to <b>aiden@ingame.app</b>. It expires in an hour.</span>
+                <button class="tlink" style="margin-top:6px;">Didn't get it? RESEND LINK</button>
               </div>
-              <div class="sec" style="margin-top:24px;"><h3>&hellip; THEN, FROM THE LINK</h3></div>
-              <div class="seal-block" style="padding-top:6px; gap:6px;">
+            </div>
+          </div>
+        </div>        <div class="nav-band locked">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>W8a &mdash; reset link sent <em>(AUTH-04 · the confirm beat)</em></h3>
+        <p><b>One clear moment: the link is on its way.</b> The calm <b>LINK SENT</b> seal &mdash; an
+        <b>envelope-with-sent-check</b> (unambiguously "reset link sent"), plain copy, and <b>RESEND</b> as a
+        quiet <b>"Didn't get it?" tertiary link</b> (not a loud button) &mdash; the same confirm grammar as the
+        AUTH-08 verify notice (W9). Reached from W7's SEND RESET LINK; tapping the link in the email opens
+        <b>W8b</b>. Both reset glyphs are Chakra/SVG line marks, accent-stroked (F-06).</p>
+      </div>
+    </div>
+
+    <!-- ═══ W8b · set a new password (from the email link) ═══ -->
+    <div class="take">
+      <div class="artboard-label">W8b · reset — set a new password</div>
+      <div class="device" data-screen-label="Welcome · W8b — set new password">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><h2>RESET PASSWORD</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO SIGN IN</a>
+            <div class="scroll">
+              <div class="seal-block" style="padding-top:40px;">
                 <div class="seal"><svg viewBox="0 0 24 24" width="32" height="32"><use href="#key"/></svg></div>
-                <span class="seal-eyebrow">SET A NEW PASSWORD</span>
+                <span class="seal-eyebrow">FROM YOUR EMAIL LINK</span>
+                <span class="seal-title">SET A NEW PASSWORD</span>
+                <span class="seal-sub">Almost done &mdash; choose a new password for <b>aiden@ingame.app</b>.</span>
               </div>
-              <div class="field" style="margin-top:10px;"><span class="flabel">NEW PASSWORD</span><div class="input"><span class="val">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</span><span class="caret"></span><span class="reveal">SHOW</span></div><span class="fhint">At least 8 characters.</span></div>
+              <div class="field" style="margin-top:22px;"><span class="flabel">NEW PASSWORD</span><div class="input"><span class="val">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</span><span class="caret"></span><span class="reveal">SHOW</span></div><span class="fhint">At least 8 characters.</span></div>
               <button class="kc primary">SET PASSWORD &amp; SIGN IN</button>
             </div>
           </div>
         </div>
-        <div class="nav-lock-note">SIGN IN TO UNLOCK</div>
         <div class="nav-band locked">
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
           <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
@@ -820,22 +924,61 @@
         </div>
       </div>
       <div class="caption">
-        <h3>W8 &mdash; sent + confirm <em>(AUTH-04 · the two beats)</em></h3>
-        <p><b>Both reset beats on one artboard, each with its own clear glyph.</b> Top: the calm <b>LINK SENT</b>
-        seal &mdash; an <b>envelope-with-sent-check</b> (unambiguously "reset link sent"), plain copy, a
-        <b>RESEND LINK</b> &mdash; the same confirm grammar as the AUTH-08 notice, never an alarm. Below the
-        divider: the <b>set-new-password</b> panel reached <i>from the emailed link</i>, now led by a <b>key
-        glyph</b> + SET A NEW PASSWORD eyebrow, then a NEW PASSWORD `TextField` + <b>SET PASSWORD &amp; SIGN
-        IN</b>, riding `POST /auth/password-reset/confirm {token, password}`. (In product these are two arrivals;
-        shown together so the flow reads in one frame.) Both glyphs are Chakra/SVG line marks on the F-06 scale,
-        accent-stroked.</p>
+        <h3>W8b &mdash; set a new password <em>(AUTH-04 · from the email link)</em></h3>
+        <p><b>The second, separate arrival.</b> Opened by tapping the reset link in the email &mdash; a <b>key</b>
+        seal + SET A NEW PASSWORD, then a NEW PASSWORD `TextField` + <b>SET PASSWORD &amp; SIGN IN</b>, riding
+        `POST /auth/password-reset/confirm {token, password}`. Split out from the old combined W8 so each beat is
+        <b>one clear screen</b> (genuinely two arrivals at two different times).</p>
+      </div>
+    </div>
+
+    <!-- ═══ W8c · reset link expired / used (AUTH-04 sad path) ═══ -->
+    <div class="take">
+      <div class="artboard-label">W8c · reset — link expired / already used</div>
+      <div class="device" data-screen-label="Welcome · W8c — reset link expired">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><h2>RESET PASSWORD</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO SIGN IN</a>
+            <div class="scroll">
+              <div class="seal-block">
+                <div class="seal"><svg viewBox="0 0 15 15" width="32" height="32"><use href="#warn"/></svg></div>
+                <span class="seal-eyebrow">LINK EXPIRED</span>
+                <span class="seal-title">THIS LINK HAS EXPIRED</span>
+                <span class="seal-sub">Reset links last an hour and can only be used once.</span>
+              </div>
+              <button class="kc primary" style="margin-top:22px;">REQUEST A NEW LINK</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band locked">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>W8c &mdash; reset link expired <em>(AUTH-04 · the sad path)</em></h3>
+        <p><b>The most-likely-hit reset state in production.</b> Reset tokens are <b>single-use</b> and
+        <b>expire in an hour</b> (W8a says so), so tapping an <b>old or already-used</b> emailed link is a
+        guaranteed real beat &mdash; one that <b>`POST /auth/password-reset/confirm`</b> rejects as
+        <b>invalid-token</b>. The terminal moment is calm, not alarmist: a <b>`#warn` triangle seal</b>, the
+        LINK EXPIRED eyebrow, plain copy spelling out the single-use / one-hour rule, and a single orange
+        <b>REQUEST A NEW LINK</b> (`.kc primary`) that <b>loops the user back to W7</b> to start a fresh reset.
+        The seal stays accent-stroked &mdash; this is an expected lifecycle end, not a genuine error, so it
+        wears the calm orange grammar, never the board's reserved RED (F-02). The &lsaquo; RETURN TO SIGN IN
+        return-link is the one escape hatch; like the sibling W8a/W8b seal beats, there is no swap-foot.</p>
       </div>
     </div>
 
   </div>
 
   <!-- ════════════════════ STAGE 5 — POST-SIGNUP + LIFECYCLE ════════════════════ -->
-  <div class="stage-label">Stage 5 &mdash; Post-signup + lifecycle (AUTH-08 · &sect;1.6 / SYS-10) <small>W9 the soft verify-email notice + resend (AUTH-08; the seam into Onboarding 4.14) &middot; W10 `LoadError` "Signal Lost" + RETRY &middot; W11 `Offline` &mdash; auth is a write, so CTAs gate calmly (SYS-10).</small></div>
+  <div class="stage-label">Stage 5 &mdash; Post-signup + lifecycle (AUTH-08 · &sect;1.6 / SYS-10) <small>W9 the soft verify-email notice + resend (AUTH-08; the seam into Onboarding 4.14) &middot; W10 `LoadError` "Signal Lost" + RETRY &middot; W11 `Offline` &mdash; auth is a write, so CTAs gate calmly (SYS-10) &middot; <b>W12</b> the AUTH-02 <b>submitting / in-flight</b> busy beat (no double-submit) &middot; <b>W13</b> the &sect;1.6 <b>Skeleton</b> / first-paint cold open.</small></div>
   <div class="stage">
 
     <!-- ═══ W9 · verify-email notice ═══ -->
@@ -862,9 +1005,7 @@
               <div class="swap-foot"><button class="tlink dim">SKIP FOR NOW</button></div>
             </div>
           </div>
-        </div>
-        <div class="nav-lock-note">SIGN IN TO UNLOCK</div>
-        <div class="nav-band locked">
+        </div>        <div class="nav-band locked">
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
           <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
@@ -898,9 +1039,7 @@
               <button class="le-retry">RETRY</button>
             </div>
           </div>
-        </div>
-        <div class="nav-lock-note">SIGN IN TO UNLOCK</div>
-        <div class="nav-band locked">
+        </div>        <div class="nav-band locked">
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
           <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
@@ -930,18 +1069,15 @@
             <div class="offline-strip"><svg viewBox="0 0 24 24"><use href="#wifi-off"/></svg>OFFLINE &middot; CONNECT TO SIGN IN<span class="sync">AUTO-RESUMES</span></div>
             <div class="scroll">
               <div class="field"><span class="flabel">EMAIL</span><div class="input"><span class="val">aiden@ingame.app</span></div></div>
-              <div class="field"><span class="flabel">PASSWORD</span><div class="input"><span class="val">&bull;&bull;&bull;&bull;&bull;&bull;</span><span class="reveal">SHOW</span></div></div>
-              <div style="text-align:right; margin:-2px 2px 14px;"><button class="tlink dim">FORGOT PASSWORD?</button></div>
+              <div class="field"><div class="flabel-row"><span class="flabel">PASSWORD</span><button class="tlink mini dim">FORGOT?</button></div><div class="input"><span class="val">&bull;&bull;&bull;&bull;&bull;&bull;</span><span class="reveal">SHOW</span></div></div>
               <button class="kc primary disabled">SIGN IN</button>
-              <div class="ordiv"><span class="ln"></span><span class="or">OR</span><span class="ln"></span></div>
-              <button class="kc secondary disabled">CREATE ACCOUNT</button>
-              <button class="apple" style="opacity:.42;"><svg viewBox="0 0 24 24"><use href="#apple"/></svg>Sign in with Apple</button>
+              <div class="ordiv"><span class="ln"></span><span class="or">OR CONTINUE WITH</span><span class="ln"></span></div>
+              <div class="apple-row"><button class="apple compact" style="opacity:.42;"><svg viewBox="0 0 24 24"><use href="#apple"/></svg>Sign in with Apple</button></div>
+              <div class="swap-foot">New to InGame?<button class="tlink dim">CREATE ACCOUNT</button></div>
               <div class="fhint" style="text-align:center; margin-top:4px;">You'll be able to sign in the moment you're back online.</div>
             </div>
           </div>
-        </div>
-        <div class="nav-lock-note">SIGN IN TO UNLOCK</div>
-        <div class="nav-band locked">
+        </div>        <div class="nav-band locked">
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
           <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
@@ -953,9 +1089,98 @@
         <h3>W11 &mdash; offline <em>(writes gated · SYS-10)</em></h3>
         <p><b>Offline &ne; error (SYS-10).</b> Auth is inherently a <i>write</i> (it can't read from cache), so
         the calm <b>`OfflineStrip`</b> rides under the header (one offline language app-wide; no red,
-        auto-recovers) and <b>every CTA gates</b> &mdash; SIGN IN, the Apple button, and FORGOT PASSWORD all dim.
+        auto-recovers) and <b>every CTA gates</b> &mdash; SIGN IN, the compact Apple, FORGOT?, and the CREATE ACCOUNT link all dim.
         Typed values are kept; a plain line promises it resumes on reconnect. The only red on this board is W4's
         field errors and W5's auth-fail.</p>
+      </div>
+    </div>
+
+    <!-- ═══ W12 · submitting / in-flight (AUTH-02) ═══ -->
+    <div class="take">
+      <div class="artboard-label">W12 · landing sign-in — submitting / in-flight (AUTH-02)</div>
+      <div class="device" data-screen-label="Welcome · W12 — signing in">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><h2>SIGN IN</h2></div>
+            <div class="scroll">
+              <div class="field" style="opacity:.5;"><span class="flabel">EMAIL</span><div class="input"><span class="val">aiden@ingame.app</span></div></div>
+              <div class="field" style="opacity:.5;"><div class="flabel-row"><span class="flabel">PASSWORD</span><button class="tlink mini dim">FORGOT?</button></div><div class="input"><span class="val">&bull;&bull;&bull;&bull;&bull;&bull;</span><span class="reveal">SHOW</span></div></div>
+              <button class="kc busy"><span class="spin2"></span>SIGNING IN&hellip;</button>
+              <div class="ordiv" style="opacity:.42;"><span class="ln"></span><span class="or">OR CONTINUE WITH</span><span class="ln"></span></div>
+              <div class="apple-row"><button class="apple compact" style="opacity:.42;"><svg viewBox="0 0 24 24"><use href="#apple"/></svg>Sign in with Apple</button></div>
+              <div class="swap-foot">New to InGame?<button class="tlink dim">CREATE ACCOUNT</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band locked">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>W12 &mdash; submitting / in-flight <em>(AUTH-02 &middot; the busy beat)</em></h3>
+        <p><b>The landing sign-in form, mid-request.</b> Built on W5's focused structure (root screen-head <b>SIGN IN</b>, no return link, no authfail) &mdash; the moment between tapping SIGN IN and the server answering. Rides `POST /auth/login`.</p>
+        <p>The primary swaps to the already-defined <b>`.kc.busy`</b> keycap (the energized scanline fill + `.spin2` ring, plain <b>SIGNING IN&hellip;</b> copy). The EMAIL + PASSWORD fields read <b>filled-but-locked</b> (dimmed, caret removed), and every secondary route &mdash; OR CONTINUE WITH, the compact Apple, FORGOT?, the CREATE ACCOUNT link &mdash; dims via the same gate grammar as W11.</p>
+        <p>That single in-flight gate is the whole point: the BUSY keycap is the only live control while the request is open, so a <b>double-submit is impossible</b> &mdash; no duplicate-register, no double-login. Resolves to the signed-in app on success, or back to W5's calm auth-fail strip on a wrong-credentials answer.</p>
+      </div>
+    </div>
+
+    <!-- ═══ W13 · skeleton / first paint (§1.6) ═══ -->
+    <div class="take">
+      <div class="artboard-label">W13 · skeleton / first paint — landing cold open (§1.6)</div>
+      <div class="device" data-screen-label="Welcome · W13 — skeleton / first paint">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="scroll">
+              <div class="ghero">
+                <div class="sk-line" style="width:188px; height:21px; margin:8px 0 14px;"></div>
+                <div class="sk-line" style="width:150px; height:9px; margin-bottom:16px;"></div>
+                <div class="sk-line" style="width:304px; height:134px; margin-bottom:14px;"></div>
+                <div class="sk-line" style="width:240px; height:9px; margin-bottom:16px;"></div>
+                <div class="sys-stats">
+                  <div class="stat-tile"><span class="sk-line" style="display:block; width:66%; height:15px; margin:1px auto 6px;"></span><span class="sk-lbl" style="width:84%; margin:0 auto;"></span></div>
+                  <div class="stat-tile"><span class="sk-line" style="display:block; width:66%; height:15px; margin:1px auto 6px;"></span><span class="sk-lbl" style="width:84%; margin:0 auto;"></span></div>
+                </div>
+                <div class="sk-line" style="width:260px; height:9px; margin-bottom:4px;"></div>
+                <div class="sk-line" style="width:180px; height:9px; margin-bottom:0;"></div>
+              </div>
+              <div style="padding:0 4px;">
+                <div class="field"><span class="sk-lbl"></span><div class="sk-input"></div></div>
+                <div class="field"><span class="sk-lbl"></span><div class="sk-input"></div></div>
+                <div class="sk-btn"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band locked">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>W13 &mdash; skeleton / first paint <em>(&sect;1.6 &middot; the cold open)</em></h3>
+        <p><b>Solid quiet fills in the exact shapes of the landing &mdash; nothing shifts when data lands.</b>
+        The logged-out front door has a genuine async first paint: the <b>SYS-12 system-wide stats</b>
+        (GAMES CATALOGED / HOURS LOGGED) load from the public aggregate endpoint (`GET /stats/public`). On cold
+        open the W1 hero silhouette is reserved end to end &mdash; the wordmark + eyebrow bars, the
+        <b>`CardFan` footprint</b>, the &ldquo;designed by&rdquo; credit, and the two <b>`StatTile` shells</b> &mdash;
+        and the sign-in form below it (`.sk-lbl` + `.sk-input` for EMAIL / PASSWORD, a `.sk-btn` for SIGN IN)
+        all render as <b>solid skeleton fills</b>. <b>Solid = loading, dashed = invitation</b> (the same rule as
+        Collection / Profile), so the skeleton can never be misread as an empty form. No invented header: the
+        landing carries no title, so this skeletons the wordmark in place instead &mdash; the chrome doesn't jump
+        when content arrives. <b>The stats degrade-hide, they don't block</b>: if `GET /stats/public` is slow or
+        unavailable, the hero stat tiles simply drop and the sign-in form still paints &mdash; the visitor can
+        sign in regardless. Quiet panel fills only; no red, no dashes.</p>
       </div>
     </div>
 

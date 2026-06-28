@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InGame · Welcome &amp; Auth (§4.13) — SIGN-IN BLOCK · component drafts A/B/C</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" /></noscript>
+<style>
+  /* ── tokens: Teal shell · Midnight (verbatim from welcome-auth-states.html). on-screen GOLD is reserved
+     (F-02) — none appears on this form block; every CTA is orange/cream, selection is the orange StateMark,
+     pink stays the physical shell LED only (F-05). ── */
+  :root {
+    --plastic: #2bb6b0; --plastic-hi: #3ec9c2; --plastic-lo: #1f9a94; --silk: #0d524e;
+    --accent: #ff3d77; --gold: #ffd23f; --cream: #f5f1e4; --navy: #1d2a4a;
+    --bezel: #14122a; --alert: #e3414e;
+    --pk: 'Chakra Petch', sans-serif; --shell: 'Paytone One', sans-serif;
+    --scr-bg: #232045; --scr-well: #2c2950; --scr-tools: #1a1733; --scr-accent: #ff9f43;
+    --scr-accent-ink: #2a1430; --scr-head: #f5f1e4; --scr-text: #ffffff; --scr-dim: #9b97c0;
+    --scr-soft: #c9c5e6; --scr-panel: rgba(255,255,255,.065); --scr-hairline: rgba(255,255,255,.08);
+    --scr-grip: #565178; --scr-chip: #f5f1e4; --scr-head-shadow: rgba(0,0,0,.45);
+    --shell-ink: #08433f; --screw-hi: #2aa39d; --screw-lo: #137671; --pip-off: #117672;
+    --success: #7fcf9b;
+  }
+  html, body { margin: 0; min-height: 100%; background: #efece6; font-family: var(--pk); }
+  .canvas { max-width: 1380px; margin: 0 auto; padding: 40px 24px 60px; }
+  .canvas-head h1 { font: 700 17px/1.2 var(--pk); letter-spacing: 2.5px; color: #2a2633; margin: 0 0 6px; text-transform: uppercase; }
+  .canvas-head p { font: 500 12.5px/1.5 var(--pk); color: #79748a; margin: 0 0 14px; max-width: 980px; }
+  .canvas-head p b { color: #2a2633; }
+  .stage { display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+  .take { width: 404px; }
+  .artboard-label { font: 700 11px/1 var(--pk); letter-spacing: 1.5px; color: #8d889c; margin: 0 0 10px 2px; text-transform: uppercase; }
+  .caption { margin-top: 14px; background: #fff; border-radius: 12px; padding: 13px 15px; box-shadow: 0 2px 8px rgba(42,38,51,.08); }
+  .caption h3 { margin: 0 0 5px; font: 700 12.5px var(--pk); letter-spacing: .8px; color: #2a2633; text-transform: uppercase; }
+  .caption h3 em { font-style: normal; color: var(--accent); }
+  .caption p { margin: 0 0 4px; font: 500 11.8px/1.5 var(--pk); color: #5d5870; }
+  .caption p b { color: #2a2633; }
+  .caption p.note { color: #8a6a2a; } .caption p.note b { color: #6f5012; }
+  .stage-label { font: 700 13px/1 var(--pk); letter-spacing: 2px; color: #2a2633; text-transform: uppercase; margin: 36px 2px 14px; }
+  .stage-label small { display: block; margin-top: 5px; font: 500 11px/1.4 var(--pk); letter-spacing: .3px; color: #79748a; text-transform: none; max-width: 980px; }
+
+  /* ── device shell (verbatim from welcome-auth-states.html) ── */
+  .device { position: relative; width: 404px; height: 884px; border-radius: 30px; overflow: hidden;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.4), inset 0 -4px 0 rgba(0,0,0,.18), 0 18px 40px color-mix(in srgb, var(--shell-ink) 28%, transparent);
+    display: flex; flex-direction: column; padding: 0 14px; box-sizing: border-box; }
+  .screw { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--screw-hi), var(--screw-lo) 75%); box-shadow: inset 0 1px 2px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.25); }
+  .screw::after { content: ""; position: absolute; left: 1.5px; right: 1.5px; top: 3.5px; height: 1.5px; background: color-mix(in srgb, var(--shell-ink) 70%, transparent); border-radius: 1px; }
+  .screw.tl { top: 10px; left: 12px; } .screw.tr { top: 10px; right: 12px; } .screw.bl { bottom: 10px; left: 12px; } .screw.br { bottom: 10px; right: 12px; }
+  .top-band { height: 64px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 12px 0; position: relative; }
+  .power { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+  .power .led { width: 9px; height: 9px; border-radius: 50%; background: #ff5a4e; box-shadow: 0 0 7px 2px rgba(255,90,78,.65), inset 0 -1px 1px rgba(0,0,0,.3); }
+  .power .lbl { font: 400 9px var(--shell); letter-spacing: .5px; color: var(--silk); opacity: .75; }
+  .logo { position: absolute; left: 50%; transform: translateX(-50%); font: 400 21px var(--shell); letter-spacing: 7px; text-indent: 7px; color: color-mix(in srgb, var(--shell-ink) 28%, transparent); text-shadow: 0 -1px 0 color-mix(in srgb, var(--shell-ink) 30%, transparent); }
+  .grille { display: flex; gap: 6px; }
+  .grille span { width: 5px; height: 23px; background: color-mix(in srgb, var(--shell-ink) 40%, transparent); border-radius: 2px; transform: skewX(-22deg); box-shadow: inset 0 1px 1px rgba(0,0,0,.3); }
+  .screen-bezel { flex: 1 1 auto; min-height: 0; background: var(--bezel); border-radius: 20px; padding: 9px; box-sizing: border-box; }
+
+  /* ── NavBand · grayed + locked while logged out (verbatim) ── */
+  .nav-band { flex: 0 0 auto; height: 128px; display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 6px 0; }
+  .nav-item { display: flex; flex-direction: column; align-items: center; width: 64px; }
+  .nav-lbl { height: 16px; font: 400 11px var(--shell); letter-spacing: .5px; color: var(--silk); display: flex; align-items: center; }
+  .nav-lbl.big { font-size: 11px; }
+  .nav-btn { width: 54px; height: 54px; border-radius: 15px; background: var(--cream); border: none;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 1px 0 rgba(255,255,255,.85); }
+  .nav-btn.store { background: var(--gold); }
+  .nav-btn.collection { background: var(--accent); }
+  .pip { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; background: var(--pip-off);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.25); }
+  .nav-band .nav-item:nth-child(2) .nav-lbl:first-child,
+  .nav-band .nav-item:nth-child(4) .nav-lbl:first-child { transform: translateY(-8px); }
+  .nav-band.locked { filter: grayscale(1); opacity: .5; pointer-events: none; }
+  .nav-band.locked .nav-btn { background: color-mix(in srgb, var(--cream) 50%, var(--plastic-lo)); box-shadow: 0 3px 0 color-mix(in srgb, var(--shell-ink) 45%, transparent), inset 0 1px 0 rgba(255,255,255,.4); }
+  .nav-band.locked .nav-btn.store, .nav-band.locked .nav-btn.collection { background: color-mix(in srgb, var(--cream) 50%, var(--plastic-lo)); }
+  .nav-band.locked .nav-btn svg path, .nav-band.locked .nav-btn svg rect, .nav-band.locked .nav-btn svg circle { stroke: color-mix(in srgb, var(--navy) 55%, transparent); fill: var(--navy); fill-opacity: .55; }
+  .nav-band.locked .pip { background: var(--pip-off); box-shadow: inset 0 1px 2px rgba(0,0,0,.5); }
+
+  /* ── screen + furniture ── */
+  .screen { position: relative; height: 100%; border-radius: 13px; overflow: hidden; display: flex; flex-direction: column; }
+  .sk2 { background: var(--scr-bg); }
+  .screen-head { flex: 0 0 auto; display: flex; flex-direction: column; gap: 5px; padding: 20px 18px 8px; }
+  .screen-head.flow { flex-direction: row; align-items: center; gap: 0; }  /* back-keycap + title on one row (A/C create) */
+  .sk2 .screen-head h2 { margin: 0; font: 700 21px/1 var(--pk); letter-spacing: 3px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); }
+  .screen-head .eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-accent); }
+  .scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 8px 18px 18px; scrollbar-width: none; display: flex; flex-direction: column; }
+  .scroll::-webkit-scrollbar { display: none; }
+  /* the form sits as a centred column in the available height — declunked rhythm reads on its own */
+  .form-wrap { margin: auto 0; }
+
+  /* ── TextField — cream inset · navy ink + caret (F-09 named exception) ── */
+  .field { display: flex; flex-direction: column; gap: 5px; margin: 0 0 13px; }
+  .flabel { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  /* label row — label left, an inline FORGOT? link right (tightens the old wedged-link rhythm) */
+  .flabel-row { display: flex; align-items: baseline; justify-content: space-between; }
+  .input { display: flex; align-items: center; gap: 7px; background: var(--scr-chip); box-shadow: inset 0 2px 3px rgba(0,0,0,.16); padding: 11px 12px; }
+  .input .val { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--navy); }
+  .input .ph { font: 600 11px var(--pk); letter-spacing: 1px; color: #8d889c; }
+  .input .caret { display: inline-block; width: 1.5px; height: 13px; background: var(--scr-accent); margin-left: 1.5px; }
+  .input .reveal { margin-left: auto; font: 700 9px var(--pk); letter-spacing: 1px; color: var(--navy); opacity: .55; }
+  /* live username availability (MOD-07) + validation states — verbatim from welcome-auth-states.html */
+  .input .stat { margin-left: auto; flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; font: 700 9px var(--pk); letter-spacing: .8px; }
+  .input .stat.ok { color: #2c8a5a; }
+  .input .stat.checking { color: #8d889c; }
+  .input .stat.bad { color: var(--alert); }
+  .input .spin { width: 11px; height: 11px; border-radius: 50%; border: 2px solid rgba(29,42,74,.22); border-top-color: var(--navy); }
+  .input.ok { box-shadow: inset 0 2px 3px rgba(0,0,0,.16), 0 0 0 1px var(--success); }
+  .input.err { box-shadow: inset 0 2px 3px rgba(0,0,0,.16); border: 1px solid var(--alert); padding: 10px 12px; }
+  .ferr { font: 600 9px var(--pk); letter-spacing: .5px; color: #ff8a93; }
+  .fhint { font: 500 9px/1.4 var(--pk); letter-spacing: .3px; color: var(--scr-grip); }
+  /* page-intro + FlowHeader back keycap (the create-account screen uses these) */
+  .page-intro { font: 500 11px/1.55 var(--pk); letter-spacing: .2px; color: var(--scr-soft); margin: 2px 2px 14px; } .page-intro b { color: var(--scr-text); }
+  .fh-key { flex: 0 0 auto; width: 28px; height: 28px; border: none; background: var(--scr-chip); color: var(--navy); font: 700 15px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; margin-right: 11px; }
+
+  /* ── AUTH-10 acceptance block (age-13 + ToS/Privacy) — verbatim from welcome-auth-states.html ── */
+  .accept { display: flex; align-items: flex-start; gap: 10px; padding: 13px 12px; margin: 4px 0 14px; background: var(--scr-well); border: 1px solid var(--scr-hairline); }
+  .accept .box { flex: 0 0 auto; width: 20px; height: 20px; margin-top: 1px; background: var(--scr-chip); display: flex; align-items: center; justify-content: center; }
+  .accept .box svg { width: 13px; height: 13px; display: none; }
+  .accept .box svg path { stroke: var(--navy); fill: none; }
+  .accept.on .box { background: var(--scr-accent); }
+  .accept.on .box svg { display: block; } .accept.on .box svg path { stroke: var(--scr-accent-ink); }
+  .accept .tx { font: 500 11px/1.55 var(--pk); letter-spacing: .2px; color: var(--scr-soft); }
+  .accept .tx b { color: var(--scr-text); }
+  .accept .tx a { color: var(--scr-accent); text-decoration: none; font-weight: 700; }
+
+  /* ── KeycapButton family — FLAT (F-03) · Scanline Energize on press ── */
+  .kc { display: block; width: 100%; border: none; box-sizing: border-box; text-align: center; font: 700 11px var(--pk); letter-spacing: 1.5px; padding: 14px 0; margin: 0 0 10px; }
+  .kc.primary { background: var(--scr-accent); color: var(--scr-accent-ink); }
+  .kc.secondary { background: var(--scr-chip); color: var(--navy); }
+  .kc.disabled { opacity: .42; }
+
+  /* Sign in with Apple — mandated platform control (Apple HIG); token-exempt like the system keyboard (OQ-035).
+     COMPACT variant: hugs its content + centred, so it is no longer a full-width black slab. */
+  .apple { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; box-sizing: border-box; border: none; background: #000; color: #fff; font: 600 13px var(--pk); letter-spacing: .3px; padding: 13px 0; margin: 0 0 10px; }
+  .apple svg { width: 16px; height: 16px; } .apple svg path { fill: #fff; }
+  .apple-row { display: flex; justify-content: center; margin: 0 0 10px; }
+  .apple.compact { width: auto; padding: 10px 20px; margin: 0; font-size: 11px; gap: 8px; }
+  .apple.compact svg { width: 14px; height: 14px; }
+
+  /* divider OR / OR CONTINUE WITH */
+  .ordiv { display: flex; align-items: center; gap: 10px; margin: 4px 0 12px; }
+  .ordiv .ln { flex: 1 1 auto; height: 1px; background: var(--scr-hairline); }
+  .ordiv .or { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-grip); }
+
+  /* tertiary link + sign-up footer (A) */
+  .tlink { display: inline-block; background: none; border: none; padding: 0; font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
+  .tlink.mini { font-size: 9px; font-weight: 700; letter-spacing: 1px; }
+  .swap-foot { text-align: center; margin: 4px 0 2px; font: 500 11px var(--pk); letter-spacing: .3px; color: var(--scr-soft); }
+  .swap-foot .tlink { margin-left: 5px; }
+  .helper { font: 500 9px/1.5 var(--pk); letter-spacing: .3px; color: var(--scr-grip); text-align: center; margin: 0 0 12px; }
+  .footnote { margin: 14px 4px 4px; font: 500 9px/1.5 var(--pk); letter-spacing: .3px; color: var(--scr-grip); text-align: center; }
+
+  /* ════ B — SegmentedControl (SIGN IN | CREATE ACCOUNT) ════
+     Flat square track (F-07/F-09), one step lighter than bg; active segment = the orange screen accent
+     (the prominent-action colour, not gold/not pink); inactive = dim. A mode toggle, not a third button. */
+  .seg { display: flex; background: var(--scr-well); border: 1px solid var(--scr-hairline); padding: 3px; margin: 0 0 16px; }
+  .seg-btn { flex: 1 1 0; border: none; background: none; text-align: center; padding: 9px 0;
+    font: 700 11px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .seg-btn.active { background: var(--scr-accent); color: var(--scr-accent-ink); }
+
+  /* ════ FLAT BUTTONS + SCANLINE ENERGIZE (F-03) ════ */
+  .kc, .apple, .seg-btn { box-shadow: none; }
+  .kc.primary:active, .kc.primary.is-pressed {
+    transform: none; background-color: color-mix(in srgb, var(--scr-accent) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, #0000 1px 2px); }
+  .kc.secondary:active, .kc.secondary.is-pressed {
+    transform: none; background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
+  .apple:active, .apple.is-pressed { background-color: #1a1a1a; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="apple" viewBox="0 0 24 24"><path d="M17.05 12.7c-.03-2.6 2.13-3.85 2.22-3.91-1.21-1.77-3.09-2.01-3.76-2.04-1.6-.16-3.12.94-3.93.94-.81 0-2.06-.92-3.39-.9-1.74.03-3.35 1.01-4.25 2.57-1.81 3.14-.46 7.79 1.3 10.34.86 1.25 1.88 2.65 3.22 2.6 1.29-.05 1.78-.83 3.34-.83 1.55 0 2 .83 3.37.81 1.39-.03 2.27-1.27 3.12-2.53.98-1.45 1.39-2.85 1.41-2.93-.03-.01-2.7-1.04-2.72-4.13zM14.6 5.1c.71-.86 1.19-2.06 1.06-3.25-1.02.04-2.26.68-2.99 1.54-.66.76-1.23 1.98-1.08 3.15 1.14.09 2.3-.58 3.01-1.44z"/></symbol>
+  <symbol id="check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</defs></svg>
+
+<div class="canvas">
+  <div class="canvas-head">
+    <h1>Welcome &amp; Auth (&sect;4.13) &mdash; sign-in block &middot; component drafts A/B/C</h1>
+    <p>Three distinct directions to de-clunk the landing's <b>sign-in block</b> &mdash; the owner flagged the
+    <b>wall of three stacked full-width buttons</b> (SIGN IN / CREATE ACCOUNT / Sign in with Apple) and the
+    <b>heavy full-width black Apple bar</b>. Each draft kills the three-equal-buttons stack and lightens Apple,
+    spanning conservative &rarr; bold. Shown on <b>iOS</b> (Apple present); the Android fork drops Apple
+    (AUTH-03). Everything stays on the &sect;1.5 catalog &mdash; flat Scanline keycaps (F-03), square on-screen
+    chrome (F-07), F-06 type (21/15/11/9), no on-screen gold/pink (F-02/F-05), the orange StateMark for
+    selection (F-09). The rest of the landing (the games hero above + the locked NavBand below) is unchanged.
+    <b>Stage 1</b> shows the sign-in block (the bit flagged as clunky); <b>Stage 2</b> shows how each draft handles
+    the OTHER half &mdash; the Create Account form (AUTH-01 &middot; the AUTH-10 age-13/ToS gate &middot; MOD-07
+    live username availability), in that draft's own idiom.</p>
+  </div>
+
+  <div class="stage-label">Stage 1 &mdash; Sign in <small>A/B/C &mdash; the three directions for the returning-user block (the form flagged as clunky): A quiets the secondaries &middot; B is a segmented mode toggle &middot; C is email-first / progressive.</small></div>
+  <div class="stage">
+
+    <!-- ═══ DRAFT A ═══ -->
+    <div class="take">
+      <div class="artboard-label">DRAFT A &mdash; quiet the secondaries (pure presentation)</div>
+      <div class="device" data-screen-label="Sign-in block · Draft A — quiet the secondaries">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><h2>WELCOME</h2><span class="eyebrow">SIGN IN TO YOUR CABINET</span></div>
+            <div class="scroll">
+              <div class="form-wrap">
+                <div class="field"><span class="flabel">EMAIL</span><div class="input"><span class="val">aiden@ingame.app</span><span class="caret"></span></div></div>
+                <div class="field">
+                  <div class="flabel-row"><span class="flabel">PASSWORD</span><button class="tlink mini">FORGOT?</button></div>
+                  <div class="input"><span class="val">&bull;&bull;&bull;&bull;&bull;&bull;</span><span class="reveal">SHOW</span></div>
+                </div>
+                <button class="kc primary">SIGN IN</button>
+                <div class="ordiv"><span class="ln"></span><span class="or">OR CONTINUE WITH</span><span class="ln"></span></div>
+                <div class="apple-row"><button class="apple compact"><svg viewBox="0 0 24 24"><use href="#apple"/></svg>Sign in with Apple</button></div>
+                <div class="swap-foot">New to InGame?<button class="tlink">CREATE ACCOUNT</button></div>
+                <div class="footnote">By continuing you confirm you're <b style="color:var(--scr-soft)">13 or older</b> and agree to our Terms &amp; Privacy Policy.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band locked">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>A &mdash; <em>quiet the secondaries</em></h3>
+        <p><b>One full-width button, not three.</b> SIGN IN stays the lone orange primary; <b>CREATE ACCOUNT
+        drops to a text link</b> in a "New to InGame?" footer; <b>Apple shrinks to a compact, content-hugging
+        button</b> under an "OR CONTINUE WITH" rule &mdash; no longer a black slab. FORGOT? moves inline on the
+        password label row, tightening the rhythm.</p>
+        <p><b>Same single-form model as today &mdash; pure presentation, zero behavior change.</b> Nothing
+        ripples to product-spec / api-contract. Lowest risk; the safe pick if the goal is just "less heavy."</p>
+      </div>
+    </div>
+
+    <!-- ═══ DRAFT B ═══ -->
+    <div class="take">
+      <div class="artboard-label">DRAFT B &mdash; segmented mode toggle (flow change)</div>
+      <div class="device" data-screen-label="Sign-in block · Draft B — segmented mode toggle">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><h2>WELCOME</h2><span class="eyebrow">SIGN IN &middot; OR CREATE AN ACCOUNT</span></div>
+            <div class="scroll">
+              <div class="form-wrap">
+                <div class="seg"><button class="seg-btn active">SIGN IN</button><button class="seg-btn">CREATE ACCOUNT</button></div>
+                <div class="field"><span class="flabel">EMAIL</span><div class="input"><span class="val">aiden@ingame.app</span><span class="caret"></span></div></div>
+                <div class="field">
+                  <div class="flabel-row"><span class="flabel">PASSWORD</span><button class="tlink mini">FORGOT?</button></div>
+                  <div class="input"><span class="val">&bull;&bull;&bull;&bull;&bull;&bull;</span><span class="reveal">SHOW</span></div>
+                </div>
+                <button class="kc primary">SIGN IN</button>
+                <div class="ordiv"><span class="ln"></span><span class="or">OR USE</span><span class="ln"></span></div>
+                <div class="apple-row"><button class="apple compact"><svg viewBox="0 0 24 24"><use href="#apple"/></svg>Sign in with Apple</button></div>
+                <div class="footnote">By continuing you confirm you're <b style="color:var(--scr-soft)">13 or older</b> and agree to our Terms &amp; Privacy Policy.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band locked">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>B &mdash; <em>segmented mode toggle</em></h3>
+        <p><b>Returning vs new is one decision, made once, at the top.</b> A <b>SIGN IN | CREATE ACCOUNT</b>
+        segmented control (active = orange StateMark) swaps the form beneath it; only the active mode's fields +
+        its single primary show. <b>CREATE ACCOUNT is a tab, not a button</b> &mdash; the stack is gone. Apple
+        rides compact below as "OR USE."</p>
+        <p class="note"><b>Flow note:</b> this folds the W2 create-account step onto the landing (today it's its
+        own screen). That's a flow change &mdash; I'd confirm it against the product-spec AUTH flow + log an OQ
+        before it converges. Strongest hierarchy of the three.</p>
+      </div>
+    </div>
+
+    <!-- ═══ DRAFT C ═══ -->
+    <div class="take">
+      <div class="artboard-label">DRAFT C &mdash; email-first / progressive (bold)</div>
+      <div class="device" data-screen-label="Sign-in block · Draft C — email-first / progressive">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><h2>WELCOME</h2><span class="eyebrow">ONE STEP TO START</span></div>
+            <div class="scroll">
+              <div class="form-wrap">
+                <div class="field"><span class="flabel">EMAIL</span><div class="input"><span class="val">aiden@ingame.app</span><span class="caret"></span></div></div>
+                <button class="kc primary">CONTINUE</button>
+                <div class="helper">We'll sign you in &mdash; or start a new cabinet if you're new.</div>
+                <div class="ordiv"><span class="ln"></span><span class="or">OR</span><span class="ln"></span></div>
+                <div class="apple-row"><button class="apple compact"><svg viewBox="0 0 24 24"><use href="#apple"/></svg>Sign in with Apple</button></div>
+                <div class="footnote">By continuing you confirm you're <b style="color:var(--scr-soft)">13 or older</b> and agree to our Terms &amp; Privacy Policy.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band locked">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>C &mdash; <em>email-first / progressive</em></h3>
+        <p><b>The lightest front door: one field, one button.</b> EMAIL + CONTINUE only; the password (or the
+        create-account beat) reveals on the next step once we know the email. Apple sits compact under an OR.
+        The button-wall is impossible here &mdash; there's only ever one primary on screen.</p>
+        <p class="note"><b>Behavior note:</b> this changes the AUTH model &mdash; one CONTINUE + an email-probe
+        to branch sign-in vs create. The biggest product-spec / api-contract ripple of the three (a new
+        "does this email exist" step). Worth an OQ + a second artboard for step 2 if you want to pursue it.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="stage-label">Stage 2 &mdash; Create account <small>How each draft handles the OTHER half &mdash; the new-user form (EMAIL &middot; USERNAME live availability, MOD-07 &middot; PASSWORD &middot; the AUTH-10 age-13/ToS gate &middot; CREATE ACCOUNT). A = its own screen reached from the footer link &middot; B = the toggle's other tab &middot; C = the progressive step-2 after CONTINUE. iOS shown; Android drops Apple (AUTH-03).</small></div>
+  <div class="stage">
+
+    <!-- ═══ DRAFT A — CREATE ACCOUNT ═══ -->
+    <div class="take">
+      <div class="artboard-label">DRAFT A &mdash; create account (its own screen)</div>
+      <div class="device" data-screen-label="Create account · Draft A — standalone screen">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head flow"><button class="fh-key">&#9666;</button><h2>CREATE ACCOUNT</h2></div>
+            <div class="scroll">
+              <div class="form-wrap">
+                <div class="page-intro">Make your cabinet. You'll pick a few games next &mdash; this takes about a minute.</div>
+                <div class="field"><span class="flabel">EMAIL</span><div class="input"><span class="val">aiden@ingame.app</span><span class="caret"></span></div></div>
+                <div class="field"><span class="flabel">USERNAME &mdash; AVAILABLE</span><div class="input ok"><span class="val">@retroratchet</span><span class="stat ok"><svg viewBox="0 0 24 24" width="12" height="12"><use href="#check" stroke="#2c8a5a"/></svg>AVAILABLE</span></div><span class="fhint">Looks good &mdash; and it passed our name check.</span></div>
+                <div class="field"><span class="flabel">PASSWORD</span><div class="input"><span class="val">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</span><span class="reveal">SHOW</span></div><span class="fhint">At least 8 characters.</span></div>
+                <div class="accept on"><span class="box"><svg viewBox="0 0 15 15"><path d="M3 8l3 3 6-7" stroke-width="2"/></svg></span><span class="tx">I'm <b>13 or older</b> and I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</span></div>
+                <button class="kc primary">CREATE ACCOUNT</button>
+                <div class="ordiv"><span class="ln"></span><span class="or">OR SIGN UP WITH</span><span class="ln"></span></div>
+                <div class="apple-row"><button class="apple compact"><svg viewBox="0 0 24 24"><use href="#apple"/></svg>Sign up with Apple</button></div>
+                <div class="swap-foot">Already have one?<button class="tlink">SIGN IN</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band locked">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>A &mdash; <em>create = its own screen</em></h3>
+        <p><b>Reached from the sign-in footer link.</b> A's idiom holds: <b>CREATE ACCOUNT is the lone orange
+        keycap</b>, Apple is the compact pill under "OR SIGN UP WITH", and the way back is the &#9666; key + the
+        "Already have one? SIGN IN" link. The W2 form &mdash; EMAIL &middot; USERNAME (live availability, MOD-07)
+        &middot; PASSWORD &middot; the AUTH-10 gate &mdash; reused verbatim. Pure presentation, no spec ripple.</p>
+      </div>
+    </div>
+
+    <!-- ═══ DRAFT B — CREATE ACCOUNT ═══ -->
+    <div class="take">
+      <div class="artboard-label">DRAFT B &mdash; create account (the toggle's other tab)</div>
+      <div class="device" data-screen-label="Create account · Draft B — segmented tab">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head"><h2>WELCOME</h2><span class="eyebrow">SIGN IN &middot; OR CREATE AN ACCOUNT</span></div>
+            <div class="scroll">
+              <div class="form-wrap">
+                <div class="seg"><button class="seg-btn">SIGN IN</button><button class="seg-btn active">CREATE ACCOUNT</button></div>
+                <div class="page-intro">Make your cabinet. You'll pick a few games next &mdash; this takes about a minute.</div>
+                <div class="field"><span class="flabel">EMAIL</span><div class="input"><span class="val">aiden@ingame.app</span><span class="caret"></span></div></div>
+                <div class="field"><span class="flabel">USERNAME &mdash; AVAILABLE</span><div class="input ok"><span class="val">@retroratchet</span><span class="stat ok"><svg viewBox="0 0 24 24" width="12" height="12"><use href="#check" stroke="#2c8a5a"/></svg>AVAILABLE</span></div><span class="fhint">Looks good &mdash; and it passed our name check.</span></div>
+                <div class="field"><span class="flabel">PASSWORD</span><div class="input"><span class="val">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</span><span class="reveal">SHOW</span></div><span class="fhint">At least 8 characters.</span></div>
+                <div class="accept on"><span class="box"><svg viewBox="0 0 15 15"><path d="M3 8l3 3 6-7" stroke-width="2"/></svg></span><span class="tx">I'm <b>13 or older</b> and I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</span></div>
+                <button class="kc primary">CREATE ACCOUNT</button>
+                <div class="ordiv"><span class="ln"></span><span class="or">OR USE</span><span class="ln"></span></div>
+                <div class="apple-row"><button class="apple compact"><svg viewBox="0 0 24 24"><use href="#apple"/></svg>Sign up with Apple</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band locked">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>B &mdash; <em>create = the toggle's other tab</em></h3>
+        <p><b>Same screen, segment flipped to CREATE ACCOUNT</b> (orange StateMark active). <b>No back key, no
+        swap-foot</b> &mdash; the segmented control IS the switch. This is B's payoff: returning-vs-new is one
+        decision made once at the top, and both forms share one frame.</p>
+        <p class="note"><b>Flow note:</b> this inlines the W2 create step onto the landing (today it's its own
+        screen) &mdash; confirm against the product-spec AUTH flow + log an OQ before converging.</p>
+      </div>
+    </div>
+
+    <!-- ═══ DRAFT C — CREATE ACCOUNT ═══ -->
+    <div class="take">
+      <div class="artboard-label">DRAFT C &mdash; create account (progressive step-2)</div>
+      <div class="device" data-screen-label="Create account · Draft C — progressive step-2">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen sk2">
+            <div class="screen-head flow"><button class="fh-key">&#9666;</button><h2>CREATE YOUR CABINET</h2></div>
+            <div class="scroll">
+              <div class="form-wrap">
+                <div class="page-intro">We checked &mdash; <b>this email is new here</b>. Finish setting up your cabinet and you'll pick a few games next.</div>
+                <div class="field"><span class="flabel">EMAIL &mdash; NEW HERE</span><div class="input ok"><span class="val">aiden@ingame.app</span><span class="stat ok"><svg viewBox="0 0 24 24" width="12" height="12"><use href="#check" stroke="#2c8a5a"/></svg>NEW</span></div><span class="fhint">No account yet &mdash; let's set one up.</span></div>
+                <div class="field"><span class="flabel">USERNAME &mdash; AVAILABLE</span><div class="input ok"><span class="val">@retroratchet</span><span class="stat ok"><svg viewBox="0 0 24 24" width="12" height="12"><use href="#check" stroke="#2c8a5a"/></svg>AVAILABLE</span></div><span class="fhint">Looks good &mdash; and it passed our name check.</span></div>
+                <div class="field"><span class="flabel">PASSWORD</span><div class="input"><span class="val">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</span><span class="reveal">SHOW</span></div><span class="fhint">At least 8 characters.</span></div>
+                <div class="accept on"><span class="box"><svg viewBox="0 0 15 15"><path d="M3 8l3 3 6-7" stroke-width="2"/></svg></span><span class="tx">I'm <b>13 or older</b> and I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</span></div>
+                <button class="kc primary">CREATE ACCOUNT</button>
+                <div class="swap-foot">Not you?<button class="tlink">USE A DIFFERENT EMAIL</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band locked">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>C &mdash; <em>create = the progressive step-2</em></h3>
+        <p><b>The email from step 1 was probed and found NEW</b> (locked green beat at the top), so this is the
+        finish-setup step &mdash; USERNAME &middot; PASSWORD &middot; the AUTH-10 gate &middot; CREATE ACCOUNT.
+        One primary; <b>Apple is dropped</b> (the visitor already committed to email); back via &#9666; or the
+        "USE A DIFFERENT EMAIL" link.</p>
+        <p class="note"><b>Behavior note:</b> this needs an email-existence probe to branch sign-in vs create
+        &mdash; the biggest product-spec / api-contract ripple of the three. OQ before pursuing.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

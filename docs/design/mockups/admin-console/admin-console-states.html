@@ -88,10 +88,10 @@
   .row { display: flex; gap: 11px; align-items: center; padding: 11px 12px; }
   .row + .row { border-top: 1px solid var(--scr-hairline); }
   .ric { flex: 0 0 auto; width: 30px; height: 30px; background: var(--scr-chip); display: flex; align-items: center; justify-content: center; }
-  .ric svg path, .ric svg rect, .ric svg circle, .ric svg line, .ric svg polyline { stroke: var(--navy); fill: none; }
+  .ric svg { stroke: var(--navy); fill: none; }
   .ric.tx { font: 800 15px var(--pk); color: var(--navy); }
   .ric.alert { background: color-mix(in srgb, var(--alert) 22%, var(--scr-well)); }
-  .ric.alert svg path, .ric.alert svg rect, .ric.alert svg circle, .ric.alert svg line { stroke: var(--alert); }
+  .ric.alert svg { stroke: var(--alert); }
   .rl-wrap { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   .rl { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
   .rl.alert { color: var(--alert); }
@@ -113,9 +113,9 @@
   .page-intro { font: 500 11px/1.55 var(--pk); letter-spacing: .2px; color: var(--scr-soft); margin: 2px 2px 12px; } .page-intro b { color: var(--scr-text); }
 
   /* ════ TierBanner — the hub tier marker (utility · no gold) ════ */
-  .tierband { display: flex; align-items: center; gap: 11px; padding: 12px 13px; margin: 2px 2px 14px; background: var(--scr-panel); border: 1px solid var(--scr-hairline); border-left: 3px solid var(--scr-accent); }
+  .tierband { display: flex; align-items: center; gap: 11px; padding: 12px 13px; margin: 2px 2px 14px; background: var(--scr-panel); border: 1px solid var(--scr-hairline); }
   .tierband .tb-g { flex: 0 0 auto; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: var(--scr-well); border: 1px solid var(--scr-hairline); }
-  .tierband .tb-g svg { width: 17px; height: 17px; } .tierband .tb-g svg path { stroke: var(--scr-accent); fill: none; }
+  .tierband .tb-g svg { width: 17px; height: 17px; stroke: var(--scr-accent); fill: none; }
   .tierband .tb-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   .tierband .tb-eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
   .tierband .tb-tier { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--scr-text); } .tierband .tb-tier b { color: var(--scr-accent); }
@@ -124,8 +124,7 @@
   .tierband .tb-scope { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
 
   /* CountTag — pending count (orange square; utility, NOT gold) */
-  .ctag { margin-left: auto; flex: 0 0 auto; min-width: 22px; height: 20px; padding: 0 6px; background: var(--scr-accent); color: var(--scr-accent-ink); font: 700 11px var(--pk); letter-spacing: .5px; display: inline-flex; align-items: center; justify-content: center;
-    clip-path: polygon(0 3px, 3px 3px, 3px 0, calc(100% - 3px) 0, calc(100% - 3px) 3px, 100% 3px, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 3px 100%, 3px calc(100% - 3px), 0 calc(100% - 3px)); }
+  .ctag { margin-left: auto; flex: 0 0 auto; min-width: 22px; height: 20px; padding: 0 6px; background: var(--scr-accent); color: var(--scr-accent-ink); font: 700 11px var(--pk); letter-spacing: .5px; display: inline-flex; align-items: center; justify-content: center; }
   .ctag.zero { background: var(--scr-panel); color: var(--scr-dim); }
   .row .ctag + .chev { margin-left: 8px; }
 
@@ -133,7 +132,7 @@
   .fnr { display: flex; gap: 12px; align-items: center; padding: 14px 13px; }
   .fnr + .fnr { border-top: 1px solid var(--scr-hairline); }
   .fnr .fic { flex: 0 0 auto; width: 36px; height: 36px; background: var(--scr-chip); display: flex; align-items: center; justify-content: center; }
-  .fnr .fic svg { width: 19px; height: 19px; } .fnr .fic svg path, .fnr .fic svg rect, .fnr .fic svg circle, .fnr .fic svg line { stroke: var(--navy); fill: none; }
+  .fnr .fic svg { width: 19px; height: 19px; stroke: var(--navy); fill: none; }
   .fnr .ftx { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
   .fnr .ft { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
   .fnr .fs { font: 600 9px var(--pk); letter-spacing: .4px; color: var(--scr-dim); }
@@ -150,16 +149,22 @@
   .qrow .chev { margin-left: 0; }
   /* soft-hidden flag (MOD-02) */
   .hflag { display: inline-flex; align-items: center; gap: 4px; font: 700 9px var(--pk); letter-spacing: .5px; color: var(--alert); border: 1px solid color-mix(in srgb, var(--alert) 45%, transparent); padding: 2px 5px; }
-  .hflag svg { width: 9px; height: 9px; } .hflag svg path { stroke: var(--alert); fill: none; }
+  .hflag svg { width: 9px; height: 9px; stroke: var(--alert); fill: none; }
   /* count of reports against the target */
   .qcount { font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); border: 1px solid var(--scr-hairline); padding: 2px 5px; }
 
-  /* card thumb (card reports) */
-  .cthumb { width: 44px; height: 62px; background: linear-gradient(160deg, #3a3568, #272350); border: 1px solid var(--scr-hairline); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 4px; box-sizing: border-box; position: relative; overflow: hidden; }
-  .cthumb .ct-art { position: absolute; inset: 4px 4px 14px; background: rgba(255,255,255,.05); display: flex; align-items: center; justify-content: center; } .cthumb .ct-art svg { width: 18px; height: 18px; opacity: .5; } .cthumb .ct-art svg path { stroke: var(--scr-soft); fill: none; }
-  .cthumb .ct-plate { position: relative; z-index: 1; font: 700 9px var(--pk); letter-spacing: .3px; color: var(--scr-soft); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 3px; }
+  /* card thumb (card reports) — the REAL game card (.gcard thumb · ported from collection).
+     Card-internal colours are content, not screen chrome (the F-02 gold ban is UI-only). Plate = F-06 9px. */
+  .gcard { position: relative; display: block; box-sizing: border-box; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
+  .gcard.thumb { width: 44px; height: 62px; flex: 0 0 auto; }
+  .gcard .art { position: absolute; inset: 3px; overflow: hidden; }
+  .gcard .art svg { width: 100%; height: 100%; display: block; }
+  .gcard .plate { position: absolute; left: 3px; right: 3px; bottom: 3px; padding: 2px 3px; text-align: center; font: 700 9px var(--pk); letter-spacing: .3px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fr-eldenring { background: linear-gradient(160deg, #d9a93f, #5e4410); } .pl-eldenring { background: #e8c364; color: #2a1f06; }
+  .fr-halo { background: linear-gradient(160deg, #4a8f6a, #1d3b3f); } .pl-halo { background: #7fcf9b; color: #08251a; }
+  .fr-hades { background: linear-gradient(160deg, #b23a44, #4a121b); } .pl-hades { background: #d34a5c; color: #2a0810; }
   /* game thumb (game reports / dedup) */
-  .gthumb { width: 40px; height: 40px; background: var(--scr-chip); display: flex; align-items: center; justify-content: center; } .gthumb svg { width: 20px; height: 20px; } .gthumb svg path, .gthumb svg rect, .gthumb svg circle { stroke: var(--navy); fill: none; }
+  .gthumb { width: 40px; height: 40px; background: var(--scr-chip); display: flex; align-items: center; justify-content: center; } .gthumb svg { width: 20px; height: 20px; stroke: var(--navy); fill: none; }
   /* avatar (user reports / dossier) */
   .uav { flex: 0 0 auto; width: 40px; height: 40px; background: var(--scr-grip); color: var(--scr-chip); font: 700 15px var(--pk); display: flex; align-items: center; justify-content: center; }
   .uav.big { width: 52px; height: 52px; font-size: 21px; }
@@ -204,9 +209,8 @@
 
   /* empty queue */
   .empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 9px; padding: 70px 24px 0; }
-  .empty .e-badge { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; border: 1.5px solid color-mix(in srgb, #7fcf9b 55%, transparent); color: #7fcf9b;
-    clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px), calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
-  .empty .e-badge svg { width: 28px; height: 28px; } .empty .e-badge svg path { stroke: #7fcf9b; fill: none; }
+  .empty .e-badge { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; border: 1.5px solid color-mix(in srgb, #7fcf9b 55%, transparent); color: #7fcf9b; }
+  .empty .e-badge svg { width: 28px; height: 28px; stroke: #7fcf9b; fill: none; }
   .empty .e-t { font: 700 15px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
   .empty .e-s { font: 500 11px/1.55 var(--pk); color: var(--scr-dim); max-width: 250px; }
 
@@ -221,7 +225,7 @@
   .merge-slot .ms-pick { margin-left: auto; font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-accent); border: 1px solid color-mix(in srgb, var(--scr-accent) 45%, transparent); padding: 4px 7px; }
   .merge-arrow { text-align: center; color: var(--scr-accent); font: 700 15px var(--pk); margin: 7px 0; }
   .merge-warn { display: flex; gap: 9px; align-items: flex-start; background: rgba(227,65,78,.08); border: 1px solid color-mix(in srgb, var(--alert) 38%, transparent); padding: 10px 11px; margin: 11px 0; }
-  .merge-warn svg { flex: 0 0 auto; width: 16px; height: 16px; margin-top: 1px; } .merge-warn svg path { stroke: var(--alert); fill: none; }
+  .merge-warn svg { flex: 0 0 auto; width: 16px; height: 16px; margin-top: 1px; stroke: var(--alert); fill: none; }
   .merge-warn .mw-tx { font: 500 9px/1.5 var(--pk); letter-spacing: .2px; color: var(--scr-soft); } .merge-warn .mw-tx b { color: var(--scr-text); }
 
   /* ════ RestoreRow — soft-deleted dup in the 3-day restore window ════ */
@@ -252,9 +256,9 @@
   .flabel { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
 
   /* moderation-action notice — the user-facing message preview */
-  .notice-prev { background: var(--scr-panel); border: 1px solid var(--scr-hairline); border-left: 3px solid var(--scr-accent); padding: 12px; }
+  .notice-prev { background: var(--scr-panel); border: 1px solid var(--scr-hairline); padding: 12px; }
   .notice-prev .np-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-  .notice-prev .np-g { flex: 0 0 auto; width: 24px; height: 24px; background: var(--scr-well); display: flex; align-items: center; justify-content: center; } .notice-prev .np-g svg { width: 13px; height: 13px; } .notice-prev .np-g svg path { stroke: var(--scr-accent); fill: none; }
+  .notice-prev .np-g { flex: 0 0 auto; width: 24px; height: 24px; background: var(--scr-well); display: flex; align-items: center; justify-content: center; } .notice-prev .np-g svg { width: 13px; height: 13px; stroke: var(--scr-accent); fill: none; }
   .notice-prev .np-h { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
   .notice-prev .np-body { font: 500 11px/1.6 var(--pk); letter-spacing: .2px; color: var(--scr-soft); } .notice-prev .np-body b { color: var(--scr-text); }
   .notice-prev .np-appeal { margin-top: 9px; padding-top: 9px; border-top: 1px dashed color-mix(in srgb, var(--scr-grip) 60%, transparent); font: 600 9px/1.5 var(--pk); letter-spacing: .3px; color: var(--scr-dim); } .notice-prev .np-appeal b { color: var(--scr-accent); }
@@ -268,11 +272,10 @@
   /* ════ ConfirmSheet / SuspendSheet — bottom drawer (settings grammar) ════ */
   .scrim { position: absolute; inset: 0; z-index: 5; background: rgba(13,11,32,.62); }
   .confirm-sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--scr-tools); border-top: 1px solid var(--scr-hairline); box-shadow: 0 -12px 26px rgba(0,0,0,.55); padding: 18px 18px 16px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 7px; }
-  .seal { width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; background: var(--scr-panel); border: 1px solid var(--scr-hairline); margin-bottom: 3px;
-    clip-path: polygon(0 5px, 3px 5px, 3px 3px, 5px 3px, 5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 3px) calc(100% - 5px), calc(100% - 3px) calc(100% - 3px), calc(100% - 5px) calc(100% - 3px), calc(100% - 5px) 100%, 0 100%); }
+  .seal { width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; background: var(--scr-panel); border: 1px solid var(--scr-hairline); margin-bottom: 3px; }
   .seal svg { width: 27px; height: 27px; }
-  .seal.alert { border-color: color-mix(in srgb, var(--alert) 55%, transparent); background: rgba(227,65,78,.08); } .seal.alert svg path { stroke: var(--alert); fill: none; }
-  .seal.ok svg path { stroke: var(--scr-accent); fill: none; }
+  .seal.alert { border-color: color-mix(in srgb, var(--alert) 55%, transparent); background: rgba(227,65,78,.08); } .seal.alert svg { stroke: var(--alert); fill: none; }
+  .seal.ok svg { stroke: var(--scr-accent); fill: none; }
   .cs-eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--alert); }
   .cs-title { font: 700 15px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
   .cs-body { font: 500 11px/1.6 var(--pk); color: var(--scr-soft); max-width: 320px; } .cs-body b { color: var(--scr-text); }
@@ -296,8 +299,7 @@
 
   /* LoadError */
   .loaderr { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 9px; padding: 78px 24px 0; }
-  .le-badge { width: 66px; height: 66px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; border: 1.5px dashed color-mix(in srgb, var(--scr-accent) 62%, transparent); color: var(--scr-accent); font: 700 21px/1 var(--pk);
-    clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px), calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
+  .le-badge { width: 66px; height: 66px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; border: 1.5px dashed color-mix(in srgb, var(--scr-accent) 62%, transparent); color: var(--scr-accent); font: 700 21px/1 var(--pk); }
   .le-t { font: 700 15px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
   .le-s { font: 500 11px/1.55 var(--pk); color: var(--scr-dim); max-width: 250px; }
   .le-retry { margin-top: 6px; border: none; background: var(--scr-accent); color: var(--scr-accent-ink); font: 700 11px var(--pk); letter-spacing: 1px; padding: 10px 22px;
@@ -305,11 +307,11 @@
 
   /* OfflineStrip */
   .offline-strip { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; margin: 0 12px 6px; padding: 7px 11px; background: var(--scr-panel); border: 1px solid var(--scr-hairline); font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
-  .offline-strip svg { width: 13px; height: 13px; flex: 0 0 auto; } .offline-strip svg path { stroke: var(--scr-dim); fill: none; }
+  .offline-strip svg { width: 13px; height: 13px; flex: 0 0 auto; stroke: var(--scr-dim); fill: none; }
   .offline-strip .sync { margin-left: auto; font-weight: 600; letter-spacing: .5px; color: var(--scr-grip); }
   .offline-block { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 9px; padding: 60px 24px 0; }
   .ob-badge { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; border: 1.5px solid var(--scr-grip); color: var(--scr-dim); }
-  .ob-badge svg { width: 28px; height: 28px; } .ob-badge svg path { stroke: var(--scr-dim); fill: none; }
+  .ob-badge svg { width: 28px; height: 28px; stroke: var(--scr-dim); fill: none; }
   .ob-t { font: 700 15px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
   .ob-s { font: 500 11px/1.55 var(--pk); color: var(--scr-dim); max-width: 260px; } .ob-s b { color: var(--scr-soft); }
 
@@ -360,6 +362,37 @@
   <symbol id="ic-history" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 1 2.3 5.6" fill="none" stroke-width="1.8" stroke-linecap="round"/><path d="M4 20v-4h4" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8v4l3 2" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="ic-wifi-off" viewBox="0 0 24 24"><path d="M2.5 8.5a15 15 0 0 1 19 0M6 12a10 10 0 0 1 12 0M9.5 15.3a5 5 0 0 1 5 0M3 3.5l18 17" fill="none" stroke-width="1.8" stroke-linecap="round"/></symbol>
   <symbol id="ic-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke-width="1.8"/><path d="M9 9l6 6M15 9l-6 6" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <!-- game-card art (real cards · collection style) -->
+  <linearGradient id="g-er" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2412"/><stop offset="1" stop-color="#100d08"/></linearGradient>
+  <radialGradient id="g-erglow" cx="50%" cy="46%" r="55%"><stop offset="0" stop-color="#f0cf76"/><stop offset="1" stop-color="#f0cf76" stop-opacity="0"/></radialGradient>
+  <linearGradient id="g-halo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16323a"/><stop offset="1" stop-color="#0c1c22"/></linearGradient>
+  <linearGradient id="g-hades" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6e1a26"/><stop offset="1" stop-color="#280a10"/></linearGradient>
+  <symbol id="art-eldenring" viewBox="0 0 63 88">
+    <rect width="63" height="88" fill="url(#g-er)"/>
+    <circle cx="31.5" cy="40" r="21" fill="url(#g-erglow)" opacity=".55"/>
+    <g stroke="#e8c364" stroke-width="1.5" stroke-linecap="round" fill="none">
+      <path d="M31.5 72 L31.5 28"/><path d="M31.5 58 L21 45 M31.5 58 L42 45"/>
+      <path d="M31.5 50 L23 39 M31.5 50 L40 39"/><path d="M31.5 42 L26 33 M31.5 42 L37 33"/>
+      <path d="M31.5 34 L28 27 M31.5 34 L35 27"/>
+    </g>
+    <circle cx="31.5" cy="22" r="2.6" fill="#fbe9a6"/>
+  </symbol>
+  <symbol id="art-halo" viewBox="0 0 63 88">
+    <rect width="63" height="88" fill="url(#g-halo)"/>
+    <circle cx="11" cy="15" r="1" fill="#d7f1e4"/><circle cx="49" cy="20" r="1" fill="#d7f1e4"/><circle cx="39" cy="11" r=".8" fill="#d7f1e4"/><circle cx="21" cy="26" r=".8" fill="#d7f1e4"/>
+    <path d="M1 31 Q31.5 11 62 31" fill="none" stroke="#cfeede" stroke-width="3.4" opacity=".9"/>
+    <path d="M1 31 Q31.5 11 62 31" fill="none" stroke="#5aa886" stroke-width="1.1"/>
+    <path d="M0 65 Q31.5 50 63 65 L63 88 L0 88 Z" fill="#1f6b57"/>
+    <path d="M0 65 Q31.5 50 63 65" fill="none" stroke="#86dcb2" stroke-width="1.1" opacity=".75"/>
+  </symbol>
+  <symbol id="art-hades" viewBox="0 0 63 88">
+    <rect width="63" height="88" fill="url(#g-hades)"/>
+    <path d="M31.5 15 Q25.5 7 31 1.5 Q34 8 39 5.5 Q37 12.5 31.5 15 Z" fill="#3fd9c2" opacity=".9"/>
+    <path d="M20 35 a11.5 13 0 0 1 23 0 v7.5 a4 4 0 0 1-3 3.9 v5 a2 2 0 0 1-2 2 h-10 a2 2 0 0 1-2-2 v-5 a4 4 0 0 1-3-3.9 Z" fill="#f1ece0"/>
+    <circle cx="26.6" cy="37" r="3.5" fill="#3a0c12"/><circle cx="36.4" cy="37" r="3.5" fill="#3a0c12"/>
+    <path d="M31.5 42 l-2.2 4.2 h4.4 Z" fill="#3a0c12"/>
+    <path d="M27 50.5 v3.5 M31.5 50.5 v4.5 M36 50.5 v3.5" stroke="#c9a59c" stroke-width="1"/>
+  </symbol>
   <!-- nav glyphs (shell) -->
   <symbol id="nav-store" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></symbol>
   <symbol id="nav-discover" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></symbol>
@@ -514,17 +547,17 @@
               <div class="sec"><h3>CARD REPORTS &mdash; 5 OPEN</h3></div>
               <div class="well">
                 <div class="qrow">
-                  <span class="q-thumb"><span class="cthumb"><span class="ct-art"><svg viewBox="0 0 24 24"><use href="#ic-card"/></svg></span><span class="ct-plate">[hidden]</span></span></span>
+                  <span class="q-thumb"><span class="gcard thumb fr-eldenring"><span class="art"><svg viewBox="0 0 63 88"><use href="#art-eldenring"/></svg></span><span class="plate pl-eldenring">Elden Ring</span></span></span>
                   <span class="q-tx"><span class="q-tt">&ldquo;SL*YER_69&rdquo; &mdash; Elden Ring</span><span class="q-reason">OFFENSIVE OR NSFW</span><span class="q-meta">@riko &middot; 2H AGO &middot; designed by @zed</span></span>
                   <span class="q-right"><span class="hflag"><svg viewBox="0 0 24 24"><use href="#ic-eye-off"/></svg>HIDDEN</span><span class="chev">&rsaquo;</span></span>
                 </div>
                 <div class="qrow">
-                  <span class="q-thumb"><span class="cthumb"><span class="ct-art"><svg viewBox="0 0 24 24"><use href="#ic-card"/></svg></span><span class="ct-plate">Halo</span></span></span>
+                  <span class="q-thumb"><span class="gcard thumb fr-halo"><span class="art"><svg viewBox="0 0 63 88"><use href="#art-halo"/></svg></span><span class="plate pl-halo">Halo</span></span></span>
                   <span class="q-tx"><span class="q-tt">Master Chief tribute</span><span class="q-reason">SPAM OR LOW-EFFORT</span><span class="q-meta">@maverick &middot; 6H AGO &middot; designed by @nova</span></span>
                   <span class="q-right"><span class="qcount">3&times;</span><span class="chev">&rsaquo;</span></span>
                 </div>
                 <div class="qrow">
-                  <span class="q-thumb"><span class="cthumb"><span class="ct-art"><svg viewBox="0 0 24 24"><use href="#ic-card"/></svg></span><span class="ct-plate">Hades</span></span></span>
+                  <span class="q-thumb"><span class="gcard thumb fr-hades"><span class="art"><svg viewBox="0 0 63 88"><use href="#art-hades"/></svg></span><span class="plate pl-hades">Hades</span></span></span>
                   <span class="q-tx"><span class="q-tt">Zagreus run</span><span class="q-reason">WRONG GAME</span><span class="q-meta">@kai &middot; 1D AGO &middot; designed by @riko</span></span>
                   <span class="q-right"><span class="qcount">1&times;</span><span class="chev">&rsaquo;</span></span>
                 </div>
@@ -663,7 +696,7 @@
             <div class="scroll">
               <a class="return-link" href="#">&#9666; CARD REPORTS</a>
               <div class="rv-obj">
-                <span class="cthumb"><span class="ct-art"><svg viewBox="0 0 24 24"><use href="#ic-card"/></svg></span><span class="ct-plate">Halo</span></span>
+                <span class="gcard thumb fr-halo"><span class="art"><svg viewBox="0 0 63 88"><use href="#art-halo"/></svg></span><span class="plate pl-halo">Halo</span></span>
                 <span class="ro-tx"><span class="ro-t">Master Chief tribute</span><span class="ro-s">PUBLISHED CARD · designed by @nova · adopted 41&times;</span></span>
               </div>
               <div class="panel"><div class="p-lbl">REPORTED FOR</div><div class="p-reason">SPAM OR LOW-EFFORT</div></div>
@@ -713,7 +746,7 @@
             <div class="scroll">
               <a class="return-link" href="#">&#9666; CARD REPORTS</a>
               <div class="rv-obj">
-                <span class="cthumb"><span class="ct-art"><svg viewBox="0 0 24 24"><use href="#ic-card"/></svg></span><span class="ct-plate">Halo</span></span>
+                <span class="gcard thumb fr-halo"><span class="art"><svg viewBox="0 0 63 88"><use href="#art-halo"/></svg></span><span class="plate pl-halo">Halo</span></span>
                 <span class="ro-tx"><span class="ro-t">Master Chief tribute</span><span class="ro-s">PUBLISHED CARD · designed by @nova · adopted 41&times;</span></span>
               </div>
               <div class="panel"><div class="p-lbl">REPORTED FOR</div><div class="p-reason">SPAM OR LOW-EFFORT</div></div>

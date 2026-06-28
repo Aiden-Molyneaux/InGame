@@ -216,11 +216,12 @@
       100% calc(100% - 1px), calc(100% - 1px) calc(100% - 1px), calc(100% - 1px) 100%, 0 100%); }
 
   /* ════ Draft C chrome (carried from v1) ════ */
-  /* FlowHeader — takeover chrome: back/✕ keycap + flow title (the held card is the context device) */
-  .fh-key { flex: 0 0 auto; width: 28px; height: 28px; border: none; background: var(--scr-chip); color: var(--navy);
-    font: 700 15px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; margin-right: 11px; }
+  /* FlowHeader — takeover chrome: flow title (back is the under-header .return-link) */
   .flow-head { justify-content: flex-start; }
   .flow-head .fh-spacer { flex: 1 1 auto; }
+  /* labelled return link under the header — replaces the white ✕-close keycap (owner: remove ✕ keycaps app-wide) */
+  .return-link { flex: 0 0 auto; align-self: flex-start; display: inline-flex; align-items: center; gap: 5px;
+    margin: 0 16px 8px; font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
   /* TextField / SelectField — labeled inputs (the create form writes onto the held card) */
   .ffield { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .ffield .flabel { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
@@ -258,8 +259,8 @@
      v3 note 3: breathing room between the fan's bottom edge and this row. */
   .fan-nav { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 11px 0 0; }
   .fan-nav .chev { font: 700 11px/1 var(--pk); color: var(--scr-dim); }
-  .fan-nav .fdot { width: 5px; height: 5px; border-radius: 50%; background: var(--scr-grip); }
-  .fan-nav .fdot.on { background: var(--scr-accent); box-shadow: 0 0 5px 1px rgba(255,159,67,.55); }
+  .fan-nav .fdot { width: 6px; height: 6px; background: var(--scr-grip); clip-path: polygon(11.1% 0, 88.9% 0, 88.9% 11.1%, 100% 11.1%, 100% 88.9%, 88.9% 88.9%, 88.9% 100%, 11.1% 100%, 11.1% 88.9%, 0 88.9%, 0 11.1%, 11.1% 11.1%); }
+  .fan-nav .fdot.on { background: var(--scr-accent); }
   .fan-nav .swipe-lbl { font: 600 9px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); margin-left: 5px; }
   /* the forefront's off-card meta block — back faces stay clean.
      v5 note 2 restack: on P2/P3 the NAME reads first — the meta block sits ABOVE the fan, and the
@@ -522,7 +523,6 @@
   .sk2 .btn,
   .sk2 .btn.secondary,
   .sk2 .chip,
-  .fh-key,
   .ovf-key,
   .drawer .dw-submit,
   .drawer .dw-cancel { box-shadow: none; }
@@ -546,11 +546,6 @@
     background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
   /* cream tool chip (.chip · was .chip.active translateY) → ink rgba(29,42,74,.20) */
   .sk2 .chip:active, .sk2 .chip.is-pressed, .sk2 .chip.active {
-    transform: none; box-shadow: none;
-    background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
-    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
-  /* cream FlowHeader keycap (.fh-key) → ink rgba(29,42,74,.20) */
-  .fh-key:active, .fh-key.is-pressed {
     transform: none; box-shadow: none;
     background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
     background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
@@ -749,7 +744,8 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><button class="fh-key">&#10005;</button><h2>ADD GAME</h2></div>
+            <div class="screen-head flow-head"><h2>ADD GAME</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
             <div class="scroll">
               <div class="sec tight"><h3>RECENTLY ADDED</h3></div>
               <div class="cfan">
@@ -817,7 +813,8 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><button class="fh-key">&#10005;</button><h2>ADD GAME</h2></div>
+            <div class="screen-head flow-head"><h2>ADD GAME</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
             <div class="scroll low">
               <div class="sec tight"><h3>MATCHING&hellip;</h3></div>
               <div class="fan-meta push"><b>ELDEN RING</b> &middot; 2022 &middot; FROMSOFTWARE</div>
@@ -876,7 +873,8 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><button class="fh-key">&#10005;</button><h2>ADD GAME</h2></div>
+            <div class="screen-head flow-head"><h2>ADD GAME</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
             <div class="scroll low airy">
               <div class="sec"><h3>3 MATCHES</h3></div>
               <div class="fan-meta push"><b>ELDEN RING</b> &middot; 2022 &middot; FROMSOFTWARE</div>
@@ -955,7 +953,8 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>ADD GAME</h2></div>
+            <div class="screen-head flow-head"><h2>ADD GAME</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
             <div class="scroll">
               <div class="sec tight"><h3>CARD DETAIL &mdash; FROM THE FAN</h3></div>
               <div class="inspect">
@@ -1048,7 +1047,8 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><button class="fh-key">&#10005;</button><h2>ADD GAME</h2></div>
+            <div class="screen-head flow-head"><h2>ADD GAME</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
             <div class="scroll low">
               <div class="sec"><h3>0 MATCHES</h3></div>
               <div class="nores">
@@ -1107,7 +1107,8 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>ADD GAME</h2></div>
+            <div class="screen-head flow-head"><h2>ADD GAME</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
             <div class="scroll">
               <div class="sec"><h3>NEW ENTRY &mdash; HELD IN HAND</h3></div>
               <div class="held-wrap"><div class="held">
@@ -1187,7 +1188,8 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>ADD GAME</h2></div>
+            <div class="screen-head flow-head"><h2>ADD GAME</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
             <div class="scroll">
               <div class="sec"><h3>IN HAND &mdash; SET ITS STATUS</h3></div>
               <div class="held-wrap"><div class="held">
@@ -1252,7 +1254,8 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>ADD GAME</h2></div>
+            <div class="screen-head flow-head"><h2>ADD GAME</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
             <div class="scroll low">
               <div class="sec tight"><h3>ITS FACE &mdash; COMMUNITY CARDS</h3><a href="#">GALLERY &rsaquo;</a></div>
               <div class="equip">
@@ -1372,7 +1375,8 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>ADD GAME</h2></div>
+            <div class="screen-head flow-head"><h2>ADD GAME</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
             <div class="scroll low">
               <div class="sec"><h3>RIKO'S FOIL &mdash; SWIPED FOREFRONT</h3><span class="fan-pos">2 / 7</span></div>
               <div class="equip peek-dim">
@@ -1450,7 +1454,8 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><button class="fh-key">&#10005;</button><h2>ADD GAME</h2><span class="fh-spacer"></span><span class="count">49 GAMES<span class="ctick">+1</span></span></div>
+            <div class="screen-head flow-head"><h2>ADD GAME</h2><span class="fh-spacer"></span><span class="count">49 GAMES<span class="ctick">+1</span></span></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
             <div class="scroll">
               <div class="fly-zone">
                 <span class="streak" style="left: 24%; top: 0; height: 88px; transform: rotate(9deg);"></span>
@@ -1532,7 +1537,8 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><button class="fh-key">&#10005;</button><h2>ADD GAME</h2></div>
+            <div class="screen-head flow-head"><h2>ADD GAME</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
             <div class="scroll low">
               <div class="sec"><h3>MATCHING&hellip;</h3></div>
               <div class="sk-meta push">
@@ -1587,7 +1593,8 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><button class="fh-key">&#10005;</button><h2>ADD GAME</h2></div>
+            <div class="screen-head flow-head"><h2>ADD GAME</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
             <div class="scroll">
               <div class="err-wrap">
                 <div class="err-card"><span class="bang">!</span></div>
@@ -1637,7 +1644,8 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><button class="fh-key">&#10005;</button><h2>ADD GAME</h2></div>
+            <div class="screen-head flow-head"><h2>ADD GAME</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
             <div class="offline-strip"><svg viewBox="0 0 24 24"><path d="M2.5 8.5a15 15 0 0 1 19 0M6 12a10 10 0 0 1 12 0M9.5 15.3a5 5 0 0 1 5 0M3 3.5l18 17" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg>OFFLINE &middot; ADDING NEEDS A CONNECTION<span class="sync">AUTO-RESUMES</span></div>
             <div class="scroll">
               <div class="err-wrap" style="padding-top: 44px;">

@@ -1,4 +1,6 @@
-# 0029 — Compare Hours (§4.6) converged + formalized (the Versus direction)
+# 0031 — Compare Hours (§4.6) converged + formalized (the Versus direction)
+
+> **Renumbered 2026-06-27** from 0029 → 0031 to resolve a parallel-session number collision with `0029-welcome-onboarding-formalization-public-endpoints.md` (which owns the "decision 0029" references across product-spec/api-contract/design-spec). This Compare record had no inbound numeric references, so it moved. No content change.
 
 - **Date:** 2026-06-24
 - **Status:** accepted

@@ -259,8 +259,8 @@
      page wrapper), whose auto margin-right would eat the free space and shove the chip back to the left */
   .schips.canvas-dock .chip.canvas { margin: 0; }
   .sdots { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 8px 0 0; }
-  .sdots .fdot { width: 5px; height: 5px; border-radius: 50%; background: var(--scr-grip); }
-  .sdots .fdot.on { background: var(--scr-accent); box-shadow: 0 0 5px 1px rgba(255,159,67,.55); }
+  .sdots .fdot { width: 6px; height: 6px; background: var(--scr-grip); clip-path: polygon(11.1% 0, 88.9% 0, 88.9% 11.1%, 100% 11.1%, 100% 88.9%, 88.9% 88.9%, 88.9% 100%, 11.1% 100%, 11.1% 88.9%, 0 88.9%, 0 11.1%, 11.1% 11.1%); }
+  .sdots .fdot.on { background: var(--scr-accent); }
   .sdots .chev { font: 700 11px/1 var(--pk); color: var(--scr-dim); }
   .sdots .swipe-lbl { font: 600 9px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); margin-left: 5px; }
   .attr-rail { display: flex; gap: 8px; padding: 2px 1px 4px; overflow: hidden; }

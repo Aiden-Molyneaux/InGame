@@ -79,7 +79,7 @@
   .scroll::-webkit-scrollbar { display: none; }
   .srail { position: absolute; right: 5px; top: 56px; bottom: 12px; width: 3px; background: var(--scr-panel); z-index: 3; }
   .srail .thumb { position: absolute; left: -0.5px; right: -0.5px; background: var(--scr-grip); box-shadow: 0 0 0 1px rgba(0,0,0,.2); }
-  .fh-key { flex: 0 0 auto; width: 28px; height: 28px; border: none; background: var(--scr-chip); color: var(--navy); font: 700 15px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; margin-right: 11px; }
+  .return-link { display: inline-flex; align-items: center; gap: 6px; margin: -2px 2px 10px; font: 700 11px var(--pk); letter-spacing: 1px; color: var(--scr-accent); text-decoration: none; }
   .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 15px 2px 7px; }
   .sec:first-child { margin-top: 4px; }
   .sec h3 { margin: 0; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
@@ -128,8 +128,7 @@
   /* `ConfirmSheet` — the destructive confirm as a BOTTOM DRAWER (owner 2026-06-14 — the app's one-drawer
      grammar, kin to `ReportSheet`; was a centered `ConfirmDialog`). */
   .confirm-sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--scr-tools); border-top: 1px solid var(--scr-hairline); box-shadow: 0 -12px 26px rgba(0,0,0,.55); padding: 18px 18px 16px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 7px; }
-  .seal { width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; background: var(--scr-panel); border: 1px solid var(--scr-hairline); margin-bottom: 3px;
-    clip-path: polygon(0 5px, 3px 5px, 3px 3px, 5px 3px, 5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 3px) calc(100% - 5px), calc(100% - 3px) calc(100% - 3px), calc(100% - 5px) calc(100% - 3px), calc(100% - 5px) 100%, 0 100%); }
+  .seal { width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; background: var(--scr-panel); border: 1px solid var(--scr-hairline); margin-bottom: 3px; }
   .seal svg { width: 27px; height: 27px; }
   .seal.alert { border-color: color-mix(in srgb, var(--alert) 55%, transparent); background: rgba(227,65,78,.08); } .seal.alert svg path { stroke: var(--alert); fill: none; }
   .seal.ok svg path { stroke: var(--scr-accent); fill: none; }
@@ -161,12 +160,10 @@
 
   /* LoadError */
   .loaderr { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 9px; padding: 78px 24px 0; }
-  .le-badge { width: 66px; height: 66px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; border: 1.5px dashed color-mix(in srgb, var(--scr-accent) 62%, transparent); color: var(--scr-accent); font: 700 21px/1 var(--pk);
-    clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px), calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
+  .le-badge { width: 66px; height: 66px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; border: 1.5px dashed color-mix(in srgb, var(--scr-accent) 62%, transparent); color: var(--scr-accent); font: 700 21px/1 var(--pk); }
   .le-t { font: 700 15px var(--pk); letter-spacing: 1.5px; color: var(--scr-text); }
   .le-s { font: 500 11px/1.55 var(--pk); color: var(--scr-dim); max-width: 250px; }
-  .le-retry { margin-top: 6px; border: none; background: var(--scr-accent); color: var(--scr-accent-ink); font: 700 11px var(--pk); letter-spacing: 1px; padding: 10px 22px;
-    clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px), calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
+  .le-retry { margin-top: 6px; border: none; background: var(--scr-accent); color: var(--scr-accent-ink); font: 700 11px var(--pk); letter-spacing: 1px; padding: 10px 22px; }
 
   /* OfflineStrip + Toast */
   .offline-strip { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; margin: 0 12px 6px; padding: 7px 11px; background: var(--scr-panel); border: 1px solid var(--scr-hairline); font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
@@ -247,8 +244,7 @@
      (none on this board). INK per fill family: orange rgba(0,0,0,.20) · cream rgba(29,42,74,.20)
      · red rgba(0,0,0,.22).
      ════════════════════════════════════════════════════════════════════════════════════ */
-  /* 1 ─ IDLE = flat fill (no 3D key shadow; .le-retry keeps its clip-path, drops drop-shadow) */
-  .fh-key,
+  /* 1 ─ IDLE = flat fill (no 3D key shadow) */
   .ib-act,
   .act-key.secondary,
   .unblock,
@@ -260,8 +256,7 @@
   .le-retry { filter: none; }
 
   /* 2 ─ PRESS/active = Scanline Energize, NO motion (replaces .fb-send.busy translateY) */
-  /* cream fills (.fh-key .act-key.secondary .unblock .cs-cancel .fbc-done) */
-  .fh-key:active, .fh-key.is-pressed,
+  /* cream fills (.act-key.secondary .unblock .cs-cancel .fbc-done) */
   .act-key.secondary:active, .act-key.secondary.is-pressed,
   .unblock:active, .unblock.is-pressed,
   .cs-cancel:active, .cs-cancel.is-pressed,
@@ -341,8 +336,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>SETTINGS</h2></div>
+            <div class="screen-head"><h2>SETTINGS</h2></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO PROFILE</a>
               <div class="sec"><h3>ACCOUNT</h3></div>
               <div class="well">
                 <div class="row"><span class="ric"><svg width="15" height="15" viewBox="0 0 15 15"><rect x="1.5" y="3" width="12" height="9" rx="1.2" stroke-width="1.4"/><path d="M2 4l5.5 4.2L13 4" stroke-width="1.4"/></svg></span><span class="rl-wrap"><span class="rl">EMAIL</span><span class="rsub ok">&#10003; VERIFIED</span></span><span class="rv strong">aiden@ingame.app</span><span class="chev">&rsaquo;</span></div>
@@ -397,8 +393,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>SETTINGS</h2></div>
+            <div class="screen-head"><h2>SETTINGS</h2></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO PROFILE</a>
               <div class="sec"><h3>FEEDBACK &amp; SUPPORT</h3></div>
               <div class="well">
                 <div class="row"><span class="ric"><svg width="15" height="15" viewBox="0 0 15 15"><path d="M2 3.5h11v7H7.5l-3 2.4V10.5H2z" stroke-width="1.3"/><path d="M4.5 6.2h6M4.5 8.2h4" stroke-width="1.2"/></svg></span><span class="rl-wrap"><span class="rl">FEEDBACK &amp; BUG REPORTING</span><span class="rsub">TELL US WHAT&rsquo;S WORKING &middot; WHAT&rsquo;S BROKEN</span></span><span class="chev">&rsaquo;</span></div>
@@ -440,8 +437,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>SETTINGS</h2></div>
+            <div class="screen-head"><h2>SETTINGS</h2></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO PROFILE</a>
               <div class="sec"><h3>ACCOUNT</h3></div>
               <div class="ibanner">
                 <span class="ib-g"><svg viewBox="0 0 15 15"><path d="M7.5 2l6 11h-12z" stroke-width="1.5" stroke-linejoin="round"/><path d="M7.5 6.3v3.4M7.5 11v.3" stroke-width="1.5"/></svg></span>
@@ -490,8 +488,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>NOTIFICATIONS</h2></div>
+            <div class="screen-head"><h2>NOTIFICATIONS</h2></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO SETTINGS</a>
               <div class="page-intro">Choose what InGame can ping you about. Push only &mdash; <b>no email spam</b>, and each has a home in the app even when push is off (NOTIF-03).</div>
               <div class="sec"><h3>SOCIAL</h3></div>
               <div class="well">
@@ -539,8 +538,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>NOTIFICATIONS</h2></div>
+            <div class="screen-head"><h2>NOTIFICATIONS</h2></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO SETTINGS</a>
               <div class="ibanner">
                 <span class="ib-g"><svg viewBox="0 0 15 15"><path d="M3.8 6.5a3.7 3.7 0 0 1 7.4 0c0 3.2 1.3 4.2 1.3 4.2H2.5S3.8 9.7 3.8 6.5z" stroke-width="1.3"/><path d="M5.9 12.5a1.7 1.7 0 0 0 3.2 0" stroke-width="1.3"/><path d="M2 2l11 11" stroke-width="1.5"/></svg></span>
                 <span class="ib-tx"><span class="ib-t">PUSH IS OFF IN YOUR PHONE</span><span class="ib-s">You turned off notifications for InGame in your phone&rsquo;s system settings, so these can&rsquo;t reach you. Turn it back on to choose what you get.</span><button class="ib-act">OPEN PHONE SETTINGS</button></span>
@@ -583,8 +583,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>BLOCKED</h2></div>
+            <div class="screen-head"><h2>BLOCKED</h2></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO SETTINGS</a>
               <div class="bu-note"><span class="ib-g" style="margin-top:1px;"><svg viewBox="0 0 15 15" width="15" height="15"><circle cx="7.5" cy="7.5" r="5.4" fill="none" stroke="var(--scr-accent)" stroke-width="1.3"/><path d="M3.7 3.7l7.6 7.6" stroke="var(--scr-accent)" stroke-width="1.3"/></svg></span><span>Blocked people can&rsquo;t find you, message you, or see your profile &mdash; and you won&rsquo;t see them. <b>They&rsquo;re never told.</b></span></div>
               <div class="well">
                 <div class="bu"><span class="bu-av">RK</span><span class="bu-tx"><span class="bu-n">RIKO</span><span class="bu-d">BLOCKED JUN 9</span></span><button class="unblock">UNBLOCK</button></div>
@@ -619,8 +620,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>SETTINGS</h2></div>
+            <div class="screen-head"><h2>SETTINGS</h2></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO PROFILE</a>
               <div class="sec"><h3>ACCOUNT</h3></div>
               <div class="well">
                 <div class="row"><span class="ric"><svg width="15" height="15" viewBox="0 0 15 15"><rect x="1.5" y="3" width="12" height="9" rx="1.2" stroke-width="1.4"/><path d="M2 4l5.5 4.2L13 4" stroke-width="1.4"/></svg></span><span class="rl-wrap"><span class="rl">EMAIL</span><span class="rsub ok">&#10003; VERIFIED</span></span><span class="rv strong">aiden@ingame.app</span><span class="chev">&rsaquo;</span></div>
@@ -675,8 +677,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>FEEDBACK</h2></div>
+            <div class="screen-head"><h2>FEEDBACK</h2></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO SETTINGS</a>
               <div class="triage-intro"><div class="ti-t">What&rsquo;s this about?</div><div class="ti-s">Pick one so it reaches the right place. Everything here goes to our team &mdash; <b>never to other players</b>.</div></div>
               <div class="tcard"><span class="tc-ic"><svg viewBox="0 0 22 22"><path d="M3 5h16v10H10l-4 3.4V15H3z" stroke-width="1.6"/><path d="M6.5 8.7h9M6.5 11.4h6" stroke-width="1.5"/></svg></span><span class="tc-tx"><span class="tc-t">FEEDBACK</span><span class="tc-s">Something you liked &mdash; or didn&rsquo;t</span></span><span class="tc-chev">&rsaquo;</span></div>
               <div class="tcard"><span class="tc-ic"><svg viewBox="0 0 22 22"><path d="M11 2.5a6 6 0 0 1 3.6 10.8c-.7.5-1.1 1-1.1 2v.5h-5v-.5c0-1-.4-1.5-1.1-2A6 6 0 0 1 11 2.5z" stroke-width="1.5"/><path d="M8.7 18.5h4.6M9.4 20.3h3.2" stroke-width="1.5"/></svg></span><span class="tc-tx"><span class="tc-t">SUGGESTION</span><span class="tc-s">An idea to make InGame better</span></span><span class="tc-chev">&rsaquo;</span></div>
@@ -708,8 +711,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>FEEDBACK</h2></div>
+            <div class="screen-head"><h2>FEEDBACK</h2></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO SETTINGS</a>
               <div class="sheet-intro">Thanks for sharing &mdash; this goes straight to our team and <b>is never shown to other players</b>.</div>
               <div class="ffield tarea"><span class="flabel">YOUR MESSAGE</span><div class="box">Love the new card editor &mdash; the print-shop animation when you publish is so satisfying. More frame options please!<span class="caret"></span></div></div>
               <button class="fb-send">SEND FEEDBACK</button>
@@ -742,8 +746,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>REPORT A BUG</h2></div>
+            <div class="screen-head"><h2>REPORT A BUG</h2></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO SETTINGS</a>
               <div class="ffield tarea"><span class="flabel">WHAT WENT WRONG?</span><div class="box short">The card editor froze when I added a 12th sticker &mdash; had to force-quit. Every time near a dozen elements.<span class="caret"></span></div></div>
               <div class="diag">
                 <div class="diag-lbl">SENT AUTOMATICALLY WITH YOUR REPORT</div>
@@ -789,8 +794,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>REPORT A BUG</h2></div>
+            <div class="screen-head"><h2>REPORT A BUG</h2></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO SETTINGS</a>
               <div class="ffield tarea"><span class="flabel">WHAT WENT WRONG?</span><div class="box short">The card editor froze when I added a 12th sticker &mdash; had to force-quit. Every time near a dozen elements.</div></div>
               <div class="diag"><div class="diag-lbl">SENT AUTOMATICALLY WITH YOUR REPORT</div><div class="diag-row"><span class="diag-chip"><b>INGAME</b> 2.1.0 (1284)</span><span class="diag-chip"><b>iOS</b> 18.2</span><span class="diag-chip"><b>iPhone</b> 14</span></div></div>
               <div class="logatt">
@@ -826,8 +832,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>REPORT A BUG</h2></div>
+            <div class="screen-head"><h2>REPORT A BUG</h2></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO SETTINGS</a>
               <div class="fbconfirm">
                 <div class="seal"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
                 <span class="fbc-eyebrow">BUG REPORT SENT</span>
@@ -862,9 +869,10 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>REPORT A BUG</h2></div>
+            <div class="screen-head"><h2>REPORT A BUG</h2></div>
             <div class="toastb"><span class="bang">&#9888;</span><div class="t-tx"><span class="t-t">COULDN&rsquo;T SEND YOUR REPORT</span><span class="t-s">NOTHING WAS LOST &mdash; YOUR MESSAGE &amp; LOGS ARE STILL HERE</span></div><button class="t-key">RETRY</button></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO SETTINGS</a>
               <div class="ffield tarea"><span class="flabel">WHAT WENT WRONG?</span><div class="box short">The card editor froze when I added a 12th sticker &mdash; had to force-quit. Every time near a dozen elements.<span class="caret"></span></div></div>
               <div class="diag"><div class="diag-lbl">SENT AUTOMATICALLY WITH YOUR REPORT</div><div class="diag-row"><span class="diag-chip"><b>INGAME</b> 2.1.0 (1284)</span><span class="diag-chip"><b>iOS</b> 18.2</span><span class="diag-chip"><b>iPhone</b> 14</span></div></div>
               <div class="logatt">
@@ -906,8 +914,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>SETTINGS</h2></div>
+            <div class="screen-head"><h2>SETTINGS</h2></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO PROFILE</a>
               <div class="sk-h"></div>
               <div class="sk-well">
                 <div class="sk-row"><span class="sk-ic"></span><span class="sk-bar" style="width:60px;"></span><span class="sk-bar" style="width:96px; margin-left:auto;"></span></div>
@@ -950,9 +959,10 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>SETTINGS</h2></div>
+            <div class="screen-head"><h2>SETTINGS</h2></div>
             <div class="offline-strip"><svg viewBox="0 0 24 24"><use href="#wifi-off"/></svg>OFFLINE &middot; CHANGES SAVE WHEN YOU&rsquo;RE BACK<span class="sync">AUTO-RESUMES</span></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO PROFILE</a>
               <div class="sec"><h3>ACCOUNT</h3></div>
               <div class="well">
                 <div class="row"><span class="ric"><svg width="15" height="15" viewBox="0 0 15 15"><rect x="1.5" y="3" width="12" height="9" rx="1.2" stroke-width="1.4"/><path d="M2 4l5.5 4.2L13 4" stroke-width="1.4"/></svg></span><span class="rl-wrap"><span class="rl">EMAIL</span><span class="rsub ok">&#10003; VERIFIED</span></span><span class="rv strong">aiden@ingame.app</span></div>
@@ -995,12 +1005,15 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>SETTINGS</h2></div>
-            <div class="loaderr">
-              <div class="le-badge">!</div>
-              <div class="le-t">SIGNAL LOST</div>
-              <div class="le-s">We couldn&rsquo;t load your settings. Check your connection and try again.</div>
-              <button class="le-retry">RETRY</button>
+            <div class="screen-head"><h2>SETTINGS</h2></div>
+            <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO PROFILE</a>
+              <div class="loaderr">
+                <div class="le-badge">!</div>
+                <div class="le-t">SIGNAL LOST</div>
+                <div class="le-s">We couldn&rsquo;t load your settings. Check your connection and try again.</div>
+                <button class="le-retry">RETRY</button>
+              </div>
             </div>
           </div>
         </div>

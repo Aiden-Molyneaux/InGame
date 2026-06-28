@@ -67,7 +67,7 @@
   .screen { position: relative; height: 100%; border-radius: 13px; overflow: hidden; display: flex; flex-direction: column; }
   .screen.sk2 { background: var(--scr-bg); }
   .screen-head { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding: 13px 14px 9px; }
-  .fh-key { flex: 0 0 auto; width: 30px; height: 30px; border: none; background: var(--scr-chip); color: var(--navy); font: 700 15px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; }
+  .return-link { display: inline-flex; align-items: center; gap: 6px; margin: -2px 2px 10px; font: 700 11px var(--pk); letter-spacing: 1px; color: var(--scr-accent); text-decoration: none; }
   .screen-head h2 { margin: 0; font: 700 21px/1 var(--pk); letter-spacing: 1.5px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .screen-head .sh-sp { flex: 1 1 auto; }
   .scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 12px 12px; scrollbar-width: none; }
@@ -290,13 +290,13 @@
      corner-notch (clip-path) are kept; the shell NavBand keys (0 4px 0) stay
      physical hardware, out of scope. .is-pressed forces the pressed state for
      static demo / verification; :active is live (hold a button in-browser).
-     Scope = .btn family (+ cream/danger/alt/add/mini/block) + .fh-key/.ovf-key.
+     Scope = .btn family (+ cream/danger/alt/add/mini/block) + .ovf-key.
      ──────────────────────────────────────────────────────────────────── */
 
   /* idle = flat fill: strip the raised edge, the clipped drop, and the bevel */
-  .btn, .btn.cream, .btn.danger, .fh-key, .ovf-key { box-shadow: none; }
+  .btn, .btn.cream, .btn.danger, .ovf-key { box-shadow: none; }
   .btn.add, .btn.alt { box-shadow: none; filter: none; }   /* keep the clip-path notch */
-  .btn, .btn.add, .btn.alt, .btn.cream, .btn.danger, .fh-key, .ovf-key
+  .btn, .btn.add, .btn.alt, .btn.cream, .btn.danger, .ovf-key
     { transition: background .07s linear, box-shadow .07s linear; }
 
   /* pressed / active = darken a step + inner shadow, no transform (depth, no motion) */
@@ -310,7 +310,7 @@
     { background: color-mix(in srgb, var(--cream) 84%, #000);      box-shadow: inset 0 2px 5px rgba(0,0,0,.4); }
   .btn.danger:active, .btn.danger.is-pressed
     { background: color-mix(in srgb, var(--alert) 80%, #000);      box-shadow: inset 0 2px 5px rgba(0,0,0,.45); }
-  .fh-key:active, .fh-key.is-pressed, .ovf-key:active, .ovf-key.is-pressed
+  .ovf-key:active, .ovf-key.is-pressed
     { background: color-mix(in srgb, var(--scr-chip) 84%, #000);   box-shadow: inset 0 2px 4px rgba(0,0,0,.32); }
 
   /* ════════════════════════════════════════════════════════════════════
@@ -357,7 +357,7 @@
      fill — NO movement (no translate), no inset shadow, no pip. Idle stays flat
      (box-shadow:none kept upstream). Scope = the KeycapButton family
      (.btn + .add/.alt/.cream/.danger, with .mini/.block as size/layout-only) +
-     the tool keycaps .fh-key/.ovf-key. clip-path notches (.add/.alt) preserved.
+     the tool keycaps .ovf-key. clip-path notches (.add/.alt) preserved.
      LEFT 3D/accent-border (out of scope): .nav-btn (physical NavBand) · the
      segmented status chips .schip/.schip.on · the bottom SectionSwitch
      .tabsw-card/.tabsw-card.on (accent-border active, NOT a pressed keycap).
@@ -383,7 +383,7 @@
     transform: none; box-shadow: none;
     background-color: color-mix(in srgb, var(--alert) 88%, #000);
     background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, #0000 1px 2px); }
-  .fh-key:active, .fh-key.is-pressed, .ovf-key:active, .ovf-key.is-pressed {
+  .ovf-key:active, .ovf-key.is-pressed {
     transform: none; box-shadow: none;
     background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
     background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
@@ -436,7 +436,7 @@
     <p><b>CONVERGED STATES BOARD &mdash; candidate B (the dossier merge), owner-picked 2026-06-15.</b> The full &sect;4.2 state matrix folded into one board: the <b>8 core artboards</b> (M1 PLAY dual-face + dossier readout &middot; M2 EDIT form &middot; M3 CARDS switcher, OQ-056 &middot; M4 community gallery &rarr; atomic adopt &middot; M5 ABOUT &middot; M6 neutral &middot; M7 friend-view + compare &middot; M8 upcoming/be-first) <b>plus the deferred lifecycle states</b> (L1 loading Skeleton &middot; L2 LoadError &middot; L3 Offline writes-gated + error&rarr;Toast, SYS-10 &middot; L4 soft-hidden/reported, MOD-02/08/09) &mdash; the lifecycle grammar reused verbatim from the sibling boards (collection &middot; discover &middot; device &middot; settings). Buttons are the owner-picked <b>flat Inset-Recess keycaps</b> (F-03, 2026-06-17): no raised <code>shadow.key</code>, pressed = the fill darkens + an inner shadow sinks it in (hold any button). Sample: Destiny, 210 hrs; Maverick = you &middot; Riko/Vanta = friends; adoption/presence numbers illustrative (OQ-002/011).</p>
     <p><b>PLAY keeps the dual-face hero</b> (the face + the stats back side-by-side) &mdash; editing is <b>not</b> on the card: <b>EDIT STATS flips the readout to a dossier form</b> (label/value rows become fields, COL-02..06), the back reflecting the values live. The section switcher (<b>PLAY &middot; CARDS &middot; ABOUT</b>) is docked at the <b>bottom</b> as the <b>SectionSwitch Section&nbsp;Rail</b> from `device-switcher-takes` (icon-card + label; selection = <b>scr.accent border</b>, F-09; locked PLAY shows an inline padlock). CARDS (switcher + community gallery + adopt), ABOUT (facts + presence + friends-who-own), friend-view (privacy-gated + compare), neutral &amp; upcoming/be-first all carry over. Buttons follow the convention: <b>orange `/primary`; gold = card-creating only</b> (F-02). The secondary keycap now owns its <b><code>.cream</code> modifier</b> &mdash; it no longer reuses the SectionHeader <code>.sec</code> class (the converge fix, brief Bugfix&nbsp;#4; the KeycapButton/SectionHeader split is design-spec-owed). Rating PENDING (OQ-058) &middot; delete (OQ-061) &middot; switcher (OQ-056).</p>
     <p style="color:#1f9a94;"><b style="color:#1f9a94;">SYSTEM TYPE-SCALE</b> &mdash; every on-screen font snapped to the 4-step scale (F-06), by role: <b style="color:#1f9a94;">21</b> headers / game titles &middot; <b style="color:#1f9a94;">15</b> stat values &amp; value fields &middot; <b style="color:#1f9a94;">11</b> buttons / chips / sub text / tab labels &middot; <b style="color:#1f9a94;">9</b> section heads / tags / labels / captions. Glyphs snapped too (back/overflow/close/check &rarr; 15, &plus; tiles &rarr; 21, &starf; rating &rarr; 11). <b style="color:#1f9a94;">Print is exempt</b> &mdash; card plates &amp; the card-back stat block are print and scale with the card (F-06); the 5.6px cell plate stays under the &sect;1.2 picker note. The lifecycle adds (L1&ndash;L4) snap to the same scale. Annotation captions on this page aren't app UI; font families unchanged (F-08).</p>
-    <p style="color:#b06a2a;"><b style="color:#b06a2a;">CONVERGE RECONCILIATIONS</b> &mdash; <b>(1) CARD-01 card-back</b> is kept clean per the owner &mdash; &ldquo;CARD ART DESIGNED BY&rdquo; + the account name &mdash; which drops the <b>adoption count</b> CARD-01 names as back-provenance; the count still reads in the gallery + the CardDetail (ADOPTED&nbsp;58&times;). Flagged to the inbox (<b>OQ-069</b>) for the spec-owner &mdash; not edited here. <b>(2) WISHLIST</b> (the 6th COL-02 value) is omitted from the owned editor's STATUS field (it is the unowned/discover state); flagged (<b>OQ-070</b>). <b>(3)</b> the <code>.btn.sec</code>/<code>.sec</code> class collision is resolved &mdash; the secondary keycap is now <code>.cream</code>. OQ-058 (rating) &amp; OQ-061 (delete/ConfirmSheet) stay open.</p>
+    <p style="color:#b06a2a;"><b style="color:#b06a2a;">CONVERGE RECONCILIATIONS</b> &mdash; <b>(1) CARD-01 card-back</b> is kept clean per the owner &mdash; &ldquo;CARD ARTIST&rdquo; + the account name &mdash; which drops the <b>adoption count</b> CARD-01 names as back-provenance; the count still reads in the gallery + the CardDetail (ADOPTED&nbsp;58&times;). Flagged to the inbox (<b>OQ-069</b>) for the spec-owner &mdash; not edited here. <b>(2) WISHLIST</b> (the 6th COL-02 value) is omitted from the owned editor's STATUS field (it is the unowned/discover state); flagged (<b>OQ-070</b>). <b>(3)</b> the <code>.btn.sec</code>/<code>.sec</code> class collision is resolved &mdash; the secondary keycap is now <code>.cream</code>. OQ-058 (rating) &amp; OQ-061 (delete/ConfirmSheet) stay open.</p>
   </div>
 
   <!-- ═══════════ PLAY — the owned core ═══════════ -->
@@ -451,8 +451,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>GAME</h2><span class="sh-sp"></span><span class="now-tag">&#9656; NOW PLAYING</span><button class="ovf-key" style="margin-left:8px;">&#8943;</button></div>
+            <div class="screen-head"><h2>GAME</h2><span class="sh-sp"></span><span class="now-tag">&#9656; NOW PLAYING</span><button class="ovf-key" style="margin-left:8px;">&#8943;</button></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
               <div class="hero-title" style="padding-top:11px;">Destiny</div>
               <div class="facts-line" style="margin-top:6px;">BUNGIE &middot; 2014 &middot; LOOTER-SHOOTER</div>
               <div class="dualface">
@@ -470,7 +471,7 @@
                         <div class="cb-row"><span class="cl">STATUS</span><span class="cv">PLAYING</span></div>
                         <div class="cb-row"><span class="cl">SINCE</span><span class="cv">2014</span></div>
                       </div>
-                      <div class="cb-prov"><span class="p1">CARD ART DESIGNED BY</span><span class="p-name">MAVERICK</span></div>
+                      <div class="cb-prov"><span class="p1">CARD ARTIST</span><span class="p-name">MAVERICK</span></div>
                     </div>
                   </div>
                   <span class="dlbl acc">YOUR STATS</span>
@@ -523,8 +524,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>GAME</h2><span class="sh-sp"></span><span class="now-tag">&#9656; NOW PLAYING</span><button class="ovf-key" style="margin-left:8px;">&#8943;</button></div>
+            <div class="screen-head"><h2>GAME</h2><span class="sh-sp"></span><span class="now-tag">&#9656; NOW PLAYING</span><button class="ovf-key" style="margin-left:8px;">&#8943;</button></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
               <div class="dualface" style="padding-top:10px;">
                 <div class="dface">
                   <div class="gcard fr-gilt fx-ember fin-holo"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div>
@@ -540,7 +542,7 @@
                         <div class="cb-row"><span class="cl">STATUS</span><span class="cv">PLAYING</span></div>
                         <div class="cb-row"><span class="cl">SINCE</span><span class="cv">2014</span></div>
                       </div>
-                      <div class="cb-prov"><span class="p1">CARD ART DESIGNED BY</span><span class="p-name">MAVERICK</span></div>
+                      <div class="cb-prov"><span class="p1">CARD ARTIST</span><span class="p-name">MAVERICK</span></div>
                     </div>
                   </div>
                   <span class="dlbl acc">&#8635; UPDATES LIVE</span>
@@ -596,8 +598,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>GAME</h2><span class="sh-sp"></span><button class="ovf-key">&#8943;</button></div>
+            <div class="screen-head"><h2>GAME</h2><span class="sh-sp"></span><button class="ovf-key">&#8943;</button></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
               <div class="sec" style="margin-top:13px;"><h3>YOUR CARDS FOR DESTINY &mdash; 5</h3><a href="#">&#8645; SORT</a></div>
               <div class="swgrid">
                 <div class="swcard"><span class="state-tag equipped">&#9670; EQUIPPED</span><div class="gcard cell fr-gilt fx-ember fin-holo"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-destiny pl-ribbon">Destiny</div></div></div>
@@ -663,8 +666,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>GAME</h2><span class="sh-sp"></span><button class="ovf-key">&#8943;</button></div>
+            <div class="screen-head"><h2>GAME</h2><span class="sh-sp"></span><button class="ovf-key">&#8943;</button></div>
             <div class="scroll dimmed">
+              <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
               <div class="sec" style="margin-top:13px;"><h3>COMMUNITY CARDS &mdash; 41</h3><a href="#">SORT &rsaquo;</a></div>
               <div class="swgrid">
                 <div class="gwrap"><div class="gcard cell fr-foil" style="outline:2px solid var(--scr-accent); outline-offset:2px;"><span class="foil-band"></span><div class="art art-hue1"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>RIKO</b></span><div class="gw-foot"><span class="adopt-chip">1 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span><span class="adopt-count">58&times;</span></div></div>
@@ -725,8 +729,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>GAME</h2><span class="sh-sp"></span><button class="ovf-key">&#8943;</button></div>
+            <div class="screen-head"><h2>GAME</h2><span class="sh-sp"></span><button class="ovf-key">&#8943;</button></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
               <div class="facts" style="padding-top:14px;">
                 <div class="title">Destiny</div>
                 <div class="meta">BUNGIE &middot; 2014 &middot; LOOTER-SHOOTER</div>
@@ -787,8 +792,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>GAME</h2><span class="sh-sp"></span><button class="ovf-key">&#8943;</button></div>
+            <div class="screen-head"><h2>GAME</h2><span class="sh-sp"></span><button class="ovf-key">&#8943;</button></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
               <div class="band neutral" style="margin-top:13px;">
                 <div class="npl">NOT IN YOUR COLLECTION</div>
                 <div class="hint" style="text-align:left; margin-top:5px;">ADD IT TO TRACK YOUR HOURS &amp; PICK A CARD &mdash; OR ADOPT A COMMUNITY FACE IN <b>CARDS</b></div>
@@ -849,8 +855,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>GAME</h2><span class="sh-sp"></span><span class="eq" style="background:var(--scr-panel);">RIKO'S</span><button class="ovf-key" style="margin-left:8px;">&#8943;</button></div>
+            <div class="screen-head"><h2>GAME</h2><span class="sh-sp"></span><span class="eq" style="background:var(--scr-panel);">RIKO'S</span><button class="ovf-key" style="margin-left:8px;">&#8943;</button></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
               <div class="hero-title" style="padding-top:11px;">Destiny</div>
               <div class="facts-line" style="margin-top:6px;">BUNGIE &middot; 2014 &middot; LOOTER-SHOOTER</div>
               <div class="dualface">
@@ -868,7 +875,7 @@
                         <div class="cb-row"><span class="cl">SINCE</span><span class="cv">2014</span></div>
                         <div class="cb-row" style="opacity:.5;"><span class="cl">NOTES &middot; RATING</span><span class="cv" style="font-size:8px;">&#128274; PRIVATE</span></div>
                       </div>
-                      <div class="cb-prov"><span class="p1">CARD ART DESIGNED BY</span><span class="p-name">RIKO</span></div>
+                      <div class="cb-prov"><span class="p1">CARD ARTIST</span><span class="p-name">RIKO</span></div>
                     </div>
                   </div>
                   <span class="dlbl">PRIVACY-GATED · PROF-03</span>
@@ -936,8 +943,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>GAME</h2><span class="sh-sp"></span><button class="ovf-key">&#8943;</button></div>
+            <div class="screen-head"><h2>GAME</h2><span class="sh-sp"></span><button class="ovf-key">&#8943;</button></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
               <div style="display:flex; justify-content:center; padding:14px 0 0;">
                 <div class="gcard pick fr-slate" style="opacity:.92;"><div class="art" style="filter:saturate(.6) brightness(.85);"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Marathon</div></div>
               </div>
@@ -1004,8 +1012,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>GAME</h2><span class="sh-sp"></span><button class="ovf-key">&#8943;</button></div>
+            <div class="screen-head"><h2>GAME</h2><span class="sh-sp"></span><button class="ovf-key">&#8943;</button></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
               <div class="sk-bar" style="height:21px; width:46%; margin:13px auto 0;"></div>
               <div class="sk-bar" style="height:11px; width:64%; margin:9px auto 0;"></div>
               <div class="dualface" style="padding-top:16px;">
@@ -1054,8 +1063,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>GAME</h2><span class="sh-sp"></span><button class="ovf-key">&#8943;</button></div>
+            <div class="screen-head"><h2>GAME</h2><span class="sh-sp"></span><button class="ovf-key">&#8943;</button></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
               <div class="err-wrap">
                 <div class="err-card"><span class="bang">!</span></div>
                 <span class="err-eyebrow">COULDN'T LOAD THIS GAME</span>
@@ -1099,8 +1109,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>GAME</h2><span class="sh-sp"></span><span class="now-tag">&#9656; NOW PLAYING</span><button class="ovf-key" style="margin-left:8px;">&#8943;</button></div>
+            <div class="screen-head"><h2>GAME</h2><span class="sh-sp"></span><span class="now-tag">&#9656; NOW PLAYING</span><button class="ovf-key" style="margin-left:8px;">&#8943;</button></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
               <div class="offline-strip"><svg viewBox="0 0 24 24"><path d="M2.5 8.5a15 15 0 0 1 19 0M6 12a10 10 0 0 1 12 0M9.5 15.3a5 5 0 0 1 5 0M3 3.5l18 17" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg>OFFLINE &middot; SHOWING LAST SYNCED<span class="sync">AUTO-RECOVERS</span></div>
               <div class="hero-title" style="padding-top:13px;">Destiny</div>
               <div class="facts-line" style="margin-top:6px;">BUNGIE &middot; 2014 &middot; LOOTER-SHOOTER</div>
@@ -1119,7 +1130,7 @@
                         <div class="cb-row"><span class="cl">STATUS</span><span class="cv">PLAYING</span></div>
                         <div class="cb-row"><span class="cl">SINCE</span><span class="cv">2014</span></div>
                       </div>
-                      <div class="cb-prov"><span class="p1">CARD ART DESIGNED BY</span><span class="p-name">MAVERICK</span></div>
+                      <div class="cb-prov"><span class="p1">CARD ARTIST</span><span class="p-name">MAVERICK</span></div>
                     </div>
                   </div>
                   <span class="dlbl">FROM CACHE</span>
@@ -1181,8 +1192,9 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><button class="fh-key">&#9666;</button><h2>GAME</h2><span class="sh-sp"></span><button class="ovf-key">&#8943;</button></div>
+            <div class="screen-head"><h2>GAME</h2><span class="sh-sp"></span><button class="ovf-key">&#8943;</button></div>
             <div class="scroll">
+              <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
               <div class="sec" style="margin-top:13px;"><h3>COMMUNITY CARDS &mdash; 39</h3><a href="#">SORT &rsaquo;</a></div>
               <div class="swgrid">
                 <div class="gwrap"><div class="gcard cell fr-teal fin-holo"><div class="art art-hue2"><svg viewBox="0 0 63 88"><use href="#art-destiny"/></svg></div><div class="plate pl-neutral pl-ribbon">Destiny</div></div><span class="gw-credit">BY <b>VANTA</b></span><div class="gw-foot"><span class="adopt-chip free">FREE</span><span class="adopt-count">31&times;</span></div></div>

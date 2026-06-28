@@ -6,7 +6,7 @@
 > "how it looks/feels"). Behavior questions raised while designing go to
 > [`../open-questions.md`](../open-questions.md), not edited into the spec directly.
 
-**Version:** 0.17 · **Last updated:** 2026-06-13 · **Owner:** Claude Code → Claude Design
+**Version:** 0.21 · **Last updated:** 2026-06-27 · **Owner:** Claude Code → Claude Design
 **Status:** **ALL screens specified** (5 tabs + 16 detail screens/flows). Ready to hand to Claude Design. Open design notes live in `open-questions.md` (`OQ-005/007`).
 > **Claude Design — read [`design-process.md`](design-process.md) first.** It defines the phased,
 > reuse-first process: 3 hero-screen (Collection) drafts → extract a named component catalog →
@@ -142,7 +142,7 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 **Purpose:** identity + trophy case + hub to management screens. **Personas:** Curator, Socializer, Contributor.
 **Must host:**
 - **Hero:** Device + collection.
-- **Identity:** avatar, username, bio, **favourite genre(s)**, **gamertags** (managed here), **pinned favourite game** (hero Game Card) (`PROF-01/02`).
+- **Identity:** avatar, username, bio, **favourite genre(s)**, **gamertags** (managed here), **pinned favourite game** (hero Game Card) (`PROF-01/02`). For an **admin**, a small **staff badge** sits next to the username (`PROF-09`, decisions 0033/0034) — **public/friend-view = a generic "STAFF"/"ADMIN" trust marker (tier hidden)**; **self-view also shows your tier** (Admin&nbsp;I–IV) = how you know you hold the role; **absent for normal users** (the header reads cleanly without it).
 - **Stats:** collection summary + **headline clout stats** (cards designed, total adoptions received) + **member-since** (`PROF-04`); stat tiles may carry **community percentile chips** (`PROF-07`) — threshold-gated, so **every tile must render cleanly without its chip**.
 - **Showcase:** **Top-5** (five Game Cards; **tapping = gateway into the collection**), **Now Playing** (`WTP-03`).
 - **Gateways:** teasers + links to **Achievements** (`ACH-05`) and **My Contributions** (`CAT-07`) — reachable from here only.
@@ -192,13 +192,19 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 **Design notes for you:** on-screen control styling (`OQ-006`); the stylized break-out (`OQ-007`).
 **States:** new (start-from) · editing · premium-reconcile · saving/flattening · publish · error/offline.
 
-### 4.4 Admin/Moderator console (moderator-only, `MOD-04`)
-**Purpose:** the light-touch moderation home. **Gated to the moderator/admin role** (`SYS-08`).
-**Must host:**
-- **Reports queue** — review, hide/restore (`MOD-01/02/03`).
+### 4.4 Admin console (admin-only, `MOD-04`)
+**Purpose:** the light-touch content + catalog moderation home — the **in-app** half of the admin model (**P1+P2**; tiers **Admin I/II**). Money/config/governance (P3–P5, tiers III/IV) live in the **external operator tool** (decision 0034, product-spec §10/OQ-080), **not here**. **Gated to `adminTier ≥ 1`** (`SYS-08`).
+**Reached from Settings** → a role-gated **Admin console** entry (decisions 0033/0034) → a hub for the functions below. **No role-management UI** — role/tier grant/revoke is out-of-band (`SYS-08`; the external tool, §10).
+**Must host (P1 Content + P2 Catalog):**
+- **Reports queue — split by target type** into separate but **equivalent** screens: **card** · **game** · **user** reports, switched by a **bottom-docked section rail** (the `SectionSwitch /rail` grammar, decision 0033 / OQ-063). Each: review → **hide / restore / resolve** (`MOD-01/02/03`); the staff-facing **details note** shown (`MOD-01`); soft-hidden flag (`MOD-02`).
+- **Account suspension** from a **user** report — temp (until date) / indefinite + reason; reversible + logged; invalidates sessions (`MOD-09`). A deliberate/destructive confirm.
 - **Edit-suggestion review** — approve/reject canonical field changes (`MOD-06`).
-- **Catalog dedup/merge** — merge a duplicate into the canonical (re-point collections/cards), then **soft-delete with a 3-day restore** (`MOD-05`).
-**States:** queues (empty / with items) · item detail + action · restore-window items.
+- **Catalog dedup/merge** — merge a duplicate into the canonical (re-point collections/cards — a consequential confirm), then **soft-delete with a 3-day restore** window (`MOD-05`).
+- **In-app remediation additions** (to be ID'd + detailed at this pass — **`OQ-081`**): field-level remediation (reset an offensive username/bio/avatar; force-rename — a remedy short of suspension) · a **user investigation view** (report history + prior actions + their content) · a **moderation-action notice** to the affected user (the "why" + appeal pointer) · **direct canonical edit** + **junk-entry removal** + **proactive takedown by ID** (`MOD-08`). Reserve room; the design pass proposes the surfaces.
+**Tier-adaptive (decision 0035):** the console **gates its own sections by the viewer's tier** — **Admin&nbsp;I** sees only **P1** (reports · suspend · remediation); **Admin&nbsp;II+** also sees **P2** (dedup/merge · direct edit · takedown). It **never** surfaces P3–P5 (economy/config/governance) — those holders simply *also* have the external tool. So the mockup needs an **Admin&nbsp;I view** and an **Admin&nbsp;II view**, not one all-powers screen.
+**Note:** the console shows admins the **true** account state (the `MOD-09` "unavailable" non-disclosure collapse is for *public viewers*, not here). Admin actions are **logged** for audit (`MOD-10`; the audit-ledger *viewer* is the external tool, §10/P5).
+**Design direction:** a **utility** surface — **no gold** (nothing acquisitive); destructive/consequential actions (hide · reject · merge · suspend · remediate) use the `ConfirmSheet` + alert-red treatment.
+**States:** queues (empty / with items) · item detail + action · suspension form · restore-window items · **tier views (Admin I vs Admin II)** · the §1.8 lifecycle (skeleton · error · offline — the console needs connectivity, `SYS-10`).
 
 ### 4.5 Device editor (`DEV-01..04`)
 **Purpose:** customize your Device shell (the app/profile frame). **Persona:** Curator. **Lighter than the card editor.**
@@ -220,9 +226,9 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 **States:** searching · results · request sent/pending · invite-landing.
 
 ### 4.9 Contributor profile — "My Contributions" (`CAT-07`)
-**Purpose:** Contributor pride surface. **Friend-viewable** (privacy-gated); **stats + badges, no level**.
-**Must host:** games you brought to the catalog · fields you added · cards you designed · adoption/usage stats · contributor achievement badges.
-**States:** self vs friend-view · empty (new user).
+**Purpose:** Contributor pride surface. **Friend-viewable** (privacy-gated, PROF-03); **stats + a contributor standing (`CAT-10`), no badge/level system**.
+**Must host:** **games you brought to the catalog · cards you designed · adoption/usage stats** (total adoptions · total **collections reached** · the percentile **standing**), each list opening a **VIEW ALL** full view. *(decision 0032: "fields you added" + achievement badges dropped from this surface; the percentile standing added.)*
+**States:** self · self-partial (a section empty) · friend-view · friend-empty · privacy-limited (`PROF-03`) · empty (new user) · lifecycle (skeleton / error / offline).
 
 ### 4.10 Achievements (`ACH-03/05`)
 **Purpose:** your achievements. Reached from Profile **only**; **friend-viewable** (earned ones).
@@ -234,7 +240,7 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 **States:** sheet detail · purchasing (landed moment/fail toast/restore) · can't-afford → in-sheet bridge with packs.
 
 ### 4.12 Wallet (`ECON-07`)
-**Must host:** **balance** (prominent; the Wallet's hero replaces the header counter here; can read negative after a refund reversal, `ECON-09` — alert-red variant with plain-words recovery copy) · earn/spend **ledger** (history: grant · daily-bonus claim · pack purchase · adoption · acquire · milestone · **refund reversal**) · **buy currency** (→ the Top Up page, `ECON-10`). Reached via the header counter / Store.
+**Must host:** **balance** (prominent; the Wallet's hero replaces the header counter here; can read negative after a refund reversal, `ECON-09` — alert-red variant with plain-words recovery copy) · earn/spend **ledger** (history: grant · daily-bonus claim · pack purchase · adoption · acquire · milestone · **refund reversal** · **operator adjustment** `ECON-11` — a plain credit/debit the user didn't initiate; decision 0035) · **buy currency** (→ the Top Up page, `ECON-10`). Reached via the header counter / Store.
 **States:** balance (+negative variant) · ledger (empty/populated) · buy-flow.
 
 ### 4.13 Welcome & Auth (`AUTH-01..05`, `AUTH-08/09/10`)
@@ -254,6 +260,7 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 ### 4.15 Settings
 **Must host:** account (email/password · **username change**, cooldown-limited `PROF-06` · **email-verification status + resend** `AUTH-08` · **sign out** · **delete account** `AUTH-07`) · **privacy** (friends-only vs limited public, `PROF-03`) · **blocked users** (list + unblock, `SOC-09`) · **notification prefs** (`NOTIF-02`; incl. recovery guidance when the OS permission was declined, `NOTIF-04`) · **Feedback & bug reporting** (`SYS-11` — feedback/suggestion/bug + message; support-facing) · **Help/Contact** (`SYS-09`) · about/legal (ToS + Privacy, `AUTH-10`).
 **Feedback surface (`SYS-11`):** a Settings row opening a small form/sheet — a **type** selector (feedback · suggestion · bug) + a **message** field; choosing **bug** reveals an **opt-in "attach InGame device logs" control** with a one-line **consent** note and **room reserved for the not-yet-defined log payload** (`OQ-060`). Support-facing (not screened — MOD-07-exempt); **distinct from Help/Contact** (`SYS-09`, which reaches support). **States:** idle · bug-with-logs · submitting · submitted-confirmation · error (the §1.8 channels). Delete-account keeps its **destructive-confirm** (`AUTH-07`).
+**Admin console entry (`MOD-04`, decisions 0033/0034):** for admins only (`adminTier ≥ 1`), a **role-gated row** opens the **Admin console** (`SYS-08`, §4.4). **Invisible to normal users.** (No role-management here — role/tier grant/revoke is out-of-band, `SYS-08` / §10.)
 **Not here:** display theming — the **screen theme** is device customization and lives in the **Device editor** (`DEV-04`).
 
 ### 4.16 Report (modal, `MOD-01`)
@@ -284,4 +291,8 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 | 2026-06-13 | 0.14 | Decision 0019 ripple: §3.5/4.1 friend-view **Share chip cut** (sharing is self-only, OQ-052); §4.1 empty-state **popular = most-collected** (`CAT-09`, OQ-051). |
 | 2026-06-13 | 0.15 | Decision 0020 ripple: §4.2 Game page gains **entry-context states** — the **friend-view** (tap a friend's card → their card + **equipped readout** `CARD-22` + per-game context, **opt-in compare**, **atomic adopt**, `SOC-11`) alongside the owned-state (now noting **inline-editable** stats + the **card-object/flip** home); Part-2 row 7 updated. |
 | 2026-06-13 | 0.16 | Decision 0021 ripple: §3.1 friend-view gains **browse-tool parity** (`COL-11`) — full sort · scoped search · genre/status filter · view-modes, **read-only**, over the friend-visible field set — the Collection board re-pass brief. |
+| 2026-06-27 | 0.18 | Decision 0032 ripple: §4.9 Contributor profile revised (`CAT-07`/`CAT-10`) — **field-edits + achievement badges dropped** from the surface, **percentile standing added**; must-host = games-added + cards-designed + adoption/usage stats (incl. collections-reached) + the standing + per-list **VIEW ALL**; states expanded (self-partial · friend-empty · lifecycle). |
 | 2026-06-13 | 0.17 | Decision 0022 ripple: §4.15 Settings gains a **Feedback & bug-reporting** surface (`SYS-11`) — feedback/suggestion/bug + message, with an **opt-in "attach InGame device logs" control on bug reports** (consent-gated; UI room reserved, log shape TBD `OQ-060`); distinct from Help/Contact (`SYS-09`). *(Header version catch-up 0.15→0.17.)* |
+| 2026-06-27 | 0.19 | Decision 0033 ripple (§4.4 design-pass prep): §3.5 gains the **`MOD`/`ADMIN` role badge** (`PROF-09`); §4.4 console specified — **reached via Settings → Mod/Admin**, **no role-management UI** (grant/revoke out-of-band), reports queue **split by target type** (card/game/user) with a **bottom rail**, **suspension from a user report** (`MOD-09`), restore window, utility styling (no gold · destructive `ConfirmSheet`); §4.15 gains the **role-gated Mod/Admin entry**. | PROF-09, MOD-04, SYS-08, MOD-09 |
+| 2026-06-27 | 0.20 | Decision 0034 ripple (admin tier model): **moderator dropped** → §4.4 renamed **"Admin console"**, scoped to the **in-app P1+P2** (tiers Admin I/II); economy/config/governance (P3–P5, tiers III/IV) noted as the **external tool**; the in-app remediation additions reserved (field reset · user dossier · action-notice · direct catalog edit · junk removal · proactive takedown → **OQ-081**). §3.5 badge → **generic public STAFF/ADMIN marker (tier hidden; tier self-view only)**. §4.15 entry renamed **Admin console** (`adminTier ≥ 1`). | PROF-09, MOD-04, SYS-08 |
+| 2026-06-27 | 0.21 | Decision 0035 ripple: §4.4 console is **tier-adaptive** — draws an **Admin I view** (P1) vs **Admin II view** (P1+P2), never surfacing P3–P5; audit-log noted (`MOD-10`). §4.12 Wallet ledger gains the **operator-adjustment** entry (`ECON-11` — a credit/debit the user didn't initiate). | MOD-04, ECON-11, MOD-10 |

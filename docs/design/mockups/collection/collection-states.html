@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>InGame · Collection States — Empty · Drawer · View Modes (C5 v2)</title>
+<title>InGame · Collection States + Card Peek-flip (COL-12) — C5 v2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
@@ -110,6 +110,33 @@
   .custom-tag { position: absolute; top: 11px; right: 11px; z-index: 2; background: #d3e95e; color: #2a3505;
     padding: 3px 5px; font: 700 9px var(--pk); letter-spacing: .5px; }
   .c5 .custom-tag { border-radius: 0; }
+
+  /* ════ card-back peek-flip (COL-12, decision 0026) — reuses the game-page DualFaceHero back ════
+     The back stats are PRINT (CARD-01, F-06-exempt — they scale with the card), sizes matched to
+     game-page-states for parity. The VIEW GAME control is the peek-flip's visible route to the
+     Game page (4.2) — screen UI, on the F-06 ladder (9). .flipy mirrors the C5 step to TR+BL (the
+     card "turned over"). No on-face indicator (owner) — the front face is untouched. */
+  .gcard.back .art { background: linear-gradient(168deg, #2a2650, #17142f); display: flex; flex-direction: column; padding: 7px; box-sizing: border-box; }
+  .cb-eyebrow { font: 700 7.5px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); text-align: center; padding-bottom: 1px; }
+  .cb-title { font: 700 12px var(--pk); letter-spacing: .8px; color: var(--scr-head); text-align: center; padding-bottom: 5px; border-bottom: 1px solid var(--scr-hairline); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cb-stats { display: flex; flex-direction: column; gap: 4px; padding: 5px 1px; flex: 1 1 auto; }
+  .cb-row { display: flex; justify-content: space-between; align-items: center; }
+  .cb-row .cl { font: 700 7px var(--pk); letter-spacing: 1.2px; color: var(--scr-dim); }
+  .cb-row .cv { font: 700 10px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .cb-row.priv { opacity: .55; }
+  .cb-row.priv .cv { display: inline-flex; align-items: center; gap: 3px; }
+  .cb-prov { border-top: 1px solid var(--scr-hairline); padding-top: 5px; display: flex; flex-direction: column; gap: 1px; }
+  .cb-prov .p1 { font: 700 7.5px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
+  .cb-prov .p-name { font: 700 7.5px var(--pk); letter-spacing: .5px; color: var(--gold); }
+  /* VIEW GAME = the real KeycapButton/secondary (cream, flat, square, Scanline press — F-02/F-03)
+     worn full-width at the print-scale mini size so it fits inside the card back. Canonical
+     .btn.mini/.btn.block ported from the catalog/game-page so this is the named component, not bespoke. */
+  .btn.block { width: 100%; justify-content: center; box-sizing: border-box; }
+  .sk2 .btn.mini { padding: 6px 8px; font-size: 9px; }
+  .gcard.back .btn { margin-top: 6px; }
+  /* .flipy — back frame mirrored on the Y axis (step on TR+BL, "turned over") */
+  .c5 .gcard.back.flipy { clip-path: polygon(100% 8px, calc(100% - 4px) 8px, calc(100% - 4px) 4px, calc(100% - 8px) 4px, calc(100% - 8px) 0, 0 0, 0 calc(100% - 8px), 4px calc(100% - 8px), 4px calc(100% - 4px), 8px calc(100% - 4px), 8px 100%, 100% 100%); }
+  .c5 .gcard.back.flipy .art { clip-path: polygon(100% 3px, calc(100% - 3px) 3px, calc(100% - 3px) 0, 0 0, 0 calc(100% - 3px), 3px calc(100% - 3px), 3px 100%, 100% 100%); }
 
   /* ════ S2 base — flat floating panels ════ */
   .sk2 { background: var(--scr-bg); }
@@ -401,11 +428,11 @@
 
 <div class="canvas">
   <div class="canvas-head">
-    <h1>Collection States · Empty · Views · Friend · Lifecycle — C5 v2</h1>
-    <p>Sixteen Collection artboards in the C5 v2 language (square chrome, stepped cards, Midnight theme),
+    <h1>Collection States + Card Peek-flip (COL-12) — C5 v2</h1>
+    <p>Nineteen Collection artboards in the C5 v2 language (square chrome, stepped cards, Midnight theme),
     now at parity with the Profile state matrix. <b>Tools &amp; empty:</b> first-run empty (AUTH-06) · the
     pulled-up drawer (COL-07/09 + OQ-031/034) · in-place search (COL-09; OQ-035). <b>View modes:</b> SHELF /
-    GRID / LIST (COL-07). <b>Friend's Collection (COL-10/COL-11):</b> your chrome + the "view in their device" toggle
+    GRID / LIST (COL-07). <b>Card peek-flip (COL-12, decision 0026 — reverses OQ-059/0025):</b> tap a shelf/grid card to flip it in place to its CARD-01 stats back — grid · shelf · friend (privacy-gated). <b>Friend's Collection (COL-10/COL-11):</b> your chrome + the "view in their device" toggle
     (decision 0012) + <b>full read-only browse tools</b> (search/sort/filter/view). <b>Now-Playing &amp; lifecycle:</b> the set-your-pin nudge (§3.1) · skeleton · load-error.
     <b>Unavailable &amp; offline:</b> terminal (MOD-09) · offline from cache · a friend you can't reach (SYS-10).
     Standalone file — sample art = built-in SVG symbols.</p>
@@ -960,6 +987,275 @@
         your eye down &mdash; sort by HOURS or OWNED SINCE and the answer pops without flipping a single card.</p>
       </div>
     </div>
+  </div>
+
+  <!-- ═══════════════════════ peek-flip (COL-12 · decision 0026) ═══════════════════════ -->
+  <div class="stage-label">States &middot; card peek-flip (COL-12) <small>tap a shelf/grid card &rarr; it <b>flips in place</b> to its CARD-01 stats back &middot; tap the back returns &middot; <b>VIEW GAME</b> opens the Game page (4.2) &middot; long-press = shortcut to the page. Reverses OQ-059 (decision 0026). Friend-view is privacy-gated. <b>No on-face indicator</b> (owner) &mdash; discoverability is a first-run coachmark.</small></div>
+  <div class="stage">
+
+    <!-- ═══ peek-flip · grid (own) ═══ -->
+    <div class="take">
+      <div class="artboard-label">Grid &mdash; a card flipped to its stats back</div>
+      <div class="device" data-screen-label="States · C5 · Peek-flip — Grid (own)">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>COLLECTION</h2><span class="count">48 GAMES</span></div>
+            <div class="scroll">
+              <div class="hero">
+                <div class="gcard hero-size fr-marathon custom"><span class="custom-tag">&#9733; FOIL</span>
+                  <div class="art"><svg><use href="#art-marathon"/></svg></div>
+                  <div class="plate pl-marathon">Marathon</div>
+                </div>
+                <div class="hero-meta">
+                  <span class="npl">NOW PLAYING</span>
+                  <span class="stat-line">86 HRS &middot; PLAYING</span>
+                  <span class="hero-title">MARATHON</span>
+                  <span class="hero-sub">BUNGIE &middot; 2025 &middot; SHOOTER</span>
+                  <button class="btn"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>LOG HOURS</button>
+                </div>
+              </div>
+              <div class="grid">
+                <div class="gcard grid-size fr-destiny">
+                  <div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="gcard grid-size fr-marathon custom"><span class="now-tag">&#9654; NOW</span>
+                  <div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
+                <div class="gcard grid-size fr-minecraft back flipy">
+                  <div class="art">
+                    <div class="cb-eyebrow">YOUR STATS</div>
+                    <div class="cb-title">MINECRAFT</div>
+                    <div class="cb-stats">
+                      <div class="cb-row"><span class="cl">HOURS</span><span class="cv">132</span></div>
+                      <div class="cb-row"><span class="cl">COMPLETE</span><span class="cv">100%</span></div>
+                      <div class="cb-row"><span class="cl">STATUS</span><span class="cv">BEATEN</span></div>
+                      <div class="cb-row"><span class="cl">SINCE</span><span class="cv">2011</span></div>
+                    </div>
+                    <div class="cb-prov"><span class="p1">CARD ARTIST</span><span class="p-name">MAVERICK</span></div>
+                    <button class="btn secondary mini block">VIEW GAME &rsaquo;</button>
+                  </div>
+                </div>
+                <div class="gcard grid-size fr-ratchet">
+                  <div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
+                <div class="gcard grid-size fr-re">
+                  <div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div>
+              </div>
+            </div>
+            <div class="tools">
+              <div class="grip"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.4" fill="none" stroke-width="1.6"/><path d="M7.8 7.8L11 11" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+              <div class="chip active"><span class="chip-pip"></span><svg width="11" height="12" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><b>A&ndash;Z &#8593;</b></div>
+              <div class="chip"><svg width="12" height="11" viewBox="0 0 12 11"><path d="M1 1.5h10L7.5 6v3.4L4.5 10V6L1 1.5z" fill="none" stroke-width="1.4" stroke-linejoin="round"/></svg><b>ALL</b></div>
+              <div class="chip active"><span class="chip-pip"></span><svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="4.4" height="4.4" rx="1"/><rect x="6.6" y="1" width="4.4" height="4.4" rx="1"/><rect x="1" y="6.6" width="4.4" height="4.4" rx="1"/><rect x="6.6" y="6.6" width="4.4" height="4.4" rx="1"/></svg></div>
+              <div class="spacer"></div>
+              <button class="btn add"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>ADD</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Peek-flip &mdash; grid <em>(tap a card to turn it over)</em></h3>
+        <p><b>Tap a card and it flips in place</b> to its standardized stats back (CARD-01) &mdash; HOURS &middot;
+        COMPLETE &middot; STATUS &middot; SINCE + the <b>CARD ARTIST</b> provenance &mdash; a quick stats peek
+        <b>without leaving the shelf</b>. Tap the back to return; the back's <b>VIEW GAME &rsaquo;</b> opens the full
+        Game page (4.2), and a long-press is a shortcut straight there.</p>
+        <p><b>No indicator on the face</b> (owner) &mdash; the card front is untouched; discoverability is a first-run
+        coachmark (CARD-16). The flip is a <i>tap</i> (the non-gesture a11y path) and honours reduce-motion. The
+        mirrored corner-step reads as "turned over." <b>Dense-list is excluded</b> (its rows already print the
+        stats &mdash; a list-row tap stays open-the-Game-page).</p>
+      </div>
+    </div>
+
+    <!-- ═══ peek-flip · shelf (own) ═══ -->
+    <div class="take">
+      <div class="artboard-label">Shelf &mdash; flipped row card</div>
+      <div class="device" data-screen-label="States · C5 · Peek-flip — Shelf (own)">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>COLLECTION</h2><span class="count">48 GAMES</span></div>
+            <div class="scroll">
+              <div class="hero">
+                <div class="gcard hero-size fr-marathon custom"><span class="custom-tag">&#9733; FOIL</span>
+                  <div class="art"><svg><use href="#art-marathon"/></svg></div>
+                  <div class="plate pl-marathon">Marathon</div>
+                </div>
+                <div class="hero-meta">
+                  <span class="npl">NOW PLAYING</span>
+                  <span class="stat-line">86 HRS &middot; PLAYING</span>
+                  <span class="hero-title">MARATHON</span>
+                  <span class="hero-sub">BUNGIE &middot; 2025 &middot; SHOOTER</span>
+                  <button class="btn"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>LOG HOURS</button>
+                </div>
+              </div>
+              <div class="shelf-stack">
+                <div class="hero">
+                  <div class="gcard hero-size fr-destiny">
+                    <div class="art"><svg><use href="#art-destiny"/></svg></div>
+                    <div class="plate pl-destiny">Destiny</div>
+                  </div>
+                  <div class="hero-meta">
+                    <span class="stat-line">210 HRS &middot; BEATEN</span>
+                    <span class="hero-title">DESTINY</span>
+                    <span class="hero-sub">BUNGIE &middot; 2014 &middot; SHOOTER</span>
+                  </div>
+                </div>
+                <div class="hero">
+                  <div class="gcard hero-size fr-minecraft back flipy">
+                    <div class="art">
+                      <div class="cb-eyebrow">YOUR STATS</div>
+                      <div class="cb-title">MINECRAFT</div>
+                      <div class="cb-stats">
+                        <div class="cb-row"><span class="cl">HOURS</span><span class="cv">132</span></div>
+                        <div class="cb-row"><span class="cl">COMPLETE</span><span class="cv">100%</span></div>
+                        <div class="cb-row"><span class="cl">STATUS</span><span class="cv">BEATEN</span></div>
+                        <div class="cb-row"><span class="cl">SINCE</span><span class="cv">2011</span></div>
+                      </div>
+                      <div class="cb-prov"><span class="p1">CARD ARTIST</span><span class="p-name">MAVERICK</span></div>
+                      <button class="btn secondary mini block">VIEW GAME &rsaquo;</button>
+                    </div>
+                  </div>
+                  <div class="hero-meta">
+                    <span class="stat-line">132 HRS &middot; BEATEN</span>
+                    <span class="hero-title">MINECRAFT</span>
+                    <span class="hero-sub">MOJANG &middot; 2011 &middot; SANDBOX</span>
+                  </div>
+                </div>
+                <div class="hero">
+                  <div class="gcard hero-size fr-ratchet">
+                    <div class="art"><svg><use href="#art-ratchet"/></svg></div>
+                    <div class="plate pl-ratchet">Ratchet &amp; Clank</div>
+                  </div>
+                  <div class="hero-meta">
+                    <span class="stat-line">38 HRS &middot; 100%</span>
+                    <span class="hero-title">RATCHET &amp; CLANK</span>
+                    <span class="hero-sub">INSOMNIAC &middot; 2002 &middot; PLATFORMER</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="tools">
+              <div class="grip"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.4" fill="none" stroke-width="1.6"/><path d="M7.8 7.8L11 11" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+              <div class="chip active"><span class="chip-pip"></span><svg width="11" height="12" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><b>A&ndash;Z &#8593;</b></div>
+              <div class="chip"><svg width="12" height="11" viewBox="0 0 12 11"><path d="M1 1.5h10L7.5 6v3.4L4.5 10V6L1 1.5z" fill="none" stroke-width="1.4" stroke-linejoin="round"/></svg><b>ALL</b></div>
+              <div class="chip"><svg width="10" height="12" viewBox="0 0 10 12"><path d="M1.5 1.5h7v9h-7z" fill="none" stroke-width="1.5" stroke-linejoin="round"/><path d="M2.8 8.6h4.4" stroke-width="1.3"/></svg></div>
+              <div class="spacer"></div>
+              <button class="btn add"><svg width="11" height="11" viewBox="0 0 11 11"><path d="M5.5 1v9M1 5.5h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>ADD</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Peek-flip &mdash; shelf <em>(same mechanism, hero rows)</em></h3>
+        <p>The flip works the same in <b>shelf</b> mode. Here the back surfaces what the stat-eyebrow can't &mdash;
+        <b>% complete</b> and the <b>designer credit</b> &mdash; right beside the row's HRS &middot; STATUS eyebrow, so
+        the quick scan and the full peek live together. The pinned Now-Playing hero never flips (it stays the
+        showcase + LOG HOURS).</p>
+      </div>
+    </div>
+
+    <!-- ═══ peek-flip · friend (privacy-gated back) ═══ -->
+    <div class="take">
+      <div class="artboard-label">Friend's grid &mdash; flipped (privacy-gated back)</div>
+      <div class="device" data-screen-label="States · C5 · Peek-flip — Friend (privacy)">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2 class="whose">COLLECTION &mdash; RIKO</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO PROFILE</a>
+            <div class="scroll">
+              <div class="hero">
+                <div class="gcard hero-size fr-re">
+                  <div class="art"><svg><use href="#art-re"/></svg></div>
+                  <div class="plate pl-re">Resident Evil</div>
+                </div>
+                <div class="hero-meta">
+                  <span class="npl">RIKO'S NOW PLAYING</span>
+                  <span class="stat-line">24 HRS &middot; PLAYING</span>
+                  <span class="hero-title">RESIDENT EVIL</span>
+                  <span class="hero-sub">CAPCOM &middot; 2002 &middot; HORROR</span>
+                </div>
+              </div>
+              <div class="grid">
+                <div class="gcard grid-size fr-re"><span class="now-tag">&#9654; NOW</span>
+                  <div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div>
+                <div class="gcard grid-size fr-ratchet">
+                  <div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
+                <div class="gcard grid-size fr-minecraft back flipy">
+                  <div class="art">
+                    <div class="cb-eyebrow">RIKO'S STATS</div>
+                    <div class="cb-title">MINECRAFT</div>
+                    <div class="cb-stats">
+                      <div class="cb-row"><span class="cl">HOURS</span><span class="cv">132</span></div>
+                      <div class="cb-row"><span class="cl">STATUS</span><span class="cv">BEATEN</span></div>
+                      <div class="cb-row"><span class="cl">SINCE</span><span class="cv">2011</span></div>
+                      <div class="cb-row priv"><span class="cl">NOTES &middot; RATING</span><span class="cv">&#128274; PRIVATE</span></div>
+                    </div>
+                    <div class="cb-prov"><span class="p1">CARD ARTIST</span><span class="p-name">RIKO</span></div>
+                    <button class="btn secondary mini block">VIEW GAME &rsaquo;</button>
+                  </div>
+                </div>
+                <div class="gcard grid-size fr-destiny">
+                  <div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+              </div>
+            </div>
+            <div class="tools">
+              <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.4" fill="none" stroke-width="1.6"/><path d="M7.8 7.8L11 11" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+              <div class="chip active"><span class="chip-pip"></span><svg width="11" height="12" viewBox="0 0 11 12"><path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg><b>A&ndash;Z &#8593;</b></div>
+              <div class="chip"><svg width="12" height="11" viewBox="0 0 12 11"><path d="M1 1.5h10L7.5 6v3.4L4.5 10V6L1 1.5z" fill="none" stroke-width="1.4" stroke-linejoin="round"/></svg><b>ALL</b></div>
+              <div class="chip active"><span class="chip-pip"></span><svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="4.4" height="4.4" rx="1"/><rect x="6.6" y="1" width="4.4" height="4.4" rx="1"/><rect x="1" y="6.6" width="4.4" height="4.4" rx="1"/><rect x="6.6" y="6.6" width="4.4" height="4.4" rx="1"/></svg></div>
+              <div class="spacer"></div>
+              <div class="chip"><svg width="13" height="12" viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg><b>COMPARE</b></div>
+              <div class="chip"><b class="ovf">&#8943;</b></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Peek-flip &mdash; friend's collection <em>(privacy-gated back)</em></h3>
+        <p><b>Parity with your own (COL-11), gated by privacy (PROF-03).</b> A friend's card flips the same way, but
+        the back shows only the <b>friend-visible</b> fields &mdash; HOURS &middot; STATUS &middot; SINCE + the designer
+        credit. <b>NOTES &middot; RATING render as &#128274; PRIVATE</b> (owner-only, COL-04/05, OQ-058), and
+        % complete is omitted. <b>VIEW GAME &rsaquo;</b> opens their friend-view Game page (M7).</p>
+      </div>
+    </div>
+
   </div>
 
   <div class="stage-label">Friend's Collection (COL-10) <small>reached from a friend's Top-5 (PROF-05) &mdash; read-only, privacy-gated; your chrome by default + the "view in their device" toggle (decision 0012). <b>Full browse-tool parity (COL-11):</b> search &middot; sort &middot; filter &middot; view, read-only</small></div>

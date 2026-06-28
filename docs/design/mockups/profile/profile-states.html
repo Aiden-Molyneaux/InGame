@@ -160,10 +160,9 @@
   .id-name { font: 700 21px/1.1 var(--pk); letter-spacing: 1px; color: var(--scr-text); }
   /* RoleTag (PROF-09 · §4.4 cross-board ripple) — staff badge next to the name. Public/friend-view =
      generic STAFF/ADMIN (tier HIDDEN); self-view also shows the tier (Admin I–IV). Absent for normal
-     users. Utility (NOT gold) — flat accent-bordered pixel-notched chip. */
+     users. Utility (NOT gold) — flat accent-bordered chip. */
   .nrow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .roletag { display: inline-flex; align-items: center; gap: 5px; font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-accent); border: 1px solid color-mix(in srgb, var(--scr-accent) 50%, transparent); padding: 3px 7px;
-    clip-path: polygon(0 3px, 3px 3px, 3px 0, calc(100% - 3px) 0, calc(100% - 3px) 3px, 100% 3px, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 3px 100%, 3px calc(100% - 3px), 0 calc(100% - 3px)); }
+  .roletag { display: inline-flex; align-items: center; gap: 5px; font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-accent); border: 1px solid color-mix(in srgb, var(--scr-accent) 50%, transparent); padding: 3px 7px; }
   .roletag svg { width: 11px; height: 11px; } .roletag svg path { stroke: var(--scr-accent); fill: none; }
   .id-sub { font: 600 11px var(--pk); letter-spacing: 1px; color: var(--scr-dim); margin-top: 3px; }
   .bio { font: 500 11px/1.5 var(--pk); color: var(--scr-soft); }

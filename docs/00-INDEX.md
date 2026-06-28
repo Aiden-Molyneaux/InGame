@@ -4,7 +4,7 @@
 > disagree, how changes flow between them, and how we keep four+ living documents from drifting.
 > Read this before editing anything else.
 
-**Last updated:** 2026-06-24 · **Maintainer:** Aiden (product) + Claude Code (spec/engineering)
+**Last updated:** 2026-06-27 · **Maintainer:** Aiden (product) + Claude Code (spec/engineering)
 
 ---
 
@@ -16,12 +16,12 @@ truth** for its concern. Other documents *reference* that truth by ID — they n
 | Document | Owns the truth for | Authored / edited by | Consumed by | Status |
 |---|---|---|---|---|
 | `00-INDEX.md` (this file) | Process, ID scheme, change protocol | Claude Code | Everyone | **Active** |
-| `spec/product-spec.md` | Behavior, data model, rules, economy — *what the app does* | Claude Code | Design, Planning | **v0.24 — draft** |
-| `spec/api-contract.md` | Endpoint + payload shapes — the **frontend↔backend seam** | Claude Code | Design, Planning | **v0.25 — draft** |
+| `spec/product-spec.md` | Behavior, data model, rules, economy — *what the app does* | Claude Code | Design, Planning | **v0.32 — draft** |
+| `spec/api-contract.md` | Endpoint + payload shapes — the **frontend↔backend seam** | Claude Code | Design, Planning | **v0.32 — draft** |
 | `spec/testing-strategy.md` | How we test — layers, tooling, rigor, CI | Claude Code | Planning, Implementation | **v0.1** |
 | `design/design-process.md` | How Claude Design works the brief — phases + reuse mandate | Claude Code → read by Claude Design | Claude Design | **Active** |
-| `design/ui-design-requirements.md` | What each screen must let users *do* (derived from spec) | Claude Code → handed to Claude Design | Claude Design | **v0.17 — all screens specified** |
-| `design/design-spec.md` | Screens, flows, components, visuals — *how you touch it* | Claude Design → committed here | Planning | **v0.26 — Foundations + Collection/Profile/Store/Add Game/Styler/Canvas/Report/Discover/Settings/Flat buttons + Game page + DS-conformance sweep + Friends/Find-Add + F-02 gold-economy + Collection peek-flip + Compare Hours** |
+| `design/ui-design-requirements.md` | What each screen must let users *do* (derived from spec) | Claude Code → handed to Claude Design | Claude Design | **v0.21 — all screens specified** |
+| `design/design-spec.md` | Screens, flows, components, visuals — *how you touch it* | Claude Design → committed here | Planning | **v0.32 — Foundations + Collection/Profile/Store/Add Game/Styler/Canvas/Report/Discover/Settings/Flat buttons + Game page + DS-conformance sweep + Friends/Find-Add + F-02 gold-economy + Collection peek-flip + Compare Hours + card-back relabel + F-05 on-screen pips squared + Profile STATS de-welled + Device editor (4.5) + Contributor profile (4.9) + Welcome & Auth Draft-A sign-in + full auth state matrix** |
 | `planning/implementation-plan.md` | Build sequence and tasks | Claude Code | Implementation | *Not started* |
 | `decisions/*.md` | **Why** we chose what we chose (rationale, dated) | Claude Code | Everyone | **Active** |
 | `open-questions.md` | The **inbox** of unresolved questions | Anyone may append | Claude Code triages | **Active** |

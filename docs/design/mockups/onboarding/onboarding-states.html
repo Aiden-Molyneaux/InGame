@@ -188,6 +188,9 @@
   .flow-head { justify-content: flex-start; }
   .flow-head .fh-spacer { flex: 1 1 auto; }
   .flow-head .skip { font: 600 11px var(--pk); letter-spacing: 1px; color: var(--scr-dim); text-decoration: none; }
+  .retlink { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 0 16px 10px;
+    font: 700 9px var(--pk); letter-spacing: 1.2px; color: var(--scr-dim); }
+  .retlink .bk { color: var(--scr-accent); font: 700 15px/1 var(--pk); }
 
   /* ── step rail (the onboarding-only chrome — built from the fan-nav dot idiom) ── */
   .step-rail { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; padding: 2px 16px 10px; }
@@ -200,6 +203,7 @@
   /* ── bottom-docked SearchField (OQ-035 posture — verbatim) ── */
   .tools { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 8px 10px; }
   .sk2 .tools { background: var(--scr-tools); border-top: 1px solid var(--scr-hairline); }
+  .sk2 .tools.search-bar { background: var(--scr-bg); border-top: none; }
   .search-bar .field { flex: 1 1 auto; }
   .field { display: flex; align-items: center; gap: 7px; background: var(--scr-chip); padding: 9px 10px;
     box-shadow: inset 0 2px 3px rgba(0,0,0,.16); }
@@ -221,8 +225,8 @@
   .cfan .fore { position: relative; z-index: 2; flex: 0 0 auto; }
   .fan-nav { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 11px 0 0; }
   .fan-nav .chev { font: 700 11px/1 var(--pk); color: var(--scr-dim); }
-  .fan-nav .fdot { width: 5px; height: 5px; border-radius: 50%; background: var(--scr-grip); }
-  .fan-nav .fdot.on { background: var(--scr-accent); box-shadow: 0 0 5px 1px rgba(255,159,67,.55); }
+  .fan-nav .fdot { width: 6px; height: 6px; background: var(--scr-grip); clip-path: polygon(11.1% 0, 88.9% 0, 88.9% 11.1%, 100% 11.1%, 100% 88.9%, 88.9% 88.9%, 88.9% 100%, 11.1% 100%, 11.1% 88.9%, 0 88.9%, 0 11.1%, 11.1% 11.1%); }
+  .fan-nav .fdot.on { background: var(--scr-accent); }
   .fan-nav .swipe-lbl { font: 600 9px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); margin-left: 5px; }
   .fan-meta { display: flex; justify-content: center; align-items: baseline; gap: 6px; padding: 7px 0 0;
     font: 600 11px var(--pk); letter-spacing: 1px; color: var(--scr-soft); text-align: center; }
@@ -254,7 +258,9 @@
   .pickgrid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 4px 8px 0; }
   .pchip { position: relative; background: var(--scr-chip); color: var(--navy); padding: 8px 11px;
     font: 700 11px var(--pk); letter-spacing: .5px; }
-  .pchip.sel { background: rgba(255,159,67,.10); color: var(--scr-text); border: 1.5px solid var(--scr-accent); padding: 6.5px 9.5px; }
+  .pchip.sel { background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.20) 0 1px, #0000 1px 2px);
+    color: var(--navy); }
   /* genre chips ride the panel ground so they read as on-screen content, not cream keycaps */
   .gchip { position: relative; background: var(--scr-panel); border: 1px solid var(--scr-hairline); color: var(--scr-soft);
     padding: 8px 12px; font: 700 11px var(--pk); letter-spacing: .5px; }
@@ -269,7 +275,6 @@
   .statrow .sr-s { font: 600 9px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); }
   .statrow .sr-pick { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
   .statrow .sr-pick .pchip { padding: 5px 8px; font-size: 9px; letter-spacing: 1px; }
-  .statrow .sr-pick .pchip.sel { padding: 3.5px 6.5px; }
 
   /* design-a-card teaser (O5) — the GOLD step + the invite nudge */
   .teaser-card { display: flex; justify-content: center; padding: 20px 0 4px; }
@@ -589,7 +594,7 @@
         <div class="screen-bezel">
           <div class="screen sk2 c5">
             <div class="screen-head flow-head"><h2>ADD GAMES</h2><span class="fh-spacer"></span><a class="skip" href="#">SKIP &rsaquo;</a></div>
-            <div class="step-rail"><span class="sr-lbl">STEP 1 / 4</span><span class="sr-dots"><i class="sd on"></i><i class="sd"></i><i class="sd"></i><i class="sd"></i></span><span class="count" style="margin-left:auto;">2 ADDED<span class="ctick">+2</span></span></div>
+            <div class="step-rail"><span class="sr-lbl">STEP 1 / 4</span><span class="sr-dots"><i class="sd on"></i><i class="sd"></i><i class="sd"></i><i class="sd"></i></span></div>
             <div class="scroll">
               <div class="step-lead" style="margin-top:2px;">Tap a card to add it — these are the games most players collect first.</div>
               <div class="sec tight"><h3>POPULAR &middot; MOST COLLECTED</h3></div>
@@ -599,9 +604,9 @@
                 <div class="nb r"><div class="gcard fan-nb fr-minecraft"><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div></div>
               </div>
               <div class="fan-meta"><b>Destiny</b> &middot; Bungie &middot; 2017</div>
-              <div class="fan-meta sub"><b>IN 9.4K COLLECTIONS</b> &middot; <b>3</b> FRIENDS HAVE IT</div>
+              <div class="fan-meta sub"><b>IN 9.4K COLLECTIONS</b></div>
               <div class="fan-nav"><span class="chev">&lsaquo;</span><span class="fdot"></span><span class="fdot on"></span><span class="fdot"></span><span class="chev">&rsaquo;</span><span class="swipe-lbl">SWIPE</span></div>
-              <div class="sec tight"><h3>FRIENDS ARE PLAYING</h3></div>
+              <div class="sec tight"><h3>TRENDING</h3></div>
               <div class="cfan">
                 <div class="nb l"><div class="gcard fan-nb fr-marathon"><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div></div>
                 <div class="fore"><div class="gcard fan-size fr-ratchet"><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div></div>
@@ -609,14 +614,14 @@
               </div>
               <div class="fan-nav"><span class="chev">&lsaquo;</span><span class="fdot"></span><span class="fdot on"></span><span class="fdot"></span><span class="chev">&rsaquo;</span><span class="swipe-lbl">SWIPE</span></div>
             </div>
-            <div class="step-foot" style="border-top:none;padding-top:2px;">
-              <button class="btn wide">CONTINUE &middot; 2 ADDED &rsaquo;</button>
-            </div>
             <div class="tools search-bar">
               <div class="field">
                 <svg width="12" height="12" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.4" fill="none" stroke-width="1.6"/><path d="M7.8 7.8L11 11" stroke-width="1.8" stroke-linecap="round"/></svg>
                 <span class="caret"></span><span class="ph">SEARCH FOR A GAME&hellip;</span>
               </div>
+            </div>
+            <div class="step-foot">
+              <button class="btn wide">CONTINUE &middot; 2 ADDED &rsaquo;</button>
             </div>
           </div>
         </div>
@@ -631,7 +636,7 @@
       <div class="caption">
         <h3>O2 — Add a few games <em>(the load-bearing step — CAT-09 + COL-01)</em></h3>
         <p>The <b>CAT-09 popular rail</b> (most-collected, capped, no paging) leads as a 3-up <b>CardFan</b> — verbatim
-        Add Game geometry (full faces, all plates legible, zero occlusion, F-01) — over <b>FRIENDS ARE PLAYING</b>, with the
+        Add Game geometry (full faces, all plates legible, zero occlusion, F-01), with the
         <b>bottom-docked SearchField</b> riding the keyboard (OQ-035). Tapping the forefront <b>adds it</b> (COL-01) — the
         green ADDED pill + the gold <b>CountKeycap</b> ticks (+2). The presence line is the CAT-09 read.</p>
         <p><b>No gold CTA:</b> CONTINUE is orange (a plain add isn't card-creating, F-02). The header counter is gold only as
@@ -651,7 +656,8 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><button class="fh-key">&#8249;</button><h2>SET STATUS</h2><span class="fh-spacer"></span><a class="skip" href="#">SKIP &rsaquo;</a></div>
+            <div class="screen-head flow-head"><h2>SET STATUS</h2><span class="fh-spacer"></span><a class="skip" href="#">SKIP &rsaquo;</a></div>
+            <div class="retlink"><span class="bk">&lsaquo;</span> BACK</div>
             <div class="step-rail"><span class="sr-lbl">STEP 1 / 4</span><span class="sr-dots"><i class="sd on"></i><i class="sd"></i><i class="sd"></i><i class="sd"></i></span></div>
             <div class="scroll">
               <div class="step-lead" style="margin-top:2px;">Optional — tag where you're at with the ones you added. Anything you skip stays <b>BACKLOG</b>.</div>
@@ -708,7 +714,8 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><button class="fh-key">&#8249;</button><h2>YOUR GENRES</h2><span class="fh-spacer"></span><a class="skip" href="#">SKIP &rsaquo;</a></div>
+            <div class="screen-head flow-head"><h2>YOUR GENRES</h2><span class="fh-spacer"></span><a class="skip" href="#">SKIP &rsaquo;</a></div>
+            <div class="retlink"><span class="bk">&lsaquo;</span> BACK</div>
             <div class="step-rail"><span class="sr-lbl">STEP 2 / 4</span><span class="sr-dots"><i class="sd done"></i><i class="sd on"></i><i class="sd"></i><i class="sd"></i></span></div>
             <div class="scroll">
               <div class="step-title">WHAT DO YOU PLAY?</div>
@@ -771,7 +778,8 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><button class="fh-key">&#8249;</button><h2>MAKE IT YOURS</h2><span class="fh-spacer"></span><a class="skip" href="#">SKIP &rsaquo;</a></div>
+            <div class="screen-head flow-head"><h2>MAKE IT YOURS</h2><span class="fh-spacer"></span><a class="skip" href="#">SKIP &rsaquo;</a></div>
+            <div class="retlink"><span class="bk">&lsaquo;</span> BACK</div>
             <div class="step-rail"><span class="sr-lbl">STEP 3 / 4</span><span class="sr-dots"><i class="sd done"></i><i class="sd done"></i><i class="sd on"></i><i class="sd"></i></span></div>
             <div class="scroll">
               <div class="teaser-card">
@@ -1133,7 +1141,7 @@
                 <div class="fore"><div class="sk-fan" style="width:96px;height:134px;"></div></div>
                 <div class="nb r"><div class="sk-fan"></div></div>
               </div>
-              <div class="sec tight" style="margin-top:18px;"><h3>FRIENDS ARE PLAYING</h3></div>
+              <div class="sec tight" style="margin-top:18px;"><h3>TRENDING</h3></div>
               <div class="cfan">
                 <div class="nb l"><div class="sk-fan"></div></div>
                 <div class="fore"><div class="sk-fan" style="width:96px;height:134px;"></div></div>

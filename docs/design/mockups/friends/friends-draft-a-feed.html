@@ -174,7 +174,7 @@
 
   /* ════ requests banner (inline) ════ */
   .reqbanner { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-top: 4px; background: var(--scr-well);
-    border: 1px solid color-mix(in srgb, var(--scr-accent) 40%, transparent); border-left: 3px solid var(--scr-accent); cursor: pointer; }
+    border: 1px solid color-mix(in srgb, var(--scr-accent) 40%, transparent); cursor: pointer; }
   .reqbanner .rb-stack { display: flex; }
   .reqbanner .rb-stack .av { margin-left: -10px; box-shadow: 0 0 0 2px var(--scr-well); } .reqbanner .rb-stack .av:first-child { margin-left: 0; }
   .reqbanner .rb-tx { flex: 1 1 auto; min-width: 0; }
@@ -188,11 +188,6 @@
   .frow .fname { font: 700 11px var(--pk); letter-spacing: .3px; color: var(--scr-text); }
   .frow .fspeek { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); } .frow .fspeek b { color: var(--scr-soft); }
   .frow .fright { margin-left: auto; flex: 0 0 auto; display: flex; align-items: center; gap: 7px; }
-  .cmp { display: inline-flex; align-items: center; gap: 5px; background: var(--scr-well); border: 1px solid color-mix(in srgb, var(--scr-accent) 45%, transparent);
-    color: var(--scr-accent); font: 700 9px var(--pk); letter-spacing: .5px; padding: 6px 8px; cursor: pointer; transition: background .07s, box-shadow .07s; }
-  .cmp svg { width: 12px; height: 11px; stroke: var(--scr-accent); fill: none; stroke-width: 1.8; stroke-linecap: round; }
-  .cmp:active, .cmp.is-pressed { background: color-mix(in srgb, var(--scr-well) 70%, #000); box-shadow: inset 0 2px 4px rgba(0,0,0,.45); }
-  .c5 .cmp { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
   .ovf { flex: 0 0 auto; width: 24px; height: 30px; display: inline-flex; align-items: center; justify-content: center; color: var(--scr-dim); font: 700 15px/1 var(--pk); cursor: pointer; }
 
   /* ════ RequestRow ════ */
@@ -453,27 +448,27 @@
               <div class="frow">
                 <div class="av" style="background:#6c4fd8;color:#fff;">RI</div>
                 <div class="fmeta"><span class="fname">@riko</span><span class="fspeek"><b>188 H</b> &middot; 142 GAMES</span></div>
-                <div class="fright"><div class="cmp"><svg viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</div><span class="ovf">&#8942;</span></div>
+                <div class="fright"><button class="btn mini secondary"><svg width="12" height="11" viewBox="0 0 13 12" style="stroke:var(--navy);fill:none;stroke-width:1.8;stroke-linecap:round;"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</button><span class="ovf">&#8942;</span></div>
               </div>
               <div class="frow">
                 <div class="av" style="background:#3a3a42;color:#f5f1e4;">VA</div>
                 <div class="fmeta"><span class="fname">@vanta</span><span class="fspeek"><b>210 H</b> &middot; 156 GAMES</span></div>
-                <div class="fright"><div class="cmp"><svg viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</div><span class="ovf">&#8942;</span></div>
+                <div class="fright"><button class="btn mini secondary"><svg width="12" height="11" viewBox="0 0 13 12" style="stroke:var(--navy);fill:none;stroke-width:1.8;stroke-linecap:round;"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</button><span class="ovf">&#8942;</span></div>
               </div>
               <div class="frow">
                 <div class="av" style="background:#2a8a7a;color:#04211c;">KA</div>
                 <div class="fmeta"><span class="fname">@kai</span><span class="fspeek"><b>120 H</b> &middot; 98 GAMES</span></div>
-                <div class="fright"><div class="cmp"><svg viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</div><span class="ovf">&#8942;</span></div>
+                <div class="fright"><button class="btn mini secondary"><svg width="12" height="11" viewBox="0 0 13 12" style="stroke:var(--navy);fill:none;stroke-width:1.8;stroke-linecap:round;"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</button><span class="ovf">&#8942;</span></div>
               </div>
               <div class="frow">
                 <div class="av" style="background:#c8413a;color:#fff;">NO</div>
                 <div class="fmeta"><span class="fname">@nova</span><span class="fspeek"><b>96 H</b> &middot; 84 GAMES</span></div>
-                <div class="fright"><div class="cmp"><svg viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</div><span class="ovf">&#8942;</span></div>
+                <div class="fright"><button class="btn mini secondary"><svg width="12" height="11" viewBox="0 0 13 12" style="stroke:var(--navy);fill:none;stroke-width:1.8;stroke-linecap:round;"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</button><span class="ovf">&#8942;</span></div>
               </div>
               <div class="frow">
                 <div class="av" style="background:#b08a4a;color:#2a1408;">SA</div>
                 <div class="fmeta"><span class="fname">@sable</span><span class="fspeek"><b>41 H</b> &middot; 31 GAMES</span></div>
-                <div class="fright"><div class="cmp"><svg viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</div><span class="ovf">&#8942;</span></div>
+                <div class="fright"><button class="btn mini secondary"><svg width="12" height="11" viewBox="0 0 13 12" style="stroke:var(--navy);fill:none;stroke-width:1.8;stroke-linecap:round;"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</button><span class="ovf">&#8942;</span></div>
               </div>
               <div class="hint"><b>SOC-01 &middot; PROF-05 &middot; COL-10.</b> Tap a row &rarr; their Profile / read-only Collection. <b>COMPARE</b> &rarr; 4.6 (SOC-03). The <b>&#8942;</b> opens the actions sheet (P6).</div>
             </div>
@@ -623,12 +618,12 @@
               <div class="frow">
                 <div class="av" style="background:#6c4fd8;color:#fff;">RI</div>
                 <div class="fmeta"><span class="fname">@riko</span><span class="fspeek"><b>188 H</b> &middot; 142 GAMES</span></div>
-                <div class="fright"><div class="cmp"><svg viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</div><span class="ovf">&#8942;</span></div>
+                <div class="fright"><button class="btn mini secondary"><svg width="12" height="11" viewBox="0 0 13 12" style="stroke:var(--navy);fill:none;stroke-width:1.8;stroke-linecap:round;"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</button><span class="ovf">&#8942;</span></div>
               </div>
               <div class="frow">
                 <div class="av" style="background:#3a3a42;color:#f5f1e4;">VA</div>
                 <div class="fmeta"><span class="fname">@vanta</span><span class="fspeek"><b>210 H</b> &middot; 156 GAMES</span></div>
-                <div class="fright"><div class="cmp"><svg viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</div><span class="ovf">&#8942;</span></div>
+                <div class="fright"><button class="btn mini secondary"><svg width="12" height="11" viewBox="0 0 13 12" style="stroke:var(--navy);fill:none;stroke-width:1.8;stroke-linecap:round;"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</button><span class="ovf">&#8942;</span></div>
               </div>
             </div>
             <!-- the sheet over the roster -->
