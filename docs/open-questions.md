@@ -142,7 +142,51 @@
   (`AchievementSheet`) holding **title · description/criterion · tier · reward (+`earnOnly`) · `unlockedAt` /
   progress**; a locked `???` opens a deliberately **sealed** sheet (no leak). The **API enumeration must include
   these node-detail fields**, and design-spec must add the `AchievementSheet` component. (Achievements §4.10
-  tier pass + converge, 2026-06-27) [behavior + presentation]
+   tier pass + converge, 2026-06-27) [behavior + presentation]
+- OQ-083 → **Top-5 home: DEDICATED (owner ruling 2026-06-28).** A standalone `SOC-04` editor screen reached from
+  the Profile (the §4.7 reading), **not** an inline Profile edit-mode panel. The api-contract re-rank wording
+  rippled off "Profile edit-mode ARRANGE gesture" → "the dedicated §4.7 editor's ARRANGE gesture" (api 0.34);
+  converged `lists/lists-states.html` ships as the dedicated editor. (Lists §4.7 converge)
+- OQ-084 → **`/me/lists` payload enumerated (api 0.34).** GET → `[{ id, kind: top5, items[{ gameId, rank 1..5,
+  card }] }]`; membership `POST /:id/items { gameId }` (rejects `LIST_FULL`) / `DELETE /:id/items/:gameId`;
+  re-rank `PATCH /:id { orderedGameIds[] }`; cap-of-5 server-enforced. Design-spec §2.17 + §1.5 Top-5-editor set
+  formalized (0.36). (Lists §4.7 converge, 2026-06-28)
+- OQ-085: **Corner-chip drift — the board-wide `.c5` gate over-applies the pixel-step; reconcile against
+  F-02/F-07.** (admin-console card work, 2026-06-28; 10-board sonnet audit) [presentation]
+  **The rule** (catalog Foundation Rules): **F-07** "Radius lives on plastic — rounding only on the shell;
+  on-screen chrome is 90°." **F-02** "The step belongs to the card. TL+BR pixel-step = GameCard signature;
+  **chrome is square**. A button may **borrow it at half scale** and colour signals intent — **gold+step =
+  acquisitive** (ADD / currency / add-to-collection), **system-orange+step = prominent non-acquisitive**
+  (RETRY · ADD FRIEND · SHARE)." Plus **F-05/F-09**: StateMark + squared position pips are stepped accents.
+  So the legit step set is: **GameCard** (+ art/plate/size-variants, + card-silhouette ghost/skeleton/err
+  placeholders) · **StateMark & pips** · **intent-buttons only** (gold-acquisitive · orange-prominent/RETRY).
+  Everything else on-screen is square. The catalog applies the step **intrinsically per component**
+  (`.gcard`, `.btn.add` directly) — **there is no board-level `c5` class in the catalog.**
+  **What the audit found:**
+  - **Genuine drift — blanket `.c5 .btn { clip-path }` on 3 boards** (`friends` ~66 buttons, `compare-hours`,
+    `discover`) chips **every** button regardless of intent — including secondary/cancel/mini that F-02 says
+    stay square. `discover` even band-aids it back with `.c5 .btn.secondary { clip-path: none }` — proof the
+    blanket rule is wrong. This is the real "random chips on things that don't call for it."
+  - **Architectural root cause:** ~12 boards deliver even the *legit* chips via a board-level `.c5`
+    descendant gate (`.c5 .gcard`, `.c5 .btn.add`) instead of intrinsically. That gate is what *enables* the
+    blanket spray, and it overloads one class with two jobs — `c5` also does `border-radius:0` square-chrome
+    enforcement (`settings` carries `c5` with **zero** clip-paths, using it purely to square chrome).
+  - **Mostly false alarms (compliant per F-02):** the many "chipped button" hits on add-game/collection/
+    styler/profile/contributor/report-sheet/onboarding/store are **intent-buttons** (`.btn.add` gold,
+    `.btn.act`/`.alt`/`.altstep` orange) — F-02 *permits* these. Cards, card-placeholders, StateMark/pips all legit.
+  - **Legit, not drift:** nameplate **RIBBON / BEVEL** shape variants (`.pl-ribbon`/`.plate-bevel`) are
+    catalog-sanctioned plate *shapes*, not the corner step.
+  - **`admin-console` (the board in hand) is clean** — not a `c5` board; its chips are intrinsic and all
+    legit (StateMark `.smark`, `.gcard.thumb`, RETRY `.le-retry`).
+  - **Owner ruling needed:** `.confirm .seal` (report-sheet) and `.cel-badge` (achievements) — discrete
+    badge/seal accents not explicitly enumerated in F-02/F-05/F-09. Legit accent, or square?
+  - **Code-hygiene (not an F-07 violation):** `.le-retry`/`.err-retry` (admin/device/welcome-auth) duplicate
+    the step inline instead of using the named `.btn`/`.kc.step` component.
+  **Recommended cleanup (for triage → likely a decision + catalog/design-spec note, no behaviour change):**
+  ① ratify F-02's step-grammar as the single corner rule; ② make the step **intrinsic to components**
+  (`.gcard*`, `.btn.add`/`.btn.act`, StateMark) and **retire the board-level `.c5` chip gate**, keeping any
+  square-chrome reset as its own explicit rule (don't overload one class); ③ fix the 3 blanket `.c5 .btn`
+  boards to intent-scoped; ④ rule on seal / cel-badge.
 ## Resolved
 - OQ-079 → **Contributor profile (4.9) revised + formalized** (decision 0032; design-spec **0.31** · product-spec
   **0.28** · api **0.28**): the pride surface **drops CAT-06 field-edits + achievement badges** and **adds a
