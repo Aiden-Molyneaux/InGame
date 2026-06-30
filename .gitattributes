@@ -1,0 +1,15 @@
+# Normalize line endings: text files are LF in the repo and on checkout — kills the Windows↔Linux
+# CRLF churn (Windows dev + Linux CI). `text=auto` lets git detect binary files; `eol=lf` overrides
+# any local core.autocrlf so checkouts stay LF.
+* text=auto eol=lf
+
+# Belt-and-braces for common binaries (no diff/eol munging).
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.jks binary
+*.keystore binary
+*.p8 binary
+*.p12 binary
