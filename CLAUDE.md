@@ -13,9 +13,13 @@ customization, a cosmetic economy, friends, and achievements. This is **v2 / gre
 5. **If you see a clearly better approach, say so before implementing.** Explain the tradeoff in 2–4 bullets. If the current request is still reasonable, proceed unless the alternative avoids serious risk or wasted work.
 
 ## Current state
-**Docs-only, design phase. There is no application code yet.** The active deliverables live under
-`docs/`. Code (Expo client + Express API) is scaffolded later, after the UI design phase and a
-dev-tooling plan.
+**Two concurrent phases as of 2026-06-30.** (1) **Design** — still closing out boards under
+`docs/design/` (design-spec is live); the **design-phase workflow rules below apply to *design* work**.
+(2) **Build — M1 is entering.** Gate **G-A is signed** ([`0046`](docs/decisions/0046-m1-entry-architecture-lock-in.md)
+LOCKED + [`CONVENTIONS.md`](CONVENTIONS.md)); the monorepo scaffold (Expo client + Express API) runs
+**in OpenCode** per [`docs/planning/m1-scaffold-task.md`](docs/planning/m1-scaffold-task.md). **Code work
+follows [`CONVENTIONS.md`](CONVENTIONS.md)** (the rulebook every PR is held to) — *not* the design-phase
+HTML/SCREEN-STATUS workflow. The active deliverables still live under `docs/`.
 - **The over-arching plan** (design → market): [`docs/planning/road-to-market.md`](docs/planning/road-to-market.md)
   (slide view: `road-to-market-deck.html`).
 - **Project health:** [`docs/PROJECT-HEALTH.md`](docs/PROJECT-HEALTH.md) — a generated dashboard; run
@@ -94,5 +98,8 @@ test-after for UI once screens settle. Tooling: Vitest · Jest + React Native Te
 supertest + Testcontainers (Postgres) · Maestro · GitHub Actions.
 
 ## Build / run
-No app scaffold yet. This section will be filled in when the Expo and Express projects are created,
-including the Chrome + iPhone dev/test loop and a seed/mock data layer.
+**M1 scaffold in progress.** The build brief is [`docs/planning/m1-scaffold-task.md`](docs/planning/m1-scaffold-task.md);
+the stack + invariants are locked in [`0046`](docs/decisions/0046-m1-entry-architecture-lock-in.md); the
+rulebook is [`CONVENTIONS.md`](CONVENTIONS.md); CI is the six-check spine
+([`testing-strategy.md`](docs/spec/testing-strategy.md) §7). Concrete `npm` scripts, the Chrome + iPhone
+dev/test loop, and the seed/mock data layer get documented here once the scaffold lands.

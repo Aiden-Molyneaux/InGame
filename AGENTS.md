@@ -18,6 +18,17 @@
   trivial, reversible gap may instead be `// ASSUMPTION(OQ-xxx)`-tagged + filed and proceeded on.
 - Run **`node scripts/health-check.mjs`** after touching the doc graph; keep it 🟢.
 
+## Code workflow (M1+)
+- **Branch + PR, not direct-to-main.** `main` is branch-protected (decision 0046): a code change lands via
+  a feature branch → green CI (the six-check spine) → required review → merge. The docs/design phase's
+  direct-to-main sweeps do **not** apply to code. *(The very first scaffold commit + enabling branch
+  protection is the owner's explicit call.)*
+- **Verify before you claim done.** Run the relevant checks (typecheck / lint / unit / integration) and
+  read the result; never report green you didn't see.
+- **Filing an OQ or a decision?** Take the next free number by listing `docs/open-questions.md` /
+  `docs/decisions/` first — parallel design tracks claim numbers concurrently, so collisions happen (that's
+  how decision 0047 collided → 0051); if two records share a number, the less-entangled one renumbers.
+
 ## Where things are
 - **Source of truth:** `docs/spec/product-spec.md` (behavior/rules/economy) ·
   `docs/spec/api-contract.md` (FE↔BE seam) · `docs/spec/testing-strategy.md` (testing).
