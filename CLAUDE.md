@@ -39,6 +39,7 @@ summary below is convenience; **00-INDEX wins**.
 | Why a decision was made | `docs/decisions/` |
 | Unresolved items (the inbox) | `docs/open-questions.md` |
 | UI requirements / design (later) | `docs/design/` |
+| UI component names → RN code (the client, **from M2**) | `docs/design/component-map.md` |
 
 ## Working rules (non-negotiable)
 1. **The product-spec has exactly ONE editor.** Never hand-patch behavior into a downstream doc.

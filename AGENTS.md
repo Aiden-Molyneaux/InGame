@@ -38,5 +38,9 @@
 - **The M1 rulebook every PR is held to:** `CONVENTIONS.md`.
 - **The M1 architecture lock-in:** `docs/decisions/0046-m1-entry-architecture-lock-in.md`
   (✅ LOCKED — gate G-A signed) + its review hardening `docs/decisions/0051-*.md`.
+- **Client UI component map (from M2, NOT M1):** `docs/design/component-map.md` — the catalog→code
+  map (canonical RN component names, variants, tokens, build order); the UI-layer rulebook, paired with
+  design-spec §1.5 + Foundation Rules F-01..F-09. **M1 builds no component library** — this governs the
+  moment client screens are built (the M2 styled-profile slice). A re-sync is owed before then (OQ-111).
 - **Current phase:** **entering M1** (tooling + monorepo scaffold). The prior design phase
   produced HTML mockups only under `docs/design/mockups/` (never PNGs).

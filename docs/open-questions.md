@@ -16,6 +16,14 @@
 
 ## Open
 
+- OQ-111: **Re-sync `docs/design/component-map.md` to current design-spec §1.5 + lock the 🔶 entries —
+  M2-entry gate, before any client-UI coding.** The map is **v0.3 mapping from §1.5 v0.41**, but design-spec
+  is now **v0.49** (the Top-10 / card-tap / admin-console / achievements tracks moved §1.5 since), so the
+  catalog→code mappings have drifted; and the **Achievements (4.10)** + **Admin console (4.4)** component sets
+  are still 🔶 *"name provisional, lock at formalization before coding."* Action: re-derive the map against
+  current §1.5, lock the 🔶 names, then point the M2 client-build prompt at it + Foundation Rules F-01..F-09.
+  **Not an M1 blocker** (M1 builds no component library). (raised reviewing the component-map at M1 build-entry,
+  2026-06-30) [presentation]
 - OQ-002: First-pass values for the economy levers — starting balance is 5 (ECON-02), but what are
   the login-bonus amount/cadence and milestone thresholds? (tunable later, but design needs a
   starting number) [behavior]

@@ -11,6 +11,12 @@
 **0.2:** intentionality review — Keycap family → Screen/Tool/Count (owner ruling), social 5→2, Strip/GTag renamed.
 **0.3:** housekeeping (decision 0042) — Admin `QueueRow`→`ModQueueRow`; onboarding banners named `LiveBanner`/`PrePrompt` (+ `InlineBanner` reuse); game-page `.presence` confirmed **live `PresenceStats` (CAT-09)**, not the cut presence — keep.
 
+> ⚠ **Pending re-sync before client coding (M2-entry gate, OQ-111).** This map is **v0.3 ← design-spec §1.5
+> v0.41**; design-spec is now **v0.49** (Top-10 / card-tap / admin / achievements tracks moved §1.5 since), so
+> some mappings have drifted, and the 🔶 **Achievements (4.10)** + **Admin console (4.4)** names are provisional.
+> **Re-derive against current §1.5 + lock the 🔶 entries before any M2 client-UI work.** Not an M1 concern —
+> M1 (the scaffold) builds no component library.
+
 ## 0. Truth precedence (where this sits)
 1. **`design-spec.md` §1.5 + Foundation Rules F-01..F-09 win.** This map never invents or changes
    behavior/visuals; it *names the code*. A name conflict → the spec is right, fix the map.
