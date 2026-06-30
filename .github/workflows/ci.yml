@@ -1,0 +1,86 @@
+# InGame CI — the required-green six-check spine (CONVENTIONS "the merge gate"; testing-strategy §7).
+# Ordered cheapest-first, fail-fast:
+#   1. typecheck + lint   2. unit   3. integration (Testcontainers PG)   4. gitleaks   5. SCA   6. build
+# E2E (Maestro) runs nightly/on-demand — NOT here, and NOT stood up in the M1 scaffold.
+#
+# ── main is branch-protected (decision 0046; CONVENTIONS "merge gate") ───────────────────────────
+# The owner must enable this on GitHub once (an owner action — agents do not configure it). Settings →
+# Branches → add a rule for `main`: require a PR before merging · require status check "ci" to pass ·
+# require 1 review · require linear history · no direct pushes/force-pushes. Or via gh:
+#   gh api -X PUT repos/Aiden-Molyneaux/InGame/branches/main/protection -F required_status_checks.strict=true \
+#     -f 'required_status_checks.contexts[]=ci' -F enforce_admins=true \
+#     -F required_pull_request_reviews.required_approving_review_count=1 \
+#     -F restrictions= -F required_linear_history=true -F allow_force_pushes=false
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so gitleaks can scan commits
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install (clean, from lockfile)
+        run: npm ci
+
+      # ── 1. typecheck + lint (custom CONVENTIONS [LINT] rules run inside `npm run lint`) ──
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint (eslint + the custom CONVENTIONS spine)
+        run: npm run lint
+
+      # ── 2. unit (Vitest) — includes the F22 bad-pr-corpus meta-test + the F04 bundle-grep self-test ──
+      - name: Unit tests
+        run: npm run test:unit
+
+      # ── 3. integration — Testcontainers Postgres + Drizzle migrations (must start a REAL container) ──
+      - name: Integration tests (Testcontainers Postgres)
+        run: npm run test:integration
+
+      # ── 4. gitleaks — secret scan (SYS-03) ──
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── 5. SCA — known-CVE scan. Gate on CRITICAL in the SHIPPING (runtime) dependency tree.
+      #    Rationale: `--omit=dev` is the meaningful CVE surface (what actually ships); the residual
+      #    HIGH advisories are all Expo BUILD-CHAIN tooling (@expo/cli, tar, cacache, @xmldom/xmldom …)
+      #    that never reaches a device and only clears on an Expo SDK major bump — surfaced here +
+      #    reviewed at the G-M dependency glance + the quarterly sweep (OQ-113). The one real
+      #    server-runtime high (drizzle-orm) was fixed by pinning the patched version. The dev-only
+      #    `vitest` critical is excluded from the runtime gate (tracked in OQ-113).
+      - name: SCA (npm audit — shipping deps, critical gate)
+        run: npm audit --omit=dev --audit-level=critical
+
+      # ── 6. build — everything compiles ──
+      - name: Build
+        run: npm run build
+
+      # ── F04 (must-now extra) — scan the REAL exported web bundle for leaked secrets ──
+      - name: Export web bundle
+        run: npm -w @ingame/mobile run build:web
+      - name: F04 client-bundle secret-grep
+        run: node tools/security/bundle-grep.mjs apps/mobile/dist

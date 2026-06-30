@@ -24,6 +24,22 @@
   current §1.5, lock the 🔶 names, then point the M2 client-build prompt at it + Foundation Rules F-01..F-09.
   **Not an M1 blocker** (M1 builds no component library). (raised reviewing the component-map at M1 build-entry,
   2026-06-30) [presentation]
+- OQ-112: **PROF-03 privacy state — the serialized enum token values are not pinned in `api-contract`.**
+  The M1 scaffold's shared zod schema models `privacy` as `'friends' | 'public'` (the default friends-only
+  vs limited public). This was an ASSUMPTION made + tagged `// ASSUMPTION(OQ-112)` in
+  `packages/shared/src/schemas/common.ts`; it's reversible (rename the enum). It does **not** affect SYS-01
+  enforcement (the scoped-query ownership is independent of the token spelling). Action: pin the canonical
+  `privacy` token values on `GET /me` + `PATCH /me` in `api-contract` at M2. (raised scaffolding the F29
+  slice, 2026-06-30) [behavior]
+- OQ-113: **SCA (`npm audit`) gate posture for the Expo monorepo.** M1 CI gates on
+  `npm audit --omit=dev --audit-level=critical` (shipping deps, critical). The residual PROD **high**
+  advisories are all Expo **build-chain** tooling (`@expo/cli`, `@expo/config-plugins`, `@expo/plist`,
+  `@xmldom/xmldom`, `cacache`, `expo`, `tar`) that never ships to a device and only clears on an Expo SDK
+  **major** bump; the dev-only `vitest` **critical** clears on a vitest 2→4 major (workspace-config
+  migration). The one real **server-runtime** high (`drizzle-orm`) was already fixed (pinned `0.45.2`).
+  Action: revisit at the next Expo SDK bump + the vitest-4 migration; consider an SCA baseline tool
+  (audit-ci / osv-scanner) at M2 so the gate can tighten to `high` without Expo-tooling noise. (raised
+  wiring the M1 CI SCA step, 2026-06-30) [undecided]
 - OQ-002: First-pass values for the economy levers — starting balance is 5 (ECON-02), but what are
   the login-bonus amount/cadence and milestone thresholds? (tunable later, but design needs a
   starting number) [behavior]

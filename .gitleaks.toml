@@ -1,0 +1,14 @@
+# gitleaks config — extends the default rules, with a tight allowlist for INTENTIONAL placeholders.
+title = "InGame gitleaks"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Example/placeholder config + the deliberately-planted fixtures for the F04 self-test."
+paths = [
+  # .env.example holds documented localhost placeholders (no real secrets; SYS-03 keeps real ones in the host store).
+  '''\.env\.example$''',
+  # The bad-pr-corpus plants fake secrets ON PURPOSE so the F04 bundle-grep + the lint spine can be self-tested.
+  '''fixtures/bad-pr-corpus/.*''',
+]

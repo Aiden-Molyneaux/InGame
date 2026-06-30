@@ -1,0 +1,47 @@
+{
+  "//": "CONVENTIONS rule 8 ledger — the written justification for every workspace dependency (runtime OR dev). Surfaced at milestone exit for the 30-second G-M owner glance (decision 0051/F44). Internal @ingame/* packages are auto-justified. Format: name → why needed · why no stdlib/existing path · provenance.",
+
+  "typescript": "The language + tsc typecheck/build (CI six-check steps 1 & 6). No stdlib equivalent. Provenance: Microsoft.",
+  "tsx": "Run TS entrypoints (dev server, db:migrate, db:reset, drizzle scripts) without a build step. Avoids a compile-to-JS dance in M1. Provenance: privatenumber/esbuild.",
+  "typescript-eslint": "TypeScript-aware ESLint integration + recommended rules (lint step). Provenance: typescript-eslint org.",
+  "eslint": "The general-quality linter (CI six-check step 1; the InGame [LINT] rules are custom in tools/lint). Provenance: ESLint org.",
+  "@eslint/js": "ESLint's official recommended JS ruleset for the flat config. Provenance: ESLint org.",
+  "globals": "Canonical global-identifier sets for the ESLint flat config (node/browser). Provenance: sindresorhus.",
+  "eslint-config-prettier": "Turns off ESLint rules that conflict with Prettier so formatting + linting don't fight. Provenance: Prettier org.",
+  "prettier": "Code formatter — one consistent style across the monorepo. Provenance: Prettier org.",
+  "vitest": "Unit + integration test runner (CI six-check steps 2 & 3); first-class ESM/TS + Vite resolution for the workspace packages. Provenance: Vitest org.",
+  "@types/node": "Node type definitions for the server + tooling. Provenance: DefinitelyTyped.",
+
+  "zod": "The single executable FE↔BE contract — request/response schemas (CONVENTIONS rule 3, decision 0046 #1). Provenance: colinhacks.",
+
+  "express": "The HTTP server framework for the API (product-spec §9, decision 0046 #2). Provenance: expressjs.",
+  "drizzle-orm": "Typed SQL + the data-access layer; SQL-transparent + testable (decision 0046 #2/#7). Provenance: Drizzle team.",
+  "drizzle-kit": "Generates + journals the committed migrations (decision 0046 #7; F28 journal check). Provenance: Drizzle team.",
+  "pg": "PostgreSQL driver backing drizzle node-postgres. Provenance: brianc/node-postgres.",
+  "supertest": "HTTP assertions against the Express app at the boundary — the integration heart (testing-strategy §2). Provenance: ladjs.",
+  "testcontainers": "Throwaway real-Postgres containers so integration tests run against a real DB, not mocks (testing-strategy §2; F36). Provenance: Testcontainers org.",
+  "@testcontainers/postgresql": "The Postgres module for Testcontainers (the integration PG container). Provenance: Testcontainers org.",
+  "@types/express": "Express type definitions. Provenance: DefinitelyTyped.",
+  "@types/pg": "pg type definitions. Provenance: DefinitelyTyped.",
+  "@types/supertest": "supertest type definitions. Provenance: DefinitelyTyped.",
+
+  "expo": "The Expo SDK — the React Native app platform + the Chrome/web dev loop + iPhone path (decision 0046 #2; item 7). Provenance: Expo.",
+  "expo-router": "File-based navigation for the Expo client (product-spec §9). Provenance: Expo.",
+  "expo-status-bar": "Status-bar component pulled in by the Expo app template. Provenance: Expo.",
+  "react": "The UI runtime underpinning React Native. Provenance: Meta.",
+  "react-dom": "React web renderer — required for the Expo web (Chrome) dev/test loop. Provenance: Meta.",
+  "react-native": "The native client runtime (iOS/Android) (decision 0046 #2). Provenance: Meta.",
+  "react-native-web": "Renders React Native components on web — the Chrome dev/test convenience surface (item 7). Provenance: Necolas.",
+  "react-native-safe-area-context": "Safe-area insets dependency required by expo-router. Provenance: th3rdwave.",
+  "react-native-screens": "Native screen primitives required by expo-router navigation. Provenance: Software Mansion.",
+  "@reduxjs/toolkit": "State management + RTK Query (server cache) bound to the shared zod types (decision 0046 #2; F31). Provenance: Redux team.",
+  "react-redux": "React bindings for Redux Toolkit. Provenance: Redux team.",
+
+  "jest-expo": "The Jest preset for Expo/React Native component tests (RNTL) — the client test runner (testing-strategy §2). Provenance: Expo.",
+  "jest": "Test runner backing jest-expo for the RN component layer. Provenance: Meta.",
+  "@testing-library/react-native": "Behavior-focused RN component testing (testing-strategy §2). Provenance: Testing Library.",
+  "react-test-renderer": "React renderer used by RNTL/jest-expo to render components in tests. Provenance: Meta.",
+  "@types/react": "React type definitions for the TS client. Provenance: DefinitelyTyped.",
+  "@types/jest": "Jest type definitions for the client component tests. Provenance: DefinitelyTyped.",
+  "@babel/core": "Babel core required by the Expo/Metro + jest-expo transform pipeline. Provenance: Babel."
+}

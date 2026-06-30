@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "name": "InGame",
+    "slug": "ingame",
+    "scheme": "ingame",
+    "version": "0.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "ios": { "supportsTablet": false, "bundleIdentifier": "com.ingame.app" },
+    "android": { "package": "com.ingame.app" },
+    "web": { "bundler": "metro", "output": "static" },
+    "plugins": ["expo-router"]
+  }
+}
