@@ -1,0 +1,8 @@
+{
+  "//": "DELIBERATELY BAD (rule-08-deps). A dependency with NO entry in tools/deps/justifications.json — a new, un-vetted package (a malicious dev tool runs in CI with FS+secret access). The dependency surfacer flags it for the G-M owner glance.",
+  "name": "bad-pr-fixture",
+  "private": true,
+  "dependencies": {
+    "left-pad-evil": "^9.9.9"
+  }
+}

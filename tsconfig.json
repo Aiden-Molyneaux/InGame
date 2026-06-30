@@ -1,0 +1,8 @@
+{
+  "//": "Solution-style root: typecheck/build the server-side projects via `tsc -b`. apps/mobile is typechecked separately (Expo TS preset, JSX/react-native) — see package.json `typecheck`.",
+  "files": [],
+  "references": [
+    { "path": "./packages/shared" },
+    { "path": "./apps/api" }
+  ]
+}

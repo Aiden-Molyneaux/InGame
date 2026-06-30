@@ -1,0 +1,13 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "jsx": "react-jsx",
+    "moduleResolution": "Bundler",
+    "paths": {
+      "@ingame/shared": ["../../packages/shared/src/index.ts"]
+    },
+    "types": ["jest", "react", "node"]
+  },
+  "include": ["app", "src", "*.ts", "*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+}

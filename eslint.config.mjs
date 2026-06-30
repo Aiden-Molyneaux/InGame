@@ -1,0 +1,48 @@
+// InGame ESLint flat config. General code-quality lint (the six-check spine, step 1).
+// The InGame-specific [LINT] CONVENTIONS rules (layering, SYS-01 scoping, zod, authz, events,
+// spec-IDs, deps) are enforced by the custom mechanisms in tools/lint/ (run via `npm run lint:custom`)
+// so they are testable against the fixtures/bad-pr-corpus (decision 0051/F22). ESLint stays general.
+import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import globals from 'globals';
+import prettier from 'eslint-config-prettier';
+
+export default tseslint.config(
+  {
+    // Deliberately-bad code (the F22 corpus), generated output, and the Expo client (its own
+    // toolchain in M2) are out of the general lint pass.
+    ignores: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/.expo/**',
+      '**/coverage/**',
+      '**/drizzle/**',
+      'fixtures/**',
+      'apps/mobile/**',
+      'scripts/health-check.mjs',
+      '**/*.config.{js,ts,mjs,cjs}',
+    ],
+  },
+  js.configs.recommended,
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [...tseslint.configs.recommended],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
+      '@typescript-eslint/consistent-type-imports': 'warn',
+    },
+  },
+  {
+    files: ['tools/**/*.mjs'],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+  },
+  prettier,
+);
