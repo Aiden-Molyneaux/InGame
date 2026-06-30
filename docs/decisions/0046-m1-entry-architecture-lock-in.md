@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-29 · **Owner:** Aiden · **Scribe:** Claude Code
 **IDs:** SYS-01/02/03/07, ACH-08, CARD-15 (references — no new behavior) · **Satisfies:** gate **G-A** (decision 0045)
-**Status:** ⏳ DRAFT — **awaiting owner sign-off** (this IS the G-A gate). No scaffold is committed until signed.
+**Status:** ✅ LOCKED — **owner signed off 2026-06-30** (gate G-A cleared). The engineer team is clear to scaffold M1 against this + `CONVENTIONS.md` (v2). Amending any lock (#1–#10) re-fires G-A (decision 0045 §governance). Next owner gate: **G-B** (the "floor is real" demo) at M1 exit.
 **Bumps:** none (planning/architecture record; ratifies road-map §3)
 
 ## Why this exists
@@ -30,8 +30,10 @@ No feature behavior (that's the specs). No tooling minutiae (lint config, CI YAM
 scaffold's job, governed by `CONVENTIONS.md`. This record is only the painful-to-reverse skeleton.
 
 ## Sign-off
-Owner signs this + `CONVENTIONS.md` → gate G-A clears → the engineer team scaffolds M1 against them, with
-gate G-B (the "floor is real" demo) at M1 exit.
+**✅ Owner signed 2026-06-30 (Aiden).** This + `CONVENTIONS.md` (v2) are locked; gate G-A is cleared. The
+engineer team scaffolds M1 against them, with gate G-B (the "floor is real" demo) at M1 exit. The 6 ship-blockers
+(decision 0051) land in/before the scaffold commit. **Apple Developer enrollment (M1-P) starts in parallel now** —
+it gates only G-B clause (d), not the scaffold.
 
 ## v2 — review-accepted amendments (decision 0051, 2026-06-30)
 The 6-round M1 foundation review (LEDGER, 44 findings) amends the decisions above; **the G-A sign-off covers the amended set:**
