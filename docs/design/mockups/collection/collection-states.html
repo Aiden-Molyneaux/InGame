@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>InGame · Collection States + Card Peek-flip (COL-12) — C5 v2</title>
+<title>InGame · Collection States — Empty · Drawer · View Modes (C5 v2)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
@@ -109,7 +109,7 @@
   .gcard.custom { background: linear-gradient(160deg, #d3e95e, #93b31a); }
   .custom-tag { position: absolute; top: 11px; right: 11px; z-index: 2; background: #d3e95e; color: #2a3505;
     padding: 3px 5px; font: 700 9px var(--pk); letter-spacing: .5px; }
-  .c5 .custom-tag { border-radius: 0; }
+  .custom-tag { border-radius: 0; }
 
   /* ════ card-back peek-flip (COL-12, decision 0026) — reuses the game-page DualFaceHero back ════
      The back stats are PRINT (CARD-01, F-06-exempt — they scale with the card), sizes matched to
@@ -166,20 +166,20 @@
   .sec h3 { margin: 0; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
   .sec a { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
 
-  /* ════ C5 · HYBRID — square chrome · stepped-diagonal cards ════ */
-  .c5 .well, .c5 .hero, .c5 .chip, .c5 .btn, .c5 .count, .c5 .now-tag { border-radius: 0; }
-  .c5 .well, .c5 .hero { border: 1px solid var(--scr-hairline); }
-  .c5 .btn.add { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+  /* ════ F-02 step is intrinsic per component; the board-level `.c5` chip gate is retired (decision 0041); the square-chrome (border-radius:0) reset is its own explicit rule. ════ */
+  .well, .hero, .chip, .btn, .count, .now-tag { border-radius: 0; }
+  .well, .hero { border: 1px solid var(--scr-hairline); }
+  .btn.add { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
       100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
       calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
-  .c5 .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
+  .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
     clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
       100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
       calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
-  .c5 .gcard .art { border-radius: 0;
+  .gcard .art { border-radius: 0;
     clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
       100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
-  .c5 .gcard .plate { border-radius: 0;
+  .gcard .plate { border-radius: 0;
     clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
 
@@ -235,11 +235,11 @@
   .strip-title { font: 700 15px/1.1 var(--pk); letter-spacing: 1px; color: var(--scr-text); }
   .chev { margin-left: auto; color: var(--scr-grip); font: 700 15px var(--pk); flex: 0 0 auto; }
   .now-inline { display: inline-block; vertical-align: 1px; margin-left: 7px; background: var(--scr-accent); color: var(--scr-accent-ink); padding: 2px 4px 1.5px; font: 700 9px var(--pk); letter-spacing: .5px; }
-  .c5 .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0,
+  .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0,
       100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
-  .c5 .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+  .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
-  .c5 .gcard.thumb .plate { clip-path: polygon(0 1px, 1px 1px, 1px 0, 100% 0,
+  .gcard.thumb .plate { clip-path: polygon(0 1px, 1px 1px, 1px 0, 100% 0,
       100% calc(100% - 1px), calc(100% - 1px) calc(100% - 1px), calc(100% - 1px) 100%, 0 100%); }
 
   /* in-place search state (OQ-034) + OS keyboard (OQ-035) */
@@ -270,7 +270,7 @@
   /* ── friend-view + §1.8 state components (ported from profile-states for the COL-10 + lifecycle parity pass) ── */
   .sk2 .btn.secondary { background: var(--cream); color: var(--navy); }
   .sk2 .btn.act { background: var(--scr-accent); color: var(--scr-accent-ink); }
-  .c5 .btn.act { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+  .btn.act { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
       100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
       calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
   .mode-tag { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-accent); }
@@ -358,6 +358,41 @@
     transform: none; box-shadow: none;
     background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
     background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
+  /* decision 0047 — nameplate F-06-bound: /thumb (<9px) drops the plate; the list-strip title names the game */
+  .gcard.thumb .plate { display: none; }
+  /* ════ TOP view-mode (COL-13 — the curated Top-10, merged from the former §4.7 board; decisions 0049/0050) ════ */
+  .tv-sub { font: 600 9px/1.4 var(--pk); letter-spacing: .5px; color: var(--scr-dim); margin: 2px 2px 10px; }
+  .tv-hero { display: flex; gap: 14px; align-items: stretch; padding: 12px; background: var(--scr-well); border: 1px solid var(--scr-hairline); margin-bottom: 9px; }
+  .tv-hero .meta { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+  .tv-hero .npl { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-accent); }
+  .tv-hero .title { font: 700 21px/1.05 var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .tv-hero .meta-sub { font: 600 11px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .tv-hero .swap { align-self: flex-start; margin-top: 2px; font: 700 11px var(--pk); letter-spacing: 1px; color: var(--navy); background: var(--cream); padding: 7px 11px; text-decoration: none; }
+  .tv-shelf { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; justify-items: center; }
+  .gcard.tv-cell { width: 96px; height: 134px;
+    clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .gcard.tv-cell .art { inset: 4.5px; }
+  .gcard.tv-cell .plate { left: 7px; right: 7px; bottom: 2px; padding: 3.5px 2px 3px; font-size: 10px; letter-spacing: .2px; }
+  .tv-seat { position: relative; }
+  .tv-rank { position: absolute; top: 5px; left: 5px; z-index: 3; min-width: 16px; height: 16px; padding: 0 3px; box-sizing: border-box;
+    background: var(--scr-chip); color: var(--navy); font: 700 11px/16px var(--pk); text-align: center; }
+  .tv-rank.first { background: var(--scr-accent); color: var(--scr-accent-ink); }
+  .tv-grip { position: absolute; bottom: 5px; right: 5px; z-index: 3; display: grid; grid-template-columns: repeat(2, 3px); grid-auto-rows: 3px; gap: 2.5px; padding: 3px; background: rgba(13,11,30,.55); }
+  .tv-grip i { background: var(--scr-soft); width: 3px; height: 3px; }
+  .tv-seat.dragging .gcard { filter: drop-shadow(0 0 0 2px var(--scr-accent)) drop-shadow(0 6px 12px rgba(0,0,0,.5)); }
+  .tv-seat.target { outline: 2px dashed var(--scr-accent); outline-offset: 2px; }
+  .tv-ghost { position: relative; width: 96px; height: 134px; background: rgba(255,255,255,.04); display: flex; align-items: center; justify-content: center;
+    clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .tv-ghost::before { content: ""; position: absolute; inset: 6px; border: 2px dashed var(--scr-grip); opacity: .75; }
+  .tv-ghost .plus { font: 700 24px/1 var(--pk); color: var(--scr-grip); }
+  .tv-ghost .seatnum { position: absolute; top: 5px; left: 5px; z-index: 2; min-width: 16px; height: 16px; line-height: 16px; text-align: center; background: var(--scr-grip); color: var(--scr-bg); font: 700 11px var(--pk); }
+  .tv-bar { flex: 0 0 auto; display: flex; align-items: center; gap: 9px; padding: 10px 12px; background: var(--scr-tools); border-top: 1px solid var(--scr-hairline); }
+  .tv-bar .count { font: 700 11px var(--pk); letter-spacing: 1px; color: var(--scr-soft); } .tv-bar .count b { color: var(--scr-text); }
+  .tv-bar .ro { color: var(--scr-grip); } .tv-bar .spacer { flex: 1 1 auto; }
+  .tv-picker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .tv-pcell { position: relative; }
+  .tv-pcell.picked .gcard { filter: drop-shadow(0 0 0 2px var(--scr-accent)) drop-shadow(0 4px 7px rgba(0,0,0,.35)); }
+  .tv-pcell .badge { position: absolute; top: 4px; right: 4px; z-index: 4; width: 16px; height: 16px; background: var(--scr-accent); color: var(--scr-accent-ink); font: 700 11px/16px var(--pk); text-align: center; }
 </style>
 </head>
 <body>
@@ -428,11 +463,11 @@
 
 <div class="canvas">
   <div class="canvas-head">
-    <h1>Collection States + Card Peek-flip (COL-12) — C5 v2</h1>
-    <p>Nineteen Collection artboards in the C5 v2 language (square chrome, stepped cards, Midnight theme),
+    <h1>Collection States · Empty · Views · Friend · Lifecycle — C5 v2</h1>
+    <p>Sixteen Collection artboards in the C5 v2 language (square chrome, stepped cards, Midnight theme),
     now at parity with the Profile state matrix. <b>Tools &amp; empty:</b> first-run empty (AUTH-06) · the
     pulled-up drawer (COL-07/09 + OQ-031/034) · in-place search (COL-09; OQ-035). <b>View modes:</b> SHELF /
-    GRID / LIST (COL-07). <b>Card peek-flip (COL-12, decision 0026 — reverses OQ-059/0025):</b> tap a shelf/grid card to flip it in place to its CARD-01 stats back — grid · shelf · friend (privacy-gated). <b>Friend's Collection (COL-10/COL-11):</b> your chrome + the "view in their device" toggle
+    GRID / LIST (COL-07). <b>Friend's Collection (COL-10/COL-11):</b> your chrome + the "view in their device" toggle
     (decision 0012) + <b>full read-only browse tools</b> (search/sort/filter/view). <b>Now-Playing &amp; lifecycle:</b> the set-your-pin nudge (§3.1) · skeleton · load-error.
     <b>Unavailable &amp; offline:</b> terminal (MOD-09) · offline from cache · a friend you can't reach (SYS-10).
     Standalone file — sample art = built-in SVG symbols.</p>
@@ -550,6 +585,7 @@
                 <div class="chip active"><svg width="10" height="12" viewBox="0 0 10 12"><path d="M1.5 1.5h7v9h-7z" fill="none" stroke-width="1.5" stroke-linejoin="round"/><path d="M2.8 8.6h4.4" stroke-width="1.3"/></svg><b>SHELF</b></div>
                 <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="4.4" height="4.4" rx="1"/><rect x="6.6" y="1" width="4.4" height="4.4" rx="1"/><rect x="1" y="6.6" width="4.4" height="4.4" rx="1"/><rect x="6.6" y="6.6" width="4.4" height="4.4" rx="1"/></svg><b>GRID</b></div>
                 <div class="chip"><svg width="12" height="10" viewBox="0 0 12 10"><path d="M1 1.5h10M1 5h10M1 8.5h10" stroke-width="1.6" stroke-linecap="round"/></svg><b>LIST</b></div>
+                <div class="chip"><svg width="12" height="10" viewBox="0 0 12 10"><path d="M1 1.5h10M1 5h7M1 8.5h4" stroke-width="1.6" stroke-linecap="round"/></svg><b>TOP</b></div>
               </div>
               <div class="sec"><h3>SORT BY</h3></div>
               <div class="chips">
@@ -867,7 +903,7 @@
         <h3>Grid <em>(dense browsing &mdash; the h2-underlay layout, now named)</em></h3>
         <p><b>The populated view we've been drawing all along is grid mode:</b> 2-wide <b>full card faces, never
         cropped</b> (OQ-014), <b>no added label chrome</b> (0012) &mdash; the title plate is baked into the card's
-        flattened image (CARD-01/15). The &#9654; NOW tag carries pin context; tap any card &rarr; Game page.</p>
+        flattened image (CARD-01/15). The &#9654; NOW tag carries pin context; <b>tap a card &rarr; it flips in place to its stats back (COL-12); the back's VIEW GAME &rarr; the Game page; long-press &rarr; the Game page</b> (card-tap grammar, CARD-23).</p>
         <p><b>Density ladder:</b> ~2 games/screen (shelf) &rarr; ~4 (grid) &rarr; ~8 (list) &mdash; each mode owns a
         distinct rung. The view keycap shows the 4-square glyph, pressed + lit (non-default mode).</p>
       </div>
@@ -990,6 +1026,173 @@
   </div>
 
   <!-- ═══════════════════════ peek-flip (COL-12 · decision 0026) ═══════════════════════ -->
+  <div class="stage-label">View mode &middot; TOP (COL-13 &mdash; the curated Top-10, merged from the former §4.7 editor; decisions 0049/0050) <small>the 4th <b>view</b> mode &mdash; the curated <b>Top-10</b> in rank order. <b>Nav in:</b> the tools-bar <b>view</b> keycap cycles SHELF &rarr; GRID &rarr; LIST &rarr; <b>TOP</b> (or the Profile's VIEW&nbsp;TOP&nbsp;10 / a Top-3 card). <b>Nav back:</b> the same view keycap cycles off TOP &mdash; it's a view-mode, not a separate screen. <b>Own = edit in place</b> (ARRANGE drag-rerank + CardPicker, cap-10); <b>a friend's = read-only.</b></small></div>
+  <div class="stage">
+
+    <!-- ═══ Collection · TOP view — self (read) ═══ -->
+    <div class="take">
+      <div class="artboard-label">TOP view — your curated Top-10 (read)</div>
+      <div class="device" data-screen-label="States · C5 · Collection — TOP (read)">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>COLLECTION</h2><span class="count">TOP 10</span></div>
+            <div class="scroll">
+              <div class="tv-sub">YOUR TOP&nbsp;10 &mdash; the curated showcase (it headlines your Profile). Tap <b>ARRANGE</b> to re-rank or change members.</div>
+              <div class="tv-hero">
+                <div class="tv-seat"><div class="gcard hero-size fr-destiny"><span class="tv-rank first">1</span><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div></div>
+                <div class="meta"><span class="npl">YOUR #1</span><span class="title">DESTINY 2</span><span class="meta-sub">210 HRS &middot; PLAYING</span></div>
+              </div>
+              <div class="tv-shelf">
+                <div class="tv-seat"><div class="gcard tv-cell fr-minecraft"><span class="tv-rank">2</span><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div></div>
+                <div class="tv-seat"><div class="gcard tv-cell fr-marathon custom"><span class="tv-rank">3</span><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div></div>
+                <div class="tv-seat"><div class="gcard tv-cell fr-ratchet"><span class="tv-rank">4</span><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet</div></div></div>
+                <div class="tv-seat"><div class="gcard tv-cell fr-re"><span class="tv-rank">5</span><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div></div>
+                <div class="tv-seat"><div class="gcard tv-cell fr-destiny"><span class="tv-rank">6</span><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div></div>
+                <div class="tv-seat"><div class="gcard tv-cell fr-minecraft"><span class="tv-rank">7</span><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div></div>
+                <div class="tv-seat"><div class="gcard tv-cell fr-marathon"><span class="tv-rank">8</span><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div></div>
+                <div class="tv-seat"><div class="gcard tv-cell fr-ratchet"><span class="tv-rank">9</span><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet</div></div></div>
+                <div class="tv-seat"><div class="gcard tv-cell fr-re"><span class="tv-rank">10</span><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div></div>
+              </div>
+            </div>
+            <div class="tools">
+              <div class="grip"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="chip"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.4" fill="none" stroke-width="1.6"/><path d="M7.8 7.8L11 11" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+              <div class="chip"><svg width="12" height="11" viewBox="0 0 12 11"><path d="M1 1.5h10L7.5 6v3.4L4.5 10V6L1 1.5z" fill="none" stroke-width="1.4" stroke-linejoin="round"/></svg><b>ALL</b></div>
+              <div class="chip active"><span class="chip-pip"></span><svg width="12" height="10" viewBox="0 0 12 10"><path d="M1 1.5h10M1 5h7M1 8.5h4" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+              <div class="spacer"></div>
+              <button class="btn act"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 3h8M2 6h8M2 9h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M9 1.5l1.5 1.5L9 4.5M9 7.5l1.5 1.5L9 10.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>ARRANGE</button>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>TOP view — <em>read</em></h3>
+        <p><b>Nav in:</b> the tools-bar <b>view</b> keycap (now SHELF · GRID · LIST · <b>TOP</b>, pressed + lit here) — or the Profile's <b>VIEW TOP 10</b> / a <b>Top-3 card</b>. The curated Top-10 in rank order: #1 the hero, 2–10 the <code>/cell</code> shelf (legible 10px plates). <b>Nav back to the rest of your library = the same view keycap</b> (cycle off TOP) — TOP is a view-mode, not a separate screen. Tap <b>ARRANGE</b> to edit →</p>
+      </div>
+    </div>
+
+    <!-- ═══ Collection · TOP view — self (ARRANGE + CardPicker) ═══ -->
+    <div class="take">
+      <div class="artboard-label">TOP view — ARRANGE (drag-rerank) + CardPicker (membership)</div>
+      <div class="device" data-screen-label="States · C5 · Collection — TOP (arrange)">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>COLLECTION</h2><span class="count">ARRANGE · 8/10</span></div>
+            <div class="scroll">
+              <div class="tv-sub"><b>ARRANGING</b> — long-press &amp; drag a card to re-rank; tap a <b>+ seat</b> to add from your collection.</div>
+              <div class="tv-hero">
+                <div class="tv-seat"><div class="gcard hero-size fr-destiny"><span class="tv-rank first">1</span><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div><div class="tv-grip"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+                <div class="meta"><span class="npl">YOUR #1</span><span class="title">DESTINY 2</span><span class="meta-sub">DRAG TO RE-RANK</span></div>
+              </div>
+              <div class="tv-shelf">
+                <div class="tv-seat dragging"><div class="gcard tv-cell fr-minecraft"><span class="tv-rank">2</span><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div><div class="tv-grip"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+                <div class="tv-seat target"><div class="gcard tv-cell fr-marathon custom"><span class="tv-rank">3</span><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div></div>
+                <div class="tv-seat"><div class="gcard tv-cell fr-ratchet"><span class="tv-rank">4</span><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet</div></div></div>
+                <div class="tv-seat"><div class="gcard tv-cell fr-re"><span class="tv-rank">5</span><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div></div>
+                <div class="tv-seat"><div class="gcard tv-cell fr-destiny"><span class="tv-rank">6</span><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div></div>
+                <div class="tv-seat"><div class="gcard tv-cell fr-minecraft"><span class="tv-rank">7</span><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div></div>
+                <div class="tv-seat"><div class="gcard tv-cell fr-marathon"><span class="tv-rank">8</span><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div></div>
+                <div class="tv-seat"><div class="tv-ghost"><span class="seatnum">9</span><span class="plus">+</span></div></div>
+                <div class="tv-seat"><div class="tv-ghost"><span class="seatnum">10</span><span class="plus">+</span></div></div>
+              </div>
+            </div>
+            <div class="tv-bar"><span class="count"><b>8</b> / 10 SEATED</span><span class="spacer"></span><button class="btn act">DONE</button></div>
+          </div>
+          <div class="scrim"></div>
+          <div class="sheet">
+            <div class="handle"></div>
+            <div class="sec"><h3>ADD TO TOP &middot; SEAT 9</h3></div>
+            <div class="field"><svg width="12" height="12" viewBox="0 0 12 12"><circle cx="5" cy="5" r="3.4" fill="none" stroke-width="1.6"/><path d="M7.8 7.8L11 11" stroke-width="1.8" stroke-linecap="round"/></svg><span>SEARCH YOUR COLLECTION&hellip;</span></div>
+            <div class="tv-picker-grid">
+              <div class="tv-pcell picked"><span class="badge">&#10003;</span><div class="gcard tv-cell fr-ratchet"><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet</div></div></div>
+              <div class="tv-pcell"><div class="gcard tv-cell fr-re"><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div></div>
+              <div class="tv-pcell"><div class="gcard tv-cell fr-minecraft"><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>TOP view — <em>ARRANGE + CardPicker</em></h3>
+        <p><b>Edit in place</b> (COL-13, the former §4.7 editor folded in): <b>drag</b> a card to re-rank (the COL-07/OQ-031 ARRANGE gesture → <code>PATCH /me/lists/:id</code>); tap a <b>+ seat</b> → the <b>CardPicker</b> sheet (search your collection · ★ add/remove · cap-10) → <code>POST/DELETE …/items</code>. <b>DONE</b> returns to read. No standalone editor (OQ-083 reversed).</p>
+      </div>
+    </div>
+
+    <!-- ═══ Collection · TOP view — friend (read-only) ═══ -->
+    <div class="take">
+      <div class="artboard-label">TOP view — a friend's (read-only; from their Profile)</div>
+      <div class="device" data-screen-label="States · C5 · Collection — RIKO · TOP">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2 class="whose">COLLECTION &mdash; RIKO</h2><span class="count">TOP 10</span></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO PROFILE</a>
+            <div class="scroll">
+              <div class="tv-sub">RIKO'S TOP&nbsp;10 &middot; read-only. Tap a card to flip for her stats, or VIEW GAME.</div>
+              <div class="tv-hero">
+                <div class="tv-seat"><div class="gcard hero-size fr-re"><span class="tv-rank first">1</span><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div></div>
+                <div class="meta"><span class="npl">RIKO'S #1</span><span class="title">RESIDENT EVIL</span><span class="meta-sub">142 HRS &middot; COMPLETED</span></div>
+              </div>
+              <div class="tv-shelf">
+                <div class="tv-seat"><div class="gcard tv-cell fr-ratchet"><span class="tv-rank">2</span><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet</div></div></div>
+                <div class="tv-seat"><div class="gcard tv-cell fr-minecraft"><span class="tv-rank">3</span><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div></div>
+                <div class="tv-seat"><div class="gcard tv-cell fr-destiny"><span class="tv-rank">4</span><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div></div>
+                <div class="tv-seat"><div class="gcard tv-cell fr-marathon"><span class="tv-rank">5</span><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div></div>
+                <div class="tv-seat"><div class="gcard tv-cell fr-re"><span class="tv-rank">6</span><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div></div>
+                <div class="tv-seat"><div class="gcard tv-cell fr-ratchet"><span class="tv-rank">7</span><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet</div></div></div>
+                <div class="tv-seat"><div class="gcard tv-cell fr-minecraft"><span class="tv-rank">8</span><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div></div>
+                <div class="tv-seat"><div class="gcard tv-cell fr-destiny"><span class="tv-rank">9</span><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div></div>
+                <div class="tv-seat"><div class="gcard tv-cell fr-marathon"><span class="tv-rank">10</span><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div></div>
+              </div>
+            </div>
+            <div class="tv-bar"><span class="count ro">READ-ONLY &middot; RIKO'S CURATED TOP 10</span></div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>TOP view — <em>friend (read-only)</em></h3>
+        <p>The destination for a friend's <b>VIEW TOP 10</b> or a <b>Top-3 card tap</b> (→ here, focused on that game). Her curated Top-10 in rank order, <b>read-only</b> (COL-13 / PROF-03) — <b>no ARRANGE, no picker, no SAVE</b>. Header self-labels <b>COLLECTION — RIKO</b>; <b>‹ RETURN TO PROFILE</b> goes back; cards flip (COL-12) for her stats · VIEW GAME → 4.2.</p>
+      </div>
+    </div>
+  </div>
+
   <div class="stage-label">States &middot; card peek-flip (COL-12) <small>tap a shelf/grid card &rarr; it <b>flips in place</b> to its CARD-01 stats back &middot; tap the back returns &middot; <b>VIEW GAME</b> opens the Game page (4.2) &middot; long-press = shortcut to the page. Reverses OQ-059 (decision 0026). Friend-view is privacy-gated. <b>No on-face indicator</b> (owner) &mdash; discoverability is a first-run coachmark.</small></div>
   <div class="stage">
 
@@ -1258,7 +1461,7 @@
 
   </div>
 
-  <div class="stage-label">Friend's Collection (COL-10) <small>reached from a friend's Top-5 (PROF-05) &mdash; read-only, privacy-gated; your chrome by default + the "view in their device" toggle (decision 0012). <b>Full browse-tool parity (COL-11):</b> search &middot; sort &middot; filter &middot; view, read-only</small></div>
+  <div class="stage-label">Friend's Collection (COL-10) <small>reached from a friend's Profile (VIEW COLLECTION &middot; VIEW TOP 10 &middot; a Top-3 card &mdash; PROF-05 / decision 0050) &mdash; read-only, privacy-gated; your chrome by default + the "view in their device" toggle (decision 0012). <b>Full browse-tool parity (COL-11):</b> search &middot; sort &middot; filter &middot; view, read-only</small></div>
   <div class="stage">
 
     <!-- ═══ Friend's Collection · default (your chrome) ═══ -->
@@ -1509,6 +1712,7 @@
                 <div class="chip"><svg width="10" height="12" viewBox="0 0 10 12"><path d="M1.5 1.5h7v9h-7z" fill="none" stroke-width="1.5" stroke-linejoin="round"/><path d="M2.8 8.6h4.4" stroke-width="1.3"/></svg><b>SHELF</b></div>
                 <div class="chip active"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="4.4" height="4.4" rx="1"/><rect x="6.6" y="1" width="4.4" height="4.4" rx="1"/><rect x="1" y="6.6" width="4.4" height="4.4" rx="1"/><rect x="6.6" y="6.6" width="4.4" height="4.4" rx="1"/></svg><b>GRID</b></div>
                 <div class="chip"><svg width="12" height="10" viewBox="0 0 12 10"><path d="M1 1.5h10M1 5h10M1 8.5h10" stroke-width="1.6" stroke-linecap="round"/></svg><b>LIST</b></div>
+                <div class="chip"><svg width="12" height="10" viewBox="0 0 12 10"><path d="M1 1.5h10M1 5h7M1 8.5h4" stroke-width="1.6" stroke-linecap="round"/></svg><b>TOP</b></div>
               </div>
               <div class="sec"><h3>SORT BY</h3></div>
               <div class="chips">

@@ -107,27 +107,32 @@
   .ftag { position: absolute; top: 5px; left: 5px; z-index: 2; background: #d3e95e; color: #2a3505;
     padding: 2px 4px; font: 700 9px var(--pk); letter-spacing: .5px; }
 
-  /* ════ C5 · HYBRID — square chrome · stepped-diagonal cards ════ */
-  .c5 .well, .c5 .btn { border-radius: 0; }
-  .c5 .well { border: 1px solid var(--scr-hairline); }
-  .c5 .btn.add { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+  /* ════ Square-chrome RESET (F-07) — on-screen chrome stays square ════
+     decision 0041 / OQ-085: the board no longer gates the corner-step via a `.c5` chip class. The
+     F-02 TL+BR pixel-step is now INTRINSIC to the components that own it (GameCard + its
+     art/plate/size-variants, StateMark/pips, and intent-buttons). Everything else is square. */
+  .well, .btn { border-radius: 0; }
+  .well { border: 1px solid var(--scr-hairline); }
+
+  /* ════ F-02 corner-step — INTRINSIC per component (GameCard + intent-button `.btn.add`) ════ */
+  .btn.add { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
       100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
       calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
-  .c5 .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
+  .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
     clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
       100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
       calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
-  .c5 .gcard .art { border-radius: 0;
+  .gcard .art { border-radius: 0;
     clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
       100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
-  .c5 .gcard .plate { border-radius: 0;
+  .gcard .plate { border-radius: 0;
     clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
-  .c5 .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0,
+  .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0,
       100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
-  .c5 .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+  .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
-  .c5 .gcard.thumb .plate { clip-path: polygon(0 1px, 1px 1px, 1px 0, 100% 0,
+  .gcard.thumb .plate { clip-path: polygon(0 1px, 1px 1px, 1px 0, 100% 0,
       100% calc(100% - 1px), calc(100% - 1px) calc(100% - 1px), calc(100% - 1px) 100%, 0 100%); }
 
   /* ── FlowHeader + keycaps (c5 chrome) ── */
@@ -185,8 +190,8 @@
   /* ════ ReportSheet — the converged report grammar (`/drawer`, Variation A ruled app-wide) ════
      NORMALIZED to add-game P3b + design-spec §1.5. One vocabulary on every target: reason rows are
      FLAT planes split by hairlines (F-09 — no sunken containers); the SELECTED reason wears a 1.5px
-     `scr.accent` ORANGE border over a ≤8% orange tint + the pink `ChipPip` (vertically centred; pink
-     stays the LED voice, F-05) · the details note = `TextField/area` — the cream inset (F-09's named
+     `scr.accent` ORANGE border + the orange `StateMark` (top-right corner;
+     F-05/F-09 — orange on screen, never pink) · the details note = `TextField/area` — the cream inset (F-09's named
      text-input exception): ~3 rows, 11px navy ink, pink caret · it is moderator-facing ONLY, never
      rendered to other users (outside MOD-07's screening scope) · SUBMIT = `KeycapButton/destructive`
      (--alert red, white ink) — DORMANT (flush, no travel, muted fill) until a reason needing
@@ -204,10 +209,9 @@
     border-bottom: 1px solid var(--scr-hairline); }
   .dw-i:has(+ :not(.dw-i)) { border-bottom: none; }
   .dw-i:has(+ .dw-i.sel) { border-bottom: none; }
-  .dw-i.sel { border: 1.5px solid var(--scr-accent); padding: 7.5px 5.5px; background: rgba(255,159,67,.07); }
-  .dw-i .dw-pip { position: absolute; top: 50%; right: 7px; transform: translateY(-50%);
+  .dw-i.sel { border: 1.5px solid var(--scr-accent); padding: 7.5px 5.5px; }
+  .dw-i .dw-pip { position: absolute; top: 4px; right: 4px;
     width: 7px; height: 7px; background: var(--scr-accent); clip-path: polygon(11.1% 0, 88.9% 0, 88.9% 11.1%, 100% 11.1%, 100% 88.9%, 88.9% 88.9%, 88.9% 100%, 11.1% 100%, 11.1% 88.9%, 0 88.9%, 0 11.1%, 11.1% 11.1%); }
-  .dw-i .oi { color: var(--scr-accent); font-weight: 700; flex: 0 0 auto; width: 13px; text-align: center; }
 
   /* TextField/area — the cream inset (F-09 named exception), ~3 rows */
   .tarea { display: flex; flex-direction: column; gap: 4px; margin: 9px 1px 0; }
@@ -250,11 +254,10 @@
      red ⊘ glyph. Copy reflects MOD-02 soft-hide (content "may be hidden") WITHOUT exposing a
      threshold, and SOC-09 (severed · mutually invisible · silent · managed in Settings). ── */
   .confirm { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 14px 10px 6px; }
+  /* the confirm/seal accent is SQUARE (F-07, decision 0041 ruling) — it is not a card / StateMark /
+     pip / intent-button, so it carries NO corner-step. */
   .confirm .seal { width: 52px; height: 52px; display: flex; align-items: center; justify-content: center;
-    background: var(--scr-panel); border: 1px solid var(--scr-hairline); margin-bottom: 4px;
-    clip-path: polygon(0 5px, 3px 5px, 3px 3px, 5px 3px, 5px 0, 100% 0,
-      100% calc(100% - 5px), calc(100% - 3px) calc(100% - 5px), calc(100% - 3px) calc(100% - 3px),
-      calc(100% - 5px) calc(100% - 3px), calc(100% - 5px) 100%, 0 100%); }
+    background: var(--scr-panel); border: 1px solid var(--scr-hairline); margin-bottom: 4px; }
   .confirm .seal svg { width: 27px; height: 27px; }
   .confirm .seal svg path { stroke: var(--scr-accent); }
   .confirm .seal.block svg circle, .confirm .seal.block svg path { stroke: var(--alert); }
@@ -341,8 +344,8 @@
     background-color: color-mix(in srgb, var(--alert) 30%, var(--scr-tools));
     background-image: none; transform: none; box-shadow: none;
   }
-</style>
-</head>
+  /* decision 0047 — nameplate F-06-bound: the report-target /thumb (<9px) drops the plate; the sheet names the target */
+  .gcard.thumb .plate { display: none; }
 </style>
 </head>
 <body>
@@ -376,7 +379,7 @@
     <b>report-sheet-drafts.html</b> and normalized inside Add Game <b>P3b</b>; this board lifts that one
     instance into a dedicated state matrix faithful to <b>P3b + design-spec &sect;1.5</b> (B `/modal` and C
     `/takeover` stay in the drafts file as losing history — not carried here). One grammar on every target:
-    flat hairline reason rows, <b>selection = a 1.5px `scr.accent` orange border + the pink `ChipPip`</b>
+    flat hairline reason rows, <b>selection = a 1.5px `scr.accent` orange border + the orange `StateMark` (top-right corner)</b>
     (F-09, no sunken containers) · the required details note rides <b>`TextField/area`</b> (the cream inset,
     <b>moderator-facing only — outside MOD-07's screening scope</b>) · <b>SUBMIT = red
     `KeycapButton/destructive`</b>, dormant until a reason needing specifics has its note (MOD-01) · CANCEL
@@ -435,9 +438,9 @@
             <div class="scrim"></div>
             <div class="drawer">
               <div class="dw-h">REPORT THIS CARD &mdash; PICK A REASON</div>
-              <div class="dw-i"><span class="oi">!</span>OFFENSIVE OR NSFW</div>
-              <div class="dw-i"><span class="oi">&#8800;</span>WRONG GAME</div>
-              <div class="dw-i"><span class="oi">@</span>SPAM OR LOW-EFFORT</div>
+              <div class="dw-i">OFFENSIVE OR NSFW</div>
+              <div class="dw-i">WRONG GAME</div>
+              <div class="dw-i">SPAM OR LOW-EFFORT</div>
               <div class="req-hint">PICK A REASON TO CONTINUE &mdash; <b>SUBMIT UNLOCKS ONCE A REASON IS CHOSEN</b></div>
               <div class="dw-btns">
                 <button class="dw-submit dormant">SUBMIT REPORT</button>
@@ -504,8 +507,8 @@
             <div class="scrim"></div>
             <div class="drawer">
               <div class="dw-h">REPORT THIS ENTRY &mdash; PICK A REASON</div>
-              <div class="dw-i"><span class="oi">&#9046;</span>DUPLICATE</div>
-              <div class="dw-i sel"><span class="oi">!</span>INCORRECT INFO<span class="dw-pip"></span></div>
+              <div class="dw-i">DUPLICATE</div>
+              <div class="dw-i sel">INCORRECT INFO<span class="dw-pip"></span></div>
               <div class="tarea">
                 <span class="flabel">WHAT'S INCORRECT? &mdash; REQUIRED FOR THIS REASON</span>
                 <div class="box"><span class="caret"></span><span class="ph">WHAT&rsquo;S WRONG WITH THIS ENTRY? &mdash; MODERATORS ONLY</span></div>
@@ -576,8 +579,8 @@
             <div class="scrim"></div>
             <div class="drawer">
               <div class="dw-h">REPORT THIS ENTRY &mdash; PICK A REASON</div>
-              <div class="dw-i sel"><span class="oi">&#9046;</span>DUPLICATE &mdash; ALREADY IN THE CATALOG<span class="dw-pip"></span></div>
-              <div class="dw-i"><span class="oi">!</span>INCORRECT INFO</div>
+              <div class="dw-i sel">DUPLICATE &mdash; ALREADY IN THE CATALOG<span class="dw-pip"></span></div>
+              <div class="dw-i">INCORRECT INFO</div>
               <div class="req-hint"><b>DUPLICATE</b> NEEDS NO NOTE &mdash; MODERATORS MERGE IT INTO THE ORIGINAL ENTRY</div>
               <div class="dw-btns">
                 <button class="dw-submit">SUBMIT REPORT</button>
@@ -648,7 +651,7 @@
             <div class="scrim"></div>
             <div class="drawer">
               <div class="dw-h">REPORT THIS ENTRY &mdash; FILING&hellip;</div>
-              <div class="dw-i sel"><span class="oi">!</span>INCORRECT INFO<span class="dw-pip"></span></div>
+              <div class="dw-i sel">INCORRECT INFO<span class="dw-pip"></span></div>
               <div class="tarea">
                 <span class="flabel">WHAT'S INCORRECT? &mdash; REQUIRED FOR THIS REASON</span>
                 <div class="box">Release date is wrong &mdash; it came out Feb 25 2022, not 2020.</div>
@@ -782,7 +785,7 @@
             <div class="scrim"></div>
             <div class="drawer">
               <div class="dw-h">REPORT THIS ENTRY &mdash; PICK A REASON</div>
-              <div class="dw-i sel"><span class="oi">!</span>INCORRECT INFO<span class="dw-pip"></span></div>
+              <div class="dw-i sel">INCORRECT INFO<span class="dw-pip"></span></div>
               <div class="tarea">
                 <span class="flabel">WHAT'S INCORRECT? &mdash; REQUIRED FOR THIS REASON</span>
                 <div class="box">Release date is wrong &mdash; it came out Feb 25 2022, not 2020.<span class="caret"></span></div>
@@ -850,13 +853,13 @@
             <div class="scrim"></div>
             <div class="drawer">
               <div class="dw-h">REPORT THIS USER &mdash; PICK A REASON</div>
-              <div class="dw-i"><span class="oi">!</span>ABUSIVE PROFILE</div>
-              <div class="dw-i sel"><span class="oi">&#8800;</span>IMPERSONATION<span class="dw-pip"></span></div>
+              <div class="dw-i">ABUSIVE PROFILE</div>
+              <div class="dw-i sel">IMPERSONATION<span class="dw-pip"></span></div>
               <div class="tarea">
                 <span class="flabel">WHO ARE THEY IMPERSONATING? &mdash; REQUIRED FOR THIS REASON</span>
                 <div class="box">BIO + AVATAR COPY @MOSSBONE&rsquo;S &mdash; POSTING TRADE LINKS AS THEM.<span class="caret"></span></div>
               </div>
-              <div class="dw-i"><span class="oi">@</span>SPAM</div>
+              <div class="dw-i">SPAM</div>
               <div class="dw-btns">
                 <button class="dw-submit">SUBMIT REPORT</button>
                 <button class="dw-cancel">CANCEL</button>
@@ -994,7 +997,7 @@
             <div class="scrim"></div>
             <div class="drawer">
               <div class="dw-h">REPORT THIS ENTRY &mdash; PICK A REASON</div>
-              <div class="dw-i sel"><span class="oi">!</span>INCORRECT INFO<span class="dw-pip"></span></div>
+              <div class="dw-i sel">INCORRECT INFO<span class="dw-pip"></span></div>
               <div class="tarea">
                 <span class="flabel">WHAT'S INCORRECT? &mdash; REQUIRED FOR THIS REASON</span>
                 <div class="box">Release date is wrong &mdash; it came out Feb 25 2022, not 2020.</div>

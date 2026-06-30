@@ -150,26 +150,36 @@
   .sk2 .btn.secondary { background: var(--cream); color: var(--navy); }
   .sk2 .btn.mini { padding: 6px 9px; font-size: 11px; }
 
-  /* ── C5 ── */
-  .c5 .btn { border-radius: 0; clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+  /* ── F-02 corner-step: INTRINSIC per component (decision 0041 / OQ-085) ──
+     The TL+BR pixel-step belongs ONLY to GameCards and to INTENT buttons:
+     the gold acquisitive .btn.add and the orange prominent action .btn.
+     Secondary/cancel/mini and all other on-screen chrome stay SQUARE (F-07). */
+
+  /* square-chrome reset (F-07) — its own explicit rule */
+  .btn, .gcard { border-radius: 0; }
+
+  /* intent buttons — orange prominent .btn (incl. .add gold) carry the step */
+  .btn { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
       100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
       calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
-  .c5 .btn.secondary { clip-path: none; }
-  .c5 .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
+  /* secondary/cancel + mini are NOT intent buttons → square */
+  .btn.secondary, .btn.mini { clip-path: none; }
+
+  .gcard { box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
     clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
       100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
       calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
-  .c5 .gcard .art { border-radius: 0; clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+  .gcard .art { border-radius: 0; clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
       100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
-  .c5 .gcard .plate { border-radius: 0; clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+  .gcard .plate { border-radius: 0; clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
-  .c5 .gcard.grid-size, .c5 .gcard.cell-size { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+  .gcard.grid-size, .gcard.cell-size { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
       100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
-  .c5 .gcard.grid-size .art, .c5 .gcard.cell-size .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+  .gcard.grid-size .art, .gcard.cell-size .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
-  .c5 .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0,
+  .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0,
       100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
-  .c5 .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+  .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
 
   /* ── Up Next room ── */
@@ -226,7 +236,7 @@
   .trend + .trend { margin-top: 6px; }
   .rchip { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px;
     padding: 0 5px; font: 700 11px var(--pk); background: var(--scr-panel); border: 1px solid var(--scr-hairline); color: var(--scr-soft); }
-  .c5 .rchip { border-radius: 0; }
+  .rchip { border-radius: 0; }
   .rchip.first { background: var(--gold); color: #3c2a09; border-color: color-mix(in srgb, var(--gold) 60%, #000); box-shadow: 0 0 8px rgba(255,210,63,.45); }
   .trend .t-meta { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
   .trend .t-title { font: 700 11px var(--pk); letter-spacing: .3px; color: var(--scr-text); }
@@ -362,6 +372,8 @@
     background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
     background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px);
   }
+  /* decision 0047 — nameplate F-06-bound: /cell-size + /thumb (<9px) drop the plate; the row/rail title names the game */
+  .gcard.cell-size .plate, .gcard.thumb .plate { display: none; }
 </style>
 </head>
 <body>
@@ -429,7 +441,7 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head"><h2>UP NEXT</h2><button class="head-act"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7" fill="none" stroke-width="2"/><path d="M12 15V4M8 7l4-4 4 4" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+            <div class="screen-head"><h2>UP NEXT</h2></div>
             <div class="scroll">
               <div class="sec"><h3>NOW PLAYING</h3></div>
               <div class="nowpin">
@@ -485,7 +497,7 @@
       </div>
       <div class="caption">
         <h3>P1 &mdash; Up Next, populated <em>(header + bottom toggle)</em></h3>
-        <p>A <b>standard header</b> names the page (UP&nbsp;NEXT) with a SHARE action (the queue is shareable); the
+        <p>A <b>standard header</b> names the page (UP&nbsp;NEXT); the
         <b>SegmentedKeycap is now a small bottom bar</b> just inside the screen, UP&nbsp;NEXT pressed + the pink pip lit.
         The single <b>Now-Playing pin</b> (Elden Ring, WTP-03) tops the ranked <b>queue</b> &mdash; real games, drag to
         reorder, source/status tags.</p>
@@ -558,7 +570,7 @@
       <div class="caption">
         <h3>P2 &mdash; Up Next, reordering <em>(the QueueRow drag)</em></h3>
         <p>CELESTE is lifted mid-drag with the orange drop-line marking its slot &mdash; the <b>QueueRow</b> (new:
-        Strip + grip + rank + source/status tag) reorders by drag. Header keeps the page name with a DONE exit; the
+        Strip + grip + rank + source/status tag) reorders by drag; a plain <b>tap</b> on a queue card (or the Now-Playing pin) <b>&rarr; that game's Game page</b> (card-tap NAVIGATE, CARD-23). Header keeps the page name with a DONE exit; the
         toggle stays docked below.</p>
       </div>
     </div>

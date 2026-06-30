@@ -34,3 +34,11 @@
 - **Locked-NavBand over pre-shell** — keeps the app's shell present from step one (consistency) without implying the nav is usable; cheaper than a separate pre-shell chrome.
 - **No-resume / no-re-offer** — the onboarding is skippable + additive, so dropping out degrades gracefully (land on the partial collection); resume/replay machinery is engineering cost for a once-per-account flow whose value is already reachable elsewhere. Rejected: persisting flow state + a Settings replay tab.
 - **Public endpoints** — the drawn affordances (live username check, landing stats) need backing data; both are logged-out, so they are public/unauthenticated by necessity, with screening (AUTH-11) and aggregate-only/rate-limited (SYS-12) safeguards.
+
+## Converge refinements (2026-06-27)
+Post-formalization, owner-directed (this session) — design-spec 0.34 · product-spec/api 0.33:
+- **O2 gains a second add-rail — NEW RELEASES (CAT-11)** beside the CAT-09 popular rail (recently-released catalog games, `GET /catalog/new-releases`; released-only → addable, capped ~12). It fills the slot the **FRIENDS-ARE-PLAYING rail** vacated — a brand-new user has **no friends**, so the friend-presence signals ("N FRIENDS HAVE IT" + the friends rail) were removed from O2 as impossible-at-onboarding (the popular rail's global collections-count stays).
+- **Rail count badge dropped** (the add count rides the CONTINUE CTA); the `SearchField` rests **above the CONTINUE foot** on a **continuous-blue** ground (OQ-035's keyboard-ride still holds — only the "bottom-docked" posture changed).
+- **COL-02 status chips → scanline-energize keycap + `StateMark`, no border** (the catalog SectionChips idiom); rippled to the game-page `.schip`. The cream-keycap-vs-panel-ground base difference between the two boards' status chips is left as a pre-existing follow-up.
+- **Per-step back → the `return-link` back-seam (`‹ BACK`)**, not the FlowHeader ◂ keycap (the link-back variant, design-spec §1.5).
+- Square on-screen pips (F-05, design-spec 0.28) already landed.

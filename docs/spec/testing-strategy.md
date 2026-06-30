@@ -4,7 +4,7 @@
 > [`product-spec.md`](product-spec.md) §7 and IDs `SYS-06`/`SYS-07`. Behavior being tested is
 > identified by the spec's stable feature IDs.
 
-**Version:** 0.1 · **Last updated:** 2026-06-07 · **Owner:** Claude Code
+**Version:** 0.2 · **Last updated:** 2026-06-30 · **Owner:** Claude Code
 
 ---
 
@@ -89,8 +89,9 @@ a **manual sandbox pass** for the real purchase UX before release.
 
 Pipeline on every push/PR, fail-fast, ordered cheapest-first:
 ```
-typecheck + lint  →  unit  →  integration (Testcontainers PG)
+typecheck + lint  →  unit  →  integration (Testcontainers PG)  →  gitleaks (secret-scan)  →  SCA (npm audit)  →  build compiles
 ```
+> **v0.2 reconcile (decision 0051):** the required-green spine is the **six checks above** (this doc previously listed only three — `CONVENTIONS.md` + decision 0046 own the CI-gate truth). The integration job must **start a real PG container** (fail on zero containers) and the economy/authz risk domains carry **concurrent** race tests (F36). §2's "single zod contract" is now a **request/response split** (the response shape is owned by the F06 privacy serializer); §3's standing authz test widens from "every *mutating* endpoint" to **"any endpoint returning another principal's data"** (F06).
 - **E2E** runs nightly / on-demand (not per-PR) to keep PR feedback fast.
 - **Speed budget:** integration tests share a single PG container and isolate via
   per-test transaction rollback; suite is parallelized/sharded. If PR feedback creeps past a few

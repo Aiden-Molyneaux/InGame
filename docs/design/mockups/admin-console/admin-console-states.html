@@ -153,16 +153,21 @@
   /* count of reports against the target */
   .qcount { font: 700 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); border: 1px solid var(--scr-hairline); padding: 2px 5px; }
 
-  /* card thumb (card reports) — the REAL game card (.gcard thumb · ported from collection).
-     Card-internal colours are content, not screen chrome (the F-02 gold ban is UI-only). Plate = F-06 9px. */
-  .gcard { position: relative; display: block; box-sizing: border-box; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
-  .gcard.thumb { width: 44px; height: 62px; flex: 0 0 auto; }
-  .gcard .art { position: absolute; inset: 3px; overflow: hidden; }
+  /* card thumb (card reports) — the REAL game card (.gcard thumb · catalog/contributor pattern, verbatim).
+     Card-internal colours + the miniaturised plate are CONTENT (the F-02 gold ban + F-06 type scale are UI-only). */
+  .gcard { position: relative; box-sizing: border-box; flex: 0 0 auto; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
+  .gcard .art { position: absolute; inset: 7px; overflow: hidden; }
   .gcard .art svg { width: 100%; height: 100%; display: block; }
-  .gcard .plate { position: absolute; left: 3px; right: 3px; bottom: 3px; padding: 2px 3px; text-align: center; font: 700 9px var(--pk); letter-spacing: .3px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .fr-eldenring { background: linear-gradient(160deg, #d9a93f, #5e4410); } .pl-eldenring { background: #e8c364; color: #2a1f06; }
-  .fr-halo { background: linear-gradient(160deg, #4a8f6a, #1d3b3f); } .pl-halo { background: #7fcf9b; color: #08251a; }
-  .fr-hades { background: linear-gradient(160deg, #b23a44, #4a121b); } .pl-hades { background: #d34a5c; color: #2a0810; }
+  .gcard .plate { position: absolute; left: 11px; right: 11px; bottom: 3px; padding: 5px 4px 4px; text-align: center; font: 700 10px var(--pk); letter-spacing: .5px; text-transform: uppercase; }
+  .gcard.thumb { width: 44px; height: 62px; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
+    clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0, 100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
+  .gcard.thumb .art { inset: 2.5px;
+    clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  .gcard.thumb .plate { left: 3.5px; right: 3.5px; bottom: 1px; padding: 1.5px 1px 1px; font-size: 3.2px; letter-spacing: 0;
+    clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  .fr-elden { background: linear-gradient(160deg, #e8c356, #b8881f); } .pl-elden { background: #e9cd72; color: #3c2e09; }
+  .fr-hades { background: linear-gradient(160deg, #c8413a, #7e1f22); } .pl-hades { background: #c8413a; color: #fbe7e3; }
+  .fr-marathon { background: linear-gradient(160deg, #64789f, #46587e); } .pl-marathon { background: #3d4f78; color: #e8eefc; }
   /* game thumb (game reports / dedup) */
   .gthumb { width: 40px; height: 40px; background: var(--scr-chip); display: flex; align-items: center; justify-content: center; } .gthumb svg { width: 20px; height: 20px; stroke: var(--navy); fill: none; }
   /* avatar (user reports / dossier) */
@@ -338,6 +343,8 @@
     transform: none; box-shadow: none;
     background-color: color-mix(in srgb, var(--alert) 88%, #000);
     background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, #0000 1px 2px); }
+  /* decision 0047 — nameplate F-06-bound: /thumb (<9px) drops the plate; the report row names the target */
+  .gcard.thumb .plate { display: none; }
 </style>
 </head>
 <body>
@@ -362,36 +369,19 @@
   <symbol id="ic-history" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 1 2.3 5.6" fill="none" stroke-width="1.8" stroke-linecap="round"/><path d="M4 20v-4h4" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8v4l3 2" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="ic-wifi-off" viewBox="0 0 24 24"><path d="M2.5 8.5a15 15 0 0 1 19 0M6 12a10 10 0 0 1 12 0M9.5 15.3a5 5 0 0 1 5 0M3 3.5l18 17" fill="none" stroke-width="1.8" stroke-linecap="round"/></symbol>
   <symbol id="ic-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke-width="1.8"/><path d="M9 9l6 6M15 9l-6 6" stroke-width="1.8" stroke-linecap="round"/></symbol>
-  <!-- game-card art (real cards · collection style) -->
-  <linearGradient id="g-er" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2412"/><stop offset="1" stop-color="#100d08"/></linearGradient>
-  <radialGradient id="g-erglow" cx="50%" cy="46%" r="55%"><stop offset="0" stop-color="#f0cf76"/><stop offset="1" stop-color="#f0cf76" stop-opacity="0"/></radialGradient>
-  <linearGradient id="g-halo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16323a"/><stop offset="1" stop-color="#0c1c22"/></linearGradient>
-  <linearGradient id="g-hades" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6e1a26"/><stop offset="1" stop-color="#280a10"/></linearGradient>
-  <symbol id="art-eldenring" viewBox="0 0 63 88">
-    <rect width="63" height="88" fill="url(#g-er)"/>
-    <circle cx="31.5" cy="40" r="21" fill="url(#g-erglow)" opacity=".55"/>
-    <g stroke="#e8c364" stroke-width="1.5" stroke-linecap="round" fill="none">
-      <path d="M31.5 72 L31.5 28"/><path d="M31.5 58 L21 45 M31.5 58 L42 45"/>
-      <path d="M31.5 50 L23 39 M31.5 50 L40 39"/><path d="M31.5 42 L26 33 M31.5 42 L37 33"/>
-      <path d="M31.5 34 L28 27 M31.5 34 L35 27"/>
-    </g>
-    <circle cx="31.5" cy="22" r="2.6" fill="#fbe9a6"/>
-  </symbol>
-  <symbol id="art-halo" viewBox="0 0 63 88">
-    <rect width="63" height="88" fill="url(#g-halo)"/>
-    <circle cx="11" cy="15" r="1" fill="#d7f1e4"/><circle cx="49" cy="20" r="1" fill="#d7f1e4"/><circle cx="39" cy="11" r=".8" fill="#d7f1e4"/><circle cx="21" cy="26" r=".8" fill="#d7f1e4"/>
-    <path d="M1 31 Q31.5 11 62 31" fill="none" stroke="#cfeede" stroke-width="3.4" opacity=".9"/>
-    <path d="M1 31 Q31.5 11 62 31" fill="none" stroke="#5aa886" stroke-width="1.1"/>
-    <path d="M0 65 Q31.5 50 63 65 L63 88 L0 88 Z" fill="#1f6b57"/>
-    <path d="M0 65 Q31.5 50 63 65" fill="none" stroke="#86dcb2" stroke-width="1.1" opacity=".75"/>
-  </symbol>
-  <symbol id="art-hades" viewBox="0 0 63 88">
-    <rect width="63" height="88" fill="url(#g-hades)"/>
-    <path d="M31.5 15 Q25.5 7 31 1.5 Q34 8 39 5.5 Q37 12.5 31.5 15 Z" fill="#3fd9c2" opacity=".9"/>
-    <path d="M20 35 a11.5 13 0 0 1 23 0 v7.5 a4 4 0 0 1-3 3.9 v5 a2 2 0 0 1-2 2 h-10 a2 2 0 0 1-2-2 v-5 a4 4 0 0 1-3-3.9 Z" fill="#f1ece0"/>
-    <circle cx="26.6" cy="37" r="3.5" fill="#3a0c12"/><circle cx="36.4" cy="37" r="3.5" fill="#3a0c12"/>
-    <path d="M31.5 42 l-2.2 4.2 h4.4 Z" fill="#3a0c12"/>
-    <path d="M27 50.5 v3.5 M31.5 50.5 v4.5 M36 50.5 v3.5" stroke="#c9a59c" stroke-width="1"/>
+  <!-- game-card art (canonical · catalog/contributor library, verbatim) -->
+  <linearGradient id="g-mar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a4a70"/><stop offset="1" stop-color="#1f2840"/></linearGradient>
+  <clipPath id="c-mar"><circle cx="40" cy="30" r="14"/></clipPath>
+  <symbol id="art-elden" viewBox="0 0 63 88"><rect width="63" height="88" fill="#1c1606"/><circle cx="31.5" cy="40" r="20" fill="rgba(232,195,86,.12)"/><path d="M31.5 70 L31.5 30" stroke="#e8c356" stroke-width="3"/><path d="M31.5 36 C24 30 20 24 18 16 M31.5 36 C39 30 43 24 45 16 M31.5 44 C26 40 22 36 20 30 M31.5 44 C37 40 41 36 43 30" fill="none" stroke="#f0d883" stroke-width="1.6" stroke-linecap="round"/><circle cx="31.5" cy="22" r="2" fill="#fff4cf"/></symbol>
+  <symbol id="art-hades" viewBox="0 0 63 88"><rect width="63" height="88" fill="#2a0e10"/><path d="M31.5 18 C22 24 18 34 22 46 C24 38 28 36 28 42 C28 30 35 30 35 42 C35 36 39 38 41 46 C45 34 41 24 31.5 18 Z" fill="#e8623a"/><circle cx="27" cy="40" r="2.2" fill="#2a0e10"/><circle cx="36" cy="40" r="2.2" fill="#2a0e10"/><path d="M26 56 L37 56 L34 64 L29 64 Z" fill="#c8b0a0"/></symbol>
+  <symbol id="art-marathon" viewBox="0 0 63 88">
+    <rect width="63" height="88" fill="url(#g-mar)"/>
+    <circle cx="40" cy="30" r="14" fill="#dfe6f0"/>
+    <g clip-path="url(#c-mar)"><rect x="24" y="25" width="32" height="7" fill="#35cfe0"/><rect x="24" y="31" width="32" height="2.5" fill="#1f93a6"/></g>
+    <ellipse cx="40" cy="30" rx="21" ry="6.5" fill="none" stroke="#8fa3c8" stroke-width="1" opacity=".7" transform="rotate(-18 40 30)"/>
+    <path d="M14 56 L23 60.5 L14 65 Z" fill="#ff5a4e"/>
+    <rect x="4" y="59.2" width="8" height="2.6" rx="1.3" fill="rgba(255,90,78,.45)"/>
+    <path d="M0 78 Q31.5 68 63 78 L63 88 L0 88 Z" fill="#2c3a5c"/>
   </symbol>
   <!-- nav glyphs (shell) -->
   <symbol id="nav-store" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></symbol>
@@ -547,17 +537,17 @@
               <div class="sec"><h3>CARD REPORTS &mdash; 5 OPEN</h3></div>
               <div class="well">
                 <div class="qrow">
-                  <span class="q-thumb"><span class="gcard thumb fr-eldenring"><span class="art"><svg viewBox="0 0 63 88"><use href="#art-eldenring"/></svg></span><span class="plate pl-eldenring">Elden Ring</span></span></span>
+                  <div class="gcard thumb fr-elden"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-elden"/></svg></div><div class="plate pl-elden">Elden Ring</div></div>
                   <span class="q-tx"><span class="q-tt">&ldquo;SL*YER_69&rdquo; &mdash; Elden Ring</span><span class="q-reason">OFFENSIVE OR NSFW</span><span class="q-meta">@riko &middot; 2H AGO &middot; designed by @zed</span></span>
                   <span class="q-right"><span class="hflag"><svg viewBox="0 0 24 24"><use href="#ic-eye-off"/></svg>HIDDEN</span><span class="chev">&rsaquo;</span></span>
                 </div>
                 <div class="qrow">
-                  <span class="q-thumb"><span class="gcard thumb fr-halo"><span class="art"><svg viewBox="0 0 63 88"><use href="#art-halo"/></svg></span><span class="plate pl-halo">Halo</span></span></span>
-                  <span class="q-tx"><span class="q-tt">Master Chief tribute</span><span class="q-reason">SPAM OR LOW-EFFORT</span><span class="q-meta">@maverick &middot; 6H AGO &middot; designed by @nova</span></span>
+                  <div class="gcard thumb fr-marathon"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
+                  <span class="q-tx"><span class="q-tt">Marathon tribute</span><span class="q-reason">SPAM OR LOW-EFFORT</span><span class="q-meta">@maverick &middot; 6H AGO &middot; designed by @nova</span></span>
                   <span class="q-right"><span class="qcount">3&times;</span><span class="chev">&rsaquo;</span></span>
                 </div>
                 <div class="qrow">
-                  <span class="q-thumb"><span class="gcard thumb fr-hades"><span class="art"><svg viewBox="0 0 63 88"><use href="#art-hades"/></svg></span><span class="plate pl-hades">Hades</span></span></span>
+                  <div class="gcard thumb fr-hades"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-hades"/></svg></div><div class="plate pl-hades">Hades</div></div>
                   <span class="q-tx"><span class="q-tt">Zagreus run</span><span class="q-reason">WRONG GAME</span><span class="q-meta">@kai &middot; 1D AGO &middot; designed by @riko</span></span>
                   <span class="q-right"><span class="qcount">1&times;</span><span class="chev">&rsaquo;</span></span>
                 </div>
@@ -696,8 +686,8 @@
             <div class="scroll">
               <a class="return-link" href="#">&#9666; CARD REPORTS</a>
               <div class="rv-obj">
-                <span class="gcard thumb fr-halo"><span class="art"><svg viewBox="0 0 63 88"><use href="#art-halo"/></svg></span><span class="plate pl-halo">Halo</span></span>
-                <span class="ro-tx"><span class="ro-t">Master Chief tribute</span><span class="ro-s">PUBLISHED CARD · designed by @nova · adopted 41&times;</span></span>
+                <div class="gcard thumb fr-marathon"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
+                <span class="ro-tx"><span class="ro-t">Marathon tribute</span><span class="ro-s">PUBLISHED CARD · designed by @nova · adopted 41&times;</span></span>
               </div>
               <div class="panel"><div class="p-lbl">REPORTED FOR</div><div class="p-reason">SPAM OR LOW-EFFORT</div></div>
               <div class="panel"><div class="p-lbl">DETAILS NOTE<span class="tag">STAFF-ONLY</span></div><div class="p-note">&ldquo;Same screenshot reposted across 6 games with no edits &mdash; karma farming.&rdquo;</div></div>
@@ -746,8 +736,8 @@
             <div class="scroll">
               <a class="return-link" href="#">&#9666; CARD REPORTS</a>
               <div class="rv-obj">
-                <span class="gcard thumb fr-halo"><span class="art"><svg viewBox="0 0 63 88"><use href="#art-halo"/></svg></span><span class="plate pl-halo">Halo</span></span>
-                <span class="ro-tx"><span class="ro-t">Master Chief tribute</span><span class="ro-s">PUBLISHED CARD · designed by @nova · adopted 41&times;</span></span>
+                <div class="gcard thumb fr-marathon"><div class="art"><svg viewBox="0 0 63 88"><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
+                <span class="ro-tx"><span class="ro-t">Marathon tribute</span><span class="ro-s">PUBLISHED CARD · designed by @nova · adopted 41&times;</span></span>
               </div>
               <div class="panel"><div class="p-lbl">REPORTED FOR</div><div class="p-reason">SPAM OR LOW-EFFORT</div></div>
             </div>
@@ -755,7 +745,7 @@
             <div class="confirm-sheet">
               <span class="seal alert"><svg viewBox="0 0 24 24"><use href="#ic-eye-off"/></svg></span>
               <span class="cs-eyebrow">SOFT-HIDE THIS CARD</span>
-              <span class="cs-title">Hide &ldquo;Master Chief tribute&rdquo;?</span>
+              <span class="cs-title">Hide &ldquo;Marathon tribute&rdquo;?</span>
               <span class="cs-body">It&rsquo;s removed from galleries pending review; <b>existing adopters fall back to a default card</b> (CARD-18). Reversible &mdash; you can RESTORE.</span>
               <div class="susp-form">
                 <div class="ffield tarea"><div class="flabel">REASON &mdash; LOGGED (MOD-10)</div><div class="box short"><span>Duplicate/low-effort repost<span class="caret"></span></span></div></div>

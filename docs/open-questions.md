@@ -29,8 +29,6 @@
   triggers and rewards. Dedicated brainstorm when the engine is built (ACH-*). [behavior/content]
   **Steering (decision 0015):** creation milestones — first card created / first publish / adoption
   milestones, with cosmetic rewards — must be on that brainstorm's list (closes the create→earn loop).
-- OQ-005: Hidden easter-egg presentation — fully invisible until unlocked, or shown as a locked
-  "???" mystery slot that hints something exists? (ACH-03) [presentation]
 - OQ-056: **Modular card saving — explicit named saves + reusable style presets + the customizations
   gallery.** Owner ruling (2026-06-13, brainstormed; chose "parts + presets" over full
   style×canvas decomposition and over anxiety-fix-only). The **card stays the atomic
@@ -63,7 +61,8 @@
   UI room and treats the body as an **opaque bundle** in access-controlled storage (`log_ref`). Decide
   before bug-log capture is built (likely the Engagement/foundation phase). (Settings formalization,
   decision 0022) [behavior]
-- OQ-061: **Card deletion semantics from the Game-page card switcher.** The Game-page CARDS view (the
+- OQ-061 → **RESOLVED (decision 0040, 2026-06-29):** can't-delete-equipped (switch first) · owned design = remove everywhere behind a destructive confirm · published-with-adopters = **unpublish** only (adopters keep copies + grant, count freezes, per CARD-20) · adopted = remove-your-copy only; the destructive-confirm component = the single bottom-sheet **`ConfirmSheet`** (not a centered modal). product-spec 0.37 · api 0.37 · design-spec 0.41. *Original question retained for context:*
+- OQ-061 (orig): **Card deletion semantics from the Game-page card switcher.** The Game-page CARDS view (the
   OQ-056 customizations switcher) now needs an explicit **delete** affordance, which raises rules the spec
   doesn't yet pin: **(a)** can you delete the **equipped** card, or must you switch first? **(b)** does
   deleting an **owned design** remove it everywhere (incl. the global **My Designs** shelf, `/me/cards`),
@@ -77,14 +76,6 @@
   component** reconciled with the Settings track's `ConfirmDialog` (centered modal vs the page's
   bottom-sheet grammar). (Game-page A×B mix, 2026-06-14) [behavior]
 
-- OQ-075: **SOC-05 recommend-a-game COMPOSE surface is undrawn (the homeless Friends-domain piece).** The
-  friend actions sheet (Friends tab P6 + the Game page) offers a **RECOMMEND A GAME** entry, but the actual
-  compose UI — **pick a game (your collection / catalog) + write a short note** → drops into the recipient's
-  What-to-Play (the Discover **FROM FRIENDS** feed; `POST /recommendations {toUserId, gameId, note}`, SOC-05/
-  WTP-) — is **drawn on no board**. The *receiving* end (Discover friend-recs) is converged; only the
-  *authoring* surface is missing. Decide its home — a bottom-sheet from the actions menu, or a small
-  game-picker micro-flow — and whether it's a Friends-tab state or a WTP-adjacent flow. Surfaced at the
-  Friends-tab (§3.3) convergence. (2026-06-22) [presentation]
 - OQ-078: **No left-edge accent rails — F-09 highlight-model clarification + ripple.** Owner ruling
   (2026-06-24): the one-sided **left-edge accent rail** (a `border-left: 3px solid var(--scr-accent)`
   stripe on a row / callout / toast) is **not** the highlight idiom — a highlighted row uses a flat
@@ -108,42 +99,7 @@
   PARKED here:** the **operator UI** (Stage 3 — a thin internal web tool wrapping the ops + read views) and
   the P4 config/authoring surfaces. Decide scope/shape when the operator pool or support volume justifies a
   UI. (Admin console §4.4 prep, decisions 0033/0034/0035, 2026-06-27) [behavior]
-- OQ-081: **In-app Admin-console remediation additions — IDs + design owed (the §4.4 pass).** The critical
-  pass (decision 0034) found the in-app P1/P2 set is missing behaviors beyond today's five actions, to be
-  given **MOD-** IDs and drawn when §4.4 is designed: **(P1)** field-level remediation (reset an offensive
-  username/bio/avatar; force-rename — a remedy short of suspension) · a **user investigation view** (report
-  history + prior actions + their content, to act on a reported user) · a **moderation-action notice** to the
-  affected user (the "why" + appeal pointer; the consumer-facing complement to MOD-09's non-disclosure, which
-  governs *other* viewers) · **(P2)** **direct canonical entry edit** (fix data with no user suggestion,
-  distinct from MOD-06) · **junk/non-dup entry removal** (distinct from MOD-05 merge) · **proactive takedown
-  by ID** (the MOD-08 legal pull, actioned without waiting for a report). Spec each (owning doc first) +
-  reconcile the destructive-confirm grammar with `ConfirmSheet` (cf. OQ-061) at the §4.4 formalization.
-  (Admin model critical pass, decision 0034, 2026-06-27) [behavior]
-- OQ-082: **Achievement TIER system — 3 tiers (owner direction, 2026-06-27).** Achievements gain a **`tier`**:
-  **PRESTIGE = gold** (`--gold`, rare/marquee) · **STANDARD = the theme accent** (`--scr-accent`) · **SECRET =
-  magenta** (a new on-screen token `--scr-secret` `#e85ad0`, for easter eggs). Drawn on the §4.10 Achievements
-  drafts (`mockups/achievements/`, `BadgeTile`/`QuestRow`/`MysterySlot`/`CelebrationMoment`); "simple but
-  rewarding." **Ripples owed (spec-owner, at the §4.10 converge):**
-  **(a) product-spec ACH-** — add the **`tier`** attribute to the data-driven definition (ACH-01/03); *which*
-  achievement is which tier = content (**OQ-004**). [behavior/data]
-  **(b) F-02 carve-out** — **gold now also = achievement PRESTIGE tier** (non-acquisitive). This **resolves the
-  long-standing badge-gold cross-screen flag** (gold-as-achievement, owner-ratified) — reconcile with the
-  Friends `.achv` gold glyph + the future Profile achievements teaser; amend the Catalog/design-spec **F-02**
-  wording. [presentation]
-  **(c) F-05 carve-out** — **magenta on-screen** (`--scr-secret`) for the SECRET tier is **pink-family on the
-  screen**, which F-05 reserved for shell LEDs only; define the token + amend the **F-05** wording (shell LEDs
-  stay round/pink; the secret tier is a flat on-screen magenta, distinct hue from the `--accent` LED). [presentation]
-  **(d)** the STANDARD tier rides **`--scr-accent`** on purpose → it **re-themes with the screen theme (DEV-04)** —
-  note the dependency. Pairs with **OQ-004** (content). **OQ-005 (egg presentation) is now design-resolved →
-  pole A** (the `???` mystery slot — "hint something exists") by the owner picking **Draft A · Trophy Case** +
-  converging to `achievements-states.html` (2026-06-27); spec-owner to move OQ-005 → Resolved with this pass.
-  **(e) Node-detail + uniform tiles (owner, 2026-06-27):** earned tiles are now **glyph + label only** (the old
-  mixed "EARNED / REWARD / 50 GAMES" sub-text dropped); tapping a node opens a **detail bottom sheet**
-  (`AchievementSheet`) holding **title · description/criterion · tier · reward (+`earnOnly`) · `unlockedAt` /
-  progress**; a locked `???` opens a deliberately **sealed** sheet (no leak). The **API enumeration must include
-  these node-detail fields**, and design-spec must add the `AchievementSheet` component. (Achievements §4.10
-   tier pass + converge, 2026-06-27) [behavior + presentation]
-- OQ-083 → **Top-5 home: DEDICATED (owner ruling 2026-06-28).** A standalone `SOC-04` editor screen reached from
+- OQ-083 → **Top home: RE-RULED → curated in the Collection "TOP" view (owner, 2026-06-30, decision 0049 — reverses the 2026-06-28 "dedicated" ruling below).** The Top-10 is set/reordered in the Collection (a TOP view-mode: COL-07 drag + `CardPicker` membership); the standalone §4.7 editor is **retired/relocated** into the Collection. Profile **VIEW TOP 10** → the Collection TOP view. **Owed:** design-spec §2.1/§2.17 re-spec + the board re-pass (coordinate with the parallel Top track — do **not** re-pass `lists-states.html` to 10 seats per 0047). *Prior ruling (superseded):* A standalone `SOC-04` editor screen reached from
   the Profile (the §4.7 reading), **not** an inline Profile edit-mode panel. The api-contract re-rank wording
   rippled off "Profile edit-mode ARRANGE gesture" → "the dedicated §4.7 editor's ARRANGE gesture" (api 0.34);
   converged `lists/lists-states.html` ships as the dedicated editor. (Lists §4.7 converge)
@@ -151,7 +107,11 @@
   card }] }]`; membership `POST /:id/items { gameId }` (rejects `LIST_FULL`) / `DELETE /:id/items/:gameId`;
   re-rank `PATCH /:id { orderedGameIds[] }`; cap-of-5 server-enforced. Design-spec §2.17 + §1.5 Top-5-editor set
   formalized (0.36). (Lists §4.7 converge, 2026-06-28)
-- OQ-085: **Corner-chip drift — the board-wide `.c5` gate over-applies the pixel-step; reconcile against
+- OQ-085 → **RESOLVED (decision 0041, 2026-06-29):** F-02 step-grammar ratified as the single corner rule (step =
+  GameCard + StateMark/pips + intent-buttons only; everything else square); make the step **intrinsic per component**
+  and **retire the board-level `.c5` chip gate**; fix the 3 blanket-chip boards (friends/compare-hours/discover);
+  `.seal` + `.cel-badge` stay **square**. Catalog v0.12 · design-spec 0.41. Board DS-conformance sweep OWED (sibling to OQ-066/078). *Original analysis retained for context:*
+- OQ-085 (orig): **Corner-chip drift — the board-wide `.c5` gate over-applies the pixel-step; reconcile against
   F-02/F-07.** (admin-console card work, 2026-06-28; 10-board sonnet audit) [presentation]
   **The rule** (catalog Foundation Rules): **F-07** "Radius lives on plastic — rounding only on the shell;
   on-screen chrome is 90°." **F-02** "The step belongs to the card. TL+BR pixel-step = GameCard signature;
@@ -187,7 +147,70 @@
   (`.gcard*`, `.btn.add`/`.btn.act`, StateMark) and **retire the board-level `.c5` chip gate**, keeping any
   square-chrome reset as its own explicit rule (don't overload one class); ③ fix the 3 blanket `.c5 .btn`
   boards to intent-scoped; ④ rule on seal / cel-badge.
+- OQ-087 → **RESOLVED (decision 0042, 2026-06-29):** Discover keeps `QueueRow`; Admin reports-queue row → **`ModQueueRow`**. component-map 0.3. [naming]
+- OQ-088 → **RESOLVED (decision 0042, 2026-06-29):** O9 shelf-live → **`LiveBanner`**; O6 NOTIF-04 priming → **`PrePrompt`**; Friends aggregated-request banner → reuse **`InlineBanner`**. component-map 0.3 · design-spec §1.5. [design-spec]
+- OQ-089 → **RESOLVED (decision 0042, 2026-06-29):** *corrected on inspection* — `.presence` is **NOT** stale; it renders the **live `PresenceStats` (CAT-09)** row (the class name collided with the cut online-presence, OQ-071). **Keep**; maps to `PresenceStats`; optional `.pstats` rename only. component-map 0.3. [presentation]
+### From the UX persona audit (2026-06-28..29) — filed per owner ruling (decision: walk-through 2026-06-29)
+> Source: `docs/design/audit/2026-06-28-ux-persona-review/LEDGER.md` (rows L0xx). The audit ran read-only;
+> its ledger used placeholder IDs `OQ-086..102` that **collided** with real OQs — corrected to OQ-091+ here.
+> **Already-owned, NOT re-filed:** no-hold buy = OQ-046 ✓ · daily-claim idempotency = OQ-043 ✓ · spend/grant
+> idempotency = ECON-03/06 (M5 test-first) · destructive/session + social actor confirm = **decision 0040** ·
+> creator per-card adoption = OQ-086/CARD-20 ✓.
+
+**Behavior:**
+- OQ-091 → **RESOLVED (decision 0043, 2026-06-29):** COL-03 hours hard-capped ≤99,999 + anomaly pending-review. *Orig:* **Self-reported HOURS has no sanity cap** — free numeric feeds compare/Top-5/achievements/store-earned;
+  fake-stat rot. Sanity-cap + anomaly pending-review; field-morph on edit. (L001; COL-03/SOC-03/ACH) [behavior] M3/M5
+- OQ-092: **Refund → keep permanents → negative balance = free cosmetics**; the "NOTHING YOU OWN IS TAKEN BACK"
+  copy pre-contradicts any clawback. Lock/clawback on reversal + reconcile copy. (L002; ECON-09) [behavior] M5
+- OQ-093: **No per-reporter cap → report-bomb** soft-hides rivals. Reporter rate-limit + dedupe. (L003; MOD-01/02) [behavior] M7
+- OQ-094: **CREATE ANYWAY has no creation rate-limit** (dedup override is one-tap). Cap creates/day + soft-queue +
+  two-button layout. (L004; CAT-03, MOD-05) [behavior] M3/M5
+- OQ-095 → **RESOLVED (decision 0043, 2026-06-29):** AUTH-11 anti-enumeration — availability throttled; login/reset/resend neutral + resend-capped. *Orig:* **Username/email enumeration oracle** (AVAILABLE vs NOT-ALLOWED distinguishes screened-reject); RESEND
+  EMAIL no idempotency. Throttle + neutral copy + resend cap. (L012; AUTH-08/11, MOD-07) [behavior] M2
+- OQ-096: **Invite + share/deep links have no TTL/cap/signature** (no "link expired" state). TTL + cap + signature
+  for invite AND share links. (L013; SOC-07/10, extends OQ-073) [behavior] M6
+- OQ-097: **Adopt / Up-Next uncapped** — bulk-adopt loop undefended. Length cap + adopt confirm. (L014; WTP, ECON-03) [behavior] M5/M6
+- OQ-098: **Offline-gated write forms lose their draft** on scrim-dismiss/reconnect (report note, add-game). Persist +
+  restore local draft. (L042; SYS-10) [behavior] M3/M7
+- OQ-099: **No "view my reports" / status surface** after a report submits. Reporter status surface. (L043; MOD-01/02) [behavior] M7
+- OQ-100: **Privacy-gating of aggregates** — public per-card ADOPTION counts enable targeting + cross-profile hour
+  inference (vs PROF-03 hour-gating); locked SECRET-tier achievement node-detail may ship criterion/unlockedAt/reward.
+  Define what leaks to public/non-friends; gate or bucket. (L051; PROF-03, ACH, CARD-20) [behavior] M5/M7
+- OQ-101: **Offline add/adopt has no disabled state + no idempotency** (collection/discover add stays live offline →
+  silent queue + double-add). Offline-disabled state + add/adopt idempotency. (L053; SYS-10) [behavior] M3/M5
+- OQ-102: **Notif pre-prompt is re-triggerable** (no one-shot/cooldown); OPEN PHONE SETTINGS no double-tap guard;
+  OS-declined toggles still render green. Server one-shot/cooldown + settings-jump guard + declined-state visual.
+  (L056/L057; NOTIF-04) [behavior] M7
+- OQ-103 → **RESOLVED (decision 0043, 2026-06-29):** SYS-02 input-validation policy (maxlengths · username charset · sanitization · signed QR/deep-link). *Orig:* **Free-text inputs unbounded/unsanitized** — report + admin mod-note no maxlength (paste-DoS); username/bio/
+  list-title length+charset; QR payload sanitization unstated. Input-validation policy (maxlength + charset + server
+  sanitization) for all free-text + QR. *(No image-upload surface exists yet — card art is SVG/design-only.)* (L058) [behavior] M2/M3
+
+**Presentation / a11y (design-system contracts for M0 close-out):**
+- OQ-104 → **RESOLVED (decision 0044, 2026-06-29):** design-spec §1.4 `motion.reduceMotion` contract + shared timing/easing tokens. *Orig:* **No `prefers-reduced-motion` contract anywhere**, and marquee motion (fan/count-up, peek-flip, redraw, KEEP
+  beat, celebration) has no shared timing/easing token vocabulary; F-03 Scanline-Energize applied inconsistently across
+  boards. Establish the reduce-motion contract + motion tokens; reconcile F-03 energize. (L029/L030/L031/L034) [presentation] M0/M4
+- OQ-105 → **RESOLVED (decision 0044, 2026-06-29):** design-spec §1.6b a11y baseline (focus-visible · form-semantics · modal focus-trap · live-regions · roles · non-gesture reorder). *Orig:* **A11y batch** — no global `:focus-visible`; form-semantics gaps (label association, aria-required,
+  aria-describedby, real checkbox inputs); modal focus-trap + Esc-dismiss + live-region announcements missing; sparse
+  ARIA (role=switch toggles, chevron/icon labels, decorative SVG aria-hidden, color-only tier swatches); gesture-only
+  reorder + CardFan dots lack a keyboard path. One a11y pass. (L032/L033/L044/L059/L060) [a11y] M0/M4
+- OQ-106 → **RESOLVED (decision 0044, 2026-06-29):** design-spec §1.6b content-resilience (truncation cues + number width-guards; pairs w/ OQ-091 cap). *Orig:* **Content-resilience** — long game-titles/usernames silently ellipsis-truncated (no cue); friends `.pname`
+  fixed max-width breaks long/intl names; extreme HOURS (99999+) unformatted → dossier layout break. Truncation cues +
+  number formatting + width guards. (L061; pairs with OQ-091 cap) [presentation] M0/M4
+
+### Sam first-impression presentation pains (UX audit; filed 2026-06-29 — design-spec/board follow-ups, not engineering-blocking)
+- OQ-107: **Editor running-cost meter.** Premium chips feel free — "CHARGED AT KEEP" is the only signal, no live running total while editing (styler:652 · device:777). CARD-13 specs the reconcile-at-KEEP step; this adds a running-cost meter *during* editing + "will charge at KEEP" clarity. (re-opens styler + device boards) [presentation] — M4
+- OQ-108: **Styler exit outcomes undefined.** KEEP / SAVE PRIVATE / CANVAS lack plain-language outcome labels, and there's no CANCEL-ALL / discard confirm (styler:584-611). (re-opens styler board) [presentation] — M4
+- OQ-109: **Returning sign-in below the hero.** Returning users scroll past the hero/cards to reach the sign-in box (welcome:442); + locked-nav silent + static fan. **NB:** the welcome-auth board is converged (Draft-A sign-in) — verify whether already addressed before re-opening. (may re-open welcome board) [presentation] — design close-out
+- OQ-110: **Spec IDs leak into UI copy.** "CARD-16"-style stable IDs appear in user-facing strings (styler:493); strip app-wide. (board copy cleanup) [presentation/QUICK] — any
+
 ## Resolved
+- OQ-090 → **RESOLVED (decision 0039, 2026-06-28): Keycap family renamed for accuracy.** Flat on-screen buttons (0.20) dropped the misleading "Keycap": **`KeycapButton→ScreenButton` · `ToolKeycap→ToolButton` · `CountKeycap→CountTag`** ("Keycap" now = the 5 shell keys only, F-03). Rippled across design-spec §1.5 + all §2 (design-spec 0.40) + component-map 0.2. Boards keep throwaway `.btn`/`.kc` classes. Naming-only — no behaviour/token/API change. [design-spec / naming]
+- OQ-082 → **RESOLVED (decision 0038, 2026-06-28): Achievement 3-tier system formalized + §4.10 converged.** **+product-spec ACH-09** — the presentation `tier` (`prestige` gold · `standard` theme-accent, re-themes DEV-04 · `secret` magenta `brand.secret`/`scr.secret` `#e85ad0`); which-tier each definition wears = content (OQ-004). **F-02 carve-out** — gold *also* = the non-acquisitive **PRESTIGE** tier (the one blessed gold-as-achievement convention across Friends `.achv` + Achievements + the future Profile teaser; resolves the badge-gold flag). **F-05 carve-out** — flat **on-screen magenta** for the **SECRET** tier (shell LEDs stay round/pink). Both amended in the **Catalog v0.11** + design-spec §1.1. **Node-detail + uniform tiles** = presentation (`AchievementSheet` D1/D2/D3, uniform glyph+label) → design-spec §2.19. product-spec **0.36** · api **0.36** (the three `/achievements*` payloads enumerated — bounded, no cursor; ACH-06 celebration push-driven) · design-spec **0.39** (§1.5 Achievements set + §2.19). Board `achievements/achievements-states.html` (SCREEN-STATUS §4.10 Design-spec ✅ · API ✅).
+- OQ-005 → **RESOLVED (decision 0038, 2026-06-28): pole A — the `???` mystery slot.** Hidden easter eggs are shown as a locked `???` `MysterySlot` that hints something exists (not fully invisible), chosen by the owner picking **Draft A · Trophy Case** + converging `achievements-states.html`; a locked secret's detail sheet (D3) stays **sealed** (no spoiler). Recorded in product-spec **ACH-09**; design-spec §2.19 / §1.5 (`MysterySlot`). (ACH-03)
+- OQ-081 → **RESOLVED (decision 0037, 2026-06-28): in-app remediation IDs assigned + §4.4 Admin console converged.** The six OQ-081 surfaces get stable IDs — **MOD-11** field-level remediation (reset username/bio/avatar · force-rename) · **MOD-12** user investigation dossier · **MOD-13** moderation-action notice (the "why" + SYS-09 appeal) · **MOD-14** direct canonical edit · **MOD-15** junk/non-dup removal; **proactive takedown = MOD-08**, **unsuspend = MOD-09** (reused). product-spec 0.36 · api 0.36 (`/admin/*` page-audit — dossier · remediate · notice · direct edit · junk delete · takedown; every write → a MOD-10 audit row) · design-spec 0.38 (§1.5 Admin-console set + §2.18). Board `admin-console-states.html` converged (SCREEN-STATUS §4.4 ✅). OQ-080 (external operator tool) stays parked.
+- OQ-057 → **REVERSED (decision 0036, 2026-06-28): DISC-02 genre/studio browse is SURFACED on Discover** as a BROWSE BY section (was parked at converge); endpoint `/discover/browse` unchanged. design-spec §2.7 · api 0.34.
+- OQ-075 → **RESOLVED design-side (decision 0036): SOC-05 recommend-compose = `RecommendSheet`** — a summoned drawer, two entry contexts (friend actions → game-picker · Game page ⋮ → friend-picker) + note → `POST /recommendations`. design-spec §1.5/§2.10; states board owed. (2026-06-28)
+- OQ-086 → **RESOLVED (decision 0036): CARD-05 creator dashboard = AGGREGATE + reveal-surfaced** — total adoptions/clout/milestone at KeepBeat/PrintRitual, not per-card (invalid under CARD-20). product-spec CARD-05 · design-spec §2.5/2.5b. (2026-06-28)
 - OQ-079 → **Contributor profile (4.9) revised + formalized** (decision 0032; design-spec **0.31** · product-spec
   **0.28** · api **0.28**): the pride surface **drops CAT-06 field-edits + achievement badges** and **adds a
   contributor STANDING** — the Profile **`PctPill`** percentile tags on the contributor `StatTile`s. Rulings:

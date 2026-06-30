@@ -86,11 +86,10 @@
   .sec.tight { margin: 6px 2px 4px; }
   .sec h3 { margin: 0; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
   .sec a { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
+  .fh-key { flex: 0 0 auto; width: 28px; height: 28px; border: none; background: var(--scr-chip); color: var(--navy);
+    font: 700 15px/1 var(--pk); display: inline-flex; align-items: center; justify-content: center; margin-right: 11px; }
   .flow-head { justify-content: flex-start; }
   .flow-head .fh-spacer { flex: 1 1 auto; }
-  /* labelled return link under the header — replaces the white ✕-close keycap (owner: remove ✕ keycaps app-wide) */
-  .return-link { flex: 0 0 auto; align-self: flex-start; display: inline-flex; align-items: center; gap: 5px;
-    margin: 0 16px 8px; font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
 
   /* ── GameCard + C5 ── */
   .gcard { position: relative; box-sizing: border-box; flex: 0 0 auto; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
@@ -110,21 +109,21 @@
   .gcard.cell-size { width: 64px; height: 89px; }
   .gcard.cell-size .art { inset: 3px; }
   .gcard.cell-size .plate { left: 4.5px; right: 4.5px; bottom: 1.5px; padding: 2px 1px 1.5px; font-size: 3.6px; letter-spacing: 0; }
-  .c5 .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
+  .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
     clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
       100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
       calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
-  .c5 .gcard .art { border-radius: 0;
+  .gcard .art { border-radius: 0;
     clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
       100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
-  .c5 .gcard .plate { border-radius: 0;
+  .gcard .plate { border-radius: 0;
     clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
-  .c5 .gcard.pick-size, .c5 .gcard.pick-nb, .c5 .gcard.cell-size { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+  .gcard.pick-size, .gcard.pick-nb, .gcard.cell-size { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
       100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
-  .c5 .gcard.pick-size .art, .c5 .gcard.pick-nb .art, .c5 .gcard.cell-size .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+  .gcard.pick-size .art, .gcard.pick-nb .art, .gcard.cell-size .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
-  .c5 .gcard.pick-size .plate, .c5 .gcard.pick-nb .plate, .c5 .gcard.cell-size .plate { clip-path: polygon(0 1.5px, 1.5px 1.5px, 1.5px 0, 100% 0,
+  .gcard.pick-size .plate, .gcard.pick-nb .plate, .gcard.cell-size .plate { clip-path: polygon(0 1.5px, 1.5px 1.5px, 1.5px 0, 100% 0,
       100% calc(100% - 1.5px), calc(100% - 1.5px) calc(100% - 1.5px), calc(100% - 1.5px) 100%, 0 100%); }
 
   /* roster frames + plates */
@@ -183,9 +182,9 @@
     font: 600 11px var(--pk); letter-spacing: .5px; color: var(--navy); }
   .sk2 .chip .chip-pip { position: absolute; top: -2.5px; right: -2.5px; width: 7px; height: 7px;
     background: var(--scr-accent); clip-path: polygon(11.1% 0, 88.9% 0, 88.9% 11.1%, 100% 11.1%, 100% 88.9%, 88.9% 88.9%, 88.9% 100%, 11.1% 100%, 11.1% 88.9%, 0 88.9%, 0 11.1%, 11.1% 11.1%); }
-  /* C5 square-chrome reset AFTER the S2 base (cascade order — F-07) */
-  .c5 .well, .c5 .chip, .c5 .btn, .c5 .field { border-radius: 0; }
-  .c5 .btn.add, .c5 .btn.alt { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+  /* F-02 step is intrinsic per component; the board-level `.c5` chip gate is retired (decision 0041); the square-chrome (border-radius:0) reset is its own explicit rule. (Placed AFTER the S2 base — cascade order, F-07.) */
+  .well, .chip, .btn, .field { border-radius: 0; }
+  .btn.add, .btn.alt { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
       100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
       calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
   .tert { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
@@ -247,8 +246,8 @@
   .schips .chip.canvas { background: var(--scr-accent); color: var(--scr-accent-ink); margin-left: 6px;
     box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-accent) 45%, #000), inset 0 1px 0 rgba(255,255,255,.4); }
   .sdots { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 8px 0 0; }
-  .sdots .fdot { width: 6px; height: 6px; background: var(--scr-grip); clip-path: polygon(11.1% 0, 88.9% 0, 88.9% 11.1%, 100% 11.1%, 100% 88.9%, 88.9% 88.9%, 88.9% 100%, 11.1% 100%, 11.1% 88.9%, 0 88.9%, 0 11.1%, 11.1% 11.1%); }
-  .sdots .fdot.on { background: var(--scr-accent); }
+  .sdots .fdot { width: 5px; height: 5px; border-radius: 50%; background: var(--scr-grip); }
+  .sdots .fdot.on { background: var(--scr-accent); box-shadow: 0 0 5px 1px rgba(255,159,67,.55); }
   .sdots .chev { font: 700 11px/1 var(--pk); color: var(--scr-dim); }
   .sdots .swipe-lbl { font: 600 9px var(--pk); letter-spacing: 1.5px; color: var(--scr-dim); margin-left: 5px; }
   .attr-rail { display: flex; gap: 8px; padding: 2px 1px 4px; overflow: hidden; }
@@ -368,6 +367,7 @@
   .sk2 .btn.secondary { box-shadow: none; }
   .sk2 .btn.buy { box-shadow: none; }
   .sk2 .btn.disabled { box-shadow: none; filter: none; }   /* stays dimmed via opacity; no press */
+  .fh-key { box-shadow: none; }
   .ccount { box-shadow: none; }   /* COUNT keycap: flatten ONLY — no scanline press */
 
   /* 2) PRESS/active = Scanline Energize, NO motion (replaces .buy.holding translate; adds :active) */
@@ -389,16 +389,22 @@
     transform: none; box-shadow: none;
     background-color: color-mix(in srgb, var(--gold) 88%, #000);
     background-image: repeating-linear-gradient(0deg, rgba(60,42,9,.24) 0 1px, #0000 1px 2px); }
-  /* cream fill -> ink rgba(29,42,74,.20) : .secondary */
+  /* cream fill -> ink rgba(29,42,74,.20) : .secondary .fh-key */
   .sk2 .btn.secondary:active, .sk2 .btn.secondary.is-pressed {
     transform: none; box-shadow: none;
     background-color: color-mix(in srgb, var(--cream) 88%, #000);
+    background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
+  .fh-key:active, .fh-key.is-pressed {
+    transform: none; box-shadow: none;
+    background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
     background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
   /* disabled never energizes (it's dimmed, not pressable) */
   .sk2 .btn.disabled:active, .sk2 .btn.disabled.is-pressed {
     background-image: none; background-color: var(--gold); }
   .sk2 .btn.buy.disabled:active, .sk2 .btn.buy.disabled.is-pressed {
     background-image: none; background-color: var(--gold); }
+  /* decision 0047 — nameplate F-06-bound: the effect-tile /cell-size (<9px "Sample" plate) drops the plate — `.at-name` labels the effect */
+  .gcard.cell-size .plate { display: none; }
 </style>
 </head>
 <body>
@@ -487,8 +493,7 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><h2>STYLER</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button></div>
-            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>STYLER</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button></div>
             <div class="scroll low">
               <div class="hint" style="margin-top:0;">DESTINY &middot; NEW CARD &mdash; <b>PICK A START</b> (CARD-16: NEVER A BLANK CANVAS)</div>
               <div class="sec tight"><h3>START FROM &mdash; SYSTEM BASES</h3></div>
@@ -565,8 +570,7 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><h2>STYLER</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button></div>
-            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>STYLER</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button></div>
             <div class="scroll low">
               <div class="hint" style="margin-top:0;">DESTINY &middot; <b>LIVE</b> &mdash; EVERY PICK REDRAWS THE CARD</div>
               <div style="display:flex; justify-content:center; padding:6px 0 0;">
@@ -646,8 +650,7 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><h2>STYLER</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button></div>
-            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>STYLER</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button></div>
             <div class="scroll low">
               <div class="hint" style="margin-top:0;">DESTINY &middot; PREVIEWING <b>1 PREMIUM PICK</b> &mdash; CHARGED AT KEEP (CARD-13)</div>
               <div style="display:flex; justify-content:center; padding:6px 0 0;">
@@ -719,8 +722,7 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><h2>STYLER</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button></div>
-            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>STYLER</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button></div>
             <div class="scroll low">
               <div class="hint" style="margin-top:0;">DESTINY &middot; PREVIEWING <b>2 PREMIUM PICKS</b> &mdash; CHARGED AT KEEP</div>
               <div style="display:flex; justify-content:center; padding:6px 0 0;">
@@ -795,8 +797,7 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><h2>STYLER</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button></div>
-            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>STYLER</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button></div>
             <div class="scroll low">
               <div class="hint" style="margin-top:0;">DESTINY &middot; PREVIEWING <b>3 PREMIUM PICKS</b> &mdash; EMBER + HOLO STACKED LIVE</div>
               <div style="display:flex; justify-content:center; padding:6px 0 0;">
@@ -871,8 +872,7 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><h2>STYLER</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button></div>
-            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>STYLER</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button></div>
             <div class="scroll low">
               <div class="hint" style="margin-top:0;">DESTINY &middot; THE PLATE IS ITS OWN OBJECT NOW &mdash; SHAPE / MATERIAL</div>
               <div style="display:flex; justify-content:center; padding:6px 0 0;">
@@ -951,8 +951,7 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><h2>STYLER</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button></div>
-            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>STYLER</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button></div>
             <div class="scroll dimmed">
               <div style="display:flex; justify-content:center; padding:10px 0 0;">
                 <div class="gcard styler-size fr-gilt fx-ember fin-holo">
@@ -1036,8 +1035,7 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><h2>STYLER</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>18</button></div>
-            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
+            <div class="screen-head flow-head"><button class="fh-key">&#10005;</button><h2>STYLER</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>18</button></div>
             <div class="scroll low">
               <div class="keepbeat">
                 <div class="gcard styler-size fr-gilt fx-ember fin-holo">
@@ -1151,8 +1149,7 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><h2>STYLER</h2><span class="fh-spacer"></span><span class="sk-bar" style="width:46px; height:21px;"></span></div>
-            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>STYLER</h2><span class="fh-spacer"></span><span class="sk-bar" style="width:46px; height:21px;"></span></div>
             <div class="scroll low">
               <div style="display:flex; justify-content:center; padding:10px 0 0;"><span class="sk-bar" style="width:170px;"></span></div>
               <div style="display:flex; justify-content:center; padding:12px 0 0;">
@@ -1211,8 +1208,7 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><h2>STYLER</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button></div>
-            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>STYLER</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button></div>
             <div class="scroll low">
               <div class="err-wrap">
                 <div class="err-card"><span class="bang">!</span></div>
@@ -1255,8 +1251,7 @@
         </div>
         <div class="screen-bezel">
           <div class="screen sk2 c5">
-            <div class="screen-head flow-head"><h2>STYLER</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button></div>
-            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
+            <div class="screen-head flow-head"><button class="fh-key">&#9666;</button><h2>STYLER</h2><span class="fh-spacer"></span><button class="ccount"><svg width="14" height="14" viewBox="0 0 40 40"><use href="#ic-pix"/></svg>5</button></div>
             <div class="offline-strip">
               <svg viewBox="0 0 16 16" fill="none"><path d="M2 6 C5.5 2.8 10.5 2.8 14 6 M4.5 8.5 C6.8 6.6 9.2 6.6 11.5 8.5 M7 11 C7.7 10.4 8.3 10.4 9 11" stroke-width="1.5" stroke-linecap="round"/><path d="M3 13 L13 3" stroke-width="1.5" stroke-linecap="round"/></svg>
               YOU'RE OFFLINE &mdash; DRAFT-SAFE

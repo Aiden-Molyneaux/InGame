@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InGame · Profile Top-5 — nameplate-legibility drafts (A/B/C)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" /></noscript>
+<style>
+  /* ── tokens: verbatim from profile-states.html (Teal shell · Midnight screen) ── */
+  :root {
+    --plastic: #2bb6b0; --plastic-hi: #3ec9c2; --plastic-lo: #1f9a94; --silk: #0d524e;
+    --accent: #ff3d77; --gold: #ffd23f; --cream: #f5f1e4; --navy: #1d2a4a;
+    --bezel: #14122a;
+    --pk: 'Chakra Petch', sans-serif; --shell: 'Paytone One', sans-serif;
+    --scr-bg: #232045; --scr-well: #2c2950; --scr-tools: #1a1733; --scr-accent: #ff9f43;
+    --scr-accent-ink: #2a1430; --scr-head: #f5f1e4; --scr-text: #ffffff; --scr-dim: #9b97c0;
+    --scr-soft: #c9c5e6; --scr-panel: rgba(255,255,255,.065); --scr-hairline: rgba(255,255,255,.08);
+    --scr-grip: #565178; --scr-chip: #f5f1e4; --scr-head-shadow: rgba(0,0,0,.45);
+    --scr-btn: #ffb38a; --scr-btn-ink: #2a1430;
+    --shell-ink: #08433f; --screw-hi: #2aa39d; --screw-lo: #137671; --pip-off: #117672;
+  }
+  html, body { margin: 0; min-height: 100%; background: #efece6; font-family: var(--pk); }
+  .canvas { max-width: 1860px; margin: 0 auto; padding: 40px 24px 60px; }
+  .canvas-head h1 { font: 700 17px/1.2 var(--pk); letter-spacing: 2.5px; color: #2a2633; margin: 0 0 6px; text-transform: uppercase; }
+  .canvas-head p { font: 500 12.5px/1.55 var(--pk); color: #79748a; margin: 0 0 8px; max-width: 880px; }
+  .canvas-head code { font-family: var(--pk); background: #ece9e2; padding: 1px 4px; font-size: 11.5px; color: #4a4658; }
+  .stage { display: flex; gap: 36px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+  .take { width: 404px; }
+  .artboard-label { font: 700 11px/1.35 var(--pk); letter-spacing: 1.2px; color: #8d889c; margin: 0 0 10px 2px; text-transform: uppercase; }
+  .artboard-label b { color: #2a2633; }
+  .caption { margin-top: 14px; background: #fff; border-radius: 12px; padding: 13px 15px; box-shadow: 0 2px 8px rgba(42,38,51,.08); }
+  .caption h3 { margin: 0 0 5px; font: 700 12.5px var(--pk); letter-spacing: .8px; color: #2a2633; text-transform: uppercase; }
+  .caption h3 em { font-style: normal; color: var(--accent); }
+  .caption p { margin: 0 0 4px; font: 500 11.8px/1.5 var(--pk); color: #5d5870; }
+  .caption p b { color: #2a2633; }
+  .caption .pro { color: #2e7d52; } .caption .con { color: #b4533a; }
+
+  /* ── device shell (physical — verbatim) ─────────────────── */
+  .device { position: relative; width: 404px; height: 884px; border-radius: 30px; overflow: hidden;
+    background: linear-gradient(178deg, var(--plastic-hi) 0%, var(--plastic) 38%, var(--plastic-lo) 100%);
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.4), inset 0 -4px 0 rgba(0,0,0,.18), 0 18px 40px color-mix(in srgb, var(--shell-ink) 28%, transparent);
+    display: flex; flex-direction: column; padding: 0 14px; box-sizing: border-box; }
+  .screw { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--screw-hi), var(--screw-lo) 75%);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.25); }
+  .screw::after { content: ""; position: absolute; left: 1.5px; right: 1.5px; top: 3.5px; height: 1.5px; background: color-mix(in srgb, var(--shell-ink) 70%, transparent); border-radius: 1px; }
+  .screw.tl { top: 10px; left: 12px; } .screw.tr { top: 10px; right: 12px; }
+  .screw.bl { bottom: 10px; left: 12px; } .screw.br { bottom: 10px; right: 12px; }
+  .top-band { height: 64px; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 12px 0; position: relative; }
+  .power { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+  .power .led { width: 9px; height: 9px; border-radius: 50%; background: #ff5a4e; box-shadow: 0 0 7px 2px rgba(255,90,78,.65), inset 0 -1px 1px rgba(0,0,0,.3); }
+  .power .lbl { font: 400 9px var(--shell); letter-spacing: .5px; color: var(--silk); opacity: .75; }
+  .logo { position: absolute; left: 50%; transform: translateX(-50%); font: 400 21px var(--shell); letter-spacing: 7px; text-indent: 7px;
+    color: color-mix(in srgb, var(--shell-ink) 28%, transparent); text-shadow: 0 -1px 0 color-mix(in srgb, var(--shell-ink) 30%, transparent); }
+  .grille { display: flex; gap: 6px; }
+  .grille span { width: 5px; height: 23px; background: color-mix(in srgb, var(--shell-ink) 40%, transparent); border-radius: 2px; transform: skewX(-22deg); box-shadow: inset 0 1px 1px rgba(0,0,0,.3); }
+  .screen-bezel { flex: 1 1 auto; min-height: 0; background: var(--bezel); border-radius: 20px; padding: 9px; box-sizing: border-box; }
+  .nav-band { flex: 0 0 auto; height: 128px; display: flex; align-items: flex-start; justify-content: space-between; padding: 16px 6px 0; }
+  .nav-item { display: flex; flex-direction: column; align-items: center; width: 64px; }
+  .nav-lbl { height: 16px; font: 400 11px var(--shell); letter-spacing: .5px; color: var(--silk); display: flex; align-items: center; }
+  .nav-lbl.big { font-size: 11px; }
+  .nav-btn { width: 54px; height: 54px; border-radius: 15px; background: var(--cream); border: none;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 1px 0 rgba(255,255,255,.85); }
+  .nav-btn.store { background: var(--gold); }
+  .nav-btn.collection { background: var(--accent); }
+  .nav-item.active .nav-btn { transform: translateY(3px); box-shadow: 0 1px 0 color-mix(in srgb, var(--shell-ink) 55%, transparent), inset 0 2px 3px rgba(0,0,0,.18); }
+  .pip { width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; background: var(--pip-off);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.25); }
+  .nav-item.active .pip { background: var(--accent); box-shadow: 0 0 9px 2.5px rgba(255,61,119,.85), inset 0 -1px 1px rgba(0,0,0,.25); }
+  .nav-band .nav-item:nth-child(2) .nav-lbl:first-child,
+  .nav-band .nav-item:nth-child(4) .nav-lbl:first-child { transform: translateY(-8px); }
+
+  /* ── shared screen structure ────────────────────────────── */
+  .screen { position: relative; height: 100%; border-radius: 13px; overflow: hidden; display: flex; flex-direction: column; }
+  .screen-head { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 12px; }
+  .scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 12px 14px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .hero { display: flex; gap: 14px; align-items: stretch; padding: 12px; }
+  .hero-meta { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 7px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; border: none; width: fit-content; }
+  .retlink { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 0 16px 10px;
+    font: 700 9px var(--pk); letter-spacing: 1.2px; color: var(--scr-dim); }
+  .retlink .bk { color: var(--scr-accent); font: 700 15px/1 var(--pk); }
+
+  /* ── the Game Card ──────────────────────────────────────── */
+  .gcard { position: relative; box-sizing: border-box; flex: 0 0 auto; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
+  .gcard .art { position: absolute; inset: 7px; overflow: hidden; }
+  .gcard .art svg { width: 100%; height: 100%; display: block; }
+  .gcard .plate { position: absolute; left: 11px; right: 11px; bottom: 3px; padding: 5px 4px 4px;
+    text-align: center; font: 700 10px var(--pk); letter-spacing: .5px; text-transform: uppercase; }
+  .gcard.hero-size { width: 138px; height: 193px; }
+  /* set-size — the catalog /grid 96×134 recipe (proven legible: 10px plate, like game-page .grid) */
+  .gcard.set-size { width: 100%; aspect-ratio: 63 / 88; }
+  .gcard.set-size .art { inset: 4.5px; }
+  .gcard.set-size .plate { left: 7px; right: 7px; bottom: 2px; padding: 3.5px 2px 3px; font-size: 10px; letter-spacing: .2px; }
+  /* mini-size — verbatim from the converged board (the 4.5px illegible plate we are replacing) */
+  .gcard.mini-size { width: 100%; aspect-ratio: 63 / 88; }
+  .gcard.mini-size .art { inset: 3px; }
+  .gcard.mini-size .plate { left: 4px; right: 4px; bottom: 1.5px; padding: 2px 1px 1.5px; font-size: 4.5px; letter-spacing: 0; }
+  /* row-size — small art-only token for ranked rows (NO plate; title lives in the row) */
+  .gcard.row-size { width: 46px; height: 64px; }
+  .gcard.row-size .art { inset: 3px; }
+  /* plate suppression — when the title is carried legibly beside/below the card */
+  .gcard.no-plate .plate { display: none; }
+  .fr-destiny { background: linear-gradient(160deg, #e8bc52, #c08a2a); }
+  .fr-marathon { background: linear-gradient(160deg, #64789f, #46587e); }
+  .fr-minecraft { background: linear-gradient(160deg, #ff5fae, #e23488); }
+  .fr-ratchet { background: linear-gradient(160deg, #4a3b30, #332821); }
+  .fr-re { background: linear-gradient(160deg, #221e2c, #121017); }
+  .pl-destiny { background: #f0cd6e; color: #3c2a09; }
+  .pl-marathon { background: #3d4f78; color: #e8eefc; }
+  .pl-minecraft { background: #8bd44a; color: #1f3505; }
+  .pl-ratchet { background: #2c2438; color: #f1ecdf; }
+  .pl-re { background: repeating-linear-gradient(45deg, #e8c83d 0 5px, #1c1a22 5px 10px); color: #fff; text-shadow: 0 1px 2px #000, 0 0 3px #000; }
+  .gcard.custom { background: linear-gradient(160deg, #d3e95e, #93b31a); }
+
+  /* ════ S2 base — flat floating panels ════ */
+  .sk2 { background: var(--scr-bg); }
+  .sk2 .screen-head h2 { margin: 0; font: 700 21px/1 var(--pk); letter-spacing: 3px; color: var(--scr-head); text-shadow: 0 2px 0 var(--scr-head-shadow); }
+  .sk2 .well, .sk2 .hero { background: var(--scr-well); }
+  .sk2 .npl { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-accent); }
+  .sk2 .hero-title { font: 700 21px/1.05 var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .sk2 .hero-sub { font: 600 11px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .sk2 .btn { background: var(--scr-btn); color: var(--scr-btn-ink); padding: 9px 13px; font: 700 11px var(--pk); letter-spacing: 1px; }
+  .sk2 .btn.secondary { background: var(--cream); color: var(--navy); }
+
+  /* ── identity + stats (trimmed from the converged board) ── */
+  .id { padding: 12px; display: flex; flex-direction: column; gap: 9px; }
+  .id-top { display: flex; gap: 12px; align-items: center; }
+  .avatar { position: relative; flex: 0 0 auto; width: 46px; height: 46px; background: var(--scr-accent); color: var(--scr-accent-ink);
+    font: 700 15px var(--pk); display: flex; align-items: center; justify-content: center; }
+  .id-name { font: 700 21px/1.1 var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .id-sub { font: 600 11px var(--pk); letter-spacing: 1px; color: var(--scr-dim); margin-top: 3px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat { background: var(--scr-panel); padding: 9px 6px 8px; display: flex; flex-direction: column; gap: 3px; align-items: center; }
+  .stat .v { font: 700 15px/1 var(--pk); color: var(--scr-text); }
+  .stat .l { font: 600 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
+  .pct { margin-top: 2px; background: var(--gold); color: #3c2a09; padding: 2px 6px; font: 600 9px var(--pk); letter-spacing: .5px; }
+  .sec { display: flex; justify-content: space-between; align-items: baseline; margin: 16px 2px 8px; }
+  .sec h3 { margin: 0; font: 700 9px var(--pk); letter-spacing: 2px; color: var(--scr-dim); }
+  .sec a { font: 600 11px var(--pk); letter-spacing: .5px; color: var(--scr-accent); text-decoration: none; }
+  .rank { position: absolute; top: 4px; left: 4px; z-index: 2; width: 14px; height: 14px;
+    background: var(--scr-chip); color: var(--navy); font: 700 9px/14px var(--pk); text-align: center; }
+  .rank.first { background: var(--gold); color: #3c2a09; }
+  .strip { display: flex; gap: 12px; align-items: center; padding: 10px 12px; }
+  .strip-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .strip-title { font: 700 15px/1.1 var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .chev { margin-left: auto; color: var(--scr-grip); font: 700 15px var(--pk); flex: 0 0 auto; }
+
+  /* ════ DRAFT A — ranked grid (5) + legible title caption ════ */
+  .t5cap { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; }
+  .t5cap .cap-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .t5cap .cap-t { font: 700 9px/1.2 var(--pk); letter-spacing: .2px; color: var(--scr-soft); text-align: center; text-transform: uppercase; }
+
+  /* ════ DRAFT B — Top 3 set-pieces (96×134) + Top-10 expand ════ */
+  .top3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+  .top10grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 12px; }
+  .top10grid .g10 { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .top10grid .g10 .g10-t { font: 700 9px/1.2 var(--pk); letter-spacing: .2px; color: var(--scr-soft); text-align: center; text-transform: uppercase; }
+
+  /* ════ DRAFT C — ranked rows ════ */
+  .r5 { }
+  .r5row { display: flex; gap: 11px; align-items: center; padding: 9px 12px; }
+  .r5row + .r5row { border-top: 1px solid var(--scr-hairline); }
+  .r5row .rk { flex: 0 0 auto; width: 17px; text-align: center; font: 700 13px/1 var(--pk); color: var(--scr-dim); }
+  .r5row .rk.first { color: var(--gold); }
+  .r5row .rm { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .r5row .rm .rt { font: 700 11px var(--pk); letter-spacing: .5px; color: var(--scr-text); }
+  .r5row .rm .rs { font: 600 9px var(--pk); letter-spacing: .5px; color: var(--scr-dim); }
+
+  /* ════ C5 · HYBRID — square chrome · stepped-diagonal cards (verbatim) ════ */
+  .c5 .well, .c5 .hero, .c5 .btn, .c5 .stat, .c5 .rank { border-radius: 0; }
+  .c5 .well, .c5 .hero { border: 1px solid var(--scr-hairline); }
+  .gcard { box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
+    clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
+      100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
+      calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
+  .gcard .art { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+      100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .gcard .plate { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  .gcard.mini-size, .gcard.row-size { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+      100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .gcard.mini-size .art, .gcard.row-size .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+      100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+</style>
+</head>
+<body>
+
+<!-- card art symbols (verbatim from profile-states.html) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="g-dst" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2156"/><stop offset="1" stop-color="#14102e"/></linearGradient>
+    <linearGradient id="g-dst2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#58e0d8"/><stop offset="1" stop-color="#2ba8a0"/></linearGradient>
+    <linearGradient id="g-mar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a4a70"/><stop offset="1" stop-color="#1f2840"/></linearGradient>
+    <linearGradient id="g-mc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff7ab1"/><stop offset="1" stop-color="#e2498e"/></linearGradient>
+    <linearGradient id="g-rat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8973f"/><stop offset="1" stop-color="#a8581b"/></linearGradient>
+    <linearGradient id="g-re" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7f4ec"/><stop offset="1" stop-color="#e3ddcc"/></linearGradient>
+    <clipPath id="c-mar"><circle cx="40" cy="30" r="14"/></clipPath>
+    <symbol id="art-destiny" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-dst)"/>
+      <circle cx="31.5" cy="38" r="17" fill="none" stroke="#d9a93f" stroke-width="1.2" opacity=".5"/>
+      <path d="M31.5 16 L48 38 L31.5 60 L15 38 Z" fill="url(#g-dst2)" stroke="#e8c364" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M31.5 24 L42.5 38 L31.5 52 L20.5 38 Z" fill="rgba(255,255,255,.18)"/>
+      <circle cx="31.5" cy="38" r="4" fill="#f4f9f8"/>
+      <circle cx="31.5" cy="13" r="1.8" fill="#e8c364"/><circle cx="51" cy="38" r="1.8" fill="#e8c364"/>
+      <circle cx="31.5" cy="63" r="1.8" fill="#e8c364"/><circle cx="12" cy="38" r="1.8" fill="#e8c364"/>
+    </symbol>
+    <symbol id="art-marathon" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-mar)"/>
+      <circle cx="40" cy="30" r="14" fill="#dfe6f0"/>
+      <g clip-path="url(#c-mar)"><rect x="24" y="25" width="32" height="7" fill="#35cfe0"/><rect x="24" y="31" width="32" height="2.5" fill="#1f93a6"/></g>
+      <ellipse cx="40" cy="30" rx="21" ry="6.5" fill="none" stroke="#8fa3c8" stroke-width="1" opacity=".7" transform="rotate(-18 40 30)"/>
+      <path d="M14 56 L23 60.5 L14 65 Z" fill="#ff5a4e"/>
+      <rect x="4" y="59.2" width="8" height="2.6" rx="1.3" fill="rgba(255,90,78,.45)"/>
+      <path d="M0 78 Q31.5 68 63 78 L63 88 L0 88 Z" fill="#2c3a5c"/>
+    </symbol>
+    <symbol id="art-minecraft" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-mc)"/>
+      <path d="M0 72 L63 66 L63 88 L0 88 Z" fill="rgba(86,12,46,.30)"/>
+      <rect x="12" y="18" width="39" height="39" rx="3" fill="#ff9cc4"/>
+      <rect x="12" y="18" width="39" height="10" rx="3" fill="#ffb1d2"/>
+      <rect x="17" y="34" width="5" height="7" fill="#471130"/><rect x="41" y="34" width="5" height="7" fill="#471130"/>
+      <rect x="24" y="42" width="15" height="11" rx="2" fill="#d12f72"/>
+      <rect x="27" y="45" width="3" height="5" fill="#6e1437"/><rect x="33" y="45" width="3" height="5" fill="#6e1437"/>
+    </symbol>
+    <symbol id="art-ratchet" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-rat)"/>
+      <path d="M0 76 Q31.5 70 63 76 L63 88 L0 88 Z" fill="rgba(60,26,8,.35)"/>
+      <rect x="18.5" y="27" width="26" height="26" rx="4" fill="#5a3414"/>
+      <rect x="18.5" y="27" width="26" height="26" rx="4" fill="#5a3414" transform="rotate(45 31.5 40)"/>
+      <circle cx="31.5" cy="40" r="11" fill="#f2c489"/>
+      <path d="M31.5 35 L36 37.5 L36 42.5 L31.5 45 L27 42.5 L27 37.5 Z" fill="#3c2410"/>
+    </symbol>
+    <symbol id="art-re" viewBox="0 0 63 88">
+      <rect width="63" height="88" fill="url(#g-re)"/>
+      <g stroke="#2a2326" stroke-width=".7" stroke-linejoin="round">
+        <path d="M31.5 38 L31.5 22 A16 16 0 0 1 42.8 26.7 Z" fill="#d8262c"/>
+        <path d="M31.5 38 L42.8 26.7 A16 16 0 0 1 47.5 38 Z" fill="#f7f5ef"/>
+        <path d="M31.5 38 L47.5 38 A16 16 0 0 1 42.8 49.3 Z" fill="#d8262c"/>
+        <path d="M31.5 38 L42.8 49.3 A16 16 0 0 1 31.5 54 Z" fill="#f7f5ef"/>
+        <path d="M31.5 38 L31.5 54 A16 16 0 0 1 20.2 49.3 Z" fill="#d8262c"/>
+        <path d="M31.5 38 L20.2 49.3 A16 16 0 0 1 15.5 38 Z" fill="#f7f5ef"/>
+        <path d="M31.5 38 L15.5 38 A16 16 0 0 1 20.2 26.7 Z" fill="#d8262c"/>
+        <path d="M31.5 38 L20.2 26.7 A16 16 0 0 1 31.5 22 Z" fill="#f7f5ef"/>
+      </g>
+      <circle cx="31.5" cy="38" r="2" fill="#2a2326"/>
+      <rect x="14" y="64" width="35" height="3.5" fill="#1c1a22"/>
+      <rect x="14" y="70" width="35" height="1.6" fill="#d8262c" opacity=".55"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="canvas">
+  <div class="canvas-head">
+    <h1>Profile Top-5 — nameplate-legibility drafts</h1>
+    <p>Three ways to fix the <b>illegible 4.5px nameplate</b> on the converged Profile <code>TOP 5</code>
+    (5-up <code>mini-size</code> cards). Ruling locked: the nameplate is a <b>UI label</b> bound by the
+    <b>F-06 9px floor</b> — so any sub-9px plate must be upsized or dropped. All three keep the Profile shell,
+    tokens, flat scanline keycaps, square chrome + stepped cards (C5) and real card art verbatim. Same
+    contributor (<b>MAVERICK</b>) across all takes. <i>Drafts for the owner gate — not converged.</i></p>
+  </div>
+
+  <div class="stage">
+
+    <!-- ═══════════ DRAFT A — ranked grid (5) + caption ═══════════ -->
+    <div class="take">
+      <div class="artboard-label"><b>Draft A — Ranked grid (keeps 5) + title caption</b><br>plate dropped · legible 9px caption under each</div>
+      <div class="device">
+        <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">PWR</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>PROFILE</h2></div>
+            <div class="scroll">
+              <div class="well id">
+                <div class="id-top">
+                  <div class="avatar">MV</div>
+                  <div><div class="id-name">MAVERICK</div><div class="id-sub">LV 12 · JOINED '24</div></div>
+                </div>
+              </div>
+              <div class="sec"><h3>STATS</h3></div>
+              <div class="stats">
+                <div class="stat"><span class="v">48</span><span class="l">GAMES</span></div>
+                <div class="stat"><span class="v">1.2K</span><span class="l">HOURS</span><span class="pct">TOP 25%</span></div>
+                <div class="stat"><span class="v">12</span><span class="l">CARDS</span></div>
+              </div>
+              <div class="sec"><h3>TOP 5</h3><a href="#">VIEW COLLECTION &rsaquo;</a></div>
+              <div class="t5cap">
+                <div class="cap-item"><div class="gcard mini-size no-plate fr-destiny"><span class="rank first">1</span><div class="art"><svg><use href="#art-destiny"/></svg></div></div><span class="cap-t">Destiny</span></div>
+                <div class="cap-item"><div class="gcard mini-size no-plate fr-minecraft"><span class="rank">2</span><div class="art"><svg><use href="#art-minecraft"/></svg></div></div><span class="cap-t">Minecraft</span></div>
+                <div class="cap-item"><div class="gcard mini-size no-plate fr-marathon custom"><span class="rank">3</span><div class="art"><svg><use href="#art-marathon"/></svg></div></div><span class="cap-t">Marathon</span></div>
+                <div class="cap-item"><div class="gcard mini-size no-plate fr-ratchet"><span class="rank">4</span><div class="art"><svg><use href="#art-ratchet"/></svg></div></div><span class="cap-t">Ratchet &amp; Clank</span></div>
+                <div class="cap-item"><div class="gcard mini-size no-plate fr-re"><span class="rank">5</span><div class="art"><svg><use href="#art-re"/></svg></div></div><span class="cap-t">Resident Evil</span></div>
+              </div>
+              <div class="sec"><h3>NOW PLAYING</h3></div>
+              <div class="well strip">
+                <div class="gcard row-size no-plate fr-marathon custom"><div class="art"><svg><use href="#art-marathon"/></svg></div></div>
+                <div class="strip-meta"><span class="strip-title">MARATHON</span><span class="hero-sub">86 HRS LOGGED</span></div>
+                <span class="chev">&rsaquo;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Draft A — <em>ranked grid + caption</em></h3>
+        <p>Keeps the familiar <b>5-up ranked silhouette</b>. The baked plate is dropped (it can't hold 9px at
+        this width); each game is named in a <b>9px caption</b> below its card.</p>
+        <p class="pro">+ Smallest change; all 5 still on the Profile; legible.</p>
+        <p class="con">– Cards are still small (not "set pieces"); captions wrap for long titles.</p>
+      </div>
+    </div>
+
+    <!-- ═══════════ DRAFT B — Top 3 set-pieces ═══════════ -->
+    <div class="take">
+      <div class="artboard-label"><b>Draft B — Top 3 set-pieces + VIEW TOP 10</b><br>96×134 cards · legible 10px baked plate (owner lean)</div>
+      <div class="device">
+        <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">PWR</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>PROFILE</h2></div>
+            <div class="scroll">
+              <div class="well id">
+                <div class="id-top">
+                  <div class="avatar">MV</div>
+                  <div><div class="id-name">MAVERICK</div><div class="id-sub">LV 12 · JOINED '24</div></div>
+                </div>
+              </div>
+              <div class="sec"><h3>STATS</h3></div>
+              <div class="stats">
+                <div class="stat"><span class="v">48</span><span class="l">GAMES</span></div>
+                <div class="stat"><span class="v">1.2K</span><span class="l">HOURS</span><span class="pct">TOP 25%</span></div>
+                <div class="stat"><span class="v">12</span><span class="l">CARDS</span></div>
+              </div>
+              <div class="sec"><h3>TOP 3</h3><a href="#">VIEW TOP 10 &rsaquo;</a></div>
+              <div class="top3">
+                <div class="gcard set-size fr-destiny"><span class="rank first">1</span><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="gcard set-size fr-minecraft"><span class="rank">2</span><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
+                <div class="gcard set-size fr-marathon custom"><span class="rank">3</span><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
+              </div>
+              <div class="sec"><h3>NOW PLAYING</h3></div>
+              <div class="well strip">
+                <div class="gcard row-size no-plate fr-marathon custom"><div class="art"><svg><use href="#art-marathon"/></svg></div></div>
+                <div class="strip-meta"><span class="strip-title">MARATHON</span><span class="hero-sub">86 HRS LOGGED</span></div>
+                <span class="chev">&rsaquo;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Draft B — <em>Top 3 set-pieces</em></h3>
+        <p>Your lean: <b>three big 96×134 cards</b> on the Profile, each carrying its <b>legible 10px baked
+        plate</b> (the trophy-case point). <code>VIEW TOP 10 ›</code> opens the full list (next frame).</p>
+        <p class="pro">+ Plate stays on the card, legible, set-piece feel; cleaner Profile.</p>
+        <p class="con">– Only 3 surface on the Profile (4 &amp; 5 move into the Top-10 view).</p>
+      </div>
+    </div>
+
+    <!-- ═══════════ DRAFT B′ — Top 10 expanded view ═══════════ -->
+    <div class="take">
+      <div class="artboard-label"><b>Draft B — the Top 10 view</b><br>tap VIEW TOP 10 → full ranked grid (legible plates)</div>
+      <div class="device">
+        <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">PWR</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>TOP 10</h2></div>
+            <div class="retlink"><span class="bk">&lsaquo;</span> RETURN TO PROFILE</div>
+            <div class="scroll">
+              <div class="top10grid">
+                <div class="g10"><div class="gcard set-size fr-destiny"><span class="rank first">1</span><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div></div>
+                <div class="g10"><div class="gcard set-size fr-minecraft"><span class="rank">2</span><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div></div>
+                <div class="g10"><div class="gcard set-size fr-marathon custom"><span class="rank">3</span><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div></div>
+                <div class="g10"><div class="gcard set-size fr-ratchet"><span class="rank">4</span><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div></div>
+                <div class="g10"><div class="gcard set-size fr-re"><span class="rank">5</span><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div></div>
+                <div class="g10"><div class="gcard set-size fr-minecraft"><span class="rank">6</span><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div></div>
+                <div class="g10"><div class="gcard set-size fr-destiny"><span class="rank">7</span><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div></div>
+                <div class="g10"><div class="gcard set-size fr-marathon"><span class="rank">8</span><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div></div>
+                <div class="g10"><div class="gcard set-size fr-ratchet"><span class="rank">9</span><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div></div>
+                <div class="g10"><div class="gcard set-size fr-re"><span class="rank">10</span><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Draft B — <em>Top 10 view</em></h3>
+        <p>The clickable expansion: a full <b>ranked two-per-row grid</b> of all 10 cards — bigger set-piece
+        cards than the 3-up Profile summary, each carrying its baked plate. Same card class, just wider —
+        nothing shrinks below 9px.</p>
+        <p class="pro">+ Deep showcase without crowding the Profile; one reused card size everywhere.</p>
+      </div>
+    </div>
+
+    <!-- ═══════════ DRAFT C — ranked rows ═══════════ -->
+    <div class="take">
+      <div class="artboard-label"><b>Draft C — Ranked rows</b><br>rank + art + legible title row (the GAMES-ADDED grammar)</div>
+      <div class="device">
+        <div class="screw tl"></div><div class="screw tr"></div><div class="screw bl"></div><div class="screw br"></div>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">PWR</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>PROFILE</h2></div>
+            <div class="scroll">
+              <div class="well id">
+                <div class="id-top">
+                  <div class="avatar">MV</div>
+                  <div><div class="id-name">MAVERICK</div><div class="id-sub">LV 12 · JOINED '24</div></div>
+                </div>
+              </div>
+              <div class="sec"><h3>STATS</h3></div>
+              <div class="stats">
+                <div class="stat"><span class="v">48</span><span class="l">GAMES</span></div>
+                <div class="stat"><span class="v">1.2K</span><span class="l">HOURS</span><span class="pct">TOP 25%</span></div>
+                <div class="stat"><span class="v">12</span><span class="l">CARDS</span></div>
+              </div>
+              <div class="sec"><h3>TOP 5</h3><a href="#">VIEW COLLECTION &rsaquo;</a></div>
+              <div class="well r5">
+                <div class="r5row"><span class="rk first">1</span><div class="gcard row-size no-plate fr-destiny"><div class="art"><svg><use href="#art-destiny"/></svg></div></div><div class="rm"><span class="rt">DESTINY</span><span class="rs">210 HRS · PLAYING</span></div><span class="chev">&rsaquo;</span></div>
+                <div class="r5row"><span class="rk">2</span><div class="gcard row-size no-plate fr-minecraft"><div class="art"><svg><use href="#art-minecraft"/></svg></div></div><div class="rm"><span class="rt">MINECRAFT</span><span class="rs">180 HRS · BEATEN</span></div><span class="chev">&rsaquo;</span></div>
+                <div class="r5row"><span class="rk">3</span><div class="gcard row-size no-plate fr-marathon custom"><div class="art"><svg><use href="#art-marathon"/></svg></div></div><div class="rm"><span class="rt">MARATHON</span><span class="rs">86 HRS · PLAYING</span></div><span class="chev">&rsaquo;</span></div>
+                <div class="r5row"><span class="rk">4</span><div class="gcard row-size no-plate fr-ratchet"><div class="art"><svg><use href="#art-ratchet"/></svg></div></div><div class="rm"><span class="rt">RATCHET &amp; CLANK</span><span class="rs">41 HRS · 100%</span></div><span class="chev">&rsaquo;</span></div>
+                <div class="r5row"><span class="rk">5</span><div class="gcard row-size no-plate fr-re"><div class="art"><svg><use href="#art-re"/></svg></div></div><div class="rm"><span class="rt">RESIDENT EVIL</span><span class="rs">24 HRS · PLAYING</span></div><span class="chev">&rsaquo;</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Draft C — <em>ranked rows</em></h3>
+        <p>Reframes Top-5 as <b>ranked rows</b> (rank · art token · legible title · hours), reusing the
+        GAMES-ADDED / queue-row grammar already in the system. The plate is dropped; the row label carries it.</p>
+        <p class="pro">+ Most legible; richest per-game context (hours/status); scales to N.</p>
+        <p class="con">– Least "trophy wall" — reads as a list, not a showcase of card art.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

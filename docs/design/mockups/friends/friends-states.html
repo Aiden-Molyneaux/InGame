@@ -111,19 +111,25 @@
   .btn.secondary:active, .btn.secondary.is-pressed { background-color: color-mix(in srgb, var(--scr-chip) 88%, #000); background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); box-shadow: none; }
   .btn.alt:active, .btn.alt.is-pressed { background-color: color-mix(in srgb, var(--scr-well) 84%, #000); background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 1px, #0000 1px 2px); box-shadow: none; }
 
-  /* ── C5 square chrome ── */
-  .c5 .btn { border-radius: 0; clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+  /* ── Square chrome (F-07) — on-screen chrome is 90°; its own explicit reset, decoupled from the
+     corner-step (decision 0041; the board-level `.c5` chip gate is retired). ── */
+  .btn { border-radius: 0; }
+  /* ── F-02 corner-step — INTRINSIC per component (decision 0041): GameCard (+ art/thumb variants),
+     and intent-buttons ONLY. Here the prominent ORANGE non-acquisitive action is the plain `.btn`
+     (RETRY · ACCEPT) — orange+step per F-02. Square: `.secondary` (cream) · `.alt` (cancel/decline) ·
+     `.mini`. No `.btn.add` (gold) on this non-commerce social board. ── */
+  .btn:not(.secondary):not(.alt):not(.mini) { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
       100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
       calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
-  .c5 .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
+  .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
     clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
       100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
       calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
-  .c5 .gcard .art { border-radius: 0; clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+  .gcard .art { border-radius: 0; clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
       100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
-  .c5 .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0,
+  .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0,
       100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
-  .c5 .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+  .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
 
   /* ── GameCard (thumb · catalog /thumb 44×62) ── */
@@ -156,6 +162,8 @@
   .feedrow .fline b { color: var(--scr-text); font-weight: 700; }
   .feedrow .ftime { font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-grip); margin-top: 1px; }
   .fpeek { display: flex; gap: 5px; align-items: center; }
+  /* `.fmore` (feed "+N more" counter chip) + `.achv` (achievement glyph) are NOT cards / StateMark /
+     intent-buttons → SQUARE per F-02/decision 0041 (kin to `.cel-badge`). The corner step is removed. */
   .fmore { display: inline-flex; align-items: center; justify-content: center; min-width: 30px; height: 62px; padding: 0 5px;
     background: var(--scr-panel); border: 1px solid var(--scr-hairline); color: var(--scr-soft); font: 700 9px var(--pk); letter-spacing: .5px; }
   .achv { position: relative; width: 44px; height: 62px; flex: 0 0 auto; background: var(--scr-panel); border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent);
@@ -234,6 +242,25 @@
   .sa .sago { margin-left: auto; color: var(--scr-grip); font: 700 9px var(--pk); letter-spacing: 1px; }
   .sa.danger { color: var(--alert); } .sa.danger .saic svg { stroke: var(--alert); }
 
+  /* ── ConfirmSheet (decision 0040 — the single destructive/session confirm; summoned drawer, NO
+     grab handle; kin to Settings `.confirm-sheet` + `ReportSheet`). Used here for UNFRIEND + BLOCK,
+     the SOC-08/09 actor pre-confirm. Square chrome (F-02: `.seal` is square, not a card/intent-button). ── */
+  .cs-scrim { position: absolute; inset: 0; z-index: 8; background: rgba(8,6,20,.62); }
+  .confirm-sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 9; background: var(--scr-tools); border-top: 1px solid var(--scr-hairline);
+    box-shadow: 0 -12px 26px rgba(0,0,0,.55); padding: 18px 18px 16px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 7px; }
+  .confirm-sheet .seal { width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; background: var(--scr-panel); border: 1px solid var(--scr-hairline); margin-bottom: 3px; }
+  .confirm-sheet .seal svg { width: 27px; height: 27px; fill: none; stroke: var(--scr-soft); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .confirm-sheet .seal.alert { border-color: color-mix(in srgb, var(--alert) 55%, transparent); background: rgba(227,65,78,.08); } .confirm-sheet .seal.alert svg { stroke: var(--alert); }
+  .cs-eyebrow { font: 700 9px var(--pk); letter-spacing: 2px; color: var(--alert); }
+  .cs-title { font: 700 15px var(--pk); letter-spacing: 1px; color: var(--scr-text); }
+  .cs-body { font: 500 11px/1.6 var(--pk); color: var(--scr-soft); max-width: 300px; } .cs-body b { color: var(--scr-text); }
+  .cs-btns { display: flex; gap: 8px; width: 100%; margin-top: 10px; }
+  .cs-btns button { flex: 1 1 0; border: none; font: 700 11px var(--pk); letter-spacing: 1px; padding: 10px 0; text-align: center; box-shadow: none; cursor: pointer; }
+  .cs-del { background: var(--alert); color: #fff; }
+  .cs-del:active, .cs-del.is-pressed { background-color: color-mix(in srgb, var(--alert) 88%, #000); background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, #0000 1px 2px); }
+  .cs-cancel { background: var(--scr-chip); color: var(--navy); }
+  .cs-cancel:active, .cs-cancel.is-pressed { background-color: color-mix(in srgb, var(--scr-chip) 88%, #000); background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
+
   /* ── §1.6 lifecycle — Skeleton · Signal-Lost · Offline (sibling grammar, now drawn) ── */
   .offline-strip { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; margin: 10px 0 2px; padding: 7px 11px;
     background: var(--scr-panel); border: 1px solid var(--scr-hairline); font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
@@ -251,6 +278,8 @@
   .sk-block { background: var(--scr-panel); flex: 0 0 auto; }
   .skrow { display: flex; gap: 11px; align-items: center; padding: 12px 4px; border-bottom: 1px solid var(--scr-hairline); }
   .skrow .skm { flex: 1 1 auto; display: flex; flex-direction: column; gap: 6px; }
+  /* decision 0047 — nameplate F-06-bound: the feed-peek /thumb (<9px) drops the plate; the feed line names the game */
+  .gcard .plate { display: none; }
 </style>
 </head>
 <body>
@@ -362,7 +391,7 @@
       <div class="caption">
         <h3>P1 &mdash; feed landing <em>(the model thesis)</em></h3>
         <p><b>The feed IS the screen.</b> You land in the SOC-06 stream &mdash; <b>aggregated</b> rows (&ldquo;Riko added
-        12 games&rdquo; as one capped item, +9 peek), beat/publish events, trivia excluded. The roster is a slim
+        12 games&rdquo; as one capped item, +9 peek &mdash; <b>tapping a peeked card &rarr; that game's Game page</b>, CARD-23 NAVIGATE), beat/publish events, trivia excluded. The roster is a slim
         <b>friends rail</b> (&rarr; ALL FRIENDS). The <b>header key</b> (person-plus, badged with the pending count) is
         the <b>persistent door to the ADD&nbsp;FRIENDS hub</b> &mdash; find/add <i>and</i> requests live there (P4), so
         requests are always reachable; the <b>inline banner</b> is just the pending fast-path. No sub-tabs &mdash; one scroll.</p>
@@ -672,7 +701,108 @@
         <b>SAFETY</b> section: <b>REPORT</b> (&rarr;4.16, MOD-01) + <b>BLOCK</b> (SOC-09, silent &mdash; severs the
         friendship + makes you mutually invisible).</p>
         <p><b>No SHARE anywhere</b> &mdash; sharing is self-only (OQ-052 cut). Block&rsquo;s blocked-list is managed in
-        Settings (4.15), not here.</p>
+        Settings (4.15), not here. <b>UNFRIEND + BLOCK now raise a `ConfirmSheet`</b> (P7/P8, decision 0040).</p>
+      </div>
+    </div>
+
+    <!-- ═══ P7 · UNFRIEND ConfirmSheet ═══ -->
+    <div class="take">
+      <div class="artboard-label">P7 &middot; unfriend &mdash; the ConfirmSheet (SOC-08 · decision 0040)</div>
+      <div class="device" data-screen-label="Friends A · P7 — unfriend ConfirmSheet">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen c5">
+            <div class="screen-head"><h2>FRIENDS<span class="h2sub">14</span></h2><div class="head-keys"><button class="head-act" title="Find, add &amp; requests"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6"/><path d="M3.5 19.5a6 6 0 0 1 11 0"/><path d="M18.5 7.5v6M15.5 10.5h6"/></svg><span class="ntag">2</span></button></div></div>
+            <div class="scroll">
+              <div class="sec"><h3>ALL FRIENDS &middot; 14</h3></div>
+              <div class="frow">
+                <div class="av" style="background:#6c4fd8;color:#fff;">RI</div>
+                <div class="fmeta"><span class="fname">@riko</span><span class="fspeek"><b>188 H</b> &middot; 142 GAMES</span></div>
+                <div class="fright"><button class="btn mini secondary"><svg width="12" height="11" viewBox="0 0 13 12" style="stroke:var(--navy);fill:none;stroke-width:1.8;stroke-linecap:round;"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</button><span class="ovf">&#8942;</span></div>
+              </div>
+              <div class="frow">
+                <div class="av" style="background:#3a3a42;color:#f5f1e4;">VA</div>
+                <div class="fmeta"><span class="fname">@vanta</span><span class="fspeek"><b>210 H</b> &middot; 156 GAMES</span></div>
+                <div class="fright"><button class="btn mini secondary"><svg width="12" height="11" viewBox="0 0 13 12" style="stroke:var(--navy);fill:none;stroke-width:1.8;stroke-linecap:round;"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</button><span class="ovf">&#8942;</span></div>
+              </div>
+            </div>
+            <div class="cs-scrim"></div>
+            <div class="confirm-sheet">
+              <div class="seal alert"><svg viewBox="0 0 24 24"><circle cx="10" cy="8" r="4"/><path d="M3 20a7 7 0 0 1 13-3.5"/><path d="M16 18h6"/></svg></div>
+              <span class="cs-eyebrow">THIS IS SILENT &mdash; THEY&rsquo;RE NOT TOLD</span>
+              <span class="cs-title">UNFRIEND @RIKO?</span>
+              <span class="cs-body">You&rsquo;ll stop seeing each other&rsquo;s activity and lose the friend-only views (compare hours, hidden stats). <b>@riko isn&rsquo;t notified.</b> You can send a new request later.</span>
+              <div class="cs-btns"><button class="cs-cancel">CANCEL</button><button class="cs-del">UNFRIEND</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P7 &mdash; unfriend confirm <em>(the `ConfirmSheet` · SOC-08)</em></h3>
+        <p><b>UNFRIEND now raises the `ConfirmSheet`</b> (decision 0040 — the actor pre-confirm against
+        mis-taps). The summoned drawer (no grab handle, kin to `ReportSheet`) carries a red alert seal,
+        plain-words copy, a red destructive <b>UNFRIEND</b> + cream <b>CANCEL</b>. <b>The copy makes the
+        silence explicit</b> — "THIS IS SILENT — THEY'RE NOT TOLD" + "@riko isn't notified" (SOC-08 /
+        decision 0010: the target is never told; the confirm guards only <i>you</i>). `DELETE
+        /me/friends/:id`.</p>
+      </div>
+    </div>
+
+    <!-- ═══ P8 · BLOCK ConfirmSheet ═══ -->
+    <div class="take">
+      <div class="artboard-label">P8 &middot; block &mdash; the ConfirmSheet (SOC-09 · decision 0040)</div>
+      <div class="device" data-screen-label="Friends A · P8 — block ConfirmSheet">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <div class="screen-bezel">
+          <div class="screen c5">
+            <div class="screen-head"><h2>FRIENDS<span class="h2sub">14</span></h2><div class="head-keys"><button class="head-act" title="Find, add &amp; requests"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6"/><path d="M3.5 19.5a6 6 0 0 1 11 0"/><path d="M18.5 7.5v6M15.5 10.5h6"/></svg><span class="ntag">2</span></button></div></div>
+            <div class="scroll">
+              <div class="sec"><h3>ALL FRIENDS &middot; 14</h3></div>
+              <div class="frow">
+                <div class="av" style="background:#6c4fd8;color:#fff;">RI</div>
+                <div class="fmeta"><span class="fname">@riko</span><span class="fspeek"><b>188 H</b> &middot; 142 GAMES</span></div>
+                <div class="fright"><button class="btn mini secondary"><svg width="12" height="11" viewBox="0 0 13 12" style="stroke:var(--navy);fill:none;stroke-width:1.8;stroke-linecap:round;"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</button><span class="ovf">&#8942;</span></div>
+              </div>
+              <div class="frow">
+                <div class="av" style="background:#3a3a42;color:#f5f1e4;">VA</div>
+                <div class="fmeta"><span class="fname">@vanta</span><span class="fspeek"><b>210 H</b> &middot; 156 GAMES</span></div>
+                <div class="fright"><button class="btn mini secondary"><svg width="12" height="11" viewBox="0 0 13 12" style="stroke:var(--navy);fill:none;stroke-width:1.8;stroke-linecap:round;"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7"/></svg>COMPARE</button><span class="ovf">&#8942;</span></div>
+              </div>
+            </div>
+            <div class="cs-scrim"></div>
+            <div class="confirm-sheet">
+              <div class="seal alert"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg></div>
+              <span class="cs-eyebrow">THIS IS SILENT &mdash; THEY&rsquo;RE NOT TOLD</span>
+              <span class="cs-title">BLOCK @RIKO?</span>
+              <span class="cs-body">This <b>removes them as a friend</b> and makes you two <b>mutually invisible</b> &mdash; you won&rsquo;t find, see, or hear from each other anywhere in InGame. <b>@riko isn&rsquo;t notified.</b> Unblock from Settings &rarr; Blocked Users.</span>
+              <div class="cs-btns"><button class="cs-cancel">CANCEL</button><button class="cs-del">BLOCK</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>P8 &mdash; block confirm <em>(the `ConfirmSheet` · SOC-09)</em></h3>
+        <p><b>BLOCK raises the same `ConfirmSheet`.</b> The copy carries the heavier SOC-09 consequence —
+        <b>severs the friendship</b> + <b>mutual invisibility</b> (you won't find/see/hear from each other
+        anywhere) — and, like unfriend, makes the <b>silence explicit</b> ("@riko isn't notified", decision
+        0010). Red destructive <b>BLOCK</b> + cream <b>CANCEL</b>; it points to Settings &rarr; Blocked Users
+        for the reverse (the MOD-09 unblock exception). `POST /me/blocks`.</p>
       </div>
     </div>
 

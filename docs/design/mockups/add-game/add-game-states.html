@@ -184,35 +184,43 @@
   .sk2 .count { background: var(--gold); color: #3c2a09; padding: 4px 8px;
     font: 700 11px/1 var(--pk); }
 
-  /* ════ C5 · HYBRID — square chrome · stepped-diagonal cards ════ */
-  .c5 .chip, .c5 .btn, .c5 .count { border-radius: 0; }
-  .c5 .btn.add { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+  /* ════ C5 · HYBRID — square chrome · stepped-diagonal cards ════
+     Decision 0041 / OQ-085: the F-02 corner-step is INTRINSIC per component, not a board-level
+     .c5 chip gate. The TL+BR pixel-step rides ONLY the GameCard family (.gcard + its .art/.plate +
+     size variants) and intent-buttons (.btn.add = gold/acquisitive). The StateMark/pip nibble
+     (.chip-pip, .dw-pip, .fdot) and the card-silhouette placeholders (.err-card, .sk-fan) are
+     already intrinsic. Everything else on-screen is square (F-07). */
+  /* square-chrome RESET — its own job, distinct from the step (F-07) */
+  .chip, .btn, .count { border-radius: 0; }
+  /* intent-button (gold/acquisitive) — the only stepped button (F-02) */
+  .btn.add { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
       100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
       calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
-  .c5 .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
+  /* GameCard family — the step rides the card, its art, and its plate (F-02) */
+  .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
     clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
       100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
       calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
-  .c5 .gcard .art { border-radius: 0;
+  .gcard .art { border-radius: 0;
     clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
       100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
-  .c5 .gcard .plate { border-radius: 0;
+  .gcard .plate { border-radius: 0;
     clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
-  .c5 .gcard.fan-size, .c5 .gcard.pick-size,
-  .c5 .gcard.fan-nb, .c5 .gcard.res-nb, .c5 .gcard.pick-nb, .c5 .gcard.pickxl-nb { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+  .gcard.fan-size, .gcard.pick-size,
+  .gcard.fan-nb, .gcard.res-nb, .gcard.pick-nb, .gcard.pickxl-nb { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
       100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
-  .c5 .gcard.fan-size .art, .c5 .gcard.pick-size .art,
-  .c5 .gcard.fan-nb .art, .c5 .gcard.res-nb .art, .c5 .gcard.pick-nb .art, .c5 .gcard.pickxl-nb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+  .gcard.fan-size .art, .gcard.pick-size .art,
+  .gcard.fan-nb .art, .gcard.res-nb .art, .gcard.pick-nb .art, .gcard.pickxl-nb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
-  .c5 .gcard.fan-size .plate, .c5 .gcard.pick-size .plate,
-  .c5 .gcard.fan-nb .plate, .c5 .gcard.res-nb .plate, .c5 .gcard.pick-nb .plate, .c5 .gcard.pickxl-nb .plate { clip-path: polygon(0 1.5px, 1.5px 1.5px, 1.5px 0, 100% 0,
+  .gcard.fan-size .plate, .gcard.pick-size .plate,
+  .gcard.fan-nb .plate, .gcard.res-nb .plate, .gcard.pick-nb .plate, .gcard.pickxl-nb .plate { clip-path: polygon(0 1.5px, 1.5px 1.5px, 1.5px 0, 100% 0,
       100% calc(100% - 1.5px), calc(100% - 1.5px) calc(100% - 1.5px), calc(100% - 1.5px) 100%, 0 100%); }
-  .c5 .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0,
+  .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0,
       100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
-  .c5 .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+  .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
-  .c5 .gcard.thumb .plate { clip-path: polygon(0 1px, 1px 1px, 1px 0, 100% 0,
+  .gcard.thumb .plate { clip-path: polygon(0 1px, 1px 1px, 1px 0, 100% 0,
       100% calc(100% - 1px), calc(100% - 1px) calc(100% - 1px), calc(100% - 1px) 100%, 0 100%); }
 
   /* ════ Draft C chrome (carried from v1) ════ */
@@ -381,9 +389,9 @@
     border-bottom: 1px solid var(--scr-hairline); }
   /* NORMALIZED at converge — this drawer is the app-wide `ReportSheet/drawer` (Variation A won the
      report-board round); recipe verbatim from report-sheet-drafts. F-09 selection: a 1.5px
-     scr.accent orange border + ≤8% tint on a FLAT row (no darkening, no inset; pressed keycaps +
-     the cream text-input inset stay the named exceptions); the pip stays the pink LED (F-05),
-     now vertically centered. INCORRECT INFO requires details (MOD-01) — `TextField/area` discloses
+     scr.accent orange border on a FLAT row (no darkening, no inset; pressed keycaps +
+     the cream text-input inset stay the named exceptions); the marker is the orange `StateMark`
+     (F-05/F-09 — orange on screen, never pink), pinned top-right corner. INCORRECT INFO requires details (MOD-01) — `TextField/area` discloses
      inline beneath the selected reason; SUBMIT REPORT stays dormant until it has content. Commit:
      SUBMIT REPORT (red KeycapButton/destructive — --alert, white ink) + CANCEL (cream). */
   .drawer .dw-i { position: relative; display: flex; align-items: center; gap: 8px; padding: 9px 7px;
@@ -391,12 +399,10 @@
     border-bottom: 1px solid var(--scr-hairline); }
   .drawer .dw-i:has(+ :not(.dw-i)) { border-bottom: none; }
   .drawer .dw-i:has(+ .dw-i.sel) { border-bottom: none; }
-  .drawer .dw-i.sel { border: 1.5px solid var(--scr-accent); padding: 7.5px 5.5px;
-    background: rgba(255,159,67,.07); }
-  .drawer .dw-i .dw-pip { position: absolute; top: 50%; right: 7px; transform: translateY(-50%);
+  .drawer .dw-i.sel { border: 1.5px solid var(--scr-accent); padding: 7.5px 5.5px; }
+  .drawer .dw-i .dw-pip { position: absolute; top: 4px; right: 4px;
     width: 7px; height: 7px;
     background: var(--scr-accent); clip-path: polygon(11.1% 0, 88.9% 0, 88.9% 11.1%, 100% 11.1%, 100% 88.9%, 88.9% 88.9%, 88.9% 100%, 11.1% 100%, 11.1% 88.9%, 0 88.9%, 0 11.1%, 11.1% 11.1%); }
-  .drawer .dw-i .oi { color: var(--scr-accent); font-weight: 700; }
   /* TextField/area — the cream inset (F-09's named exception); metrics exactly the report board's:
      ~3 rows (46px floor), 8/10px padding, 11px navy ink, the pink caret riding inline. The
      component DEBUTED on the report board; adopted here verbatim. */
@@ -564,6 +570,8 @@
     transform: none; box-shadow: none;
     background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
     background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
+  /* decision 0047 — nameplate F-06-bound: /thumb (<9px) drops the plate; the title is named beside */
+  .gcard.thumb .plate { display: none; }
 </style>
 </head>
 <body>
@@ -980,8 +988,8 @@
             <div class="scrim"></div>
             <div class="drawer">
               <div class="dw-h">REPORT THIS ENTRY &mdash; PICK A REASON</div>
-              <div class="dw-i"><span class="oi">&#9046;</span>DUPLICATE</div>
-              <div class="dw-i sel"><span class="oi">!</span>INCORRECT INFO<span class="dw-pip"></span></div>
+              <div class="dw-i">DUPLICATE</div>
+              <div class="dw-i sel">INCORRECT INFO<span class="dw-pip"></span></div>
               <div class="tarea">
                 <span class="flabel">WHAT'S INCORRECT? &mdash; REQUIRED FOR THIS REASON</span>
                 <div class="box">Release date is wrong &mdash; it came out in<span class="caret"></span></div>

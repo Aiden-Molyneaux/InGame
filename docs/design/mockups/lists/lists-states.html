@@ -1,9 +1,19 @@
 <!DOCTYPE html>
+<!--
+  ⚠ RETIRED (2026-06-30, decision 0050) — HISTORY ONLY, NOT A BUILD SOURCE.
+  The Top-10 view-mode was MERGED INTO the Collection board
+  (`collection/collection-states.html` → the "TOP view (COL-13)" stage: self read,
+  self arrange + CardPicker, friend read-only). TOP is a Collection view-mode reached
+  by the `view` keycap (SHELF · GRID · LIST · TOP); there is no standalone editor (OQ-083
+  reversed). This file is kept for history; the prior 0049 "re-homed as the Collection
+  TOP view" framing is superseded by the in-board merge.
+-->
+
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>InGame · Lists / Top-5 editor (4.7) — states board (converged · Frame-first / ranked slots)</title>
+<title>InGame · Collection — TOP view (the curated Top-10, SOC-04 · relocated, decision 0049)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Paytone+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
@@ -99,9 +109,10 @@
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
   /* /hero 138×193 — the #1 podium seat. /cell 96×134 — seats 2-5 + the picker (catalog v0.7). */
   .gcard.hero { width: 138px; height: 193px; }
-  .gcard.cell { width: 100%; aspect-ratio: 96 / 134; }
-  .gcard.cell .art { inset: 5px; }
-  .gcard.cell .plate { left: 8px; right: 8px; bottom: 2px; padding: 3px 3px 3px; font-size: 7.5px; }
+  /* /cell 96×134 fixed — legible 10px plate (≥9px F-06 floor, decision 0047) */
+  .gcard.cell { width: 96px; height: 134px; }
+  .gcard.cell .art { inset: 4.5px; }
+  .gcard.cell .plate { left: 7px; right: 7px; bottom: 2px; padding: 3.5px 2px 3px; font-size: 10px; letter-spacing: .2px; }
   .gcard.mini { width: 100%; aspect-ratio: 63 / 88; }
   .gcard.mini .art { inset: 3px; } .gcard.mini .plate { left: 4px; right: 4px; bottom: 1.5px; padding: 2px 1px; font-size: 4.5px; letter-spacing: 0; }
   .fr-destiny { background: linear-gradient(160deg, #e8bc52, #c08a2a); }
@@ -140,8 +151,8 @@
   .seat-one .swap { align-self: flex-start; margin-top: 4px; font: 700 11px var(--pk); letter-spacing: 1px; color: var(--navy);
     background: var(--cream); padding: 8px 12px; text-decoration: none; }
   /* the seats 2-5 row — a 4-up cell shelf */
-  .seat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; margin-top: 9px; }
-  /* S3 full — all five seats as stacked hero rows */
+  .seat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-top: 9px; justify-items: center; }
+  /* hero-list — retired at the Top-10 re-pass (S3 now uses the podium + 3-up /cell shelf, decision 0047); kept for history */
   .hero-list { display: flex; flex-direction: column; gap: 9px; }
   .hero-list .seat-one { gap: 12px; align-items: center; }
   .hero-list .grip { flex: 0 0 auto; align-self: center; display: grid; grid-template-columns: repeat(2, 3px); grid-auto-rows: 3px; gap: 2.5px; padding: 4px 3px; }
@@ -152,7 +163,7 @@
   .seat .grip { position: absolute; bottom: 5px; right: 5px; z-index: 3; display: grid; grid-template-columns: repeat(2, 3px); grid-auto-rows: 3px; gap: 2.5px; padding: 3px; background: rgba(13,11,30,.55); }
   .seat .grip i { background: var(--scr-soft); border-radius: 1px; width: 3px; height: 3px; }
   /* ghost seat (empty) — §1.5 ghost-card grammar */
-  .ghost { position: relative; width: 100%; aspect-ratio: 96 / 134; background: rgba(255,255,255,.04);
+  .ghost { position: relative; width: 96px; height: 134px; background: rgba(255,255,255,.04);
     clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
       100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
       calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
@@ -225,7 +236,7 @@
   .sk-hero { display: flex; gap: 14px; padding: 12px; background: var(--scr-well); border: 1px solid var(--scr-hairline); margin-bottom: 9px; }
   .sk-h-card { width: 138px; height: 193px; background: var(--scr-panel); }
   .sk-h-meta { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; gap: 9px; }
-  .sk-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+  .sk-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; justify-items: center; }
   .sk-cell { aspect-ratio: 96/134; background: var(--scr-panel); }
   .sk-b { height: 11px; background: var(--scr-panel); } .sk-b.short { width: 55%; }
 </style>
@@ -298,20 +309,20 @@
 
 <div class="canvas">
   <div class="canvas-head">
-    <h1>Lists / Top-5 editor (SOC-04) — converged states board · Frame-first / ranked slots</h1>
-    <p>The <b>Top-5 structure leads.</b> The finished trophy-case shape is the frame — a headliner <b>#1</b> seat over a 4-up
-      shelf of seats 2&ndash;5; an empty seat is a ghost card inviting a pick → tap → a <b>CardPicker sheet</b> → the card drops
-      into that seat; long-press &amp; drag to re-rank (the <b>ARRANGE</b> gesture, COL-07). Cards render full-face (CARD-07)
-      so the editor reads like the Profile showcase it feeds. The cap is structural — five seats. Non-commerce → <b>no
-      gold</b> (F-02). Full matrix: <b>S1 empty · S2 editing · S3 full (5) · S4 Skeleton · S5 LoadError · S6 Offline</b>.
-      Counts illustrative.</p>
+    <h1>Collection — TOP view · the curated Top-10 (SOC-04) — relocated from the standalone editor into the Collection (decision 0049, amends 0047)</h1>
+    <p><b>The Collection’s TOP view</b> (relocated here from the standalone editor — decision 0049; reached from the Collection + the Profile VIEW&nbsp;TOP&nbsp;10). The <b>Top-10 structure leads.</b> The finished trophy-case shape is the frame — a headliner <b>#1</b> <code>/hero</code>
+      seat over a <b>3-up <code>/cell</code> shelf of seats 2&ndash;10</b> (legible 10px nameplate, ≥9px F-06 floor — decision 0047);
+      an empty seat is a ghost card inviting a pick → tap → a <b>CardPicker sheet</b> → the card drops into that seat; long-press
+      &amp; drag to re-rank (the <b>ARRANGE</b> gesture, COL-07). The <b>top 3 headline the Profile</b> (VIEW TOP 10 opens <b>this Collection TOP view</b>). Cards render full-face (CARD-07) so the TOP view reads like the Profile showcase it feeds. The cap is structural — ten
+      seats. Non-commerce → <b>no gold</b> (F-02). Full matrix: <b>S1 empty · S2 editing · S3 full (10) · S4 Skeleton · S5
+      LoadError · S6 Offline</b>. Counts illustrative.</p>
   </div>
 
   <div class="stage">
 
     <!-- ════ S1 · EMPTY ════ -->
     <div class="take">
-      <div class="artboard-label">S1 · EMPTY — no Top-5 yet</div>
+      <div class="artboard-label">S1 · EMPTY — no Top-10 yet</div>
       <div class="device">
         <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
         <div class="top-band">
@@ -321,9 +332,9 @@
         </div>
         <div class="screen-bezel">
           <div class="screen">
-            <div class="screen-head"><h2>TOP 5</h2></div>
-            <a class="return-link" href="#">&lsaquo; RETURN TO PROFILE</a>
-            <p class="sub">Pick your five favourites — they headline your profile.</p>
+            <div class="screen-head"><h2>TOP 10</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
+            <p class="sub">Pick your ten favourites — the top 3 headline your profile.</p>
             <div class="scroll">
               <div class="podium">
                 <div class="seat-one">
@@ -336,24 +347,29 @@
                   <div class="seat"><div class="ghost"><span class="seatnum">3</span><span class="plus">+</span></div></div>
                   <div class="seat"><div class="ghost"><span class="seatnum">4</span><span class="plus">+</span></div></div>
                   <div class="seat"><div class="ghost"><span class="seatnum">5</span><span class="plus">+</span></div></div>
+                  <div class="seat"><div class="ghost"><span class="seatnum">6</span><span class="plus">+</span></div></div>
+                  <div class="seat"><div class="ghost"><span class="seatnum">7</span><span class="plus">+</span></div></div>
+                  <div class="seat"><div class="ghost"><span class="seatnum">8</span><span class="plus">+</span></div></div>
+                  <div class="seat"><div class="ghost"><span class="seatnum">9</span><span class="plus">+</span></div></div>
+                  <div class="seat"><div class="ghost"><span class="seatnum">10</span><span class="plus">+</span></div></div>
                 </div>
               </div>
             </div>
-            <div class="savebar"><span class="count"><b>0</b> / 5 SEATED</span><span class="spacer"></span>
-              <button class="btn act disabled">SAVE TOP 5</button></div>
+            <div class="savebar"><span class="count"><b>0</b> / 10 SEATED</span><span class="spacer"></span>
+              <button class="btn act disabled">SAVE TOP 10</button></div>
           </div>
         </div>
         <div class="nav-band">
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
           <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
-          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
-          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl big">COLLECTION</div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">PROFILE</div></div>
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
         </div>
       </div>
       <div class="caption">
         <h3>S1 · <em>Empty</em> — the showcase shape is the frame</h3>
-        <p>No Top-5 yet → a <b>headliner ghost</b> + four shelf ghosts (the §1.5 ghost-card grammar). You see the finished
+        <p>No Top-10 yet → a <b>headliner ghost</b> + nine shelf ghosts (the §1.5 ghost-card grammar). You see the finished
           trophy case <b>before</b> you pick — you fill a shape, you don't build a list. Create nudge is <b>non-gold</b>
           (F-02); SAVE disabled at 0 seated.</p>
       </div>
@@ -371,8 +387,8 @@
         </div>
         <div class="screen-bezel">
           <div class="screen">
-            <div class="screen-head"><h2>TOP 5</h2></div>
-            <a class="return-link" href="#">&lsaquo; RETURN TO PROFILE</a>
+            <div class="screen-head"><h2>TOP 10</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
             <div class="scroll">
               <div class="podium">
                 <div class="seat-one">
@@ -382,14 +398,19 @@
                 </div>
                 <div class="seat-row">
                   <div class="seat"><div class="gcard cell fr-minecraft"><span class="rank">2</span><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div></div>
-                  <div class="seat"><div class="ghost"><span class="seatnum">3</span><span class="plus">+</span></div></div>
+                  <div class="seat"><div class="gcard cell fr-marathon custom"><span class="rank">3</span><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div></div>
                   <div class="seat"><div class="ghost"><span class="seatnum">4</span><span class="plus">+</span></div></div>
                   <div class="seat"><div class="ghost"><span class="seatnum">5</span><span class="plus">+</span></div></div>
+                  <div class="seat"><div class="ghost"><span class="seatnum">6</span><span class="plus">+</span></div></div>
+                  <div class="seat"><div class="ghost"><span class="seatnum">7</span><span class="plus">+</span></div></div>
+                  <div class="seat"><div class="ghost"><span class="seatnum">8</span><span class="plus">+</span></div></div>
+                  <div class="seat"><div class="ghost"><span class="seatnum">9</span><span class="plus">+</span></div></div>
+                  <div class="seat"><div class="ghost"><span class="seatnum">10</span><span class="plus">+</span></div></div>
                 </div>
               </div>
             </div>
-            <div class="savebar"><span class="count"><b>2</b> / 5 SEATED</span><span class="spacer"></span>
-              <button class="btn act">SAVE TOP 5</button></div>
+            <div class="savebar"><span class="count"><b>3</b> / 10 SEATED</span><span class="spacer"></span>
+              <button class="btn act">SAVE TOP 10</button></div>
             <!-- picker sheet -->
             <div class="scrim"></div>
             <div class="sheet">
@@ -410,8 +431,8 @@
         <div class="nav-band">
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
           <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
-          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
-          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl big">COLLECTION</div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">PROFILE</div></div>
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
         </div>
       </div>
@@ -425,7 +446,7 @@
 
     <!-- ════ S3 · FULL (5) + mid-arrange ════ -->
     <div class="take">
-      <div class="artboard-label">S3 · FULL (5) — cap reached + mid-arrange (drag)</div>
+      <div class="artboard-label">S3 · FULL (10) — cap reached + mid-arrange (drag)</div>
       <div class="device">
         <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
         <div class="top-band">
@@ -435,61 +456,97 @@
         </div>
         <div class="screen-bezel">
           <div class="screen">
-            <div class="screen-head"><h2>TOP 5</h2></div>
-            <a class="return-link" href="#">&lsaquo; RETURN TO PROFILE</a>
-            <p class="sub">All five seated. Long-press &amp; drag a card to re-rank.</p>
+            <div class="screen-head"><h2>TOP 10</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
+            <p class="sub">All ten seated. Long-press &amp; drag a card to re-rank; the top 3 headline your profile.</p>
             <div class="scroll">
-              <div class="podium hero-list">
+              <div class="podium">
                 <div class="seat-one">
-                  <div class="card-wrap"><div class="gcard hero fr-destiny"><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div></div>
+                  <div class="card-wrap"><div class="gcard hero fr-destiny"><span class="rank first">1</span><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div></div>
                   <div class="meta"><span class="npl">HEADLINER</span><span class="title">DESTINY 2</span><span class="meta-sub">210 HRS · PLAYING</span>
                     <a class="swap" href="#">SWAP</a></div>
-                  <div class="grip"><i></i><i></i><i></i><i></i><i></i><i></i></div>
                 </div>
-                <div class="seat-one dragging">
-                  <div class="card-wrap"><div class="gcard hero fr-minecraft"><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div></div>
-                  <div class="meta"><span class="npl">RANK 2</span><span class="title">MINECRAFT</span><span class="meta-sub">DRAGGING&hellip;</span>
-                    <a class="swap" href="#">SWAP</a></div>
-                  <div class="grip"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-                </div>
-                <div class="drop-line"></div>
-                <div class="seat-one">
-                  <div class="card-wrap"><div class="gcard hero fr-marathon custom"><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div></div>
-                  <div class="meta"><span class="npl">RANK 3</span><span class="title">MARATHON</span><span class="meta-sub">88 HRS · CUSTOM · NOW</span>
-                    <a class="swap" href="#">SWAP</a></div>
-                  <div class="grip"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-                </div>
-                <div class="seat-one">
-                  <div class="card-wrap"><div class="gcard hero fr-ratchet"><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet</div></div></div>
-                  <div class="meta"><span class="npl">RANK 4</span><span class="title">RATCHET &amp; CLANK</span><span class="meta-sub">52 HRS · COMPLETED</span>
-                    <a class="swap" href="#">SWAP</a></div>
-                  <div class="grip"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-                </div>
-                <div class="seat-one">
-                  <div class="card-wrap"><div class="gcard hero fr-re"><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div></div>
-                  <div class="meta"><span class="npl">RANK 5</span><span class="title">RESIDENT EVIL</span><span class="meta-sub">40 HRS · COMPLETED</span>
-                    <a class="swap" href="#">SWAP</a></div>
-                  <div class="grip"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                <div class="seat-row">
+                  <div class="seat"><div class="gcard cell fr-minecraft"><span class="rank">2</span><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div></div>
+                  <div class="seat dragging"><div class="gcard cell fr-marathon custom"><span class="rank">3</span><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div><div class="grip"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+                  <div class="seat target"><div class="gcard cell fr-ratchet"><span class="rank">4</span><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet</div></div></div>
+                  <div class="seat"><div class="gcard cell fr-re"><span class="rank">5</span><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div></div>
+                  <div class="seat"><div class="gcard cell fr-destiny"><span class="rank">6</span><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div></div>
+                  <div class="seat"><div class="gcard cell fr-minecraft"><span class="rank">7</span><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div></div>
+                  <div class="seat"><div class="gcard cell fr-marathon"><span class="rank">8</span><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div></div>
+                  <div class="seat"><div class="gcard cell fr-ratchet"><span class="rank">9</span><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet</div></div></div>
+                  <div class="seat"><div class="gcard cell fr-re"><span class="rank">10</span><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div></div>
                 </div>
               </div>
             </div>
-            <div class="savebar"><span class="count"><b>5</b> / 5 SEATED · FULL</span><span class="spacer"></span>
-              <button class="btn act">SAVE TOP 5</button></div>
+            <div class="savebar"><span class="count"><b>10</b> / 10 SEATED · FULL</span><span class="spacer"></span>
+              <button class="btn act">SAVE TOP 10</button></div>
           </div>
         </div>
         <div class="nav-band">
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
           <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
-          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
-          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl big">COLLECTION</div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">PROFILE</div></div>
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
         </div>
       </div>
       <div class="caption">
-        <h3>S3 · <em>Full (5)</em> — cap is structural; re-rank by drag</h3>
-        <p>All five seats filled → <b>no empty seat remains</b> (no 6th seat exists — the §6 capped list, drawn into the
+        <h3>S3 · <em>Full (10)</em> — cap is structural; re-rank by drag</h3>
+        <p>All ten seats filled → <b>no empty seat remains</b> (no 11th seat exists — the §6 capped list, drawn into the
           frame). Change membership via <b>SWAP</b>; re-rank by <b>long-press &amp; drag</b> (the COL-07 ARRANGE gesture →
           <code>PATCH /me/lists/:id { orderedGameIds[] }</code>). Seat 1 wears the orange marker — <b>not gold</b>.</p>
+      </div>
+    </div>
+
+    <!-- ════ S7 · FRIEND read-only TOP (reached from a friend's Profile · VIEW TOP 10 / Top-3 card) ════ -->
+    <div class="take">
+      <div class="artboard-label">S7 · FRIEND — read-only TOP (COL-13; from a friend's Profile)</div>
+      <div class="device">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">ON</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen">
+            <div class="screen-head"><h2>COLLECTION — RIKO</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO PROFILE</a>
+            <p class="sub">RIKO'S TOP 10 · read-only. Tap a card to flip for her stats, or VIEW GAME.</p>
+            <div class="scroll">
+              <div class="podium">
+                <div class="seat-one">
+                  <div class="card-wrap"><div class="gcard hero fr-re"><span class="rank first">1</span><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div></div>
+                  <div class="meta"><span class="npl">RIKO'S #1</span><span class="title">RESIDENT EVIL</span><span class="meta-sub">142 HRS · COMPLETED</span></div>
+                </div>
+                <div class="seat-row">
+                  <div class="seat"><div class="gcard cell fr-ratchet"><span class="rank">2</span><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet</div></div></div>
+                  <div class="seat"><div class="gcard cell fr-minecraft"><span class="rank">3</span><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div></div>
+                  <div class="seat"><div class="gcard cell fr-destiny"><span class="rank">4</span><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div></div>
+                  <div class="seat"><div class="gcard cell fr-marathon"><span class="rank">5</span><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div></div>
+                  <div class="seat"><div class="gcard cell fr-re"><span class="rank">6</span><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div></div>
+                  <div class="seat"><div class="gcard cell fr-ratchet"><span class="rank">7</span><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet</div></div></div>
+                  <div class="seat"><div class="gcard cell fr-minecraft"><span class="rank">8</span><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div></div>
+                  <div class="seat"><div class="gcard cell fr-destiny"><span class="rank">9</span><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div></div>
+                  <div class="seat"><div class="gcard cell fr-marathon"><span class="rank">10</span><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div></div>
+                </div>
+              </div>
+            </div>
+            <div class="savebar"><span class="count" style="color:var(--scr-grip);">READ-ONLY · RIKO'S CURATED TOP 10</span></div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl big">COLLECTION</div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">PROFILE</div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>S7 · <em>Friend read-only TOP</em></h3>
+        <p>The destination for a friend's <b>VIEW TOP 10</b> or a <b>Top-3 card tap</b> (→ here, focused on that game). Her curated Top-10 in rank order, <b>read-only</b> (COL-13 / PROF-03) — <b>no ghosts, no picker, no ARRANGE, no SAVE</b>. Header self-labels <b>COLLECTION — RIKO</b>; <b>‹ RETURN TO PROFILE</b> goes back; cards flip (COL-12) for her stats · VIEW GAME → 4.2.</p>
       </div>
     </div>
 
@@ -505,21 +562,21 @@
         </div>
         <div class="screen-bezel">
           <div class="screen">
-            <div class="screen-head"><h2>TOP 5</h2></div>
-            <a class="return-link" href="#">&lsaquo; RETURN TO PROFILE</a>
+            <div class="screen-head"><h2>TOP 10</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
             <div class="scroll" style="padding-top:8px;">
               <div class="sk-hero"><div class="sk-h-card"></div><div class="sk-h-meta"><div class="sk-b short"></div><div class="sk-b"></div><div class="sk-b short"></div></div></div>
-              <div class="sk-row"><div class="sk-cell"></div><div class="sk-cell"></div><div class="sk-cell"></div><div class="sk-cell"></div></div>
+              <div class="sk-row"><div class="sk-cell"></div><div class="sk-cell"></div><div class="sk-cell"></div><div class="sk-cell"></div><div class="sk-cell"></div><div class="sk-cell"></div><div class="sk-cell"></div><div class="sk-cell"></div><div class="sk-cell"></div></div>
             </div>
             <div class="savebar"><span class="count" style="color:var(--scr-grip);">LOADING&hellip;</span><span class="spacer"></span>
-              <button class="btn act disabled">SAVE TOP 5</button></div>
+              <button class="btn act disabled">SAVE TOP 10</button></div>
           </div>
         </div>
         <div class="nav-band">
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
           <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
-          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
-          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl big">COLLECTION</div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">PROFILE</div></div>
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
         </div>
       </div>
@@ -542,13 +599,13 @@
         </div>
         <div class="screen-bezel">
           <div class="screen">
-            <div class="screen-head"><h2>TOP 5</h2></div>
-            <a class="return-link" href="#">&lsaquo; RETURN TO PROFILE</a>
+            <div class="screen-head"><h2>TOP 10</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
             <div class="scroll">
               <div class="err-wrap">
                 <div class="err-card"><div class="void-ic"><svg viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M5 12a7 7 0 0 1 9-5"/><path d="M19 12a7 7 0 0 1-2 4.5"/></svg></div></div>
                 <div class="err-eyebrow">SIGNAL LOST</div>
-                <div class="err-title">COULDN'T LOAD YOUR TOP 5</div>
+                <div class="err-title">COULDN'T LOAD YOUR TOP 10</div>
                 <div class="err-sub">We couldn't reach your list. Check your connection and try again.</div>
                 <button class="btn act">RETRY</button>
               </div>
@@ -558,8 +615,8 @@
         <div class="nav-band">
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
           <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
-          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
-          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl big">COLLECTION</div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">PROFILE</div></div>
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
         </div>
       </div>
@@ -582,9 +639,9 @@
         </div>
         <div class="screen-bezel">
           <div class="screen">
-            <div class="screen-head"><h2>TOP 5</h2></div>
-            <a class="return-link" href="#">&lsaquo; RETURN TO PROFILE</a>
-            <div class="offline-strip"><svg viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M5 12.5a11 11 0 0 1 5-2.8"/><path d="M1.5 9a16 16 0 0 1 5-3"/><path d="M12 18h.01"/></svg>OFFLINE — SHOWING YOUR SAVED TOP 5<span class="sync">READ-ONLY</span></div>
+            <div class="screen-head"><h2>TOP 10</h2></div>
+            <a class="return-link" href="#">&lsaquo; RETURN TO COLLECTION</a>
+            <div class="offline-strip"><svg viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M5 12.5a11 11 0 0 1 5-2.8"/><path d="M1.5 9a16 16 0 0 1 5-3"/><path d="M12 18h.01"/></svg>OFFLINE — SHOWING YOUR SAVED TOP 10<span class="sync">READ-ONLY</span></div>
             <div class="scroll">
               <div class="podium" style="opacity:.62;">
                 <div class="seat-one">
@@ -596,24 +653,29 @@
                   <div class="seat"><div class="gcard cell fr-marathon custom"><span class="rank">3</span><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div></div>
                   <div class="seat"><div class="gcard cell fr-ratchet"><span class="rank">4</span><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet</div></div></div>
                   <div class="seat"><div class="gcard cell fr-re"><span class="rank">5</span><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div></div>
+                  <div class="seat"><div class="gcard cell fr-destiny"><span class="rank">6</span><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div></div>
+                  <div class="seat"><div class="gcard cell fr-minecraft"><span class="rank">7</span><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div></div>
+                  <div class="seat"><div class="gcard cell fr-marathon"><span class="rank">8</span><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div></div>
+                  <div class="seat"><div class="gcard cell fr-ratchet"><span class="rank">9</span><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet</div></div></div>
+                  <div class="seat"><div class="gcard cell fr-re"><span class="rank">10</span><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div></div>
                 </div>
               </div>
             </div>
             <div class="savebar"><span class="count" style="color:var(--scr-grip);">RECONNECT TO EDIT</span><span class="spacer"></span>
-              <button class="btn act disabled">SAVE TOP 5</button></div>
+              <button class="btn act disabled">SAVE TOP 10</button></div>
           </div>
         </div>
         <div class="nav-band">
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
           <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
-          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
-          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item active"><div class="nav-lbl big">COLLECTION</div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">PROFILE</div></div>
           <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
         </div>
       </div>
       <div class="caption">
         <h3>S6 · <em>Offline</em> — read your list, writes gated (SYS-10)</h3>
-        <p>The §1.8 offline strip; the saved Top-5 reads from cache but every <b>write is gated</b> — SWAP/drag/SAVE
+        <p>The §1.8 offline strip; the saved Top-10 reads from cache but every <b>write is gated</b> — SWAP/drag/SAVE
           disabled (you can't re-rank or re-pick offline). A <b>doorway, not a dead end</b>: the showcase still renders.</p>
       </div>
     </div>

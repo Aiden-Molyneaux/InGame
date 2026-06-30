@@ -105,8 +105,10 @@
   .btn.secondary:active, .btn.secondary.is-pressed { background-color: color-mix(in srgb, var(--scr-chip) 88%, #000); background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); box-shadow: none; }
   .btn.alt:active, .btn.alt.is-pressed { background-color: color-mix(in srgb, var(--scr-well) 84%, #000); background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 1px, #0000 1px 2px); box-shadow: none; }
 
-  /* ── C5 square chrome (buttons only) ── */
-  .c5 .btn { border-radius: 0; clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+  /* ── button chrome — F-02 intrinsic step; board-level `.c5` chip gate retired (decision 0041); square reset its own rule; non-commerce — no gold ── */
+  .btn { border-radius: 0; }
+  /* prominent orange intent (RETRY / BROWSE) keeps the TL+BR step; alt/mini/secondary go square */
+  .btn:not(.alt):not(.mini):not(.secondary) { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
       100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
       calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
 
@@ -124,8 +126,8 @@
   .gcard { position: relative; box-sizing: border-box; flex: 0 0 auto; overflow: hidden; }
   .gcard .art { position: absolute; inset: 2.5px; overflow: hidden; }
   .gcard .art svg { width: 100%; height: 100%; display: block; }
-  /* the GameCard TL+BR signature step + lift under .c5 (F-02 grammar) */
-  .c5 .gcard { border-radius: 0; filter: drop-shadow(0 2px 5px rgba(0,0,0,.34)); }
+  /* the GameCard TL+BR signature step + lift (F-02 grammar — intrinsic) */
+  .gcard { border-radius: 0; filter: drop-shadow(0 2px 5px rgba(0,0,0,.34)); }
   /* per-game frames — the card border that shows around the art (values reused from the social-cluster boards) */
   .fr-destiny { background: linear-gradient(160deg, #e8bc52, #c08a2a); }
   .fr-elden   { background: linear-gradient(160deg, #e8c356, #b8881f); }
@@ -167,8 +169,8 @@
   /* ════ /cell GameCard 96×134 (F-01 — catalog size, full face never cropped) for the card-vs-card matchup ════ */
   .gcard.cell { width: 96px; height: 134px; }
   .gcard.cell .art { inset: 4px; }
-  .c5 .gcard.cell { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
-  .c5 .gcard.cell .art { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0, 100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
+  .gcard.cell { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .gcard.cell .art { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0, 100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
   .vs-owner { font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); text-align: center; margin-top: 5px; }
 
   /* ════ ComparePair / CompareRow — card-vs-card matchup (their card · stats · your card; winner orange) ════ */

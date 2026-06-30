@@ -119,8 +119,9 @@
   .btn.secondary:active, .btn.secondary.is-pressed { background-color: color-mix(in srgb, var(--scr-chip) 88%, #000); background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); box-shadow: none; }
   .btn.alt:active, .btn.alt.is-pressed { background-color: color-mix(in srgb, var(--scr-well) 84%, #000); background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 1px, #0000 1px 2px); box-shadow: none; }
 
-  /* ── C5 square chrome (buttons only on 4.8 — no game cards here) ── */
-  .c5 .btn { border-radius: 0; clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+  /* ── F-02 intrinsic step; board `.c5` chip gate retired (decision 0041); square reset its own rule; non-commerce — no gold ── */
+  .btn { border-radius: 0; }
+  .btn:not(.secondary):not(.alt):not(.mini) { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
       100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
       calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
 
@@ -563,8 +564,7 @@
         <div class="top-band"><div class="power"><span class="led"></span><span class="lbl">POWER</span></div><div class="logo">INGAME</div><div class="grille"><span></span><span></span><span></span><span></span><span></span></div></div>
         <div class="screen-bezel">
           <div class="screen c5">
-            <div class="screen-head"><h2 style="letter-spacing:2px;">INVITE</h2></div>
-            <a class="return-link" href="#">MAYBE LATER</a>
+            <div class="screen-head"><h2 style="letter-spacing:2px;">INVITE</h2><div class="head-keys"><button class="fh-key">&times;</button></div></div>
             <div class="scroll">
               <div class="land">
                 <div class="av lg lav" style="background:#6a5acd;color:#fff;">HM</div>

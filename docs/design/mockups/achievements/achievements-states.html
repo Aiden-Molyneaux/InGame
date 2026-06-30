@@ -84,7 +84,9 @@
   /* ════ C5 · HYBRID — square chrome ════ */
   .c5 .well, .c5 .btn, .c5 .stat, .c5 .badge, .c5 .rchip, .c5 .bglyph, .c5 .ri, .c5 .err-card, .c5 .dt-glyph { border-radius: 0; }
   .c5 .well { border: 1px solid var(--scr-hairline); }
-  .c5 .btn.add, .c5 .btn.act { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+
+  /* ── F-02 corner-step rides the intent-button intrinsically (not the board) ── */
+  .btn.add, .btn.act { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
       100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
       calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
 
@@ -232,6 +234,28 @@
     background: var(--scr-panel); border: 1px solid var(--scr-hairline); font: 700 9px var(--pk); letter-spacing: 1px; color: var(--scr-dim); }
   .offline-strip svg { width: 13px; height: 13px; flex: 0 0 auto; fill: none; stroke: var(--scr-dim); stroke-width: 2; }
   .offline-strip .sync { margin-left: auto; font-weight: 600; letter-spacing: .5px; color: var(--scr-grip); }
+
+  /* ════ CelebrationMoment — the ACH-06 arcade takeover (P5; tier-coloured) ════
+     Ported from achievements-draft-a-trophycase.html at converge (the fold dropped it); adapted for
+     the converged markup's .cel-badge-wrap (rays centred on the badge, not the panel). */
+  .celebrate { --cel: var(--scr-accent); position: absolute; inset: 0; overflow: hidden; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 13px; padding: 28px 24px; box-sizing: border-box;
+    background: radial-gradient(circle at 50% 36%, #322c63 0%, var(--scr-bg) 66%); }
+  .celebrate.t-gold { --cel: var(--gold); }
+  .celebrate.t-secret { --cel: var(--scr-secret); }
+  .celebrate::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .45;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, #0000 1px 3px); }
+  .cel-eyebrow { z-index: 1; font: 700 11px var(--pk); letter-spacing: 5px; color: var(--cel); }
+  .cel-badge-wrap { z-index: 1; position: relative; display: flex; align-items: center; justify-content: center; }
+  .cel-rays { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 260px; height: 260px; opacity: .5; z-index: 0; }
+  .cel-rays line { stroke: var(--cel); stroke-width: 2.5; stroke-linecap: round; }
+  .cel-badge { position: relative; z-index: 1; width: 96px; height: 96px; display: flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, var(--cel) 14%, transparent); border: 2px solid var(--cel); }
+  .cel-badge svg { width: 46px; height: 46px; fill: none; stroke: var(--cel); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .cel-title { z-index: 1; font: 700 21px/1.1 var(--pk); letter-spacing: 1.5px; color: var(--scr-text); text-align: center; }
+  .cel-sub { z-index: 1; font: 500 11px/1.5 var(--pk); color: var(--scr-soft); text-align: center; max-width: 250px; }
+  .cel-rewards { z-index: 1; display: flex; flex-direction: column; gap: 7px; width: 248px; margin-top: 2px; }
+  .cel-cont { z-index: 1; margin-top: 8px; }
 
   /* ════ FLAT BUTTONS + SCANLINE ENERGIZE (F-03, locked 2026-06-18) ════ */
   .sk2 .btn:active, .sk2 .btn.is-pressed {

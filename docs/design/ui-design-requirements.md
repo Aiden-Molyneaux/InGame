@@ -6,7 +6,7 @@
 > "how it looks/feels"). Behavior questions raised while designing go to
 > [`../open-questions.md`](../open-questions.md), not edited into the spec directly.
 
-**Version:** 0.21 · **Last updated:** 2026-06-27 · **Owner:** Claude Code → Claude Design
+**Version:** 0.22 · **Last updated:** 2026-06-28 · **Owner:** Claude Code → Claude Design
 **Status:** **ALL screens specified** (5 tabs + 16 detail screens/flows). Ready to hand to Claude Design. Open design notes live in `open-questions.md` (`OQ-005/007`).
 > **Claude Design — read [`design-process.md`](design-process.md) first.** It defines the phased,
 > reuse-first process: 3 hero-screen (Collection) drafts → extract a named component catalog →
@@ -109,7 +109,7 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 **Purpose:** "what should I play, and what's out there." **Personas:** Completionist, Casual returner.
 **Must host:**
 - A **segmented toggle: `Up Next` ↔ `Discover`**.
-- **Up Next** (`WTP-01/02/03`): ranked **owned + unowned** queue; drag-to-reorder; "currently playing" pin; shareable; add from collection / discovery / friend rec. *(Unowned = `Wishlist`-status entries — no separate wishlist screen.)*
+- **Up Next** (`WTP-01/02/03`): ranked **owned + unowned** queue; drag-to-reorder; "currently playing" pin; add from collection / discovery / friend rec. *(Unowned = `Wishlist`-status entries — no separate wishlist screen.)*
 - **Discover:** **Upcoming** (future release dates, `DISC-01`) · **Browse** by genre/studio (`DISC-02`) · **Trending/featured cards** (`DISC-04`) · **games-only search** (`DISC-03`).
 **Cold-start:** with a community catalog that starts thin, turn empty discovery into a **Contributor hook** ("be the first to add this / design its card").
 **States:** queue empty/populated · sparse-catalog discovery · search active.
@@ -122,6 +122,7 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 - **Requests** — incoming: **accept / decline**; outgoing: **cancel** (`SOC-08`).
 - **Find/add friends:** **username search** + **invite link** + **QR code**; *no contacts-matching* (`SOC-07`).
 - **Block** entry points: a user profile's overflow + the report flow (`SOC-09`); the blocked list itself is managed in Settings.
+- **Recommend a game** (`SOC-05`) → a summoned **`RecommendSheet`** (pick a game + note → friend's What-to-Play); reached from a friend's actions sheet (game-picker arrival) **and** the Game page ⋮ (friend-picker arrival). One sheet, two entry contexts; lands `POST /recommendations` (decision 0036, closes OQ-075).
 - Jump-off to **Compare Hours** (`SOC-03`).
 **States:** no friends (invite hook) · pending requests · quiet vs active feed.
 
@@ -160,7 +161,7 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 **Purpose:** get a game into your collection (and the catalog when it's new). **Personas:** everyone; Contributor.
 **Must host:**
 - **Search** the community catalog (`CAT-01`); results show **title + release year + developer studio + a representative card + an "in your collection" marker** + **community presence** (in-N-collections · friends-have-it, `CAT-09`).
-- **Empty-state suggestions** (recently-added / **popular** = most-collected, `CAT-09` — capped, no paging, decision 0019 / friends' games) — never a blank box.
+- **Empty-state suggestions** (recently-added / **popular** = most-collected, `CAT-09` — capped, no paging, decision 0019 / **friends are playing** = `CAT-12` friends-active rail) — never a blank box.
 - **Exists →** add with an **all-status picker** (`COL-01/02`), then an **offered (not forced)** card step (else default placeholder, `CARD-18`).
 - **Missing →** **Create canonical entry** (name/genre/studio/publisher/release) with **fuzzy dedup** (`CAT-03`) → "be first to design its card."
 - **Add & continue** (quick multi-add); **Report duplicate** from a result (→ admin dedup, `MOD-01/05`).
@@ -188,7 +189,7 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 - **Save private vs Publish** → flatten to one image + true-preview + thumbnail safe-area (`CARD-04/15`); **publish integrity** (`CARD-19`); **share image** at the reveal (`CARD-21`; the reveal/celebration pattern itself is `OQ-040`).
 - **Approachability/a11y:** start-from (template / preset kit / **auto-design "Surprise me"**) — never blank; coachmarks; **break-out** to max canvas; screen-reader + non-gesture path; reduce-motion (`CARD-16`).
 - **Asset library:** searchable/categorized/filtered (free/premium/owned)/favourites; premium preview-on-card (`CARD-17`).
-- **Creator dashboard touch:** adoptions/clout/milestone progress (`CARD-05`).
+- **Creator dashboard touch:** **aggregate** adoptions/clout/milestone progress at the **publish reveal / keep-beat** — never a per-card working-canvas readout (`CARD-05`, decision 0036).
 **Design notes for you:** on-screen control styling (`OQ-006`); the stylized break-out (`OQ-007`).
 **States:** new (start-from) · editing · premium-reconcile · saving/flattening · publish · error/offline.
 
@@ -296,3 +297,4 @@ Plus: **destructive actions always confirm** (delete account/game/card, unpublis
 | 2026-06-27 | 0.19 | Decision 0033 ripple (§4.4 design-pass prep): §3.5 gains the **`MOD`/`ADMIN` role badge** (`PROF-09`); §4.4 console specified — **reached via Settings → Mod/Admin**, **no role-management UI** (grant/revoke out-of-band), reports queue **split by target type** (card/game/user) with a **bottom rail**, **suspension from a user report** (`MOD-09`), restore window, utility styling (no gold · destructive `ConfirmSheet`); §4.15 gains the **role-gated Mod/Admin entry**. | PROF-09, MOD-04, SYS-08, MOD-09 |
 | 2026-06-27 | 0.20 | Decision 0034 ripple (admin tier model): **moderator dropped** → §4.4 renamed **"Admin console"**, scoped to the **in-app P1+P2** (tiers Admin I/II); economy/config/governance (P3–P5, tiers III/IV) noted as the **external tool**; the in-app remediation additions reserved (field reset · user dossier · action-notice · direct catalog edit · junk removal · proactive takedown → **OQ-081**). §3.5 badge → **generic public STAFF/ADMIN marker (tier hidden; tier self-view only)**. §4.15 entry renamed **Admin console** (`adminTier ≥ 1`). | PROF-09, MOD-04, SYS-08 |
 | 2026-06-27 | 0.21 | Decision 0035 ripple: §4.4 console is **tier-adaptive** — draws an **Admin I view** (P1) vs **Admin II view** (P1+P2), never surfacing P3–P5; audit-log noted (`MOD-10`). §4.12 Wallet ledger gains the **operator-adjustment** entry (`ECON-11` — a credit/debit the user didn't initiate). | MOD-04, ECON-11, MOD-10 |
+| 2026-06-28 | 0.22 | Decision 0036 ripple (pre-engineering audit): §4.3 **CARD-05** dashboard = aggregate + reveal-surfaced; §4.1 friends-playing rail → **CAT-12**; §3.3 **recommend-a-game → `RecommendSheet`** (closes OQ-075); §3.2 DISC-02 browse stays surfaced (OQ-057 reversed). Profile friend-view SHARE + Up-Next queue-share cut. | CARD-05, CAT-09/12, DISC-02, SOC-05 |

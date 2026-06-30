@@ -129,29 +129,38 @@
   .hint { margin: 8px 1px 0; font: 600 9px/1.6 var(--pk); letter-spacing: .5px; color: var(--scr-dim); text-align: center; }
   .hint b { color: var(--scr-soft); }
 
-  /* ════ C5 ════ */
-  .c5 .well, .c5 .chip, .c5 .btn { border-radius: 0; }
-  .c5 .well { border: 1px solid var(--scr-hairline); }
-  .c5 .btn.act { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+  /* ════ Square-chrome reset (F-07) ════
+     Every on-screen surface is square. The corner-STEP (F-02) is no longer a board-level
+     chip gate — it is INTRINSIC to the only components that may carry it (decision 0041 /
+     OQ-085): the GameCard family, StateMark/pips, and intent-buttons. Everything else stays
+     square. The root keeps its `c5` class but it no longer drives any clip-path. */
+  .well, .chip, .btn { border-radius: 0; }
+  .well { border: 1px solid var(--scr-hairline); }
+
+  /* ── F-02 corner-step — INTRINSIC, only on the allowed components ── */
+  /* intent-button: orange/prominent non-acquisitive (.btn.act) */
+  .btn.act { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
       100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
       calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
-  .c5 .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
+  /* GameCard — hero/default + its art + plate */
+  .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
     clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
       100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
       calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
-  .c5 .gcard .art { border-radius: 0;
+  .gcard .art { border-radius: 0;
     clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
       100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
-  .c5 .gcard .plate { border-radius: 0;
+  .gcard .plate { border-radius: 0;
     clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
-  .c5 .gcard.fan-size, .c5 .gcard.cell-size { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+  /* GameCard size variants — smaller step magnitudes */
+  .gcard.fan-size, .gcard.cell-size { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
       100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
-  .c5 .gcard.fan-size .art, .c5 .gcard.cell-size .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+  .gcard.fan-size .art, .gcard.cell-size .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
-  .c5 .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0,
+  .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0,
       100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
-  .c5 .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+  .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
 
   /* ════ Store components (converged forms · PIXELS mark) ════ */
@@ -428,6 +437,8 @@
     transform: none; box-shadow: none;
     background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
     background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
+  /* decision 0047 — nameplate F-06-bound: the cosmetic-preview cards (<9px "Sample" plate) drop the plate — it isn't a game title */
+  .gcard.fan-size .plate, .gcard.cell-size .plate, .gcard.thumb .plate { display: none; }
 </style>
 </head>
 <body>
@@ -570,6 +581,11 @@
                   <span class="price-chip">2 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span>
                 </div>
                 <div class="rtile">
+                  <div style="width:56px;height:30px;display:flex;align-items:center;justify-content:center;background:#3a3a42;border:2px solid #ffd23f;border-radius:3px;color:#f5f1e4;font:700 9px/1 'Chakra Petch';letter-spacing:1px;">TITLE</div>
+                  <span class="rt-name">HOLO PLATE</span><span class="rt-type">NAMEPLATE</span>
+                  <span class="price-chip">3 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span>
+                </div>
+                <div class="rtile">
                   <div class="sw-theme" style="background:#0f2e2b;"><i style="background:#173d38;"></i><i style="background:#ffd23f;"></i><i style="background:#0a1f1d;"></i></div>
                   <span class="rt-name">DEEP SEA</span><span class="rt-type">SCREEN THEME</span>
                   <span class="price-chip">4 <svg width="9" height="9" viewBox="0 0 40 40"><use href="#ic-pix"/></svg></span>
@@ -581,6 +597,7 @@
                 <div class="idx"><span class="gl">&#10022;</span>EFFECTS<span class="n">14 &rsaquo;</span></div>
                 <div class="idx"><span class="gl">&#9686;</span>FINISHES<span class="n">9 &rsaquo;</span></div>
                 <div class="idx"><span class="gl">&#9633;</span>FRAMES<span class="n">11 &rsaquo;</span></div>
+                <div class="idx"><span class="gl">&#9647;</span>NAMEPLATES<span class="n">6 &rsaquo;</span></div>
                 <div class="idx"><span class="gl">A</span>FONTS<span class="n">8 &rsaquo;</span></div>
                 <div class="idx"><span class="gl">&#9646;</span>DEVICE SHELLS<span class="n">7 &rsaquo;</span></div>
                 <div class="idx"><span class="gl">&#9640;</span>SCREEN THEMES<span class="n">6 &rsaquo;</span></div>

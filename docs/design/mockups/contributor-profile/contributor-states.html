@@ -109,26 +109,26 @@
   .pl-stardew  { background: #4f8a36; color: #eefbe6; }
   .pl-celeste  { background: #8a4aa0; color: #f7e9f6; }
 
-  /* ════ C5 · HYBRID — square chrome · stepped-diagonal cards ════ */
-  .c5 .well, .c5 .hero, .c5 .btn, .c5 .stat, .c5 .gtag, .c5 .rank, .c5 .pct { border-radius: 0; }
-  .c5 .well, .c5 .hero { border: 1px solid var(--scr-hairline); }
-  .c5 .btn.add, .c5 .btn.act { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+  /* ════ F-02 step intrinsic per component; board-level `.c5` chip gate retired (decision 0041); square reset its own rule. ════ */
+  .well, .hero, .btn, .stat, .gtag, .rank, .pct { border-radius: 0; }
+  .well, .hero { border: 1px solid var(--scr-hairline); }
+  .btn.add, .btn.act { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
       100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
       calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
-  .c5 .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
+  .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
     clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
       100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
       calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
-  .c5 .gcard .art { border-radius: 0;
+  .gcard .art { border-radius: 0;
     clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
       100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
-  .c5 .gcard .plate { border-radius: 0;
+  .gcard .plate { border-radius: 0;
     clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
-  .c5 .gcard.cell { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
-  .c5 .gcard.cell .art { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0, 100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
-  .c5 .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0, 100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
-  .c5 .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
+  .gcard.cell { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .gcard.cell .art { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0, 100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
+  .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0, 100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
+  .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
 
   /* ════ S2 base — flat floating panels ════ */
   .sk2 { background: var(--scr-bg); }
@@ -259,6 +259,9 @@
     transform: none; box-shadow: none;
     background-color: color-mix(in srgb, var(--cream) 88%, #000);
     background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
+  /* decision 0047 — nameplate F-06-bound (≥9px). CARDS DESIGNED /cell → legible 10px plate (its sole label); GAMES ADDED /thumb drops the plate (title named beside) */
+  .gcard.cell .plate { font-size: 10px; left: 7px; right: 7px; bottom: 2px; padding: 3.5px 2px 3px; letter-spacing: .2px; }
+  .gcard.thumb .plate { display: none; }
 </style>
 </head>
 <body>
@@ -369,12 +372,12 @@
 
               <div class="sec"><h3>CARDS DESIGNED</h3><a href="#">VIEW ALL &rsaquo;</a></div>
               <div class="minigrid">
-                <div class="cardcell"><div class="gcard cell fr-marathon"><span class="rank first">1</span>
-                  <div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div><span class="adopt"><b>312</b> ADOPTIONS</span></div>
-                <div class="cardcell"><div class="gcard cell fr-destiny"><span class="rank">2</span>
-                  <div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div><span class="adopt"><b>88</b> ADOPTIONS</span></div>
-                <div class="cardcell"><div class="gcard cell fr-elden"><span class="rank">3</span>
-                  <div class="art"><svg><use href="#art-elden"/></svg></div><div class="plate pl-elden">Elden Ring</div></div><span class="adopt"><b>64</b> ADOPTIONS</span></div>
+                <div class="gcard cell fr-marathon"><span class="rank first">1</span>
+                  <div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
+                <div class="gcard cell fr-destiny"><span class="rank">2</span>
+                  <div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="gcard cell fr-elden"><span class="rank">3</span>
+                  <div class="art"><svg><use href="#art-elden"/></svg></div><div class="plate pl-elden">Elden Ring</div></div>
               </div>
 
               <div class="sec"><h3>GAMES ADDED</h3><a href="#">VIEW ALL &rsaquo;</a></div>
@@ -420,8 +423,8 @@
         <h3>P1 — Self <em>(Profile layout)</em></h3>
         <p>The same contributor record as Draft B, re-laid in <b>Profile's grammar</b>: identity block →
         boxless STATS tiles (gold percentile chips) → <b>SIGNATURE CARD</b> as the PINNED-FAVOURITE hero (with a
-        <code>VIEW CARD</code> button) → <b>CARDS DESIGNED</b> as a legible <code>/cell</code> card grid and
-        <b>GAMES ADDED</b> as <b>title rows</b> (so the game name reads clearly), each + <code>VIEW ALL ›</code>.</p>
+        <code>VIEW CARD</code> button) → <b>CARDS DESIGNED</b> as a legible <code>/cell</code> card grid (<b>tap a card &rarr; its <code>CardDetail</code></b>, CARD-23 INSPECT) and
+        <b>GAMES ADDED</b> as <b>title rows</b> (so the game name reads clearly; <b>tap a row &rarr; the Game page</b>, CARD-23 NAVIGATE), each + <code>VIEW ALL ›</code>.</p>
       </div>
     </div>
 
@@ -604,8 +607,8 @@
 
               <div class="sec"><h3>CARDS DESIGNED</h3><a href="#">VIEW ALL &rsaquo;</a></div>
               <div class="minigrid">
-                <div class="cardcell"><div class="gcard cell fr-hades"><span class="rank first">1</span>
-                  <div class="art"><svg><use href="#art-hades"/></svg></div><div class="plate pl-hades">Hades</div></div><span class="adopt"><b>47</b> ADOPTIONS</span></div>
+                <div class="gcard cell fr-hades"><span class="rank first">1</span>
+                  <div class="art"><svg><use href="#art-hades"/></svg></div><div class="plate pl-hades">Hades</div></div>
               </div>
 
               <div class="sec"><h3>GAMES ADDED</h3><a href="#">VIEW ALL &rsaquo;</a></div>

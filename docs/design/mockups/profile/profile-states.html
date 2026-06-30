@@ -206,30 +206,36 @@
   /* ════ C5 · HYBRID — square chrome · stepped-diagonal cards ════ */
   .c5 .well, .c5 .hero, .c5 .chip, .c5 .btn, .c5 .count, .c5 .now-tag, .c5 .gtag, .c5 .stat, .c5 .rank, .c5 .ric { border-radius: 0; }
   .c5 .well, .c5 .hero { border: 1px solid var(--scr-hairline); }
-  .c5 .btn.add, .c5 .btn.act { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
+  /* ── F-02/F-07 corner-step is INTRINSIC per component (decision 0041 / OQ-085) ──
+     The board no longer gates the step on .c5. The step belongs ONLY to the GameCard
+     (+ its .art/.plate + size variants) and the intent-buttons (.btn.add gold/acquisitive,
+     .btn.act orange/prominent non-acquisitive). The StateMark corner pip (.chip-pip) and the
+     card-silhouette placeholders (ghost/skeleton/error) carry their own steps below. Everything
+     else stays square (F-07) via the square-chrome reset above. Magnitudes unchanged. */
+  .btn.add, .btn.act { clip-path: polygon(0 4px, 2px 4px, 2px 2px, 4px 2px, 4px 0, 100% 0,
       100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px),
       calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 0 100%); }
-  .c5 .gcard { border-radius: 0; box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
+  .gcard { box-shadow: none; filter: drop-shadow(0 4px 7px rgba(0,0,0,.35));
     clip-path: polygon(0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0, 100% 0,
       100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px),
       calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 0 100%); }
-  .c5 .gcard .art { border-radius: 0;
+  .gcard .art {
     clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
       100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
-  .c5 .gcard .plate { border-radius: 0;
+  .gcard .plate {
     clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
-  .c5 .gcard.mini-size { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
+  .gcard.mini-size { clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0,
       100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
-  .c5 .gcard.mini-size .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+  .gcard.mini-size .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
-  .c5 .gcard.mini-size .plate { clip-path: polygon(0 1.5px, 1.5px 1.5px, 1.5px 0, 100% 0,
+  .gcard.mini-size .plate { clip-path: polygon(0 1.5px, 1.5px 1.5px, 1.5px 0, 100% 0,
       100% calc(100% - 1.5px), calc(100% - 1.5px) calc(100% - 1.5px), calc(100% - 1.5px) 100%, 0 100%); }
-  .c5 .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0,
+  .gcard.thumb { clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0,
       100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
-  .c5 .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
+  .gcard.thumb .art { clip-path: polygon(0 2px, 2px 2px, 2px 0, 100% 0,
       100% calc(100% - 2px), calc(100% - 2px) calc(100% - 2px), calc(100% - 2px) 100%, 0 100%); }
-  .c5 .gcard.thumb .plate { clip-path: polygon(0 1px, 1px 1px, 1px 0, 100% 0,
+  .gcard.thumb .plate { clip-path: polygon(0 1px, 1px 1px, 1px 0, 100% 0,
       100% calc(100% - 1px), calc(100% - 1px) calc(100% - 1px), calc(100% - 1px) 100%, 0 100%); }
 
   /* ════ NEW — profile-state components (this file) ════ */
@@ -361,6 +367,27 @@
     transform: none; box-shadow: none;
     background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
     background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px); }
+
+  /* ════ Top-3 set-pieces (GameCard/cell) + Top-10 view (GameCard/grid, 2-up) — decision 0047, nameplate F-06-bound ≥9px ════ */
+  .top3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; justify-items: center; }
+  .top10grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 12px; justify-items: center; }
+  /* Top-3 card = catalog GameCard/cell (96×134, F-01) · legible 10px plate (≥9px floor) */
+  .gcard.set-size { width: 96px; height: 134px;
+    clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .gcard.set-size .art { inset: 4.5px;
+    clip-path: polygon(0 2.5px, 2.5px 2.5px, 2.5px 0, 100% 0, 100% calc(100% - 2.5px), calc(100% - 2.5px) calc(100% - 2.5px), calc(100% - 2.5px) 100%, 0 100%); }
+  .gcard.set-size .plate { left: 7px; right: 7px; bottom: 2px; padding: 3.5px 2px 3px; font-size: 10px; letter-spacing: .2px; }
+  /* Top-10 view card = catalog GameCard/grid — fills the 2-up column → 161×225 (F-01); base 10px plate */
+  .gcard.show-size { width: 100%; max-width: 161px; aspect-ratio: 63 / 88; }
+  .gcard.show-size .art { inset: 6px; }
+  .retlink { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 0 16px 10px; font: 700 9px var(--pk); letter-spacing: 1.2px; color: var(--scr-dim); }
+  .retlink .bk { color: var(--scr-accent); font: 700 15px/1 var(--pk); }
+  .ghost-set { position: relative; width: 96px; height: 134px; border: 1.5px dashed var(--scr-grip); display: flex; align-items: center; justify-content: center;
+    clip-path: polygon(0 3px, 3px 3px, 3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 0 100%); }
+  .ghost-set .plus { font: 700 21px/1 var(--pk); color: var(--scr-grip); }
+  .top3 .sk-mini { width: 96px; height: 134px; }
+  /* decision 0047 — the NOW-PLAYING / strip /thumb (<9px) drops the plate; `.strip-title` names the game. (/mini-size is retired dead CSS from the old Top-5.) */
+  .gcard.thumb .plate, .gcard.mini-size .plate { display: none; }
 </style>
 </head>
 <body>
@@ -497,18 +524,11 @@
                   <button class="btn secondary">VIEW GAME</button>
                 </div>
               </div>
-              <div class="sec"><h3>TOP 5</h3><a href="#">VIEW COLLECTION &rsaquo;</a></div>
-              <div class="top5">
-                <div class="gcard mini-size fr-destiny"><span class="rank first">1</span>
-                  <div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
-                <div class="gcard mini-size fr-minecraft"><span class="rank">2</span>
-                  <div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
-                <div class="gcard mini-size fr-marathon custom"><span class="rank">3</span>
-                  <div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
-                <div class="gcard mini-size fr-ratchet"><span class="rank">4</span>
-                  <div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
-                <div class="gcard mini-size fr-re"><span class="rank">5</span>
-                  <div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div>
+              <div class="sec"><h3>TOP 3</h3><a href="#">VIEW TOP 10 &rsaquo;</a></div>
+              <div class="top3">
+                <div class="gcard set-size fr-destiny"><span class="rank first">1</span><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="gcard set-size fr-minecraft"><span class="rank">2</span><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
+                <div class="gcard set-size fr-marathon custom"><span class="rank">3</span><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
               </div>
               <div class="sec"><h3>NOW PLAYING</h3></div>
               <div class="well strip">
@@ -572,6 +592,52 @@
       </div>
     </div>
 
+    <!-- ═══ Profile · Top-10 view (VIEW TOP 10 → ranked 2-up, decision 0047) ═══ -->
+    <div class="take">
+      <div class="artboard-label">Profile — Top-10 view (VIEW TOP 10 → ranked two-per-row)</div>
+      <div class="device" data-screen-label="States · C5 · Profile — Top 10">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <div class="top-band">
+          <div class="power"><span class="led"></span><span class="lbl">POWER</span></div>
+          <div class="logo">INGAME</div>
+          <div class="grille"><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="screen-bezel">
+          <div class="screen sk2 c5">
+            <div class="screen-head"><h2>TOP 10</h2></div>
+            <div class="retlink"><span class="bk">&lsaquo;</span> RETURN TO PROFILE</div>
+            <div class="scroll">
+              <div class="top10grid">
+                <div class="gcard show-size fr-destiny"><span class="rank first">1</span><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="gcard show-size fr-minecraft"><span class="rank">2</span><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
+                <div class="gcard show-size fr-marathon custom"><span class="rank">3</span><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
+                <div class="gcard show-size fr-ratchet"><span class="rank">4</span><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
+                <div class="gcard show-size fr-re"><span class="rank">5</span><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div>
+                <div class="gcard show-size fr-minecraft"><span class="rank">6</span><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
+                <div class="gcard show-size fr-destiny"><span class="rank">7</span><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="gcard show-size fr-marathon"><span class="rank">8</span><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
+                <div class="gcard show-size fr-ratchet"><span class="rank">9</span><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
+                <div class="gcard show-size fr-re"><span class="rank">10</span><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-band">
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn store"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M7 9V7.5a5 5 0 0 1 10 0V9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 9z" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linejoin="round"/></svg></button><span class="pip"></span><div class="nav-lbl">STORE</div></div>
+          <div class="nav-item"><div class="nav-lbl">DISCOVER</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2z" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn collection"><svg width="24" height="24" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8" fill="#1d2a4a"/></svg></button><span class="pip"></span><div class="nav-lbl big">COLLECTION</div></div>
+          <div class="nav-item active"><div class="nav-lbl">PROFILE</div><button class="nav-btn"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M12 2.5v3" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="2.8" r="1.3" fill="#1d2a4a"/><rect x="4.5" y="5.5" width="15" height="12" rx="3.5" fill="none" stroke="#1d2a4a" stroke-width="2"/><circle cx="9" cy="11.5" r="1.6" fill="#1d2a4a"/><circle cx="15" cy="11.5" r="1.6" fill="#1d2a4a"/><path d="M9 21h6" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl"></div></div>
+          <div class="nav-item"><div class="nav-lbl"></div><button class="nav-btn"><svg width="26" height="24" viewBox="0 0 26 24"><circle cx="9" cy="8" r="3.4" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M3 19.5a6 6 0 0 1 12 0" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="9" r="2.8" fill="none" stroke="#1d2a4a" stroke-width="2"/><path d="M16.5 19.5a5.4 5.4 0 0 1 6.5-5.2" fill="none" stroke="#1d2a4a" stroke-width="2" stroke-linecap="round"/></svg></button><span class="pip"></span><div class="nav-lbl">FRIENDS</div></div>
+        </div>
+      </div>
+      <div class="caption">
+        <h3>Top-10 view <em>(VIEW TOP 10)</em></h3>
+        <p>The clickable expansion of the Profile <b>TOP 3</b> set-pieces (decision 0047): a ranked
+        <b>two-per-row</b> grid of all 10 cards, each at the legible <code>GameCard/grid</code> with its
+        <b>10px nameplate</b> — nothing renders below the F-06 9px floor. SOC-04 grew Top-5 → Top-10.</p>
+      </div>
+    </div>
+
     <!-- ═══ Profile · Edit mode ═══ -->
     <div class="take">
       <div class="artboard-label">Profile — edit mode (self, in-place)</div>
@@ -621,20 +687,13 @@
                   <button class="btn secondary">PICK FROM COLLECTION</button>
                 </div>
               </div>
-              <div class="sec"><h3>TOP 5</h3></div>
-              <div class="top5">
-                <div class="gcard mini-size fr-destiny"><span class="rank first">1</span><span class="grip-badge"><i></i><i></i><i></i><i></i><i></i><i></i></span>
-                  <div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
-                <div class="gcard mini-size fr-minecraft"><span class="rank">2</span><span class="grip-badge"><i></i><i></i><i></i><i></i><i></i><i></i></span>
-                  <div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
-                <div class="gcard mini-size fr-marathon custom"><span class="rank">3</span><span class="grip-badge"><i></i><i></i><i></i><i></i><i></i><i></i></span>
-                  <div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
-                <div class="gcard mini-size fr-ratchet"><span class="rank">4</span><span class="grip-badge"><i></i><i></i><i></i><i></i><i></i><i></i></span>
-                  <div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
-                <div class="gcard mini-size fr-re"><span class="rank">5</span><span class="grip-badge"><i></i><i></i><i></i><i></i><i></i><i></i></span>
-                  <div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div>
+              <div class="sec"><h3>TOP 3</h3><a href="#">EDIT TOP 10 &rsaquo;</a></div>
+              <div class="top3">
+                <div class="gcard set-size fr-destiny"><span class="rank first">1</span><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="gcard set-size fr-minecraft"><span class="rank">2</span><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
+                <div class="gcard set-size fr-marathon custom"><span class="rank">3</span><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
               </div>
-              <div class="hint"><b>LONG-PRESS &amp; DRAG TO RE-RANK</b> (SAME ARRANGE GESTURE AS THE COLLECTION, OQ-031) &middot; TAP A CARD TO SWAP IT</div>
+              <div class="hint"><b>YOUR TOP 3 SHOW HERE</b> &middot; RANK YOUR FULL TOP 10 IN THE LIST EDITOR (SOC-04 · OQ-083 dedicated)</div>
               <div class="sec"><h3>NOW PLAYING</h3></div>
               <div class="well strip dimmed">
                 <div class="gcard thumb fr-marathon custom">
@@ -734,15 +793,13 @@
                   <button class="btn secondary">PICK FROM COLLECTION</button>
                 </div>
               </div>
-              <div class="sec"><h3>TOP 5</h3></div>
-              <div class="top5">
-                <div class="ghost-mini"><span class="rank first">1</span><span class="plus">+</span></div>
-                <div class="ghost-mini"><span class="rank">2</span><span class="plus">+</span></div>
-                <div class="ghost-mini"><span class="rank">3</span><span class="plus">+</span></div>
-                <div class="ghost-mini"><span class="rank">4</span><span class="plus">+</span></div>
-                <div class="ghost-mini"><span class="rank">5</span><span class="plus">+</span></div>
+              <div class="sec"><h3>TOP 3</h3></div>
+              <div class="top3">
+                <div class="ghost-set"><span class="rank first">1</span><span class="plus">+</span></div>
+                <div class="ghost-set"><span class="rank">2</span><span class="plus">+</span></div>
+                <div class="ghost-set"><span class="rank">3</span><span class="plus">+</span></div>
               </div>
-              <div class="hint">RANK THE FIVE THAT DEFINE YOUR SHELF &mdash; FRIENDS TAP THESE TO BROWSE YOUR COLLECTION</div>
+              <div class="hint">RANK YOUR TOP 10 &mdash; THE BEST 3 SHOW HERE; FRIENDS TAP THEM TO BROWSE YOUR COLLECTION</div>
               <div class="sec"><h3>NOW PLAYING</h3></div>
               <div class="ghost-line">NOTHING PINNED &mdash; SET YOUR NOW PLAYING FROM THE COLLECTION TAB</div>
               <div class="well" style="margin-top: 14px;">
@@ -839,18 +896,11 @@
                 <div class="stat"><span class="v">412</span><span class="l">ADOPTIONS</span><span class="pct">TOP 5%</span></div>
                 <div class="stat"><span class="v">14</span><span class="l">FRIENDS</span></div>
               </div>
-              <div class="sec"><h3>TOP 5</h3><a href="#">VIEW COLLECTION &rsaquo;</a></div>
-              <div class="top5">
-                <div class="gcard mini-size fr-re"><span class="rank first">1</span>
-                  <div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div>
-                <div class="gcard mini-size fr-ratchet"><span class="rank">2</span>
-                  <div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
-                <div class="gcard mini-size fr-minecraft"><span class="rank">3</span>
-                  <div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
-                <div class="gcard mini-size fr-destiny"><span class="rank">4</span>
-                  <div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
-                <div class="gcard mini-size fr-marathon"><span class="rank">5</span>
-                  <div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
+              <div class="sec"><h3>TOP 3</h3><a href="#">VIEW TOP 10 &rsaquo;</a></div>
+              <div class="top3">
+                <div class="gcard set-size fr-re"><span class="rank first">1</span><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div>
+                <div class="gcard set-size fr-ratchet"><span class="rank">2</span><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
+                <div class="gcard set-size fr-minecraft"><span class="rank">3</span><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
               </div>
               <div class="sec"><h3>NOW PLAYING</h3></div>
               <div class="well strip">
@@ -873,8 +923,8 @@
               </div>
             </div>
             <div class="tools">
+              <div class="chip"><svg width="12" height="12" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8"/></svg><b>VIEW COLLECTION</b></div>
               <div class="chip"><svg width="13" height="12" viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg><b>COMPARE</b></div>
-              <div class="chip"><svg width="12" height="13" viewBox="0 0 12 13"><path d="M6 1v7M3.4 3.2L6 .8l2.6 2.4" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 6.5v5h9v-5" fill="none" stroke-width="1.5" stroke-linejoin="round"/></svg><b>SHARE</b></div>
               <div class="spacer"></div>
               <div class="chip"><b class="ovf">&#8943;</b></div>
             </div>
@@ -893,8 +943,8 @@
         <p><b>Your device is your constant frame</b> (decision 0012): Riko's profile renders inside <i>your</i> teal
         shell + Midnight screen; <b>their device appears as an on-screen hero</b> with the explicit
         <b>VIEW IN THEIRS</b> toggle. The head shows <i>whose</i> profile (RIKO + FRIEND tag); identity adds
-        <b>friend count + mutuals</b>; Top-5 is the <b>gateway into their collection</b> (COL-10, read-only).</p>
-        <p><b>Tools swap for the social job</b> (PROF-05/SOC-02): COMPARE (SOC-03) + SHARE, with <b>Report / Block
+        <b>friend count + mutuals</b>; an explicit <b>VIEW COLLECTION</b> plus the Top-3 cards / <b>VIEW TOP 10</b> are the <b>doors into their collection</b> (COL-10, read-only — decision 0050). A Top-3 card tap opens their Collection in <b>TOP view, focused on that game</b>.</p>
+        <p><b>Tools swap for the social job</b> (PROF-05/SOC-02): <b>VIEW COLLECTION</b> (the primary door) + COMPARE (SOC-03), with <b>Report / Block
         in the &#8943; overflow</b> (MOD-01, SOC-09) &mdash; present but not foregrounded. No EDIT, no Settings:
         management chrome belongs to the owner.</p>
       </div>
@@ -936,18 +986,11 @@
                 <div class="stat"><span class="v">412</span><span class="l">ADOPTIONS</span><span class="pct">TOP 5%</span></div>
                 <div class="stat"><span class="v">14</span><span class="l">FRIENDS</span></div>
               </div>
-              <div class="sec"><h3>TOP 5</h3><a href="#">VIEW COLLECTION &rsaquo;</a></div>
-              <div class="top5">
-                <div class="gcard mini-size fr-re"><span class="rank first">1</span>
-                  <div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div>
-                <div class="gcard mini-size fr-ratchet"><span class="rank">2</span>
-                  <div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
-                <div class="gcard mini-size fr-minecraft"><span class="rank">3</span>
-                  <div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
-                <div class="gcard mini-size fr-destiny"><span class="rank">4</span>
-                  <div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
-                <div class="gcard mini-size fr-marathon"><span class="rank">5</span>
-                  <div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
+              <div class="sec"><h3>TOP 3</h3><a href="#">VIEW TOP 10 &rsaquo;</a></div>
+              <div class="top3">
+                <div class="gcard set-size fr-re"><span class="rank first">1</span><div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div>
+                <div class="gcard set-size fr-ratchet"><span class="rank">2</span><div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
+                <div class="gcard set-size fr-minecraft"><span class="rank">3</span><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
               </div>
               <div class="sec"><h3>NOW PLAYING</h3></div>
               <div class="well strip">
@@ -963,8 +1006,8 @@
               </div>
             </div>
             <div class="tools">
+              <div class="chip"><svg width="12" height="12" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.4" height="7.4" rx="1.8"/><rect x="13.1" y="3.5" width="7.4" height="7.4" rx="1.8"/><rect x="3.5" y="13.1" width="7.4" height="7.4" rx="1.8"/><rect x="13.1" y="13.1" width="7.4" height="7.4" rx="1.8"/></svg><b>VIEW COLLECTION</b></div>
               <div class="chip"><svg width="13" height="12" viewBox="0 0 13 12"><path d="M2 10.5V5M6.5 10.5V1.5M11 10.5V7" fill="none" stroke-width="1.8" stroke-linecap="round"/></svg><b>COMPARE</b></div>
-              <div class="chip"><svg width="12" height="13" viewBox="0 0 12 13"><path d="M6 1v7M3.4 3.2L6 .8l2.6 2.4" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M1.5 6.5v5h9v-5" fill="none" stroke-width="1.5" stroke-linejoin="round"/></svg><b>SHARE</b></div>
               <div class="spacer"></div>
               <div class="chip"><b class="ovf">&#8943;</b></div>
             </div>
@@ -1091,10 +1134,9 @@
                   <div class="sk-bar" style="width: 58%;"></div>
                 </div>
               </div>
-              <div class="sec"><h3>TOP 5</h3></div>
-              <div class="top5">
+              <div class="sec"><h3>TOP 3</h3></div>
+              <div class="top3">
                 <div class="sk-mini"></div><div class="sk-mini"></div><div class="sk-mini"></div>
-                <div class="sk-mini"></div><div class="sk-mini"></div>
               </div>
               <div class="sec"><h3>NOW PLAYING</h3></div>
               <div class="well strip">
@@ -1337,18 +1379,11 @@
                   <button class="btn secondary">VIEW GAME</button>
                 </div>
               </div>
-              <div class="sec"><h3>TOP 5</h3></div>
-              <div class="top5">
-                <div class="gcard mini-size fr-destiny"><span class="rank first">1</span>
-                  <div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
-                <div class="gcard mini-size fr-minecraft"><span class="rank">2</span>
-                  <div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
-                <div class="gcard mini-size fr-marathon custom"><span class="rank">3</span>
-                  <div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
-                <div class="gcard mini-size fr-ratchet"><span class="rank">4</span>
-                  <div class="art"><svg><use href="#art-ratchet"/></svg></div><div class="plate pl-ratchet">Ratchet &amp; Clank</div></div>
-                <div class="gcard mini-size fr-re"><span class="rank">5</span>
-                  <div class="art"><svg><use href="#art-re"/></svg></div><div class="plate pl-re">Resident Evil</div></div>
+              <div class="sec"><h3>TOP 3</h3><a href="#">VIEW TOP 10 &rsaquo;</a></div>
+              <div class="top3">
+                <div class="gcard set-size fr-destiny"><span class="rank first">1</span><div class="art"><svg><use href="#art-destiny"/></svg></div><div class="plate pl-destiny">Destiny</div></div>
+                <div class="gcard set-size fr-minecraft"><span class="rank">2</span><div class="art"><svg><use href="#art-minecraft"/></svg></div><div class="plate pl-minecraft">Minecraft</div></div>
+                <div class="gcard set-size fr-marathon custom"><span class="rank">3</span><div class="art"><svg><use href="#art-marathon"/></svg></div><div class="plate pl-marathon">Marathon</div></div>
               </div>
               <div class="sec"><h3>NOW PLAYING</h3></div>
               <div class="well strip">

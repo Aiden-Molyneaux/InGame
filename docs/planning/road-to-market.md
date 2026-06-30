@@ -7,7 +7,8 @@
 > restates or changes it. It builds **on** product-spec §8 phasing and `testing-strategy.md`, not
 > beside them. Where it implies a spec/behavior change, that routes through `open-questions.md` (§4).
 
-**Version:** 0.2 · **Date:** 2026-06-24 · **Author:** Claude Code · **Owner:** Aiden ·
+**Version:** 0.4 · **Date:** 2026-06-30 · **Author:** Claude Code · **Owner:** Aiden ·
+**M1 foundation review folded in (decision 0051):** npm pinned · **Apple enrollment day-one** (G-B(d) depends on it) · the **Minimum-M1 manifest** (7-item spine, F37) governs M1 scope · this planning doc is **non-authoritative** where it disagrees with the specs / decisions / CONVENTIONS. ·
 **Status:** M0 audit ruled — **full v1.0 scope, staged release** (decision 0027). Milestones are pure
 build-order; v1.0 = the complete feature set.
 
@@ -98,7 +99,7 @@ reverse, so they're settled (as a `decisions/` record) **as M1 entry criteria**,
 | **Repo shape** | **Monorepo**, npm/pnpm workspaces: `apps/mobile` · `apps/api` · `packages/shared` (zod schemas + types). Skip Turborepo/Nx for now. | The shared zod schemas make `api-contract.md` *executable* — one source for FE+BE payloads. Don't over-tool. |
 | **Env / config & secrets** | Env-only; `.env*` gitignored; secrets in the host's secret store; **gitleaks secret-scan in CI**. Never a secret in the repo. | `SYS-03` |
 | **Ownership scoping** | A scoped-query helper at the **repository/service** layer; every mutating endpoint carries a standing authz test. | `SYS-01` enforced by `SYS-07` — the cross-cutting law; the prototype's original sin |
-| **Error handling** | One `AppError` hierarchy → Express error middleware → `api-contract` error codes; zod failure → 400. Established in M2. | consistent client handling of `SYS-10`/error family |
+| **Error handling** | One `AppError` hierarchy → Express error middleware → `api-contract` error codes; zod failure → **422** (decision 0043/0051); `SERVER_ERROR` 500 carries a generic body (internals to Sentry); auth failures stay neutral `AUTH_FAILED`. Established in M2. | consistent client handling of `SYS-10`/error family |
 | **Domain events** | An in-process emit/outbox convention in **Foundation** so every mutation emits events; achievements (M7) **and** analytics (§7) consume them — no retrofit. | `ACH-08` |
 | **Migrations** | Drizzle migrations generated + **committed + reviewed in the PR**; expand-contract for column changes; **destructive/irreversible = owner-approval change-class** (§5). | migration discipline |
 | **Backup / restore (lean)** | Managed-Postgres **automated daily backups** (PITR if the tier offers it) + **one tested restore drill** (restore to a scratch DB, verify) **before real users**. Not DR. | "can we recover," right-sized |
@@ -280,6 +281,30 @@ exceptions — each names why an agent can't own it. (~7, per the brief.)
 | 5 | **Customization render payoff** (taste) | M4 | "Does it feel like the trophy case" is aesthetic — agents can't judge it |
 | 6 | **Manual IAP sandbox pass** | M5 / M8 | Real-money StoreKit/Play sandbox UX is automation's documented blind spot (testing-strategy §5) |
 | 7 | **Store submission / public launch** | M8 | The irreversible outward-facing act |
+
+### Additional owner gates (decision 0045 — right-sized, owner-ratified 2026-06-29)
+Layered onto the 7 above, weighted to the M1/M2 groundwork; front-loaded + tapering. Full detail + the
+deliberately-cut candidates are in `decisions/0045-owner-gate-scheme-build-phase.md`. Cadence: most fire
+once at a milestone exit (batched into one sitting); G-K/L/M are per-event always-on tripwires; none add
+per-PR load (the spine + the 3 change-classes already cover per-PR).
+
+| Gate | Milestone | Weight | What the owner does |
+|---|---|---|---|
+| G-A Architecture + CONVENTIONS lock-in | M1 entry | heavy·1× | Sign the §3 architecture record + `CONVENTIONS.md` before scaffold (= decision 0046) |
+| G-B "Floor is real" demo | M1 exit | 1 sitting | Watch a test go RED on purpose · a bad PR refused · CONVENTIONS lint-teeth · loop on your iPhone |
+| G-C Live-infra cutover + env-separation | M1-P | heavy·1× | Distinct prod/staging/local DBs; agent-destructive paths only at disposable DBs; secrets in host store; billing yours |
+| G-D Authz "break-it" demo | M2 exit (re-fire M3/M5) | demo | Watch 2 mutation-tests go RED when SYS-01 scoping removed; test-count == mutating-endpoint count |
+| G-E Un-retrofittable lock-in | M2 exit | receipt | Append-only audit log · ACH-08 emission completeness · server-enforced role/tier ladder |
+| G-F Recoverability proof | M2 exit | receipt | One executed restore drill + a migration roll-forward/back |
+| G-G Auth fidelity + abuse-levers | M2 exit (rides gate 3) | light | Refresh-rotation rejects old token · AUTH-11 neutral responses real · SYS-05 429-under-burst |
+| G-H CARD-15 render-spike budget cap | M4 entry | heavy·1× | A hard time/token ceiling before the flatten spike (distinct from gate 5 taste) |
+| G-I Economy concurrency + intent | M5 | heavy | Double-spend demonstrated on real PG; confirm the agent encoded the RIGHT invariants |
+| G-J IAP-live check | M5 (1 sitting) | heavy | Real-path refund hits negative-floor/no-clawback; webhook signature + product mappings verified |
+| G-K SYS-04 / SYS-05 value sign-off | always-on | per-event | Approve the actual economy + rate-limit NUMBERS before they take effect (ride no PR) |
+| G-L ECON-11 operator-adjustment auth | always-on | per-op | Per-op yes on any manual Pixel grant/clawback (real money, no UI) |
+| G-M New-dependency glance | milestone exit | light | 30-sec yes/no on dependency-manifest changes (catches what SCA can't) |
+| G-N AUTH-07 deletion-ripple | M8 (dry-run M5) | heavy | Hard-delete vs anonymize-and-keep; no orphaned adopters, no retained PII |
+| G-O App Privacy / data-safety labels | M8 (with gate 7) | review | Declaration checked vs the actual ACH-08 analytics + SYS-11 bundle contents |
 
 ### Risk register (top handful)
 

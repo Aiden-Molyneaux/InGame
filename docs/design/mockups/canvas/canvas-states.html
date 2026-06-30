@@ -348,6 +348,9 @@
     background-color: color-mix(in srgb, var(--scr-chip) 88%, #000);
     background-image: repeating-linear-gradient(0deg, rgba(29,42,74,.20) 0 1px, #0000 1px 2px);
   }
+  /* decision 0047 — nameplate F-06-bound: the PROOF size-ladder keeps a legible 10px plate at /grid-96; /mini + /thumb (<9px) drop the plate — the proof now checks the ART reads small, the plate rides only ≥9px renders */
+  .gcard.pc-grid .plate { font-size: 10px; left: 7px; right: 7px; bottom: 2.5px; padding: 3.5px 2px 3px; letter-spacing: .2px; }
+  .gcard.pc-mini .plate, .gcard.pc-thumb .plate { display: none; }
 </style>
 </head>
 <body>
@@ -789,8 +792,9 @@
         CARD-15). <b>Change 2 applied:</b> below it, the print renders at the <b>GameCard's set sizes</b>
         &mdash; <b>GRID (96) · MINI (64) · THUMB (44)</b> (design-spec §1.5 `GameCard/grid|mini|thumb`) &mdash;
         so the proof answers the question that matters: <b>does it still read small?</b> The card is the
-        universal representation everywhere (CARD-07: shelf · Top-5 · list rows), and the plate must survive
-        the <b>thumbnail safe-area</b> (CARD-15). The size ladder makes that legibility check part of the
+        universal representation everywhere (CARD-07: shelf · Top-10 · list rows); the <b>card ART</b> must still
+        read at small sizes, while the <b>nameplate rides only &ge;9px renders</b> (F-06-bound, decision 0047 —
+        /mini + /thumb drop the plate). The size ladder makes that legibility check part of the
         proof, not a post-publish surprise. Release lifts the proof; the slips return.</p>
       </div>
     </div>
