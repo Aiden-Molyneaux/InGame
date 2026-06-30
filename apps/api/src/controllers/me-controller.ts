@@ -3,6 +3,8 @@ import type { PatchMeRequest } from '@ingame/shared';
 import { AuthFailedError, NotFoundError } from '../errors/AppError';
 import * as profileService from '../services/profile-service';
 import { toSelfShape } from '../serializers/user-shape';
+import { getDb } from '../db/client';
+import { users } from '../db/schema';
 
 // The `/me` controllers. The actor is resolved from the authenticated principal ONLY (SYS-01) — the
 // server never trusts an id in the body. Controllers read `req.validated` (the zod-parsed body), not
@@ -42,4 +44,10 @@ export async function patchMe(req: Request, res: Response): Promise<void> {
     throw new NotFoundError('Profile not found.');
   }
   res.json(toSelfShape(current));
+}
+
+// ⚠️ G-B(b) DEMO — DELIBERATELY BAD: a raw DB query in the controller layer (CONVENTIONS rule 1).
+// This compiles, so the red lands on the CI *Lint* step (the custom spine has teeth). Reverted next commit.
+export async function listAllProfilesDemo() {
+  return getDb().select().from(users);
 }
