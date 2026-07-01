@@ -4,7 +4,7 @@
 > be refined alongside the design-spec, because screens reveal exactly what each call must return.
 > Behavior lives in [`product-spec.md`](product-spec.md); shapes live here. Referenced by ID.
 
-**Version:** 0.41 (draft) · **Last updated:** 2026-06-30 · **Owner:** Claude Code
+**Version:** 0.42 (draft) · **Last updated:** 2026-07-01 · **Owner:** Claude Code
 
 ---
 
@@ -48,6 +48,10 @@
 | POST | `/auth/verify-email/confirm` | `{ token }` → `{ ok: true }` (AUTH-08) |
 | GET | `/auth/username-available?u=` | `{ available, reason? }` — **public pre-check** (pre-auth): screened (MOD-07) + uniqueness; **advisory** (authoritative at register / `PATCH /me`); rate-limited (**AUTH-11**) |
 
+> **The session `user` IS the `GET /me` self-shape** — register / login / apple return the same
+> serializer output `/me` does (**one self-shape serializer, no issuance-vs-`/me` drift** — OQ-121;
+> e.g. `gamertags` inline on both). A client may still refetch `/me`, but the shapes never disagree.
+
 ## Public stats (`SYS-12`)
 | Method | Path | Notes |
 |---|---|---|
@@ -56,11 +60,11 @@
 ## Profile (`PROF-`)
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/me` | Current user — **the Profile self-view renders from this one call**: identity `{ username, avatarUrl }` (**`avatarUrl: null` ⇒ the default monogram**, PROF-08), `bio`, `memberSince`, favourite genres, **`privacy ∈ 'friends' | 'public'`** (PROF-03 · `'friends'` = friends-only default · `'public'` = limited public profile; OQ-112), gamertags (PROF-01/02/03); **`usernameNextChangeAt`** — the edit-mode cooldown microcopy ("NEXT CHANGE OK NOW · 1/30 DAYS", PROF-06); **`stats { games, hours, completionPct, cardsDesigned, adoptionsReceived, friends }`**, each with an optional **`percentile`** (threshold-gated, PROF-07); **`favouriteGame`** + **`nowPlaying`** each expanded `{ gameId, entryId?, title, hours, card }` (PROF-01/04/05, WTP-03; `card` = the owner's selected render, CARD-07/18); **`top10: [{ rank (1..10), gameId, title, card }]`** (SOC-04 — all 10 inlined; the Profile renders the **top 3** set-pieces, **VIEW TOP 10** the full list, presentation); teaser counts **`achievements { unlocked, total }`** (ACH-02) · **`contributionsCount`** (CAT-07) |
+| GET | `/me` | Current user — **the Profile self-view renders from this one call**: identity `{ username, avatarUrl }` (**`avatarUrl: null` ⇒ the default monogram**, PROF-08), `bio`, `memberSince`, **`usernamePending`** (AUTH-09 — true until the first-SIWA username completes) · **`emailVerified`** (AUTH-08 — soft-verify state, gates nothing), favourite genres, **`privacy ∈ 'friends' | 'public'`** (PROF-03 · `'friends'` = friends-only default · `'public'` = limited public profile; OQ-112), gamertags (PROF-01/02/03); **`usernameNextChangeAt`** — the edit-mode cooldown microcopy ("NEXT CHANGE OK NOW · 1/30 DAYS", PROF-06); **`stats { games, hours, completionPct, cardsDesigned, adoptionsReceived, friends }`**, each with an optional **`percentile`** (threshold-gated, PROF-07); **`favouriteGame`** + **`nowPlaying`** each expanded `{ gameId, entryId?, title, hours, card }` (PROF-01/04/05, WTP-03; `card` = the owner's selected render, CARD-07/18); **`top10: [{ rank (1..10), gameId, title, card }]`** (SOC-04 — all 10 inlined; the Profile renders the **top 3** set-pieces, **VIEW TOP 10** the full list, presentation); teaser counts **`achievements { unlocked, total }`** (ACH-02) · **`contributionsCount`** (CAT-07) |
 | PATCH | `/me` | `{ username?, bio?, favouriteGenreIds?, favouriteGameId?, privacy? }` — **`privacy ∈ 'friends' \| 'public'`** (PROF-03; OQ-112); username changes cooldown-limited + screened (PROF-06, MOD-07); avatar changes flow through the avatar pipeline (PROF-08) |
 | POST | `/me/avatar/draft` · `/me/avatar/publish` | Avatar design pipeline (PROF-08) — mirrors the card draft → publish-flatten flow (server-rendered square image); shapes to harden during design |
 | GET | `/users/:id` | **Two privacy-gated shapes** (PROF-03). **Friend / full** (PROF-05): identity (username, avatarUrl, memberSince, bio, favourite genres, **gamertags** — PROF-02), **`device { shellId, screenThemeId, stickerComposition }`** (the THEIR-DEVICE row + the "view in their device" chrome toggle, DEV-02/04 / decision 0012), stats + percentiles (PROF-07), top10, now-playing (+ hours), **`friendsCount` + `mutualFriendsCount`**, achievements teaser (ACH-05). **Non-friend / limited**: `{ username, avatarUrl, memberSince, mutualFriendsCount }` — nothing else leaks. Both carry **`relationship`** (`none · outgoing · incoming · friend`) driving the ADD FRIEND / FRIEND-tag chrome (SOC-01/08). **Blocked / suspended / deleted → one generic `NOT_FOUND`-style "unavailable"** (non-disclosure, MOD-09 / SOC-09 / AUTH-07) — never reveals which, nor who blocked whom |
-| GET | `/me/gamertags` · POST · PATCH `/:id` · DELETE `/:id` | Gamertag CRUD (PROF-02) |
+| GET | `/me/gamertags` · POST · PATCH `/:id` · DELETE `/:id` | Gamertag CRUD (PROF-02). GET → `[{ id, platform, handle }]` · POST `{ platform, handle }` → the created row · PATCH `/:id` `{ platform?, handle? }` → the updated row · DELETE `/:id` → `{ ok: true }`. **`platform` ∈ the controlled list `pc \| playstation \| xbox \| nintendo`** (PROF-02); `handle` trimmed + length-bounded (rule 3) |
 
 ## Catalog & contribution (`CAT-`)
 | Method | Path | Notes |
@@ -259,3 +263,4 @@
 | 2026-06-29 | 0.39 | **Profile Top-3 / Top-10** (decision 0047): `/me` + `/users/:id` **`top5` → `top10`** (`rank 1..10`; all 10 carded items inlined — the Profile renders the top 3, VIEW TOP 10 the full list, presentation-only, no new path); `/me/lists` **cap 5 → 10** (`kind: top10`, `rank 1..10`, `LIST_FULL` past 10). SOC-04 grew Top-5 → Top-10. No new endpoints. | SOC-04, PROF-05 |
 | 2026-06-30 | 0.40 | **M1 foundation-review deferred ripple** (decision 0051, the 6-round review) — **conventions only, no new paths/shapes**: §Conventions now pins **error serialization** (`SERVER_ERROR` 500 = generic body, internals to Sentry by request-ID; auth failures uniformly neutral `AUTH_FAILED`; zod → `422`, F08) and the **read-path privacy serializer** (`toPublicShape`/`toFriendShape` allowlist per PROF-03 state — the already-enumerated friend/non-friend/blocked/deleted shapes are the contract it satisfies; AUTH-07-deleted → anonymized-author shape; the standing authz test asserts the shape for actor-B, F06). | SYS-10, PROF-03, AUTH-07/11 |
 | 2026-06-30 | 0.41 | **PROF-03 privacy enum pinned** (OQ-112, M2-entry spec-prep): `/me` (read) + `PATCH /me` (write) `privacy` field pinned to **`∈ 'friends' \| 'public'`** (`'friends'` = friends-only default, `'public'` = limited public profile — PROF-03). Formalizes the value already tagged `// ASSUMPTION(OQ-112)` in `packages/shared`. No new paths/shapes. | PROF-03 |
+| 2026-07-01 | 0.42 | **M2 seam-detail formalizations** (OQ-116 + OQ-121 — the shapes the M2 backend implemented+tested, pinned rule-7 before the M2 PR merges): `/me` self-shape gains **`usernamePending`** (AUTH-09) + **`emailVerified`** (AUTH-08); **gamertag CRUD bodies enumerated** (POST `{platform, handle}` · PATCH `{platform?, handle?}` · controlled list `pc\|playstation\|xbox\|nintendo` — PROF-02); **the session `user` pinned = the `GET /me` self-shape** (one serializer, no issuance drift — OQ-121; the current issuance path returning `gamertags: []` is the alignment owed in the auth lane, gate-3). *(OQ-116(b)'s `ACCOUNT_SUSPENDED {reason, until?}` + `VALIDATION_ERROR reason:"invalid_token"` verified already pinned — 0.11/0.32.)* No new paths. | AUTH-08/09, PROF-02 |

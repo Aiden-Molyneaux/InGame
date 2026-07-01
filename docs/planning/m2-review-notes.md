@@ -56,5 +56,32 @@ all run + passed on SDK-54).
 - ⚠️ **PARTIAL — Fix 2 / `rule-02-scoping`:** the requested AUTH-LOOKUP **reads-only tightening works** (marked `.update`/`.delete` fail closed, marked `.from` passes; green test + corpus fixture). But rule-02's detection is a **3-verb denylist** (`.from`/`.update`/`.delete`); unmarked cross-user **writes** via `.insert(...).onConflictDoUpdate(...)` (an upsert mutating an existing row) and a raw `db.execute` of a `sql` template doing `UPDATE`/`DELETE` bypass the whole rule, in any repo. **Pre-existing guardrail gap, no confirmed live hole** (runtime `asActor`/`ownedBy` scoping is sound). → **OQ-118** (flip rule-02 to a read-verb allowlist / extend detection); **fast-follow before M3**, does **not** block M2 sign-off.
 - **Residual (non-blocking):** login-timing has a one-time per-process warmup artifact (pre-warm the dummy hash at startup) and no automated timing-parity test — hardening nits, not oracles.
 
+## Parvati run — 2026-07-01 (sign-on + shell + fix-pass re-verify, vs the M2 DoD)
+**Reviewed from:** Expo web @390×844 (headless-Edge captures + live DOM measurements), signed in as
+the seeded `demo_curator2`; owner phone screenshot for the shell pass.
+**All six OpenCode fixes VERIFIED in the running app:** S1 shell dims exact (device r30 · top-band 64 ·
+bezel pad 9 r20 · screen r13 · nav-band 128 · locked 0.45) · P8 order · P1 bio · P4 gamertags ·
+P5 MiniDevice 42×92 labelled · C1 bottom-docked SectionSwitch (F-09 grammar) · C4 count coherent.
+
+| # | Observation | Bucket | Verdict | Outcome |
+|---|---|---|---|---|
+| S2 | **Nav key ORDER wrong** — build COLLECT·DISCOVER·STORE·FRIENDS·PROFILE; every board renders STORE·DISCOVER·COLLECTION(centre)·PROFILE·FRIENDS | MISPLACED | 🚩 FLAG | **FIXED same-day** (`ShellNav.tsx` ORDER); glyph-caps + outside-label grammar also built (owner directive — `react-native-svg`, rule-8 justification filed) |
+| W1 | **Create-account mode hardcodes `acceptedTerms: true`** — no W2 acceptance row (13+ assertion, Terms/Privacy links) | ABSENT (behavior) | 🚩 FLAG → **OQ-119** | Owner ruling owed: add the W2 row or drop create mode from M2 |
+| C5 | Shelf rows lack the showcase artboard's per-row meta | — | **WITHDRAWN** | Owner ruling: the shelf is 2-up card faces + the NOW hero — the hero-row artboard was the not-adopted OQ-033 direction → **decision 0055**; build reworked same-day |
+| W2r | Sign-in wordmark PINK (`brand.accent`, F-05 shell-only) at 40px — mockup cream (`--scr-head`) 34px | UNPOLISHED | 🎨 POLISH | iteration lane (one-line token swap) |
+| W3r | Wrong-credentials beat renders plain centred text, not the W5 `InlineBanner` strip | UNPOLISHED | 🎨 POLISH | rides the landing build-out (M3) |
+| C6 | TOP view: #1 rank GOLD (F-02 — mockup `.tv-rank.first` is accent orange); layout = list rows vs #1-hero + tv-cell grid | UNPOLISHED | 🎨 POLISH | recolor cheap now; structure rides COL-13 formal (M3) |
+| C7 | `/mini` cards still carry in-face titles that wrap sub-9px — decision 0047 says /mini·/thumb DROP the plate (titles already render beside in LIST/TOP) | UNPOLISHED | 🎨 POLISH (F-06/0047) | iteration lane |
+| P10 | Top-3 set-pieces lack rank chips + VIEW TOP 10 › door | ABSENT | ✅ EXPECTED / 🎨 | chips cheap; the door rides COL-13 (M3); OQ-114 (0047 grid/cell contradiction) still owed an owner ruling |
+| — | Side finds (not parity): **OQ-120** API sends no CORS headers (web dev loop blocked — verified live) · **OQ-121** login `user.gamertags: []` vs `/me` inline (contract pinned 0.42; issuance alignment rides gate-3) · **OQ-122** robust 401→auto-sign-out filed | — | inbox | filed 2026-07-01 |
+
+**Owner device-pass rulings (2026-07-01, all implemented + verified same-day):** shelf 2-up faces +
+NOW hero (→ 0055) · seed cut to a coherent 12 (12 OF 12; profile stats derive) · nav-band
+content-sized (keys ~½cm above the device bottom) · INGAME logo centred in the top-band content box
+(was under the notch) · profile stat tiles in centred panel wells (P9 closed) · NavKeycap glyph caps
++ outside labels + always-present pip.
+**Still open for the owner:** OQ-119 (AUTH-10 form) · OQ-114 (0047 size contradiction) · the M2 gate
+sitting (gate-3 · G-D..G-G · G-M — now incl. `react-native-svg` · G-K).
+
 ## (more — owner to add; I'll triage each)
 _Append below and I'll bucket + verdict them._
