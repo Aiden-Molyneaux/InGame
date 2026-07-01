@@ -27,10 +27,10 @@ physical iPhone via Expo Go; **G-D re-fired** over the new target-id/mutating en
 |---|---|---|---|
 | P-1 | **M2 gate batch cleared** — gate-3 · G-D · G-E · G-F · G-G · G-M (incl. `react-native-svg`) · G-K, one sitting | owner | ⏳ scheduled by owner |
 | P-2 | **OQ-118** — flip `rule-02-scoping` to a read-verb **allowlist** (fail closed on unknown verbs) — the guardrail gap **widens exactly as M3 adds write surface**; explicitly "fast-follow before M3" | eng (small, lint-lane) | ⏳ |
-| P-3 | **OQ-121 backend alignment** — issuance serializer returns the pinned `/me` self-shape (api-contract 0.42); auth-lane code → rides **gate-3** | eng (auth lane) | ⏳ |
+| P-3 | **OQ-121 backend alignment** — issuance serializer returns the pinned `/me` self-shape (api-contract 0.45 / decision 0056); auth-lane code → rides **gate-3** | eng (auth lane) | ⏳ |
 | P-4 | **OQ-120** — dev-only CORS allowlist (localhost Metro origins) so the Expo-web loop can call the API; three review sessions have had to proxy around it | eng (tiny) | ⏳ |
 | P-5 | **OQ-119 ruling** — AUTH-10 acceptance row on the create form, or drop create mode until W2 builds | **owner** | ⏳ |
-| P-6 | **OQ-114 ruling** — correct decision 0047's grid/cell contradiction (Top-3 seat size) before the M3 profile touches it | **owner** | ⏳ |
+| P-6 | ~~OQ-114 ruling~~ — **RULED on main** (Top-3 = `/cell` + 10px plate; 0047 corrected) | owner | ✅ done |
 | P-7 | **Component-map currency check** for the M3 client screens — add-game (§4.3 arc), game-page (§4.2), the collection sort/filter drawer + tools bar. Map v0.4 (OQ-111) predates no M3 board changes known — verify, re-sync only if drift found | spec owner | ⏳ |
 | P-8 | **api-contract page-audit refresh** for `/catalog/*` + `/me/collection` rows (0.17 enumerated them; confirm they still match the converged boards before transcription into `packages/shared`) | spec owner | ⏳ |
 
@@ -60,7 +60,7 @@ physical iPhone via Expo Go; **G-D re-fired** over the new target-id/mutating en
   view keycap** (the board's "no segmented switchers" grammar replaces the M2 SectionSwitch
   interim) · the gold **ADD** button · the **sort/filter bottom drawer** (COL-07/09).
 - **Profile:** real stats; PINNED FAVOURITE set-piece (P2); Top-3 rank chips + VIEW TOP 10 › door.
-- **OQ-122** — robust 401 → auto-sign-out (session self-healing).
+- **OQ-123** — robust 401 → auto-sign-out (session self-healing).
 - Polish riders (cheap, non-blocking): sign-in wordmark cream/34 (W2r) · TOP #1 rank → orange (C6)
   · `/mini` plate drop per 0047 (C7).
 
@@ -79,7 +79,7 @@ admin console (M7) · **COL-12 peek-flip?** → §6 owner call.
    authz tests in the same PR as each endpoint.
 5. `/me` stats/expansions widening.
 6. Client: add-game flow → collection re-wire (seed retirement) → tools-bar/drawer → profile
-   set-pieces → OQ-122.
+   set-pieces → OQ-123.
 7. **Restore-drill EXECUTION** at M3-exit (0052 §4) + the G-D re-fire demo.
 
 ## 5. The M3 gate batch (draft)
@@ -95,7 +95,7 @@ admin console (M7) · **COL-12 peek-flip?** → §6 owner call.
 
 ## 6. Open decisions for the owner (rule before/at ratification)
 
-1. **COL-12 peek-flip timing** — the shelf's stats-on-the-back (decision 0055 leans on it): M3
+1. **COL-12 peek-flip timing** — the shelf's stats-on-the-back (decision 0057 leans on it): M3
    client scope, or M4 with the card-back render? (M4 gives it the real CARD-01 back; M3 could ship
    a plain stats back.)
 2. **Sort/filter drawer depth at M3** — full board grammar (search/sorts/status+genre filters) vs

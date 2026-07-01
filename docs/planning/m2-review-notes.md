@@ -67,20 +67,20 @@ P5 MiniDevice 42×92 labelled · C1 bottom-docked SectionSwitch (F-09 grammar) �
 |---|---|---|---|---|
 | S2 | **Nav key ORDER wrong** — build COLLECT·DISCOVER·STORE·FRIENDS·PROFILE; every board renders STORE·DISCOVER·COLLECTION(centre)·PROFILE·FRIENDS | MISPLACED | 🚩 FLAG | **FIXED same-day** (`ShellNav.tsx` ORDER); glyph-caps + outside-label grammar also built (owner directive — `react-native-svg`, rule-8 justification filed) |
 | W1 | **Create-account mode hardcodes `acceptedTerms: true`** — no W2 acceptance row (13+ assertion, Terms/Privacy links) | ABSENT (behavior) | 🚩 FLAG → **OQ-119** | Owner ruling owed: add the W2 row or drop create mode from M2 |
-| C5 | Shelf rows lack the showcase artboard's per-row meta | — | **WITHDRAWN** | Owner ruling: the shelf is 2-up card faces + the NOW hero — the hero-row artboard was the not-adopted OQ-033 direction → **decision 0055**; build reworked same-day |
+| C5 | Shelf rows lack the showcase artboard's per-row meta | — | **WITHDRAWN** | Owner ruling: the shelf is 2-up card faces + the NOW hero — the hero-row artboard was the not-adopted OQ-033 direction → **decision 0057**; build reworked same-day |
 | W2r | Sign-in wordmark PINK (`brand.accent`, F-05 shell-only) at 40px — mockup cream (`--scr-head`) 34px | UNPOLISHED | 🎨 POLISH | iteration lane (one-line token swap) |
 | W3r | Wrong-credentials beat renders plain centred text, not the W5 `InlineBanner` strip | UNPOLISHED | 🎨 POLISH | rides the landing build-out (M3) |
 | C6 | TOP view: #1 rank GOLD (F-02 — mockup `.tv-rank.first` is accent orange); layout = list rows vs #1-hero + tv-cell grid | UNPOLISHED | 🎨 POLISH | recolor cheap now; structure rides COL-13 formal (M3) |
 | C7 | `/mini` cards still carry in-face titles that wrap sub-9px — decision 0047 says /mini·/thumb DROP the plate (titles already render beside in LIST/TOP) | UNPOLISHED | 🎨 POLISH (F-06/0047) | iteration lane |
-| P10 | Top-3 set-pieces lack rank chips + VIEW TOP 10 › door | ABSENT | ✅ EXPECTED / 🎨 | chips cheap; the door rides COL-13 (M3); OQ-114 (0047 grid/cell contradiction) still owed an owner ruling |
-| — | Side finds (not parity): **OQ-120** API sends no CORS headers (web dev loop blocked — verified live) · **OQ-121** login `user.gamertags: []` vs `/me` inline (contract pinned 0.42; issuance alignment rides gate-3) · **OQ-122** robust 401→auto-sign-out filed | — | inbox | filed 2026-07-01 |
+| P10 | Top-3 set-pieces lack rank chips + VIEW TOP 10 › door | ABSENT | ✅ EXPECTED / 🎨 | chips cheap; the door rides COL-13 (M3); OQ-114 RULED on main (0047 corrected: /cell + 10px plate) |
+| — | Side finds (not parity): **OQ-120** API sends no CORS headers (web dev loop blocked — verified live) · **OQ-121** login `user.gamertags: []` vs `/me` inline (contract pinned 0.45/0056; issuance alignment rides gate-3) · **OQ-123** robust 401→auto-sign-out filed | — | inbox | filed 2026-07-01 |
 
 **Owner device-pass rulings (2026-07-01, all implemented + verified same-day):** shelf 2-up faces +
-NOW hero (→ 0055) · seed cut to a coherent 12 (12 OF 12; profile stats derive) · nav-band
+NOW hero (→ 0057) · seed cut to a coherent 12 (12 OF 12; profile stats derive) · nav-band
 content-sized (keys ~½cm above the device bottom) · INGAME logo centred in the top-band content box
 (was under the notch) · profile stat tiles in centred panel wells (P9 closed) · NavKeycap glyph caps
 + outside labels + always-present pip.
-**Still open for the owner:** OQ-119 (AUTH-10 form) · OQ-114 (0047 size contradiction) · the M2 gate
+**Still open for the owner:** OQ-119 (AUTH-10 form) · the M2 gate
 sitting (gate-3 · G-D..G-G · G-M — now incl. `react-native-svg` · G-K).
 
 ## (more — owner to add; I'll triage each)

@@ -30,7 +30,7 @@
   Expo Go native loop is unaffected — no CORS there). Verified live: POST /auth/login 200s via curl
   yet is blocked in-browser. Action: a dev-only CORS allowlist (localhost Metro origins) on the API.
   (raised during the Parvati review's web-loop capture, 2026-07-01) [behavior/infra] M2 fast-follow
-- OQ-122: **Robust 401 → auto-sign-out (self-healing expired sessions).** The M2 client's SIGNAL-LOST
+- OQ-123: **Robust 401 → auto-sign-out (self-healing expired sessions).** The M2 client's SIGNAL-LOST
   error state now offers a manual Sign-out escape, but any expired/stale session still strands the
   user until they use it: an authenticated request that 401s (after a failed refresh) should
   **tear down the session automatically** (F20 purge + F14 token clear → `/sign-in`), not just error.
@@ -38,7 +38,7 @@
   lands — schedule in the M3 client lane. (from the M2 phone-test receipt) [behavior] M3
 - OQ-121: **login/register session response returns `user.gamertags: []` while GET /me inlines the
   real rows** — the issuance serializer doesn't join gamertags, so the same "self-shape" differs
-  between `POST /auth/login` and `GET /me`. **Contract ruling PINNED — api-contract 0.42:** the
+  between `POST /auth/login` and `GET /me`. **Contract ruling PINNED — api-contract 0.45 (decision 0056):** the
   session `user` IS the `GET /me` self-shape (one serializer, no issuance drift). **What remains is
   the backend alignment** (join gamertags in the issuance path): auth-lane code — a STOP-domain
   surface, so not hand-patched from the review lane; rides **gate-3** with the auth seam review.
@@ -63,7 +63,7 @@
   name/avatar/memberSince/mutuals (yet less than a friend), that's a spec refinement. Tagged
   `// ASSUMPTION(OQ-117)` in `apps/api/src/services/users-service.ts`; reversible, non-STOP (the
   conservative reading is implemented). (raised building G-D, 2026-06-30) [behavior] M2
-
+- OQ-122: **The F32 binary global/user-owned scope model doesn't cover the community / cross-user READS arriving at M4–M7** (foundation review F-09). `rule-02-scoping` admits two classes (global-listed vs user-owned fail-closed) + the auth-layer `AUTH-LOOKUP` exception. Coming reads fit none: the **published-card gallery / trending** (`card_designs` filtered by `published`, M4/M5), **invite-token resolution** by token value (SOC-10, M6 — partly covered only if the repo is named `*-token-repo`), and **feed fan-out** cross-user reads (SOC-06, M7). Each will either fail rule-02 (breeding ad-hoc `asActor`-shaped workarounds) or pressure the manifest to mislabel a user-owned table as global (silently disabling scoping for its private rows — the worse failure). **Proposed:** a third read class — a `// SYS-01-PUBLIC-READ` marker / `publishedOnly(table)` helper valid only for reads carrying an explicit visibility predicate, + a bearer-token-lookup variant of `AUTH-LOOKUP` scoped to an enumerated repo list. **Decide at M4 entry (G-H window)**, not mid-build. Related to OQ-115. (foundation review F-09, 2026-07-01) [behavior/process] M4-entry
 - OQ-118: **`rule-02-scoping` actor-scoping lint is a write-verb denylist with holes** (surfaced by the
   M2 fix-pass lead-audit, commit `acde8b9`, 2026-07-01). The CONVENTIONS-spine rule
   `tools/lint/rules/rule-02-scoping.mjs` detects unscoped queries via `ACCESS_RE = /\.(from|update|delete)\(/`
@@ -76,7 +76,7 @@
   unrecognized query verb), or at minimum extend detection to `.onConflictDoUpdate` / `.execute` / raw `sql`
   writes. Related to **OQ-115** (auth-layer confinement shape, gate-3). Fast-follow before M3; does **not**
   block M2 sign-off. (M2 fix-pass audit, 2026-07-01) [behavior]
-- OQ-114: **decision 0047 §B self-contradicts on the Profile Top-3 card size.** §B calls the Top-3
+- OQ-114 → **RESOLVED (decision 0055, 2026-07-01): Top-3 = `GameCard/cell` (96×134) + 10px plate** (owner ruling; the `/grid` label in 0047 §B was the typo — 96×134 is `/cell`, not `/grid` 161×225 — corrected in 0047; the build + component-map already render `/cell`). *Original:* **decision 0047 §B self-contradicts on the Profile Top-3 card size.** §B calls the Top-3
   set-pieces **`GameCard/grid`** but gives the dimension **`(96×134)`** — which is the **`/cell`** size
   (grid is 161×225), and 0047's own §B.1 board treatment snaps those seats to a **`/cell` 10px plate**. So
   0047 contradicts itself on whether the Profile Top-3 renders at `/grid` or `/cell`. Action: **correct
@@ -279,13 +279,12 @@
 - OQ-110: **Spec IDs leak into UI copy.** "CARD-16"-style stable IDs appear in user-facing strings (styler:493); strip app-wide. (board copy cleanup) [presentation/QUICK] — any
 
 ## Resolved
-- OQ-116 → **RESOLVED (2026-07-01, M2 close-out): pinned in api-contract 0.42** (rule-7, before the
-  M2 PR merges): `/me` gains `usernamePending` (AUTH-09) + `emailVerified` (AUTH-08); gamertag CRUD
-  bodies enumerated with the controlled platform list (PROF-02); the session `user` pinned = the
-  `GET /me` self-shape (with OQ-121). Its (b) items — `ACCOUNT_SUSPENDED {reason, until?}` +
-  `VALIDATION_ERROR reason:"invalid_token"` — were verified **already pinned** (0.11 / 0.32).
-  `usernameNextChangeAt` + inline `gamertags` on `/me` were likewise already in the row (0.17).
-  [behavior/shape]
+- OQ-116 → **RESOLVED (2026-07-01): pinned in api-contract 0.42** by the parallel spec-owner pass
+  (`/me` gains `usernamePending`/`emailVerified`/`role`/`adminTier`; gamertag CRUD bodies + the
+  controlled platform list, `{ items: [...] }` GET wrapper, `handle` ≤64 sanitized+screened). The
+  companion **session-`user` = `/me` self-shape** pin (the OQ-121 half) landed in **0.45**
+  (decision 0056). Its (b) items — `ACCOUNT_SUSPENDED {reason, until?}` + `VALIDATION_ERROR
+  reason:"invalid_token"` — were verified already pinned (0.11 / 0.32). [behavior/shape]
 - OQ-111 → **RESOLVED (2026-06-30, M2-entry spec-prep): component-map re-synced to §1.5 v0.49 (v0.4).** A grounded, adversarially-vetted reconciliation folded decisions 0037/0038/0047/0048/0049/0050 into the map — nameplate F-06 binding, CARD-23 tap + CardDetail enlarge, the §4.7 Lists editor **RETIRED** → Collection **TOP** view-mode (COL-13), Collection view-switch SHELF·GRID·LIST·TOP, and three silent-drift gaps filled (`CommunityGallery`, `RecommendSheet`, §1.6b A11y baseline). The 🔶 **Achievements (4.10)** + **Admin (4.4)** name-sets are **locked ✅** (`ListSummary` dropped; FunctionRow/FieldRemediationRow/ModerationNotice held provisional). The map is current for M2 **Lane B** client coding. *(A size contradiction inside decision 0047 was surfaced, not silently resolved → OQ-114.)* [design]
 - OQ-112 → **RESOLVED (2026-06-30, M2-entry spec-prep — the decision 0052 §4 carryover): `privacy` enum pinned.** `api-contract` **0.41** pins the PROF-03 `privacy` field to **`∈ 'friends' | 'public'`** (`'friends'` = friends-only default · `'public'` = limited public) on `GET /me` + `PATCH /me`, formalizing the value tagged `// ASSUMPTION(OQ-112)` in `packages/shared`. No new paths/shapes. [behavior]
 - OQ-090 → **RESOLVED (decision 0039, 2026-06-28): Keycap family renamed for accuracy.** Flat on-screen buttons (0.20) dropped the misleading "Keycap": **`KeycapButton→ScreenButton` · `ToolKeycap→ToolButton` · `CountKeycap→CountTag`** ("Keycap" now = the 5 shell keys only, F-03). Rippled across design-spec §1.5 + all §2 (design-spec 0.40) + component-map 0.2. Boards keep throwaway `.btn`/`.kc` classes. Naming-only — no behaviour/token/API change. [design-spec / naming]
@@ -441,7 +440,7 @@
   (long-press-drag), saved as one more sort choice. design-spec §2.1. Decision 0013. (2026-06-11)
 - OQ-033 → **Shelf rows show per-game stats.** The dense-list rationale shifts from "only mode with
   stats" to **density** (list scans more rows than shelf). One-line ripple to design-req §3.1.
-  Decision 0013. (2026-06-11) — **SUPERSEDED by decision 0055 (2026-07-01, owner on-device ruling):
+  Decision 0013. (2026-06-11) — **SUPERSEDED by decision 0057 (2026-07-01, owner on-device ruling):
   the shelf is the binder — Now-Playing hero + two-per-row bare card FACES, no per-row meta; stats
   via the COL-12 flip (list stays the per-row stats scan). design-spec §2.1 (0.50).**
 - OQ-034 → **Tools-bar model: "keycaps act, the drawer configures."** Tap = the tool's one-bit action

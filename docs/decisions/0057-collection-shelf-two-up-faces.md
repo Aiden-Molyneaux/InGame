@@ -1,4 +1,4 @@
-# 0055 — Collection SHELF = two-per-row card faces + the Now-Playing hero (OQ-033 reversed)
+# 0057 — Collection SHELF = two-per-row card faces + the Now-Playing hero (OQ-033 reversed)
 
 **Status:** LOCKED · **Date:** 2026-07-01 · **Author:** Aiden (owner ruling, on-device M2 pass)
 **Refs:** COL-07 (view modes) · COL-12 (peek-flip) · reverses the OQ-033 item of decision 0013;
