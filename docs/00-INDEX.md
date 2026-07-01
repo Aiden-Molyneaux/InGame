@@ -16,12 +16,14 @@ truth** for its concern. Other documents *reference* that truth by ID — they n
 | Document | Owns the truth for | Authored / edited by | Consumed by | Status |
 |---|---|---|---|---|
 | `00-INDEX.md` (this file) | Process, ID scheme, change protocol | Claude Code | Everyone | **Active** |
-| `spec/product-spec.md` | Behavior, data model, rules, economy — *what the app does* | Claude Code | Design, Planning | **v0.44 — draft** |
-| `spec/api-contract.md` | Endpoint + payload shapes — the **frontend↔backend seam** | Claude Code | Design, Planning | **v0.43 — draft** |
+| `spec/product-spec.md` | Behavior, data model, rules, economy — *what the app does* | Claude Code | Design, Planning | **v0.45 — draft** |
+| `spec/api-contract.md` | Endpoint + payload shapes — the **frontend↔backend seam** | Claude Code | Design, Planning | **v0.44 — draft** |
 | `spec/testing-strategy.md` | How we test — layers, tooling, rigor, CI | Claude Code | Planning, Implementation | **v0.2** |
 | `design/design-process.md` | How Claude Design works the brief — phases + reuse mandate | Claude Code → read by Claude Design | Claude Design | **Active** |
 | `design/ui-design-requirements.md` | What each screen must let users *do* (derived from spec) | Claude Code → handed to Claude Design | Claude Design | **v0.22 — all screens specified** |
 | `design/design-spec.md` | Screens, flows, components, visuals — *how you touch it* | Claude Design → committed here | Planning | **v0.49 — Foundations + Collection/Profile/Store/Add Game/Styler/Canvas/Report/Discover/Settings/Flat buttons + Game page + DS-conformance sweep + Friends/Find-Add + F-02 gold-economy + Collection peek-flip + Compare Hours + card-back relabel + F-05 on-screen pips squared + Profile STATS de-welled + Device editor (4.5) + Contributor profile (4.9) + Welcome & Auth Draft-A sign-in + full auth state matrix + Profile RoleTag (PROF-09, §4.4 ripple) + Onboarding (4.14) converge + Settings STAFF / Admin-console row (MOD-04) + Wallet operator-adjustment ledger (ECON-11) + Lists / Top-5 editor (4.7) + pre-engineering audit fixes + Admin console (4.4 · §2.18) + Achievements (4.10 · §2.19) + Keycap→Screen/Tool/Count rename (OQ-090/0039) + confirm-grammar / card-delete (0040) · F-02 intrinsic-step (0041) · component-map housekeeping (0042) · nameplate F-06-bound + Profile Top-3/Top-10 (0047) + card-tap grammar (CARD-23, 0048) + Top-10 curated-in-Collection + TOP view re-homed (0049) + Collection & TOP navigation model (COL-13, 0050)** |
+| `CONVENTIONS.md` | **How code is written** — the rulebook every PR is held to | Claude Code (ratified via 0046/0051) | Implementation | **Active** (0051-amended) |
+| `design/component-map.md` | UI component names → RN code (the design→code naming bridge, from M2) | Claude Design → spec-owner | Implementation | **v0.4** |
 | `planning/implementation-plan.md` | Build sequence and tasks | Claude Code | Implementation | *Not started* |
 | `decisions/*.md` | **Why** we chose what we chose (rationale, dated) | Claude Code | Everyone | **Active** |
 | `open-questions.md` | The **inbox** of unresolved questions | Anyone may append | Claude Code triages | **Active** |
@@ -123,3 +125,4 @@ them *coherently* in one pass, rather than piecemeal edits that fight each other
 - Version bumps: `0.x` during design; `1.0` when a document is considered build-ready.
 - Every commit message names the **IDs touched**, e.g. `spec: add CARD-12 (spoiler blur); ripple api-contract`.
 - Git history is the audit trail — any layer is diffable and revertable.
+- **Parallel tracks claim the next version number the way they claim OQ/decision numbers — list the doc's changelog first, then take the next free number.** Concurrent bumps have produced historical duplicate rows (product-spec 0.36×2; api-contract 0.34×2 / 0.36×2); disambiguate those by **date + description**, and never silently rewrite a cited version. (F-14)
