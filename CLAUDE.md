@@ -99,8 +99,10 @@ test-after for UI once screens settle. Tooling: Vitest · Jest + React Native Te
 supertest + Testcontainers (Postgres) · Maestro · GitHub Actions.
 
 ## Build / run
-**M1 scaffold in progress.** The build brief is [`docs/planning/m1-scaffold-task.md`](docs/planning/m1-scaffold-task.md);
-the stack + invariants are locked in [`0046`](docs/decisions/0046-m1-entry-architecture-lock-in.md); the
-rulebook is [`CONVENTIONS.md`](CONVENTIONS.md); CI is the six-check spine
-([`testing-strategy.md`](docs/spec/testing-strategy.md) §7). Concrete `npm` scripts, the Chrome + iPhone
-dev/test loop, and the seed/mock data layer get documented here once the scaffold lands.
+**M1 scaffold merged; M2 (auth + first vertical slice) in progress** (built in OpenCode). The stack +
+invariants are locked in [`0046`](docs/decisions/0046-m1-entry-architecture-lock-in.md); the rulebook is
+[`CONVENTIONS.md`](CONVENTIONS.md); CI is the six-check spine ([`testing-strategy.md`](docs/spec/testing-strategy.md) §7);
+M1/M2 build briefs live in [`docs/planning/`](docs/planning/). **Client:** Expo **SDK 54** (RN 0.81.5 / React 19.1 —
+pinned to match iOS Expo Go, decision [`0053`](docs/decisions/0053-expo-sdk-54-bump.md)); dev loop is Expo web
+(`npm -w @ingame/mobile run web`, phone viewport) + Expo Go on device. Concrete `npm` scripts + the seed/mock
+data layer get documented here as they settle.
