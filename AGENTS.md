@@ -18,11 +18,13 @@
   trivial, reversible gap may instead be `// ASSUMPTION(OQ-xxx)`-tagged + filed and proceeded on.
 - Run **`node scripts/health-check.mjs`** after touching the doc graph; keep it 🟢.
 
-## Code workflow (M1+)
-- **Branch + PR, not direct-to-main.** `main` is branch-protected (decision 0046): a code change lands via
-  a feature branch → green CI (the six-check spine) → required review → merge. The docs/design phase's
-  direct-to-main sweeps do **not** apply to code. *(The very first scaffold commit + enabling branch
-  protection is the owner's explicit call.)*
+## Change workflow (M1+) — PR for everything
+- **Branch + PR, not direct-to-main — for docs AND code.** As of the M1 merge, `main` is branch-protected
+  with **`enforce_admins`** (decisions 0046/0052): **every** change (governance docs included) lands via a
+  feature branch → green CI (the six-check spine) → **self-merge**. `required_approving_review_count=0`
+  (solo owner — GitHub forbids self-approval, so ≥1 would deadlock; the required `ci` check + strict +
+  enforce_admins are the enforcement, see 0052 §3). The docs/design phase's direct-to-main sweeps are
+  **over** — nobody, including the owner, bypasses `main`.
 - **Verify before you claim done.** Run the relevant checks (typecheck / lint / unit / integration) and
   read the result; never report green you didn't see.
 - **Filing an OQ or a decision?** Take the next free number by listing `docs/open-questions.md` /
