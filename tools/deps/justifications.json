@@ -14,6 +14,12 @@
 
   "zod": "The single executable FE↔BE contract — request/response schemas (CONVENTIONS rule 3, decision 0046 #1). Provenance: colinhacks.",
 
+  "@node-rs/argon2": "Argon2id password hashing for email/password auth (AUTH-01; product-spec §7 argon2/bcrypt). Native-but-prebuilt (napi-rs platform binaries, no node-gyp) so CI stays green on Linux + Windows; wrapped behind a PasswordHasher interface for swappability. No stdlib password KDF. Provenance: napi-rs/node-rs.",
+  "jose": "Sign/verify the short-lived access-token JWT (AUTH-02); ESM-native, zero-dependency. Refresh tokens are opaque + server-stored (rotation/reuse-detection), not JWTs. No stdlib JWT. Provenance: panva.",
+
+  "pino": "Structured JSON logging + request-ID correlation on the server (product-spec §7 observability; F18). The named logger; low-overhead, the Node standard. Provenance: pinojs.",
+  "@sentry/node": "Server error tracking with request-ID correlation + PII/token scrubbing via beforeSend (product-spec §7 observability; F18). Env-gated on SENTRY_DSN — a no-op until the owner provisions the DSN (the F39-style provider carve-out). Provenance: Sentry.",
+
   "express": "The HTTP server framework for the API (product-spec §9, decision 0046 #2). Provenance: expressjs.",
   "drizzle-orm": "Typed SQL + the data-access layer; SQL-transparent + testable (decision 0046 #2/#7). Provenance: Drizzle team.",
   "drizzle-kit": "Generates + journals the committed migrations (decision 0046 #7; F28 journal check). Provenance: Drizzle team.",
@@ -27,6 +33,9 @@
 
   "expo": "The Expo SDK — the React Native app platform + the Chrome/web dev loop + iPhone path (decision 0046 #2; item 7). Provenance: Expo.",
   "expo-router": "File-based navigation for the Expo client (product-spec §9). Provenance: Expo.",
+  "expo-linking": "Deep-linking primitive required by expo-router (SDK 54 peer — the URL/route resolution the router builds on). Provenance: Expo.",
+  "expo-constants": "App/runtime constants required by expo-router + the Expo runtime (SDK 54 peer). Provenance: Expo.",
+  "@expo/metro-runtime": "Expo's Metro runtime shim required by expo-router for Fast Refresh + web/runtime bootstrap (SDK 54 peer). Provenance: Expo.",
   "expo-status-bar": "Status-bar component pulled in by the Expo app template. Provenance: Expo.",
   "react": "The UI runtime underpinning React Native. Provenance: Meta.",
   "react-dom": "React web renderer — required for the Expo web (Chrome) dev/test loop. Provenance: Meta.",
@@ -36,6 +45,12 @@
   "react-native-screens": "Native screen primitives required by expo-router navigation. Provenance: Software Mansion.",
   "@reduxjs/toolkit": "State management + RTK Query (server cache) bound to the shared zod types (decision 0046 #2; F31). Provenance: Redux team.",
   "react-redux": "React bindings for Redux Toolkit. Provenance: Redux team.",
+  "redux-persist": "Persist the client's drafts/cache slice locally, PURGED on logout + per-user namespaced + version-keyed (decision 0051/F20; product-spec §9). The auth tokens are NEVER persisted here — they live in expo-secure-store (F14). Provenance: rt2zz.",
+  "expo-secure-store": "Access/refresh tokens at rest in the device secure enclave / keystore — NEVER redux-persist (decision 0051/F14; product-spec §9). Provenance: Expo.",
+  "@react-native-async-storage/async-storage": "The redux-persist storage engine on React Native (F20; persist holds drafts/cache only, never tokens). Provenance: React Native Community.",
+  "expo-font": "Load the design-system fonts (F-08). Provenance: Expo.",
+  "@expo-google-fonts/chakra-petch": "Chakra Petch — the on-screen typeface (F-08 / design-spec §1.2). Bundled font, no manual asset. Provenance: Expo.",
+  "@expo-google-fonts/paytone-one": "Paytone One — the shell/wordmark typeface (F-08 / design-spec §1.2). Provenance: Expo.",
 
   "jest-expo": "The Jest preset for Expo/React Native component tests (RNTL) — the client test runner (testing-strategy §2). Provenance: Expo.",
   "jest": "Test runner backing jest-expo for the RN component layer. Provenance: Meta.",
@@ -43,5 +58,6 @@
   "react-test-renderer": "React renderer used by RNTL/jest-expo to render components in tests. Provenance: Meta.",
   "@types/react": "React type definitions for the TS client. Provenance: DefinitelyTyped.",
   "@types/jest": "Jest type definitions for the client component tests. Provenance: DefinitelyTyped.",
-  "@babel/core": "Babel core required by the Expo/Metro + jest-expo transform pipeline. Provenance: Babel."
+  "@babel/core": "Babel core required by the Expo/Metro + jest-expo transform pipeline. Provenance: Babel.",
+  "babel-preset-expo": "The Expo Babel preset the Metro bundler + jest-expo transform pipeline compile against (Expo SDK 54). Explicit dep after the SDK 52→54 upgrade pruned the transitive copy. Provenance: Expo."
 }

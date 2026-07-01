@@ -1,21 +1,35 @@
-import { patchMeRequestSchema } from '@ingame/shared';
+import {
+  patchMeRequestSchema,
+  createGamertagRequestSchema,
+  updateGamertagRequestSchema,
+  avatarCompositionRequestSchema,
+} from '@ingame/shared';
 import { defineRoute, type RouteDef } from '../http/defineRoute';
 import { validateBody } from '../http/validate';
 import { asyncHandler } from '../http/asyncHandler';
 import { resolvePrincipal } from '../auth/principal';
-import { getMe, patchMe } from '../controllers/me-controller';
+import {
+  getMe,
+  patchMe,
+  getGamertags,
+  createGamertag,
+  patchGamertag,
+  deleteGamertag,
+  saveAvatarDraft,
+  publishAvatar,
+} from '../controllers/me-controller';
 
-// The `/me` route inventory (DATA, not regex-scraped — F30). `mutates` is explicit; the mutating
-// route declares its standing SYS-07 authz test id, which the rule-4 inventory-diff lint pairs
-// against a test that hits the route as actor-B asserting 4xx (authz:patch_me).
+// The `/me` route inventory (DATA, not regex-scraped — F30). `mutates` is explicit; every mutating
+// route declares its standing SYS-07 authz test id (paired by the rule-4 inventory-diff lint against a
+// test that hits the route as actor-B asserting 4xx). All `/me*` routes resolve the actor from the
+// verified principal ONLY.
 
 export const meRoutes: RouteDef[] = [
   defineRoute({
     method: 'get',
     path: '/me',
     mutates: false,
-    // self-view only — derives the actor from the principal; returns no other principal's data.
-    crossPrincipal: false,
+    crossPrincipal: false, // self-view only — never returns another principal's data
     specIds: ['PROF-01', 'PROF-05', 'SYS-01'],
     handler: [resolvePrincipal, asyncHandler(getMe)],
   }),
@@ -24,7 +38,59 @@ export const meRoutes: RouteDef[] = [
     path: '/me',
     mutates: true,
     authzTest: 'authz:patch_me',
-    specIds: ['PROF-01', 'SYS-01', 'SYS-02', 'SYS-07'],
+    specIds: ['PROF-01', 'PROF-03', 'PROF-06', 'SYS-01', 'SYS-02', 'SYS-07', 'AUTH-09'],
     handler: [resolvePrincipal, validateBody(patchMeRequestSchema), asyncHandler(patchMe)],
+  }),
+
+  // PROF-02 gamertag CRUD
+  defineRoute({
+    method: 'get',
+    path: '/me/gamertags',
+    mutates: false,
+    crossPrincipal: false,
+    specIds: ['PROF-02', 'SYS-01'],
+    handler: [resolvePrincipal, asyncHandler(getGamertags)],
+  }),
+  defineRoute({
+    method: 'post',
+    path: '/me/gamertags',
+    mutates: true,
+    authzTest: 'authz:create_gamertag',
+    specIds: ['PROF-02', 'SYS-01', 'SYS-07', 'MOD-07'],
+    handler: [resolvePrincipal, validateBody(createGamertagRequestSchema), asyncHandler(createGamertag)],
+  }),
+  defineRoute({
+    method: 'patch',
+    path: '/me/gamertags/:id',
+    mutates: true,
+    authzTest: 'authz:update_gamertag',
+    specIds: ['PROF-02', 'SYS-01', 'SYS-07', 'MOD-07'],
+    handler: [resolvePrincipal, validateBody(updateGamertagRequestSchema), asyncHandler(patchGamertag)],
+  }),
+  defineRoute({
+    method: 'delete',
+    path: '/me/gamertags/:id',
+    mutates: true,
+    authzTest: 'authz:delete_gamertag',
+    specIds: ['PROF-02', 'SYS-01', 'SYS-07'],
+    handler: [resolvePrincipal, asyncHandler(deleteGamertag)],
+  }),
+
+  // PROF-08 avatar draft/publish (shape-stubs)
+  defineRoute({
+    method: 'post',
+    path: '/me/avatar/draft',
+    mutates: true,
+    authzTest: 'authz:avatar_draft',
+    specIds: ['PROF-08', 'SYS-01', 'SYS-07'],
+    handler: [resolvePrincipal, validateBody(avatarCompositionRequestSchema), asyncHandler(saveAvatarDraft)],
+  }),
+  defineRoute({
+    method: 'post',
+    path: '/me/avatar/publish',
+    mutates: true,
+    authzTest: 'authz:avatar_publish',
+    specIds: ['PROF-08', 'SYS-01', 'SYS-07'],
+    handler: [resolvePrincipal, validateBody(avatarCompositionRequestSchema), asyncHandler(publishAvatar)],
   }),
 ];

@@ -21,6 +21,13 @@ export interface ApiErrorBody {
   error: {
     code: ErrorCode;
     message: string;
+    /**
+     * Optional machine-readable reason. Present on `VALIDATION_ERROR` `invalid_token` for AUTH-04
+     * reset/verify, and on `ACCOUNT_SUSPENDED` (MOD-09). Absent otherwise.
+     */
+    reason?: string;
+    /** `ACCOUNT_SUSPENDED` only (MOD-09) — the suspension end (ISO-8601 UTC) or null (indefinite). */
+    until?: string | null;
   };
 }
 

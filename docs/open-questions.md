@@ -16,6 +16,37 @@
 
 ## Open
 
+- OQ-115: **SYS-01 scope-lint gains a `// SYS-01-AUTH-LOOKUP` marker for pre-auth credential lookups**
+  (M2 auth build). rule-2 (the fail-closed SYS-01 scope-lint) now recognizes an explicit, greppable
+  `// SYS-01-AUTH-LOOKUP` annotation — **confined to the auth-layer repos** (path `/auth/` or a
+  `(auth|token)…-repo` file) — for the ONE legitimate non-actor-scoped user read: a pre-authentication
+  / bearer-credential lookup by **email / username / token-hash** (login · register-uniqueness ·
+  refresh · reset/verify-confirm · apple-linking) where no owner id yet exists to scope by. Every
+  POST-auth write stays actor-scoped (asActor/ownedBy); only credential LOOKUPS use the marker. A
+  misuse fixture proves the marker grants **no bypass outside the auth layer**
+  (`tools/lint/rules/rule-02-scoping.test.mjs`). This touches the SYS-01 guard surface → wants
+  **owner / gate-3 review** (the auth+SYS-01 seam gate is exactly for this). (raised building the M2
+  auth stack, 2026-06-30) [behavior/process] M2
+- OQ-116: **M2 seam-detail formalizations owed in `api-contract` (rule-7 same-PR, before the M2 PR).**
+  The M2 backend IMPLEMENTED + tested these FE↔BE shapes; the spec-owner should pin them: (a) the
+  **GET /me self-shape** carries **`usernamePending`** (AUTH-09), **`emailVerified`** (AUTH-08),
+  **`usernameNextChangeAt`** (PROF-06), and inline **`gamertags`**; (b) the **`ACCOUNT_SUSPENDED`**
+  error envelope carries **`{ reason, until }`** (MOD-09; login/refresh) and **`VALIDATION_ERROR`**
+  carries **`reason: "invalid_token"`** (AUTH-04) — both optional fields on `error`; (c) the
+  **gamertag** bodies `POST /me/gamertags {platform, handle}` · `PATCH /me/gamertags/:id {platform?,
+  handle?}` (PROF-02, controlled list pc|playstation|xbox|nintendo). No new endpoints — shape detail
+  on existing rows; the F09 fidelity snapshot already covers every ENUMERATED body (register/login/
+  apple/refresh/logout/reset/verify + PATCH /me). (raised building M2 profile/auth, 2026-06-30)
+  [behavior/shape] M2
+- OQ-117: **PROF-03 `public` privacy — does it expose MORE than the limited shape to a non-friend?**
+  GET /users/:id (G-D) enumerates exactly TWO shapes — friend/full vs non-friend/limited — gated by
+  FRIENDSHIP; M2 implements that (a non-friend gets the limited allowlist regardless of the target's
+  `privacy`). The contract enumerates no richer 'public-non-friend' shape, so `friends` vs `public`
+  currently only rides the friend shape. If a `public` profile should show a non-friend *more* than
+  name/avatar/memberSince/mutuals (yet less than a friend), that's a spec refinement. Tagged
+  `// ASSUMPTION(OQ-117)` in `apps/api/src/services/users-service.ts`; reversible, non-STOP (the
+  conservative reading is implemented). (raised building G-D, 2026-06-30) [behavior] M2
+
 - OQ-114: **decision 0047 §B self-contradicts on the Profile Top-3 card size.** §B calls the Top-3
   set-pieces **`GameCard/grid`** but gives the dimension **`(96×134)`** — which is the **`/cell`** size
   (grid is 161×225), and 0047's own §B.1 board treatment snaps those seats to a **`/cell` 10px plate**. So

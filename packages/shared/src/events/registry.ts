@@ -12,8 +12,18 @@
  * the end (the same append-only discipline as the error-code enum + composition asset IDs).
  */
 export const DOMAIN_EVENT_TYPES = [
-  // F29 golden-path slice — the worked exemplar every future mutation clones.
+  // F29 golden-path slice (M1). Superseded in M2 by `profile.updated` (the widened PATCH /me), but
+  // RETAINED — this list is append-only (never remove/renumber an entry).
   'profile.bio_updated',
+  // M2 — auth + profile + gamertag + avatar mutations. Append new types at the END.
+  'auth.registered', // AUTH-01/09 — a new account (email/password or first Apple sign-in). Funnel signup.
+  'auth.identity_linked', // AUTH-09 — an Apple identity linked to an existing account by verified email.
+  'profile.updated', // PATCH /me — the changed field-set (username/bio/privacy/favourites).
+  'gamertag.added', // PROF-02
+  'gamertag.updated', // PROF-02
+  'gamertag.removed', // PROF-02
+  'avatar.draft_saved', // PROF-08 (shape-stub — the flatten pipeline is M4)
+  'avatar.published', // PROF-08 (shape-stub)
 ] as const;
 
 export type DomainEventType = (typeof DOMAIN_EVENT_TYPES)[number];

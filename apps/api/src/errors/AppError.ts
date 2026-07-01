@@ -18,6 +18,12 @@ export abstract class AppError extends Error {
 export class ValidationError extends AppError {
   readonly code = 'VALIDATION_ERROR';
   readonly httpStatus = 422;
+  /** An optional machine-readable reason, e.g. `invalid_token` for AUTH-04 reset/verify (api-contract). */
+  readonly reason?: string;
+  constructor(message: string, reason?: string) {
+    super(message);
+    this.reason = reason;
+  }
 }
 
 export class NotFoundError extends AppError {
@@ -56,11 +62,16 @@ export class RateLimitedError extends AppError {
   }
 }
 
+/** MOD-09 — a suspended account carries the reason + optional end date (api-contract login/refresh). */
 export class AccountSuspendedError extends AppError {
   readonly code = 'ACCOUNT_SUSPENDED';
   readonly httpStatus = 403;
-  constructor(message = 'Account suspended.') {
+  readonly reason: string;
+  readonly until: string | null;
+  constructor(reason: string, until: string | null, message = 'This account is suspended.') {
     super(message);
+    this.reason = reason;
+    this.until = until;
   }
 }
 
