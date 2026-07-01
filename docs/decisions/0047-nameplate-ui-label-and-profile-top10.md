@@ -27,7 +27,7 @@ rule **F-06 reworded**; **`/mini` and `/thumb` carry no plate** going forward.
 
 ### B — Profile showcase → Top-3 set-pieces + a clickable Top-10 view
 - The **SOC-04 curated list grows from Top-5 to Top-10** (cap 5 → 10).
-- The **Profile features the top 3** as legible **`GameCard/grid` (96×134) set-pieces** (10px plate held)
+- The **Profile features the top 3** as legible **`GameCard/cell` (96×134) set-pieces** (10px plate held) *(corrected from `/grid`: 96×134 is the `/cell` size, not `/grid` 161×225 — owner ruling, OQ-114 / decision 0055, 2026-07-01)*
   + a **`VIEW TOP 10 ›`** `TertiaryLink`.
 - **VIEW TOP 10** opens a **ranked two-per-row grid** of all 10 cards (same `/grid` card, scaled wider) —
   owner-picked layout. No new endpoint: ≤10 carded items inline in `/me`/`/users/:id`; the view is
