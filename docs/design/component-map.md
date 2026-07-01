@@ -6,16 +6,15 @@
 > each shared component **once, reusably**, instead of re-deriving it per screen. The map governs
 > **naming + reuse conventions from the ground stage** — it is the executable echo of §1.5.
 
-**Version:** 0.3 · **Date:** 2026-06-29 · **Author:** Claude · **Owner:** Aiden ·
-**Maps from:** `design-spec.md` §1.5 (v0.41) · **Implements toward:** Expo / RN (product-spec §9).
+**Version:** 0.4 · **Date:** 2026-06-30 · **Author:** Claude · **Owner:** Aiden ·
+**Maps from:** `design-spec.md` §1.5 (v0.49) · **Implements toward:** Expo / RN (product-spec §9).
 **0.2:** intentionality review — Keycap family → Screen/Tool/Count (owner ruling), social 5→2, Strip/GTag renamed.
 **0.3:** housekeeping (decision 0042) — Admin `QueueRow`→`ModQueueRow`; onboarding banners named `LiveBanner`/`PrePrompt` (+ `InlineBanner` reuse); game-page `.presence` confirmed **live `PresenceStats` (CAT-09)**, not the cut presence — keep.
+**0.4:** re-sync to §1.5 v0.49 — nameplate F-06 binding (0047); GameCard CARD-23 four-mode tap + CardDetail enlarge (0048); §4.7 Lists editor RETIRED, SlotFrame/RankSlot/CardPicker relocate to Collection TOP view-mode (0049/0050); Collection view-switch SHELF·GRID·LIST·TOP; Achievements (§13) + Admin (§14) formalized → 🔶 locked ✅; new brand.secret/scr.secret token; CommunityGallery + RecommendSheet + §1.6b A11y baseline added; §15 QueueRow(Admin)→ModQueueRow alias registered; VIEW COLLECTION / VIEW TOP 10 doors.
 
-> ⚠ **Pending re-sync before client coding (M2-entry gate, OQ-111).** This map is **v0.3 ← design-spec §1.5
-> v0.41**; design-spec is now **v0.49** (Top-10 / card-tap / admin / achievements tracks moved §1.5 since), so
-> some mappings have drifted, and the 🔶 **Achievements (4.10)** + **Admin console (4.4)** names are provisional.
-> **Re-derive against current §1.5 + lock the 🔶 entries before any M2 client-UI work.** Not an M1 concern —
-> M1 (the scaffold) builds no component library.
+> ✅ **Re-synced to §1.5 v0.49 (v0.4, 2026-06-30).** Top-10/card-tap/admin/achievements tracks reconciled;
+> 🔶 Achievements (4.10) + Admin (4.4) names LOCKED. Remaining M2-entry gate work (OQ-111) is component-library
+> build, not name drift.
 
 ## 0. Truth precedence (where this sits)
 1. **`design-spec.md` §1.5 + Foundation Rules F-01..F-09 win.** This map never invents or changes
@@ -43,12 +42,14 @@
 | §1.x | Code | Shape / rule baked in |
 |---|---|---|
 | 1.1 shell.* | `theme.shell` | 5 colourways (Teal★/Grape/Sunset/Pink/Carbon); Carbon flips silk light |
-| 1.1 scr.* | `theme.scr` | 3 dark + 3 light (Midnight★); `accent`+`accentInk` paired; drives DEV-04 |
-| 1.1 brand.* | `theme.brand` | accent(pink LED) · gold(value) · cream · navy · alert · success — invariant |
+| 1.1 scr.* | `theme.scr` | 3 dark + 3 light (Midnight★); `accent`+`accentInk` paired; drives DEV-04; **scr.secret** SECRET-tier accent (DEV-04-exempt) |
+| 1.1 brand.* | `theme.brand` | accent(pink LED) · gold(value) · cream · navy · alert · success · **secret (#e85ad0 magenta — SECRET-tier, theme-invariant)** — invariant |
 | 1.2 type.* | `theme.type` | **21/15/11/9 only** (F-06); Chakra Petch screen, Paytone shell (F-08) |
 | 1.3 space/corner | `theme.space`/`theme.corner` | step 4/8·3·2.5; C5 square on-screen; radius shell-only (F-07) |
 | 1.4 motion.* | `theme.motion` | scanlineEnergize · stateMark · holdToBuy · counterTick · foilSweep |
 | F-01..F-09 | `<ThemeProvider>` + lint rules | no-crop, gold-disambig, flat+scanline, no-sunken — enforced in review |
+
+> A11y & resilience baseline (§1.6b, decision 0044) — not a component: global :focus-visible, form semantics, `*Sheet` focus-trap/role=dialog, live-regions, role=switch/carousel roles, content-resilience (COL-03 ≤99,999). Enforced in review like F-rules.
 
 ## 3. Status legend
 - ✅ **converged** — §1.5 entry final; build to it now.
@@ -76,7 +77,9 @@ domain sets. A screen never ships before its primitives.
 ### 5.2 The card
 | §1.5 name | Code | Variants / props | Tokens | Status |
 |---|---|---|---|---|
-| GameCard | `GameCard` | **`size`**: hero·grid(161×225)·cell(96×134)·mini(64×89)·thumb · `custom`(owner shell+`FoilTag`) · `flipped`(stats back) — never cropped (F-01) | scr · step 4/8 | ✅⭐ |
+| GameCard | `GameCard` | **`size`**: hero·grid(161×225)·cell(96×134)·mini(64×89)·thumb · `custom`(owner shell+`FoilTag`) · `flipped`(stats back) — never cropped (F-01); **`.plate` = F-06 9px-floor UI label — `/mini` + `/thumb` carry NO plate (drop → legible label beside/below), `/cell` plate at 10px floor (decision 0047)**; **tap = CARD-23 four-mode by host** (NAVIGATE·FLIP·INSPECT·ACT-IN-PLACE·inert), whole card is tap-target (decision 0048) | scr · step 4/8 | ✅⭐ |
+
+> ⚠ **decision-0047 §B typo, owner-flag:** 0047 §B L30 writes `GameCard/grid` **(96×134)** for the Profile Top-3 set-pieces, but the §5.2 variant table has grid=161×225 / cell=96×134, and 0047's own §B.1 board treatment snaps those seats to a **`/cell` 10px plate**. The map cites 0047 §B verbatim (grid) but the 96×134 dimension reads as **/cell**, not /grid — flag to owner to correct decision-0047 rather than guessing which the door builds to.
 | NowTag · FoilTag | `NowTag` `FoilTag` | corner plate tags, 9px | scr.accent · gold | ✅ |
 | RankChip | `RankChip` | `first`(gold) else accent; #1 list-marker = `StateMark`, not gold | gold/accent | ✅ |
 
@@ -86,6 +89,8 @@ domain sets. A screen never ships before its primitives.
 | KeycapButton→ScreenButton | `ScreenButton` | **`variant`**: primary·action-alt·secondary·destructive · `add`(gold+step F-02) · `block`/`mini` size; flat, pressed=scanline | scr.accent · gold · cream · alert | ✅⭐ |
 | ToolKeycap→ToolButton | `ToolButton` | cream 28–32, icon[+label], `active`+StateMark | cream/navy | ✅⭐ |
 | TertiaryLink | `TertiaryLink` | `dim`(cancel) · `return-link`(back-seam) | scr.accent | ✅⭐ |
+
+> Profile→Collection doors are `TertiaryLink` instances: **VIEW TOP 10 ›** (opens Collection TOP view active) and friend-only **VIEW COLLECTION ›** (opens friend Collection shelf); Top-3 cards are GameCard/grid set-pieces whose tap opens Collection TOP focused on that game (decisions 0047 §B, 0050 §C — see the 0047 §B grid/cell size flag above).
 | SectionSwitch | `SectionSwitch` | **`variant`**: pair·chips·rail; active=accent border+StateMark (collapses SegmentedKeycap+SectionChips, §9) | scr.accent | ✅⭐ |
 | Toggle | `Toggle` | square knob; ON=accent+right; `disabled` | scr.accent/grip | ✅ |
 | IntensitySlider | `IntensitySlider` | flat track + cream thumb; value→reconcile | scr.accent | ✅ |
@@ -133,7 +138,7 @@ domain sets. A screen never ships before its primitives.
 | ResultRow · MatchTag | `ResultRow` | search-hit: title·year·studio·in-collection✓·report | ✅ |
 | InlineBanner | `InlineBanner` | dedup warning (CAT-03), never a toast | ✅ |
 | CardFan | `CardFan` | `pick`; 3-up swipe, zero plate occlusion; pips square | ✅⭐ |
-| CardDetail · EquipReadout · CleanPeek | `CardDetail` `EquipReadout` `CleanPeek` | gallery hero+ledger · equipped chips · hold-to-bare | ✅ |
+| CardDetail · EquipReadout · CleanPeek | `CardDetail` `EquipReadout` `CleanPeek` | gallery hero+ledger · **owned/friend ENLARGE** (Game-page hero tap → enlarged CardDetail + EquipReadout CARD-22; yours=share/edit, friend's=adopt; R-ENLARGE) · equipped chips · hold-to-bare | ✅ |
 | ReportSheet · ReportConfirm | `ReportSheet` `ReportConfirm` | `target`: card·game·user(+BLOCK); +`block` confirm | ✅ |
 
 # 7. Commerce (Store/Wallet set — gold = economy, F-02)
@@ -160,6 +165,7 @@ domain sets. A screen never ships before its primitives.
 | QueueRow·ReleaseRow·RecRow·AdoptCount·NotifyToggle | same | reorder · upcoming · friend-rec · clout count · notify | ✅ |
 | LogAttach·FeedbackConfirm·TriageCard | same | bug-logs opt-in · seal · type-chooser | ✅ |
 | DualFaceHero·PlayStats·CardSwitcher·FriendContext | same | face+stats · dossier · 3-up select · friend compare | ✅ |
+| CommunityGallery | `CommunityGallery` | 3-up `GameCard/cell` roster; each cell `AdoptCount` + DESIGNED-BY credit + `PriceChip`/FREE; tap → `CardDetail` enlarge (CARD-22, decision 0048); GET /games/:gameId/cards, adopt POST /cards/:id/adopt (ECON-03/04, M4) | ✅ |
 
 # 10. Social — Friends · Find/Add · Compare · Contributor
 | §1.5 name | Code | Variants | Status |
@@ -168,26 +174,39 @@ domain sets. A screen never ships before its primitives.
 | PersonRow·QrCard·InviteLanding·SenderSummary | same | relationship spine (ADD/CANCEL/ACCEPT…) · QR · arrival | ✅ |
 | CompareHeader·CompareTotals·ComparePair·FriendsLeaderboard·LeaderRow | same | face-off · card-vs-card · cohort rank | ✅ |
 | SectionEmpty | `SectionEmpty` | gold DESIGN-A-CARD / neutral ADD-A-GAME | ✅ |
+| RecommendSheet | `RecommendSheet` | GameCard/cell picker + note TextField/area + SEND → Toast; POST /recommendations (SOC-05, decision 0036) | ✅ |
 
 # 11. Device editor
 | §1.5 name | Code | Status |
 |---|---|---|
 | SectionCard·StickerStage·TransformBox·PlacedSticker·StickerTray·SavedLook·LooksGrid·KeepBar | same | ✅ |
 
-# 12. Top-5 / Lists (4.7 — Draft A slots)
+# 12. Collection TOP view-mode (Top-10 curation — §4.7 Lists editor RETIRED, relocated into Collection)
 | §1.5 name | Code | Status |
 |---|---|---|
-| SlotFrame·RankSlot·CardPicker(PickerSheet)·SaveBar | `SlotFrame` `RankSlot` `CardPicker` `SaveBar` | ✅ |
+| SlotFrame·RankSlot·CardPicker(PickerSheet) | `SlotFrame` `RankSlot` `CardPicker` | **the Collection TOP view-mode** (COL-13): #1 emphasized + rank chips over collection data; self=drag-rerank ARRANGE + `+ ADD` ghost → CardPicker (cap-10 LIST_FULL); friend=read-only ranked Top-10. The standalone §4.7 Lists screen is RETIRED (decisions 0049/0050). | ✅ |
 
-# 13. Achievements (🔶 spec-debt — lock at 4.10 formalization)
-| Board class | Provisional code | Status |
-|---|---|---|
-| BadgeTile·MysterySlot·ProgressMeter·RewardChip·CelebrationMoment·AchievementSheet·TierLegend·ListSummary | same | 🔶 |
+> Collection COL-07 view keycap now cycles **SHELF · GRID · LIST · TOP** (was SHELF·GRID·LIST); TOP = the view-mode above (decision 0050, COL-13).
 
-# 14. Admin console (🔶 spec-debt — lock at 4.4 formalization)
-| Board class | Provisional code | Status |
+> `SaveBar` is **not yet a §1.5-named component** — the SAVE/SWAP affordance is currently `ScreenButton/secondary` (§1.5 L122). Keep provisional until §1.5 names it (mirrors FunctionRow/FieldRemediationRow/ModerationNotice treatment in §14).
+
+# 13. Achievements (✅ formalized §1.5 + §2.19, decision 0038)
+| Board class | Code | Status |
 |---|---|---|
-| ModQueueRow·ReviewPanel·SuspendSheet·MergePicker·RestoreRow·TierBanner·CountTag·FunctionRow·FieldRemediationRow·ModerationNotice | same | 🔶 |
+| BadgeTile·MysterySlot·ProgressMeter·RewardChip·TierLegend·AchievementSheet·CelebrationMoment | same | ✅ |
+
+> Tiles UNIFORM (glyph+label; criterion/reward/date in AchievementSheet). Tier-themed by ACH-09: PRESTIGE brand.gold · STANDARD scr.accent (DEV-04) · SECRET scr.secret #e85ad0. F-02 carve-out: gold marks PRESTIGE (non-acquisitive). F-05 carve-out: flat magenta square for SECRET.
+
+# 14. Admin console (✅ formalized §1.5 + §2.18, decision 0037)
+| Board class | Code | Status |
+|---|---|---|
+| ModQueueRow·ReviewPanel·SuspendSheet·MergePicker·RestoreRow·TierBanner·CountTag | same | ✅ |
+
+> `FunctionRow·FieldRemediationRow·ModerationNotice` are **not yet named in §1.5 — keep provisional (MOD-11..15)**: remediation surfaces backing OQ-081 IDs MOD-11..15 — prose in §2.18, not yet named components; keep provisional until §1.5 names them.
+
+> Admin `CountTag` = flat **scr.accent rectangle** (utility, square F-07, `.zero` muted variant, per-row pending count) — NOT the §5.4 brand.gold display CountTag. Same symbol, two visual specs → model as `CountTag/admin` variant (prop), NOT a fork.
+
+> **Why CountTag collapses but QueueRow forks:** the two CountTags are the *same primitive re-themed* (a count rectangle, gold vs scr.accent) → one symbol, `/admin` variant (naming-law rule 2). The two QueueRows are *genuinely different behavior* — Discover's is a **drag-to-reorder** row (PATCH /me/queue/reorder), Admin's is a **read-only moderation object** in a review queue — so they stay two symbols, with Admin's given the distinct code name `ModQueueRow` (decision 0042). Behavior, not theme, is the fork test.
 
 > Admin reports-queue row = **`ModQueueRow`**; Discover keeps `QueueRow` (decision 0042, OQ-087).
 
@@ -201,6 +220,7 @@ domain sets. A screen never ships before its primitives.
 | KeycapButton | `ScreenButton` (flat; "keycap" reserved to shell) |
 | ToolKeycap | `ToolButton` |
 | CountKeycap | `CountTag` (display-only) |
+| QueueRow (Admin-target variant) | `ModQueueRow` (decision 0042) |
 | Strip | `GameStrip` |
 | GTag | `GenreTag` |
 | slip · LayerSlip | `Slip` · editbar → `EditBar` |

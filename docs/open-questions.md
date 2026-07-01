@@ -16,21 +16,12 @@
 
 ## Open
 
-- OQ-111: **Re-sync `docs/design/component-map.md` to current design-spec §1.5 + lock the 🔶 entries —
-  M2-entry gate, before any client-UI coding.** The map is **v0.3 mapping from §1.5 v0.41**, but design-spec
-  is now **v0.49** (the Top-10 / card-tap / admin-console / achievements tracks moved §1.5 since), so the
-  catalog→code mappings have drifted; and the **Achievements (4.10)** + **Admin console (4.4)** component sets
-  are still 🔶 *"name provisional, lock at formalization before coding."* Action: re-derive the map against
-  current §1.5, lock the 🔶 names, then point the M2 client-build prompt at it + Foundation Rules F-01..F-09.
-  **Not an M1 blocker** (M1 builds no component library). (raised reviewing the component-map at M1 build-entry,
-  2026-06-30) [presentation]
-- OQ-112: **PROF-03 privacy state — the serialized enum token values are not pinned in `api-contract`.**
-  The M1 scaffold's shared zod schema models `privacy` as `'friends' | 'public'` (the default friends-only
-  vs limited public). This was an ASSUMPTION made + tagged `// ASSUMPTION(OQ-112)` in
-  `packages/shared/src/schemas/common.ts`; it's reversible (rename the enum). It does **not** affect SYS-01
-  enforcement (the scoped-query ownership is independent of the token spelling). Action: pin the canonical
-  `privacy` token values on `GET /me` + `PATCH /me` in `api-contract` at M2. (raised scaffolding the F29
-  slice, 2026-06-30) [behavior]
+- OQ-114: **decision 0047 §B self-contradicts on the Profile Top-3 card size.** §B calls the Top-3
+  set-pieces **`GameCard/grid`** but gives the dimension **`(96×134)`** — which is the **`/cell`** size
+  (grid is 161×225), and 0047's own §B.1 board treatment snaps those seats to a **`/cell` 10px plate**. So
+  0047 contradicts itself on whether the Profile Top-3 renders at `/grid` or `/cell`. Action: **correct
+  decision 0047** (owner ruling) rather than letting the M2 client build guess. Only bites when M2 **Lane B**
+  renders the Profile Top-3 (surfaced by the OQ-111 component-map re-sync, 2026-06-30). [presentation]
 - OQ-113: **SCA (`npm audit`) gate posture for the Expo monorepo.** M1 CI gates on
   `npm audit --omit=dev --audit-level=critical` (shipping deps, critical). The residual PROD **high**
   advisories are all Expo **build-chain** tooling (`@expo/cli`, `@expo/config-plugins`, `@expo/plist`,
@@ -228,6 +219,8 @@
 - OQ-110: **Spec IDs leak into UI copy.** "CARD-16"-style stable IDs appear in user-facing strings (styler:493); strip app-wide. (board copy cleanup) [presentation/QUICK] — any
 
 ## Resolved
+- OQ-111 → **RESOLVED (2026-06-30, M2-entry spec-prep): component-map re-synced to §1.5 v0.49 (v0.4).** A grounded, adversarially-vetted reconciliation folded decisions 0037/0038/0047/0048/0049/0050 into the map — nameplate F-06 binding, CARD-23 tap + CardDetail enlarge, the §4.7 Lists editor **RETIRED** → Collection **TOP** view-mode (COL-13), Collection view-switch SHELF·GRID·LIST·TOP, and three silent-drift gaps filled (`CommunityGallery`, `RecommendSheet`, §1.6b A11y baseline). The 🔶 **Achievements (4.10)** + **Admin (4.4)** name-sets are **locked ✅** (`ListSummary` dropped; FunctionRow/FieldRemediationRow/ModerationNotice held provisional). The map is current for M2 **Lane B** client coding. *(A size contradiction inside decision 0047 was surfaced, not silently resolved → OQ-114.)* [design]
+- OQ-112 → **RESOLVED (2026-06-30, M2-entry spec-prep — the decision 0052 §4 carryover): `privacy` enum pinned.** `api-contract` **0.41** pins the PROF-03 `privacy` field to **`∈ 'friends' | 'public'`** (`'friends'` = friends-only default · `'public'` = limited public) on `GET /me` + `PATCH /me`, formalizing the value tagged `// ASSUMPTION(OQ-112)` in `packages/shared`. No new paths/shapes. [behavior]
 - OQ-090 → **RESOLVED (decision 0039, 2026-06-28): Keycap family renamed for accuracy.** Flat on-screen buttons (0.20) dropped the misleading "Keycap": **`KeycapButton→ScreenButton` · `ToolKeycap→ToolButton` · `CountKeycap→CountTag`** ("Keycap" now = the 5 shell keys only, F-03). Rippled across design-spec §1.5 + all §2 (design-spec 0.40) + component-map 0.2. Boards keep throwaway `.btn`/`.kc` classes. Naming-only — no behaviour/token/API change. [design-spec / naming]
 - OQ-082 → **RESOLVED (decision 0038, 2026-06-28): Achievement 3-tier system formalized + §4.10 converged.** **+product-spec ACH-09** — the presentation `tier` (`prestige` gold · `standard` theme-accent, re-themes DEV-04 · `secret` magenta `brand.secret`/`scr.secret` `#e85ad0`); which-tier each definition wears = content (OQ-004). **F-02 carve-out** — gold *also* = the non-acquisitive **PRESTIGE** tier (the one blessed gold-as-achievement convention across Friends `.achv` + Achievements + the future Profile teaser; resolves the badge-gold flag). **F-05 carve-out** — flat **on-screen magenta** for the **SECRET** tier (shell LEDs stay round/pink). Both amended in the **Catalog v0.11** + design-spec §1.1. **Node-detail + uniform tiles** = presentation (`AchievementSheet` D1/D2/D3, uniform glyph+label) → design-spec §2.19. product-spec **0.36** · api **0.36** (the three `/achievements*` payloads enumerated — bounded, no cursor; ACH-06 celebration push-driven) · design-spec **0.39** (§1.5 Achievements set + §2.19). Board `achievements/achievements-states.html` (SCREEN-STATUS §4.10 Design-spec ✅ · API ✅).
 - OQ-005 → **RESOLVED (decision 0038, 2026-06-28): pole A — the `???` mystery slot.** Hidden easter eggs are shown as a locked `???` `MysterySlot` that hints something exists (not fully invisible), chosen by the owner picking **Draft A · Trophy Case** + converging `achievements-states.html`; a locked secret's detail sheet (D3) stays **sealed** (no spoiler). Recorded in product-spec **ACH-09**; design-spec §2.19 / §1.5 (`MysterySlot`). (ACH-03)
