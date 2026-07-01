@@ -25,7 +25,8 @@ tripwires.
   by branch protection + the six CI checks; (c) `CONVENTIONS.md` has **lint teeth** (a raw-DB-query /
   un-zod'd-body / untagged-test PR fails CI, not just review); (d) the Expo loop runs on the owner's
   iPhone (the existing M1 check). *Credibility anchor — every later automated gate is worthless if
-  "green" can be hollow.*
+  "green" can be hollow.* — **✅ PASSED 2026-06-30** (b live on PR #1; a/c/d owner-sat; d via Expo Go,
+  standalone build trails M1-P). See decision 0052 (M1 exit ratification).
 
 **M1-P — provisioning**
 - **G-C · Live-infra cutover + environment-separation** *(heavy · one-time)* — prod/staging/local are
