@@ -1,6 +1,11 @@
 # InGame CI — the required-green six-check spine (CONVENTIONS "the merge gate"; testing-strategy §7).
-# Ordered cheapest-first, fail-fast:
+# Ordered cheapest-first. Every CHECK step carries `if: ${{ !cancelled() }}` so a mid-pipeline failure
+# can't silently SKIP — and thereby MASK — the checks after it (the M2 lead-audit found a gitleaks halt
+# had skipped SCA + Build + Export + the F04 bundle-grep, which then got mis-reported as "passed"). The
+# job still goes RED if any single check fails; the guard only guarantees every check actually RUNS and
+# reports. Checkout/setup/install stay UNguarded — they are hard prerequisites, not checks.
 #   1. typecheck + lint   2. unit   3. integration (Testcontainers PG)   4. gitleaks   5. SCA   6. build
+#      + Export web bundle + F04 client-bundle secret-grep
 # E2E (Maestro) runs nightly/on-demand — NOT here, and NOT stood up in the M1 scaffold.
 #
 # ── main is branch-protected (decision 0046; CONVENTIONS "merge gate") ───────────────────────────
@@ -46,21 +51,26 @@ jobs:
 
       # ── 1. typecheck + lint (custom CONVENTIONS [LINT] rules run inside `npm run lint`) ──
       - name: Typecheck
+        if: ${{ !cancelled() }}
         run: npm run typecheck
 
       - name: Lint (eslint + the custom CONVENTIONS spine)
+        if: ${{ !cancelled() }}
         run: npm run lint
 
       # ── 2. unit (Vitest) — includes the F22 bad-pr-corpus meta-test + the F04 bundle-grep self-test ──
       - name: Unit tests
+        if: ${{ !cancelled() }}
         run: npm run test:unit
 
       # ── 3. integration — Testcontainers Postgres + Drizzle migrations (must start a REAL container) ──
       - name: Integration tests (Testcontainers Postgres)
+        if: ${{ !cancelled() }}
         run: npm run test:integration
 
       # ── 4. gitleaks — secret scan (SYS-03) ──
       - name: Secret scan (gitleaks)
+        if: ${{ !cancelled() }}
         uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -73,14 +83,18 @@ jobs:
       #    server-runtime high (drizzle-orm) was fixed by pinning the patched version. The dev-only
       #    `vitest` critical is excluded from the runtime gate (tracked in OQ-113).
       - name: SCA (npm audit — shipping deps, critical gate)
+        if: ${{ !cancelled() }}
         run: npm audit --omit=dev --audit-level=critical
 
       # ── 6. build — everything compiles ──
       - name: Build
+        if: ${{ !cancelled() }}
         run: npm run build
 
       # ── F04 (must-now extra) — scan the REAL exported web bundle for leaked secrets ──
       - name: Export web bundle
+        if: ${{ !cancelled() }}
         run: npm -w @ingame/mobile run build:web
       - name: F04 client-bundle secret-grep
+        if: ${{ !cancelled() }}
         run: node tools/security/bundle-grep.mjs apps/mobile/dist

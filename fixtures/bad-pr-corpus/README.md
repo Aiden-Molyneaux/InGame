@@ -15,7 +15,7 @@ scaffold source is clean). This is, simultaneously:
 | Folder | Violates | The planted bug |
 |---|---|---|
 | `rule-01-layering/` | CONVENTIONS rule 1 | raw `getDb().select()` in a controller (outside the repository layer) |
-| `rule-02-scoping/` | CONVENTIONS rule 2 / F32 | a repo reads another user's row with no SYS-01 scoped helper (the original sin) |
+| `rule-02-scoping/` | CONVENTIONS rule 2 / F32 | (a) a repo reads another user's row with no SYS-01 scoped helper (the original sin); (b) a `// SYS-01-AUTH-LOOKUP`-marked **write** (`.update(users)`) in an auth-layer repo — the marker is reads-only, so a marked write fails closed |
 | `rule-03-zod/` | CONVENTIONS rule 3 | a handler reads raw `req.body` with no shared-schema validation |
 | `rule-04-authz/` | CONVENTIONS rule 4 / F30 | a `mutates:true` route whose `authzTest` has no paired actor-B 4xx test |
 | `rule-05-events/` | CONVENTIONS rule 5 | a `@mutation` seam that emits no domain event (warn-severity; teeth deferred to M7) |

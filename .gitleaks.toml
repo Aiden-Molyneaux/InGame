@@ -12,3 +12,11 @@ paths = [
   # The bad-pr-corpus plants fake secrets ON PURPOSE so the F04 bundle-grep + the lint spine can be self-tested.
   '''fixtures/bad-pr-corpus/.*''',
 ]
+regexes = [
+  # A single, deliberate NON-production JWT signing secret used only to exercise the M2 auth stack in
+  # *.test.ts (apps/api/src/auth/principal.test.ts + the auth/profile/users integration slices). It is
+  # not a real credential — SYS-03 keeps production secrets in the host store, never in-repo. Scoped to
+  # this exact fixed value (not a blanket `*.test.ts` path allow) so it cannot mask an UNRELATED leak in
+  # a test file. If a test ever needs a different fake secret, it gets its own reviewed allowlist entry.
+  '''test-signing-secret-at-least-16-chars-long''',
+]

@@ -102,12 +102,31 @@ export async function register(input: RegisterRequest): Promise<AuthSession> {
   return outcome.session;
 }
 
+// AUTH-11 timing parity: the not-found / deleted / Apple-only (no-password) login branch must cost the
+// same wall-clock as a real account with a WRONG password — otherwise argon2's deliberate slowness is a
+// side-channel distinguishing "account exists" from "not found" (the status/body are already neutral;
+// only timing wasn't). We verify the presented password against a fixed DUMMY hash so BOTH paths run
+// one argon2 verify. The dummy hash is computed ONCE, lazily, with the pinned params (auth/password.ts)
+// so its verify cost matches a real one; it is a hash of a throwaway constant, never a credential.
+let dummyPasswordHashPromise: Promise<string> | undefined;
+function dummyPasswordHash(): Promise<string> {
+  if (!dummyPasswordHashPromise) {
+    dummyPasswordHashPromise = argon2Hasher.hash('ingame-login-timing-equalizer-not-a-credential');
+  }
+  return dummyPasswordHashPromise;
+}
+
 // ── AUTH-02 login ─────────────────────────────────────────────────────────────────────────────────
 export async function login(input: LoginRequest): Promise<AuthSession> {
   const email = input.email.toLowerCase();
   const user = await authRepo.findByEmail(email);
-  // NEUTRAL: unknown account, deleted, Apple-only (no password), or wrong password → same AUTH_FAILED.
-  if (!user || user.deletedAt || !user.passwordHash) throw new AuthFailedError();
+  // NEUTRAL + TIMING-EQUAL (AUTH-11): unknown / deleted / Apple-only (no password) still runs one
+  // argon2 verify (against the dummy hash) before the SAME AUTH_FAILED, so "exists" and "not found"
+  // cost the same wall-clock. A real account with a wrong password runs the verify just below.
+  if (!user || user.deletedAt || !user.passwordHash) {
+    await argon2Hasher.verify(await dummyPasswordHash(), input.password);
+    throw new AuthFailedError();
+  }
   if (!(await argon2Hasher.verify(user.passwordHash, input.password))) throw new AuthFailedError();
 
   const suspension = await suspensionRepo.getActiveSuspension(user.id);
