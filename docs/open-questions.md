@@ -16,6 +16,7 @@
 
 ## Open
 
+- OQ-122: **The F32 binary global/user-owned scope model doesn't cover the community / cross-user READS arriving at M4–M7** (foundation review F-09). `rule-02-scoping` admits two classes (global-listed vs user-owned fail-closed) + the auth-layer `AUTH-LOOKUP` exception. Coming reads fit none: the **published-card gallery / trending** (`card_designs` filtered by `published`, M4/M5), **invite-token resolution** by token value (SOC-10, M6 — partly covered only if the repo is named `*-token-repo`), and **feed fan-out** cross-user reads (SOC-06, M7). Each will either fail rule-02 (breeding ad-hoc `asActor`-shaped workarounds) or pressure the manifest to mislabel a user-owned table as global (silently disabling scoping for its private rows — the worse failure). **Proposed:** a third read class — a `// SYS-01-PUBLIC-READ` marker / `publishedOnly(table)` helper valid only for reads carrying an explicit visibility predicate, + a bearer-token-lookup variant of `AUTH-LOOKUP` scoped to an enumerated repo list. **Decide at M4 entry (G-H window)**, not mid-build. Related to OQ-115. (foundation review F-09, 2026-07-01) [behavior/process] M4-entry
 - OQ-118: **`rule-02-scoping` actor-scoping lint is a write-verb denylist with holes** (surfaced by the
   M2 fix-pass lead-audit, commit `acde8b9`, 2026-07-01). The CONVENTIONS-spine rule
   `tools/lint/rules/rule-02-scoping.mjs` detects unscoped queries via `ACCESS_RE = /\.(from|update|delete)\(/`
@@ -28,7 +29,7 @@
   unrecognized query verb), or at minimum extend detection to `.onConflictDoUpdate` / `.execute` / raw `sql`
   writes. Related to **OQ-115** (auth-layer confinement shape, gate-3). Fast-follow before M3; does **not**
   block M2 sign-off. (M2 fix-pass audit, 2026-07-01) [behavior]
-- OQ-114: **decision 0047 §B self-contradicts on the Profile Top-3 card size.** §B calls the Top-3
+- OQ-114 → **RESOLVED (decision 0055, 2026-07-01): Top-3 = `GameCard/cell` (96×134) + 10px plate** (owner ruling; the `/grid` label in 0047 §B was the typo — 96×134 is `/cell`, not `/grid` 161×225 — corrected in 0047; the build + component-map already render `/cell`). *Original:* **decision 0047 §B self-contradicts on the Profile Top-3 card size.** §B calls the Top-3
   set-pieces **`GameCard/grid`** but gives the dimension **`(96×134)`** — which is the **`/cell`** size
   (grid is 161×225), and 0047's own §B.1 board treatment snaps those seats to a **`/cell` 10px plate**. So
   0047 contradicts itself on whether the Profile Top-3 renders at `/grid` or `/cell`. Action: **correct
