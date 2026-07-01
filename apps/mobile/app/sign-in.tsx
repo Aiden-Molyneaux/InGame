@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { DeviceShell } from '../src/components/DeviceShell';
 import { TextField } from '../src/components/TextField';
 import { ScreenButton } from '../src/components/ScreenButton';
 import { theme } from '../src/theme';
@@ -47,60 +46,58 @@ export default function SignIn() {
   }
 
   return (
-    <DeviceShell>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Text style={styles.wordmark}>INGAME</Text>
-          <Text style={styles.tagline}>YOUR COLLECTION, ON DISPLAY</Text>
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <Text style={styles.wordmark}>INGAME</Text>
+        <Text style={styles.tagline}>YOUR COLLECTION, ON DISPLAY</Text>
 
-          <View style={styles.form}>
+        <View style={styles.form}>
+          <TextField
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="you@example.com"
+            keyboardType="email-address"
+          />
+          {mode === 'create' ? (
             <TextField
-              label="Email"
-              value={email}
-              onChangeText={setEmail}
-              placeholder="you@example.com"
-              keyboardType="email-address"
+              label="Username"
+              value={username}
+              onChangeText={setUsername}
+              placeholder="a–z, 0–9, _"
             />
-            {mode === 'create' ? (
-              <TextField
-                label="Username"
-                value={username}
-                onChangeText={setUsername}
-                placeholder="a–z, 0–9, _"
-              />
-            ) : null}
-            <TextField
-              label="Password"
-              value={password}
-              onChangeText={setPassword}
-              placeholder="min 8 characters"
-              secureTextEntry
-            />
+          ) : null}
+          <TextField
+            label="Password"
+            value={password}
+            onChangeText={setPassword}
+            placeholder="min 8 characters"
+            secureTextEntry
+          />
 
-            {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <Text style={styles.error}>{error}</Text> : null}
 
-            <ScreenButton
-              label={busy ? '…' : mode === 'signin' ? 'Sign in' : 'Create account'}
-              onPress={submit}
-              disabled={busy}
-              block
-            />
-            <ScreenButton
-              label={mode === 'signin' ? 'New here? Create account' : 'Have an account? Sign in'}
-              variant="secondary"
-              onPress={() => {
-                setError(null);
-                setMode(mode === 'signin' ? 'create' : 'signin');
-              }}
-              block
-            />
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </DeviceShell>
+          <ScreenButton
+            label={busy ? '…' : mode === 'signin' ? 'Sign in' : 'Create account'}
+            onPress={submit}
+            disabled={busy}
+            block
+          />
+          <ScreenButton
+            label={mode === 'signin' ? 'New here? Create account' : 'Have an account? Sign in'}
+            variant="secondary"
+            onPress={() => {
+              setError(null);
+              setMode(mode === 'signin' ? 'create' : 'signin');
+            }}
+            block
+          />
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 

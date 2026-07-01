@@ -41,6 +41,9 @@ export const theme = {
     lo: '#0d524e',
     silk: '#f5f1e4', // the cream faceplate
     ink: '#0a2b28',
+    bezel: '#0b0a13', // the dark screen-bezel frame the Midnight screen sits in (mockup `--bezel`,
+    // darker than scr.bg so the screen reads inset) — DeviceShell §5.1
+    led: '#ff5a4e', // the red POWER LED on the top-band (mockup `.power .led`)
   },
 
   // F-06 — the ONLY on-screen type scale.
@@ -56,8 +59,10 @@ export const theme = {
 
   space: { xs: 2, sm: 4, md: 8, lg: 12, xl: 16, xxl: 24 },
 
-  // F-07 — radius on the shell only; on-screen chrome is square (0).
-  corner: { shell: 14, screen: 0 },
+  // F-07 — radius on the shell only; on-screen chrome is square (0). The device-frame radii are the
+  // fixed structural dimensions of the physical shell (mockup profile-states.html): the outer plastic
+  // `.device` (30), the `.screen-bezel` (20), the inner `.screen` glass (13), the `.nav-btn` keys (15).
+  corner: { shell: 14, screen: 0, device: 30, bezel: 20, glass: 13, navKey: 15 },
 
   // F-02 — the GameCard TL+BR pixel-step (the card signature; borrowed at half-scale by intent buttons).
   step: 6,

@@ -1,55 +1,106 @@
-import { View, StyleSheet, type ViewStyle } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../theme';
-import { PipLight } from './PipLight';
+import { ShellNav } from './ShellNav';
 
-// DeviceShell (component-map §5.1) — the 3D device plastic (TEAL) that wraps every screen: the
-// faceplate frame, corner screws, and the power LED. The dark Midnight screen sits inset inside it.
-// F-07: radius lives on the plastic. (A fuller 3D bevel is a Burt-audit refinement.)
-export function DeviceShell({ children, style }: { children: React.ReactNode; style?: ViewStyle }) {
+// DeviceShell (component-map §5.1 · design-spec §1.5) — the F-03 teal plastic that **wraps every
+// screen**. ONE persistent instance is mounted at the ROOT layout so the device frame containerizes
+// the whole application (sign-in → tabs), never unmounting across navigation. The routed screen
+// renders inside the Midnight `.screen`, framed by the fixed chrome:
+//   top-band (64) · screen-bezel (pad 9, r20) → screen (r13) · nav-band (128, the NavBand).
+// The fixed band/inset heights come from the canonical device in profile-states.html, so the USABLE
+// screen area (viewport − top-band − nav-band − bezel padding) is correct now and every screen builds
+// into the right space. Decorative F-03 chrome (grille slats, embossed logo, 3D screw/bevel
+// gradients) is simplified this pass (iteration lane) — the structure + dimensions are what matter.
+export function DeviceShell({ children }: { children: React.ReactNode }) {
+  const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.plastic, style]}>
-      <View style={styles.topRail}>
-        <Screw />
-        <PipLight size={6} />
-        <Screw />
+    <View style={styles.plastic}>
+      {/* top-band (64px): power LED (left) · INGAME logo (center) · grille (right). The top safe-area
+          inset extends the band up into the notch without shrinking its 64px content area. */}
+      <View style={[styles.topBand, { height: TOP_BAND + insets.top, paddingTop: 16 + insets.top }]}>
+        <View style={styles.power}>
+          <View style={styles.led} />
+          <Text style={styles.powerLbl}>POWER</Text>
+        </View>
+        <Text style={styles.logo}>INGAME</Text>
+        <View style={styles.grille}>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <View key={i} style={styles.slat} />
+          ))}
+        </View>
       </View>
-      <View style={styles.screen}>{children}</View>
+
+      {/* screen-bezel (pad 9, r20) holding the Midnight screen (r13) where the routed screen renders */}
+      <View style={styles.bezel}>
+        <View style={styles.screen}>{children}</View>
+      </View>
+
+      {/* nav-band (128px): the 5 nav keys — `locked` (gray, non-interactive) until signed in */}
+      <ShellNav bottomInset={insets.bottom} />
     </View>
   );
 }
 
-function Screw() {
-  return <View style={styles.screw} />;
-}
+const TOP_BAND = 64;
 
 const styles = StyleSheet.create({
   plastic: {
-    flex: 1,
+    flex: 1, // fills the viewport (the shell IS the device body)
     backgroundColor: theme.shell.plastic,
-    padding: theme.space.md,
-    paddingTop: theme.space.sm,
+    borderRadius: theme.corner.device, // ~30 (mockup `.device`)
+    paddingHorizontal: 14,
+    overflow: 'hidden',
   },
-  topRail: {
+  topBand: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: theme.space.sm,
-    paddingBottom: theme.space.sm,
+    paddingHorizontal: 12,
   },
-  screw: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  power: { alignItems: 'flex-start', gap: 3 },
+  led: {
+    width: 9,
+    height: 9,
+    borderRadius: 5, // round LED (F-05 shell light)
+    backgroundColor: theme.shell.led,
+  },
+  powerLbl: {
+    fontFamily: theme.font.shell, // Paytone One on the plastic (F-08)
+    fontSize: theme.type.micro, // 9
+    color: theme.shell.silk,
+    opacity: 0.75,
+    letterSpacing: 0.5,
+  },
+  logo: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    fontFamily: theme.font.shell, // Paytone One (F-08)
+    fontSize: theme.type.display, // 21
+    letterSpacing: 7,
+    color: theme.shell.lo, // faint emboss on the plastic (full 3D emboss = iteration lane)
+  },
+  grille: { flexDirection: 'row', gap: 6 },
+  slat: {
+    width: 5,
+    height: 23,
+    borderRadius: 2,
     backgroundColor: theme.shell.lo,
-    borderWidth: 1,
-    borderColor: theme.shell.hi,
+    transform: [{ skewX: '-22deg' }],
+  },
+  bezel: {
+    flex: 1,
+    minHeight: 0,
+    backgroundColor: theme.shell.bezel,
+    borderRadius: theme.corner.bezel, // 20 (mockup `.screen-bezel`)
+    padding: 9,
   },
   screen: {
     flex: 1,
     backgroundColor: theme.scr.bg, // the Midnight screen
-    borderRadius: theme.corner.screen, // F-07 square screen
-    borderWidth: 2,
-    borderColor: theme.shell.ink,
+    borderRadius: theme.corner.glass, // 13 (mockup `.screen`)
     overflow: 'hidden',
   },
 });

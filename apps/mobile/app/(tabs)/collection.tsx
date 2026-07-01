@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { ScreenHead } from '../../src/components/ScreenHead';
 import { SectionSwitch } from '../../src/components/SectionSwitch';
 import { GameCard } from '../../src/components/GameCard';
@@ -7,9 +7,10 @@ import { useAppDispatch, useAppSelector } from '../../src/store/hooks';
 import { setCollectionView, type CollectionView } from '../../src/store/prefsSlice';
 import { SEED_COLLECTION, COLLECTION_TOTAL, type SeedGame } from '../../src/data/seed';
 
-// The seeded STYLED Collection shelf (the tangible-win render). The view-switch (SHELF · GRID · LIST ·
-// TOP — COL-07/COL-13) is bound to the redux-persisted pref (F20). Data is scratch-seeded (the real
-// /me/collection is M3); the aesthetic follows the tokens + F-rules (F-01 no-crop cards, F-06 scale).
+// The seeded STYLED Collection shelf (the tangible-win render). The always-visible view-switch (SHELF ·
+// GRID · LIST · TOP — COL-07/COL-13) is bound to the redux-persisted pref (F20) and DOCKED in the
+// bottom tools bar (mockup `.tools`, `border-top`) — fix #5 / C1. Data is scratch-seeded (the real
+// /me/collection + the sort/filter drawer ride M3). The aesthetic follows the tokens + F-rules.
 
 const VIEW_OPTIONS: { value: CollectionView; label: string }[] = [
   { value: 'shelf', label: 'Shelf' },
@@ -23,17 +24,18 @@ export default function Collection() {
   const view = useAppSelector((s) => s.prefs.collectionView);
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <View style={styles.screen}>
       <View style={styles.pad}>
         <ScreenHead title="Collection" count={`${SEED_COLLECTION.length} OF ${COLLECTION_TOTAL}`} />
-        <View style={styles.switchRow}>
-          <SectionSwitch options={VIEW_OPTIONS} value={view} onChange={(v) => dispatch(setCollectionView(v))} />
-        </View>
       </View>
-      <ScrollView contentContainerStyle={styles.body}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.body}>
         {view === 'list' ? <ListView /> : view === 'top' ? <TopView /> : <ShelfView size={view} />}
       </ScrollView>
-    </SafeAreaView>
+      {/* bottom tools bar — the docked view-switch (fix #5 / C1); border-top per the mockup `.tools` */}
+      <View style={styles.tools}>
+        <SectionSwitch options={VIEW_OPTIONS} value={view} onChange={(v) => dispatch(setCollectionView(v))} />
+      </View>
+    </View>
   );
 }
 
@@ -96,9 +98,18 @@ function TopView() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: theme.scr.bg },
-  pad: { paddingHorizontal: theme.space.lg, paddingTop: theme.space.lg, gap: theme.space.md },
-  switchRow: { marginBottom: theme.space.sm },
+  pad: { paddingHorizontal: theme.space.lg, paddingTop: theme.space.lg, paddingBottom: theme.space.md },
+  scroll: { flex: 1 },
   body: { padding: theme.space.lg, gap: theme.space.lg },
+  tools: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.space.lg,
+    paddingVertical: theme.space.md,
+    borderTopWidth: 1,
+    borderTopColor: theme.scr.hairline,
+    backgroundColor: theme.scr.bg,
+  },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.lg, justifyContent: 'space-between' },
   list: { gap: theme.space.md },
   row: {

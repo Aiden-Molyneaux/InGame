@@ -1,9 +1,21 @@
 import { View, Text, StyleSheet } from 'react-native';
+import type { GamertagView } from '@ingame/shared';
 import { theme } from '../theme';
 import { Avatar } from './Avatar';
 import { RoleTag, selfRoleLabel } from './RoleTag';
 
-// IdentityBlock (component-map §5.4) — the name + Avatar + RoleTag cluster (the Profile header identity).
+// IdentityBlock (component-map §5.4) — the identity WELL (mockup `.well.id`): the name + Avatar +
+// RoleTag cluster, then the bio line, then the gamertag chips. Fix #3 (P1/P4) renders the `bio` +
+// `gamertags` the `/me` self-shape carries (0.42 / OQ-116) that the M2 render had dropped.
+
+// PROF-02 platform → short display label for the gamertag chip.
+const PLATFORM_LABEL: Record<string, string> = {
+  pc: 'PC',
+  playstation: 'PSN',
+  xbox: 'XBOX',
+  nintendo: 'SWITCH',
+};
+
 export function IdentityBlock({
   username,
   avatarUrl,
@@ -11,6 +23,8 @@ export function IdentityBlock({
   adminTier = null,
   staff = false,
   memberSince,
+  bio,
+  gamertags,
 }: {
   username: string;
   avatarUrl?: string | null;
@@ -18,23 +32,40 @@ export function IdentityBlock({
   adminTier?: number | null;
   staff?: boolean;
   memberSince?: string;
+  bio?: string;
+  gamertags?: GamertagView[];
 }) {
   // Self-view shows the tier (PROF-09); a friend-view passes `staff` for the generic marker.
   const roleLabel = staff ? 'STAFF' : selfRoleLabel(role, adminTier);
   return (
-    <View style={styles.row}>
-      <Avatar username={username} avatarUrl={avatarUrl} size={64} />
-      <View style={styles.meta}>
-        <View style={styles.nameRow}>
-          <Text style={styles.name} numberOfLines={1}>
-            {username}
-          </Text>
-          {roleLabel ? <RoleTag label={roleLabel} /> : null}
+    <View style={styles.well}>
+      <View style={styles.row}>
+        <Avatar username={username} avatarUrl={avatarUrl} size={64} />
+        <View style={styles.meta}>
+          <View style={styles.nameRow}>
+            <Text style={styles.name} numberOfLines={1}>
+              {username}
+            </Text>
+            {roleLabel ? <RoleTag label={roleLabel} /> : null}
+          </View>
+          {memberSince ? (
+            <Text style={styles.since}>MEMBER SINCE {formatSince(memberSince)}</Text>
+          ) : null}
         </View>
-        {memberSince ? (
-          <Text style={styles.since}>MEMBER SINCE {formatSince(memberSince)}</Text>
-        ) : null}
       </View>
+
+      {bio ? <Text style={styles.bio}>{bio}</Text> : null}
+
+      {gamertags && gamertags.length > 0 ? (
+        <View style={styles.gtags}>
+          {gamertags.map((g) => (
+            <View key={g.id} style={styles.gtag}>
+              <Text style={styles.gtagPlatform}>{PLATFORM_LABEL[g.platform] ?? g.platform.toUpperCase()}</Text>
+              <Text style={styles.gtagHandle}>{g.handle}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -47,6 +78,11 @@ function formatSince(iso: string): string {
 }
 
 const styles = StyleSheet.create({
+  well: {
+    backgroundColor: theme.scr.panel,
+    padding: theme.space.lg,
+    gap: theme.space.md,
+  },
   row: { flexDirection: 'row', alignItems: 'center', gap: theme.space.lg },
   meta: { flex: 1, gap: theme.space.xs },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md, flexWrap: 'wrap' },
@@ -61,5 +97,32 @@ const styles = StyleSheet.create({
     fontSize: theme.type.micro, // 9
     color: theme.scr.dim,
     letterSpacing: 1,
+  },
+  bio: {
+    fontFamily: theme.font.screen,
+    fontSize: theme.type.body, // 11 (F-06)
+    lineHeight: 16,
+    color: theme.scr.dim,
+  },
+  gtags: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.md },
+  gtag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.space.sm,
+    backgroundColor: theme.scr.panelHi,
+    paddingHorizontal: theme.space.md,
+    paddingVertical: 4,
+  },
+  gtagPlatform: {
+    fontFamily: theme.font.screenBold,
+    fontSize: theme.type.micro, // 9
+    color: theme.scr.ink,
+    letterSpacing: 0.5,
+  },
+  gtagHandle: {
+    fontFamily: theme.font.screen,
+    fontSize: theme.type.micro, // 9
+    color: theme.scr.dim,
+    letterSpacing: 0.5,
   },
 });

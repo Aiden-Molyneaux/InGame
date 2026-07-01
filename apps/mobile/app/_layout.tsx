@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
   useFonts,
   ChakraPetch_500Medium,
@@ -13,6 +14,7 @@ import { PaytoneOne_400Regular } from '@expo-google-fonts/paytone-one';
 import { store, persistor } from '../src/store';
 import { setTokens } from '../src/store/authSlice';
 import { loadTokens } from '../src/auth/tokenStore';
+import { DeviceShell } from '../src/components/DeviceShell';
 import { theme } from '../src/theme';
 
 function Splash() {
@@ -47,18 +49,26 @@ export default function RootLayout() {
   if (!fontsLoaded) return <Splash />;
 
   return (
-    <Provider store={store}>
-      <PersistGate loading={<Splash />} persistor={persistor}>
-        <AuthBootstrap>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: theme.shell.lo },
-            }}
-          />
-        </AuthBootstrap>
-      </PersistGate>
-    </Provider>
+    <SafeAreaProvider>
+      <Provider store={store}>
+        <PersistGate loading={<Splash />} persistor={persistor}>
+          <AuthBootstrap>
+            {/* Fix #1 — ONE persistent DeviceShell frames EVERY screen (sign-in → tabs), mounted at
+                the root so it never unmounts across navigation. The NavBand shows its `locked`
+                variant pre-auth and drives tab navigation once in the app (see ShellNav). */}
+            <DeviceShell>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: theme.scr.bg },
+                  animation: 'none',
+                }}
+              />
+            </DeviceShell>
+          </AuthBootstrap>
+        </PersistGate>
+      </Provider>
+    </SafeAreaProvider>
   );
 }
 

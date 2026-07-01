@@ -1,18 +1,19 @@
-import { View, Text, ScrollView, StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { IdentityBlock } from '../../src/components/IdentityBlock';
 import { GameCard } from '../../src/components/GameCard';
 import { StatTile } from '../../src/components/StatTile';
 import { ScreenButton } from '../../src/components/ScreenButton';
-import { PipLight } from '../../src/components/PipLight';
+import { MiniDevice } from '../../src/components/MiniDevice';
 import { theme } from '../../src/theme';
 import { useGetMeQuery } from '../../src/store/api';
 import { logoutTeardown } from '../../src/store';
 import { SEED_TOP3, SEED_NOW_PLAYING, SEED_STATS } from '../../src/data/seed';
 
-// The self-Profile (PROF-05). The IDENTITY (username, avatar, role, bio, memberSince) is the REAL
-// GET /me self-shape; the Device hero / Now-Playing / Top-3 / stats render from scratch-seeded data
-// (their endpoints are M3+). This is the "your profile" half of the tangible win.
+// The self-Profile (PROF-05). The IDENTITY (username, avatar, role, bio, gamertags, memberSince) is the
+// REAL GET /me self-shape; the Top-3 / Now-Playing / stats / device render from scratch-seeded data
+// (their endpoints are M3+). Section ORDER follows the mockup (profile-states.html:505–547):
+//   identity → STATS → [PINNED FAVOURITE — M3/catalog, deferred] → TOP 3 → NOW PLAYING → MY DEVICE.
 export default function Profile() {
   const router = useRouter();
   const { data: me, isLoading, isError, refetch } = useGetMeQuery();
@@ -24,51 +25,42 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={[styles.screen, styles.center]}>
+      <View style={[styles.screen, styles.center]}>
         <ActivityIndicator color={theme.brand.accent} />
-      </SafeAreaView>
+      </View>
     );
   }
   if (isError || !me) {
     return (
-      <SafeAreaView style={[styles.screen, styles.center]}>
+      <View style={[styles.screen, styles.center]}>
         <Text style={styles.errTitle}>SIGNAL LOST</Text>
         <ScreenButton label="Retry" variant="action-alt" onPress={() => refetch()} />
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.body}>
+        {/* identity — the real /me self-shape (bio + gamertags rendered here, fix #3 / P1+P4) */}
         <IdentityBlock
           username={me.username}
           avatarUrl={me.avatarUrl}
           role={me.role}
           adminTier={me.adminTier}
           memberSince={me.memberSince}
+          bio={me.bio}
+          gamertags={me.gamertags}
         />
-        {me.bio ? <Text style={styles.bio}>{me.bio}</Text> : null}
 
-        {/* Device hero (PROF-05) — the user's device set-piece (styled placeholder; DEV-* is M4). */}
-        <View style={styles.device}>
-          <View style={styles.deviceRail}>
-            <View style={styles.screw} />
-            <PipLight size={6} />
-            <View style={styles.screw} />
-          </View>
-          <View style={styles.deviceScreen}>
-            <Text style={styles.deviceWord}>INGAME</Text>
-          </View>
-        </View>
-
-        <Section title="Now Playing">
-          <View style={styles.nowRow}>
-            <GameCard title={SEED_NOW_PLAYING.title} size="cell" nowPlaying />
-            <View style={styles.nowMeta}>
-              <Text style={styles.nowTitle}>{SEED_NOW_PLAYING.title}</Text>
-              <Text style={styles.nowSub}>{SEED_NOW_PLAYING.hours}H LOGGED</Text>
-            </View>
+        <Section title="Stats">
+          <View style={styles.stats}>
+            <Stat value={SEED_STATS.games} label="Games" />
+            <Stat value={`${SEED_STATS.hours}h`} label="Hours" />
+            <Stat value={`${SEED_STATS.completionPct}%`} label="Complete" />
+            <Stat value={SEED_STATS.cardsDesigned} label="Cards" />
+            <Stat value={SEED_STATS.adoptions} label="Adoptions" />
+            <Stat value={SEED_STATS.friends} label="Friends" />
           </View>
         </Section>
 
@@ -80,20 +72,30 @@ export default function Profile() {
           </View>
         </Section>
 
-        <Section title="Stats">
-          <View style={styles.stats}>
-            <StatTile value={SEED_STATS.games} label="Games" />
-            <StatTile value={`${SEED_STATS.hours}h`} label="Hours" />
-            <StatTile value={`${SEED_STATS.completionPct}%`} label="Complete" />
-            <StatTile value={SEED_STATS.cardsDesigned} label="Cards" />
-            <StatTile value={SEED_STATS.adoptions} label="Adoptions" />
-            <StatTile value={SEED_STATS.friends} label="Friends" />
+        <Section title="Now Playing">
+          <View style={styles.nowRow}>
+            <GameCard title={SEED_NOW_PLAYING.title} size="cell" nowPlaying />
+            <View style={styles.nowMeta}>
+              <Text style={styles.nowTitle}>{SEED_NOW_PLAYING.title}</Text>
+              <Text style={styles.nowSub}>{SEED_NOW_PLAYING.hours}H LOGGED</Text>
+            </View>
+          </View>
+        </Section>
+
+        {/* MY DEVICE — a small labelled thumbnail (fix #4 / P5); NOT the app-wrapping DeviceShell */}
+        <Section title="My Device">
+          <View style={styles.devRow}>
+            <MiniDevice />
+            <View style={styles.devMeta}>
+              <Text style={styles.devTitle}>POCKET · TEAL</Text>
+              <Text style={styles.devSub}>MIDNIGHT SCREEN</Text>
+            </View>
           </View>
         </Section>
 
         <ScreenButton label="Sign out" variant="secondary" onPress={signOut} block />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -106,29 +108,37 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
+// A stats cell — a centered 1/3-width tile so the grid spans the width (mockup `.stats`, P9).
+function Stat({ value, label }: { value: string | number; label: string }) {
+  return (
+    <View style={styles.statCell}>
+      <StatTile value={value} label={label} />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: theme.scr.bg },
   center: { alignItems: 'center', justifyContent: 'center', gap: theme.space.lg },
   body: { padding: theme.space.lg, gap: theme.space.xl },
   errTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.accent, letterSpacing: 1 },
-  bio: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.dim, lineHeight: 16 },
-  device: {
-    backgroundColor: theme.shell.plastic,
-    borderRadius: theme.corner.shell,
-    padding: theme.space.md,
-    borderBottomWidth: 4,
-    borderBottomColor: theme.shell.lo,
-  },
-  deviceRail: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: theme.space.sm, paddingBottom: theme.space.sm },
-  screw: { width: 7, height: 7, borderRadius: 4, backgroundColor: theme.shell.lo },
-  deviceScreen: { backgroundColor: theme.scr.bg, height: 90, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: theme.shell.ink },
-  deviceWord: { fontFamily: theme.font.shell, fontSize: 24, color: theme.brand.accent, letterSpacing: 2 },
   section: { gap: theme.space.md },
   sectionHead: { fontFamily: theme.font.screenBold, fontSize: theme.type.body, color: theme.scr.dim, letterSpacing: 1.5 },
+  stats: { flexDirection: 'row', flexWrap: 'wrap', rowGap: theme.space.lg },
+  statCell: { width: '33.33%', alignItems: 'center' },
+  top3: { flexDirection: 'row', gap: theme.space.lg, justifyContent: 'space-between' },
   nowRow: { flexDirection: 'row', alignItems: 'center', gap: theme.space.lg },
   nowMeta: { gap: 2 },
   nowTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink },
   nowSub: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.accent, letterSpacing: 1 },
-  top3: { flexDirection: 'row', gap: theme.space.lg, justifyContent: 'space-between' },
-  stats: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.lg, rowGap: theme.space.lg },
+  devRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.space.lg,
+    backgroundColor: theme.scr.panel,
+    padding: theme.space.lg,
+  },
+  devMeta: { gap: 2 },
+  devTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 0.5 },
+  devSub: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
 });
