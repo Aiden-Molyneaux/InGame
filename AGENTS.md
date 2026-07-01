@@ -27,6 +27,16 @@
   **over** — nobody, including the owner, bypasses `main`.
 - **Verify before you claim done.** Run the relevant checks (typecheck / lint / unit / integration) and
   read the result; never report green you didn't see.
+- **See your own UI before reporting a screen done (client work).** The app runs in a browser —
+  `npm -w @ingame/mobile run web` (Expo web / `react-native-web`) at a **phone viewport (~390×844)**.
+  After building or changing any screen, **open it, screenshot it, and compare it against its mockup**
+  (`docs/design/mockups/<screen>/*-states.html`) + the milestone DoD — then fix the obvious
+  presence/placement gaps *before* reporting the screen done. Building UI blind is the main cause of weak
+  first passes; seeing your own render is the cheapest quality lever there is. **Caveat:** Expo web ≈
+  native for layout / structure / most styling, but the **device shell, notch, safe-areas, fonts, and
+  native modules render differently (or not at all) on web** — treat web as the fast iteration loop and
+  the **physical iPhone as the source of truth** for native fidelity (that's the milestone gate, not the
+  per-change loop).
 - **Filing an OQ or a decision?** Take the next free number by listing `docs/open-questions.md` /
   `docs/decisions/` first — parallel design tracks claim numbers concurrently, so collisions happen (that's
   how decision 0047 collided → 0051); if two records share a number, the less-entangled one renumbers.

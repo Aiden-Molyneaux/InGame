@@ -16,6 +16,18 @@
 
 ## Open
 
+- OQ-118: **`rule-02-scoping` actor-scoping lint is a write-verb denylist with holes** (surfaced by the
+  M2 fix-pass lead-audit, commit `acde8b9`, 2026-07-01). The CONVENTIONS-spine rule
+  `tools/lint/rules/rule-02-scoping.mjs` detects unscoped queries via `ACCESS_RE = /\.(from|update|delete)\(/`
+  — a **3-verb denylist**. Unmarked cross-user **writes** via `.insert(...).onConflictDoUpdate(...)` (an
+  upsert that mutates an existing row) and a raw `db.execute` of a `sql` template doing `UPDATE`/`DELETE`
+  **bypass the rule entirely**, in any repo. (Plain `.insert()` is a deliberate, sound exclusion — you can't
+  IDOR a brand-new actor-stamped row.) **No confirmed live hole** — runtime `asActor`/`ownedBy` scoping is
+  sound (M2 audit) — but the guardrail's "CI catches an unscoped write" promise has a gap that widens as M3
+  adds write surface. **Proposed:** flip rule-02 to an **allowlist of read verbs** (fail closed on any
+  unrecognized query verb), or at minimum extend detection to `.onConflictDoUpdate` / `.execute` / raw `sql`
+  writes. Related to **OQ-115** (auth-layer confinement shape, gate-3). Fast-follow before M3; does **not**
+  block M2 sign-off. (M2 fix-pass audit, 2026-07-01) [behavior]
 - OQ-114: **decision 0047 §B self-contradicts on the Profile Top-3 card size.** §B calls the Top-3
   set-pieces **`GameCard/grid`** but gives the dimension **`(96×134)`** — which is the **`/cell`** size
   (grid is 161×225), and 0047's own §B.1 board treatment snaps those seats to a **`/cell` 10px plate**. So
