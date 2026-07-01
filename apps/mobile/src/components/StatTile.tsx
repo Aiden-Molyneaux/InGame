@@ -13,7 +13,7 @@ export function StatTile({ value, label }: { value: string | number; label: stri
 }
 
 const styles = StyleSheet.create({
-  tile: { alignItems: 'flex-start', gap: 1, minWidth: 72 },
+  tile: { alignItems: 'center', gap: 1 }, // centred within its container (mockup `.stat`)
   value: {
     fontFamily: theme.font.screenBold,
     fontSize: theme.type.title, // 15 (F-06)

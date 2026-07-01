@@ -3,9 +3,11 @@ import { theme } from '../theme';
 import { NavKeycap } from './NavKeycap';
 
 // NavBand (component-map §5.1) — the shell band holding the 5 NavKeycaps. It is transparent so it
-// reads as the lower part of the ONE teal plastic body (the DeviceShell), and is a FIXED 128px tall so
-// the usable screen area above it is sized correctly. `locked` (logged-out / pre-auth) greys it out +
-// makes it non-interactive. F-04: nav legibility beats customization (the 5 keys stay legible).
+// reads as the lower part of the ONE teal plastic body (the DeviceShell). The band is CONTENT-sized
+// (pad-top 16 · keys · pad-bottom ⌊home-indicator inset⌋) — owner ruling 2026-07-01: the keys ride
+// just above the device bottom (~½cm), not atop a fixed 128px well of dead plastic (the mockup's 128
+// includes the outside key labels this build carries inside the caps). `locked` (logged-out /
+// pre-auth) greys it out + makes it non-interactive. F-04: the 5 keys stay legible.
 export interface NavTab {
   key: string;
   label: string;
@@ -13,8 +15,6 @@ export interface NavTab {
   /** false ⇒ a placeholder tab (M3+ screen not built) — shown but inert. */
   built?: boolean;
 }
-
-const NAV_BAND = 128; // mockup `.nav-band` height — fixes the usable screen area
 
 export function NavBand({
   tabs,
@@ -34,15 +34,17 @@ export function NavBand({
     <View
       style={[
         styles.band,
-        { height: NAV_BAND + bottomInset, paddingBottom: bottomInset },
+        { paddingBottom: Math.max(bottomInset, 16) },
         locked && styles.bandLocked,
       ]}
       accessibilityRole="tablist"
     >
-      {tabs.map((tab) => (
+      {tabs.map((tab, i) => (
         <NavKeycap
           key={tab.key}
           label={tab.label}
+          glyph={tab.key}
+          labelPosition={i % 2 === 1 ? 'above' : 'below'} // mockup alternation (DISCOVER/PROFILE above)
           accent={tab.accent}
           active={!locked && tab.key === activeKey}
           disabled={locked || tab.built === false}
@@ -58,7 +60,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     paddingHorizontal: 6,
-    paddingTop: 16, // mockup `.nav-band` padding — keys sit toward the top of the band
+    paddingTop: 16,
   },
   bandLocked: { opacity: 0.45 }, // component-map §5.1 NavBand `locked` (gray + non-interactive)
 });

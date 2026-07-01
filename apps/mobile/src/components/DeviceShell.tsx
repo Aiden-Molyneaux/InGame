@@ -23,7 +23,11 @@ export function DeviceShell({ children }: { children: React.ReactNode }) {
           <View style={styles.led} />
           <Text style={styles.powerLbl}>POWER</Text>
         </View>
-        <Text style={styles.logo}>INGAME</Text>
+        {/* the logo overlays the CONTENT box (below the notch) so it centres in line with POWER +
+            the grille — absolute w/o `top` ignored the inset padding and rode up under the notch */}
+        <View pointerEvents="none" style={[styles.logoWrap, { top: 16 + insets.top }]}>
+          <Text style={styles.logo}>INGAME</Text>
+        </View>
         <View style={styles.grille}>
           {[0, 1, 2, 3, 4].map((i) => (
             <View key={i} style={styles.slat} />
@@ -72,11 +76,15 @@ const styles = StyleSheet.create({
     opacity: 0.75,
     letterSpacing: 0.5,
   },
-  logo: {
+  logoWrap: {
     position: 'absolute',
     left: 0,
     right: 0,
-    textAlign: 'center',
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logo: {
     fontFamily: theme.font.shell, // Paytone One (F-08)
     fontSize: theme.type.display, // 21
     letterSpacing: 7,

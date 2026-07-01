@@ -16,6 +16,26 @@
 
 ## Open
 
+- OQ-119: **AUTH-10 acceptance gate missing from the built create-account form.** The M2 client's
+  sign-in screen ships a create-account mode that **hardcodes `acceptedTerms: true`**
+  (`apps/mobile/app/sign-in.tsx` register call) — no checkbox, no "13 or older" assertion, no
+  Terms/Privacy links. AUTH-10 + the W2 board (`welcome-auth-states.html` W2 — the acceptance row,
+  CREATE ACCOUNT disabled until checked) make the assertion the USER'S act; the client asserting it
+  on their behalf is a compliance-shaped behavior gap. Either add the W2 acceptance row to the M2
+  form or drop the create mode from the client until W2 is built (register wasn't in the M2 client
+  DoD). (raised by the Parvati sign-on review, 2026-07-01) [behavior] M2
+- OQ-120: **API sends no CORS headers — the Expo-web (Chrome) dev loop can't call it.** Product-spec
+  §9 keeps web as the dev/testing convenience, but a browser origin (`http://localhost:8081`) gets no
+  `Access-Control-Allow-Origin` on any `/api/*` response, so login fails in Expo web (the phone /
+  Expo Go native loop is unaffected — no CORS there). Verified live: POST /auth/login 200s via curl
+  yet is blocked in-browser. Action: a dev-only CORS allowlist (localhost Metro origins) on the API.
+  (raised during the Parvati review's web-loop capture, 2026-07-01) [behavior/infra] M2 fast-follow
+- OQ-121: **login/register session response returns `user.gamertags: []` while GET /me inlines the
+  real rows** — the issuance serializer doesn't join gamertags, so the same "self-shape" differs
+  between `POST /auth/login` and `GET /me` (0.42 / OQ-116 says the self-shape carries inline
+  gamertags). Pin one: session responses either omit the field or return the true self-shape.
+  Verified live against the seeded `demo_curator2`. (raised during the Parvati review, 2026-07-01)
+  [behavior/shape] M2
 - OQ-115: **SYS-01 scope-lint gains a `// SYS-01-AUTH-LOOKUP` marker for pre-auth credential lookups**
   (M2 auth build). rule-2 (the fail-closed SYS-01 scope-lint) now recognizes an explicit, greppable
   `// SYS-01-AUTH-LOOKUP` annotation — **confined to the auth-layer repos** (path `/auth/` or a

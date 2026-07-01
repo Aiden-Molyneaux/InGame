@@ -34,7 +34,11 @@ export default function Profile() {
     return (
       <View style={[styles.screen, styles.center]}>
         <Text style={styles.errTitle}>SIGNAL LOST</Text>
+        <Text style={styles.errSub}>
+          Couldn’t load your profile. If this is an old session, sign out and sign back in.
+        </Text>
         <ScreenButton label="Retry" variant="action-alt" onPress={() => refetch()} />
+        <ScreenButton label="Sign out" variant="secondary" onPress={signOut} />
       </View>
     );
   }
@@ -108,7 +112,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-// A stats cell — a centered 1/3-width tile so the grid spans the width (mockup `.stats`, P9).
+// A stats cell — a 3-per-row PANEL container (mockup `.stat`: panel bg, centred value/label — owner
+// ruling 2026-07-01) with the boxless StatTile centred inside it. P9.
 function Stat({ value, label }: { value: string | number; label: string }) {
   return (
     <View style={styles.statCell}>
@@ -122,10 +127,18 @@ const styles = StyleSheet.create({
   center: { alignItems: 'center', justifyContent: 'center', gap: theme.space.lg },
   body: { padding: theme.space.lg, gap: theme.space.xl },
   errTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.accent, letterSpacing: 1 },
+  errSub: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.dim, textAlign: 'center', lineHeight: 16, paddingHorizontal: theme.space.xl },
   section: { gap: theme.space.md },
   sectionHead: { fontFamily: theme.font.screenBold, fontSize: theme.type.body, color: theme.scr.dim, letterSpacing: 1.5 },
-  stats: { flexDirection: 'row', flexWrap: 'wrap', rowGap: theme.space.lg },
-  statCell: { width: '33.33%', alignItems: 'center' },
+  stats: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.md },
+  statCell: {
+    flexBasis: '31%',
+    flexGrow: 1,
+    alignItems: 'center',
+    backgroundColor: theme.scr.panel,
+    paddingVertical: theme.space.md,
+    paddingHorizontal: theme.space.sm,
+  },
   top3: { flexDirection: 'row', gap: theme.space.lg, justifyContent: 'space-between' },
   nowRow: { flexDirection: 'row', alignItems: 'center', gap: theme.space.lg },
   nowMeta: { gap: 2 },

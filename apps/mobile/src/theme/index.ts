@@ -44,6 +44,7 @@ export const theme = {
     bezel: '#0b0a13', // the dark screen-bezel frame the Midnight screen sits in (mockup `--bezel`,
     // darker than scr.bg so the screen reads inset) — DeviceShell §5.1
     led: '#ff5a4e', // the red POWER LED on the top-band (mockup `.power .led`)
+    pipOff: '#117672', // an unlit nav pip (mockup `--pip-off`)
   },
 
   // F-06 — the ONLY on-screen type scale.

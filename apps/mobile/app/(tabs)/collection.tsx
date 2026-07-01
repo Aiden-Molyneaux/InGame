@@ -29,7 +29,7 @@ export default function Collection() {
         <ScreenHead title="Collection" count={`${SEED_COLLECTION.length} OF ${COLLECTION_TOTAL}`} />
       </View>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.body}>
-        {view === 'list' ? <ListView /> : view === 'top' ? <TopView /> : <ShelfView size={view} />}
+        {view === 'list' ? <ListView /> : view === 'top' ? <TopView /> : view === 'grid' ? <GridView /> : <ShelfView />}
       </ScrollView>
       {/* bottom tools bar — the docked view-switch (fix #5 / C1); border-top per the mockup `.tools` */}
       <View style={styles.tools}>
@@ -39,12 +39,42 @@ export default function Collection() {
   );
 }
 
-function ShelfView({ size }: { size: CollectionView }) {
-  const cardSize = size === 'grid' ? 'cell' : 'grid';
+// SHELF (owner ruling 2026-07-01, mockup drawer/search artboards): ONE Now-Playing hero (card +
+// stats beside — mockup `.hero`) leading a TWO-per-row flow of bare card faces (`.grid`, 1fr 1fr).
+// Faces only — per-entry meta lives in LIST; the card-back stats flip (peek-flip) is M3. LOG HOURS
+// (M3 action) + the catalog line (M3 data) stay off the hero.
+function ShelfView() {
+  const hero = SEED_COLLECTION.find((g) => g.nowPlaying);
+  return (
+    <View style={styles.shelf}>
+      {hero ? (
+        <View style={styles.hero}>
+          <GameCard title={hero.title} size="grid" foil={hero.foil} style={styles.heroCard} />
+          <View style={styles.heroMeta}>
+            <Text style={styles.heroEyebrow}>NOW PLAYING</Text>
+            <Text style={styles.heroStat}>
+              {hero.hours}H · {hero.status.toUpperCase()}
+            </Text>
+            <Text style={styles.heroTitle}>{hero.title.toUpperCase()}</Text>
+          </View>
+        </View>
+      ) : null}
+      <View style={styles.shelfWrap}>
+        {SEED_COLLECTION.map((g) => (
+          <View key={g.entryId} style={styles.shelfCol}>
+            <GameCard title={g.title} size="grid" nowPlaying={g.nowPlaying} foil={g.foil} style={styles.fluidCard} />
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function GridView() {
   return (
     <View style={styles.wrap}>
       {SEED_COLLECTION.map((g) => (
-        <GameCard key={g.entryId} title={g.title} size={cardSize} nowPlaying={g.nowPlaying} foil={g.foil} />
+        <GameCard key={g.entryId} title={g.title} size="cell" nowPlaying={g.nowPlaying} foil={g.foil} />
       ))}
     </View>
   );
@@ -111,6 +141,44 @@ const styles = StyleSheet.create({
     backgroundColor: theme.scr.bg,
   },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.lg, justifyContent: 'space-between' },
+  shelf: { gap: theme.space.lg },
+  hero: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    padding: theme.space.lg,
+    backgroundColor: theme.scr.panel,
+    borderWidth: 1,
+    borderColor: theme.scr.hairline,
+  },
+  heroCard: { width: 138, height: 193 }, // mockup `.gcard.hero-size`
+  heroMeta: { flex: 1, justifyContent: 'center', gap: 7 },
+  heroEyebrow: {
+    fontFamily: theme.font.screenBold,
+    fontSize: theme.type.micro, // 9 (mockup `.npl`)
+    color: theme.scr.accent,
+    letterSpacing: 2,
+  },
+  heroStat: {
+    fontFamily: theme.font.screenBold,
+    fontSize: theme.type.micro, // 9 (mockup `.stat-line`)
+    color: theme.scr.dim,
+    letterSpacing: 2,
+  },
+  heroTitle: {
+    fontFamily: theme.font.screenBold,
+    fontSize: theme.type.display, // 21 (mockup `.hero-title`, F-06)
+    color: theme.scr.ink,
+    letterSpacing: 1,
+  },
+  shelfWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    rowGap: theme.space.lg,
+  },
+  shelfCol: { width: '48%' },
+  fluidCard: { width: '100%', height: 'auto', aspectRatio: 63 / 88 }, // mockup `.grid-size`
   list: { gap: theme.space.md },
   row: {
     flexDirection: 'row',

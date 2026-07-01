@@ -8,10 +8,12 @@ import { NavBand, type NavTab } from './NavBand';
 //   • in the app (a built tab route) ⇒ active, and a keypress navigates via the router.
 // M2 wires COLLECTION + PROFILE; DISCOVER · STORE · FRIENDS are shown but inert (screens are M3+).
 
-const ORDER = ['collection', 'discover', 'store', 'friends', 'profile'] as const;
+// Key order per the canonical NavBand on every mockup board: STORE · DISCOVER · COLLECTION (the
+// centre/hero key) · PROFILE · FRIENDS.
+const ORDER = ['store', 'discover', 'collection', 'profile', 'friends'] as const;
 
 const LABELS: Record<string, { label: string; accent?: NavTab['accent'] }> = {
-  collection: { label: 'COLLECT', accent: 'collection' },
+  collection: { label: 'COLLECTION', accent: 'collection' }, // full name — the label rides OUTSIDE the cap now
   discover: { label: 'DISCOVER' },
   store: { label: 'STORE', accent: 'store' },
   friends: { label: 'FRIENDS' },
