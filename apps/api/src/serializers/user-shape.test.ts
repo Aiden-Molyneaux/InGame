@@ -19,11 +19,17 @@ function makeUser(over: Partial<UserRow> = {}): UserRow {
     id: '11111111-1111-4111-8111-111111111111',
     username: 'curator',
     email: 'curator@example.com',
+    passwordHash: null,
+    emailVerifiedAt: null,
     bio: 'collector of trophies',
     avatarUrl: null,
     privacy: 'friends',
     role: 'user',
     adminTier: null,
+    favouriteGameId: null,
+    favouriteGenreIds: [],
+    usernamePending: false,
+    usernameChangedAt: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     deletedAt: null,
     ...over,
@@ -53,9 +59,15 @@ describe('F06: read-path privacy serializer (relationship matrix)', () => {
   });
 
   it('friend (full) shape adds exactly bio + privacy', () => {
-    const out = toFriendShape(makeUser(), { relationship: 'friend', mutualFriendsCount: 5 });
+    const out = toFriendShape(makeUser(), {
+      relationship: 'friend',
+      mutualFriendsCount: 5,
+      friendsCount: 12,
+      gamertags: [],
+    });
     expect(friendProfileSchema.parse(out)).toEqual(out);
     expect(out.bio).toBe('collector of trophies');
+    expect(out.friendsCount).toBe(12);
     expect('email' in out).toBe(false);
   });
 

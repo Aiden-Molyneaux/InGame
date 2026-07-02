@@ -4,7 +4,7 @@
 > be refined alongside the design-spec, because screens reveal exactly what each call must return.
 > Behavior lives in [`product-spec.md`](product-spec.md); shapes live here. Referenced by ID.
 
-**Version:** 0.44 (draft) · **Last updated:** 2026-07-01 · **Owner:** Claude Code
+**Version:** 0.45 (draft) · **Last updated:** 2026-07-01 · **Owner:** Claude Code
 
 ---
 
@@ -47,6 +47,10 @@
 | POST | `/auth/verify-email/request` | Resend the verification email (AUTH-08) |
 | POST | `/auth/verify-email/confirm` | `{ token }` → `{ ok: true }` (AUTH-08) |
 | GET | `/auth/username-available?u=` | `{ available, reason? }` — **public pre-check** (pre-auth): screened (MOD-07) + uniqueness; **advisory** (authoritative at register / `PATCH /me`); rate-limited (**AUTH-11**) |
+
+> **The session `user` IS the `GET /me` self-shape** — register / login / apple return the same
+> serializer output `/me` does (**one self-shape serializer, no issuance-vs-`/me` drift** — OQ-121;
+> e.g. `gamertags` inline on both). A client may still refetch `/me`, but the shapes never disagree.
 
 ## Public stats (`SYS-12`)
 | Method | Path | Notes |
@@ -262,3 +266,4 @@
 | 2026-06-30 | 0.42 | **M2 seam formalizations** (OQ-116/117 — spec-owner pass on the committed M2 build, no new paths): `/me` self-shape gains **`usernamePending`** (AUTH-09) · **`emailVerified`** (AUTH-08) · **`role`/`adminTier`** (PROF-09 / decision 0034), and in M2 returns the bare **`favouriteGameId`** (the expanded `favouriteGame`/`nowPlaying` need the catalog → M3); **gamertag CRUD bodies** enumerated (`{platform,handle}` req · `{id,platform,handle}` view); **OQ-117** — the M2 `/users/:id` non-friend shape is the limited set **regardless of the `privacy` toggle** (friendship-gated; the `public`-widening field set deferred to a later design call). `ACCOUNT_SUSPENDED {reason,until?}` + `VALIDATION_ERROR reason:"invalid_token"` already enumerated (0.32/0.38). | PROF-01/02/03/09, AUTH-08/09 |
 | 2026-07-01 | 0.43 | **Foundation-review formalization — batch 1** (decision 0055): `/users/:id` — the generic **`staff?: true`** marker (PROF-09) added to the enumerated **friend + limited** shapes, plus a note that **neither shape exposes the target's own `privacy` value** (F-16 — the shipped friend serializer's stray `privacy` field is dropped in code); the **Top-10 re-rank** row re-pointed off the retired §4.7 editor to the **Collection TOP view-mode** (COL-13, decisions 0049/0050 — F-06). No new paths/shapes. | PROF-09, COL-13, PROF-03 |
 | 2026-07-01 | 0.44 | **Foundation-review — batch 2 (doc hygiene)** (decision 0055 disposition): `/users/search` **`relationship`** enum spelling unified to **`friend`** (matching `/users/:id` + the shared schema; `blocked`·`cooldown` noted search-only — F-13); **business-refusal error codes** noted **additive, reserved M4/M5** on the error registry (F-17). No new paths/shapes. | SOC-07, PROF-03 |
+| 2026-07-01 | 0.45 | **Session `user` = the `GET /me` self-shape** (OQ-121, decision 0056): register / login / apple return the same serializer output `/me` does — one self-shape serializer, no issuance-vs-`/me` drift (the live drift Parvati caught: login returned `gamertags: []` while `/me` inlined the rows; the issuance-side alignment rides gate-3). Auth-table note added. No new paths/shapes. | AUTH-02/03, PROF-02 |

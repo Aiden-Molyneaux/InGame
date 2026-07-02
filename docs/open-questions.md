@@ -16,6 +16,62 @@
 
 ## Open
 
+- OQ-124: **Nail down the username / email / password requirements** (owner directive after the
+  on-device register confusion, 2026-07-01 — `AidenBruh` silently 422'd on the lowercase-only rule).
+  To pin: **username** — charset + bounds are implemented (`^[a-z0-9_]+$`, the shared schema) but
+  the POLICY isn't ruled: normalize-vs-reject casing (should the client lowercase as you type
+  instead of erroring?), and is a separate display-name ever wanted; **email** — normalization
+  (case-fold? plus-addressing aliases = same account?); **password** — the ≥8 floor exists
+  (AUTH-01) but max length, breach-list checking, and no-composition-rules (NIST-style) are
+  unruled. Product-spec owns the ruling (AUTH-01 territory); the shared schemas + the W2/W3/W4
+  boards ripple. (raised from the failed-register session, 2026-07-01) [behavior] M3-window
+- OQ-119: **AUTH-10 acceptance gate missing from the built create-account form.** The M2 client's
+  sign-in screen ships a create-account mode that **hardcodes `acceptedTerms: true`**
+  (`apps/mobile/app/sign-in.tsx` register call) — no checkbox, no "13 or older" assertion, no
+  Terms/Privacy links. AUTH-10 + the W2 board (`welcome-auth-states.html` W2 — the acceptance row,
+  CREATE ACCOUNT disabled until checked) make the assertion the USER'S act; the client asserting it
+  on their behalf is a compliance-shaped behavior gap. Either add the W2 acceptance row to the M2
+  form or drop the create mode from the client until W2 is built (register wasn't in the M2 client
+  DoD). (raised by the Parvati sign-on review, 2026-07-01) [behavior] M2
+- OQ-120: **API sends no CORS headers — the Expo-web (Chrome) dev loop can't call it.** Product-spec
+  §9 keeps web as the dev/testing convenience, but a browser origin (`http://localhost:8081`) gets no
+  `Access-Control-Allow-Origin` on any `/api/*` response, so login fails in Expo web (the phone /
+  Expo Go native loop is unaffected — no CORS there). Verified live: POST /auth/login 200s via curl
+  yet is blocked in-browser. Action: a dev-only CORS allowlist (localhost Metro origins) on the API.
+  (raised during the Parvati review's web-loop capture, 2026-07-01) [behavior/infra] M2 fast-follow
+- OQ-123: **Robust 401 → auto-sign-out (self-healing expired sessions).** The M2 client's SIGNAL-LOST
+  error state now offers a manual Sign-out escape, but any expired/stale session still strands the
+  user until they use it: an authenticated request that 401s (after a failed refresh) should
+  **tear down the session automatically** (F20 purge + F14 token clear → `/sign-in`), not just error.
+  Deferred by owner call during the M2 fix pass (2026-07-01); recurring for any expired token until it
+  lands — schedule in the M3 client lane. (from the M2 phone-test receipt) [behavior] M3
+- OQ-121: **login/register session response returns `user.gamertags: []` while GET /me inlines the
+  real rows** — the issuance serializer doesn't join gamertags, so the same "self-shape" differs
+  between `POST /auth/login` and `GET /me`. **Contract ruling PINNED — api-contract 0.45 (decision 0056):** the
+  session `user` IS the `GET /me` self-shape (one serializer, no issuance drift). **What remains is
+  the backend alignment** (join gamertags in the issuance path): auth-lane code — a STOP-domain
+  surface, so not hand-patched from the review lane; rides **gate-3** with the auth seam review.
+  Verified live against the seeded `demo_curator2`. (raised during the Parvati review, 2026-07-01)
+  [behavior/shape] M2
+- OQ-115: **SYS-01 scope-lint gains a `// SYS-01-AUTH-LOOKUP` marker for pre-auth credential lookups**
+  (M2 auth build). rule-2 (the fail-closed SYS-01 scope-lint) now recognizes an explicit, greppable
+  `// SYS-01-AUTH-LOOKUP` annotation — **confined to the auth-layer repos** (path `/auth/` or a
+  `(auth|token)…-repo` file) — for the ONE legitimate non-actor-scoped user read: a pre-authentication
+  / bearer-credential lookup by **email / username / token-hash** (login · register-uniqueness ·
+  refresh · reset/verify-confirm · apple-linking) where no owner id yet exists to scope by. Every
+  POST-auth write stays actor-scoped (asActor/ownedBy); only credential LOOKUPS use the marker. A
+  misuse fixture proves the marker grants **no bypass outside the auth layer**
+  (`tools/lint/rules/rule-02-scoping.test.mjs`). This touches the SYS-01 guard surface → wants
+  **owner / gate-3 review** (the auth+SYS-01 seam gate is exactly for this). (raised building the M2
+  auth stack, 2026-06-30) [behavior/process] M2
+- OQ-117: **PROF-03 `public` privacy — does it expose MORE than the limited shape to a non-friend?**
+  GET /users/:id (G-D) enumerates exactly TWO shapes — friend/full vs non-friend/limited — gated by
+  FRIENDSHIP; M2 implements that (a non-friend gets the limited allowlist regardless of the target's
+  `privacy`). The contract enumerates no richer 'public-non-friend' shape, so `friends` vs `public`
+  currently only rides the friend shape. If a `public` profile should show a non-friend *more* than
+  name/avatar/memberSince/mutuals (yet less than a friend), that's a spec refinement. Tagged
+  `// ASSUMPTION(OQ-117)` in `apps/api/src/services/users-service.ts`; reversible, non-STOP (the
+  conservative reading is implemented). (raised building G-D, 2026-06-30) [behavior] M2
 - OQ-122: **The F32 binary global/user-owned scope model doesn't cover the community / cross-user READS arriving at M4–M7** (foundation review F-09). `rule-02-scoping` admits two classes (global-listed vs user-owned fail-closed) + the auth-layer `AUTH-LOOKUP` exception. Coming reads fit none: the **published-card gallery / trending** (`card_designs` filtered by `published`, M4/M5), **invite-token resolution** by token value (SOC-10, M6 — partly covered only if the repo is named `*-token-repo`), and **feed fan-out** cross-user reads (SOC-06, M7). Each will either fail rule-02 (breeding ad-hoc `asActor`-shaped workarounds) or pressure the manifest to mislabel a user-owned table as global (silently disabling scoping for its private rows — the worse failure). **Proposed:** a third read class — a `// SYS-01-PUBLIC-READ` marker / `publishedOnly(table)` helper valid only for reads carrying an explicit visibility predicate, + a bearer-token-lookup variant of `AUTH-LOOKUP` scoped to an enumerated repo list. **Decide at M4 entry (G-H window)**, not mid-build. Related to OQ-115. (foundation review F-09, 2026-07-01) [behavior/process] M4-entry
 - OQ-118: **`rule-02-scoping` actor-scoping lint is a write-verb denylist with holes** (surfaced by the
   M2 fix-pass lead-audit, commit `acde8b9`, 2026-07-01). The CONVENTIONS-spine rule
@@ -232,6 +288,12 @@
 - OQ-110: **Spec IDs leak into UI copy.** "CARD-16"-style stable IDs appear in user-facing strings (styler:493); strip app-wide. (board copy cleanup) [presentation/QUICK] — any
 
 ## Resolved
+- OQ-116 → **RESOLVED (2026-07-01): pinned in api-contract 0.42** by the parallel spec-owner pass
+  (`/me` gains `usernamePending`/`emailVerified`/`role`/`adminTier`; gamertag CRUD bodies + the
+  controlled platform list, `{ items: [...] }` GET wrapper, `handle` ≤64 sanitized+screened). The
+  companion **session-`user` = `/me` self-shape** pin (the OQ-121 half) landed in **0.45**
+  (decision 0056). Its (b) items — `ACCOUNT_SUSPENDED {reason, until?}` + `VALIDATION_ERROR
+  reason:"invalid_token"` — were verified already pinned (0.11 / 0.32). [behavior/shape]
 - OQ-111 → **RESOLVED (2026-06-30, M2-entry spec-prep): component-map re-synced to §1.5 v0.49 (v0.4).** A grounded, adversarially-vetted reconciliation folded decisions 0037/0038/0047/0048/0049/0050 into the map — nameplate F-06 binding, CARD-23 tap + CardDetail enlarge, the §4.7 Lists editor **RETIRED** → Collection **TOP** view-mode (COL-13), Collection view-switch SHELF·GRID·LIST·TOP, and three silent-drift gaps filled (`CommunityGallery`, `RecommendSheet`, §1.6b A11y baseline). The 🔶 **Achievements (4.10)** + **Admin (4.4)** name-sets are **locked ✅** (`ListSummary` dropped; FunctionRow/FieldRemediationRow/ModerationNotice held provisional). The map is current for M2 **Lane B** client coding. *(A size contradiction inside decision 0047 was surfaced, not silently resolved → OQ-114.)* [design]
 - OQ-112 → **RESOLVED (2026-06-30, M2-entry spec-prep — the decision 0052 §4 carryover): `privacy` enum pinned.** `api-contract` **0.41** pins the PROF-03 `privacy` field to **`∈ 'friends' | 'public'`** (`'friends'` = friends-only default · `'public'` = limited public) on `GET /me` + `PATCH /me`, formalizing the value tagged `// ASSUMPTION(OQ-112)` in `packages/shared`. No new paths/shapes. [behavior]
 - OQ-090 → **RESOLVED (decision 0039, 2026-06-28): Keycap family renamed for accuracy.** Flat on-screen buttons (0.20) dropped the misleading "Keycap": **`KeycapButton→ScreenButton` · `ToolKeycap→ToolButton` · `CountKeycap→CountTag`** ("Keycap" now = the 5 shell keys only, F-03). Rippled across design-spec §1.5 + all §2 (design-spec 0.40) + component-map 0.2. Boards keep throwaway `.btn`/`.kc` classes. Naming-only — no behaviour/token/API change. [design-spec / naming]
@@ -387,7 +449,9 @@
   (long-press-drag), saved as one more sort choice. design-spec §2.1. Decision 0013. (2026-06-11)
 - OQ-033 → **Shelf rows show per-game stats.** The dense-list rationale shifts from "only mode with
   stats" to **density** (list scans more rows than shelf). One-line ripple to design-req §3.1.
-  Decision 0013. (2026-06-11)
+  Decision 0013. (2026-06-11) — **SUPERSEDED by decision 0057 (2026-07-01, owner on-device ruling):
+  the shelf is the binder — Now-Playing hero + two-per-row bare card FACES, no per-row meta; stats
+  via the COL-12 flip (list stays the per-row stats scan). design-spec §2.1 (0.50).**
 - OQ-034 → **Tools-bar model: "keycaps act, the drawer configures."** Tap = the tool's one-bit action
   (search live-filter · sort ASC/DESC · view cycle); FILTER opens the sheet; long-press → sheet at
   that section; one shared query state. design-spec §2.1. Decision 0013. (2026-06-11)

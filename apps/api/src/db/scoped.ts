@@ -10,8 +10,12 @@ export interface Actor {
   readonly actorId: string;
 }
 
-/** Construct an Actor, refusing an absent id at runtime (belt-and-braces over the type). */
-export function asActor(actorId: string | undefined | null): Actor {
+/**
+ * Construct an Actor. The id is a NON-OPTIONAL `string` so a caller cannot pass a possibly-undefined
+ * id (compile-time enforcement); the runtime guard stays as belt-and-braces — it still catches an
+ * empty string and any `any`-typed value that slips past the type checker.
+ */
+export function asActor(actorId: string): Actor {
   if (!actorId) {
     throw new Error('SYS-01: actorId is required and non-optional for user-owned data access.');
   }

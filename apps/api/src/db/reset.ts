@@ -9,7 +9,12 @@ import { getDb, closeDb } from './client';
 export async function resetDb(): Promise<void> {
   assertDisposableDb();
   const db = getDb();
-  await db.execute(sql`TRUNCATE TABLE domain_events, users RESTART IDENTITY CASCADE`);
+  // TRUNCATE the parent `users` + the append-only logs; CASCADE clears every child table that FKs
+  // users (auth_identities, refresh_tokens, auth_tokens, gamertags, friendships, user_blocks,
+  // user_suspensions). admin_audit_log + domain_events carry no FK, so they are named explicitly.
+  await db.execute(
+    sql`TRUNCATE TABLE users, admin_audit_log, domain_events RESTART IDENTITY CASCADE`,
+  );
 }
 
 function isDirectRun(): boolean {

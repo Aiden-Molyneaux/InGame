@@ -7,6 +7,25 @@ export interface ApiEnv {
   disposableDb: boolean;
   port: number;
   nodeEnv: string;
+  /** AUTH-02 — HS256 signing secret for the short-lived access-token JWT (server-only, SYS-03). */
+  jwtSigningSecret: string;
+  /** AUTH-02 — access-token lifetime (short-lived). */
+  accessTokenTtlSeconds: number;
+  /** AUTH-02 — refresh-token lifetime (long-lived, rotating). */
+  refreshTokenTtlSeconds: number;
+  /** AUTH-04 — password-reset token lifetime (~1 hour, single-use). */
+  passwordResetTtlSeconds: number;
+  /** AUTH-08 — email-verification token lifetime (soft). */
+  emailVerifyTtlSeconds: number;
+  /** PROF-06 — username-change cooldown (server-configurable, SYS-04; default 30 days). */
+  usernameCooldownSeconds: number;
+  /** F18 — Sentry DSN (server). Empty ⇒ Sentry is a no-op (log-only), like the stubbed email sender. */
+  sentryDsn: string;
+}
+
+function num(value: string | undefined, fallback: number): number {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): ApiEnv {
@@ -14,7 +33,14 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): ApiEnv {
   return {
     databaseUrl: source.DATABASE_URL ?? '',
     disposableDb: flag === '1' || flag === 'true',
-    port: Number(source.PORT ?? 4000),
+    port: num(source.PORT, 4000),
     nodeEnv: source.NODE_ENV ?? 'development',
+    jwtSigningSecret: source.JWT_SIGNING_SECRET ?? '',
+    accessTokenTtlSeconds: num(source.ACCESS_TOKEN_TTL_SECONDS, 15 * 60),
+    refreshTokenTtlSeconds: num(source.REFRESH_TOKEN_TTL_SECONDS, 30 * 24 * 60 * 60),
+    passwordResetTtlSeconds: num(source.PASSWORD_RESET_TTL_SECONDS, 60 * 60),
+    emailVerifyTtlSeconds: num(source.EMAIL_VERIFY_TTL_SECONDS, 24 * 60 * 60),
+    usernameCooldownSeconds: num(source.USERNAME_COOLDOWN_SECONDS, 30 * 24 * 60 * 60),
+    sentryDsn: source.SENTRY_DSN ?? '',
   };
 }

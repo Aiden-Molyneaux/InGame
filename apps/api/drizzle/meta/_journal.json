@@ -8,6 +8,20 @@
       "when": 1782854273842,
       "tag": "0000_same_shinobi_shaw",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1782870521845,
+      "tag": "0001_chemical_kitty_pryde",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782873009356,
+      "tag": "0002_left_hemingway",
+      "breakpoints": true
     }
   ]
 }

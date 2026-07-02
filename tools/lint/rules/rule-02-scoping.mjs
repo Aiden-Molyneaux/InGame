@@ -11,7 +11,19 @@ import { loadGlobalTables } from '../util/manifest.mjs';
 const ACCESS_RE = /\.(from|update|delete)\(\s*([A-Za-z_$][\w$]*)/g;
 const SCOPE_SIGNAL_RE = /\b(ownedBy|asActor|scoped|scopedQuery)\s*\(/;
 const EXEMPT_RE = /\/\/\s*SYS-01-EXEMPT(?::\s*([A-Za-z_][\w]*))?/;
+// SYS-01-AUTH-LOOKUP: the ONE legitimate non-actor-scoped user read — a PRE-AUTHENTICATION or
+// bearer-credential lookup (by email / username / token-hash) that ESTABLISHES the actor or validates
+// a bearer credential (login, register-uniqueness, refresh, reset/verify-confirm, apple-linking,
+// username-available). The marker exempts a READ (`.from` select) ONLY — its contract is "pre-auth
+// LOOKUPS only", so a marked `.update`/`.delete` still FAILS CLOSED (a write must be actor-scoped).
+// It is CONFINED to the auth-layer repos (path `/auth/` or a `(auth|token)…-repo` file) so it can
+// never grant a cross-user bypass to an ordinary repo — a misuse-fixture proves both guards.
+// Greppable + auditable at the gate-3 auth+SYS-01 seam review (OQ-115).
+const AUTH_LOOKUP_RE = /\/\/\s*SYS-01-AUTH-LOOKUP\b/;
 const WINDOW = 12;
+
+const isAuthLookupFile = (path) =>
+  /(^|\/)auth\//.test(path) || /(auth|token)[\w-]*-repo\.[mc]?tsx?$/.test(path);
 
 export default {
   id: 'rule-02-scoping',
@@ -47,6 +59,7 @@ export default {
 
       // (b) each user-owned select/update/delete must have a scope signal nearby.
       for (const match of code.matchAll(ACCESS_RE)) {
+        const verb = match[1]; // 'from' (select) | 'update' | 'delete'
         const table = match[2];
         if (isGlobal(table)) continue;
         const idx = match.index ?? 0;
@@ -56,7 +69,15 @@ export default {
         const hasScope = SCOPE_SIGNAL_RE.test(codeLines.slice(from, to).join('\n'));
         const hasExempt =
           /SYS-01-EXEMPT/.test(origLines.slice(from, to).join('\n')) && isGlobal(table);
-        if (!hasScope && !hasExempt) {
+        // A pre-auth / bearer-credential lookup, valid ONLY in an auth-layer repo (fails closed
+        // everywhere else — the marker grants no bypass to an ordinary repo) AND ONLY for a READ
+        // (`.from` select). A marked `.update`/`.delete` still fails closed: the marker's contract is
+        // "pre-auth LOOKUPS only", so every WRITE must carry the actor scope (asActor/ownedBy).
+        const hasAuthLookup =
+          verb === 'from' &&
+          isAuthLookupFile(file.path) &&
+          AUTH_LOOKUP_RE.test(origLines.slice(from, to).join('\n'));
+        if (!hasScope && !hasExempt && !hasAuthLookup) {
           violations.push({
             file: file.path,
             line: lineNo,
