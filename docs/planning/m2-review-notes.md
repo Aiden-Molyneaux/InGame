@@ -83,5 +83,10 @@ content-sized (keys ~½cm above the device bottom) · INGAME logo centred in the
 **Still open for the owner:** OQ-119 (AUTH-10 form) · the M2 gate
 sitting (gate-3 · G-D..G-G · G-M — now incl. `react-native-svg` · G-K).
 
+## Owner register attempt — 2026-07-01 evening (found live on device)
+| # | Observation | Bucket | Verdict | Cite / note |
+|---|---|---|---|---|
+| B1 | **`VALIDATION_ERROR` responses carry NO field detail** — `POST /auth/register` with a bad username returns only `{"error":{"code":"VALIDATION_ERROR","message":"Validation failed."}}` (verified live via curl), leaving the user guessing which field failed. The api-contract **promises field-targeted detail** on register rejections (0.32: duplicate email/username · screened username · weak password) | ABSENT (contract parity) | 🚩 FLAG (backend) | Error serializer drops the zod issues; fix = pass through **sanitized** per-field issues (never echo raw input — SYS-02). Client follow: render per-field errors (W4 grammar) + wire the W3 `username-available` pre-check. Folded into the M3 brief's fast-follow batch. The policy side (charset/normalize/casing rules) → **OQ-124**. |
+
 ## (more — owner to add; I'll triage each)
 _Append below and I'll bucket + verdict them._

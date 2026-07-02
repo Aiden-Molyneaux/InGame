@@ -1,8 +1,10 @@
 # M3 ENTRY PLAN — InGame · Catalog + Collection (DRAFT — awaiting owner ratification)
 
 > **Status: DRAFT (2026-07-01, authored at M2 close-out).** Mirrors the ratified `m2-entry-plan.md`
-> shape. The owner ratifies this plan (and rules §6) **before** the OpenCode build brief
-> (`m3-build-task.md`) is cut from it. Source anchors: road-to-market §M3 row · product-spec
+> shape. **The build brief ([`m3-build-task.md`](m3-build-task.md)) was cut 2026-07-01 on the
+> owner's word, with the §6 decisions taken as ASSUMPTION-tagged safe defaults (D1–D6 in the
+> brief) — veto any at a glance.** Ratifying this plan formalizes them. Source anchors:
+> road-to-market §M3 row · product-spec
 > `CAT-01..05` / `COL-*` · testing-strategy §3 (dedup = a named risk domain) · decision 0052 §4
 > (restore-drill re-timed to M3-exit) · the M2 review ledger (`m2-review-notes.md`).
 

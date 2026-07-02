@@ -16,6 +16,15 @@
 
 ## Open
 
+- OQ-124: **Nail down the username / email / password requirements** (owner directive after the
+  on-device register confusion, 2026-07-01 — `AidenBruh` silently 422'd on the lowercase-only rule).
+  To pin: **username** — charset + bounds are implemented (`^[a-z0-9_]+$`, the shared schema) but
+  the POLICY isn't ruled: normalize-vs-reject casing (should the client lowercase as you type
+  instead of erroring?), and is a separate display-name ever wanted; **email** — normalization
+  (case-fold? plus-addressing aliases = same account?); **password** — the ≥8 floor exists
+  (AUTH-01) but max length, breach-list checking, and no-composition-rules (NIST-style) are
+  unruled. Product-spec owns the ruling (AUTH-01 territory); the shared schemas + the W2/W3/W4
+  boards ripple. (raised from the failed-register session, 2026-07-01) [behavior] M3-window
 - OQ-119: **AUTH-10 acceptance gate missing from the built create-account form.** The M2 client's
   sign-in screen ships a create-account mode that **hardcodes `acceptedTerms: true`**
   (`apps/mobile/app/sign-in.tsx` register call) — no checkbox, no "13 or older" assertion, no
