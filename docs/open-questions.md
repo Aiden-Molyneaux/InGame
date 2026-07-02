@@ -16,7 +16,25 @@
 
 ## Open
 
-- OQ-124: **Nail down the username / email / password requirements** (owner directive after the
+- OQ-126: **rule-02 gains a `// SYS-01-COMMUNITY-AGGREGATE` marker — the CAT-09 read class arrived
+  at M3, ahead of OQ-122's M4-entry decision.** CAT-09a (`collectionsCount`) is a spec-sanctioned
+  ANONYMOUS cross-user aggregate over the user-owned `collection_entries` — the F32 binary model
+  (global vs actor-scoped) has no vocabulary for it. Interim: the marker exempts a **read** of a
+  user-owned table ONLY when the lint window also contains an **aggregate call (`count(`)** — never
+  row-level reads, never writes; misuse fixtures prove both guards
+  (`fixtures/bad-pr-corpus/rule-02-scoping/aggregate-abuse-repo.ts`,
+  `tools/lint/rules/rule-02-scoping.test.mjs`). Fold into OQ-122's M4-entry scope-model decision;
+  **guard-surface change → owner/gate-3 eyes** (the OQ-115 precedent). (raised building CAT-09,
+  2026-07-01) [behavior/process] gate-3
+- OQ-125 → **RESOLVED (M3 closeout, 2026-07-02, decision 0059): the seeded 16-genre list is owner-blessed** as the launch default (amendable via SYS-08 config; the migration 0003 `ASSUMPTION(OQ-125)` tag is hereby owner-ratified — the file is left as-is to preserve its drizzle hash). *Original:* **Pin the canonical CAT-04 controlled genre LIST content.** The behavior (controlled list,
+  not free text) is specced, but the list's CONTENT is pinned nowhere — mockups only show sample
+  values (`RPG · SOULSLIKE`). The M3 build seeds a 16-genre default (Action · Adventure · RPG ·
+  Shooter · Platformer · Puzzle · Strategy · Simulation · Sports · Racing · Fighting · Horror ·
+  Roguelike · Metroidvania · Soulslike · Survival) with fixed ids in migration 0003, tagged
+  `ASSUMPTION(OQ-125)` — trivially amendable (genre rows are additive; the list is P4 owner config,
+  SYS-08). Owner: bless/trim/extend the list. (raised transcribing CAT-04 into the M3 data layer,
+  2026-07-01) [behavior/config] M3-window
+- OQ-124 → **RESOLVED (M3 closeout, 2026-07-02, decision 0059 · product-spec 0.48 AUTH-01):** username `[A-Za-z0-9_]` case-preserved + **case-insensitive-unique** (generated normalized column, migration 0004); email case-folded + unique (**no** plus-alias collapse); password **8–128**, no composition rules, breach-check → M5; no separate display-name. Implemented test-first. *Original:* **Nail down the username / email / password requirements** (owner directive after the
   on-device register confusion, 2026-07-01 — `AidenBruh` silently 422'd on the lowercase-only rule).
   To pin: **username** — charset + bounds are implemented (`^[a-z0-9_]+$`, the shared schema) but
   the POLICY isn't ruled: normalize-vs-reject casing (should the client lowercase as you type
@@ -25,7 +43,7 @@
   (AUTH-01) but max length, breach-list checking, and no-composition-rules (NIST-style) are
   unruled. Product-spec owns the ruling (AUTH-01 territory); the shared schemas + the W2/W3/W4
   boards ripple. (raised from the failed-register session, 2026-07-01) [behavior] M3-window
-- OQ-119: **AUTH-10 acceptance gate missing from the built create-account form.** The M2 client's
+- OQ-119 → **RESOLVED (M3 closeout, 2026-07-02, decision 0059):** the register form now carries a real acceptance checkbox gating submit (13+ + ToS/Privacy links → in-app stub legal screens `app/legal/*`); hosted policy copy is a release task. *Original:* **AUTH-10 acceptance gate missing from the built create-account form.** The M2 client's
   sign-in screen ships a create-account mode that **hardcodes `acceptedTerms: true`**
   (`apps/mobile/app/sign-in.tsx` register call) — no checkbox, no "13 or older" assertion, no
   Terms/Privacy links. AUTH-10 + the W2 board (`welcome-auth-states.html` W2 — the acceptance row,
@@ -33,19 +51,31 @@
   on their behalf is a compliance-shaped behavior gap. Either add the W2 acceptance row to the M2
   form or drop the create mode from the client until W2 is built (register wasn't in the M2 client
   DoD). (raised by the Parvati sign-on review, 2026-07-01) [behavior] M2
-- OQ-120: **API sends no CORS headers — the Expo-web (Chrome) dev loop can't call it.** Product-spec
+- OQ-120 → **RESOLVED (M3 step-1, 2026-07-01): dev-only CORS allowlist landed** — `DEV_CORS_ORIGINS`
+  env (OFF by default = the production posture; exact `http://localhost:<port>` origins only, non-local
+  entries ignored) → `apps/api/src/http/devCors.ts`, mounted in `app.ts`; unit + integration tested.
+  *Original:* **API sends no CORS headers — the Expo-web (Chrome) dev loop can't call it.** Product-spec
   §9 keeps web as the dev/testing convenience, but a browser origin (`http://localhost:8081`) gets no
   `Access-Control-Allow-Origin` on any `/api/*` response, so login fails in Expo web (the phone /
   Expo Go native loop is unaffected — no CORS there). Verified live: POST /auth/login 200s via curl
   yet is blocked in-browser. Action: a dev-only CORS allowlist (localhost Metro origins) on the API.
   (raised during the Parvati review's web-loop capture, 2026-07-01) [behavior/infra] M2 fast-follow
-- OQ-123: **Robust 401 → auto-sign-out (self-healing expired sessions).** The M2 client's SIGNAL-LOST
+- OQ-123 → **RESOLVED (M3 Lane B, 2026-07-01): the self-healing session landed** — the RTK
+  baseQuery now wraps every authed call: a 401 triggers ONE single-flight `POST /auth/refresh`
+  (rotation-safe — parallel 401s share the attempt so F15 reuse-detection can't misfire) and
+  retries; a failed refresh runs the full teardown (F20 purge + F14 secure-store clear) and lands
+  on `/sign-in` (`apps/mobile/src/store/api.ts` `baseQueryWithReauth`). *Original:* **Robust 401 →
+  auto-sign-out (self-healing expired sessions).** The M2 client's SIGNAL-LOST
   error state now offers a manual Sign-out escape, but any expired/stale session still strands the
   user until they use it: an authenticated request that 401s (after a failed refresh) should
   **tear down the session automatically** (F20 purge + F14 token clear → `/sign-in`), not just error.
   Deferred by owner call during the M2 fix pass (2026-07-01); recurring for any expired token until it
   lands — schedule in the M3 client lane. (from the M2 phone-test receipt) [behavior] M3
-- OQ-121: **login/register session response returns `user.gamertags: []` while GET /me inlines the
+- OQ-121 → **RESOLVED (M3 step-1, 2026-07-01): issuance aligned to the 0056 pin** — ONE
+  `assembleSelfShape()` emitter now feeds BOTH `GET /me` and register/login/apple issuance
+  (`profile-service.assembleSelfShape` ← `auth-service.issueSession`); integration tests assert the
+  session `user` deep-equals `GET /me` (incl. inlined gamertags). Auth-lane diff, named in the M3
+  receipt — rides gate-3. *Original:* **login/register session response returns `user.gamertags: []` while GET /me inlines the
   real rows** — the issuance serializer doesn't join gamertags, so the same "self-shape" differs
   between `POST /auth/login` and `GET /me`. **Contract ruling PINNED — api-contract 0.45 (decision 0056):** the
   session `user` IS the `GET /me` self-shape (one serializer, no issuance drift). **What remains is
@@ -73,7 +103,13 @@
   `// ASSUMPTION(OQ-117)` in `apps/api/src/services/users-service.ts`; reversible, non-STOP (the
   conservative reading is implemented). (raised building G-D, 2026-06-30) [behavior] M2
 - OQ-122: **The F32 binary global/user-owned scope model doesn't cover the community / cross-user READS arriving at M4–M7** (foundation review F-09). `rule-02-scoping` admits two classes (global-listed vs user-owned fail-closed) + the auth-layer `AUTH-LOOKUP` exception. Coming reads fit none: the **published-card gallery / trending** (`card_designs` filtered by `published`, M4/M5), **invite-token resolution** by token value (SOC-10, M6 — partly covered only if the repo is named `*-token-repo`), and **feed fan-out** cross-user reads (SOC-06, M7). Each will either fail rule-02 (breeding ad-hoc `asActor`-shaped workarounds) or pressure the manifest to mislabel a user-owned table as global (silently disabling scoping for its private rows — the worse failure). **Proposed:** a third read class — a `// SYS-01-PUBLIC-READ` marker / `publishedOnly(table)` helper valid only for reads carrying an explicit visibility predicate, + a bearer-token-lookup variant of `AUTH-LOOKUP` scoped to an enumerated repo list. **Decide at M4 entry (G-H window)**, not mid-build. Related to OQ-115. (foundation review F-09, 2026-07-01) [behavior/process] M4-entry
-- OQ-118: **`rule-02-scoping` actor-scoping lint is a write-verb denylist with holes** (surfaced by the
+- OQ-118 → **RESOLVED (M3 step-1, 2026-07-01): rule-02 flipped to the read-verb ALLOWLIST** —
+  detection now covers `.onConflictDoUpdate` upserts, raw `.execute`/`sql``` (fail-closed
+  unconditionally inside `repositories/`+`*-repo` files), `db.query.*` relational reads, and
+  user-owned JOINs; four new misuse fixtures + unit tests prove no bypass
+  (`tools/lint/rules/rule-02-scoping.{mjs,test.mjs}`, `fixtures/bad-pr-corpus/rule-02-scoping/`).
+  **Guard-surface change → surfaced for owner/gate-3 eyes in the M3 receipt.**
+  *Original:* **`rule-02-scoping` actor-scoping lint is a write-verb denylist with holes** (surfaced by the
   M2 fix-pass lead-audit, commit `acde8b9`, 2026-07-01). The CONVENTIONS-spine rule
   `tools/lint/rules/rule-02-scoping.mjs` detects unscoped queries via `ACCESS_RE = /\.(from|update|delete)\(/`
   — a **3-verb denylist**. Unmarked cross-user **writes** via `.insert(...).onConflictDoUpdate(...)` (an
@@ -247,7 +283,7 @@
 - OQ-092: **Refund → keep permanents → negative balance = free cosmetics**; the "NOTHING YOU OWN IS TAKEN BACK"
   copy pre-contradicts any clawback. Lock/clawback on reversal + reconcile copy. (L002; ECON-09) [behavior] M5
 - OQ-093: **No per-reporter cap → report-bomb** soft-hides rivals. Reporter rate-limit + dedupe. (L003; MOD-01/02) [behavior] M7
-- OQ-094: **CREATE ANYWAY has no creation rate-limit** (dedup override is one-tap). Cap creates/day + soft-queue +
+- OQ-094 → **RESOLVED (M3 closeout, 2026-07-02, decision 0059):** catalog-create gains a **200/day** cap stacked on the 10/min burst; the previously-UNLIMITED collection writes share a **60/min** cap (test-first burst tests). Soft-queue/two-button UI deferred (not needed at M3 scale). *Original:* **CREATE ANYWAY has no creation rate-limit** (dedup override is one-tap). Cap creates/day + soft-queue +
   two-button layout. (L004; CAT-03, MOD-05) [behavior] M3/M5
 - OQ-095 → **RESOLVED (decision 0043, 2026-06-29):** AUTH-11 anti-enumeration — availability throttled; login/reset/resend neutral + resend-capped. *Orig:* **Username/email enumeration oracle** (AVAILABLE vs NOT-ALLOWED distinguishes screened-reject); RESEND
   EMAIL no idempotency. Throttle + neutral copy + resend cap. (L012; AUTH-08/11, MOD-07) [behavior] M2

@@ -1,4 +1,4 @@
-import type { ErrorCode } from '@ingame/shared';
+import type { DedupSuggestion, ErrorCode, ValidationDetail } from '@ingame/shared';
 import { NEUTRAL_AUTH_FAILED_MESSAGE } from '@ingame/shared';
 
 // The one AppError hierarchy → Express error middleware → api-contract error codes (CONVENTIONS
@@ -20,9 +20,12 @@ export class ValidationError extends AppError {
   readonly httpStatus = 422;
   /** An optional machine-readable reason, e.g. `invalid_token` for AUTH-04 reset/verify (api-contract). */
   readonly reason?: string;
-  constructor(message: string, reason?: string) {
+  /** B1 (api-contract 0.32/0.46) — optional sanitized field-targeted detail (SYS-02: never raw input). */
+  readonly details?: ValidationDetail[];
+  constructor(message: string, reason?: string, details?: ValidationDetail[]) {
     super(message);
     this.reason = reason;
+    this.details = details;
   }
 }
 
@@ -72,6 +75,23 @@ export class AccountSuspendedError extends AppError {
     super(message);
     this.reason = reason;
     this.until = until;
+  }
+}
+
+/**
+ * CAT-03 — a suspected duplicate canonical entry (409, api-contract 0.47) carrying the best-first
+ * candidate list the client's InlineBanner renders ("did you mean …?").
+ */
+export class DuplicateSuspectedError extends AppError {
+  readonly code = 'DUPLICATE_SUSPECTED';
+  readonly httpStatus = 409;
+  readonly suggestions: DedupSuggestion[];
+  constructor(
+    suggestions: DedupSuggestion[],
+    message = 'A very similar game is already in the catalog.',
+  ) {
+    super(message);
+    this.suggestions = suggestions;
   }
 }
 

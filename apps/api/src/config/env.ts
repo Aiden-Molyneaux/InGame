@@ -21,6 +21,11 @@ export interface ApiEnv {
   usernameCooldownSeconds: number;
   /** F18 — Sentry DSN (server). Empty ⇒ Sentry is a no-op (log-only), like the stubbed email sender. */
   sentryDsn: string;
+  /**
+   * OQ-120 — dev-only CORS allowlist (comma-separated exact origins, e.g. the localhost Metro
+   * ports). Empty ⇒ OFF — the production posture sends no CORS headers at all.
+   */
+  devCorsOrigins: string[];
 }
 
 function num(value: string | undefined, fallback: number): number {
@@ -42,5 +47,9 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): ApiEnv {
     emailVerifyTtlSeconds: num(source.EMAIL_VERIFY_TTL_SECONDS, 24 * 60 * 60),
     usernameCooldownSeconds: num(source.USERNAME_COOLDOWN_SECONDS, 30 * 24 * 60 * 60),
     sentryDsn: source.SENTRY_DSN ?? '',
+    devCorsOrigins: (source.DEV_CORS_ORIGINS ?? '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean),
   };
 }

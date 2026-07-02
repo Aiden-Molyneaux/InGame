@@ -19,6 +19,7 @@ import * as refreshRepo from '../repositories/refresh-token-repo';
 import * as authTokenRepo from '../repositories/auth-token-repo';
 import * as suspensionRepo from '../repositories/suspension-repo';
 import * as profileRepo from '../repositories/profile-repo';
+import { isUniqueViolation } from '../db/pg-errors';
 import { argon2Hasher } from '../auth/password';
 import { signAccessToken, generateOpaqueToken, hashOpaqueToken } from '../auth/tokens';
 import { stubAppleVerifier, type AppleTokenVerifier } from '../auth/apple-verifier';
@@ -27,7 +28,7 @@ import { AuthFailedError, AccountSuspendedError, ValidationError } from '../erro
 import { loadEnv } from '../config/env';
 import { track } from '../observability/funnel';
 import { isUsernameAllowed } from '../moderation/screen';
-import { toSelfShape } from '../serializers/user-shape';
+import { assembleSelfShape } from './profile-service';
 import type { UserRow, UserSuspensionRow } from '../db/schema';
 
 // AUTH-01/02/03/04/05/08/09/11 — the auth stack. Anti-enumeration (AUTH-11 / decision 0043): login,
@@ -51,8 +52,9 @@ async function issueSession(user: UserRow, tx: Tx, familyId: string = randomUUID
     { userId: user.id, familyId, tokenHash: refresh.tokenHash, expiresAt: refreshExpiry() },
     tx,
   );
-  // The session `user` is the bootstrap self-shape (gamertags hydrate via GET /me / /me/gamertags).
-  return { user: toSelfShape(user), accessToken, refreshToken: refresh.token };
+  // OQ-121 / decision 0056 — ONE self-shape serializer: the session `user` IS the GET /me self-shape
+  // (gamertags inlined at issuance; issuance-vs-/me drift is a bug class, not a shape variant).
+  return { user: await assembleSelfShape(user, tx), accessToken, refreshToken: refresh.token };
 }
 
 function suspended(s: UserSuspensionRow): AccountSuspendedError {
@@ -63,17 +65,24 @@ function suspended(s: UserSuspensionRow): AccountSuspendedError {
 export async function register(input: RegisterRequest): Promise<AuthSession> {
   const email = input.email.toLowerCase();
   if (!isUsernameAllowed(input.username)) {
-    throw new ValidationError('That username isn’t allowed.', 'username_screened');
+    throw new ValidationError('That username isn’t allowed.', 'username_screened', [
+      { path: 'username', message: 'That username isn’t allowed.' },
+    ]);
   }
   // Hash BEFORE opening the transaction (argon2 is deliberately slow — never hold a tx during it).
   const passwordHash = await argon2Hasher.hash(input.password);
 
   const outcome = await withTransaction(async (tx) => {
     if (await authRepo.findByEmail(email, tx)) {
-      throw new ValidationError('That email is already registered.', 'email_taken');
+      // The acknowledged existence-disclosure point (AUTH-11/AUTH-01, F-05/0055) — field-targeted (B1).
+      throw new ValidationError('That email is already registered.', 'email_taken', [
+        { path: 'email', message: 'That email is already registered.' },
+      ]);
     }
     if (await authRepo.findByUsername(input.username, tx)) {
-      throw new ValidationError('That username is taken.', 'username_taken');
+      throw new ValidationError('That username is taken.', 'username_taken', [
+        { path: 'username', message: 'That username is taken.' },
+      ]);
     }
     const user = await authRepo.insertUser({ email, username: input.username, passwordHash }, tx);
     const verify = generateOpaqueToken();
@@ -94,6 +103,20 @@ export async function register(input: RegisterRequest): Promise<AuthSession> {
     });
     const session = await issueSession(user, tx);
     return { session, user, verifyToken: verify.token };
+  }).catch(async (e): Promise<never> => {
+    // Lost the concurrent-insert race after the in-tx pre-check passed (the DB unique index caught it) —
+    // map the raw 23505 to the same field-targeted 422 the pre-check would have thrown, not a 500.
+    if (isUniqueViolation(e)) {
+      if (await authRepo.findByEmail(email)) {
+        throw new ValidationError('That email is already registered.', 'email_taken', [
+          { path: 'email', message: 'That email is already registered.' },
+        ]);
+      }
+      throw new ValidationError('That username is taken.', 'username_taken', [
+        { path: 'username', message: 'That username is taken.' },
+      ]);
+    }
+    throw e;
   });
 
   // Post-commit side-effects (never rolled back): "send" the AUTH-08 verification email + funnel event.
@@ -289,6 +312,17 @@ type AppleOutcome =
   | { kind: 'ok'; session: AuthSession; userId: string; isNew: boolean };
 
 export async function appleSignIn(input: AppleRequest): Promise<AuthSession> {
+  try {
+    return await appleSignInAttempt(input);
+  } catch (e) {
+    // Lost the concurrent first-sign-in race for this Apple subject — the winner's identity now exists,
+    // so a single retry resolves to that account (branch 1) instead of surfacing a raw 500.
+    if (isUniqueViolation(e)) return await appleSignInAttempt(input);
+    throw e;
+  }
+}
+
+async function appleSignInAttempt(input: AppleRequest): Promise<AuthSession> {
   // STUB verification — the REAL server verifier (validate the JWT vs Apple's JWKS + bind the nonce)
   // is DEFERRED to enrollment (M1-P). Everything below is the real, tested downstream machinery.
   const identity = await appleVerifier.verify(input.identityToken, input.nonce);

@@ -24,6 +24,8 @@ export interface ProfileUpdate {
   privacy?: string;
   usernamePending?: boolean;
   usernameChangedAt?: Date;
+  /** WTP-03 — the single Now-Playing pin (PUT /me/now-playing). */
+  nowPlayingGameId?: string | null;
 }
 
 export async function updateOwnProfile(

@@ -20,6 +20,13 @@ const DEFAULTS: Record<string, RateLimitRule> = {
   'auth:verify-confirm': { limit: 10, windowMs: 60_000 },
   'auth:username-available': { limit: 30, windowMs: 60_000 },
   'auth:apple': { limit: 20, windowMs: 60_000 },
+  // M3 — SYS-05, owner-approved G-K values (CAT-02/03, OQ-094). Catalog-create is two-tier: a
+  // per-minute burst cap AND a per-day cap — both mounted as stacked middlewares (both must pass).
+  'catalog:create': { limit: 10, windowMs: 60_000 },
+  'catalog:create:daily': { limit: 200, windowMs: 24 * 60 * 60_000 },
+  // Collection writes (add · status/hours · reorder · delete · now-playing) share one cap (OQ-094) —
+  // 60/min is ample for any real editing burst; the only way past it is a scripted/abusive client.
+  'collection:write': { limit: 60, windowMs: 60_000 },
 };
 
 const overrides = new Map<string, RateLimitRule>();

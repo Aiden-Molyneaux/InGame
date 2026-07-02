@@ -22,6 +22,20 @@
       "when": 1782873009356,
       "tag": "0002_left_hemingway",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1782956067198,
+      "tag": "0003_pretty_retro_girl",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1783003373833,
+      "tag": "0004_fixed_rockslide",
+      "breakpoints": true
     }
   ]
 }

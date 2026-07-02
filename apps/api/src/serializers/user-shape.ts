@@ -7,7 +7,9 @@ import {
   type PublicProfile,
   type Relationship,
   type Role,
+  type SelfGameExpansion,
   type SelfProfile,
+  type SelfStats,
 } from '@ingame/shared';
 import type { UserRow, GamertagRow } from '../db/schema';
 
@@ -21,16 +23,37 @@ export function toGamertagView(row: GamertagRow): GamertagView {
   return { id: row.id, platform: row.platform as GamertagView['platform'], handle: row.handle };
 }
 
+/** PROF-04 — the honest empty stat block (a fresh account, or a serializer default). */
+export const EMPTY_SELF_STATS: SelfStats = {
+  games: 0,
+  hours: 0,
+  completionPct: 0,
+  cardsDesigned: 0,
+  adoptionsReceived: 0,
+  friends: 0,
+};
+
 /** Cross-table extras the self-view needs beyond the user row (loaded by the service). */
 export interface SelfExtras {
   gamertags: GamertagView[];
   /** PROF-06 — when the next username change is allowed (ISO-8601 UTC), or null ⇒ allowed now. */
   usernameNextChangeAt: string | null;
+  /** PROF-04 (M3) — derived from the real shelf by the service. */
+  stats: SelfStats;
+  /** PROF-01/05 + WTP-03 (M3) — the expanded pins (null ⇒ unset). */
+  favouriteGame: SelfGameExpansion | null;
+  nowPlaying: SelfGameExpansion | null;
 }
 
 export function toSelfShape(
   row: UserRow,
-  extras: SelfExtras = { gamertags: [], usernameNextChangeAt: null },
+  extras: SelfExtras = {
+    gamertags: [],
+    usernameNextChangeAt: null,
+    stats: EMPTY_SELF_STATS,
+    favouriteGame: null,
+    nowPlaying: null,
+  },
 ): SelfProfile {
   return {
     id: row.id,
@@ -47,6 +70,9 @@ export function toSelfShape(
     favouriteGenreIds: row.favouriteGenreIds,
     gamertags: extras.gamertags,
     usernameNextChangeAt: extras.usernameNextChangeAt,
+    stats: extras.stats,
+    favouriteGame: extras.favouriteGame,
+    nowPlaying: extras.nowPlaying,
   };
 }
 

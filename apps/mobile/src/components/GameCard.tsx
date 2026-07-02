@@ -55,11 +55,8 @@ export function GameCard({
             <Text style={styles.nowText}>▶ NOW</Text>
           </View>
         ) : null}
-        {!showPlate ? (
-          <Text style={styles.miniTitle} numberOfLines={2}>
-            {title}
-          </Text>
-        ) : null}
+        {/* C7/decision 0047 — /mini + /thumb carry NO in-face title (it would wrap sub-9px, F-06);
+            the host names the game BESIDE the card (LIST/TOP rows do). a11y keeps the label. */}
       </View>
       {showPlate ? (
         <View style={styles.plate}>
@@ -108,11 +105,6 @@ const styles = StyleSheet.create({
     fontSize: theme.type.micro,
     color: theme.scr.accentInk,
     letterSpacing: 0.5,
-  },
-  miniTitle: {
-    fontFamily: theme.font.screen,
-    fontSize: theme.type.micro,
-    color: theme.brand.cream,
   },
   plate: {
     backgroundColor: theme.scr.bg,

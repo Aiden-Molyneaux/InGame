@@ -3,6 +3,7 @@ import {
   patchMeRequestSchema,
   bioSchema,
   usernameSchema,
+  normalizeUsername,
   BIO_MAX,
   PATCH_ME_FIELDS,
 } from './profile';
@@ -30,11 +31,17 @@ describe('SYS-02: PATCH /me request schema', () => {
     expect(parsed).toBe('abc');
   });
 
-  it('enforces the username charset [a-z0-9_] and length', () => {
+  it('allows [A-Za-z0-9_] with display case PRESERVED, enforcing length (OQ-124)', () => {
+    expect(usernameSchema.parse('Aiden_M')).toBe('Aiden_M'); // capitals allowed, case preserved for display
     expect(usernameSchema.safeParse('good_name1').success).toBe(true);
-    expect(usernameSchema.safeParse('BadName').success).toBe(false); // uppercase
-    expect(usernameSchema.safeParse('no').success).toBe(false); // too short
+    expect(usernameSchema.safeParse('no').success).toBe(false); // too short (<3)
     expect(usernameSchema.safeParse('has space').success).toBe(false);
+    expect(usernameSchema.safeParse('bad-dash').success).toBe(false); // '-' not allowed
+  });
+
+  it('normalizeUsername folds case for case-INSENSITIVE uniqueness (OQ-124)', () => {
+    expect(normalizeUsername('Aiden_M')).toBe('aiden_m');
+    expect(normalizeUsername('aiden_m')).toBe('aiden_m');
   });
 
   it('rejects unknown keys (.strict) — the body never carries an actor id (SYS-01)', () => {

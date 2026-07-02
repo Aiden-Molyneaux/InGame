@@ -25,8 +25,15 @@ export async function findByUsername(
   username: string,
   exec: Executor = getDb(),
 ): Promise<UserRow | null> {
-  // SYS-01-AUTH-LOOKUP: username-availability / register-uniqueness lookup (pre-auth).
-  const rows = await exec.select().from(users).where(eq(users.username, username)).limit(1);
+  // SYS-01-AUTH-LOOKUP: username-availability / register-uniqueness lookup (pre-auth). Case-INSENSITIVE
+  // (OQ-124) — matches on the generated case-fold column (users_username_normalized_idx); the stored
+  // row keeps its display casing, so 'Aiden' and 'aiden' resolve to the same account. Usernames are
+  // ASCII [A-Za-z0-9_], so .toLowerCase() equals the DB's lower().
+  const rows = await exec
+    .select()
+    .from(users)
+    .where(eq(users.usernameNormalized, username.toLowerCase()))
+    .limit(1);
   return rows[0] ?? null;
 }
 

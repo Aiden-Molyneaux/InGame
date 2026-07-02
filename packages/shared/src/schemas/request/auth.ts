@@ -10,7 +10,9 @@ import { usernameSchema } from './profile';
 
 export const EMAIL_MAX = 254; // RFC 5321 practical maximum
 export const PASSWORD_MIN = 8; // AUTH-01 — minimum 8 characters
-export const PASSWORD_MAX = 200; // bound the KDF input (avoid a long-password DoS)
+// AUTH-01 / OQ-124 — passphrase-friendly upper bound on the KDF input (argon2 has no 72-byte bcrypt
+// truncation, so 128 > that; still bounds a long-password DoS). No composition rules; breach-check → M5.
+export const PASSWORD_MAX = 128;
 export const TOKEN_MAX = 4096; // opaque credential / JWT upper bound
 
 /** A valid, bounded, sanitized email. Case-folding to lowercase happens at the service boundary. */

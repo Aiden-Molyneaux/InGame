@@ -44,6 +44,7 @@ beforeAll(async () => {
   process.env.DATABASE_URL = container.getConnectionUri();
   process.env.DISPOSABLE_DB = '1';
   process.env.JWT_SIGNING_SECRET = 'test-signing-secret-at-least-16-chars-long';
+  process.env.DEV_CORS_ORIGINS = 'http://localhost:8081'; // OQ-120 — the mounted-in-app check below
 
   const { runMigrations } = await import('../../src/db/migrate');
   await runMigrations();
@@ -120,6 +121,43 @@ describe('AUTH-01 register', () => {
       acceptedTerms: false,
     });
     expect(res.status).toBe(422);
+  });
+
+  it('usernames are case-INSENSITIVE unique with display case PRESERVED (OQ-124)', async () => {
+    const mixed = `Aiden_${randomUUID().slice(0, 4)}`;
+    const first = await post('/auth/register', {
+      email: `ci1_${randomUUID().slice(0, 6)}@example.com`,
+      username: mixed,
+      password: PW,
+      acceptedTerms: true,
+    });
+    expect(first.status).toBe(201);
+    expect(first.body.user.username).toBe(mixed); // display casing preserved verbatim
+
+    const collision = await post('/auth/register', {
+      email: `ci2_${randomUUID().slice(0, 6)}@example.com`, // distinct email — the clash is the username
+      username: mixed.toLowerCase(), // same handle, different case → must be taken
+      password: PW,
+      acceptedTerms: true,
+    });
+    expect(collision.status).toBe(422);
+    expect(collision.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('concurrent same-username registers → exactly one 201, the rest 422 (never a 500 race)', async () => {
+    const uname = `Race_${randomUUID().slice(0, 4)}`;
+    const attempts = Array.from({ length: 6 }, (_, i) =>
+      post('/auth/register', {
+        email: `race${i}_${randomUUID().slice(0, 6)}@example.com`,
+        username: uname, // same handle → the DB unique index decides the race
+        password: PW,
+        acceptedTerms: true,
+      }),
+    );
+    const results = await Promise.all(attempts);
+    expect(results.filter((r) => r.status === 201)).toHaveLength(1);
+    expect(results.filter((r) => r.status === 500)).toHaveLength(0); // the race loser is a friendly 422
+    for (const r of results.filter((r) => r.status !== 201)) expect(r.status).toBe(422);
   });
 });
 
@@ -347,5 +385,60 @@ describe('G-G / SYS-05: the auth rate-limiter returns 429 under burst', () => {
     const limited = results.filter((r) => r.status === 429);
     expect(limited.length).toBeGreaterThan(0);
     expect(limited[0]?.body.error.code).toBe('RATE_LIMITED');
+  });
+});
+
+describe('OQ-121 / decision 0056: the session user IS the GET /me self-shape (ONE serializer)', () => {
+  it('register response user deep-equals GET /me at issuance', async () => {
+    const { res } = await registerUser();
+    expect(res.status).toBe(201);
+    const me = await request(app)
+      .get('/api/me')
+      .set('Authorization', `Bearer ${res.body.accessToken}`);
+    expect(me.status).toBe(200);
+    expect(res.body.user).toEqual(me.body);
+  });
+
+  it('login user INLINES the real gamertag rows and deep-equals GET /me (the drift Parvati caught)', async () => {
+    const { email, password, res } = await registerUser();
+    const tag = await request(app)
+      .post('/api/me/gamertags')
+      .set('Authorization', `Bearer ${res.body.accessToken}`)
+      .send({ platform: 'pc', handle: 'shape_check' });
+    expect(tag.status).toBe(201);
+
+    const login = await post('/auth/login', { email, password });
+    expect(login.status).toBe(200);
+    expect(login.body.user.gamertags).toHaveLength(1);
+    expect(login.body.user.gamertags[0]).toMatchObject({ platform: 'pc', handle: 'shape_check' });
+
+    const me = await request(app)
+      .get('/api/me')
+      .set('Authorization', `Bearer ${login.body.accessToken}`);
+    expect(login.body.user).toEqual(me.body);
+  });
+});
+
+describe('OQ-120: the dev CORS allowlist is mounted (Expo-web dev loop)', () => {
+  it('reflects an allowlisted localhost origin on a real route + answers preflight 204', async () => {
+    const preflight = await request(app)
+      .options('/api/auth/login')
+      .set('Origin', 'http://localhost:8081');
+    expect(preflight.status).toBe(204);
+    expect(preflight.headers['access-control-allow-origin']).toBe('http://localhost:8081');
+
+    const res = await post('/auth/login', { email: 'x@example.com', password: 'whatever1!' }).set(
+      'Origin',
+      'http://localhost:8081',
+    );
+    expect(res.headers['access-control-allow-origin']).toBe('http://localhost:8081');
+  });
+
+  it('sends no CORS headers for a non-allowlisted origin', async () => {
+    const res = await post('/auth/login', { email: 'x@example.com', password: 'whatever1!' }).set(
+      'Origin',
+      'http://localhost:9999',
+    );
+    expect(res.headers['access-control-allow-origin']).toBeUndefined();
   });
 });

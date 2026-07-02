@@ -18,6 +18,7 @@ function makeUser(over: Partial<UserRow> = {}): UserRow {
   return {
     id: '11111111-1111-4111-8111-111111111111',
     username: 'curator',
+    usernameNormalized: 'curator',
     email: 'curator@example.com',
     passwordHash: null,
     emailVerifiedAt: null,
@@ -30,6 +31,7 @@ function makeUser(over: Partial<UserRow> = {}): UserRow {
     favouriteGenreIds: [],
     usernamePending: false,
     usernameChangedAt: null,
+    nowPlayingGameId: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
     deletedAt: null,
     ...over,

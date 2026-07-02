@@ -24,6 +24,13 @@ export const DOMAIN_EVENT_TYPES = [
   'gamertag.removed', // PROF-02
   'avatar.draft_saved', // PROF-08 (shape-stub — the flatten pipeline is M4)
   'avatar.published', // PROF-08 (shape-stub)
+  // M3 — catalog + collection. Append new types at the END.
+  'catalog.game_created', // CAT-02/05 — a new canonical entry (contributor credited).
+  'collection.entry_added', // COL-01
+  'collection.entry_updated', // COL-02/03 — the changed field-set (status/hours/…).
+  'collection.entry_removed', // COL-01
+  'collection.reordered', // COL-07 manual order (the reorder write).
+  'collection.now_playing_set', // WTP-03 — the single pin set/cleared.
 ] as const;
 
 export type DomainEventType = (typeof DOMAIN_EVENT_TYPES)[number];

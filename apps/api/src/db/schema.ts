@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   pgTable,
   uuid,
@@ -5,9 +6,12 @@ import {
   integer,
   boolean,
   timestamp,
+  date,
   jsonb,
   index,
   uniqueIndex,
+  primaryKey,
+  type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 
 // M2 data layer (product-spec §6 entity map). Every table here is USER-OWNED unless it is on the F32
@@ -30,7 +34,12 @@ import {
  */
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
-  username: text('username').notNull().unique(),
+  // OQ-124: `username` keeps its typed display casing; uniqueness is enforced on the derived
+  // case-folded `usernameNormalized` column (users_username_normalized_idx below).
+  username: text('username').notNull(),
+  // DB-GENERATED case-fold of username — the uniqueness key, so 'Aiden' and 'aiden' collide. The app
+  // never writes it; findByUsername compares against it. Mirrors the games.normalized_name pattern.
+  usernameNormalized: text('username_normalized').generatedAlwaysAs(sql`lower("username")`),
   email: text('email').notNull().unique(),
   passwordHash: text('password_hash'),
   emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true }),
@@ -39,13 +48,27 @@ export const users = pgTable('users', {
   privacy: text('privacy').notNull().default('friends'),
   role: text('role').notNull().default('user'),
   adminTier: integer('admin_tier'),
-  favouriteGameId: uuid('favourite_game_id'),
+  // M3: FK'd to the catalog (the deferred-to-M3 existence guarantee the M2 comment promised).
+  // (The explicit AnyPgColumn annotations break the users↔games circular type inference.)
+  favouriteGameId: uuid('favourite_game_id').references((): AnyPgColumn => games.id, {
+    onDelete: 'set null',
+  }),
   favouriteGenreIds: uuid('favourite_genre_ids').array().notNull().default([]),
   usernamePending: boolean('username_pending').notNull().default(false),
   usernameChangedAt: timestamp('username_changed_at', { withTimezone: true }), // PROF-06 cooldown
+  // WTP-03 — the single Now-Playing pin (one per user; PUT /me/now-playing sets/clears it; the
+  // collection items' `nowPlaying` flag derives from it).
+  nowPlayingGameId: uuid('now_playing_game_id').references((): AnyPgColumn => games.id, {
+    onDelete: 'set null',
+  }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
-});
+}, (table) => ({
+  // OQ-124 — case-INSENSITIVE username uniqueness enforced on the generated case-fold column. The
+  // app-layer findByUsername pre-check yields the friendly "taken" message; this is the race-safe
+  // backstop (mirrors games_normalized_name_live_idx).
+  usernameNormalizedIdx: uniqueIndex('users_username_normalized_idx').on(table.usernameNormalized),
+}));
 
 /**
  * `auth_identities` — external login identities linked to a user (AUTH-09). One row per
@@ -268,6 +291,106 @@ export const domainEvents = pgTable(
   }),
 );
 
+/**
+ * `genres` — the CAT-04 controlled genre list. GLOBAL (on the F32 manifest) — community reference
+ * data, not user-owned. Content is seeded by migration 0003 with FIXED ids so environments agree;
+ * the canonical list is owner config (SYS-08 P4) — the seeded set is `ASSUMPTION(OQ-125)`-tagged.
+ */
+export const genres = pgTable('genres', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull().unique(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * `games` — the community catalog's canonical entry (CAT-02, §6 entity map). GLOBAL (F32 manifest):
+ * community data every user reads; writes only via the dedup-guarded create (CAT-03).
+ *  - `normalizedName` — the CAT-03 dedup key (case/punctuation-folded, packages/shared normalizer).
+ *    UNIQUE among LIVE rows (partial index) so an exact-normalized duplicate is impossible even
+ *    under concurrent creates (the F36 race) — near-dups get the 409-warn instead.
+ *  - `createdBy` — contributor credit (CAT-05); anonymized on AUTH-07 deletion (M7).
+ *  - `deletedAt`/`deletedBy` — the dedup-grace soft delete (admin junk-removal/merge is M7).
+ */
+export const games = pgTable(
+  'games',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: text('name').notNull(),
+    normalizedName: text('normalized_name').notNull(),
+    studio: text('studio'), // CAT-02 optional (developer)
+    publisher: text('publisher'), // CAT-02 optional
+    releaseDate: date('release_date'), // CAT-02 optional; CAT-08 upcoming = a future date
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+    deletedBy: uuid('deleted_by'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    normalizedLiveIdx: uniqueIndex('games_normalized_name_live_idx')
+      .on(table.normalizedName)
+      .where(sql`deleted_at IS NULL`),
+    createdByIdx: index('games_created_by_idx').on(table.createdBy),
+  }),
+);
+
+/** `game_genres` — games × controlled genres (CAT-02/04). GLOBAL (F32 manifest). */
+export const gameGenres = pgTable(
+  'game_genres',
+  {
+    gameId: uuid('game_id')
+      .notNull()
+      .references(() => games.id, { onDelete: 'cascade' }),
+    genreId: uuid('genre_id')
+      .notNull()
+      .references(() => genres.id),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.gameId, table.genreId] }),
+    genreIdx: index('game_genres_genre_idx').on(table.genreId),
+  }),
+);
+
+/**
+ * `collection_entries` — user × game (COL-01..07, §6 entity map). USER-OWNED (owner key = `user_id`;
+ * NOT on the F32 manifest — rule-2 fails closed). One row per (user, game) — the unique pair index
+ * also decides the F36 concurrent double-add race (one wins, the rest 4xx).
+ *  - `status` — the COL-02 six-status enum; the shared zod schema owns the wire values.
+ *  - `hours` — COL-03 manual hours, server-bounded ≤99,999 (decision 0043; the cap alone ships now,
+ *    the anomaly pending-review is M7). `hoursSource` keeps the column import-ready.
+ *  - `position` — the COL-07 manual order (append on add; `PATCH /me/collection/reorder` rewrites).
+ *  - `notes`/`rating` — COL-05/COL-03 PRIVATE personal fields (never serialized to others).
+ *  - NO `active_card_design_id` yet (COL-06 needs the M4 card_designs table — additive later) and NO
+ *    `collection_platforms` (COL-04 rides the platform work; `platformIds` deferred with it).
+ */
+export const collectionEntries = pgTable(
+  'collection_entries',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    gameId: uuid('game_id')
+      .notNull()
+      .references(() => games.id),
+    status: text('status').notNull().default('backlog'),
+    hours: integer('hours').notNull().default(0),
+    hoursSource: text('hours_source').notNull().default('manual'),
+    percentComplete: integer('percent_complete'),
+    ownedSince: date('owned_since'), // COL-03 date acquired — defaults to the add date in code
+    rating: integer('rating'), // COL-03 private ⭐ (1..5)
+    notes: text('notes'), // COL-05 (column now; the write path rides later scope)
+    position: integer('position').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(), // recently-added
+  },
+  (table) => ({
+    userGameIdx: uniqueIndex('collection_entries_user_game_idx').on(table.userId, table.gameId),
+    userIdx: index('collection_entries_user_idx').on(table.userId),
+    userPositionIdx: index('collection_entries_user_position_idx').on(table.userId, table.position),
+  }),
+);
+
 export type UserRow = typeof users.$inferSelect;
 export type NewUserRow = typeof users.$inferInsert;
 export type AuthIdentityRow = typeof authIdentities.$inferSelect;
@@ -280,3 +403,9 @@ export type UserSuspensionRow = typeof userSuspensions.$inferSelect;
 export type AdminAuditRow = typeof adminAuditLog.$inferSelect;
 export type AdminAuditInsert = typeof adminAuditLog.$inferInsert;
 export type DomainEventInsert = typeof domainEvents.$inferInsert;
+export type GenreRow = typeof genres.$inferSelect;
+export type GameRow = typeof games.$inferSelect;
+export type NewGameRow = typeof games.$inferInsert;
+export type GameGenreRow = typeof gameGenres.$inferSelect;
+export type CollectionEntryRow = typeof collectionEntries.$inferSelect;
+export type NewCollectionEntryRow = typeof collectionEntries.$inferInsert;

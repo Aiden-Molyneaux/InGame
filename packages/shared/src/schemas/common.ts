@@ -23,3 +23,17 @@ export type Relationship = z.infer<typeof relationshipSchema>;
 /** PROF-02 controlled platform list for gamertags. */
 export const platformSchema = z.enum(['pc', 'playstation', 'xbox', 'nintendo']);
 export type Platform = z.infer<typeof platformSchema>;
+
+/**
+ * COL-02 — the six per-game statuses. Wire spelling pinned api-contract 0.47
+ * (`completed` = the display name "Completed 100%"; display casing is the client's).
+ */
+export const collectionStatusSchema = z.enum([
+  'backlog',
+  'playing',
+  'beaten',
+  'completed',
+  'dropped',
+  'wishlist',
+]);
+export type CollectionStatus = z.infer<typeof collectionStatusSchema>;

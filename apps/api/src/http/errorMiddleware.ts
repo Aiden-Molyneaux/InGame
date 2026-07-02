@@ -3,30 +3,49 @@ import { ZodError } from 'zod';
 import {
   GENERIC_SERVER_ERROR_MESSAGE,
   type ApiErrorBody,
+  type DedupSuggestion,
   type ErrorCode,
+  type ValidationDetail,
 } from '@ingame/shared';
 import { AppError } from '../errors/AppError';
+import { sanitizedValidationDetails } from './validation-details';
 import { captureException } from '../observability/sentry';
+
+interface EnvelopeExtras {
+  reason?: string;
+  until?: string | null;
+  details?: ValidationDetail[];
+  suggestions?: DedupSuggestion[];
+}
 
 function send(
   res: Parameters<ErrorRequestHandler>[2],
   status: number,
   code: ErrorCode,
   message: string,
-  extra: { reason?: string; until?: string | null } = {},
+  extra: EnvelopeExtras = {},
 ): void {
   const body: ApiErrorBody = { error: { code, message } };
   if (typeof extra.reason === 'string') body.error.reason = extra.reason;
   if (extra.until !== undefined) body.error.until = extra.until;
+  if (extra.details && extra.details.length > 0) body.error.details = extra.details;
+  if (extra.suggestions) body.error.suggestions = extra.suggestions;
   res.status(status).json(body);
 }
 
-/** Optional envelope extras carried by some AppErrors (VALIDATION_ERROR reason, ACCOUNT_SUSPENDED). */
-function extrasOf(err: AppError): { reason?: string; until?: string | null } {
-  const e = err as { reason?: string; until?: string | null };
-  const out: { reason?: string; until?: string | null } = {};
+/** Optional envelope extras carried by some AppErrors (VALIDATION_ERROR reason/details, ACCOUNT_SUSPENDED, DUPLICATE_SUSPECTED). */
+function extrasOf(err: AppError): EnvelopeExtras {
+  const e = err as {
+    reason?: string;
+    until?: string | null;
+    details?: ValidationDetail[];
+    suggestions?: DedupSuggestion[];
+  };
+  const out: EnvelopeExtras = {};
   if (typeof e.reason === 'string') out.reason = e.reason;
   if (e.until !== undefined) out.until = e.until;
+  if (Array.isArray(e.details)) out.details = e.details;
+  if (Array.isArray(e.suggestions)) out.suggestions = e.suggestions;
   return out;
 }
 
@@ -36,7 +55,10 @@ function extrasOf(err: AppError): { reason?: string; until?: string | null } {
 //  - anything else              → 500 SERVER_ERROR, generic body, internals to Sentry by request-ID
 export const errorMiddleware: ErrorRequestHandler = (err, req, res, _next) => {
   if (err instanceof ZodError) {
-    send(res, 422, 'VALIDATION_ERROR', 'Validation failed.');
+    // B1 — field-targeted detail (api-contract 0.32/0.46), sanitized from issue METADATA (SYS-02).
+    send(res, 422, 'VALIDATION_ERROR', 'Validation failed.', {
+      details: sanitizedValidationDetails(err),
+    });
     return;
   }
 

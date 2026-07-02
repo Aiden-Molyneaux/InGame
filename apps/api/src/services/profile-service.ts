@@ -6,13 +6,20 @@ import type {
   SelfProfile,
   GamertagView,
 } from '@ingame/shared';
+import { DEFAULT_CARD_STUB, type SelfGameExpansion, type SelfStats } from '@ingame/shared';
 import { mutation } from '../db/mutation';
+import type { Executor } from '../db/client';
 import * as profileRepo from '../repositories/profile-repo';
 import type { ProfileUpdate } from '../repositories/profile-repo';
 import * as gamertagRepo from '../repositories/gamertag-repo';
 import * as authRepo from '../repositories/auth-repo';
+import * as collectionRepo from '../repositories/collection-repo';
+import * as catalogRepo from '../repositories/catalog-repo';
+import { isUniqueViolation } from '../db/pg-errors';
+import * as relationshipRepo from '../repositories/relationship-repo';
 import { NotFoundError, ValidationError } from '../errors/AppError';
 import { toSelfShape, toGamertagView } from '../serializers/user-shape';
+import type { CollectionEntryRow } from '../db/schema';
 import { isUsernameAllowed, screenText } from '../moderation/screen';
 import { loadEnv } from '../config/env';
 import type { UserRow, GamertagRow } from '../db/schema';
@@ -37,12 +44,71 @@ export function usernameNextChangeAt(row: UserRow): string | null {
   return next > Date.now() ? new Date(next).toISOString() : null;
 }
 
+/** PROF-04 stats derived from the real shelf; completionPct per decision 0058. */
+function statsOf(entries: CollectionEntryRow[], friends: number): SelfStats {
+  const nonWishlist = entries.filter((e) => e.status !== 'wishlist');
+  const done = nonWishlist.filter((e) => e.status === 'beaten' || e.status === 'completed');
+  return {
+    games: entries.length,
+    hours: entries.reduce((sum, e) => sum + e.hours, 0),
+    completionPct:
+      nonWishlist.length === 0 ? 0 : Math.round((100 * done.length) / nonWishlist.length),
+    cardsDesigned: 0, // honest zero — card_designs is M4
+    adoptionsReceived: 0, // honest zero — adoptions are M4/M5
+    friends,
+  };
+}
+
+/**
+ * The ONE self-shape assembler (OQ-121 / decision 0056): `GET /me` AND the auth issuance path
+ * (register/login/apple) both emit this, so the session `user` can never drift from the `/me`
+ * self-shape (gamertags + the M3 stats/expansions inlined on both).
+ * The executor passes THROUGH to the repos (which own the getDb() default) — rule-1 layering.
+ */
+export async function assembleSelfShape(row: UserRow, exec?: Executor): Promise<SelfProfile> {
+  // Sequential on purpose: `exec` may be an open TRANSACTION (one pg client — parallel queries on
+  // it are deprecated); these are three cheap indexed reads.
+  const gamertagRows = exec
+    ? await gamertagRepo.listForUser(row.id, exec)
+    : await gamertagRepo.listForUser(row.id);
+  const entries = exec
+    ? await collectionRepo.listOwnedEntries(row.id, exec)
+    : await collectionRepo.listOwnedEntries(row.id);
+  const friends = exec
+    ? await relationshipRepo.countFriends(row.id, exec)
+    : await relationshipRepo.countFriends(row.id);
+
+  // The expanded favouriteGame / nowPlaying pins (M3 — the P2 PINNED FAVOURITE unblock, WTP-03).
+  const expand = async (gameId: string | null): Promise<SelfGameExpansion | null> => {
+    if (!gameId) return null;
+    const [game] = exec
+      ? await catalogRepo.gamesByIds([gameId], exec)
+      : await catalogRepo.gamesByIds([gameId]);
+    if (!game) return null; // soft-deleted from the catalog → honest null
+    const entry = entries.find((e) => e.gameId === gameId);
+    return {
+      gameId,
+      ...(entry ? { entryId: entry.id } : {}),
+      title: game.name,
+      hours: entry?.hours ?? 0,
+      card: { ...DEFAULT_CARD_STUB },
+    };
+  };
+
+  return toSelfShape(row, {
+    gamertags: gamertagRows.map(toGamertagView),
+    usernameNextChangeAt: usernameNextChangeAt(row),
+    stats: statsOf(entries, friends),
+    favouriteGame: await expand(row.favouriteGameId),
+    nowPlaying: await expand(row.nowPlayingGameId),
+  });
+}
+
 /** The assembled GET /me self-view (row + gamertags + PROF-06 cooldown). */
 export async function getSelfView(actorId: string): Promise<SelfProfile | null> {
   const row = await profileRepo.getOwnProfile(actorId);
   if (!row) return null;
-  const gamertags = await listGamertags(actorId);
-  return toSelfShape(row, { gamertags, usernameNextChangeAt: usernameNextChangeAt(row) });
+  return assembleSelfShape(row);
 }
 
 /**
@@ -50,7 +116,7 @@ export async function getSelfView(actorId: string): Promise<SelfProfile | null> 
  * uniqueness + AUTH-09 usernamePending completion), bio, privacy, favourites — all in one tx, emitting
  * one `profile.updated` with the changed field-set. The actor is the authenticated principal ONLY.
  */
-export const updateProfile = mutation(
+const updateProfileMutation = mutation(
   {
     name: 'profile.updateProfile',
     specIds: ['PROF-01', 'PROF-03', 'PROF-06', 'SYS-01', 'SYS-02', 'MOD-07', 'AUTH-09'],
@@ -64,11 +130,15 @@ export const updateProfile = mutation(
 
     if (input.username !== undefined && input.username !== current.username) {
       if (!isUsernameAllowed(input.username)) {
-        throw new ValidationError('That username isn’t allowed.', 'username_screened');
+        throw new ValidationError('That username isn’t allowed.', 'username_screened', [
+          { path: 'username', message: 'That username isn’t allowed.' },
+        ]);
       }
       const existing = await authRepo.findByUsername(input.username, ctx.tx);
       if (existing && existing.id !== actorId) {
-        throw new ValidationError('That username is taken.', 'username_taken');
+        throw new ValidationError('That username is taken.', 'username_taken', [
+          { path: 'username', message: 'That username is taken.' },
+        ]);
       }
       if (current.usernamePending) {
         updates.usernamePending = false; // AUTH-09 completion — NOT cooldown-limited
@@ -76,7 +146,9 @@ export const updateProfile = mutation(
       } else if (current.usernameChangedAt) {
         const next = current.usernameChangedAt.getTime() + loadEnv().usernameCooldownSeconds * 1000;
         if (next > Date.now()) {
-          throw new ValidationError('You changed your username too recently.', 'username_cooldown');
+          throw new ValidationError('You changed your username too recently.', 'username_cooldown', [
+            { path: 'username', message: 'You changed your username too recently.' },
+          ]);
         }
       }
       updates.username = input.username;
@@ -92,10 +164,27 @@ export const updateProfile = mutation(
       changed.push('privacy');
     }
     if (input.favouriteGameId !== undefined) {
+      // M3 — the catalog exists now: the favourite must be a live entry (backs the users FK).
+      if (input.favouriteGameId !== null) {
+        const [game] = await catalogRepo.gamesByIds([input.favouriteGameId], ctx.tx);
+        if (!game) {
+          throw new ValidationError('That game is not in the catalog.', 'unknown_game', [
+            { path: 'favouriteGameId', message: 'That game is not in the catalog.' },
+          ]);
+        }
+      }
       updates.favouriteGameId = input.favouriteGameId;
       changed.push('favouriteGameId');
     }
     if (input.favouriteGenreIds !== undefined) {
+      // M3 — CAT-04: favourite genres validate against the controlled list.
+      const unique = [...new Set(input.favouriteGenreIds)];
+      const known = await catalogRepo.genresByIds(unique, ctx.tx);
+      if (known.length !== unique.length) {
+        throw new ValidationError('Unknown genre.', 'unknown_genre', [
+          { path: 'favouriteGenreIds', message: 'Contains a genre that is not on the controlled list.' },
+        ]);
+      }
       updates.favouriteGenreIds = input.favouriteGenreIds;
       changed.push('favouriteGenreIds');
     }
@@ -112,6 +201,21 @@ export const updateProfile = mutation(
     return updated;
   },
 );
+
+// PROF-06 — a concurrent username-change race (the DB unique index catches what the in-tx pre-check
+// missed) maps to the friendly username_taken 422, not a raw 500 (mirrors register / the F36 siblings).
+export async function updateProfile(actorId: string, input: PatchMeRequest): Promise<UserRow> {
+  try {
+    return await updateProfileMutation(actorId, input);
+  } catch (e) {
+    if (isUniqueViolation(e)) {
+      throw new ValidationError('That username is taken.', 'username_taken', [
+        { path: 'username', message: 'That username is taken.' },
+      ]);
+    }
+    throw e;
+  }
+}
 
 // ── PROF-02 gamertag CRUD ─────────────────────────────────────────────────────────────────────────
 export const addGamertag = mutation(

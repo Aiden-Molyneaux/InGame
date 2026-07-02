@@ -83,3 +83,215 @@ export async function remove(id, exec) {
     expect(run(offending).length).toBeGreaterThan(0);
   });
 });
+
+// OQ-118 — detection flipped from the 3-verb denylist to an ALLOWLIST of recognized query verbs
+// (fail closed on the holes the M2 lead-audit named: upserts via .onConflictDoUpdate, raw
+// db.execute / sql`` writes, plus the relational query builder and user-owned JOINs).
+describe('rule-02 OQ-118 — allowlist detection closes the denylist holes', () => {
+  const repo = (text) => file('apps/api/src/repositories/collection-repo.ts', text);
+
+  it('flags an UNSCOPED .insert(...).onConflictDoUpdate(...) upsert on a user-owned table', () => {
+    const v = run([
+      repo(`
+import { gamertags } from '../db/schema';
+export async function upsertAny(exec, userId, handle) {
+  return exec
+    .insert(gamertags)
+    .values({ userId, handle })
+    .onConflictDoUpdate({ target: gamertags.userId, set: { handle } });
+}
+`),
+    ]);
+    expect(v.length).toBeGreaterThan(0);
+  });
+
+  it('EXEMPTS a SCOPED upsert (asActor/ownedBy signal in the window)', () => {
+    const v = run([
+      repo(`
+import { gamertags } from '../db/schema';
+import { asActor, ownedBy } from '../db/scoped';
+export async function upsertOwned(actorId, exec, handle) {
+  const actor = asActor(actorId);
+  return exec
+    .insert(gamertags)
+    .values({ userId: actor.actorId, handle })
+    .onConflictDoUpdate({
+      target: gamertags.userId,
+      set: { handle },
+      setWhere: ownedBy(actor, gamertags.userId),
+    });
+}
+`),
+    ]);
+    expect(v).toHaveLength(0);
+  });
+
+  it('still EXEMPTS a bare .insert (no conflict-update chain — cannot IDOR a new row)', () => {
+    const v = run([
+      repo(`
+import { gamertags } from '../db/schema';
+export async function insertNew(exec, userId, handle) {
+  return exec.insert(gamertags).values({ userId, handle });
+}
+`),
+    ]);
+    expect(v).toHaveLength(0);
+  });
+
+  it('flags raw .execute(sql``) in a repository file EVEN WITH a scope signal nearby', () => {
+    const v = run([
+      repo(`
+import { sql } from 'drizzle-orm';
+import { asActor } from '../db/scoped';
+export async function rawWrite(exec, actorId, email) {
+  const actor = asActor(actorId); // a nearby signal must NOT launder raw SQL
+  return exec.execute(sql\`UPDATE users SET email = \${email} WHERE id = \${actor.actorId}\`);
+}
+`),
+    ]);
+    expect(v.length).toBeGreaterThan(0);
+  });
+
+  it('does NOT apply the raw-SQL ban to db/ infra (reset.ts is rule-f03 surface)', () => {
+    const v = run([
+      file(
+        'apps/api/src/db/reset.ts',
+        `
+import { sql } from 'drizzle-orm';
+export async function resetDb(db) {
+  await db.execute(sql\`TRUNCATE TABLE users RESTART IDENTITY CASCADE\`);
+}
+`,
+      ),
+    ]);
+    expect(v).toHaveLength(0);
+  });
+
+  it('flags an unscoped db.query.<userOwnedTable>.findMany relational read', () => {
+    const v = run([
+      repo(`
+export async function getAny(db, userId) {
+  return db.query.gamertags.findMany({ where: (t, { eq }) => eq(t.userId, userId) });
+}
+`),
+    ]);
+    expect(v.length).toBeGreaterThan(0);
+  });
+
+  it('EXEMPTS db.query.<globalTable>.findMany (real F32 manifest)', () => {
+    const v = run([
+      repo(`
+export async function listGames(db) {
+  return db.query.games.findMany();
+}
+`),
+    ]);
+    expect(v).toHaveLength(0);
+  });
+
+  it('flags an unscoped user-owned .leftJoin even when the FROM table is global', () => {
+    const v = run([
+      repo(`
+import { eq } from 'drizzle-orm';
+import { games, collectionEntries } from '../db/schema';
+export async function leak(exec, gameId) {
+  return exec
+    .select()
+    .from(games)
+    .leftJoin(collectionEntries, eq(collectionEntries.gameId, games.id))
+    .where(eq(games.id, gameId));
+}
+`),
+    ]);
+    expect(v.length).toBeGreaterThan(0);
+  });
+
+  it('EXEMPTS a global-to-global join (games × game_genres × genres)', () => {
+    const v = run([
+      repo(`
+import { eq } from 'drizzle-orm';
+import { games, gameGenres, genres } from '../db/schema';
+export async function listWithGenres(exec) {
+  return exec
+    .select()
+    .from(games)
+    .leftJoin(gameGenres, eq(gameGenres.gameId, games.id))
+    .leftJoin(genres, eq(genres.id, gameGenres.genreId));
+}
+`),
+    ]);
+    expect(v).toHaveLength(0);
+  });
+
+  it('rejects each on-disk OQ-118 fixture (upsert · raw-sql · rqb · join-leak)', () => {
+    const dir = join(process.cwd(), 'fixtures', 'bad-pr-corpus', 'rule-02-scoping');
+    const all = collectFiles([dir], { exts: ['.ts'], cwd: process.cwd() });
+    for (const name of ['upsert-repo.ts', 'raw-sql-repo.ts', 'rqb-repo.ts', 'join-leak-repo.ts']) {
+      const fixture = all.filter((f) => f.path.endsWith(name));
+      expect(fixture, `${name} missing from the corpus`).toHaveLength(1);
+      expect(run(fixture).length, `${name} was not flagged`).toBeGreaterThan(0);
+    }
+  });
+});
+
+// OQ-126 — the CAT-09 community-aggregate read class (interim, pre-OQ-122's M4-entry model):
+// `// SYS-01-COMMUNITY-AGGREGATE` exempts a READ of a user-owned table ONLY when the window also
+// contains an aggregate call (count() — anonymous aggregates, never row reads), and NEVER a write.
+// Guard-surface change → gate-3 review, like the OQ-115 AUTH-LOOKUP marker.
+describe('rule-02 SYS-01-COMMUNITY-AGGREGATE marker (aggregate reads only — OQ-126)', () => {
+  const repo = (text) => file('apps/api/src/repositories/collection-repo.ts', text);
+
+  it('EXEMPTS a marked COUNT-aggregate read of a user-owned table (CAT-09)', () => {
+    const v = run([
+      repo(`
+import { count } from 'drizzle-orm';
+import { collectionEntries } from '../db/schema';
+export async function collectionsCountByGame(exec, gameIds) {
+  // SYS-01-COMMUNITY-AGGREGATE: CAT-09a — an anonymous cross-user COUNT per game (spec-sanctioned)
+  return exec
+    .select({ gameId: collectionEntries.gameId, n: count() })
+    .from(collectionEntries)
+    .groupBy(collectionEntries.gameId);
+}
+`),
+    ]);
+    expect(v).toHaveLength(0);
+  });
+
+  it('does NOT exempt a marked read with NO aggregate call in the window (row reads fail closed)', () => {
+    const v = run([
+      repo(`
+import { collectionEntries } from '../db/schema';
+export async function leakRows(exec, userId) {
+  // SYS-01-COMMUNITY-AGGREGATE: (ABUSED) claims an aggregate but selects raw rows
+  return exec.select().from(collectionEntries);
+}
+`),
+    ]);
+    expect(v.length).toBeGreaterThan(0);
+  });
+
+  it('does NOT exempt a marked WRITE even with count() nearby (reads-only contract)', () => {
+    const v = run([
+      repo(`
+import { count, eq } from 'drizzle-orm';
+import { collectionEntries } from '../db/schema';
+export async function abuse(exec, entryId) {
+  const n = count();
+  // SYS-01-COMMUNITY-AGGREGATE: (ABUSED) claims an aggregate but mutates a row
+  return exec.update(collectionEntries).set({ hours: 0 }).where(eq(collectionEntries.id, entryId));
+}
+`),
+    ]);
+    expect(v.length).toBeGreaterThan(0);
+  });
+
+  it('rejects the on-disk marked-write corpus fixture (aggregate-abuse-repo.ts)', () => {
+    const dir = join(process.cwd(), 'fixtures', 'bad-pr-corpus', 'rule-02-scoping');
+    const offending = collectFiles([dir], { exts: ['.ts'], cwd: process.cwd() }).filter((f) =>
+      f.path.endsWith('aggregate-abuse-repo.ts'),
+    );
+    expect(offending).toHaveLength(1);
+    expect(run(offending).length).toBeGreaterThan(0);
+  });
+});

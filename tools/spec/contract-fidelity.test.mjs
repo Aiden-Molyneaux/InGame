@@ -11,6 +11,11 @@ import {
   RESET_REQUEST_FIELDS,
   RESET_CONFIRM_FIELDS,
   VERIFY_CONFIRM_FIELDS,
+  CREATE_GAME_FIELDS,
+  ADD_COLLECTION_ENTRY_FIELDS,
+  UPDATE_COLLECTION_ENTRY_FIELDS,
+  REORDER_COLLECTION_FIELDS,
+  NOW_PLAYING_FIELDS,
 } from '@ingame/shared';
 
 // CONVENTIONS rule 3 — the api-contract FIDELITY snapshot (F09; decision 0045/0051, distinct from the
@@ -33,7 +38,7 @@ function contractBodyFields(method, path) {
   expect(body, `body { … } not found for ${method} ${path}`).toBeTruthy();
   return (body?.[1] ?? '')
     .split(',')
-    .map((f) => f.trim().replace(/\?$/, '').replace(/[\s:].*$/, ''))
+    .map((f) => f.trim().replace(/\?$/, '').replace(/\[\]$/, '').replace(/[\s:].*$/, ''))
     .filter(Boolean);
 }
 
@@ -50,6 +55,11 @@ describe('rule-3 fidelity: shared request schemas == api-contract bodies (F09)',
     ['POST', '/auth/password-reset/request', RESET_REQUEST_FIELDS],
     ['POST', '/auth/password-reset/confirm', RESET_CONFIRM_FIELDS],
     ['POST', '/auth/verify-email/confirm', VERIFY_CONFIRM_FIELDS],
+    ['POST', '/catalog/games', CREATE_GAME_FIELDS],
+    ['POST', '/me/collection', ADD_COLLECTION_ENTRY_FIELDS],
+    ['PATCH', '/me/collection/:entryId', UPDATE_COLLECTION_ENTRY_FIELDS],
+    ['PATCH', '/me/collection/reorder', REORDER_COLLECTION_FIELDS],
+    ['PUT', '/me/now-playing', NOW_PLAYING_FIELDS],
   ];
 
   for (const [method, path, fields] of cases) {

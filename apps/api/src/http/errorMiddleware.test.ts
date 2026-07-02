@@ -106,3 +106,83 @@ describe('SYS-02/F08: AppError → 422 error middleware → fixed envelope', () 
     expect(Object.keys(res.body?.error ?? {}).sort()).toEqual(['code', 'message']);
   });
 });
+
+// B1 (api-contract 0.32/0.46) — VALIDATION_ERROR carries SANITIZED field-targeted details:
+// `details: [{ path, message }]` built from the zod issue METADATA (paths + our own messages),
+// never from the submitted values (SYS-02 — no raw-input echo).
+describe('B1/SYS-02: VALIDATION_ERROR field-targeted details, sanitized', () => {
+  const schema = z
+    .object({
+      email: z.string().email(),
+      password: z.string().min(8),
+      privacy: z.enum(['friends', 'public']),
+    })
+    .strict();
+
+  it('maps zod issues to per-field details without echoing the submitted values', () => {
+    const parsed = schema.safeParse({
+      email: 'EVIL-not-an-email',
+      password: 'shrt',
+      privacy: 'EVIL_ENUM_INPUT',
+    });
+    expect(parsed.success).toBe(false);
+    const res = mockRes();
+    errorMiddleware(parsed.success ? null : parsed.error, req, res as never, next);
+
+    expect(res.statusCode).toBe(422);
+    const details = res.body?.error.details ?? [];
+    const byPath = Object.fromEntries(details.map((d) => [d.path, d.message]));
+    expect(byPath['email']).toBeTruthy();
+    expect(byPath['password']).toContain('at least 8');
+    expect(byPath['privacy']).toBeTruthy();
+    // SYS-02 — the submitted values never round-trip:
+    const flat = JSON.stringify(details);
+    expect(flat).not.toContain('EVIL');
+    expect(flat).not.toContain('shrt');
+  });
+
+  it('reports a missing required field as Required.', () => {
+    const parsed = schema.safeParse({ email: 'a@b.co', privacy: 'friends' });
+    const res = mockRes();
+    errorMiddleware(parsed.success ? null : parsed.error, req, res as never, next);
+    const details = res.body?.error.details ?? [];
+    expect(details).toContainEqual({ path: 'password', message: 'Required.' });
+  });
+
+  it('reports an unknown key (strict schema) without an unsafe path echo', () => {
+    const parsed = schema.safeParse({
+      email: 'a@b.co',
+      password: 'longenough',
+      privacy: 'friends',
+      ['<script>alert(1)</script>']: true,
+    });
+    const res = mockRes();
+    errorMiddleware(parsed.success ? null : parsed.error, req, res as never, next);
+    const details = res.body?.error.details ?? [];
+    expect(details.some((d) => d.message === 'Unknown field.')).toBe(true);
+    expect(JSON.stringify(details)).not.toContain('<script>');
+  });
+
+  it('passes through the details a service-thrown ValidationError carries', () => {
+    const res = mockRes();
+    errorMiddleware(
+      new ValidationError('That username is taken.', 'username_taken', [
+        { path: 'username', message: 'That username is taken.' },
+      ]),
+      req,
+      res as never,
+      next,
+    );
+    expect(res.statusCode).toBe(422);
+    expect(res.body?.error.reason).toBe('username_taken');
+    expect(res.body?.error.details).toEqual([
+      { path: 'username', message: 'That username is taken.' },
+    ]);
+  });
+
+  it('keeps the envelope minimal when a ValidationError has no details', () => {
+    const res = mockRes();
+    errorMiddleware(new ValidationError('bad'), req, res as never, next);
+    expect(Object.keys(res.body?.error ?? {}).sort()).toEqual(['code', 'message']);
+  });
+});

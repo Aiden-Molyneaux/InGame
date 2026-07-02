@@ -211,8 +211,17 @@ describe('PROF-01/03/06 · AUTH-09: PATCH /me widened body', () => {
 
   it('updates username + privacy + favourites in one call, emitting one profile.updated', async () => {
     const actor = await seedFull();
-    const gameId = randomUUID();
-    const genreId = randomUUID();
+    // M3 — favourites now validate against the REAL catalog + controlled genre list (the existence
+    // checks the M2 schema comment deferred here; the users.favourite_game_id FK backs it).
+    const genresRes = await request(app).get('/api/genres').set(authed(actor.token));
+    const genreId = genresRes.body.items[0].id as string;
+    const created = await request(app)
+      .post('/api/catalog/games')
+      .set(authed(actor.token))
+      .send({ name: `Fave Game ${randomUUID().slice(0, 6)}`, genreIds: [genreId] });
+    expect(created.status).toBe(201);
+    const gameId = created.body.id as string;
+
     const res = await request(app)
       .patch('/api/me')
       .set(authed(actor.token))
@@ -222,12 +231,28 @@ describe('PROF-01/03/06 · AUTH-09: PATCH /me widened body', () => {
     expect(res.body.privacy).toBe('public');
     expect(res.body.favouriteGameId).toBe(gameId);
     expect(res.body.favouriteGenreIds).toEqual([genreId]);
+    expect(res.body.favouriteGame?.gameId).toBe(gameId); // the M3 expansion rides the same call
 
     const { getDb } = await import('../../src/db/client');
     const { domainEvents } = await import('../../src/db/schema');
     const rows = await getDb().select().from(domainEvents);
-    expect(rows).toHaveLength(1);
-    expect(rows[0]?.eventType).toBe('profile.updated');
+    const profileEvents = rows.filter((r) => r.eventType === 'profile.updated');
+    expect(profileEvents).toHaveLength(1);
+  });
+
+  it('M3: an UNKNOWN favourite game / genre → 422 (catalog + controlled list are authoritative)', async () => {
+    const actor = await seedFull();
+    const badGame = await request(app)
+      .patch('/api/me')
+      .set(authed(actor.token))
+      .send({ favouriteGameId: randomUUID() });
+    expect(badGame.status).toBe(422);
+    expect(badGame.body.error.code).toBe('VALIDATION_ERROR');
+    const badGenre = await request(app)
+      .patch('/api/me')
+      .set(authed(actor.token))
+      .send({ favouriteGenreIds: [randomUUID()] });
+    expect(badGenre.status).toBe(422);
   });
 
   it('AUTH-09: a usernamePending user completing their username clears the pending flag', async () => {
