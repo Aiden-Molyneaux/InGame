@@ -1,20 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  Pressable,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import type { CatalogItem, CollectionItem, CollectionStatus, DedupSuggestion } from '@ingame/shared';
 import { GameCard } from '../src/components/GameCard';
 import { ScreenButton } from '../src/components/ScreenButton';
 import { CountTag } from '../src/components/ScreenHead';
 import { SearchField } from '../src/components/SearchField';
+import { KeyboardLift } from '../src/components/KeyboardLift';
 import { TextField } from '../src/components/TextField';
 import { GenreTag } from '../src/components/GenreTag';
 import { InlineBanner } from '../src/components/InlineBanner';
@@ -70,7 +62,9 @@ export default function AddGame() {
   const [added, setAdded] = useState<CollectionItem | null>(null); // the status beat
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    // S4-d (M3-R R0-2): the old window-measuring KeyboardAvoidingView chronically mis-lifted inside
+    // the device frame — replaced by the frame-aware KeyboardLift on the docked search bar itself.
+    <View style={styles.flex}>
       <View style={styles.screen}>
         {/* FlowHeader — ✕ · ADD GAME · CountTag (the +1 tick rides the invalidated query) */}
         <View style={styles.flowHead}>
@@ -97,7 +91,7 @@ export default function AddGame() {
           <SearchMode q={q} setQ={setQ} onNoneOfThese={() => setMode('create')} onAdded={setAdded} />
         )}
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -206,10 +200,12 @@ function SearchMode({
         ) : null}
       </ScrollView>
 
-      {/* bottom-docked search (OQ-035) */}
-      <View style={styles.dock}>
-        <SearchField value={q} onChangeText={setQ} placeholder="Search the catalog" autoFocus />
-      </View>
+      {/* bottom-docked search (OQ-035) — rises above the keyboard within the frame (S4-d, R0-2) */}
+      <KeyboardLift>
+        <View style={styles.dock}>
+          <SearchField value={q} onChangeText={setQ} placeholder="Search the catalog" autoFocus />
+        </View>
+      </KeyboardLift>
     </>
   );
 }

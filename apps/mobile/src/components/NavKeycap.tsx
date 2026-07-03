@@ -1,4 +1,4 @@
-import { Pressable, Text, View, StyleSheet } from 'react-native';
+import { Platform, Pressable, Text, View, StyleSheet } from 'react-native';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { theme } from '../theme';
 import { PipLight } from './PipLight';
@@ -149,9 +149,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: theme.corner.navKey, // 15
-    borderBottomWidth: 4, // the hard drop edge (F-03)
-    borderBottomColor: theme.shell.ink,
+    // The hard drop edge (F-03, mockup `box-shadow: 0 4px 0 ink`) — REAL RN shadow props on
+    // native (S1-c: a borderBottom reads flat — it thickens the edge inside the radius instead of
+    // dropping below the cap): hard offset shadow on iOS, elevation approximating on Android.
+    // Web keeps the mockup's literal boxShadow (RN-web deprecated shadow* props).
+    ...Platform.select({
+      web: { boxShadow: `0 4px 0 ${theme.shell.ink}` },
+      default: {
+        shadowColor: theme.shell.ink,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+        elevation: 5,
+      },
+    }),
   },
-  keyPressed: { borderBottomWidth: 1, transform: [{ translateY: 3 }] }, // travels
+  keyPressed: {
+    // travels: the cap sinks 3px and the drop edge collapses to 1px (F-03)
+    ...Platform.select({
+      web: { boxShadow: `0 1px 0 ${theme.shell.ink}` },
+      default: { shadowOffset: { width: 0, height: 1 }, elevation: 1 },
+    }),
+    transform: [{ translateY: 3 }],
+  },
   pipRow: { height: 13, justifyContent: 'flex-end' }, // 6px gap + the 7px pip (mockup `.pip`)
 });
