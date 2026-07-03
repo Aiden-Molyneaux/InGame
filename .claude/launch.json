@@ -13,6 +13,12 @@
       "runtimeArgs": ["-w", "@ingame/mobile", "run", "web", "--", "--port", "8082"],
       "port": 8082,
       "autoPort": false
+    },
+    {
+      "name": "dashboard",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["../shipwright/dashboard/server.mjs", "--port", "8791"],
+      "port": 8791
     }
   ]
 }
