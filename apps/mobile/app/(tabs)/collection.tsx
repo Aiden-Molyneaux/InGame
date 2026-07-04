@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Pressable, BackHandler, Keyboard, Platform } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
-import { useRouter } from 'expo-router';
 import type { CollectionItem, CollectionStatus, GenreView } from '@ingame/shared';
 import { ScreenHead } from '../../src/components/ScreenHead';
 import { GameCard } from '../../src/components/GameCard';
@@ -12,6 +12,7 @@ import { PulledSheet } from '../../src/components/PulledSheet';
 import { TextField } from '../../src/components/TextField';
 import { GenreTag } from '../../src/components/GenreTag';
 import { TertiaryLink } from '../../src/components/TertiaryLink';
+import { KeyboardLift } from '../../src/components/KeyboardLift';
 import { theme } from '../../src/theme';
 import { useAppDispatch, useAppSelector } from '../../src/store/hooks';
 import { setCollectionView, type CollectionView } from '../../src/store/prefsSlice';
@@ -24,10 +25,16 @@ import { useGetCollectionQuery, useUpdateEntryMutation } from '../../src/store/a
 // right (F-02). Card faces are the CARD-18 default until M4; the COL-12 peek-flip rides M4 (D1).
 
 const VIEW_ORDER: CollectionView[] = ['shelf', 'grid', 'list', 'top'];
+// Board sort chips (:592–596): A–Z · HOURS · OWNED SINCE · RECENT · MY ORDER (decision 0061 keeps
+// MY ORDER first as the default). RECENT (OQ-128) sorts by ownedSince DESC as an INTERIM — see the
+// filtered memo: ownedSince defaults to the add-date (COL-03), so it approximates recently-added,
+// but a truly distinct RECENT (immutable addedAt vs the user-editable owned-since) needs an
+// api-contract field. Flagged in OQ-128; do not treat this as the final RECENT.
 const SORTS = [
   { key: 'order', label: 'MY ORDER' },
   { key: 'hours', label: 'HOURS' },
   { key: 'ownedSince', label: 'OWNED SINCE' },
+  { key: 'recent', label: 'RECENT' },
   { key: 'title', label: 'A–Z' },
 ] as const;
 type SortKey = (typeof SORTS)[number]['key'];
@@ -118,6 +125,21 @@ function PlusIcon({ color = theme.brand.goldInk, size = 15 }: { color?: string; 
     </Svg>
   );
 }
+// The in-place-search ⊗ clear (board `.search-bar .field .clear`, :693) — dismisses search + clears q.
+function ClearIcon() {
+  return (
+    <Svg width={15} height={15} viewBox="0 0 13 13">
+      <Circle cx={6.5} cy={6.5} r={5.5} fill="none" stroke={NAVY} strokeWidth={1.4} />
+      <Path d="M4.4 4.4l4.2 4.2M8.6 4.4L4.4 8.6" fill="none" stroke={NAVY} strokeWidth={1.4} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+// Shared row copy (decision 0061 — the showcase stat-line + catalog line, reused by the hero and the
+// shelf-stack rows; board `.stat-line` :747 / `.hero-sub` :749).
+const statLine = (i: CollectionItem) => `${i.hours} HRS · ${STATUS_LABEL[i.status]}`;
+const catalogLine = (i: CollectionItem) =>
+  [i.developer, i.releaseYear, i.genres[0]?.name].filter(Boolean).join(' · ').toUpperCase();
 
 export default function Collection() {
   const router = useRouter();
@@ -146,6 +168,32 @@ export default function Collection() {
     if (logHoursId != null && logHoursItem === null) setLogHoursId(null);
   }, [logHoursId, logHoursItem]);
 
+  const closeSearch = () => {
+    setQ('');
+    setSearchOpen(false);
+  };
+
+  // Hardware back closes the search dock instead of navigating (parity with PulledSheet's rule).
+  // Web-guarded: react-native-web's BackHandler shim console.errors on every subscribe.
+  // NOTE: hooks live ABOVE the isLoading/isError early returns — hook count must not vary per render.
+  useEffect(() => {
+    if (!searchOpen || Platform.OS === 'web') return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      closeSearch();
+      return true;
+    });
+    return () => sub.remove();
+    // closeSearch is re-created per render; searchOpen is the real subscribe key.
+  }, [searchOpen]);
+
+  // Leaving the tab with the dock focused would strand the keyboard over the next screen (the Tabs
+  // navigator keeps this screen mounted) — dismiss it on blur; the dock itself survives the round trip.
+  useFocusEffect(
+    useCallback(() => {
+      return () => Keyboard.dismiss();
+    }, []),
+  );
+
   // COL-07/09 — client-side query execution over the loaded shelf (D2).
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -163,7 +211,8 @@ export default function Collection() {
         const cmp =
           sortKey === 'hours'
             ? a.hours - b.hours
-            : sortKey === 'ownedSince'
+            : // OWNED SINCE and RECENT both key on ownedSince pending an immutable addedAt (OQ-128).
+              sortKey === 'ownedSince' || sortKey === 'recent'
               ? (a.ownedSince ?? '').localeCompare(b.ownedSince ?? '')
               : a.title.localeCompare(b.title);
         return sortAsc ? cmp : -cmp;
@@ -195,6 +244,9 @@ export default function Collection() {
     const next = VIEW_ORDER[(VIEW_ORDER.indexOf(view) + 1) % VIEW_ORDER.length]!;
     dispatch(setCollectionView(next));
   };
+  // The Now-Playing hero persists across all three browse modes (decision 0061) — LOG HOURS opens
+  // the hero's sheet from whichever mode is showing.
+  const onLogHours = () => hero && setLogHoursId(hero.entryId);
 
   // S3-j / §0.3 — count copy: "N game(s)" unfiltered · "N of M games" filtered (singular-aware);
   // absent until the first add (the board shows no count keycap on the empty shelf, :491).
@@ -216,11 +268,17 @@ export default function Collection() {
       <View style={styles.pad}>
         {/* honest totals — filtered count OF the whole shelf (the C4 class); S3-j copy */}
         <ScreenHead title="Collection" count={countLabel} />
-        {searchOpen ? (
-          <SearchField value={q} onChangeText={setQ} placeholder="Search title · studio" autoFocus />
-        ) : null}
       </View>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.body}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+        {/* In-place search: the query live-filters the CURRENT view + a RESULTS header (board :661). */}
+        {searchOpen && q.trim() !== '' && data.collectionTotal > 0 ? (
+          <Text style={styles.resultsHead}>RESULTS — TITLE · DEVELOPER · PUBLISHER</Text>
+        ) : null}
+        {/* The Now-Playing hero persists across the browse modes (0061) but YIELDS while a query is
+            active (board :711–713) and in TOP view — rendered once here, not per-view. */}
+        {data.collectionTotal > 0 && view !== 'top' && q.trim() === '' ? (
+          <NowPlayingHero hero={hero} onLogHours={onLogHours} />
+        ) : null}
         {data.collectionTotal === 0 ? (
           <EmptyShelf onAdd={() => router.push('/add-game')} />
         ) : view === 'list' ? (
@@ -230,45 +288,71 @@ export default function Collection() {
         ) : view === 'grid' ? (
           <GridView items={filtered} />
         ) : (
-          <ShelfView items={filtered} hero={hero} onLogHours={() => hero && setLogHoursId(hero.entryId)} />
+          <ShelfView items={filtered} />
         )}
       </ScrollView>
 
-      {/* The ToolsBar (§2.1): icon-only keycaps ACT · long-press opens the drawer (OQ-034 · S3-n). */}
-      <View style={styles.tools}>
-        <ToolButton
-          icon={<SearchIcon />}
-          label="Search"
-          active={searchOpen || q.trim() !== ''}
-          onPress={() => {
-            if (searchOpen) setQ('');
-            setSearchOpen(!searchOpen);
-          }}
-          onLongPress={() => setDrawerOpen(true)}
-        />
-        <ToolButton
-          icon={<SortIcon active={sortKey !== 'order' || sortAsc} asc={sortAsc} />}
-          label="Sort"
-          active={sortKey !== 'order' || sortAsc}
-          onPress={() => setSortAsc(!sortAsc)}
-          onLongPress={() => setDrawerOpen(true)}
-        />
-        <ToolButton
-          icon={<FilterIcon />}
-          label="Filter"
-          active={statusFilter.size > 0 || genreFilter.size > 0}
-          onPress={() => setDrawerOpen(true)}
-        />
-        <ToolButton
-          icon={<ViewIcon view={view} />}
-          label="View"
-          active={view !== 'shelf'}
-          onPress={cycleView}
-          onLongPress={() => setDrawerOpen(true)}
-        />
-        <View style={styles.spacer} />
-        <ScreenButton label="Add" variant="add" icon={<PlusIcon />} onPress={() => router.push('/add-game')} style={styles.addBtn} />
-      </View>
+      {/* The ToolsBar (§2.1 · OQ-034): keycaps ACT · long-press opens the drawer. Tapping Search MORPHS
+          the whole bar into a docked SearchField that lifts over the keyboard (R0-2 KeyboardLift, board
+          :689–695); the ⊗ clears the query and exits search. */}
+      {searchOpen ? (
+        <KeyboardLift>
+          <View style={styles.searchBar}>
+            <View style={styles.searchFieldWrap}>
+              {/* Keyboard SEARCH = the non-destructive exit: un-morph, KEEP the query (the Search
+                  keycap returns pressed + pip via its q-based active predicate). ⊗ clears (board :712). */}
+              <SearchField
+                value={q}
+                onChangeText={setQ}
+                placeholder="Title · developer · publisher"
+                autoFocus
+                onSubmit={() => setSearchOpen(false)}
+              />
+            </View>
+            <Pressable
+              onPress={closeSearch}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Clear search"
+              style={styles.searchClear}
+            >
+              <ClearIcon />
+            </Pressable>
+          </View>
+        </KeyboardLift>
+      ) : (
+        <View style={styles.tools}>
+          <ToolButton
+            icon={<SearchIcon />}
+            label="Search"
+            active={q.trim() !== ''}
+            onPress={() => setSearchOpen(true)}
+            onLongPress={() => setDrawerOpen(true)}
+          />
+          <ToolButton
+            icon={<SortIcon active={sortKey !== 'order' || sortAsc} asc={sortAsc} />}
+            label="Sort"
+            active={sortKey !== 'order' || sortAsc}
+            onPress={() => setSortAsc(!sortAsc)}
+            onLongPress={() => setDrawerOpen(true)}
+          />
+          <ToolButton
+            icon={<FilterIcon />}
+            label="Filter"
+            active={statusFilter.size > 0 || genreFilter.size > 0}
+            onPress={() => setDrawerOpen(true)}
+          />
+          <ToolButton
+            icon={<ViewIcon view={view} />}
+            label="View"
+            active={view !== 'shelf'}
+            onPress={cycleView}
+            onLongPress={() => setDrawerOpen(true)}
+          />
+          <View style={styles.spacer} />
+          <ScreenButton label="Add" variant="add" icon={<PlusIcon />} onPress={() => router.push('/add-game')} style={styles.addBtn} />
+        </View>
+      )}
 
       <SortFilterSheet
         visible={drawerOpen}
@@ -293,50 +377,67 @@ export default function Collection() {
   );
 }
 
-// SHELF (decision 0057): ONE Now-Playing hero (card + NOW PLAYING eyebrow · stat-line · title ·
-// the M3 catalog line · LOG HOURS) over TWO-per-row bare card faces — no per-row meta (stats live
-// in LIST; the COL-12 flip rides M4, D1).
-function ShelfView({
-  items,
-  hero,
-  onLogHours,
-}: {
-  items: CollectionItem[];
-  hero: CollectionItem | null;
-  onLogHours: () => void;
-}) {
+// The Now-Playing hero, shared across all three browse modes (decision 0061): the pinned card +
+// NOW PLAYING eyebrow · stat-line · title · catalog line · LOG HOURS (hero-exclusive). Unset → the
+// "set your Now Playing" nudge (WTP-03; the per-game picker is M4, §0.5/0.8).
+function NowPlayingHero({ hero, onLogHours }: { hero: CollectionItem | null; onLogHours: () => void }) {
+  if (!hero) {
+    return (
+      <View style={styles.nudge}>
+        <Text style={styles.nudgeTitle}>SET YOUR NOW PLAYING</Text>
+        <Text style={styles.nudgeSub}>Pin the game you’re on — it leads the shelf (WTP-03).</Text>
+      </View>
+    );
+  }
+  return (
+    <View style={styles.hero}>
+      <GameCard title={hero.title} size="grid" style={styles.heroCard} />
+      <View style={styles.heroMeta}>
+        <Text style={styles.heroEyebrow}>NOW PLAYING</Text>
+        <Text style={styles.heroStat}>{statLine(hero)}</Text>
+        <Text style={styles.heroTitle}>{hero.title.toUpperCase()}</Text>
+        <Text style={styles.heroCatalog}>{catalogLine(hero)}</Text>
+        <ScreenButton
+          label="Log hours"
+          icon={<PlusIcon color={theme.scr.accentInk} size={11} />}
+          onPress={onLogHours}
+          style={styles.heroBtn}
+        />
+      </View>
+    </View>
+  );
+}
+
+// SHELF (decision 0061 — the showcase / "flip through your binder"): a stack where EVERY entry gets
+// the hero treatment (full face + stat-line · title · catalog line). LOG HOURS stays hero-exclusive
+// (the NowPlayingHero above, rendered by the parent); ▶ NOW marks the pinned game in the stack.
+function ShelfView({ items }: { items: CollectionItem[] }) {
   return (
     <View style={styles.shelf}>
-      {hero ? (
-        <View style={styles.hero}>
-          <GameCard title={hero.title} size="grid" style={styles.heroCard} />
-          <View style={styles.heroMeta}>
-            <Text style={styles.heroEyebrow}>NOW PLAYING</Text>
-            <Text style={styles.heroStat}>
-              {hero.hours} HRS · {STATUS_LABEL[hero.status]}
-            </Text>
-            <Text style={styles.heroTitle}>{hero.title.toUpperCase()}</Text>
-            <Text style={styles.heroCatalog}>
-              {/* board :749 — DEVELOPER · YEAR · GENRE */}
-              {[hero.developer, hero.releaseYear, hero.genres[0]?.name].filter(Boolean).join(' · ').toUpperCase()}
-            </Text>
-            <ScreenButton
-              label="Log hours"
-              icon={<PlusIcon color={theme.scr.accentInk} size={11} />}
-              onPress={onLogHours}
-              style={styles.heroBtn}
-            />
-          </View>
-        </View>
-      ) : (
-        <View style={styles.nudge}>
-          <Text style={styles.nudgeTitle}>SET YOUR NOW PLAYING</Text>
-          <Text style={styles.nudgeSub}>Pin the game you’re on — it leads the shelf (WTP-03).</Text>
-        </View>
-      )}
-      <View style={styles.shelfWrap}>
+      <View style={styles.shelfStack}>
         {items.map((i) => (
-          <View key={i.entryId} style={styles.shelfCol}>
+          <View key={i.entryId} style={styles.stackRow}>
+            <GameCard title={i.title} size="grid" nowPlaying={i.nowPlaying} style={styles.heroCard} />
+            <View style={styles.heroMeta}>
+              <Text style={styles.heroStat}>{statLine(i)}</Text>
+              <Text style={styles.heroTitle}>{i.title.toUpperCase()}</Text>
+              <Text style={styles.heroCatalog}>{catalogLine(i)}</Text>
+            </View>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+// GRID (decision 0061 — compact browsing): a two-per-row grid of bare card FACES (never cropped,
+// F-01), ▶ NOW in-flow on the pinned face; no per-row meta. The hero renders above (parent).
+function GridView({ items }: { items: CollectionItem[] }) {
+  return (
+    <View style={styles.shelf}>
+      <View style={styles.gridWrap}>
+        {items.map((i) => (
+          <View key={i.entryId} style={styles.gridCol}>
             <GameCard title={i.title} size="grid" nowPlaying={i.nowPlaying} style={styles.fluidCard} />
           </View>
         ))}
@@ -345,32 +446,32 @@ function ShelfView({
   );
 }
 
-function GridView({ items }: { items: CollectionItem[] }) {
-  return (
-    <View style={styles.wrap}>
-      {items.map((i) => (
-        <GameCard key={i.entryId} title={i.title} size="cell" nowPlaying={i.nowPlaying} />
-      ))}
-    </View>
-  );
-}
-
+// LIST (management scan): dense strip rows — thumb + title (▶ NOW inline) + HRS · STATUS + chevron
+// → the Game page (the tap-target is M4). The always-visible per-row stats mode; hero above (parent).
 function ListView({ items }: { items: CollectionItem[] }) {
   return (
-    <View style={styles.list}>
-      {items.map((i) => (
-        <View key={i.entryId} style={styles.row}>
-          <GameCard title={i.title} size="mini" nowPlaying={i.nowPlaying} />
-          <View style={styles.rowMeta}>
-            <Text style={styles.rowTitle} numberOfLines={1}>
-              {i.title}
-            </Text>
-            <Text style={styles.rowSub}>
-              {i.hours} HRS · {STATUS_LABEL[i.status]}
-            </Text>
+    <View style={styles.shelf}>
+      <View style={styles.listStack}>
+        {items.map((i) => (
+          <View key={i.entryId} style={styles.strip}>
+            <GameCard title={i.title} size="thumb" />
+            <View style={styles.stripMeta}>
+              <View style={styles.stripTitleRow}>
+                <Text style={styles.stripTitle} numberOfLines={1}>
+                  {i.title.toUpperCase()}
+                </Text>
+                {i.nowPlaying ? (
+                  <View style={styles.nowInline}>
+                    <Text style={styles.nowInlineText}>▶ NOW</Text>
+                  </View>
+                ) : null}
+              </View>
+              <Text style={styles.rowSub}>{statLine(i)}</Text>
+            </View>
+            <Text style={styles.chev}>›</Text>
           </View>
-        </View>
-      ))}
+        ))}
+      </View>
     </View>
   );
 }
@@ -443,7 +544,7 @@ function SortFilterSheet(props: {
   return (
     <PulledSheet visible={props.visible} onClose={props.onClose}>
       <SheetSection title="Search">
-        <SearchField value={props.q} onChangeText={props.setQ} placeholder="Title · studio · publisher" />
+        <SearchField value={props.q} onChangeText={props.setQ} placeholder="Title · developer · publisher" />
       </SheetSection>
       <SheetSection title="View">
         <View style={styles.chipRow}>
@@ -597,7 +698,27 @@ const styles = StyleSheet.create({
   // S3-o — the gold ADD reads larger than the cream tool keycaps (the one loud object). Token-driven
   // padding; the "+" icon (PlusIcon) adds height, the F-02 step (add variant) adds the card signature.
   addBtn: { paddingVertical: theme.space.lg, paddingHorizontal: theme.space.xxl },
-  wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.lg, justifyContent: 'space-between' },
+  // 1c — the in-place search dock: the tools bar becomes a cream SearchField + ⊗ clear, same slot,
+  // same border/background chrome so the morph reads in place (board `.tools.search-bar`, :689–695).
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.space.md,
+    paddingHorizontal: theme.space.lg,
+    paddingVertical: theme.space.md,
+    borderTopWidth: 1,
+    borderTopColor: theme.scr.hairline,
+    backgroundColor: theme.scr.bg,
+  },
+  searchFieldWrap: { flex: 1 },
+  searchClear: {
+    width: 32,
+    height: 30,
+    backgroundColor: theme.brand.cream,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  resultsHead: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },
   shelf: { gap: theme.space.lg },
   hero: {
     flexDirection: 'row',
@@ -625,19 +746,41 @@ const styles = StyleSheet.create({
   nudgeTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 1 },
   nudgeSub: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.dim, lineHeight: 16 },
   empty: { alignItems: 'flex-start', gap: theme.space.lg, padding: theme.space.xl, backgroundColor: theme.scr.panel },
-  shelfWrap: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: theme.space.lg },
-  shelfCol: { width: '48%' },
+  // SHELF stack (decision 0061) — each entry a hero-treatment row (card + meta beside), board `.shelf-stack`.
+  shelfStack: { gap: theme.space.lg },
+  stackRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    padding: theme.space.lg,
+    backgroundColor: theme.scr.panel,
+    borderWidth: 1,
+    borderColor: theme.scr.hairline,
+  },
+  // GRID (decision 0061) — two-per-row bare card faces (board `.grid` 1fr/1fr).
+  gridWrap: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: theme.space.lg },
+  gridCol: { width: '48%' },
   fluidCard: { width: '100%', height: 'auto', aspectRatio: 63 / 88 }, // mockup `.grid-size`
-  list: { gap: theme.space.md },
-  row: {
+  // LIST — dense strip rows (board `.list-stack` gap 9 / `.strip`).
+  listStack: { gap: theme.space.sm + 1 },
+  strip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.space.lg,
     backgroundColor: theme.scr.panel,
     borderWidth: 1,
     borderColor: theme.scr.hairline,
-    padding: theme.space.md,
+    paddingHorizontal: theme.space.lg,
+    paddingVertical: theme.space.md,
   },
+  stripMeta: { flex: 1, gap: theme.space.xs, minWidth: 0 },
+  stripTitleRow: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md },
+  stripTitle: { flexShrink: 1, fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 1 },
+  // ▶ NOW inline next to the title (board `.now-inline`) — the thumb is too small to wear a tag.
+  nowInline: { backgroundColor: theme.scr.accent, paddingHorizontal: 4, paddingVertical: 1 },
+  nowInlineText: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.accentInk, letterSpacing: 0.5 },
+  chev: { marginLeft: 'auto', fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.faint },
+  list: { gap: theme.space.md },
   rowMeta: { flex: 1, gap: 1 },
   rowTitle: { fontFamily: theme.font.screenSemi, fontSize: theme.type.title, color: theme.scr.ink },
   rowSub: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },

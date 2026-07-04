@@ -8,11 +8,14 @@ export function SearchField({
   onChangeText,
   placeholder,
   autoFocus,
+  onSubmit,
 }: {
   value: string;
   onChangeText: (v: string) => void;
   placeholder?: string;
   autoFocus?: boolean;
+  /** The keyboard's SEARCH/return key (board OQ-034: dismisses and KEEPS the filter). */
+  onSubmit?: () => void;
 }) {
   return (
     <TextInput
@@ -24,6 +27,8 @@ export function SearchField({
       autoCapitalize="none"
       autoCorrect={false}
       autoFocus={autoFocus}
+      returnKeyType={onSubmit ? 'search' : undefined}
+      onSubmitEditing={onSubmit}
       accessibilityLabel={placeholder ?? 'Search'}
       accessibilityRole="search"
     />
