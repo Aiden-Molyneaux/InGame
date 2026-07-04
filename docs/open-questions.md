@@ -16,6 +16,32 @@
 
 ## Open
 
+- OQ-129: **Sort direction carry-over on key switch reads wrong.** The Collection sort fold (S3-h/i)
+  shares one `sortAsc` across keys with DESC default, so from a fresh screen selecting "A–Z" yields a
+  chip reading "A–Z ↓" — Z first, contradicting the label's promise. Consider per-key default
+  direction on key *switch* (HOURS→DESC, A–Z→ASC, OWNED SINCE→DESC), re-tap still flips. (raised by
+  murr verifying R1-1 Collection, 2026-07-03) [behavior]
+- OQ-130: **Filtered-to-zero Collection body has no "no results" beat.** With filters/search matching
+  nothing the count honestly reads "0 OF N GAMES" but the scroll body is blank — no board artboard
+  draws a no-results state either (the in-place-search artboard shows hits only,
+  `collection-states.html:647–720`). Needs a small design + copy ruling; same family as the §5.6
+  lifecycle set. (raised by murr verifying R1-1 Collection, 2026-07-03) [presentation]
+- OQ-127: **The GameCard F-02 TL+BR pixel-step isn't rendered in the RN app.** `GameCard`
+  (`apps/mobile/src/components/GameCard.tsx`) draws a plain square face (`borderRadius:
+  theme.corner.screen` = 0) and `StateMark` (`StateMark.tsx`) fakes its notch with a no-op
+  `borderTopLeftRadius:0` — so the card's signature stepped corner is on paper only, app-wide. R1-1
+  (S3-p) gave the gold ADD button a real step via an SVG polygon (the `ScreenButton/add` variant);
+  the same treatment is owed to GameCard (+ its ghost/skeleton/error card-silhouette placeholders)
+  and StateMark, which decision 0041 §2 says carry the step *intrinsically*. Likely one shared
+  stepped-path helper the card, placeholders, StateMark, and the add/act buttons all consume. Out of
+  R1-1 scope (it names only the ADD button); flagged for an M4-entry DS-fidelity pass. (raised
+  building R1-1 Collection, 2026-07-03) [presentation]
+- OQ-128: **The Collection sort drawer is missing the board's `RECENT` sort.** The board's SORT chips
+  are A–Z · HOURS · OWNED SINCE · **RECENT** · MY ORDER (`collection-states.html:592–596`), but the
+  build's `SORTS` (`apps/mobile/app/(tabs)/collection.tsx`) has only MY ORDER · HOURS · OWNED SINCE ·
+  A–Z. `RECENT` presumably = recently-**added-to-collection** order (an `addedAt`/`createdAt` field),
+  distinct from OWNED SINCE. Confirm whether RECENT is wanted and which field it sorts. Out of R1-1
+  scope (no S3 item names it). (raised building R1-1 Collection, 2026-07-03) [behavior]
 - OQ-126: **rule-02 gains a `// SYS-01-COMMUNITY-AGGREGATE` marker — the CAT-09 read class arrived
   at M3, ahead of OQ-122's M4-entry decision.** CAT-09a (`collectionsCount`) is a spec-sanctioned
   ANONYMOUS cross-user aggregate over the user-owned `collection_entries` — the F32 binary model
