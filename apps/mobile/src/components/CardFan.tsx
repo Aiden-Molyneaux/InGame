@@ -16,12 +16,10 @@ export function CardFan({
   items,
   foreIndex,
   onFocus,
-  variant = 'entry',
 }: {
   items: FanItem[];
   foreIndex: number;
   onFocus: (index: number) => void;
-  variant?: 'entry' | 'results';
 }) {
   const n = items.length;
   // step wraps; the guard below blocks it for n < 2 so a single-card fan can't rotate onto itself.
@@ -50,9 +48,11 @@ export function CardFan({
   // same card on both sides, so one side stays empty.
   const leftIdx = foreIndex > 0 ? foreIndex - 1 : n > 2 ? n - 1 : -1;
   const rightIdx = foreIndex < n - 1 ? foreIndex + 1 : n > 2 ? 0 : -1;
-  const foreW = variant === 'results' ? 138 : 96;
-  const foreH = variant === 'results' ? 193 : 134;
-  const dropY = variant === 'results' ? 16 : 8;
+  // The fore is always enlarged (138×193) so the focused card is salient in every state (owner ruling
+  // 2026-07-04, supersedes the board's same-size-in-entry P1); neighbours stay /cell 96×134.
+  const foreW = 138;
+  const foreH = 193;
+  const dropY = 16;
 
   const neighbour = (idx: number, side: 'l' | 'r') =>
     idx < 0 ? null : (

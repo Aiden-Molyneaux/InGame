@@ -30,7 +30,9 @@ export function ShellNav({ bottomInset = 0 }: { bottomInset?: number }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const onCollection = pathname.startsWith('/collection');
+  // Add-game is a FlowTakeover OF Collection (board: NavBand untouched, COLLECTION keycap active) —
+  // the nav stays live and a keypress switches tabs, it is NOT locked. It counts as Collection context.
+  const onCollection = pathname.startsWith('/collection') || pathname.startsWith('/add-game');
   const onProfile = pathname.startsWith('/profile');
   const locked = !(onCollection || onProfile); // sign-in, index redirect, splash
   const activeKey = onProfile ? 'profile' : 'collection';

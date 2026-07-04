@@ -11,6 +11,7 @@ import { TextField } from '../src/components/TextField';
 import { GenreTag } from '../src/components/GenreTag';
 import { InlineBanner } from '../src/components/InlineBanner';
 import { TertiaryLink } from '../src/components/TertiaryLink';
+import { COLLECTION_STATUSES, STATUS_LABEL } from '../src/constants/collection';
 import { theme } from '../src/theme';
 import {
   useGetGenresQuery,
@@ -30,17 +31,6 @@ import {
 // ride their milestones.
 
 const SEARCH_DEBOUNCE_MS = 350;
-// Board chip order — playing-first, mirroring collection.tsx (murr debt: the two status rows must not
-// diverge). A shared constant is the cleaner home; kept mirrored here to leave the R1-1 file untouched.
-const STATUSES: CollectionStatus[] = ['playing', 'backlog', 'beaten', 'completed', 'dropped', 'wishlist'];
-const STATUS_LABEL: Record<CollectionStatus, string> = {
-  backlog: 'BACKLOG',
-  playing: 'PLAYING',
-  beaten: 'BEATEN',
-  completed: 'COMPLETED 100%',
-  dropped: 'DROPPED',
-  wishlist: 'WISHLIST',
-};
 
 type ApiErrorPayload = {
   error?: {
@@ -182,7 +172,6 @@ function SearchMode({
               items={items.map((i) => ({ id: i.id, title: i.name }))}
               foreIndex={safeFore}
               onFocus={setForeIndex}
-              variant={querying ? 'results' : 'entry'}
             />
             {focused?.inCollection ? <Text style={styles.hintLine}>ITS DETAIL OFFERS THE GAME PAGE INSTEAD OF RE-ADDING</Text> : null}
             {addError ? <Text style={styles.errLine}>{addError}</Text> : null}
@@ -263,7 +252,7 @@ function StatusBeat({ item, onDone }: { item: CollectionItem; onDone: () => void
       </View>
       <Text style={styles.railHead}>SET A STATUS</Text>
       <View style={styles.chipRow}>
-        {STATUSES.map((s) => (
+        {COLLECTION_STATUSES.map((s) => (
           <GenreTag key={s} label={STATUS_LABEL[s]} selected={status === s} onPress={() => void pick(s)} />
         ))}
       </View>
@@ -424,24 +413,26 @@ function CreateForm({
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   screen: { flex: 1, backgroundColor: theme.scr.bg },
+  // N3 — no divider between the header and the POPULAR FIRST ADDS section (owner, 2026-07-04).
   flowHead: {
     alignItems: 'flex-start',
     gap: theme.space.xs,
     paddingHorizontal: theme.space.lg,
     paddingVertical: theme.space.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.scr.hairline,
   },
-  flowTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 2 },
-  returnLink: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
+  // N2 — same size as the Collection ScreenHead title (display 21, F-06).
+  flowTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.display, color: theme.scr.ink, letterSpacing: 1 },
+  // N5 — the RETURN link is orange (the on-screen accent).
+  returnLink: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.accent, letterSpacing: 1 },
   body: { padding: theme.space.lg, gap: theme.space.lg },
   railHead: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },
-  meta: { gap: 3 },
-  metaTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 0.5 },
-  metaSub: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
-  metaGenres: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.faint, letterSpacing: 1 },
-  metaPresence: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.accent, letterSpacing: 1 },
-  metaCredit: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
+  // N4 — the focused game's details are centered (owner, 2026-07-04).
+  meta: { gap: 3, alignItems: 'center' },
+  metaTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 0.5, textAlign: 'center' },
+  metaSub: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1, textAlign: 'center' },
+  metaGenres: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.faint, letterSpacing: 1, textAlign: 'center' },
+  metaPresence: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.accent, letterSpacing: 1, textAlign: 'center' },
+  metaCredit: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1, textAlign: 'center' },
   hintLine: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.faint, letterSpacing: 1, textAlign: 'center' },
   noneWrap: { gap: theme.space.sm, padding: theme.space.lg, backgroundColor: theme.scr.panel },
   noneTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 1 },

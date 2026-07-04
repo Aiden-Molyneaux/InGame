@@ -13,6 +13,7 @@ import { TextField } from '../../src/components/TextField';
 import { GenreTag } from '../../src/components/GenreTag';
 import { TertiaryLink } from '../../src/components/TertiaryLink';
 import { KeyboardLift } from '../../src/components/KeyboardLift';
+import { COLLECTION_STATUSES, STATUS_LABEL } from '../../src/constants/collection';
 import { theme } from '../../src/theme';
 import { useAppDispatch, useAppSelector } from '../../src/store/hooks';
 import { setCollectionView, type CollectionView } from '../../src/store/prefsSlice';
@@ -26,10 +27,8 @@ import { useGetCollectionQuery, useUpdateEntryMutation } from '../../src/store/a
 
 const VIEW_ORDER: CollectionView[] = ['shelf', 'grid', 'list', 'top'];
 // Board sort chips (:592–596): A–Z · HOURS · OWNED SINCE · RECENT · MY ORDER (decision 0061 keeps
-// MY ORDER first as the default). RECENT (OQ-128) sorts by ownedSince DESC as an INTERIM — see the
-// filtered memo: ownedSince defaults to the add-date (COL-03), so it approximates recently-added,
-// but a truly distinct RECENT (immutable addedAt vs the user-editable owned-since) needs an
-// api-contract field. Flagged in OQ-128; do not treat this as the final RECENT.
+// MY ORDER first as the default). RECENT sorts by the IMMUTABLE `addedAt` (shelf-add timestamp) —
+// genuinely distinct from the user-editable OWNED SINCE (OQ-128 resolved, addedAt commissioned 2026-07-04).
 const SORTS = [
   { key: 'order', label: 'MY ORDER' },
   { key: 'hours', label: 'HOURS' },
@@ -38,17 +37,8 @@ const SORTS = [
   { key: 'title', label: 'A–Z' },
 ] as const;
 type SortKey = (typeof SORTS)[number]['key'];
-// Board chip order (:601–608): PLAYING leads.
-const STATUSES: CollectionStatus[] = ['playing', 'backlog', 'beaten', 'completed', 'dropped', 'wishlist'];
-/** COL-02 display names (`completed` = "Completed 100%"). */
-const STATUS_LABEL: Record<CollectionStatus, string> = {
-  backlog: 'BACKLOG',
-  playing: 'PLAYING',
-  beaten: 'BEATEN',
-  completed: 'COMPLETED 100%',
-  dropped: 'DROPPED',
-  wishlist: 'WISHLIST',
-};
+// The COL-02 status set (order + display names) is shared with add-game via one constant so the two
+// chip rows can't drift (murr debt, 2026-07-04).
 // COL-07 view labels (S3-d — the TOP chip reads "TOP 10" explicitly; collection-states.html:588/1044).
 const VIEW_LABEL: Record<CollectionView, string> = { shelf: 'Shelf', grid: 'Grid', list: 'List', top: 'Top 10' };
 
@@ -211,10 +201,11 @@ export default function Collection() {
         const cmp =
           sortKey === 'hours'
             ? a.hours - b.hours
-            : // OWNED SINCE and RECENT both key on ownedSince pending an immutable addedAt (OQ-128).
-              sortKey === 'ownedSince' || sortKey === 'recent'
+            : sortKey === 'ownedSince'
               ? (a.ownedSince ?? '').localeCompare(b.ownedSince ?? '')
-              : a.title.localeCompare(b.title);
+              : sortKey === 'recent'
+                ? a.addedAt.localeCompare(b.addedAt) // ISO timestamps sort chronologically (OQ-128)
+                : a.title.localeCompare(b.title);
         return sortAsc ? cmp : -cmp;
       });
     } else if (sortAsc) {
@@ -574,7 +565,7 @@ function SortFilterSheet(props: {
       <SheetSection title="Status">
         <View style={styles.chipRow}>
           <GenreTag label="All" selected={props.statusFilter.size === 0} onPress={() => props.setStatusFilter(new Set())} />
-          {STATUSES.map((s) => (
+          {COLLECTION_STATUSES.map((s) => (
             <GenreTag
               key={s}
               label={STATUS_LABEL[s]}

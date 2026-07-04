@@ -43,7 +43,9 @@ export const collectionItemSchema = z
     hours: z.number().int().nonnegative(),
     percentComplete: z.number().int().nullable(),
     status: collectionStatusSchema,
-    ownedSince: z.string().nullable(), // YYYY-MM-DD (defaulted to the add date, COL-03)
+    ownedSince: z.string().nullable(), // YYYY-MM-DD (user-editable date acquired, COL-03)
+    addedAt: z.string(), // ISO-8601 — the IMMUTABLE shelf-add timestamp (entry.createdAt); the RECENT
+    // sort keys on this, distinct from the editable ownedSince (OQ-128 resolved, 2026-07-04)
     nowPlaying: z.boolean(), // the ▶ NOW tag (WTP-03)
     card: collectionCardSchema,
   })

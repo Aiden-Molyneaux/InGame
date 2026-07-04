@@ -52,6 +52,7 @@ function toItem(
     percentComplete: entry.percentComplete,
     status: entry.status as CollectionItem['status'],
     ownedSince: entry.ownedSince,
+    addedAt: entry.createdAt.toISOString(), // OQ-128 — immutable add timestamp for the RECENT sort
     nowPlaying: game.id === nowPlayingGameId,
     card: { ...DEFAULT_CARD_STUB },
   };
