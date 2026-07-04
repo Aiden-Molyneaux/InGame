@@ -351,3 +351,46 @@ live or R2 device pass must exercise. Recommend the owner treat this pass as **c
 the changes are sound on paper; the running-app confirmation was defeated by session-level Metro
 instability, not by anything in the build. Cleanup: nothing started by me to stop; `.env.local` absent;
 :4000 + :8081 left running.
+
+## R1-5 · Shell polish (device-frame tweaks) — parvati (M3-R, 2026-07-04)
+
+**Verdict:** 0 🚩 flag · 0 ✅ expected · 1 🎨 polish — **4/4 frame changes confirmed correct + the
+keycap-depth guard INTACT** (a FRAME SPOT-CHECK, not a per-surface enumeration — the shell is
+root-mounted so there is no manifest; measured vs the four owner device-feel notes in
+`m3-walkthrough-iteration-notes.md` Steps 1 & 6 and the canonical device in `profile-states.html:48–80`).
+**Reviewed from:** live Expo web on the **sign-in frame** (`/sign-in`, the guaranteed-reachable
+full-frame surface — no login needed), own captures + DOM measurements, isolated fresh Chrome tab
+group. Chrome clamped the window to a **1280×575** viewport (the 390-wide resize could not shrink below
+Chrome's min-window floor), so the **vertical** frame geometry (which is what all four changes touch) is
+what I judged, per the brief's clamp note. Signed-in active-keycap state **not exercised** — see below.
+
+### The four device-frame changes (owner notes)
+| # | Change (owner note) | Bucket | Verdict / evidence |
+|---|---|---|---|
+| S1-a | Top bar (POWER LED · INGAME engraving · grille) nudged **up ~¼cm** | MATCHES | ✔ Top-band content rides high near the frame top — INGAME logo top y=17, grille y=20, POWER y=31 (DOM). Source: `DeviceShell.tsx:53–54` `TOP_BAND 64→56 · TOP_PAD 16→8` (band centred, both drop together for a clean ~8px raise with alignment kept). Direction + cleanliness correct. |
+| S1-b | Nav band's 5 keycaps nudged **down ~¼cm** (closer to device bottom) | MATCHES (web-capped) | ✔ Band content-sized, `paddingBottom` DOM-measured **10px**, band bottom flush to viewport bottom (gap 0), caps low near the device floor. On web `bottomInset=0` so the `Math.max(inset−8, 10)` lands on the **10px floor** — the down-nudge direction is correct but the true ¼cm magnitude is inset-driven (owner's R2 device pass is the real calibration). `NavBand.tsx:40`. |
+| S1-d | **DISCOVER** + **PROFILE** above-labels a couple px **higher** over their caps | MATCHES | ✔ Both above-labels carry `translateY(-11)` (DOM `matrix(1,0,0,1,0,-11)`), sitting at y=456 vs the below-labels (STORE/COLLECTION/FRIENDS) at y=550. Board is −8; build raises to −11 (deliberate, code-commented "board −8 → −11"). `NavKeycap.tsx:145`. |
+| S6-b | Black bezel border between device frame and Midnight screen **thinner** (9px→6px) | MATCHES | ✔ Bezel padding **6** in source (`DeviceShell.tsx:111`, was 9); the zoomed top-left corner shows a thin, clean black border ring between the teal plastic and the rounded Midnight screen. RN-web flattens the bezel/screen nodes so a direct child-inset read wasn't obtainable, but the source value + the visible thin ring both confirm it. |
+
+### Regression guard (S1-c / R0 keycap depth — my diff must NOT have flattened it)
+| Check | Verdict / evidence |
+|---|---|
+| Raised 3D drop-edge on all 5 caps | ✔ **INTACT.** DOM: every one of the 5 cream/tinted caps carries `boxShadow: rgb(10,43,40) 0px 4px 0px 0px` (the hard `0 4px 0 ink` drop edge, web branch). Zoom on the DISCOVER cap shows the dark drop-band offset ~4px beneath the cap face — reads as a physical raised key (muted slightly because the band is `locked`/greyed pre-auth at 0.45 opacity, but unmistakably present). The active-cap **sink** (collapse to `0 1px 0` + `translateY(3)`) is coded (`NavKeycap.tsx:167–174`) but only observable on a pressed/active cap — see Not-exercised. **No flattening from the shell-polish diff.** |
+
+### 🎨 Polish / iteration (built-app, token-level — not a blocker)
+- **Bezel token colour** — the app's bezel resolves to `rgb(20,18,31)` (#14121f) vs the mockup `--bezel: #14122a` (rgb(20,18,42)). A hair less blue-purple. Token-level only; the thinner-border S6-b change itself is correct. Noting so it isn't mistaken for a regression from this pass (it predates the shell-polish diff — `theme.shell.bezel`).
+
+### Not exercised (and why)
+- **Signed-in active-keycap state** (the active cap **pressed/sunk** with collapsed drop-edge + its **pink PipLight lit**) — **not exercised: web login instability.** `POST /login` to the LAN-IP base returned the app's "Something went wrong" toast on 3 attempts (the documented renderer-side LAN-IP failure under Metro instability, task `f5628409`; the localhost-repoint fix needs `.env.local`, forbidden by this brief). The frame is root-mounted and identical on every screen — only the active-pip/pressed-cap differs when signed in — so the four changes + the raised-edge guard are all fully evaluated on the sign-in frame; only the *active/sunk* half of the depth (already code-verified) awaits a live signed-in or R2 device pass.
+- **True ¼cm magnitudes** (S1-a/S1-b down-nudge in real cm, and S1-b's inset-driven lower travel) — device-feel targets; the owner's **R2 physical-device look is the final calibration** per the brief. Web confirms direction + cleanliness, not the exact physical offset (no safe-area insets in a browser; the 1280w clamp is a desktop-width viewport).
+
+### Read of it
+The four shell-frame tweaks all landed cleanly and in the right **direction**, and — the point of the
+guard — **the R0 keycap depth survived the diff**: all five caps still wear the hard 3D drop-edge
+(DOM-confirmed `0 4px 0 ink` on every cap, visible in the zoom). S1-a raises the top bar (band + pad
+drop together, alignment kept), S1-d puts the DISCOVER/PROFILE above-labels at −11 (a touch higher than
+the board's −8, deliberately), and S6-b thins the bezel to 6px (clean thin ring in the corner zoom).
+S1-b's down-nudge is correct in shape but web-capped at the 10px floor (it's home-indicator-inset-driven,
+so the felt ¼cm only shows on a device). No divergence from the owner's intent, so nothing to flag — the
+one 🎨 note is a pre-existing bezel-token hue, not a regression. The signed-in *active/sunk* keycap and
+the real-cm magnitudes are the R2 device pass's to confirm; everything web-observable is clean.

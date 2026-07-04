@@ -16,6 +16,13 @@
 
 ## Open
 
+- OQ-132: **Built bezel colour diverges from the mockup.** `theme.shell.bezel` = `#0b0a13` (the dark
+  DeviceShell frame ring the Midnight screen sits in) but the mockup `--bezel` = `#14122a`
+  (`profile-states.html`) — the built ring is darker / less-blue. The token's own comment rationalises
+  it ("darker than `scr.bg` so the screen reads inset"), so this may be a deliberate builder call, not a
+  slip — owner/design lane to rule which value wins. **Unrelated to S6-b** (that only thinned the bezel
+  *padding* 9→6, not its colour). (raised by parvati spot-checking R1-5 shell polish, 2026-07-04)
+  [presentation]
 - OQ-131: **RESOLVED-BY-BOARD (owner to confirm at review) — the hero yields during an active
   search.** Raised as a 0061-vs-board tension (does the Now-Playing hero persist while searching?),
   but the board's own caption rules it explicitly: *"The Now-Playing hero yields while a query is
