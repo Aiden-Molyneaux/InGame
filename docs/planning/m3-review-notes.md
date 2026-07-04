@@ -182,3 +182,108 @@ seed. The one open flag is small and sharply scoped — the search state renders
 says must yield (R12) — plus two token-level field-composition polish items. Nothing touches a
 LOCKED ruling. One more builder pass on R12 (a `q`-gate around the hero in the three views) and this
 surface reads "matches the converged board" within its declared GAP/EXPECTED envelope.
+
+## R1-2 · Add-game — parvati (M3-R, 2026-07-04)
+
+**Verdict:** 2 🚩 flag · 3 ✅ expected · 4 🎨 polish (measured vs the M3-R DoD `m3r-build-task.md` §3
+R1-2, the grounded manifest `m3r/add-game-manifest.md` — the fixed enumeration, states P1–P9 — and
+`GET /catalog/popular` · `GET /catalog/search` · `GET /genres`). **The R1-2 named fixlist (S4-a/c/e/f/g
++ R0-follow) all landed and verified live.** Two board-divergences surfaced beyond the builder's
+declared gaps; the builder's 4 declared gaps + the fore-focus DECISION resolve to 3 polish + 2 expected.
+**Reviewed from:** live Expo web (fresh-context Chrome, own captures), signed in as `demo@ingame.app`,
+reads-only — search + fan-rotate + create-form exercised, **NO game added, NO catalog entry created**
+(create form inspected without submit). States reached: **P1 entry** (fore-focus meta + gold ADD),
+**fan rotate** (3× via Next chevron — fore + meta + lit-dot all updated; fore-tap inertness confirmed
+via the a11y tree, the fore is not a button), **P3 results** (query "a" → 8-match fan, fore enlarged),
+**P5 create** (full form + dedup-driven banner not exercised — 409-only). **P6 status beat / P8 filed
+NOT exercised** (would require an add = mutation; optional per brief, skipped). **Viewport caveat:**
+Chrome's minimum window width pinned the web viewport at **1280w** (the 390×844 resize could not shrink
+the inner viewport below Chrome's floor) — the single-column layout, section order, fan geometry, meta
+ordering, header, and copy are all faithfully assessable at 1280, but true phone-width stacking/thumb-
+reach and the `KeyboardLift`/`automaticallyAdjustKeyboardInsets` rise are **not** web-observable (native,
+R2 device pass owns them). **Metro instability** (task `f5628409`): the renderer froze twice mid-run
+(30s CDP screenshot timeouts) but recovered each time after a short wait — the full walk completed; I
+started no Metro (reused the standing :8082 expo-web, PID-confirmed) and stopped none.
+
+### R1-2 fixlist claims re-verified (the receipt's ledger, live)
+| Item | Check | Verdict |
+|---|---|---|
+| S4-a (FlowHeader) | LEFT "ADD GAME" title + "‹ RETURN TO COLLECTION" labeled link, **no ✕**; RETURN navigates back to /collection (verified) | ✔ **BUILT** |
+| S4-e (no count) | No count chip in the head (the R1-1 `CountTag "N IN"` is gone) | ✔ **BUILT** |
+| S4-c (CardFan) | 3-up fan — centered fore + two neighbours rotated ±4°/translateY, ‹ dots › + SWIPE beneath; replaces the flat cell scroll | ✔ **BUILT** (see R13 for the entry-fore size) |
+| S4-f (fan-meta) | Name-first meta ABOVE the fan: "DESTINY 2 · 2017 · BUNGIE" / "SHOOTER" / "IN 2 COLLECTIONS · 0 FRIENDS HAVE IT" (accent) / "ADDED BY DEMO_CURATOR_M3" — all fields, updates with the fore | ✔ **BUILT** |
+| S4-g (focus-only) | Neighbour/chevron/swipe rotate the fore; **the fore's own tap is inert** — a11y tree shows the fore is a plain View, only "Focus <neighbour>" + Prev/Next are buttons | ✔ **BUILT** (LOCKED §0.7) |
+| Fore-focus-by-default (GAP-3 decision) | The centered fore shows its meta + gold ADD with no first tap; Destiny 2 fore (owned) → "IN YOUR COLLECTION ✓" disabled + "ITS DETAIL OFFERS THE GAME PAGE…" hint | ✔ **BUILT** — accepted §0.7-consistent decision |
+| R0-follow (create keyboard) | `automaticallyAdjustKeyboardInsets` on the CreateForm ScrollView | — **not web-observable** (native; R2 device) |
+
+### 🚩 Flag (divergence from the converged board — M3-R DoD)
+| # | Observation | Bucket | Cite / note |
+|---|---|---|---|
+| R13 | **The ENTRY (POPULAR) fan's fore is NOT enlarged** — it renders at 96×134, identical to the neighbour `/cell` (96×134), so the "bigger centered fore" reads as same-size-but-upright, differentiated only by the neighbours' ±4° rotation + drop. The board's `.fan-size` fore is drawn meaningfully larger than `.fan-nb`. *(The RESULTS fan is correct — fore 138×193 vs cell 96×134, visibly bigger.)* | MISPLACED (size) | board `:761/:768/:775` (`.fan-size` > `.fan-nb`); manifest S4-c "a bigger centered fore + two smaller rotated neighbours"; `CardFan.tsx:47` (`foreW = variant==='results' ? 138 : 96`) + `:74` — the entry branch never enlarges the fore |
+| R14 | **The results header reads a static "RESULTS", not the board's match COUNT** — board P3 heads the scroll with "3 MATCHES" (`:887`), the manifest OWES it as an R1-2 item (P3 row 1); the build renders a fixed "RESULTS" label with no count, so a searcher can't see how many the fan holds without walking the dots | ABSENT (count) | board `:887`; manifest P3 row 1 **OWED(R1-2)**; `add-game.tsx:156` (`querying ? 'RESULTS' : 'POPULAR FIRST ADDS'`) — the count is in `searchState.data.items.length`, cheap to render |
+
+### ✅ Expected (deferred — proceed; manifest cites)
+- **Fore-focus-by-default add-target** (GAP-3) — a recorded builder decision, §0.7-consistent (the fore
+  auto-shows its detail, so it's addable without a first tap). Owner may re-rule to require an explicit
+  tap; not a defect. Cite: manifest P1 fore-focus row `OWED(R1-2)` + §0.7.
+- **Fore-tap → CardDetail / navigate** (P3b) — the fore tap is inert now; detail + M4 navigate are
+  EXPECTED(M4 · CARD-23 · `:896`). LOCKED §0.7 interim.
+- **RECENTLY ADDED + FRIENDS ARE PLAYING rails** — only POPULAR is built for M3-R; the other two rails
+  EXPECTED(M4·CAT-11 / M6·CAT-12 · §0.6 · board `:758/:772`). P3b report · P7/P7b community cards ·
+  P8 full celebration · P9 lifecycle → all EXPECTED / declared GAPs, not R1-2.
+
+### 🎨 Polish / iteration (built-app, token-level)
+- **R13-adjacent / GAP-1 — fan-nav dot count**: the build renders **one dot per catalog item** (8 dots
+  on the "a" results, ~12 on POPULAR); the board draws a fixed **3-dot** affordance (`:764/:895`). A
+  windowed/capped 3-dot indicator is the likely refinement (builder-declared GAP-1). Not a blocker — the
+  fan rotates and the lit dot tracks correctly.
+- **GAP-2 — dot shape**: plain 6px square vs the board's corner-notched `.fdot` (clip-path) — same
+  OQ-127 family (the F-02 pixel-step/notch isn't rendered app-wide). Known-OQ.
+- **GAP-4 — status-beat copy**: "ADDED TO YOUR SHELF / SET A STATUS" vs board "IN HAND — SET ITS STATUS"
+  (`:1189`). Copy only; builder-declared. *(P6 not exercised live — from code `add-game.tsx:255/:257`.)*
+- **Standing SWIPE/TAP hint absent (P3)**: the board draws "SWIPE TO ROTATE · **TAP THE FOREFRONT** FOR
+  ITS DETAIL" under the fan (`:896`); the build shows no standing hint (only the inCollection-specific
+  "ITS DETAIL OFFERS THE GAME PAGE…" line when the fore is owned). The `SWIPE` label on the fan-nav
+  partly carries the swipe affordance; the tap-for-detail half is M4 anyway. Minor.
+- *(No-action note: the P1 rail head "POPULAR FIRST ADDS" vs the board's bare "POPULAR" (`:765`) — the
+  build's label matches the CAT-09 "POPULAR FIRST ADDS" empty-state naming used on collection; a
+  deliberate label, not a drop. Noting so nobody "fixes" it to "POPULAR" and desyncs the two surfaces.)*
+
+### ✔ Matches (verified live)
+FlowHeader — LEFT "ADD GAME" + "‹ RETURN TO COLLECTION" link, no ✕, no count chip, RETURN works ·
+docked SearchField "Search the catalog" at the screen bottom · **fan-meta above the fan, name-first,
+all S4-f fields** (title · year·studio · genres · CAT-09 presence in accent · CAT-05 "ADDED BY" credit),
+**updates with the fore** on every rotate (Destiny 2 → Celeste → Elden Ring → Forza, meta + lit dot
+tracked) · **§0.7 focus-only** — neighbour/chevron rotate; fore-tap inert (a11y-confirmed) · gold ADD
+present under the fan, fore-focused-by-default; owned fore → "IN YOUR COLLECTION ✓" disabled + hint
+(inCollection gate works) · **RESULTS fan fore enlarged** (138×193 vs 96×134 neighbours) · CREATE hook
+"NONE OF THESE — CREATE "<q>" ›" under the fan · **create form** — "CREATE A CATALOG ENTRY" head, NAME
+pre-filled from the query, the full genre-chip set (16 chips), STUDIO · PUBLISHER · RELEASE DATE
+(YYYY-MM-DD placeholder), gold "CREATE + ADD" (disabled until name+genre) + "Back to search" secondary ·
+nav band COLLECTION keycap active (FlowTakeover intact).
+
+### Not exercised (and why)
+- **P6 status beat** (held card, 6 off-card COL-02 chips, DONE) + **P8 filed** — reaching them adds a
+  game (mutation); optional per brief, skipped. Code shows `StatusBeat` (`add-game.tsx:238`) with the
+  playing-first `GenreTag` chips + `GameCard/grid` no-stamp; the GAP-4 copy divergence is code-read.
+- **P5 dedup banner (CAT-03)** — 409-`DUPLICATE_SUSPECTED`-driven; requires a create submit against a
+  colliding name (a mutation attempt). Inspected the form only; banner is `PRE` per the receipt.
+- **KeyboardLift rise + create-form keyboard inset (R0-follow)** — native, not web-observable; R2 device.
+- **True phone-width stacking / thumb-reach** — Chrome pinned the viewport at 1280w (min-window floor);
+  section order + geometry assessed at 1280, but the narrow-viewport layout the board frames is a device-
+  pass check.
+- **The enabled (non-owned) gold ADD** — every POPULAR + "a"-result game is owned by the demo shelf's
+  curator, so the fore was always `inCollection`; the enabled gold state is the same `variant="add"`
+  component verified gold on collection (R1-1), not re-shot here to avoid an add.
+
+### Read of it
+The R1-2 named fixlist is **honest and landed**: the FlowHeader restack (S4-a/e), the CardFan (S4-c) with
+name-above-the-fan meta (S4-f), and the §0.7 focus-only interaction (S4-g) all verify live, and the
+create form carries the full field set. Two real board-divergences remain — the **entry-fan fore isn't
+enlarged** (R13, the "bigger fore" is only in the results variant) and the **results header shows
+"RESULTS" not the owed match count** (R14) — both cheap, both manifest-cited as OWED. The builder's four
+declared gaps resolve as expected (fan-dot count, dot shape, status copy → polish; fore-focus decision →
+accepted). Nothing touches a LOCKED ruling. One builder pass on R13 (enlarge the entry fore) + R14 (render
+the count) + optionally the 3-dot window (GAP-1) and this surface reads "matches the converged board"
+within its declared GAP/EXPECTED envelope. The native keyboard fix (R0-follow) and P6/P8 remain owed to
+the R2 device pass.
