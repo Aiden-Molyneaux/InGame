@@ -8,8 +8,8 @@ import { theme } from '../theme';
 // the ‹ dots › + SWIPE affordance. A tap on a neighbour — or a chevron, or a horizontal swipe —
 // rotates it to the fore (S4-g / §0.7 FOCUS-ONLY: the fore auto-shows its meta; the fore's own tap is
 // INERT until the M4 Game page swaps it to NAVIGATE, CARD-23). Chevrons are the non-gesture rotate
-// path (a11y baseline + web-testable). `variant`: 'entry' (fore /cell 96×134) · 'results' (fore
-// 138×193); neighbours are always /cell. F-01: never cropped — GameCard only scales.
+// path (a11y baseline + web-testable). The fore is always 138×193 (owner ruling — salient in every
+// state); neighbours are /cell 96×134. F-01: never cropped — GameCard only scales.
 export type FanItem = { id: string; title: string };
 
 export function CardFan({
