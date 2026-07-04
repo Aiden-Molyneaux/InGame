@@ -80,6 +80,20 @@ component is a review-reject); fix to the manifest line, not the vibe; `ui-craft
 `failure-first` load on their task-types; no scope creep — anything discovered goes to
 `open-questions.md`. Self-check your own render against the manifest before handing to review.
 
+**Manifest recalibration — R1-1 first-article corrections (owner-blessed, 2026-07-04).** The R1-1
+lane found the manifest's failure mode was `PRE` rows treated as extraction, not verification: six
+structural build divergences (and a LOCKED-decision contradiction) sailed through stamped
+"pre-existing, correct" without ever being checked against the running app. Two patches, binding
+from R1-2:
+1. **`PRE` requires evidence.** A row may read `PRE` (pre-existing, correct) only with a **code cite
+   or a screenshot check against the build** — not just a board cite. Anything asserted-but-unchecked
+   is marked **`UNVERIFIED`**, which parvati treats as a checklist row (a candidate flag), not a pass.
+   Board fidelity is proven against the *build*, never assumed from the mockup.
+2. **Adversarial predicate self-check.** Before handing off, the builder walks every **changed state
+   predicate** (the boolean/enum that drives a pip, a count, a mode, a guard) through its full state
+   table — the R1-1 major was one `active={…}` predicate that dropped a term. A changed predicate
+   without an enumerated state-table walk in the receipt is an incomplete self-check.
+
 **murr** runs on each surface's diff (runtime-first; the keyboard/sheet mechanics of R0 are
 exactly his async/lifecycle lane).
 

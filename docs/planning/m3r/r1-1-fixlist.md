@@ -1,7 +1,23 @@
-# R1-1 · Collection — structural fixlist (for a builder round)
+# R1-1 · Collection — structural fixlist ✅ CLOSED (built 2026-07-04)
 
-> **From the verification lane (2026-07-03).** Findings that are structural — a wrong interaction
-> model or a missing element class — which the lane does **not** fix per the hand-off boundaries.
+> **STATUS UPDATE (2026-07-04):** the owner ruled on all three at the first-article review and the
+> fix round was built the same day (Opus builder). **FIX-1/2/3 are DONE**; FIX-1 became **decision
+> 0061** (shelf/grid reversal — the owner identified 0057 as a shelf/grid mix-up). Re-verification by
+> the Fable lane (murr + parvati) follows. The original fixlist is preserved below for the record.
+>
+> - **FIX-1 → decision 0061:** shelf restored to the showcase (hero-treatment rows), grid = 2-up full
+>   faces + persistent hero. Built in `collection.tsx` (shared `NowPlayingHero`).
+> - **FIX-2:** list = strip rows (thumb) + chevron + inline ▶ NOW + persistent hero. Built.
+> - **FIX-3:** in-place search morphs the tools bar into a docked field + ⊗ clear + RESULTS header,
+>   lifted by `KeyboardLift`. Built.
+> - Plus **RECENT sort** added (OQ-128, interim). Process-recalibration patch applied to
+>   `m3r-build-task.md` §1 (PRE-requires-evidence + adversarial-predicate self-check).
+
+---
+
+> **From the verification lane (2026-07-03) — original fixlist, now closed.** Findings that were
+> structural — a wrong interaction model or a missing element class — which the lane did **not** fix
+> at the time per the hand-off boundaries.
 > All were confirmed live by parvati (report: `docs/planning/m3-review-notes.md` §"R1-1 · Collection
 > — parvati") and are **pre-existing M3 code**, not introduced by the R1-1 diff. None are R1-1 items;
 > none touch a §0 lock. The owner sequences these (a follow-up builder round, or fold into M4 entry).

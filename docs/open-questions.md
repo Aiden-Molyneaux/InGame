@@ -16,6 +16,14 @@
 
 ## Open
 
+- OQ-131: **RESOLVED-BY-BOARD (owner to confirm at review) — the hero yields during an active
+  search.** Raised as a 0061-vs-board tension (does the Now-Playing hero persist while searching?),
+  but the board's own caption rules it explicitly: *"The Now-Playing hero yields while a query is
+  active"* (`collection-states.html:711–713`), and the search artboard draws no hero. No conflict
+  with 0061 — "persists across the browse modes" is orthogonal to the query state. **Fix applied**
+  (2026-07-04, verification lane): `NowPlayingHero` hoisted to the Collection scroll body, gated on
+  `total > 0 && view !== 'top' && q.trim() === ''`. Owner confirms the reading at the fix-round
+  review, then this closes. (raised by murr, evidence by parvati, R1-1 fix round) [presentation]
 - OQ-129: **Sort direction carry-over on key switch reads wrong.** The Collection sort fold (S3-h/i)
   shares one `sortAsc` across keys with DESC default, so from a fresh screen selecting "A–Z" yields a
   chip reading "A–Z ↓" — Z first, contradicting the label's promise. Consider per-key default
@@ -36,12 +44,17 @@
   stepped-path helper the card, placeholders, StateMark, and the add/act buttons all consume. Out of
   R1-1 scope (it names only the ADD button); flagged for an M4-entry DS-fidelity pass. (raised
   building R1-1 Collection, 2026-07-03) [presentation]
-- OQ-128: **The Collection sort drawer is missing the board's `RECENT` sort.** The board's SORT chips
-  are A–Z · HOURS · OWNED SINCE · **RECENT** · MY ORDER (`collection-states.html:592–596`), but the
-  build's `SORTS` (`apps/mobile/app/(tabs)/collection.tsx`) has only MY ORDER · HOURS · OWNED SINCE ·
-  A–Z. `RECENT` presumably = recently-**added-to-collection** order (an `addedAt`/`createdAt` field),
-  distinct from OWNED SINCE. Confirm whether RECENT is wanted and which field it sorts. Out of R1-1
-  scope (no S3 item names it). (raised building R1-1 Collection, 2026-07-03) [behavior]
+- OQ-128: **RECENT sort — PARTIALLY RESOLVED (owner ruled it IN, 2026-07-04); the distinct-field part
+  stays open.** The RECENT chip is now built into `SORTS` (`collection.tsx`) per the owner's R1-1
+  first-article ruling. **INTERIM:** it sorts by `ownedSince` DESC — because the collection response
+  (`packages/shared/src/schemas/response/collection.ts`) exposes **no immutable `addedAt`/`createdAt`**;
+  `ownedSince` is the add-date *default* (COL-03) but is user-editable, so RECENT and OWNED SINCE key
+  the same field and are indistinguishable until direction is flipped. **STILL OPEN:** a truly distinct
+  RECENT (immutable shelf-add timestamp vs the editable owned-since) needs an `addedAt` field added to
+  the collection item — an **api-contract + serializer + repository** change (behavior/data). Decide
+  whether to commission `addedAt`, or accept RECENT ≈ OWNED SINCE for now. Interim recorded in
+  `collection.tsx` (SORTS comment + the `filtered` memo). (raised 2026-07-03; interim shipped
+  2026-07-04) [behavior]
 - OQ-126: **rule-02 gains a `// SYS-01-COMMUNITY-AGGREGATE` marker — the CAT-09 read class arrived
   at M3, ahead of OQ-122's M4-entry decision.** CAT-09a (`collectionsCount`) is a spec-sanctioned
   ANONYMOUS cross-user aggregate over the user-owned `collection_entries` — the F32 binary model

@@ -20,9 +20,9 @@ The device shell / NavBand / top-band render from `DeviceShell` + `NavBand` + `N
 
 ---
 
-## State: shelf — the default populated view (board `:727–841` · **decision 0057 overlay**)
+## State: shelf — the default populated view (board `:727–841` · **decision 0061 — the showcase**)
 
-Screen head + the Now-Playing hero + the shelf library + the ToolsBar + gold ADD. This is the default `view === 'shelf'`. **Contract note (spot-audit correction):** the board's "View mode — shelf (the showcase)" artboard draws every entry at hero treatment (`:753–809`), but **LOCKED decision 0057 (2026-07-01) reversed that**: the shelf library is **two-per-row bare card faces, no per-row meta** (stats live in LIST / the M4 COL-12 flip); the showcase artboard is recorded not-adopted. The 2-up faces grammar is the board's `.grid` as drawn in the drawer/search-era artboards (`:568–577`).
+Screen head + the Now-Playing hero + the shelf-stack + the ToolsBar + gold ADD. This is the default `view === 'shelf'`. **Model (decision 0061, 2026-07-04 — supersedes 0057):** the shelf is **the showcase** — the Now-Playing hero over a **stack where every entry gets the hero treatment** (full hero-size face + stat-line *N HRS · STATUS* · title · catalog line *dev · year · genre*); LOG HOURS stays hero-exclusive; the ▶ NOW tag marks the pinned game in the stack. This is the board's "View mode — shelf (the showcase)" artboard (`:753–809`), restoring OQ-033/decision 0013. *(The earlier 0057 re-base — shelf = 2-up bare faces — was the owner's shelf/grid mix-up, corrected at the R1-1 first-article review; the 2-up faces belong to GRID.)*
 
 | # | Element | Component (component-map) | Variant/size | Docks (section order) | Copy | Status |
 |---|---------|---------------------------|--------------|----------------------|------|--------|
@@ -34,8 +34,8 @@ Screen head + the Now-Playing hero + the shelf library + the ToolsBar + gold ADD
 | 6 | Hero title | Text | display 21 | hero-meta L3 | "MARATHON" | PRE (`:748`) |
 | 7 | Hero catalog line | Text | micro 9, dim | hero-meta L4 | "BUNGIE · 2025 · SHOOTER" | PRE (`:749`) |
 | 8 | LOG HOURS button (hero-only) | `ScreenButton` primary (peach) + "+" icon | body 11 | hero-meta L5 | "LOG HOURS" | PRE / opens LogHoursSheet (`:750`) |
-| 9 | Shelf library — **2-up bare card faces, no per-row meta** | `GameCard` | fluid 63:88, 2-col | scroll body | — (baked plate only) | PRE · **LOCKED(decision 0057)** — the board's hero-row shelf-stack (`:753–809`) is NOT-ADOPTED; 2-up grammar per `:568–577` |
-| 10 | ▶ NOW tag on the pinned face | `NowTag` | micro 9, scr.accent | on shelf card, in-flow | "▶ NOW" | PRE (`:571`/`:873` — the 2-up-faces depiction) |
+| 9 | Shelf-stack — **every entry at hero treatment** (card + stat-line · title · catalog line) | `GameCard` hero-size + meta | 138×193 + meta col | scroll body | stat · title · catalog | **FIX(0061)** built this round — the showcase stack (`:753–809`), reversing the 0057 bare-faces model |
+| 10 | ▶ NOW tag on the pinned stack card | `GameCard nowPlaying` tag | micro 9, scr.accent | on stack card | "▶ NOW" | **FIX(0061)** (`:766`) |
 | 11 | ToolsBar grip (ARRANGE shortcut) | (board `.grip`) | — | tools, far-left | — | EXPECTED(COL-13 ARRANGE · OQ-031 · `:812`) — **not built** |
 | 12 | Search tool | `ToolButton` icon-only (magnifier SVG) | cream 32×30 | tools | — (a11y "Search") | **FIX(S3-n)** (`:813`) |
 | 13 | Sort tool | `ToolButton` icon-only (up/down arrows SVG) + StateMark pip when active + asc/desc emphasis | cream 32×30 | tools | — (a11y "Sort") | **FIX(S3-n/i)** (`:814`) |
@@ -51,9 +51,9 @@ Same head/hero/tools; the library below the hero is a 2-col grid of full card fa
 
 | # | Element | Component | Variant/size | Docks | Copy | Status |
 |---|---------|-----------|--------------|-------|------|--------|
-| 0 | Now-Playing hero (persists in every view mode — board stage-label `:723`, grid artboard `:857–869`) | `GameCard` hero + meta | hero 138×193 | above library | NOW PLAYING · stats · LOG HOURS | **VERIFY(spot-audit): build renders NO hero outside shelf view (`collection.tsx:213–221`) — parvati confirm & FLAG** |
-| 1 | Grid cards (2-up, full face) | `GameCard` | grid 161×225 | scroll body | baked plate | **VERIFY(spot-audit): build renders `size="cell"` 96×134 wrap (~3-up), not 2-up grid faces (`collection.tsx:329–337`) — parvati confirm & FLAG** (`:870–881`) |
-| 2 | ▶ NOW tag | `NowTag` | micro 9 | on pinned card | "▶ NOW" | PRE (`:873`) |
+| 0 | Now-Playing hero (persists in every browse mode — board stage-label `:723`, grid artboard `:857–869`) | shared `NowPlayingHero` | hero 138×193 | above library | NOW PLAYING · stats · LOG HOURS | **FIX(0061)** hero now persists in grid + list (shared component) (`:857–869`) |
+| 1 | Grid cards (2-up, full face) | `GameCard` | fluid 63:88 (board grid-size 161×225), 2-col | scroll body | baked plate | **FIX(0061)** built as 2-up bare faces + hero (was `cell` 3-up) (`:870–881`) |
+| 2 | ▶ NOW tag | `GameCard nowPlaying` | micro 9 | on pinned card | "▶ NOW" | **FIX(0061)** (`:873`) |
 | 3 | View tool = grid glyph, pipped | `ToolButton` | cream | tools | — | **FIX(S3-n)** (`:888`) |
 | — | Card tap → FLIP (COL-12) / VIEW GAME → Game page (CARD-23) | `GameCard` tap | — | — | — | EXPECTED(M4·D1 · CARD-23 · `:906`) |
 
@@ -63,10 +63,10 @@ Head/hero/tools; library = `GameStrip` rows (thumb + title + HRS·STATUS + chevr
 
 | # | Element | Component | Variant/size | Docks | Copy | Status |
 |---|---------|-----------|--------------|-------|------|--------|
-| 1 | Strip rows | `GameStrip` (row) | thumb 48×67 + meta | scroll body | title · "210 HRS · BEATEN" | PRE rows, but **VERIFY(spot-audit): build uses `GameCard/mini` 64×89, not the thumb strip variant (`collection.tsx:344`)** (`:939–994`) |
-| 2 | ▶ NOW inline (title-adjacent) | `NowTag` inline | micro 9 | in row title | "▶ NOW" | PRE (`:957`) |
-| 3 | Chevron → Game page | Text chev | title 15, grip | row right | "›" | **VERIFY(spot-audit): build rows render NO chevron glyph (`collection.tsx:339–357`) — parvati confirm & FLAG**; tap-target itself EXPECTED(M4 · `:949`) |
-| 0 | Now-Playing hero persists in list (board `:723` stage-label) | `GameCard` hero + meta | hero | above library | — | **VERIFY(spot-audit): build omits — parvati confirm & FLAG** |
+| 0 | Now-Playing hero persists in list (board `:926–938`) | shared `NowPlayingHero` | hero | above library | — | **FIX(0061)** built (`:926–938`) |
+| 1 | Strip rows | `GameCard/thumb` (48×67) + strip-meta | thumb + meta | scroll body | title · "210 HRS · BEATEN" | **FIX(0061)** built as strip rows (was `mini` 64×89) (`:939–994`) |
+| 2 | ▶ NOW inline (title-adjacent) | `nowInline` tag | micro 9 | in row title | "▶ NOW" | **FIX(0061)** inline by the title (`:957`) |
+| 3 | Chevron → Game page | Text chev | title 15, faint | row right | "›" | **FIX(0061)** glyph built (`:949`); the tap-target → Game page is EXPECTED(M4) |
 | 4 | View tool = list glyph, pipped | `ToolButton` | cream | tools | — | **FIX(S3-n)** (`:1002`) |
 
 > **Board list row also draws a `MatchTag`** (dev/publisher hit, `:672`, `:684`) — only in the in-place-search results, not plain list. See search state.
@@ -112,7 +112,7 @@ Opens over shelf/grid; scrim + in-screen sheet (R0-1). Sections in order: (scope
 | 1 | Grab handle + scrim, opens in-frame | `PulledSheet` | grab-handle | overlay bottom | — | PRE (R0-1 done, murr-SOUND) (`:580–581`) |
 | 2 | Scoped SEARCH field | `SearchField` | inset | §1 | "TITLE · DEVELOPER · PUBLISHER…" | PRE (`:582`) |
 | 3 | VIEW chips | `GenreTag` ×4 (SHELF·GRID·LIST·**TOP 10**) | selected=accent border | §2 | "SHELF"·"GRID"·"LIST"·**"TOP 10"** | **FIX(S3-d)** TOP→"TOP 10" (`:583–589`) |
-| 4 | SORT BY chips | `GenreTag` ×N; active shows ↑/↓, re-tap flips | selected=accent | §3 | "MY ORDER"·"HOURS"·"OWNED SINCE"·"A–Z" | **FIX(S3-h)** standalone ASC/DESC chip removed; direction folded in (`:591–597`) |
+| 4 | SORT BY chips | `GenreTag` ×N; active shows ↑/↓, re-tap flips | selected=accent | §3 | "MY ORDER"·"HOURS"·"OWNED SINCE"·**"RECENT"**·"A–Z" | **FIX(S3-h + OQ-128)** standalone ASC/DESC folded in; **RECENT added** (interim: ownedSince DESC, addedAt owed — OQ-128) (`:591–597`) |
 | 5 | ~~Standalone ASC/DESC chip~~ | — | — | (removed) | — | **FIX(S3-h)** deleted (was `collection.tsx:352`; board had no standalone chip either) |
 | 6 | ARRANGE hint (MY ORDER) | Text hint | micro 9 | under §3 | "TAP THE ACTIVE SORT TO FLIP…" | EXPECTED(OQ-031 ARRANGE · build omits · `:598`) |
 | 7 | STATUS chips incl. **ALL** | `GenreTag`; ALL selected when set empty, clears set | selected=accent | §4 | "ALL"·"PLAYING"·"BACKLOG"·"BEATEN"·"COMPLETED 100%"·"DROPPED"·"WISHLIST" | **FIX(S3-f)** (`:600–608`; board abbreviates the chip to "100%" `:605` — the long form is the COL-02 display name, judge as polish) |
@@ -127,8 +127,9 @@ Tap the search tool → the ToolsBar morphs to a docked `SearchField` that rises
 
 | # | Element | Component | Variant/size | Docks | Copy | Status |
 |---|---------|-----------|--------------|-------|------|--------|
-| 1 | In-place search field — board: the tools bar MORPHS into the field, docked bottom, ⊗ clear affordance | `SearchField` | inset | replaces tools (`:689–695`, clear ⊗ `:693`) | live query | **VERIFY(spot-audit): build renders the field UNDER the ScreenHead at top (`collection.tsx:206–208`); the tools bar stays put — a different dock than the board's morph. Parvati confirm & FLAG (not an R1-1 item — fixlist candidate)** |
-| 1b | RESULTS section header | `SectionHeader` | micro | above results | "RESULTS — TITLE · DEVELOPER · PUBLISHER" | board `:661` — **spot-audit addition**; build omits |
+| 1 | In-place search field — the tools bar MORPHS into a docked `SearchField` + ⊗ clear, lifts over the keyboard | `SearchField` + `ClearIcon` + `KeyboardLift` | inset | replaces tools (`:689–695`, clear ⊗ `:693`) | live query | **FIX(1c)** built this round — the bar now morphs in place (was: field under the head) |
+| 1b | RESULTS section header | Text (resultsHead) | micro | above results | "RESULTS — TITLE · DEVELOPER · PUBLISHER" | **FIX(1c)** built (`:661`; gated to non-empty shelves) |
+| 1c | **Keyboard SEARCH = non-destructive exit** — dismisses + un-morphs, **keeps the query** (Search keycap returns pressed + pip); ⊗ = the clearing exit; the hero **yields while a query is active** | `SearchField onSubmit` | — | dock | — | **FIX(fix-round · murr)** built per the board caption (`:711–713`) — was missing from this manifest (extraction gap: the caption, not the artboard, carries it) |
 | 2 | Count narrows | `CountTag` | micro 9 | head | "2 OF 48 GAMES" (§0.3) | **FIX(S3-j)** filtered copy (`:659`) |
 | 3 | Result rows + MatchTag | `GameStrip` + `MatchTag` | thumb | scroll | title · HRS·STATUS · match | PRE strip / `MatchTag` EXPECTED(match-highlight · build omits · `:672`) |
 | 4 | System keyboard (theme-matched) | OS | — | bottom | — | PRE (OQ-035 · `:698–704`) |
@@ -219,13 +220,13 @@ Has games, no pin: the hero slot becomes a "SET YOUR NOW PLAYING" nudge.
 - **DIV-2 (ADD keeps its keycap in TOP, GAP-1):** the board swaps ADD for an orange ARRANGE `.btn.act` in TOP view (`:1069`). ARRANGE is EXPECTED(M4·COL-13), so the build keeps the gold ADD in all modes for now. Declared, not fixed.
 - **GAP-2/3/4** (empty rail/ghost, now-playing picker, skeleton/load-error family) — pre-existing, not in the R1-1 list; see each state above. Filed as observations, not fixed this pass.
 
-## Spot-audit corrections (verification lane, 2026-07-03)
+## Spot-audit corrections + the R1-1 fix round (verification lane 2026-07-03 → owner ruling + build 2026-07-04)
 
-The R1-1 verifier audited this manifest against the board + decisions before parvati ran. Corrections made:
-1. **Shelf state re-based on LOCKED decision 0057** — the original rows 3/9 presented the board's not-adopted hero-row showcase artboard (`:753–809`) as the contract and gave the hero 224×313; 0057 rules one hero (138×193) + 2-up bare faces, showcase not-adopted. The build was already correct; the manifest wasn't.
-2. **False-PRE rows re-marked VERIFY** (build appears to diverge from board-accurate rows; parvati confirms & flags): grid 2-up full faces vs the build's `cell` wrap; hero persistence in grid/list (board stage-label `:723`); list chevron; list thumb-vs-mini; in-place-search dock (board morphs the tools bar; build docks the field under the head).
-3. **Missing board elements added**: TOP `tv-sub` explainer (`:1046`); board TOP tools drop the Sort chip (`:1063–1070`); empty/loading dimmed tools (`:511–518`, `:1860–1866`); search RESULTS header (`:661`) + field ⊗ clear (`:693`).
-4. STATUS "COMPLETED 100%" vs the board's "100%" chip got its COL-02 cite.
+The R1-1 verifier audited this manifest against the board + decisions before parvati ran; parvati confirmed the divergences live; the owner then ruled at the first-article review (2026-07-04) and the fixes were built.
+1. **Shelf/grid model — RESOLVED by decision 0061.** The spot-audit had re-based the shelf on decision 0057 (shelf = 2-up bare faces). At the first-article review the owner identified 0057 as a shelf/grid **mix-up** and reversed it: **[`0061`](../../decisions/0061-collection-shelf-showcase-restore.md)** restores shelf = the **showcase** (hero-treatment rows, per-entry stats, OQ-033/0013) and sets grid = **2-up full faces + persistent hero**. Both were rebuilt this round; manifest shelf/grid/list rows updated to the 0061 model.
+2. **The false-PRE structural rows were BUILT** (parvati-confirmed flags → fix round): grid 2-up faces + hero (was `cell` 3-up, no hero); hero persistence in grid + list (shared `NowPlayingHero`); list strip rows + chevron + inline ▶ NOW (was `mini`, no chevron); in-place-search **morph dock** + ⊗ clear + RESULTS header (was field-under-head). See `r1-1-fixlist.md` (now closed) + the R1-1 fix-round receipt.
+3. **RECENT sort added** (OQ-128, owner-ruled in) — interim over `ownedSince` DESC; a distinct immutable `addedAt` stays owed (OQ-128).
+4. **Still-declared observations** (NOT built — later-milestone / lifecycle family): TOP `tv-sub` explainer + board TOP tools dropping the Sort chip (M4 COL-13); empty/loading **dimmed tools** + empty ghost/rail (GAP-2); skeleton/load-error family (GAP-4); STATUS "COMPLETED 100%" vs board "100%" (COL-02 long form, polish).
 
 ## Notes for the verifier
 

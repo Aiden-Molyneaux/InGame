@@ -87,3 +87,98 @@ board-copy/element drops the manifest had as PRE (R7–R11). Nothing in the flag
 ruling. The screen's R1-1 *fix ledger* is honest; the surface as a whole is not yet
 "matches the converged board" until the R1–R6 family is resolved or explicitly re-scoped (they are
 board-accurate rows, not R1-1 named items — the owner's call at the R1-1 hard stop).
+
+## R1-1 · Collection — parvati fix-round re-review (M3-R, 2026-07-04)
+
+**Verdict:** 1 🚩 flag · 12 ✅ expected · 2 🎨 polish (measured vs the M3-R DoD `m3r-build-task.md` §3 R1-1,
+the **0061-updated** manifest `m3r/collection-manifest.md` — the fixed enumeration — decision `0061`,
+and `GET /me/collection`). **The R1–R6 structural family is CLOSED** (all six verified fixed live);
+one **new** divergence surfaced (R12, search-state hero).
+**Reviewed from:** live Expo web @ 390×844 (fresh-context agent, own captures + DOM measurements),
+signed in as `demo@ingame.app`, reads-only — no log-hours save, no adds, no pin/order mutations.
+Standing stack used: shared API :4000 + DB adopted untouched; Metro :8082 was down and
+`dev-stack.mjs up` could not keep its spawn alive (3 attempts, incl. unsandboxed — child dies
+instantly, 0-byte log), so a fallback Metro was started via the preview harness on :8082 and stopped
+after the run. `apps/mobile/.env.local` verified absent throughout; the phone's :8081 untouched.
+**Environment note:** the demo shelf is now **15 games** (was 13) — three new seeds ("min",
+"Gears of War", "hentai sniper wwII") with partial catalog fields (no dev/year); all counts below
+were re-checked coherent at 15, and the catalog line degrades gracefully by omitting missing
+segments (e.g. "HEYO · RACING") — seed-data, not a build defect.
+
+### Fix-round claims re-verified (the receipt's table, live)
+| Prior flag | Check | Verdict |
+|---|---|---|
+| R1 (grid faces) | Grid = **2-up full faces**, DOM-measured 154×215 (63:88 fluid, F-01 uncropped), no per-row meta (0 stat-lines beyond the hero), ▶ NOW in-flow on the pinned face | ✔ **FIXED** (0061 grid) |
+| R2 (hero persistence) | Shared `NowPlayingHero` renders in **shelf, grid, AND list** — eyebrow · stat · title · catalog · LOG HOURS, docked above the library in all three | ✔ **FIXED** |
+| R1a (shelf model, 0061) | Shelf = **the showcase**: hero + a stack where **every entry is hero-treated** — 138×193 face (DOM-measured, all 15) + stat-line · display title · catalog line beside; **LOG HOURS hero-exclusive** (exactly one on screen); ▶ NOW on the pinned stack card | ✔ **BUILT** (board `:753–809`) |
+| R3/R4/R5 (list) | List = strip rows: **48×67 thumbs** (DOM-measured), TITLE + **inline ▶ NOW** beside it, "N HRS · STATUS" line, **› chevron** on all 15 rows, hero above | ✔ **FIXED** (board `:939–994`) |
+| R6 (search dock) | Tap Search → **the entire tools bar morphs** into a docked `SearchField` + ⊗ (tools + ADD gone); "bun" → **RESULTS — TITLE · DEVELOPER · PUBLISHER** header + count narrows **"2 OF 15 GAMES"** + dev-scope hits (Destiny 2 + Marathon via BUNGIE); ⊗ → query cleared, tools bar + ADD restored, count "15 GAMES" | ✔ **FIXED** (board `:689–695`, `:661`) |
+| OQ-128 (RECENT) | **RECENT** chip present in SORT; select → stack reorders newest-adds-first (ownedSince DESC interim) + Sort keycap pips **orange** (F-05); keycap re-tap flips **↓→↑** (order verified reversed) and the drawer chip agrees ("RECENT ↑") | ✔ **BUILT** |
+
+### 🚩 Flag (divergence from the converged board — M3-R DoD)
+| # | Observation | Bucket | Cite / note |
+|---|---|---|---|
+| R12 | **The Now-Playing hero does NOT yield during an active search** — with a query live, the build renders the RESULTS header and then the full hero block (eyebrow + LOG HOURS) *above* the result rows; the board's search artboard begins the scroll at the RESULTS sec with no hero, and the caption is explicit: "The Now-Playing hero yields while a query is active" | MISPLACED | board `:660–662`, caption `:711–713`; `collection.tsx:252–265` (view renders with `hero` unconditionally; `q` doesn't gate it). Not manifest-cited as EXPECTED/LOCKED — a search-state row the spot-audit didn't extract |
+
+### ✅ Expected (deferred — proceed; manifest cites, all carried from the prior pass)
+ToolsBar grip (COL-13 · OQ-031 · `:812`) · ARRANGE-replaces-ADD in TOP (M4·COL-13, DIV-2/GAP-1 ·
+`:1069`) · TOP curated grid + `tv-sub` explainer + the board's no-Sort TOP bar (M4·COL-13 · 0049/0050;
+build shows the D3 hours-derived placeholder — re-verified live, #1 orange marker, ranks 2+) ·
+card-tap flip / VIEW GAME (M4·D1 · CARD-23 · `:906`) · MatchTag on dev/publisher hits
+(match-highlight · `:672`; dev-scope itself verified working) · hero foil/custom art (M4·CARD-22) ·
+ARRANGE hint under SORT (OQ-031 · `:598`) · per-game actions / set-now-playing picker (M4 · §0.5) ·
+empty-state family (GAP-2; not exercisable) · lifecycle family (GAP-4; skeleton/load-error) ·
+distinct immutable `addedAt` for RECENT (OQ-128, interim ownedSince DESC is the blessed shape) ·
+GameCard F-02 step app-wide (OQ-127).
+
+### 🎨 Polish / iteration (built-app, token-level)
+- **Docked search-field composition** — the board draws the magnifier glyph *inside* the field and ⊗
+  *in-field* right (`:690–694`); the build's field has no in-field magnifier and docks ⊗ as an
+  adjacent keycap. Mechanics are exactly the board's (morph · clear · restore) — composition only.
+  Placeholder is sentence-case "Title · developer · publisher" vs the board's caps (the prior pass's
+  under-named publisher IS fixed).
+- **Drawer search placeholder copy** (carried) — "Title · studio · publisher" vs board "TITLE ·
+  DEVELOPER · PUBLISHER…" (`:582`): "studio" vs DEVELOPER + case.
+- *(No-action note, carried: STATUS chip "COMPLETED 100%" is the COL-02 display name — the board's
+  "100%" abbreviates; don't "fix" backwards.)*
+
+### ✔ Matches (verified live this run)
+Shelf showcase per 0061 — hero (138×193, NOW PLAYING accent eyebrow, "11 HRS · PLAYING", display
+title, "FROMSOFTWARE · 2022 · SOULSLIKE", LOG HOURS + icon) over a 15-row hero-treatment stack, ▶ NOW
+on the pinned card, LOG HOURS nowhere else · grid 2-up faces + persistent hero + in-flow ▶ NOW + view
+keycap grid-glyph pipped · list strips (48×67 thumb · title + inline ▶ NOW · HRS·STATUS · ›) +
+persistent hero + list-glyph pipped · view keycap cycles shelf→grid→list→top and returns · TOP count
+**"TOP 10"** (gold), #1 orange never gold · S3-j count copy round-trips: "15 GAMES" → "3 OF 15 GAMES"
+(STATUS PLAYING, 3 rendered, coherent) → "15 GAMES" (ALL) → "1 OF 15 GAMES" (GENRE SOULSLIKE) →
+restored; live while the drawer is open · drawer in-frame (grab handle + scrim, nav band never
+blocked §0.11), section order SEARCH → VIEW (SHELF·GRID·LIST·**TOP 10**) → SORT (MY ORDER · HOURS ·
+OWNED SINCE · **RECENT** · A–Z, no standalone ASC/DESC, active chip wears ↑/↓) → STATUS (PLAYING
+leads; ALL = empty set, selected-when-clear, tap-clears) → GENRE (ALL ditto) → RESET · DONE · Filter
+keycap orange StateMark pip lights on filter, clears on ALL · Sort keycap pip + arrow emphasis agree
+with the drawer in both directions · log-hours sheet in-frame, "LOG HOURS — ELDEN RING", field
+pre-filled `value="11"` (real value), numeric pad, SAVE present, **closed without saving** (hero
+still "11 HRS · PLAYING") · gold ADD 98×39 with the F-02 TL+BR stepped SVG face + "+" icon, visibly
+the largest control · tools 4× cream 32×30 icon-only keycaps (S3-n).
+
+### Not exercised (and why)
+- **Empty shelf** (S3-j count-hidden, dimmed tools, ghost/rail — GAP-2 family) — needs an empty
+  account; reads-only run.
+- **Now-playing-unset nudge (GAP-3 inert-tap check)** — the demo has a pin; unpinning is a mutation.
+  Still owed a live check.
+- **Load-error** (SIGNAL LOST family, GAP-4) — needs a mid-session API failure.
+- **True singular "1 GAME"** — needs a 1-game shelf.
+- **Keyboard-rise (`KeyboardLift`) + "keyboard SEARCH dismisses keeping the filter → Search keycap
+  pips"** — OS-keyboard behaviors the web loop can't drive; code shows the keycap pip is wired
+  (`collection.tsx:293` `active={q.trim() !== ''}`); the R2 device pass owns both.
+- **Behavior note (not scored):** selecting a *new* sort key inherits the previous direction rather
+  than resetting to ↓ (MY ORDER re-selected after RECENT ↑ came back as "MY ORDER ↑"). The board
+  doesn't specify; flagging for the owner's taste, not the fixlist.
+
+### Read of it
+The fix round **holds**: all six structural flags (R1–R6) are closed and DOM-verified against the
+0061 model, RECENT landed with correct pip/flip mechanics, and every prior regression row (count
+copy, ALL round-trips, pips, pre-fill, TOP 10, stepped ADD) re-verified green at the new 15-game
+seed. The one open flag is small and sharply scoped — the search state renders the hero the board
+says must yield (R12) — plus two token-level field-composition polish items. Nothing touches a
+LOCKED ruling. One more builder pass on R12 (a `q`-gate around the hero in the three views) and this
+surface reads "matches the converged board" within its declared GAP/EXPECTED envelope.
