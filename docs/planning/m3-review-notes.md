@@ -438,3 +438,63 @@ the S2-e/S2-f server-error paths are gated behind a 503-ing LAN-IP API, and S2-i
 (for S2-c) a matching server-contract test, so the logic is sound; the pixels are owed to a
 healthy-API / R2 iOS device pass. The manifest's locked divergences (single mode-toggle form kept, hero
 S1-e design-owed) were honoured — not touched, not flagged. Nothing owed at R1-3's DoD is missing.
+
+## R1-4 · Profile — parvati (M3-R, 2026-07-04)
+
+**Verdict:** 0 🚩 flag · 0 ✅ expected-divergence · 0 🎨 polish — **both S5 owner-notes CONFIRMED**
+(S5-a CODE-CONFIRMED · S5-b CODE-CONFIRMED, per the manifest's own grounded finding). Measured vs the
+fixed enumeration `m3r/profile-manifest.md` (the two S5 items only — the rest is owner "reference-good",
+scoped out) + `profile-states.html` (C5 v2, base `:477–590`) + `GET /me`. M3-R calibration:
+divergence-from-manifest = 🚩; EXPECTED requires the manifest's cite.
+**Reviewed from:** the working tree (`profile.tsx`, `ScreenHead.tsx`) cross-read against the
+`collection.tsx` pattern and the board — **the profile screen's live render was NOT reachable** (auth
+barrier, below). What WAS exercised live: the `/sign-in` full-frame shell (no login needed) — a
+regression sanity check that the S5-a header diff didn't leak into the shell. Fresh-context agent, own
+isolated Chrome tab group, own capture. Standing stack adopted untouched (DB + API :4000 + Metro :8082
+all external/owner-owned — `dev-stack.mjs up` adopted the running :8082 Metro; I started none of my own,
+stopped none). `apps/mobile/.env.local` not created.
+
+### Live barrier (why this pass is code-confirmed for the profile screen)
+The Profile screen is **auth-gated**, and **web login is currently broken** on the :8082 dev lane — the
+LAN-IP `POST /auth/login` from the renderer hangs (OPTIONS preflight 200, no POST result / "Something
+went wrong" toast; documented task `f5628409`, the same LAN-IP-from-:8082 friction the R1-1/R1-2/R1-3
+passes hit). Per the orchestrator's brief I attempted no login churn — the profile's live pixel
+confirmation is explicitly **owed to the R2 device pass**. So the two S5 items are verified against the
+**working tree**, and the shell-frame regression check was run on the guaranteed-reachable sign-in frame.
+
+### The 2 S5 owner-notes
+| # | Note | Bucket | Verdict / evidence |
+|---|---|---|---|
+| S5-a | render the fixed **"PROFILE" title band** above the scroll (board `.screen-head` `:487`) | MATCHES | ✔ **CODE-CONFIRMED.** `ScreenHead` is imported (`profile.tsx:4`) and mounted `<ScreenHead title="Profile" />` inside a fixed `<View style={styles.pad}>` wrapper **above** the `ScrollView` in the loaded return (`profile.tsx:64–69`) — exactly mirroring the Collection pattern (`collection.tsx:258–263`). The `pad` style (`:186`) matches Collection's header-wrapper padding (`paddingHorizontal/Top: space.lg`, `paddingBottom: space.md`). `ScreenHead` renders the title at `type.display` (21, F-06) cream/`scr.ink` bold letter-spaced (`ScreenHead.tsx:32–37`) — the board's `.sk2 .screen-head h2` 21px cream-bold spec. Title-only (no `count` prop) — correct; the count keycap is a Collection-only affordance. The EDIT/SHARE/Settings tools that share that board region are **NOT added** — correctly EXPECTED(M7) per the manifest. *(Live pixel check owed to R2.)* |
+| S5-b | confirm NO inert "SET YOUR NOW PLAYING" affordance (§0.8 hide-until-M4); the NOW PLAYING **display** still renders | MATCHES | ✔ **CODE-CONFIRMED** (a confirm, not a build). `profile.tsx:122–134` — the Now Playing section renders the `me.nowPlaying` display (GameCard + title + "{hours}H LOGGED") when present, else a **directional empty-line** "Nothing pinned — set it from your Collection." (`:132`). There is **no button, no press handler, no set-affordance** — the empty branch is a plain `<Text style={styles.emptyLine}>`. This matches the board's own ghost-line "NOTHING PINNED — SET YOUR NOW PLAYING FROM THE COLLECTION TAB" (`profile-states.html:804`, itself display-only) and the populated board strip (`:533–544`, minus the `.chev` navigate → tap-to-navigate is EXPECTED(M4)). Nothing to hide; §0.8 already satisfied. |
+
+### Shell-frame regression check (the S5-a diff must not have leaked into the root frame)
+| Check | Verdict / evidence |
+|---|---|
+| `/sign-in` full-frame renders clean post-S5-a | ✔ **LIVE.** The DeviceShell frame renders intact — teal bezel + POWER LED + INGAME bezel engraving wrapping the Midnight screen; the sign-in screen paints its INGAME wordmark, "YOUR COLLECTION, ON DISPLAY" tagline, EMAIL/PASSWORD fields, brown SIGN IN button, and "New to InGame? CREATE ACCOUNT" swap link. No error overlay, no red-box crash, no broken frame. The S5-a change (a `pad`-wrapped `ScreenHead` above the profile scroll) is isolated to `profile.tsx` and did not perturb the root shell. |
+
+### Not exercised (and why)
+- **The entire Profile live walk** — the fixed PROFILE band above the scroll (S5-a), the identity /
+  STATS / PINNED / TOP-3 / NOW-PLAYING / MY-DEVICE section stack, and the Now-Playing display-vs-empty
+  render (S5-b) — **not exercised: web login broken on the :8082 lane** (LAN-IP `POST /login` hangs
+  in-renderer, task `f5628409`; the localhost-repoint fix needs `.env.local`, forbidden by this brief).
+  Both S5 items are code-confirmed with board + pattern cites; the **pixel/interaction confirmation is
+  owed to the R2 device pass** (the manifest scopes it there). The M3-R owner already ruled the rest of
+  the profile "reference-good", so only these two S5 targets were in scope.
+- **Console note (out of scope, not flagged):** a `ReferenceError: Pressable is not defined` fired from
+  `LegalScreen` during a React Fast-Refresh cycle this run. It is a **stale-HMR-bundle artifact** — the
+  current `LegalScreen.tsx` source imports only `Text/ScrollView/StyleSheet` and references no
+  `Pressable` (verified in the working tree), and R1-3 verified LegalScreen LIVE at this commit. Not a
+  profile/sign-in defect; noting for transparency, not as an R1-4 finding.
+
+### Read of it
+Clean pass, both S5 items land. **S5-a** is a faithful additive render — the shared `ScreenHead
+title="Profile"` in a fixed `pad` wrapper above the `ScrollView`, an exact structural mirror of the
+Collection header pattern (same component, same wrapper, same padding tokens, board-correct display-21
+cream-bold title), with the M7 header tools correctly withheld. **S5-b** is a confirm, and it holds: the
+build has no inert set-affordance — Now Playing renders the real `me.nowPlaying` display or a directional
+empty-line, matching the board's own display-only ghost-line, so §0.8's hide-until-M4 has nothing to
+hide. The one thing not done this pass is eyes-on the running profile, and that's the environment (the
+:8082 login barrier, task `f5628409`), not the build — the manifest already assigns the profile's live
+pixel confirmation to R2. The sign-in shell regression check came back clean, so the S5-a diff didn't
+leak into the root frame. Nothing owed at R1-4's DoD is missing; no 🚩, no new OQ.
