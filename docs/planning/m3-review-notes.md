@@ -394,3 +394,47 @@ S1-b's down-nudge is correct in shape but web-capped at the 10px floor (it's hom
 so the felt ¼cm only shows on a device). No divergence from the owner's intent, so nothing to flag — the
 one 🎨 note is a pre-existing bezel-token hue, not a regression. The signed-in *active/sunk* keycap and
 the real-cm magnitudes are the R2 device pass's to confirm; everything web-observable is clean.
+
+## R1-3 · Welcome/Auth + Register + Legal — parvati (M3-R, 2026-07-04)
+
+**Verdict:** 0 🚩 flag · 0 ✅ expected-divergence · 0 🎨 polish — **all 9 S2 owner-notes CONFIRMED**
+(measured vs the fixed enumeration `m3r/welcome-auth-manifest.md` — sign-in / create / legal states —
+not an improvised list; M3-R calibration: divergence-from-manifest = 🚩, EXPECTED requires the
+manifest's cite). **Reviewed from:** live Expo web on the pre-auth surface (no login needed) —
+`/sign-in` (default + swapped-to-create), `/legal/terms`, `/legal/privacy` — fresh-context agent, own
+isolated Chrome tab group, own captures + DOM/`type`-attribute reads + one network trace. Window resized
+to 390×844; the device shell centres the screen inside a wide desktop viewport so screenshots read
+~1568w (judged the screen contents, not the frame staging). RN-web `TextInput`s **did** register React
+state this pass (unlike the R1-2 friction) — so S2-a enable-on-fill and the S2-c "CHECKING…" beat were
+exercised LIVE; only the *resolved* availability copy and the submit-error clear were API-blocked (503
+from the LAN-IP base — infra, not build; see Not-exercised).
+
+### The 9 S2 owner-notes
+| # | Note | Bucket | Verdict / evidence |
+|---|---|---|---|
+| S2-g | mode-swap is a `.swap-foot` **text link**, not a full button | MATCHES | ✔ **LIVE.** Sign-in: centred footer "New to InGame? **CREATE ACCOUNT**" (accent text link, `TertiaryLink chevron='none'`); create: "Already have one? **SIGN IN**". No slab button. Swap round-trip (signin→create→signin) exercised via ref-click. `sign-in.tsx:262–272` |
+| S2-h | **FORGOT?** on the password label row — **sign-in only**; tap → coming-soon stub | MATCHES | ✔ **LIVE.** FORGOT? (accent) rides the PASSWORD `.flabel-row` right in sign-in; **absent** in create (confirmed on the swapped form). Stub `Alert` is code-confirmed (`comingSoon`, `:94–98,190–198`); the real reset flow is owner-deferred (AUTH-04) — its absence NOT flagged, per the manifest ruling. |
+| S2-i | SIWA — compact Apple button + "OR CONTINUE WITH" divider; **iOS + sign-in only** | MATCHES | ✔ Correctly **absent on web** (`Platform.OS === 'ios' && mode==='signin'` guard, `:237`) — device-only per the manifest; not flagged missing on web. Render/label/divider + black-token exemption code-confirmed (`:235–260`). **Owed on an R2 iOS device pass** (not web-verifiable). |
+| S2-j | password **SHOW/HIDE reveal** inside the input; toggles masking | MATCHES | ✔ **LIVE.** Clicking SHOW flipped the input `type="password"→"text"` and the a11y label "Show password"→"Hide password" (DOM-read both states). `TextField.tsx:33,59–68` |
+| S2-a | primary disabled while any required field empty/erroring (create also needs the checkbox), not only the checkbox | MATCHES | ✔ **LIVE.** Create with all 3 fields empty → CREATE ACCOUNT renders **brown/muted (disabled)**; after filling email+username+password **and** checking the box → **bright orange (enabled)**. The gate widened beyond the checkbox exactly as specced. `canSubmit` = `!busy && requiredFilled && no fieldErrors` (`:120–126`). |
+| S2-c | availability copy — taken → **"USERNAME NOT AVAILABLE"**, screened/reserved → "USERNAME NOT ALLOWED" | MATCHES | ✔ **CODE-CONFIRMED** (live copy 503-blocked). The "CHECKING…" advisory beat fired LIVE for a typed username; the resolved branch maps `reason==='taken'`→"USERNAME NOT AVAILABLE", else→"USERNAME NOT ALLOWED" (`:137–141`), and the server genuinely emits `reason:'taken'` (taken) vs `reason:'screened'` (reserved) per integration test `auth-slice.test.ts:366,370`. Mapping correct. |
+| S2-e | field-error text legible (9px, semibold — board `.ferr` 600) | MATCHES | ✔ **CODE-CONFIRMED.** `TextField` error style now `fontFamily: screenSemi` (was regular) at `type.micro` (9). `TextField.tsx:110–114`. (Live render 503-blocked — no server field-error to paint this pass.) |
+| S2-f | a field's error (+ top-line) clears as the user edits it; editing username re-shows the availability line | MATCHES | ✔ **CODE-CONFIRMED + partially LIVE.** `editField` clears `error` + that field's `fieldErrors` on every keystroke (`:74–85`); `showAvailability` re-gates on `!fieldErrors.username` (`:131–132`) — editing the username re-shows the line (observed LIVE: the CHECKING… line reappeared on username re-type). The *server*-error clear-on-type is 503-blocked (no error to seed). |
+| S2-b | on `/legal/terms` + `/legal/privacy` the ‹ BACK link sits **UNDER** the screen title | MATCHES | ✔ **LIVE on both.** Order top-to-bottom: **title (display-21, bold) → ‹ BACK (accent, leading ‹) → DRAFT note → body**. Verified on `/legal/terms` and `/legal/privacy`. `LegalScreen.tsx:11–13` |
+
+### Not exercised (and why)
+- **Resolved availability copy** (S2-c "NOT AVAILABLE" / "NOT ALLOWED" painted) + **server field-error clear** (S2-f live) + **S2-e error render** — **API-blocked, not a build defect.** The `GET /auth/username-available?u=…` call to the LAN-IP base (`http://192.168.68.58:4000/api/…`) returned **HTTP 503** (network-traced), so the advisory stayed stale-guarded at "CHECKING…" and no submit/field-error could round-trip. Same LAN-IP-from-:8082 friction the R1-1/R1-2 passes hit. All three are code-confirmed with a contract cite; the painted copy is owed to a device / healthy-API pass.
+- **SIWA (S2-i)** — `Platform.OS==='ios'`; never renders on web by design. Its look/label/divider are code-confirmed; the *render* is owed to an **R2 iOS device pass**.
+- **Legal ‹ BACK navigation** — the onPress→`router.back()` is code-confirmed (`LegalScreen.tsx:12`, no console error on click). A direct-URL visit gives expo-router no back-stack, so `back()` is a harness no-op; in the real flow legal is reached via `router.push` from the consent row (`:214,218`), which builds the stack. The **placement** (S2-b, the actual note) is fully live-verified; the stack-pop is standard expo-router, not an S2 item.
+
+### Read of it
+This is a clean pass — **all 9 S2 owner-notes landed, nothing diverges from the manifest, and nothing
+new to flag.** Five items were confirmed **live** (S2-g swap text-link, S2-h FORGOT? sign-in-only,
+S2-j reveal masking-toggle, S2-a enable-on-fill widened past the checkbox, S2-b BACK-under-title on both
+legal screens), and the CHECKING… availability beat + username-edit re-show were seen live too. The four
+that leaned on code-confirmation did so for **infra reasons, not build gaps**: the resolved S2-c copy,
+the S2-e/S2-f server-error paths are gated behind a 503-ing LAN-IP API, and S2-i SIWA is a
+`Platform.OS==='ios'` fork that correctly never paints on web. Each of those has a concrete code cite and
+(for S2-c) a matching server-contract test, so the logic is sound; the pixels are owed to a
+healthy-API / R2 iOS device pass. The manifest's locked divergences (single mode-toggle form kept, hero
+S1-e design-owed) were honoured — not touched, not flagged. Nothing owed at R1-3's DoD is missing.
