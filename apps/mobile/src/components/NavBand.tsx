@@ -4,10 +4,13 @@ import { NavKeycap } from './NavKeycap';
 
 // NavBand (component-map §5.1) — the shell band holding the 5 NavKeycaps. It is transparent so it
 // reads as the lower part of the ONE teal plastic body (the DeviceShell). The band is CONTENT-sized
-// (pad-top 16 · keys · pad-bottom ⌊home-indicator inset⌋) — owner ruling 2026-07-01: the keys ride
-// just above the device bottom (~½cm), not atop a fixed 128px well of dead plastic (the mockup's 128
-// includes the outside key labels this build carries inside the caps). `locked` (logged-out /
-// pre-auth) greys it out + makes it non-interactive. F-04: the 5 keys stay legible.
+// (pad-top 16 · keys · pad-bottom) — owner ruling 2026-07-01: the keys ride just above the device
+// bottom (~½cm), not atop a fixed 128px well of dead plastic (the mockup's 128 includes the outside
+// key labels this build carries inside the caps). Because the band is content-sized with flex-start
+// keys, the bottom pad drives the key position 1:1 — S1-b (M3-R) nudges it DOWN ~¼cm by subtracting
+// ~8 from the home-indicator inset, clamped to a 10px floor so no-inset/web + small-inset devices
+// never touch the edge (R2-tunable on device). `locked` (logged-out / pre-auth) greys it out + makes
+// it non-interactive. F-04: the 5 keys stay legible.
 export interface NavTab {
   key: string;
   label: string;
@@ -34,7 +37,7 @@ export function NavBand({
     <View
       style={[
         styles.band,
-        { paddingBottom: Math.max(bottomInset, 16) },
+        { paddingBottom: Math.max(bottomInset - 8, 10) }, // S1-b: keys ~¼cm lower (inset − 8, floor 10)
         locked && styles.bandLocked,
       ]}
       accessibilityRole="tablist"

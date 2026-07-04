@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     width: 84, // wider than the key column so COLLECTION doesn't ellipsize (mockup labels overflow too)
     textAlign: 'center',
   },
-  lblAbove: { transform: [{ translateY: -8 }] }, // mockup floats the above-labels 8px higher
+  lblAbove: { transform: [{ translateY: -11 }] }, // S1-d (M3-R): DISCOVER/PROFILE labels a couple px higher (board −8 → −11)
   key: {
     width: 54,
     height: 54, // mockup `.nav-btn` 54×54

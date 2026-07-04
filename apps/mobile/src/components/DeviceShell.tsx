@@ -7,7 +7,7 @@ import { ShellNav } from './ShellNav';
 // screen**. ONE persistent instance is mounted at the ROOT layout so the device frame containerizes
 // the whole application (sign-in → tabs), never unmounting across navigation. The routed screen
 // renders inside the Midnight `.screen`, framed by the fixed chrome:
-//   top-band (64) · screen-bezel (pad 9, r20) → screen (r13) · nav-band (128, the NavBand).
+//   top-band (56) · screen-bezel (pad 6, r20) → screen (r13) · nav-band (content, the NavBand).
 // The fixed band/inset heights come from the canonical device in profile-states.html, so the USABLE
 // screen area (viewport − top-band − nav-band − bezel padding) is correct now and every screen builds
 // into the right space. Decorative F-03 chrome (grille slats, embossed logo, 3D screw/bevel
@@ -16,16 +16,16 @@ export function DeviceShell({ children }: { children: React.ReactNode }) {
   const insets = useSafeAreaInsets();
   return (
     <View style={styles.plastic}>
-      {/* top-band (64px): power LED (left) · INGAME logo (center) · grille (right). The top safe-area
-          inset extends the band up into the notch without shrinking its 64px content area. */}
-      <View style={[styles.topBand, { height: TOP_BAND + insets.top, paddingTop: 16 + insets.top }]}>
+      {/* top-band (56px): power LED (left) · INGAME logo (center) · grille (right). The top safe-area
+          inset extends the band up into the notch without shrinking its 56px content area. */}
+      <View style={[styles.topBand, { height: TOP_BAND + insets.top, paddingTop: TOP_PAD + insets.top }]}>
         <View style={styles.power}>
           <View style={styles.led} />
           <Text style={styles.powerLbl}>POWER</Text>
         </View>
         {/* the logo overlays the CONTENT box (below the notch) so it centres in line with POWER +
             the grille — absolute w/o `top` ignored the inset padding and rode up under the notch */}
-        <View pointerEvents="none" style={[styles.logoWrap, { top: 16 + insets.top }]}>
+        <View pointerEvents="none" style={[styles.logoWrap, { top: TOP_PAD + insets.top }]}>
           <Text style={styles.logo}>INGAME</Text>
         </View>
         <View style={styles.grille}>
@@ -40,13 +40,18 @@ export function DeviceShell({ children }: { children: React.ReactNode }) {
         <View style={styles.screen}>{children}</View>
       </View>
 
-      {/* nav-band (128px): the 5 nav keys — `locked` (gray, non-interactive) until signed in */}
+      {/* nav-band (content-sized): the 5 nav keys — `locked` (gray, non-interactive) until signed in */}
       <ShellNav bottomInset={insets.bottom} />
     </View>
   );
 }
 
-const TOP_BAND = 64;
+// S1-a (M3-R shell polish): top bar up ~¼cm. The band is fixed-height with vertically-CENTRED
+// content, so paddingTop alone shifts content by only half the change — TOP_BAND and TOP_PAD drop
+// together (64→56 · 16→8) to move the engraving/grille/POWER up a clean ~8px with alignment kept.
+// ¼cm is a device-feel target; final magnitude is the owner's R2 device judgment.
+const TOP_BAND = 56;
+const TOP_PAD = 8;
 
 const styles = StyleSheet.create({
   plastic: {
@@ -103,7 +108,7 @@ const styles = StyleSheet.create({
     minHeight: 0,
     backgroundColor: theme.shell.bezel,
     borderRadius: theme.corner.bezel, // 20 (mockup `.screen-bezel`)
-    padding: 9,
+    padding: 6, // S6-b (M3-R): thinner black frame/screen border (board is 9) — R2-tunable
   },
   screen: {
     flex: 1,
