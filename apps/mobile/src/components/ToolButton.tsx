@@ -1,18 +1,23 @@
-import { Pressable, Text, View, StyleSheet } from 'react-native';
+import { type ReactNode } from 'react';
+import { Pressable, View, StyleSheet } from 'react-native';
 import { theme } from '../theme';
 import { StateMark } from './StateMark';
 
-// ToolButton (component-map §5.3 — was ToolKeycap) — the cream utility keycap in the ToolsBar:
-// glyph (+ tiny label), `active` = the F-09 StateMark. Flat (F-03), square on-screen (F-07).
+// ToolButton (component-map §5.3 — was ToolKeycap) — the cream utility keycap in the ToolsBar.
+// ICON-ONLY (S3-n): the board's tool keycaps carry a mockup SVG glyph and NO text label
+// (collection-states.html:813–816); `label` is the accessibility name only. `active` = the F-09
+// StateMark pip (orange notched square — NOT the pink PipLight, F-05). Flat (F-03), square (F-07).
 // OQ-034: a TAP acts (search toggles, sort flips, view cycles); a LONG-PRESS opens the drawer.
 export function ToolButton({
-  glyph,
+  icon,
   label,
   active,
   onPress,
   onLongPress,
 }: {
-  glyph: string;
+  /** The board SVG glyph (navy stroke/fill on the cream cap). */
+  icon: ReactNode;
+  /** Accessibility name only — the keycap renders no visible label (S3-n). */
   label: string;
   active?: boolean;
   onPress?: () => void;
@@ -25,19 +30,18 @@ export function ToolButton({
       accessibilityState={{ selected: !!active }}
       onPress={onPress}
       onLongPress={onLongPress}
-      style={({ pressed }) => [styles.wrap, pressed && styles.pressed]}
+      // The 32×30 keycap sits under the 44pt platform tap-target floor; the bar's 12px gap leaves
+      // room to make up the difference outside the visible cap.
+      hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+      style={({ pressed }) => [styles.key, pressed && styles.pressed]}
     >
-      <View style={styles.key}>
-        <Text style={styles.glyph}>{glyph}</Text>
-        {active ? <StateMark size={6} style={styles.mark} /> : null}
-      </View>
-      <Text style={styles.label}>{label.toUpperCase()}</Text>
+      {icon}
+      {active ? <StateMark size={6} style={styles.mark} /> : null}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { alignItems: 'center', gap: 2 },
   pressed: { opacity: 0.75 }, // F-03 — energize, no travel
   key: {
     width: 32,
@@ -47,16 +51,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  glyph: {
-    fontFamily: theme.font.screenBold,
-    fontSize: theme.type.title, // 15
-    color: theme.brand.navy,
-  },
   mark: { position: 'absolute', top: 2, right: 2 },
-  label: {
-    fontFamily: theme.font.screenSemi,
-    fontSize: theme.type.micro, // 9
-    color: theme.scr.dim,
-    letterSpacing: 0.5,
-  },
 });

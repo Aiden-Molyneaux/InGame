@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
+import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import type { CollectionItem, CollectionStatus, GenreView } from '@ingame/shared';
 import { ScreenHead } from '../../src/components/ScreenHead';
@@ -30,7 +31,8 @@ const SORTS = [
   { key: 'title', label: 'A–Z' },
 ] as const;
 type SortKey = (typeof SORTS)[number]['key'];
-const STATUSES: CollectionStatus[] = ['backlog', 'playing', 'beaten', 'completed', 'dropped', 'wishlist'];
+// Board chip order (:601–608): PLAYING leads.
+const STATUSES: CollectionStatus[] = ['playing', 'backlog', 'beaten', 'completed', 'dropped', 'wishlist'];
 /** COL-02 display names (`completed` = "Completed 100%"). */
 const STATUS_LABEL: Record<CollectionStatus, string> = {
   backlog: 'BACKLOG',
@@ -40,6 +42,82 @@ const STATUS_LABEL: Record<CollectionStatus, string> = {
   dropped: 'DROPPED',
   wishlist: 'WISHLIST',
 };
+// COL-07 view labels (S3-d — the TOP chip reads "TOP 10" explicitly; collection-states.html:588/1044).
+const VIEW_LABEL: Record<CollectionView, string> = { shelf: 'Shelf', grid: 'Grid', list: 'List', top: 'Top 10' };
+
+// ── ToolsBar glyphs — the BOARD's SVG icons, extracted verbatim from collection-states.html's tools
+// bar (S3-n). Navy stroke/fill on the cream keycap (mockup `.sk2 .chip svg {stroke/fill: navy}`); set
+// on each element directly (react-native-svg has no descendant CSS). ──
+const NAVY = theme.brand.navy;
+function SearchIcon() {
+  return (
+    <Svg width={12} height={12} viewBox="0 0 12 12">
+      <Circle cx={5} cy={5} r={3.4} fill="none" stroke={NAVY} strokeWidth={1.6} />
+      <Path d="M7.8 7.8L11 11" fill="none" stroke={NAVY} strokeWidth={1.8} strokeLinecap="round" />
+    </Svg>
+  );
+}
+// Sort double-arrow (down at x=3, up at x=8); when a sort is active the chosen direction's arrow is
+// emphasized and the other dims — the icon-only form of the board's "↑" direction cue (S3-i).
+function SortIcon({ active, asc }: { active?: boolean; asc?: boolean }) {
+  const down = !active ? 1 : asc ? 0.3 : 1;
+  const up = !active ? 1 : asc ? 1 : 0.3;
+  return (
+    <Svg width={11} height={12} viewBox="0 0 11 12">
+      <Path d="M3 1.5v9M3 10.5L1 8.4M3 10.5l2-2.1" fill="none" stroke={NAVY} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" opacity={down} />
+      <Path d="M8 10.5v-9M8 1.5L6 3.6M8 1.5l2 2.1" fill="none" stroke={NAVY} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" opacity={up} />
+    </Svg>
+  );
+}
+function FilterIcon() {
+  return (
+    <Svg width={12} height={11} viewBox="0 0 12 11">
+      <Path d="M1 1.5h10L7.5 6v3.4L4.5 10V6L1 1.5z" fill="none" stroke={NAVY} strokeWidth={1.4} strokeLinejoin="round" />
+    </Svg>
+  );
+}
+// The view keycap always wears the CURRENT mode's glyph (board caption §View modes).
+function ViewIcon({ view }: { view: CollectionView }) {
+  if (view === 'grid') {
+    return (
+      <Svg width={12} height={12} viewBox="0 0 12 12">
+        <Rect x={1} y={1} width={4.4} height={4.4} rx={1} fill={NAVY} />
+        <Rect x={6.6} y={1} width={4.4} height={4.4} rx={1} fill={NAVY} />
+        <Rect x={1} y={6.6} width={4.4} height={4.4} rx={1} fill={NAVY} />
+        <Rect x={6.6} y={6.6} width={4.4} height={4.4} rx={1} fill={NAVY} />
+      </Svg>
+    );
+  }
+  if (view === 'list') {
+    return (
+      <Svg width={12} height={10} viewBox="0 0 12 10">
+        <Path d="M1 1.5h10M1 5h10M1 8.5h10" fill="none" stroke={NAVY} strokeWidth={1.6} strokeLinecap="round" />
+      </Svg>
+    );
+  }
+  if (view === 'top') {
+    return (
+      <Svg width={12} height={10} viewBox="0 0 12 10">
+        <Path d="M1 1.5h10M1 5h7M1 8.5h4" fill="none" stroke={NAVY} strokeWidth={1.6} strokeLinecap="round" />
+      </Svg>
+    );
+  }
+  return (
+    <Svg width={10} height={12} viewBox="0 0 10 12">
+      <Path d="M1.5 1.5h7v9h-7z" fill="none" stroke={NAVY} strokeWidth={1.5} strokeLinejoin="round" />
+      <Path d="M2.8 8.6h4.4" fill="none" stroke={NAVY} strokeWidth={1.3} />
+    </Svg>
+  );
+}
+// The board's button "+" (`.btn` svg, currentColor = the button's ink). Gold-ink at 15px on ADD
+// (larger than the board's 11px, S3-o); accent-ink at 11px on the hero LOG HOURS (board :750).
+function PlusIcon({ color = theme.brand.goldInk, size = 15 }: { color?: string; size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 11 11">
+      <Path d="M5.5 1v9M1 5.5h9" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
 
 export default function Collection() {
   const router = useRouter();
@@ -55,10 +133,18 @@ export default function Collection() {
   const [statusFilter, setStatusFilter] = useState<Set<CollectionStatus>>(new Set());
   const [genreFilter, setGenreFilter] = useState<Set<string>>(new Set());
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [logHoursFor, setLogHoursFor] = useState<CollectionItem | null>(null);
+  // Keyed by entryId (not an item snapshot) so the sheet always derives the FRESHEST cached item —
+  // a snapshot taken pre-refetch can pre-fill stale hours, and §0.4's Save-as-is would write them back.
+  const [logHoursId, setLogHoursId] = useState<string | null>(null);
 
   const items = useMemo(() => data?.items ?? [], [data]);
   const hero = items.find((i) => i.nowPlaying) ?? null;
+  const logHoursItem = logHoursId != null ? (items.find((i) => i.entryId === logHoursId) ?? null) : null;
+  // If the open entry vanishes from a landing refetch, drop the id — otherwise the sheet hides
+  // with onClose never firing and a later refetch that re-includes the entry silently reopens it.
+  useEffect(() => {
+    if (logHoursId != null && logHoursItem === null) setLogHoursId(null);
+  }, [logHoursId, logHoursItem]);
 
   // COL-07/09 — client-side query execution over the loaded shelf (D2).
   const filtered = useMemo(() => {
@@ -110,11 +196,26 @@ export default function Collection() {
     dispatch(setCollectionView(next));
   };
 
+  // S3-j / §0.3 — count copy: "N game(s)" unfiltered · "N of M games" filtered (singular-aware);
+  // absent until the first add (the board shows no count keycap on the empty shelf, :491).
+  const filterActive = q.trim() !== '' || statusFilter.size > 0 || genreFilter.size > 0;
+  const total = data.collectionTotal;
+  const games = (n: number) => (n === 1 ? 'GAME' : 'GAMES');
+  // TOP view wears the curated-list label, not the shelf total (board :1044).
+  const countLabel =
+    total === 0
+      ? undefined
+      : view === 'top'
+        ? 'TOP 10'
+        : filterActive
+          ? `${filtered.length} OF ${total} ${games(total)}`
+          : `${total} ${games(total)}`;
+
   return (
     <View style={styles.screen}>
       <View style={styles.pad}>
-        {/* honest totals — filtered count OF the whole shelf (the C4 class) */}
-        <ScreenHead title="Collection" count={`${filtered.length} OF ${data.collectionTotal}`} />
+        {/* honest totals — filtered count OF the whole shelf (the C4 class); S3-j copy */}
+        <ScreenHead title="Collection" count={countLabel} />
         {searchOpen ? (
           <SearchField value={q} onChangeText={setQ} placeholder="Search title · studio" autoFocus />
         ) : null}
@@ -129,16 +230,16 @@ export default function Collection() {
         ) : view === 'grid' ? (
           <GridView items={filtered} />
         ) : (
-          <ShelfView items={filtered} hero={hero} onLogHours={() => hero && setLogHoursFor(hero)} />
+          <ShelfView items={filtered} hero={hero} onLogHours={() => hero && setLogHoursId(hero.entryId)} />
         )}
       </ScrollView>
 
-      {/* The ToolsBar (§2.1): keycaps ACT · long-press opens the drawer at that concern (OQ-034). */}
+      {/* The ToolsBar (§2.1): icon-only keycaps ACT · long-press opens the drawer (OQ-034 · S3-n). */}
       <View style={styles.tools}>
         <ToolButton
-          glyph="⌕"
+          icon={<SearchIcon />}
           label="Search"
-          active={searchOpen || q.length > 0}
+          active={searchOpen || q.trim() !== ''}
           onPress={() => {
             if (searchOpen) setQ('');
             setSearchOpen(!searchOpen);
@@ -146,21 +247,27 @@ export default function Collection() {
           onLongPress={() => setDrawerOpen(true)}
         />
         <ToolButton
-          glyph="⇅"
+          icon={<SortIcon active={sortKey !== 'order' || sortAsc} asc={sortAsc} />}
           label="Sort"
           active={sortKey !== 'order' || sortAsc}
           onPress={() => setSortAsc(!sortAsc)}
           onLongPress={() => setDrawerOpen(true)}
         />
         <ToolButton
-          glyph="≡"
+          icon={<FilterIcon />}
           label="Filter"
           active={statusFilter.size > 0 || genreFilter.size > 0}
           onPress={() => setDrawerOpen(true)}
         />
-        <ToolButton glyph="▤" label={view} onPress={cycleView} onLongPress={() => setDrawerOpen(true)} />
+        <ToolButton
+          icon={<ViewIcon view={view} />}
+          label="View"
+          active={view !== 'shelf'}
+          onPress={cycleView}
+          onLongPress={() => setDrawerOpen(true)}
+        />
         <View style={styles.spacer} />
-        <ScreenButton label="+ Add" variant="add" onPress={() => router.push('/add-game')} />
+        <ScreenButton label="Add" variant="add" icon={<PlusIcon />} onPress={() => router.push('/add-game')} style={styles.addBtn} />
       </View>
 
       <SortFilterSheet
@@ -181,7 +288,7 @@ export default function Collection() {
         genres={[...new Map(items.flatMap((i) => i.genres).map((g) => [g.id, g])).values()]}
       />
 
-      <LogHoursSheet item={logHoursFor} onClose={() => setLogHoursFor(null)} />
+      <LogHoursSheet item={logHoursItem} onClose={() => setLogHoursId(null)} />
     </View>
   );
 }
@@ -206,13 +313,19 @@ function ShelfView({
           <View style={styles.heroMeta}>
             <Text style={styles.heroEyebrow}>NOW PLAYING</Text>
             <Text style={styles.heroStat}>
-              {hero.hours}H · {STATUS_LABEL[hero.status]}
+              {hero.hours} HRS · {STATUS_LABEL[hero.status]}
             </Text>
             <Text style={styles.heroTitle}>{hero.title.toUpperCase()}</Text>
             <Text style={styles.heroCatalog}>
-              {[hero.developer, hero.releaseYear].filter(Boolean).join(' · ').toUpperCase()}
+              {/* board :749 — DEVELOPER · YEAR · GENRE */}
+              {[hero.developer, hero.releaseYear, hero.genres[0]?.name].filter(Boolean).join(' · ').toUpperCase()}
             </Text>
-            <ScreenButton label="Log hours" onPress={onLogHours} style={styles.heroBtn} />
+            <ScreenButton
+              label="Log hours"
+              icon={<PlusIcon color={theme.scr.accentInk} size={11} />}
+              onPress={onLogHours}
+              style={styles.heroBtn}
+            />
           </View>
         </View>
       ) : (
@@ -253,7 +366,7 @@ function ListView({ items }: { items: CollectionItem[] }) {
               {i.title}
             </Text>
             <Text style={styles.rowSub}>
-              {i.hours}H · {STATUS_LABEL[i.status]}
+              {i.hours} HRS · {STATUS_LABEL[i.status]}
             </Text>
           </View>
         </View>
@@ -276,7 +389,7 @@ function TopView({ items }: { items: CollectionItem[] }) {
             <Text style={styles.rowTitle} numberOfLines={1}>
               {i.title}
             </Text>
-            <Text style={styles.rowSub}>{i.hours}H</Text>
+            <Text style={styles.rowSub}>{i.hours} HRS</Text>
           </View>
         </View>
       ))}
@@ -289,7 +402,7 @@ function EmptyShelf({ onAdd }: { onAdd: () => void }) {
     <View style={styles.empty}>
       <Text style={styles.nudgeTitle}>YOUR SHELF IS EMPTY</Text>
       <Text style={styles.nudgeSub}>Add your first game — the catalog is community-built.</Text>
-      <ScreenButton label="+ Add a game" variant="add" onPress={onAdd} />
+      <ScreenButton label="Add a game" variant="add" icon={<PlusIcon />} onPress={onAdd} />
       <TertiaryLink label="Can't find your game? Be the first to add it" onPress={onAdd} dim />
     </View>
   );
@@ -335,28 +448,31 @@ function SortFilterSheet(props: {
       <SheetSection title="View">
         <View style={styles.chipRow}>
           {VIEW_ORDER.map((v) => (
-            <GenreTag key={v} label={v} selected={props.view === v} onPress={() => props.setView(v)} />
+            <GenreTag key={v} label={VIEW_LABEL[v]} selected={props.view === v} onPress={() => props.setView(v)} />
           ))}
         </View>
       </SheetSection>
+      {/* S3-h/i: no standalone ASC/DESC chip — the active sort shows ↑/↓ and re-tapping it flips
+          (the board's "tap the active sort to flip", :598); direction also folds onto the Sort tool. */}
       <SheetSection title="Sort">
         <View style={styles.chipRow}>
-          {SORTS.map((s) => (
-            <GenreTag
-              key={s.key}
-              label={s.label}
-              selected={props.sortKey === s.key}
-              onPress={() => props.setSortKey(s.key)}
-            />
-          ))}
-          <GenreTag
-            label={props.sortAsc ? 'ASC ↑' : 'DESC ↓'}
-            onPress={() => props.setSortAsc(!props.sortAsc)}
-          />
+          {SORTS.map((s) => {
+            const isActive = props.sortKey === s.key;
+            return (
+              <GenreTag
+                key={s.key}
+                label={`${s.label}${isActive ? (props.sortAsc ? ' ↑' : ' ↓') : ''}`}
+                selected={isActive}
+                onPress={() => (isActive ? props.setSortAsc(!props.sortAsc) : props.setSortKey(s.key))}
+              />
+            );
+          })}
         </View>
       </SheetSection>
+      {/* S3-f: ALL = the empty status set — selected when nothing is filtered, tapping it clears. */}
       <SheetSection title="Status">
         <View style={styles.chipRow}>
+          <GenreTag label="All" selected={props.statusFilter.size === 0} onPress={() => props.setStatusFilter(new Set())} />
           {STATUSES.map((s) => (
             <GenreTag
               key={s}
@@ -367,9 +483,11 @@ function SortFilterSheet(props: {
           ))}
         </View>
       </SheetSection>
+      {/* S3-g: ALL genre option, same grammar. */}
       {props.genres.length > 0 ? (
         <SheetSection title="Genre">
           <View style={styles.chipRow}>
+            <GenreTag label="All" selected={props.genreFilter.size === 0} onPress={() => props.setGenreFilter(new Set())} />
             {props.genres.map((g) => (
               <GenreTag
                 key={g.id}
@@ -396,6 +514,17 @@ function LogHoursSheet({ item, onClose }: { item: CollectionItem | null; onClose
   const [value, setValue] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [updateEntry, state] = useUpdateEntryMutation();
+
+  // S3-m / §0.4 — pre-fill the field with the current hours (as the VALUE, not a placeholder over an
+  // empty field): Save-as-is keeps it, and CLEARING it is what trips the empty-guard error below.
+  // Value-driven deps (not item identity): every refetch re-parses the response into fresh objects,
+  // and an identity dep would re-seed — wiping in-progress typing — even when hours didn't change.
+  useEffect(() => {
+    if (item) {
+      setValue(String(item.hours));
+      setError(null);
+    }
+  }, [item?.entryId, item?.hours]);
 
   async function save() {
     if (!item) return;
@@ -465,6 +594,9 @@ const styles = StyleSheet.create({
     backgroundColor: theme.scr.bg,
   },
   spacer: { flex: 1 },
+  // S3-o — the gold ADD reads larger than the cream tool keycaps (the one loud object). Token-driven
+  // padding; the "+" icon (PlusIcon) adds height, the F-02 step (add variant) adds the card signature.
+  addBtn: { paddingVertical: theme.space.lg, paddingHorizontal: theme.space.xxl },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.lg, justifyContent: 'space-between' },
   shelf: { gap: theme.space.lg },
   hero: {
