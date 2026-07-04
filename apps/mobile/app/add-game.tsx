@@ -3,8 +3,8 @@ import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from
 import { useRouter } from 'expo-router';
 import type { CatalogItem, CollectionItem, CollectionStatus, DedupSuggestion } from '@ingame/shared';
 import { GameCard } from '../src/components/GameCard';
+import { CardFan } from '../src/components/CardFan';
 import { ScreenButton } from '../src/components/ScreenButton';
-import { CountTag } from '../src/components/ScreenHead';
 import { SearchField } from '../src/components/SearchField';
 import { KeyboardLift } from '../src/components/KeyboardLift';
 import { TextField } from '../src/components/TextField';
@@ -13,7 +13,6 @@ import { InlineBanner } from '../src/components/InlineBanner';
 import { TertiaryLink } from '../src/components/TertiaryLink';
 import { theme } from '../src/theme';
 import {
-  useGetCollectionQuery,
   useGetGenresQuery,
   useGetPopularQuery,
   useLazySearchCatalogQuery,
@@ -31,7 +30,9 @@ import {
 // ride their milestones.
 
 const SEARCH_DEBOUNCE_MS = 350;
-const STATUSES: CollectionStatus[] = ['backlog', 'playing', 'beaten', 'completed', 'dropped', 'wishlist'];
+// Board chip order — playing-first, mirroring collection.tsx (murr debt: the two status rows must not
+// diverge). A shared constant is the cleaner home; kept mirrored here to leave the R1-1 file untouched.
+const STATUSES: CollectionStatus[] = ['playing', 'backlog', 'beaten', 'completed', 'dropped', 'wishlist'];
 const STATUS_LABEL: Record<CollectionStatus, string> = {
   backlog: 'BACKLOG',
   playing: 'PLAYING',
@@ -55,7 +56,6 @@ function errOf(e: unknown): NonNullable<ApiErrorPayload['error']> {
 
 export default function AddGame() {
   const router = useRouter();
-  const { data: collection } = useGetCollectionQuery();
 
   const [mode, setMode] = useState<'search' | 'create'>('search');
   const [q, setQ] = useState('');
@@ -66,13 +66,18 @@ export default function AddGame() {
     // the device frame — replaced by the frame-aware KeyboardLift on the docked search bar itself.
     <View style={styles.flex}>
       <View style={styles.screen}>
-        {/* FlowHeader — ✕ · ADD GAME · CountTag (the +1 tick rides the invalidated query) */}
+        {/* FlowHeader (S4-a/e): LEFT-aligned title + a labeled RETURN link (no ✕), and NO count chip —
+            add-game isn't a collection-count surface (board add-game-states :755–756). */}
         <View style={styles.flowHead}>
-          <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => router.back()}>
-            <Text style={styles.close}>✕</Text>
-          </Pressable>
           <Text style={styles.flowTitle}>ADD GAME</Text>
-          <CountTag label={`${collection?.collectionTotal ?? 0} IN`} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Return to collection"
+            onPress={() => router.back()}
+            hitSlop={8}
+          >
+            <Text style={styles.returnLink}>‹ RETURN TO COLLECTION</Text>
+          </Pressable>
         </View>
 
         {added ? (
@@ -109,7 +114,7 @@ function SearchMode({
 }) {
   const { data: popular } = useGetPopularQuery();
   const [search, searchState] = useLazySearchCatalogQuery();
-  const [focusedId, setFocusedId] = useState<string | null>(null);
+  const [foreIndex, setForeIndex] = useState(0);
   const [addError, setAddError] = useState<string | null>(null);
   const [addToCollection, addState] = useAddToCollectionMutation();
 
@@ -126,12 +131,14 @@ function SearchMode({
     return popular?.items ?? []; // never blank — the POPULAR FIRST ADDS rail (CAT-09)
   }, [querying, searchState.data, popular]);
 
-  // Clear the focus when the result set changes so a stale focusedId can't linger into a new list.
-  useEffect(() => setFocusedId(null), [querying, searchState.data]);
+  // Reset the fore to the first card when the result set changes (a stale index must not carry over).
+  useEffect(() => setForeIndex(0), [querying, searchState.data]);
 
-  // No silent items[0] fallback: Add acts on `focused`, so a game must be EXPLICITLY tapped (else null →
-  // Add disabled). A fallback would let Add target a game the user never selected after a query change.
-  const focused = items.find((i) => i.id === focusedId) ?? null;
+  // §0.7 focus-only: the CardFan's centered FORE card is the focused card and always shows its meta +
+  // ADD (the board's P1 static frame just isn't mid-interaction). Clamp in case the list shrank before
+  // the reset effect runs. Add acts on the fore — a visible, meta-shown card, never a hidden one.
+  const safeFore = items.length > 0 ? Math.min(foreIndex, items.length - 1) : 0;
+  const focused = items[safeFore] ?? null;
 
   async function add() {
     if (!focused) return;
@@ -146,7 +153,14 @@ function SearchMode({
   return (
     <>
       <ScrollView style={styles.flex} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-        <Text style={styles.railHead}>{querying ? 'RESULTS' : 'POPULAR FIRST ADDS'}</Text>
+        {/* R14 — the board's match COUNT, not a static "RESULTS" (board P2 "MATCHING…" · P3 "N MATCHES") */}
+        <Text style={styles.railHead}>
+          {querying
+            ? searchState.isFetching
+              ? 'MATCHING…'
+              : `${items.length} ${items.length === 1 ? 'MATCH' : 'MATCHES'}`
+            : 'POPULAR FIRST ADDS'}
+        </Text>
 
         {querying && searchState.isFetching ? (
           <ActivityIndicator color={theme.brand.accent} />
@@ -161,21 +175,16 @@ function SearchMode({
           </View>
         ) : (
           <>
+            {/* S4-f — the focused card's meta ABOVE the fan (name-first · CAT-09 presence · CAT-05 credit) */}
             {focused ? <FocusedMeta item={focused} /> : null}
-            {/* the fan — tap focuses; the focused seat carries the F-09 accent ring */}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.fan}>
-              {items.map((i) => (
-                <Pressable
-                  key={i.id}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Focus ${i.name}`}
-                  onPress={() => setFocusedId(i.id)}
-                  style={[styles.fanSeat, focused?.id === i.id && styles.fanSeatFocused]}
-                >
-                  <GameCard title={i.name} size="cell" />
-                </Pressable>
-              ))}
-            </ScrollView>
+            {/* S4-c — the 3-up CardFan: fore + rotated neighbours + ‹ dots › + SWIPE (focus-only, §0.7) */}
+            <CardFan
+              items={items.map((i) => ({ id: i.id, title: i.name }))}
+              foreIndex={safeFore}
+              onFocus={setForeIndex}
+              variant={querying ? 'results' : 'entry'}
+            />
+            {focused?.inCollection ? <Text style={styles.hintLine}>ITS DETAIL OFFERS THE GAME PAGE INSTEAD OF RE-ADDING</Text> : null}
             {addError ? <Text style={styles.errLine}>{addError}</Text> : null}
             <ScreenButton
               label={
@@ -326,7 +335,16 @@ function CreateForm({
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+    // R0-follow (murr R0 audit): the removed KAV left the create form with no keyboard handling — a
+    // focused lower field (publisher / release date) + the Create button sat under the keyboard on
+    // iOS. `automaticallyAdjustKeyboardInsets` insets the scroll content by the keyboard's own
+    // intersection with THIS ScrollView (frame-correct, unlike the window-measuring KAV). Android's
+    // adjustResize reflows; web is a no-op. Native — confirmed at the R2 device pass.
+    <ScrollView
+      contentContainerStyle={styles.body}
+      keyboardShouldPersistTaps="handled"
+      automaticallyAdjustKeyboardInsets
+    >
       <Text style={styles.railHead}>CREATE A CATALOG ENTRY</Text>
 
       {suggestions.length > 0 ? (
@@ -407,16 +425,15 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   screen: { flex: 1, backgroundColor: theme.scr.bg },
   flowHead: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: theme.space.xs,
     paddingHorizontal: theme.space.lg,
     paddingVertical: theme.space.lg,
     borderBottomWidth: 1,
     borderBottomColor: theme.scr.hairline,
   },
-  close: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.dim, padding: theme.space.sm },
   flowTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 2 },
+  returnLink: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
   body: { padding: theme.space.lg, gap: theme.space.lg },
   railHead: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },
   meta: { gap: 3 },
@@ -425,9 +442,7 @@ const styles = StyleSheet.create({
   metaGenres: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.faint, letterSpacing: 1 },
   metaPresence: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.accent, letterSpacing: 1 },
   metaCredit: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
-  fan: { gap: theme.space.md, paddingVertical: theme.space.sm },
-  fanSeat: { padding: 3, borderWidth: 1, borderColor: 'transparent' },
-  fanSeatFocused: { borderColor: theme.scr.accent }, // F-09 selection
+  hintLine: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.faint, letterSpacing: 1, textAlign: 'center' },
   noneWrap: { gap: theme.space.sm, padding: theme.space.lg, backgroundColor: theme.scr.panel },
   noneTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 1 },
   noneSub: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.dim, lineHeight: 16 },
