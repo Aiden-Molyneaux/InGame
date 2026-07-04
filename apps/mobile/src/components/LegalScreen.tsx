@@ -1,16 +1,16 @@
-import { Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { Text, ScrollView, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { theme } from '../theme';
+import { TertiaryLink } from './TertiaryLink';
 
 // OQ-119 — placeholder in-app legal screens so the AUTH-10 acceptance links resolve today. The final
 // ToS/Privacy copy on a hosted domain is a release task (road-to-market §10); this is the interim stub.
 export function LegalScreen({ title, paragraphs }: { title: string; paragraphs: string[] }) {
   return (
     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <Pressable accessibilityRole="link" onPress={() => router.back()} hitSlop={8}>
-        <Text style={styles.back}>‹ BACK</Text>
-      </Pressable>
+      {/* S2-b — the ‹ BACK return-seam sits UNDER the screen title (was above it). */}
       <Text style={styles.title}>{title}</Text>
+      <TertiaryLink label="Back" chevron="leading-back" onPress={() => router.back()} />
       <Text style={styles.note}>
         DRAFT — placeholder copy. The final policy is published on a hosted domain before launch.
       </Text>
@@ -25,12 +25,6 @@ export function LegalScreen({ title, paragraphs }: { title: string; paragraphs: 
 
 const styles = StyleSheet.create({
   content: { flexGrow: 1, padding: theme.space.xxl, gap: theme.space.lg },
-  back: {
-    fontFamily: theme.font.screenSemi,
-    fontSize: theme.type.micro, // 9 — F-06
-    color: theme.scr.accent,
-    letterSpacing: 1,
-  },
   title: {
     fontFamily: theme.font.screenBold,
     fontSize: theme.type.display, // 21 — F-06

@@ -1,8 +1,19 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, Pressable } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  Alert,
+} from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { TextField } from '../src/components/TextField';
 import { ScreenButton } from '../src/components/ScreenButton';
+import { TertiaryLink } from '../src/components/TertiaryLink';
 import { theme } from '../src/theme';
 import {
   useLoginMutation,
@@ -58,6 +69,34 @@ export default function SignIn() {
     return () => clearTimeout(t);
   }, [mode, candidate, checkUsername]);
 
+  // S2-f — a field's error (and the top-line auth error) clears the moment the user edits it; for the
+  // username field that also un-gates the advisory availability line (which hides while it errors).
+  function editField(setter: (v: string) => void, field: string) {
+    return (v: string) => {
+      setter(v);
+      setError(null);
+      setFieldErrors((prev) => {
+        if (!prev[field]) return prev;
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    };
+  }
+
+  function toggleMode() {
+    setError(null);
+    setFieldErrors({});
+    setAccepted(false);
+    setMode((m) => (m === 'signin' ? 'create' : 'signin'));
+  }
+
+  // S2-h / S2-i — the FORGOT? and Sign-in-with-Apple affordances are present but the flows behind them
+  // (AUTH-04 reset · AUTH-03 SIWA) are deferred; a calm "coming soon" beat keeps them from dead-ending.
+  function comingSoon(feature: string) {
+    Alert.alert(`${feature} is coming soon`, "We're still building this — it lands in a later update.");
+  }
+
   async function submit() {
     setError(null);
     setFieldErrors({});
@@ -78,6 +117,14 @@ export default function SignIn() {
     }
   }
 
+  // S2-a — the primary is disabled while busy, while a required field is empty, or while any field is
+  // erroring (create additionally needs the AUTH-10 acceptance). Not only the checkbox, as before.
+  const requiredFilled =
+    mode === 'signin'
+      ? email.trim().length > 0 && password.length > 0
+      : email.trim().length > 0 && candidate.length > 0 && password.length > 0 && accepted;
+  const canSubmit = !busy && requiredFilled && Object.keys(fieldErrors).length === 0;
+
   // W3 advisory line state — stale-guarded (only trust a result for the CURRENT candidate).
   const availabilityFresh =
     availability.originalArgs === candidate && !availability.isFetching && availability.data;
@@ -87,8 +134,10 @@ export default function SignIn() {
     ? 'CHECKING…'
     : availability.data?.available
       ? 'USERNAME AVAILABLE'
-      : availability.data?.reason === 'taken'
-        ? 'USERNAME TAKEN'
+      : // S2-c — a name that's simply taken reads "NOT AVAILABLE"; only a MOD-07 screened/reserved
+        // name reads "NOT ALLOWED" (a rule, not a coincidence of who registered first).
+        availability.data?.reason === 'taken'
+        ? 'USERNAME NOT AVAILABLE'
         : 'USERNAME NOT ALLOWED';
   const availabilityColor = !availabilityFresh
     ? theme.scr.dim
@@ -109,7 +158,7 @@ export default function SignIn() {
           <TextField
             label="Email"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={editField(setEmail, 'email')}
             placeholder="you@example.com"
             keyboardType="email-address"
             error={fieldErrors.email}
@@ -119,7 +168,7 @@ export default function SignIn() {
               <TextField
                 label="Username"
                 value={username}
-                onChangeText={setUsername}
+                onChangeText={editField(setUsername, 'username')}
                 placeholder="A–Z, a–z, 0–9, _"
                 error={fieldErrors.username}
               />
@@ -133,10 +182,20 @@ export default function SignIn() {
           <TextField
             label="Password"
             value={password}
-            onChangeText={setPassword}
+            onChangeText={editField(setPassword, 'password')}
             placeholder="min 8 characters"
             secureTextEntry
             error={fieldErrors.password}
+            // S2-h — FORGOT? rides the password label row on sign-in only (create has the hint instead).
+            labelRight={
+              mode === 'signin' ? (
+                <TertiaryLink
+                  label="Forgot?"
+                  chevron="none"
+                  onPress={() => comingSoon('Password reset')}
+                />
+              ) : undefined
+            }
           />
 
           {mode === 'create' ? (
@@ -169,20 +228,48 @@ export default function SignIn() {
           <ScreenButton
             label={busy ? '…' : mode === 'signin' ? 'Sign in' : 'Create account'}
             onPress={submit}
-            disabled={busy || (mode === 'create' && !accepted)}
+            disabled={!canSubmit}
             block
           />
-          <ScreenButton
-            label={mode === 'signin' ? 'New here? Create account' : 'Have an account? Sign in'}
-            variant="secondary"
-            onPress={() => {
-              setError(null);
-              setFieldErrors({});
-              setAccepted(false);
-              setMode(mode === 'signin' ? 'create' : 'signin');
-            }}
-            block
-          />
+
+          {/* S2-i — SIWA placeholder (AUTH-03 stub): iOS + sign-in only, per the board's platform fork
+              (W1 has it, W1b Android does not). Web/Android never render it. */}
+          {mode === 'signin' && Platform.OS === 'ios' ? (
+            <>
+              <View style={styles.orDiv}>
+                <View style={styles.orLine} />
+                <Text style={styles.orText}>OR CONTINUE WITH</Text>
+                <View style={styles.orLine} />
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Sign in with Apple"
+                onPress={() => comingSoon('Sign in with Apple')}
+                style={({ pressed }) => [styles.appleBtn, pressed && styles.applePressed]}
+              >
+                {/* Apple HIG-mandated control — black/white are token-exempt (board OQ-035). */}
+                <Svg width={14} height={14} viewBox="0 0 24 24">
+                  <Path
+                    d="M17.05 12.7c-.03-2.6 2.13-3.85 2.22-3.91-1.21-1.77-3.09-2.01-3.76-2.04-1.6-.16-3.12.94-3.93.94-.81 0-2.06-.92-3.39-.9-1.74.03-3.35 1.01-4.25 2.57-1.81 3.14-.46 7.79 1.3 10.34.86 1.25 1.88 2.65 3.22 2.6 1.29-.05 1.78-.83 3.34-.83 1.55 0 2 .83 3.37.81 1.39-.03 2.27-1.27 3.12-2.53.98-1.45 1.39-2.85 1.41-2.93-.03-.01-2.7-1.04-2.72-4.13zM14.6 5.1c.71-.86 1.19-2.06 1.06-3.25-1.02.04-2.26.68-2.99 1.54-.66.76-1.23 1.98-1.08 3.15 1.14.09 2.3-.58 3.01-1.44z"
+                    fill="#fff"
+                  />
+                </Svg>
+                <Text style={styles.appleText}>Sign in with Apple</Text>
+              </Pressable>
+            </>
+          ) : null}
+
+          {/* S2-g — the mode swap is a quiet footer text link, not a full button. */}
+          <View style={styles.swapFoot}>
+            <Text style={styles.swapText}>
+              {mode === 'signin' ? 'New to InGame?' : 'Already have one?'}
+            </Text>
+            <TertiaryLink
+              label={mode === 'signin' ? 'Create account' : 'Sign in'}
+              chevron="none"
+              onPress={toggleMode}
+            />
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -250,4 +337,44 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   link: { color: theme.scr.accent, fontFamily: theme.font.screenSemi },
+  // S2-i — the OR divider + compact Apple stub (board `.ordiv` / `.apple.compact`).
+  orDiv: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md, marginVertical: theme.space.xs },
+  orLine: { flex: 1, height: 1, backgroundColor: theme.scr.hairline },
+  orText: {
+    fontFamily: theme.font.screenBold,
+    fontSize: theme.type.micro, // 9
+    color: theme.scr.faint,
+    letterSpacing: 2,
+  },
+  appleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.space.md,
+    alignSelf: 'center', // hugs its content + centred (board `.apple.compact`), not a full slab
+    backgroundColor: '#000', // HIG-mandated (token-exempt, board OQ-035)
+    paddingVertical: theme.space.md,
+    paddingHorizontal: theme.space.xl,
+  },
+  applePressed: { opacity: 0.85 },
+  appleText: {
+    fontFamily: theme.font.screen,
+    fontSize: theme.type.body, // 11
+    color: '#fff', // HIG-mandated (token-exempt)
+    letterSpacing: 0.3,
+  },
+  // S2-g — the quiet swap footer (board `.swap-foot`: soft text + accent text link).
+  swapFoot: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: theme.space.xs,
+    marginTop: theme.space.sm,
+  },
+  swapText: {
+    fontFamily: theme.font.screen,
+    fontSize: theme.type.body, // 11
+    color: theme.scr.dim,
+    letterSpacing: 0.3,
+  },
 });
