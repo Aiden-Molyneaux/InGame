@@ -8,6 +8,13 @@
       "port": 8753
     },
     {
+      "name": "api-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["-w", "@ingame/api", "run", "dev:local"],
+      "port": 4000,
+      "autoPort": false
+    },
+    {
       "name": "expo-web",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["-w", "@ingame/mobile", "run", "web", "--", "--port", "8082"],

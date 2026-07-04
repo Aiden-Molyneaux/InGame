@@ -46,5 +46,8 @@ Thumbs.db
 # Testing
 coverage/
 
+# Dev-stack supervisor runtime (pidfiles + service logs — decision 0060)
+.devstack/
+
 # Visual-companion (brainstorming) working files
 .superpowers/

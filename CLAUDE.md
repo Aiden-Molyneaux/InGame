@@ -107,22 +107,34 @@ pinned to match iOS Expo Go, decision [`0053`](docs/decisions/0053-expo-sdk-54-b
 (`npm -w @ingame/mobile run web`, phone viewport) + Expo Go on device. Concrete `npm` scripts + the seed/mock
 data layer get documented here as they settle.
 
-### The browser-verification loop (recurring setup trap — read before web-testing the client)
-The API sends **no CORS headers by default** (production posture), so browser logins fail with
-`ERR_FAILED` / "Something went wrong" unless the API was launched with
-`DEV_CORS_ORIGINS=http://localhost:8082` (OQ-120, localhost-only allowlist). The trap has two shapes:
-1. **You own the API instance:** launch it with the full dev env —
-   `DATABASE_URL=postgres://ingame:ingame@localhost:5432/local_ingame DISPOSABLE_DB=1
-   JWT_SIGNING_SECRET=<any dev string> DEV_CORS_ORIGINS=http://localhost:8082 npm -w @ingame/api run dev`.
-2. **The owner's API is already on :4000 serving the phone — do NOT restart it** (its JWT secret
-   lives in its launching shell; a restart with a new secret invalidates the phone's sessions).
-   Instead: run a **parallel API on :4001** with the env above (+`PORT=4001`), point the WEB bundle
-   at it via `apps/mobile/.env.local` → `EXPO_PUBLIC_API_BASE_URL=http://localhost:4001/api`
-   (expo loads `.env.local` over `.env`), and start Metro on **8082** (`.claude/launch.json`
-   `expo-web`; **never** the phone's 8081). **Cleanup is mandatory:** delete `.env.local` (a Metro
-   restarted while it exists points the PHONE at localhost and breaks it) and kill the :4001 node —
-   task-stop orphans the tsx child, so find it with `netstat -ano | findstr :4001` and kill that PID.
+### The dev stack (how agents run & test the app — decision 0060)
+One **standing, shared, restart-safe** stack. Do NOT hand-build parallel services; run the supervisor:
+```
+node scripts/dev-stack.mjs up      # idempotent first move — ~1s no-op when already running
+node scripts/dev-stack.mjs status  # one-shot health JSON (db/api/metro)
+```
+`up` ensures docker Postgres (`ingame-dev-db`), the API on **:4000**, Metro web on **:8082**, and
+pre-warms the web bundle. Logs/pidfiles live in `.devstack/` (gitignored).
+- **API :4000 is shared** (phone + agents) and **safe to restart** — its env, incl. a stable
+  `JWT_SIGNING_SECRET` and `DEV_CORS_ORIGINS=http://localhost:8082` (OQ-120), lives in
+  `apps/api/.env.dev` (gitignored; committed template: `apps/api/.env.example`), loaded by
+  `npm -w @ingame/api run dev:local`. Restarts no longer log the phone out.
+- **The web bundle needs no base-URL override** — it uses `apps/mobile/.env` (LAN IP), which a
+  browser on this machine reaches fine; CORS allows the `:8082` origin. **NEVER create
+  `apps/mobile/.env.local`** (retired trap: a Metro restarted while it exists points the PHONE at
+  localhost and breaks it).
+- **Metro :8081 is the owner's phone lane — never touch it.** Agents use :8082 only.
+- **Metro :8082 ownership:** the supervisor's detached Metro is the standing one — it survives
+  session ends (preview_start-owned servers do NOT; observed 2026-07-03). `preview_start` cannot
+  attach to it and errors "port 8082 in use" — that error means the standing Metro is UP: do NOT
+  kill it to free the port (that re-pays the cold start); verify in the browser via the
+  claude-in-chrome tools at `http://localhost:8082` instead. `up` adopts any healthy Metro it
+  finds and only starts its own when :8082 is empty.
+- **Prefer supertest integration tests** (`npm run test:integration`) over the browser loop for
+  behavior checks; reserve the :8082 browser lane for visual/UI verification.
+- **Destructive DB testing only** (resets / seed churn): that's the one remaining case for a
+  parallel API — `PORT=4001` + a disposable DB; kill it after (task-stop orphans the tsx child —
+  find it with `netstat -ano | findstr :4001`).
 Login: `demo@ingame.app` / `InGameDemo1!` (the idempotent `npm -w @ingame/api run db:seed-dev` shelf).
-Gotcha: the preview tab often loads **before** Metro's first bundle (blank page, `scripts: 0`) —
-reload after "Bundled" appears in the logs. *(Standing owner fix that retires shape 2: launch your
-everyday dev API with `DEV_CORS_ORIGINS=http://localhost:8082` in its env.)*
+Gotcha: the preview tab can load **before** Metro's first bundle (blank page, `scripts: 0`) —
+reload after "Bundled" appears in the logs (rare now that `up` pre-warms the bundle).
