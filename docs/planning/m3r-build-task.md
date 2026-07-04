@@ -146,6 +146,11 @@ on iOS a focused lower field (publisher/release-date) + the Create button sit un
 give the form a real fix (KeyboardLift on the form tail, or `automaticallyAdjustKeyboardInsets`
 on its ScrollView), verified at the R2 device pass.
 
+> **⤴ ORDER CHANGE (owner, 2026-07-04): R1-5 shell polish is PULLED FORWARD to run NEXT, before
+> R1-3.** The shell is root-mounted (frames every screen), so doing S1-a/b/d + S6-b now makes every
+> subsequent device review look right. Effective order: **R1-5(shell) → R1-3 → R1-4**; R1-5 is thereby
+> completed early (its slot below is done-early, not re-run).
+
 ### R1-3 · Welcome/Auth + Register + Legal
 S2-g (Create account → text link) · S2-h ("Forgot?" affordance, AUTH-04) · S2-i (placeholder
 Sign-in-with-Apple on Apple devices, AUTH-03 stub) · S2-j (password show/hide) · S2-a (submit
@@ -158,9 +163,11 @@ available" vs screened-only "not allowed") · S2-e (field-error text up to the D
 S5-a (render the `.screen-head` "PROFILE" title band — `profile-states.html:487`; the
 EDIT/SHARE/Settings tools in that region stay ⛔ M7) · S5-b (hide SET-NOW-PLAYING, §0.8).
 
-### R1-5 · Shell polish (one small pass)
+### R1-5 · Shell polish (one small pass) — **PULLED FORWARD to run first (owner, 2026-07-04)**
 S1-a (top bar up ~¼cm) · S1-b (nav band down ~¼cm) · S1-d (DISCOVER/PROFILE labels a couple px
-higher) · S6-b (thinner black border between frame and screen). Parvati checks against the
+higher) · S6-b (thinner black border between frame and screen). **Cross-cutting** — the change lives
+in the root-mounted `DeviceShell`/`NavBand`/`NavKeycap` (component-map §5.1), so it frames every
+screen; verify against Collection + Add-game (already built) + sign-in. Parvati checks against the
 shell across any board's frame rendering; final judgment is the owner's device look at R2.
 
 ## 4. Phase R2 — owner re-acceptance
