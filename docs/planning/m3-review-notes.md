@@ -287,3 +287,67 @@ accepted). Nothing touches a LOCKED ruling. One builder pass on R13 (enlarge the
 the count) + optionally the 3-dot window (GAP-1) and this surface reads "matches the converged board"
 within its declared GAP/EXPECTED envelope. The native keyboard fix (R0-follow) and P6/P8 remain owed to
 the R2 device pass.
+
+## R1-2 owner-iteration — parvati (M3-R, 2026-07-04)
+
+**Verdict:** 0 🚩 flag · 0 ✅ expected · 0 🎨 polish — **8 code-confirmed, 0 live-confirmed this pass**
+(the running app could not be reached past sign-in — see Not-exercised). Measured vs the manifest's
+**"Owner iteration — 2026-07-04"** enumeration (`m3r/add-game-manifest.md:131–153`: D1/D3/D4 + notes
+N1–N5) and the Add-game / Collection surfaces. This is a deferred re-review of commit **236fecc** (the
+owner-feedback iteration built + self-verified in one session).
+**Reviewed from:** the committed diff (236fecc) + a read of the working tree — **the live web loop was
+blocked** (login barrier, below). No screenshots of the changed states were obtainable. Reads-only intent
+throughout; `apps/mobile/.env.local` verified **absent** at start and end; no game added, no catalog
+entry created. Standing stack adopted untouched (DB + API :4000 + Metro :8082 all external/owner-owned —
+I started none, stopped none).
+
+### Live barrier (why this pass is code-confirmed, not live-confirmed)
+The Expo-web bundle targets **`http://192.168.68.58:4000/api`** (the LAN IP baked into `apps/mobile/.env`
+for the owner's phone; `.env.local` is correctly absent, so the web bundle inherits it). Every browser
+login attempt failed — the CORS preflight (`OPTIONS`) returns **200** (origin `localhost:8082` IS
+allowed), but the follow-up `POST /api/auth/login` from the renderer either returns **503** or never
+completes, surfacing the app's "Something went wrong" toast. The **API itself is healthy**: shell `curl`
+to the *identical* LAN-IP URL + origin returned **200 on 5/5 rapid attempts (~90 ms each)** and `{"ok":true}`
+on health for both localhost and the LAN interface. So the failure is **renderer-side network under the
+session's Metro/renderer instability** (task `f5628409` — screenshots also CDP-timed-out at 30 s repeatedly
+this run), not a credential, CORS-allowlist, or API-liveness problem. The canonical repoint-to-localhost
+fix (`.env.local` → `EXPO_PUBLIC_API_BASE_URL=http://localhost:4000/api`) is **forbidden by this brief**
+(no `.env.local`), and restarting :4000 / the phone's :8081 is likewise forbidden — so there was no
+honest path past sign-in this session. Attempts made: 6+ login submissions across 2 fresh page loads,
+2 shell health+login confirmations. The eight observable changes below are therefore verified against the
+**diff + working tree**, and the two collection-side changes were **already verified LIVE in the prior
+R1-1 fix-round pass** (this file, 2026-07-04) — noted per item.
+
+### Code-confirmed (commit 236fecc + working tree) — the 8 enumerated changes
+| # | Change (manifest ref) | Verdict | Evidence |
+|---|---|---|---|
+| 1 | **Fore enlarged 138×193** (D1) — bigger than the 96×134 neighbours in *every* state incl. entry | ✔ CODE-CONFIRMED | `CardFan.tsx:53–55` `foreW=138/foreH=193/dropY=16` unconditional; `variant` prop **removed** (`:16–20`). Directly closes the prior-pass **R13** (entry fore was 96×134). Neighbours stay `/cell` 96×134. *(Live pixel check owed — not reachable this pass.)* |
+| 2 | **"ADD GAME" header = display-21** (N2) — same as Collection's "COLLECTION" title | ✔ CODE-CONFIRMED | `add-game.tsx` `flowTitle` `fontSize: theme.type.display` (was `theme.type.title`). Matches the Collection `ScreenHead` display size (F-06 21). |
+| 3 | **No divider between header and POPULAR** (N3) | ✔ CODE-CONFIRMED | `add-game.tsx` `flowHead` — `borderBottomWidth/Color` removed (comment "N3 — no divider"). |
+| 4 | **Focused game details centered** (N4) — name·year·studio·genres·presence·credit | ✔ CODE-CONFIRMED | `meta` `alignItems:'center'` + `textAlign:'center'` on all five meta styles (metaTitle/Sub/Genres/Presence/Credit). |
+| 5 | **RETURN link orange** (N5) — the on-screen accent | ✔ CODE-CONFIRMED | `returnLink` `color: theme.scr.accent` (was `theme.scr.dim`). |
+| 6 | **NavBand stays LIVE on Add-game** (N1) — COLLECTION keycap active, keycaps tappable | ✔ CODE-CONFIRMED | `ShellNav.tsx:33` `onCollection = pathname.startsWith('/collection') \|\| pathname.startsWith('/add-game')` → `/add-game` no longer falls to `locked`; COLLECTION is `activeKey`, keypresses route. **The key behavioural change — live tap-through owed to a device/live pass.** |
+| 7 | **Collection RECENT sort → immutable `addedAt`** (D4/OQ-128) — chip present, reorders shelf | ✔ CODE-CONFIRMED **+ LIVE (prior pass)** | `collection.tsx:36` RECENT chip; `:206–207` sorts on `a.addedAt.localeCompare(...)` (immutable ISO), re-pointed off `ownedSince`; server `toItem`/`entry.createdAt` + shared schema + api-contract 0.50. RECENT chip + reorder + Sort-keycap pip were **verified LIVE** in the R1-1 fix-round pass (this file) on the `ownedSince`-interim; this pass confirms the re-point onto `addedAt` in code. |
+| 8 | **STATUS chips lead PLAYING** after the shared-constant hoist (D3) | ✔ CODE-CONFIRMED **+ LIVE (prior pass)** | `COLLECTION_STATUSES = ['playing','backlog',…]` in the new shared `src/constants/collection.ts:6`; consumed by `collection.tsx:16/568` **and** `add-game.tsx` StatusBeat — one home, no drift. PLAYING-first STATUS row was **verified LIVE** in the R1-1 fix-round pass; the hoist preserves the same array order. |
+
+### Not exercised (and why)
+- **The entire Add-game live walk** (fore enlargement vs neighbours, display-21 header side-by-side with
+  Collection, divider-gone, centered meta, orange RETURN, and critically the **live NavBand tap-through**
+  N1) — **not exercised: Metro/renderer instability (task `f5628409`)** blocked the browser at the
+  sign-in gate (LAN-IP `POST /login` 503s/hangs in-renderer while the API answers 200 from shell; the
+  localhost-repoint fix needs `.env.local`, forbidden here). All 8 changes are code-confirmed; the
+  pixel/interaction confirmation is owed to the next live or R2 device pass.
+- **Collection RECENT reorder + PLAYING-first** — code-confirmed this pass **and** already live-verified
+  in the prior R1-1 fix-round pass (2026-07-04, this file); not re-shot live given the barrier.
+
+### Read of it
+All eight owner-iteration changes (D1 enlarged fore, D3 shared STATUSES, D4 `addedAt` RECENT, and notes
+N1–N5) are **present and correct in the committed code** — D1 directly closes the prior pass's **R13**
+(entry-fore-not-enlarged) flag, and the two collection-side changes were already confirmed live in the
+R1-1 fix-round. **No divergences and no new flags at the code level.** The one change that genuinely
+needs eyes-on rather than a diff-read is **N1 (live NavBand tap-through on Add-game)** — the code wires
+`/add-game` into Collection context, but "tapping COLLECTION/PROFILE navigates away" is a behaviour a
+live or R2 device pass must exercise. Recommend the owner treat this pass as **code-verified, live-pending**:
+the changes are sound on paper; the running-app confirmation was defeated by session-level Metro
+instability, not by anything in the build. Cleanup: nothing started by me to stop; `.env.local` absent;
+:4000 + :8081 left running.
