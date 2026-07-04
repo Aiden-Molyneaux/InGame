@@ -1,6 +1,7 @@
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { IdentityBlock } from '../../src/components/IdentityBlock';
+import { ScreenHead } from '../../src/components/ScreenHead';
 import { GameCard } from '../../src/components/GameCard';
 import { StatTile } from '../../src/components/StatTile';
 import { ScreenButton } from '../../src/components/ScreenButton';
@@ -60,7 +61,12 @@ export default function Profile() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.body}>
+      {/* S5-a — the fixed "PROFILE" title band (board `.screen-head` :487), above the scroll. The
+          EDIT/SHARE/Settings tools that share that region stay ⛔ M7. */}
+      <View style={styles.pad}>
+        <ScreenHead title="Profile" />
+      </View>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.body}>
         {/* identity — the real /me self-shape */}
         <IdentityBlock
           username={me.username}
@@ -176,6 +182,9 @@ function Stat({ value, label }: { value: string | number; label: string }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: theme.scr.bg },
+  // S5-a — the fixed title-band wrapper (mirrors collection.tsx `pad`; horizontal pad aligns with body).
+  pad: { paddingHorizontal: theme.space.lg, paddingTop: theme.space.lg, paddingBottom: theme.space.md },
+  scroll: { flex: 1 },
   center: { alignItems: 'center', justifyContent: 'center', gap: theme.space.lg },
   body: { padding: theme.space.lg, gap: theme.space.xl },
   errTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.accent, letterSpacing: 1 },
