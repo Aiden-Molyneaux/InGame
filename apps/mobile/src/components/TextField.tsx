@@ -67,7 +67,11 @@ export function TextField({
           </Pressable>
         ) : null}
       </View>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {/* R2 (4b) — the error line's space is ALWAYS reserved, so showing/clearing an error never
+          reflows the form (layout stability over compactness). Shared here → every TextField form. */}
+      <View style={styles.errorSlot}>
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+      </View>
     </View>
   );
 }
@@ -107,6 +111,8 @@ const styles = StyleSheet.create({
     opacity: 0.55,
     letterSpacing: 1,
   },
+  // R2 (4b) — reserve one line of the 9px error so the field's height is stable with/without an error.
+  errorSlot: { minHeight: 13, justifyContent: 'flex-start' },
   error: {
     fontFamily: theme.font.screenSemi, // S2-e — board `.ferr` 600 (was regular; reads more legibly at 9px)
     fontSize: theme.type.micro,

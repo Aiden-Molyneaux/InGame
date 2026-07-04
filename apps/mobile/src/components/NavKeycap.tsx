@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     width: 84, // wider than the key column so COLLECTION doesn't ellipsize (mockup labels overflow too)
     textAlign: 'center',
   },
-  lblAbove: { transform: [{ translateY: -11 }] }, // S1-d (M3-R): DISCOVER/PROFILE labels a couple px higher (board −8 → −11)
+  lblAbove: { transform: [{ translateY: -13 }] }, // S1-d + R2: DISCOVER/PROFILE above-labels higher (board −8 → −11 → −13 R2)
   key: {
     width: 54,
     height: 54, // mockup `.nav-btn` 54×54
@@ -154,11 +154,11 @@ const styles = StyleSheet.create({
     // dropping below the cap): hard offset shadow on iOS, elevation approximating on Android.
     // Web keeps the mockup's literal boxShadow (RN-web deprecated shadow* props).
     ...Platform.select({
-      web: { boxShadow: `0 4px 0 ${theme.shell.ink}` },
+      web: { boxShadow: `0 4px 0 color-mix(in srgb, ${theme.shell.ink} 55%, transparent)` },
       default: {
         shadowColor: theme.shell.ink,
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 1,
+        shadowOpacity: 0.55, // R2 (0a) — lighter drop edge (mockup `.nav-btn` ink @ 55%), was 1
         shadowRadius: 0,
         elevation: 5,
       },
@@ -167,8 +167,8 @@ const styles = StyleSheet.create({
   keyPressed: {
     // travels: the cap sinks 3px and the drop edge collapses to 1px (F-03)
     ...Platform.select({
-      web: { boxShadow: `0 1px 0 ${theme.shell.ink}` },
-      default: { shadowOffset: { width: 0, height: 1 }, elevation: 1 },
+      web: { boxShadow: `0 1px 0 color-mix(in srgb, ${theme.shell.ink} 55%, transparent)` },
+      default: { shadowOffset: { width: 0, height: 1 }, elevation: 1 }, // shadowOpacity 0.55 inherited from `key`
     }),
     transform: [{ translateY: 3 }],
   },

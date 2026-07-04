@@ -106,8 +106,8 @@ function ViewIcon({ view }: { view: CollectionView }) {
     </Svg>
   );
 }
-// The board's button "+" (`.btn` svg, currentColor = the button's ink). Gold-ink at 15px on ADD
-// (larger than the board's 11px, S3-o); accent-ink at 11px on the hero LOG HOURS (board :750).
+// The board's button "+" (`.btn` svg, currentColor = the button's ink). Enlarged to 20px on the tools
+// ADD (R2 2a — the '+' glyph is the CTA; the button stays base size); accent-ink at 11px on the hero.
 function PlusIcon({ color = theme.brand.goldInk, size = 15 }: { color?: string; size?: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 11 11">
@@ -238,6 +238,12 @@ export default function Collection() {
   // The Now-Playing hero persists across all three browse modes (decision 0061) — LOG HOURS opens
   // the hero's sheet from whichever mode is showing.
   const onLogHours = () => hero && setLogHoursId(hero.entryId);
+  // OQ-130 — the filtered-to-zero "no results" beat's clear action: drop all filters + exit search.
+  const clearAll = () => {
+    setStatusFilter(new Set());
+    setGenreFilter(new Set());
+    closeSearch();
+  };
 
   // S3-j / §0.3 — count copy: "N game(s)" unfiltered · "N of M games" filtered (singular-aware);
   // absent until the first add (the board shows no count keycap on the empty shelf, :491).
@@ -267,11 +273,14 @@ export default function Collection() {
         ) : null}
         {/* The Now-Playing hero persists across the browse modes (0061) but YIELDS while a query is
             active (board :711–713) and in TOP view — rendered once here, not per-view. */}
-        {data.collectionTotal > 0 && view !== 'top' && q.trim() === '' ? (
+        {data.collectionTotal > 0 && view !== 'top' && q.trim() === '' && filtered.length > 0 ? (
           <NowPlayingHero hero={hero} onLogHours={onLogHours} />
         ) : null}
         {data.collectionTotal === 0 ? (
           <EmptyShelf onAdd={() => router.push('/add-game')} />
+        ) : filtered.length === 0 ? (
+          // OQ-130 — filters/search matched nothing but the shelf isn't empty.
+          <NoResults onClear={clearAll} />
         ) : view === 'list' ? (
           <ListView items={filtered} />
         ) : view === 'top' ? (
@@ -341,7 +350,8 @@ export default function Collection() {
             onLongPress={() => setDrawerOpen(true)}
           />
           <View style={styles.spacer} />
-          <ScreenButton label="Add" variant="add" icon={<PlusIcon />} onPress={() => router.push('/add-game')} style={styles.addBtn} />
+          {/* R2 (2a) — the button is base size; only the '+' glyph is enlarged (size 20, was 15). */}
+          <ScreenButton label="Add" variant="add" icon={<PlusIcon size={20} />} onPress={() => router.push('/add-game')} />
         </View>
       )}
 
@@ -500,6 +510,18 @@ function EmptyShelf({ onAdd }: { onAdd: () => void }) {
   );
 }
 
+// OQ-130 — the filtered-to-zero beat: the shelf HAS games, but the current search/filters match none.
+// A calm message + a Clear affordance (drops filters + exits search) so it's never a dead end.
+function NoResults({ onClear }: { onClear: () => void }) {
+  return (
+    <View style={styles.noResults}>
+      <Text style={styles.noResultsTitle}>NO MATCHES</Text>
+      <Text style={styles.noResultsSub}>Nothing on your shelf matches your search or filters.</Text>
+      <TertiaryLink label="Clear" onPress={onClear} />
+    </View>
+  );
+}
+
 // The pulled sort/filter drawer (D2 — full board grammar, client-side): scoped search · views ·
 // sorts + ASC/DESC · status + genre filters. One shared query state with the in-place search.
 function SortFilterSheet(props: {
@@ -555,7 +577,13 @@ function SortFilterSheet(props: {
                 key={s.key}
                 label={`${s.label}${isActive ? (props.sortAsc ? ' ↑' : ' ↓') : ''}`}
                 selected={isActive}
-                onPress={() => (isActive ? props.setSortAsc(!props.sortAsc) : props.setSortKey(s.key))}
+                onPress={() => {
+                  if (isActive) props.setSortAsc(!props.sortAsc);
+                  else {
+                    props.setSortKey(s.key);
+                    props.setSortAsc(s.key === 'title'); // OQ-129 — A–Z opens ascending (A first); others descending
+                  }
+                }}
               />
             );
           })}
@@ -642,8 +670,8 @@ function LogHoursSheet({ item, onClose }: { item: CollectionItem | null; onClose
   }
 
   return (
-    <PulledSheet visible={item !== null} onClose={onClose}>
-      <SheetSection title={`Log hours — ${item?.title ?? ''}`}>
+    <PulledSheet visible={item !== null} onClose={onClose} title="Log Hours">
+      <SheetSection title={item?.title ?? ''}>
         <TextField
           label="Total hours"
           value={value}
@@ -675,6 +703,10 @@ const styles = StyleSheet.create({
   pad: { paddingHorizontal: theme.space.lg, paddingTop: theme.space.lg, paddingBottom: theme.space.md, gap: theme.space.md },
   scroll: { flex: 1 },
   body: { padding: theme.space.lg, gap: theme.space.lg },
+  // OQ-130 — filtered-to-zero "no results" beat.
+  noResults: { alignItems: 'center', gap: theme.space.md, paddingVertical: theme.space.xxl },
+  noResultsTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 1 },
+  noResultsSub: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.dim, textAlign: 'center' },
   tools: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -688,7 +720,6 @@ const styles = StyleSheet.create({
   spacer: { flex: 1 },
   // S3-o — the gold ADD reads larger than the cream tool keycaps (the one loud object). Token-driven
   // padding; the "+" icon (PlusIcon) adds height, the F-02 step (add variant) adds the card signature.
-  addBtn: { paddingVertical: theme.space.lg, paddingHorizontal: theme.space.xxl },
   // 1c — the in-place search dock: the tools bar becomes a cream SearchField + ⊗ clear, same slot,
   // same border/background chrome so the morph reads in place (board `.tools.search-bar`, :689–695).
   searchBar: {

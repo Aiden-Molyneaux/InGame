@@ -358,8 +358,8 @@ const styles = StyleSheet.create({
   },
   applePressed: { opacity: 0.85 },
   appleText: {
-    fontFamily: theme.font.screen,
-    fontSize: theme.type.body, // 11
+    fontFamily: theme.font.screenBold, // R2 (4a) — match the SIGN IN button label's weight so the two read the same size (both 11px)
+    fontSize: theme.type.body, // 11 — same as the ScreenButton label
     color: '#fff', // HIG-mandated (token-exempt)
     letterSpacing: 0.3,
   },

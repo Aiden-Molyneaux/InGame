@@ -7,7 +7,7 @@ import { ShellNav } from './ShellNav';
 // screen**. ONE persistent instance is mounted at the ROOT layout so the device frame containerizes
 // the whole application (sign-in → tabs), never unmounting across navigation. The routed screen
 // renders inside the Midnight `.screen`, framed by the fixed chrome:
-//   top-band (56) · screen-bezel (pad 6, r20) → screen (r13) · nav-band (content, the NavBand).
+//   top-band (36) · screen-bezel (pad 6, r20) → screen (r13) · nav-band (content, the NavBand).
 // The fixed band/inset heights come from the canonical device in profile-states.html, so the USABLE
 // screen area (viewport − top-band − nav-band − bezel padding) is correct now and every screen builds
 // into the right space. Decorative F-03 chrome (grille slats, embossed logo, 3D screw/bevel
@@ -16,8 +16,8 @@ export function DeviceShell({ children }: { children: React.ReactNode }) {
   const insets = useSafeAreaInsets();
   return (
     <View style={styles.plastic}>
-      {/* top-band (56px): power LED (left) · INGAME logo (center) · grille (right). The top safe-area
-          inset extends the band up into the notch without shrinking its 56px content area. */}
+      {/* top-band (36px): power LED (left) · INGAME logo (center) · grille (right). The top safe-area
+          inset extends the band up into the notch without shrinking its 36px content area. */}
       <View style={[styles.topBand, { height: TOP_BAND + insets.top, paddingTop: TOP_PAD + insets.top }]}>
         <View style={styles.power}>
           <View style={styles.led} />
@@ -46,12 +46,12 @@ export function DeviceShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-// S1-a (M3-R shell polish): top bar up ~¼cm. The band is fixed-height with vertically-CENTRED
-// content, so paddingTop alone shifts content by only half the change — TOP_BAND and TOP_PAD drop
-// together (64→56 · 16→8) to move the engraving/grille/POWER up a clean ~8px with alignment kept.
-// ¼cm is a device-feel target; final magnitude is the owner's R2 device judgment.
-const TOP_BAND = 56;
-const TOP_PAD = 8;
+// S1-a (M3-R) + R2: top bar up. The band is fixed-height with vertically-CENTRED content whose centre
+// sits at (TOP_PAD + TOP_BAND)/2 below the inset — so both drop together to raise it. R1-5 took 64/16 →
+// 56/8 (~8px up); the R2 device pass asked for ~12px more, so 36/4 (centre 20 below the inset, from 32).
+// Content box = TOP_BAND − TOP_PAD = 32 (POWER ~23 · grille 23 still fit centred). Owner re-checks at R2.
+const TOP_BAND = 36;
+const TOP_PAD = 4;
 
 const styles = StyleSheet.create({
   plastic: {

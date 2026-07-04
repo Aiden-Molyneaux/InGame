@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, BackHandler, Keyboard, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Animated, BackHandler, Keyboard, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { ReactNode } from 'react';
 import { theme } from '../theme';
 import { KeyboardLift } from './KeyboardLift';
@@ -23,10 +23,13 @@ import { KeyboardLift } from './KeyboardLift';
 export function PulledSheet({
   visible,
   onClose,
+  title,
   children,
 }: {
   visible: boolean;
   onClose: () => void;
+  /** Optional page title rendered under the grab handle (R2 0b — e.g. the Log-Hours drawer). */
+  title?: string;
   children: ReactNode;
 }) {
   const slide = useRef(new Animated.Value(0)).current; // 0 = off-stage, 1 = docked
@@ -78,6 +81,7 @@ export function PulledSheet({
           ]}
         >
           <View style={styles.handle} />
+          {title ? <Text style={styles.title}>{title.toUpperCase()}</Text> : null}
           <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
             {children}
           </ScrollView>
@@ -106,6 +110,14 @@ const styles = StyleSheet.create({
     height: 4,
     marginTop: theme.space.md,
     backgroundColor: theme.scr.faint,
+  },
+  title: {
+    fontFamily: theme.font.screenBold,
+    fontSize: theme.type.title, // 15 — the drawer page title (R2 0b)
+    color: theme.scr.ink,
+    letterSpacing: 1,
+    paddingHorizontal: theme.space.xl,
+    paddingTop: theme.space.md,
   },
   body: { padding: theme.space.xl, gap: theme.space.xl },
 });
