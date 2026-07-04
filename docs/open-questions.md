@@ -44,17 +44,13 @@
   stepped-path helper the card, placeholders, StateMark, and the add/act buttons all consume. Out of
   R1-1 scope (it names only the ADD button); flagged for an M4-entry DS-fidelity pass. (raised
   building R1-1 Collection, 2026-07-03) [presentation]
-- OQ-128: **RECENT sort — PARTIALLY RESOLVED (owner ruled it IN, 2026-07-04); the distinct-field part
-  stays open.** The RECENT chip is now built into `SORTS` (`collection.tsx`) per the owner's R1-1
-  first-article ruling. **INTERIM:** it sorts by `ownedSince` DESC — because the collection response
-  (`packages/shared/src/schemas/response/collection.ts`) exposes **no immutable `addedAt`/`createdAt`**;
-  `ownedSince` is the add-date *default* (COL-03) but is user-editable, so RECENT and OWNED SINCE key
-  the same field and are indistinguishable until direction is flipped. **STILL OPEN:** a truly distinct
-  RECENT (immutable shelf-add timestamp vs the editable owned-since) needs an `addedAt` field added to
-  the collection item — an **api-contract + serializer + repository** change (behavior/data). Decide
-  whether to commission `addedAt`, or accept RECENT ≈ OWNED SINCE for now. Interim recorded in
-  `collection.tsx` (SORTS comment + the `filtered` memo). (raised 2026-07-03; interim shipped
-  2026-07-04) [behavior]
+- ~~OQ-128~~ **RESOLVED (2026-07-04, owner commissioned `addedAt`).** RECENT is built and now keys on a
+  genuinely distinct field: the collection item gained **`addedAt`** — the immutable ISO shelf-add
+  timestamp (entry `created_at`, already in the drizzle schema) — exposed via the shared
+  `collectionItemSchema` + the `toItem` serializer (`entry.createdAt.toISOString()`); the client RECENT
+  sort re-points off the `ownedSince` interim onto `addedAt` (`collection.tsx` `filtered` memo).
+  api-contract 0.50 documents the field. Distinct from the user-editable `ownedSince`. (raised
+  2026-07-03; resolved 2026-07-04) [behavior]
 - OQ-126: **rule-02 gains a `// SYS-01-COMMUNITY-AGGREGATE` marker — the CAT-09 read class arrived
   at M3, ahead of OQ-122's M4-entry decision.** CAT-09a (`collectionsCount`) is a spec-sanctioned
   ANONYMOUS cross-user aggregate over the user-owned `collection_entries` — the F32 binary model

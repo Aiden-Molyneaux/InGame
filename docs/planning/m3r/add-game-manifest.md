@@ -123,10 +123,23 @@ insets (R0-follow), and the STATUSES mirror. Verified by murr (diff) + parvati (
   handler the current `step`/`n`; the responder no longer freezes the mount-time fore). Delta re-verified.
 - **parvati R14 — results header was static "RESULTS"** → FIXED to the board's count ("N MATCHES" ·
   "MATCHING…" while fetching; board `:827`/`:887`).
-- **parvati R13 — entry (POPULAR) fore "not enlarged"** → **DISMISSED with board evidence:** the board
-  P1 entry fore is `.gcard.fan-size` = **96×134, identical to the neighbours** (`.fan-nb`, board
-  `:760–762`); the build matches. Enlarging it would DIVERGE. Surfaced to the owner in case a board
-  change (bigger entry fore) is wanted — not a build defect.
+- **parvati R13 — entry (POPULAR) fore "not enlarged"** → surfaced to the owner (the board P1 fore is
+  `.fan-size` 96×134 = neighbour size, so this was a board-faithfulness call, not a build defect). **Owner
+  ruled 2026-07-04: enlarge it** — the fore is now always 138×193 (salient in every state), a deliberate
+  divergence from the board's same-size P1 fore. The `variant` prop was removed (fore always enlarged).
+
+### Owner iteration — 2026-07-04 (review feedback, all built)
+- **D1** enlarge the focused/fore card → fore always 138×193 (`CardFan.tsx`); `variant` prop removed.
+- **D3** hoist the duplicated `STATUSES`/`STATUS_LABEL` → one shared `src/constants/collection.ts`
+  consumed by collection.tsx + add-game.tsx (kills the murr drift-debt).
+- **D4 / OQ-128 RESOLVED** — `addedAt` commissioned end-to-end: shared schema + `toItem` serializer
+  (`entry.createdAt.toISOString()`) + api-contract 0.50 + the client RECENT sort re-pointed onto it.
+  Verified by the collection integration slice (26 tests) + unit/typecheck.
+- **Notes:** N1 the NavBand stays LIVE on Add-game (ShellNav treats `/add-game` as Collection context —
+  COLLECTION keycap active, keypress switches tabs; was rendering `locked`/gray); N2 the "ADD GAME"
+  header is now display-21 (= the Collection ScreenHead); N3 the header→POPULAR divider removed; N4 the
+  focused game's details are centered; N5 the RETURN link is orange (`scr.accent`).
+- **Fore-focus-by-default** kept (owner: "keep how it's done now").
 - **Polish (deferred, declared):** fan-nav one-dot-per-item (board draws 3; a cap/window is the likely
   refinement) · plain-square dots (OQ-127 notch family) · status-beat copy ("ADDED TO YOUR SHELF" vs
   "IN HAND — SET ITS STATUS") · the standing "SWIPE TO ROTATE · TAP THE FOREFRONT" hint is **omitted
