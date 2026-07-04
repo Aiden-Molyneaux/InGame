@@ -17,7 +17,7 @@
 // Logs + pidfiles live in .devstack/ (gitignored). If `up` is interrupted mid-wait (caller
 // timeout), the services keep running detached — just run `up` again to resume waiting.
 
-import { spawn, execFile } from 'node:child_process';
+import { spawn, execFile, execFileSync } from 'node:child_process';
 import net from 'node:net';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -89,20 +89,44 @@ function pidFile(name) {
   return path.join(RUN_DIR, `${name}.pid`);
 }
 
+// Resolve how to invoke npm WITHOUT a shell. On Windows `npm` is `npm.cmd`, and Node 20+ refuses
+// to spawn a .cmd/.bat without shell:true (CVE-2024-27980) — but shell:true + detached is exactly
+// the combo that breaks stdio inheritance to the metro grandchild (see startDetached). So on
+// Windows we run node directly against npm-cli.js, which ships next to node.exe. On POSIX `npm` is
+// a real executable and spawns fine with no shell.
+function resolveNpm() {
+  if (process.platform !== 'win32') return { command: 'npm', prefix: [] };
+  const beside = path.join(path.dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js');
+  if (fs.existsSync(beside)) return { command: process.execPath, prefix: [beside] };
+  // Fallback: locate npm.cmd on PATH and derive npm-cli.js beside it.
+  try {
+    const npmCmd = execFileSync('where', ['npm.cmd']).toString().split(/\r?\n/)[0].trim();
+    const cli = npmCmd && path.join(path.dirname(npmCmd), 'node_modules', 'npm', 'bin', 'npm-cli.js');
+    if (cli && fs.existsSync(cli)) return { command: process.execPath, prefix: [cli] };
+  } catch { /* fall through */ }
+  throw new Error('could not locate npm-cli.js next to node — cannot start a detached child without a shell');
+}
+
 function startDetached(name, args) {
   ensureRunDir();
   const logPath = path.join(RUN_DIR, `${name}.log`);
-  // shell:true so `npm` resolves on Windows and so the >> redirection below works reliably
-  // (fd-passing to a detached cmd tree produced empty logs); taskkill /T kills the whole tree.
-  const child = spawn('npm', [...args, '>>', `"${logPath}"`, '2>&1'], {
+  // Log via inherited file descriptors, NOT a shell `>>` redirection. On Windows a detached cmd.exe
+  // tree does not propagate stdio (nor a `>>` redirect) down to the metro grandchild — that left
+  // metro.log at 0 bytes and the child dying on startup with no trace. Spawning node→npm-cli.js
+  // directly (no shell) and handing it an appended fd as stdout+stderr fixes both, and makes the
+  // recorded pid the real npm root (not a throwaway cmd wrapper) so `down`'s taskkill /T still
+  // tears down the whole tree.
+  const out = fs.openSync(logPath, 'a');
+  const { command, prefix } = resolveNpm();
+  const child = spawn(command, [...prefix, ...args], {
     cwd: ROOT,
     detached: true,
-    shell: true,
     windowsHide: true,
-    stdio: 'ignore',
+    stdio: ['ignore', out, out],
   });
   fs.writeFileSync(pidFile(name), String(child.pid));
   child.unref();
+  fs.closeSync(out); // the child holds its own duplicated handle
   say(`started ${name} (pid ${child.pid}) → logs: .devstack/${name}.log`);
   return logPath;
 }
