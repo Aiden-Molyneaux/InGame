@@ -210,22 +210,19 @@ function SearchMode({
 
 function FocusedMeta({ item }: { item: CatalogItem }) {
   const year = item.releaseDate ? item.releaseDate.slice(0, 4) : null;
+  const sub = [year, item.studio].filter(Boolean).join(' · ').toUpperCase();
   return (
     <View style={styles.meta}>
-      <Text style={styles.metaTitle}>{item.name.toUpperCase()}</Text>
-      <Text style={styles.metaSub}>
-        {[year, item.studio].filter(Boolean).join(' · ').toUpperCase() || '—'}
+      {/* R2 (owner) — NAME · YEAR · STUDIO on ONE line (name bold, meta dim); genre + CAT-05 credit removed. */}
+      <Text style={styles.metaTitle}>
+        {item.name.toUpperCase()}
+        {sub ? <Text style={styles.metaSub}>{` · ${sub}`}</Text> : null}
       </Text>
-      {item.genres.length > 0 ? (
-        <Text style={styles.metaGenres}>{item.genres.map((g) => g.name.toUpperCase()).join(' · ')}</Text>
-      ) : null}
       {/* the CAT-09 presence line */}
       <Text style={styles.metaPresence}>
         IN {item.collectionsCount} COLLECTION{item.collectionsCount === 1 ? '' : 'S'} ·{' '}
         {item.friendsHaveCount} FRIEND{item.friendsHaveCount === 1 ? '' : 'S'} HAVE IT
       </Text>
-      {/* the CAT-05 contributor credit */}
-      <Text style={styles.metaCredit}>ADDED BY {item.contributor.username.toUpperCase()}</Text>
     </View>
   );
 }
@@ -429,10 +426,8 @@ const styles = StyleSheet.create({
   // N4 — the focused game's details are centered (owner, 2026-07-04).
   meta: { gap: 3, alignItems: 'center' },
   metaTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 0.5, textAlign: 'center' },
-  metaSub: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1, textAlign: 'center' },
-  metaGenres: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.faint, letterSpacing: 1, textAlign: 'center' },
+  metaSub: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.dim, letterSpacing: 1 }, // R2 — inline year·studio (body/dim), baseline in the title line
   metaPresence: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.accent, letterSpacing: 1, textAlign: 'center' },
-  metaCredit: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1, textAlign: 'center' },
   hintLine: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.faint, letterSpacing: 1, textAlign: 'center' },
   noneWrap: { gap: theme.space.sm, padding: theme.space.lg, backgroundColor: theme.scr.panel },
   noneTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 1 },
