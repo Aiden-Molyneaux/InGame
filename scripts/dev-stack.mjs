@@ -189,11 +189,11 @@ async function doctor() {
   let corsOk = false, corsDetail, corsFix;
   if (!fs.existsSync(API_ENV_DEV)) {
     corsDetail = 'apps/api/.env.dev is MISSING';
-    corsFix = 'copy apps/api/.env.example -> apps/api/.env.dev, fill values, then node scripts/dev-stack.mjs up';
+    corsFix = 'copy apps/api/.env.example -> apps/api/.env.dev, fill values; if an API is already running it will NOT reload env — kill it first (taskkill /PID (Get-Content .devstack/api.pid) /T /F), then node scripts/dev-stack.mjs up';
   } else {
     corsOk = /^DEV_CORS_ORIGINS=.*http:\/\/localhost:8082/m.test(fs.readFileSync(API_ENV_DEV, 'utf8'));
     corsDetail = corsOk ? 'DEV_CORS_ORIGINS allows :8082' : 'DEV_CORS_ORIGINS missing http://localhost:8082 (web login will CORS-fail)';
-    corsFix = 'add http://localhost:8082 to DEV_CORS_ORIGINS in apps/api/.env.dev, then node scripts/dev-stack.mjs up (API restart is safe)';
+    corsFix = 'add http://localhost:8082 to DEV_CORS_ORIGINS in apps/api/.env.dev, then restart JUST the API so it reloads env (up alone will NOT): taskkill /PID (Get-Content .devstack/api.pid) /T /F, then node scripts/dev-stack.mjs up';
   }
   check('FAIL', 'api CORS env', corsOk, corsDetail, corsFix);
 
@@ -254,7 +254,8 @@ async function doctor() {
     say(`doctor: ${blocking} blocking issue(s) — apply the fixes above, re-run doctor. Novel failure? -> docs/qa-runbook.md`);
     process.exit(1);
   }
-  say('doctor: green board — QA away.');
+  const warns = rows.filter((r) => !r.ok && r.sev === 'WARN').length;
+  say(warns ? `doctor: no blocking issues (${warns} warning(s) above) — QA away.` : 'doctor: green board — QA away.');
 }
 
 async function prewarmBundle() {
