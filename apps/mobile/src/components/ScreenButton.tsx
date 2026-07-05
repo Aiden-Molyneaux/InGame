@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Pressable, Text, View, StyleSheet, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { theme } from '../theme';
+import { steppedRectPath } from '../theme/steppedPath';
 
 // ScreenButton (component-map §5.3 — was KeycapButton) — the on-screen action. F-03: FLAT (no raised
 // 3D edge), pressed = a hairline-darkened "scanline energize" fill. F-02: `add` = GOLD (acquisitive —
@@ -25,20 +26,9 @@ const INK: Record<ScreenButtonVariant, string> = {
   add: theme.brand.goldInk, // F-02
 };
 
-// The F-02 TL+BR staircase (mockup `.btn.add` clip-path, collection-states.html:172). Intent buttons
-// borrow the GameCard step at half-scale (theme.step comment / decision 0041) → unit stair `u`, total
-// notch `2u`. TR + BL stay square; the fill shows through the notch as transparent (RN has no
-// clip-path, so the gold face is an SVG polygon rather than a background-color).
+// F-02 `add` step: intent buttons borrow the GameCard step at half-scale (decision 0041); the gold
+// face is the shared `steppedRectPath` SVG polygon (RN has no clip-path). TR + BL stay square.
 const ADD_STEP_UNIT = theme.step / 2;
-function steppedAddPath(w: number, h: number, u: number): string {
-  const t = 2 * u;
-  return [
-    `M0 ${t}`, `L${u} ${t}`, `L${u} ${u}`, `L${t} ${u}`, `L${t} 0`,
-    `L${w} 0`,
-    `L${w} ${h - t}`, `L${w - u} ${h - t}`, `L${w - u} ${h - u}`, `L${w - t} ${h - u}`, `L${w - t} ${h}`,
-    `L0 ${h}`, 'Z',
-  ].join(' ');
-}
 
 export function ScreenButton({
   label,
@@ -88,7 +78,7 @@ export function ScreenButton({
     >
       {stepped && size ? (
         <Svg width={size.w} height={size.h} style={StyleSheet.absoluteFill}>
-          <Path d={steppedAddPath(size.w, size.h, ADD_STEP_UNIT)} fill={FILL.add} />
+          <Path d={steppedRectPath(size.w, size.h, ADD_STEP_UNIT)} fill={FILL.add} />
         </Svg>
       ) : null}
       <View style={styles.content}>
