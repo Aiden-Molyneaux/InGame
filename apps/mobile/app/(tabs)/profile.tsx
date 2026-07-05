@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, Pressable, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { IdentityBlock } from '../../src/components/IdentityBlock';
 import { ScreenHead } from '../../src/components/ScreenHead';
@@ -93,7 +93,14 @@ export default function Profile() {
         <Section title="Pinned favourite">
           {me.favouriteGame ? (
             <View style={styles.heroRow}>
-              <GameCard title={me.favouriteGame.title} size="grid" style={styles.favCard} />
+              {/* CARD-23 NAVIGATE — the pinned-favourite is a game handle → the Game page (mode 1). */}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Open ${me.favouriteGame.title}`}
+                onPress={() => router.push(`/game/${me.favouriteGame!.gameId}`)}
+              >
+                <GameCard title={me.favouriteGame.title} size="grid" style={styles.favCard} />
+              </Pressable>
               <View style={styles.heroMeta}>
                 <Text style={styles.heroTitle}>{me.favouriteGame.title.toUpperCase()}</Text>
                 <Text style={styles.heroSub}>{me.favouriteGame.hours}H LOGGED</Text>
@@ -108,10 +115,16 @@ export default function Profile() {
           {top3.length > 0 ? (
             <View style={styles.top3}>
               {top3.map((g, i) => (
-                <View key={g.entryId} style={styles.topSeat}>
+                <Pressable
+                  key={g.entryId}
+                  style={styles.topSeat}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Open ${g.title}`}
+                  onPress={() => router.push(`/game/${g.gameId}`)}
+                >
                   <GameCard title={g.title} size="cell" />
                   <RankChip rank={i + 1} />
-                </View>
+                </Pressable>
               ))}
             </View>
           ) : (
@@ -122,7 +135,13 @@ export default function Profile() {
         <Section title="Now Playing">
           {me.nowPlaying ? (
             <View style={styles.nowRow}>
-              <GameCard title={me.nowPlaying.title} size="cell" nowPlaying />
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Open ${me.nowPlaying.title}`}
+                onPress={() => router.push(`/game/${me.nowPlaying!.gameId}`)}
+              >
+                <GameCard title={me.nowPlaying.title} size="cell" nowPlaying />
+              </Pressable>
               <View style={styles.nowMeta}>
                 <Text style={styles.nowTitle}>{me.nowPlaying.title}</Text>
                 <Text style={styles.nowSub}>{me.nowPlaying.hours}H LOGGED</Text>

@@ -382,6 +382,7 @@ export default function Collection() {
 // NOW PLAYING eyebrow · stat-line · title · catalog line · LOG HOURS (hero-exclusive). Unset → the
 // "set your Now Playing" nudge (WTP-03; the per-game picker is M4, §0.5/0.8).
 function NowPlayingHero({ hero, onLogHours }: { hero: CollectionItem | null; onLogHours: () => void }) {
+  const router = useRouter(); // CARD-23 NAVIGATE — the now-playing hero card → the Game page (mode 1)
   if (!hero) {
     return (
       <View style={styles.nudge}>
@@ -392,7 +393,13 @@ function NowPlayingHero({ hero, onLogHours }: { hero: CollectionItem | null; onL
   }
   return (
     <View style={styles.hero}>
-      <GameCard title={hero.title} size="grid" style={styles.heroCard} />
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Open ${hero.title}`}
+        onPress={() => router.push(`/game/${hero.gameId}`)}
+      >
+        <GameCard title={hero.title} size="grid" style={styles.heroCard} />
+      </Pressable>
       <View style={styles.heroMeta}>
         <Text style={styles.heroEyebrow}>NOW PLAYING</Text>
         <Text style={styles.heroStat}>{statLine(hero)}</Text>
