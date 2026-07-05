@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, type ViewStyle } from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import Svg, { Path, Line } from 'react-native-svg';
 import { theme } from '../theme';
 import { steppedRectPath } from '../theme/steppedPath';
@@ -50,18 +51,36 @@ export function GameCard({
   const faceFill = `hsl(${hue}, 42%, 26%)`;
   const bevelStroke = `hsl(${hue}, 55%, 44%)`;
 
+  // The face is drawn as an SVG polygon (RN has no clip-path), so it MUST track the card's ACTUAL
+  // laid-out box — callers resize via `style` (Collection `heroCard` 138×193, `fluidCard`
+  // 100%/aspectRatio, Profile's favourite), and drawing at the fixed SIZES w/h made the SVG overflow
+  // (or underflow) the resized container — the "card breaks its container" bug (regression from the
+  // OQ-127 SVG-face change). Measure via onLayout and draw to the measured box; the intrinsic w/h is
+  // just the first-frame fallback (mirrors ScreenButton's stepped `add`).
+  const [box, setBox] = useState<{ w: number; h: number }>({ w, h });
+  const onLayout = (e: LayoutChangeEvent) => {
+    const { width, height } = e.nativeEvent.layout;
+    if (width > 0 && height > 0) {
+      setBox((prev) => (prev.w === width && prev.h === height ? prev : { w: width, h: height }));
+    }
+  };
+  const bw = box.w;
+  const bh = box.h;
+
   return (
     <View
       accessibilityRole="image"
       accessibilityLabel={`${title} card`}
       style={[{ width: w, height: h }, style]}
+      onLayout={onLayout}
     >
       {/* F-02 silhouette (decision 0041): the face fill + a hairline stepped border, the plate strip
-          (BR notch only), and an inset stepped bevel — all one shared steppedRectPath helper. */}
-      <Svg width={w} height={h} style={StyleSheet.absoluteFill}>
-        <Path d={steppedRectPath(w, h, u)} fill={faceFill} stroke={theme.scr.hairline} strokeWidth={1} />
+          (BR notch only), and an inset stepped bevel — all one shared steppedRectPath helper, drawn to
+          the MEASURED box (bw×bh) so it fills the container at any size. */}
+      <Svg width={bw} height={bh} style={StyleSheet.absoluteFill}>
+        <Path d={steppedRectPath(bw, bh, u)} fill={faceFill} stroke={theme.scr.hairline} strokeWidth={1} />
         <Path
-          d={steppedRectPath(w - 8, h - 8, u)}
+          d={steppedRectPath(bw - 8, bh - 8, u)}
           transform="translate(4 4)"
           fill="none"
           stroke={bevelStroke}
@@ -71,11 +90,11 @@ export function GameCard({
         {showPlate ? (
           <>
             <Path
-              d={steppedRectPath(w, plateH, u, { br: true })}
-              transform={`translate(0 ${h - plateH})`}
+              d={steppedRectPath(bw, plateH, u, { br: true })}
+              transform={`translate(0 ${bh - plateH})`}
               fill={theme.scr.bg}
             />
-            <Line x1={0} y1={h - plateH} x2={w} y2={h - plateH} stroke={theme.scr.hairline} strokeWidth={1} />
+            <Line x1={0} y1={bh - plateH} x2={bw} y2={bh - plateH} stroke={theme.scr.hairline} strokeWidth={1} />
           </>
         ) : null}
       </Svg>
