@@ -176,9 +176,9 @@
   the login-bonus amount/cadence and milestone thresholds? (tunable later, but design needs a
   starting number) [behavior]
 - OQ-009: **Vector-asset library scope** — how many/which starter SVG packs (shapes/letters/numbers/
-  icons) ship at launch, free vs premium split. (CARD-02/17) [content] — **M4-entry (decision 0062): owner content input owed before the editor *build* (§3); not blocking entry formalization.** **→ Owner approved the proposed breadth 2026-07-05; COSM-02 formalization = early-M4 (product-spec §5.8 + decision 0063). Open pending that formalization.**
+  icons) ship at launch, free vs premium split. (CARD-02/17) [content] — **M4-entry (decision 0062): owner content input owed before the editor *build* (§3); not blocking entry formalization.** **→ RESOLVED (decision 0063, 2026-07-05):** the COSM-02 free **vector Essentials** roster is owner-blessed (~12 shapes + ~30 gaming icons + placeable font glyphs; SYS-08 seed; pre-launch design pass owed).
 - OQ-010: **Effect & finish roster** — the launch set of animated effects and finishes, free vs
-  premium split. (CARD-12) [content] — **M4-entry (decision 0062): owner content input owed before the editor *build* (§3); not blocking entry formalization.** **→ Owner approved the proposed free/premium splits 2026-07-05 (+ dev-preview + pre-launch design-pass notes, decision-log); COSM-02 formalization = early-M4 (product-spec §5.8 + decision 0063). Open pending that formalization.**
+  premium split. (CARD-12) [content] — **M4-entry (decision 0062): owner content input owed before the editor *build* (§3); not blocking entry formalization.** **→ RESOLVED (decision 0063, 2026-07-05):** the COSM-02 free effect/finish/frame/nameplate/font roster + the premium(M5) split is owner-blessed (SYS-08 seed; dev-preview + pre-launch design-pass notes carried in 0063).
 - OQ-011: **Store pricing** — currency-pack tiers/prices (IAP) and currency costs of premium
   cosmetics. (ECON-01/02/06) [tuning] — pairs with OQ-002.
 - OQ-004: Specific achievement & easter-egg **content** — which milestones, which eggs, their

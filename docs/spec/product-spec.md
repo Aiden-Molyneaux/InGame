@@ -4,7 +4,7 @@
 > Screens and visuals are owned by the design-spec; endpoint shapes by the api-contract. This
 > document references those by ID. See [`../00-INDEX.md`](../00-INDEX.md) for the working agreement.
 
-**Version:** 0.49 (draft) · **Last updated:** 2026-07-05 · **Owner:** Claude Code
+**Version:** 0.50 (draft) · **Last updated:** 2026-07-05 · **Owner:** Claude Code
 
 ---
 
@@ -198,7 +198,7 @@ Priority: **P0** = core, can't ship without · **P1** = important to the vision 
 | ID | Pri | Behavior |
 |---|---|---|
 | COSM-01 | P0 | A library of cosmetic items typed as: **shell sticker pack** (shapes/letters/icons placed on the device shell, DEV-01) · **effect** · **finish** (holo/foil) · **frame** · **nameplate** (the title-plate object — SLAB/RIBBON/BEVEL/…; adopted per the styler gate ruling, OQ-039/decision 0018; "overlay" was considered and **cut**) · **font** · **device shell** (colourways/wraps for the one handheld — replaces the former "device skin" + "device model" pair) · **screen theme** (DEV-04). (The card canvas sells nothing: card vector elements are the free baseline, CARD-02 — decision 0017.) |
-| COSM-02 | P0 | A **free baseline** set is always available so everyone can customize meaningfully. |
+| COSM-02 | P0 | A **free baseline** set is always available so everyone can customize meaningfully. **The launch roster — vector Essentials (CARD-02) · frames · effects · finishes · nameplates · fonts, with the free/premium split against COSM-03 — is owner-blessed in decision 0063** (a SYS-08-tunable seed, per the CAT-04 genre-list precedent; a distinct pre-launch design pass finalizes it). |
 | COSM-03 | P0 | Premium items are gated by **entitlement** (owned via purchase or earned). The store's moat = **things you can't just draw** (animated/dynamic effects, curated packs). |
 | COSM-04 | P1 | Some cosmetics are **earned**, not bought — delivered via the achievement system (ACH-04), including **achievement-exclusive** items that are never purchasable (prestige). |
 
@@ -424,3 +424,4 @@ Recorded so they're conscious choices, not omissions:
 | 2026-07-01 | 0.47 | **PROF-04 completion-rate definition pinned** (M3 build formalization, decision 0058): beaten \| completed over the **non-wishlist** entries, rounded (0 with no eligible entries) — the formula the M3 real-stats build needed and "completion rate" left open. Ripples api-contract (0.49 — the live `/me` stats/expansions note). | PROF-04 |
 | 2026-07-02 | 0.48 | **AUTH-01 credential policy pinned + AUTH-10 client acceptance gate** (M3 closeout rulings, decision 0059): username `[A-Za-z0-9_]` 3–20 **case-preserved display + case-insensitive unique** (generated normalized column, migration 0004); email case-folded + unique (no plus-alias collapse); password **8–128**, no composition rules, breach-check → M5. The register form gains a real acceptance checkbox gating submit (OQ-119). Resolves OQ-124/OQ-119 (the on-device register confusion). Ripples the shared auth/profile schemas. | AUTH-01, AUTH-10 |
 | 2026-07-05 | 0.49 | **OQ-056 modular card saving formalized + M4-entry mis-slot** (decision 0062, the M4-entry gate): **+CARD-24** style presets & named save-targets — the **card stays the atomic save/equip/publish/adopt unit** (CARD-01/15), the editor gains **named save-targets + SAVE-AS-NEW** (promotes CARD-14) + **autosave across the Styler↔Canvas posture switch**, reusable **game-agnostic** `StylePreset`s in the CARD-16 `BaseRail`, and the customizations gallery (Game-page switcher COL-06 + `/me/cards` shelf); **+`style_presets`** entity (§6). **CAT-12** gains the **→ M6** phasing note (SOC-01 dep; audit mis-slot). Ripples api-contract (0.51 — `/me/style-presets` CRUD) + design-spec (0.52 — §2.4b Game-page shell/state re-tag M4/M5). | CARD-24, CAT-12 |
+| 2026-07-05 | 0.50 | **COSM-02 free-baseline roster** (decision 0063, M4-entry content — resolves OQ-009/010): the launch **free** set is owner-blessed — vector **Essentials** pack (~12 shapes + ~30 gaming icons + placeable font glyphs, all free per 0017) · **frames** ~6 · **effects** ~5 · **finishes** ~2 · **nameplates** none/SLAB/RIBBON/BEVEL · **fonts** ~5; the showy effects (frost/fire/galaxy/…) + HOLO PLATE + foil/metallic stay **premium (COSM-03, M5)**. SYS-08-tunable seed (CAT-04 precedent); a **pre-launch roster design pass** is owed (road-to-market M8). Device free baseline deferred to the Device-editor build. No entity/api change (COSM-02 exists; assets are seed). | COSM-02, COSM-03 |
