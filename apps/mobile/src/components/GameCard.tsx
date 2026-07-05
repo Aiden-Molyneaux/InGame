@@ -10,10 +10,11 @@ import { steppedRectPath } from '../theme/steppedPath';
 // UI label; /mini + /thumb DROP the plate (title named below). The face here is the CARD-18 DEFAULT
 // face (a themed placeholder) — the real vector-composition + skia render is M4.
 
-export type GameCardSize = 'hero' | 'grid' | 'cell' | 'mini' | 'thumb';
+export type GameCardSize = 'hero' | 'pick' | 'grid' | 'cell' | 'mini' | 'thumb';
 
 const SIZES: Record<GameCardSize, { w: number; h: number; plate: number | null; step: number }> = {
   hero: { w: 224, h: 313, plate: 11, step: theme.step },
+  pick: { w: 138, h: 193, plate: 11, step: theme.step }, // the board `.gcard.pick` — dual-face hero + CardDetail enlarge (M4 Game page)
   grid: { w: 161, h: 225, plate: 11, step: theme.step },
   cell: { w: 96, h: 134, plate: 10, step: theme.step }, // /cell plate at the 10px floor (decision 0047)
   mini: { w: 64, h: 89, plate: null, step: theme.step / 2 }, // half-step keeps the notch proportionate

@@ -450,11 +450,18 @@ function GridView({ items }: { items: CollectionItem[] }) {
 // LIST (management scan): dense strip rows — thumb + title (▶ NOW inline) + HRS · STATUS + chevron
 // → the Game page (the tap-target is M4). The always-visible per-row stats mode; hero above (parent).
 function ListView({ items }: { items: CollectionItem[] }) {
+  const router = useRouter(); // CARD-23 NAVIGATE — the list row is the Game-page tap-target (M4 §3.1)
   return (
     <View style={styles.shelf}>
       <View style={styles.listStack}>
         {items.map((i) => (
-          <View key={i.entryId} style={styles.strip}>
+          <Pressable
+            key={i.entryId}
+            style={styles.strip}
+            accessibilityRole="button"
+            accessibilityLabel={`Open ${i.title}`}
+            onPress={() => router.push(`/game/${i.gameId}`)}
+          >
             <GameCard title={i.title} size="thumb" />
             <View style={styles.stripMeta}>
               <View style={styles.stripTitleRow}>
@@ -470,7 +477,7 @@ function ListView({ items }: { items: CollectionItem[] }) {
               <Text style={styles.rowSub}>{statLine(i)}</Text>
             </View>
             <Text style={styles.chev}>›</Text>
-          </View>
+          </Pressable>
         ))}
       </View>
     </View>
