@@ -13,6 +13,7 @@ export default tseslint.config(
     // toolchain in M2) are out of the general lint pass.
     ignores: [
       '**/node_modules/**',
+      '**/.claude/**',
       '**/dist/**',
       '**/.expo/**',
       '**/coverage/**',
@@ -40,6 +41,14 @@ export default tseslint.config(
   },
   {
     files: ['tools/**/*.mjs'],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+  },
+  {
+    // Repo scripts run under Node (e.g. the standing dev-stack supervisor, decision 0060).
+    // health-check.mjs is separately ignored above.
+    files: ['scripts/**/*.mjs'],
     languageOptions: {
       globals: { ...globals.node },
     },

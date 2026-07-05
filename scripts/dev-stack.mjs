@@ -136,7 +136,7 @@ function killTree(pid) {
     if (process.platform === 'win32') {
       execFile('taskkill', ['/PID', String(pid), '/T', '/F'], () => resolve());
     } else {
-      try { process.kill(-pid, 'SIGTERM'); } catch { try { process.kill(pid, 'SIGTERM'); } catch {} }
+      try { process.kill(-pid, 'SIGTERM'); } catch { try { process.kill(pid, 'SIGTERM'); } catch { /* process already gone */ } }
       resolve();
     }
   });
