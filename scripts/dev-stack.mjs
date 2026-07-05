@@ -166,6 +166,8 @@ async function status() {
 // Read-only diagnostics: probe every KNOWN failure signature and print the exact fix.
 // NEVER mutates state — starts/stops/kills nothing, and never touches the phone Metro on :8081.
 // New signatures graduate here from docs/qa-runbook.md when an entry reaches Hits >= 2.
+// Caveat: the warmth probe's bundle GET may kick off a background compile on a cold Metro —
+// beneficial (a later run reports warm), but not strictly zero-effect.
 
 async function doctor() {
   const rows = [];
@@ -218,8 +220,11 @@ async function doctor() {
     if (!page) warmDetail = 'index page did not answer in 8s (cold)';
     else if (!m) warmDetail = 'index page has no bundle tag (cold)';
     else {
-      warm = (await httpGet(`${METRO_BASE}${m[1]}`, 15000))?.ok === true;
-      warmDetail = warm ? 'bundle answers fast (warm)' : 'bundle did not answer in 15s (cold/building)';
+      const res = await httpGet(`${METRO_BASE}${m[1]}`, 15000);
+      warm = res?.ok === true;
+      warmDetail = warm ? 'bundle answers fast (warm)'
+        : res ? `bundle request errored (status ${res.status}) — likely a build error, not cold`
+        : 'bundle did not answer in 15s (cold/building)';
     }
     check('WARN', 'web bundle', warm, warmDetail,
       'node scripts/dev-stack.mjs up (pre-warms); blank preview tab = loaded before "Bundled" appeared in .devstack/metro.log -> reload');
