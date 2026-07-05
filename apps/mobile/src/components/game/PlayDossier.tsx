@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import type { CollectionItem, CollectionStatus } from '@ingame/shared';
 import { GenreTag } from '../GenreTag';
 import { TextField } from '../TextField';
-import { COLLECTION_STATUSES, STATUS_LABEL } from '../../constants/collection';
+import { OWNED_STATUSES, STATUS_LABEL } from '../../constants/collection';
 import { theme } from '../../theme';
 
 // PlayDossier (component-map §9 `PlayStats`) — the "YOUR PLAY" readout that flips to a FORM in EDIT
@@ -93,7 +93,8 @@ export function PlayDossier({
       <View style={styles.field}>
         <Text style={styles.fieldLabel}>STATUS</Text>
         <View style={styles.chipRow}>
-          {COLLECTION_STATUSES.map((s) => (
+          {/* OWNED_STATUSES omits WISHLIST — the owned-entry editor never offers it (OQ-070 · 0025). */}
+          {OWNED_STATUSES.map((s) => (
             <GenreTag
               key={s}
               label={STATUS_LABEL[s]}

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import type { CollectionItem } from '@ingame/shared';
 import { PulledSheet } from '../PulledSheet';
 import { ScreenButton } from '../ScreenButton';
@@ -21,7 +21,15 @@ export function CardDetailSheet({
   onClose: () => void;
 }) {
   return (
-    <PulledSheet visible={visible} onClose={onClose} title={`Your ${entry.title} card`}>
+    <PulledSheet visible={visible} onClose={onClose}>
+      {/* custom sheet head with a visible ✕ (the board `sh-h` carries one, `:691`) — dismissal isn't
+          scrim-only. */}
+      <View style={styles.head}>
+        <Text style={styles.headTitle}>YOUR {entry.title.toUpperCase()} CARD</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={8}>
+          <Text style={styles.close}>✕</Text>
+        </Pressable>
+      </View>
       <View style={styles.cardWrap}>
         <GameCard title={entry.title} size="pick" />
       </View>
@@ -40,6 +48,9 @@ export function CardDetailSheet({
 }
 
 const styles = StyleSheet.create({
+  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: theme.space.sm },
+  headTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.ink, letterSpacing: 1.5 },
+  close: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.dim },
   cardWrap: { alignItems: 'center', paddingVertical: theme.space.sm },
   credit: {
     fontFamily: theme.font.screenSemi,

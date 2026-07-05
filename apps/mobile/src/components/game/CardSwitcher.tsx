@@ -60,7 +60,10 @@ export function CardSwitcher({
         <View style={styles.actions}>
           <ScreenButton label="Set as main" variant="secondary" disabled style={styles.miniBtn} />
           <ScreenButton label="Edit in Styler" variant="secondary" onPress={onEditInStyler} disabled style={styles.miniBtn} />
-          <ScreenButton label="Delete" variant="destructive" disabled style={styles.miniBtn} />
+          {/* DELETE is a deferred, non-functional affordance at M4 (default card is non-deletable) — render
+              it greyed like its siblings, NOT danger-red (which reads as actionable). It becomes the
+              destructive variant once the card-delete substrate lands (OQ-133 · 0058 §7 · board `:625`). */}
+          <ScreenButton label="Delete" variant="secondary" disabled style={styles.miniBtn} />
         </View>
         <Text style={styles.note}>
           More cards — and SET-AS-MAIN · EDIT-IN-STYLER · DELETE — arrive with the card editor and the

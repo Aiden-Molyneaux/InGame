@@ -13,6 +13,12 @@ export const COLLECTION_STATUSES: CollectionStatus[] = [
   'wishlist',
 ];
 
+// The status set offered in the OWNED-entry editors (the Game-page EDIT-STATS status field). WISHLIST
+// is EXCLUDED — it is the pre-ownership / unowned state (WTP-02); an owned entry must never be settable
+// to it (OQ-070 resolved 2026-06-18 · decision 0025; the converged Game-page board M2 omits it, drawing
+// 5 chips). Distinct from COLLECTION_STATUSES, which is the full storage enum (0058 §4).
+export const OWNED_STATUSES: CollectionStatus[] = COLLECTION_STATUSES.filter((s) => s !== 'wishlist');
+
 export const STATUS_LABEL: Record<CollectionStatus, string> = {
   backlog: 'BACKLOG',
   playing: 'PLAYING',
