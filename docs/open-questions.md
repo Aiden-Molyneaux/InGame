@@ -21,25 +21,21 @@
   darker ring is the intended "screen reads inset" treatment (the token's own rationale), not a slip.
   No change; the mockup token is not chased. Unrelated to S6-b (which thinned the bezel *padding* 9→6,
   not its colour). (raised by parvati R1-5; ruled by owner) [presentation]
-- OQ-131: **RESOLVED-BY-BOARD (owner to confirm at review) — the hero yields during an active
-  search.** Raised as a 0061-vs-board tension (does the Now-Playing hero persist while searching?),
-  but the board's own caption rules it explicitly: *"The Now-Playing hero yields while a query is
-  active"* (`collection-states.html:711–713`), and the search artboard draws no hero. No conflict
-  with 0061 — "persists across the browse modes" is orthogonal to the query state. **Fix applied**
-  (2026-07-04, verification lane): `NowPlayingHero` hoisted to the Collection scroll body, gated on
-  `total > 0 && view !== 'top' && q.trim() === ''`. Owner confirms the reading at the fix-round
-  review, then this closes. (raised by murr, evidence by parvati, R1-1 fix round) [presentation]
-- OQ-129: **Sort direction carry-over on key switch reads wrong.** The Collection sort fold (S3-h/i)
-  shares one `sortAsc` across keys with DESC default, so from a fresh screen selecting "A–Z" yields a
-  chip reading "A–Z ↓" — Z first, contradicting the label's promise. Consider per-key default
-  direction on key *switch* (HOURS→DESC, A–Z→ASC, OWNED SINCE→DESC), re-tap still flips. (raised by
-  murr verifying R1-1 Collection, 2026-07-03) [behavior]
-- OQ-130: **Filtered-to-zero Collection body has no "no results" beat.** With filters/search matching
-  nothing the count honestly reads "0 OF N GAMES" but the scroll body is blank — no board artboard
-  draws a no-results state either (the in-place-search artboard shows hits only,
-  `collection-states.html:647–720`). Needs a small design + copy ruling; same family as the §5.6
-  lifecycle set. (raised by murr verifying R1-1 Collection, 2026-07-03) [presentation]
-- OQ-127: **The GameCard F-02 TL+BR pixel-step isn't rendered in the RN app.** `GameCard`
+- ~~OQ-131~~ **RESOLVED (2026-07-05, owner confirmed at R2 — "it should not appear"): the Now-Playing
+  hero YIELDS (hides) during an active search** — the board-ruled behavior (`collection-states.html:711–713`),
+  confirmed on device. Built R1-1 (`NowPlayingHero` gated on `total > 0 && view !== 'top' && q.trim() === ''`);
+  R2 round-1 also yields the hero on filter-zero (`&& filtered.length > 0`, see OQ-130). (raised by murr,
+  evidence by parvati, R1-1; confirmed at R2) [presentation]
+- ~~OQ-129~~ **RESOLVED (2026-07-05, R2 round-1, owner: "A–Z by default"): per-key default direction on
+  key SWITCH** — `setSortAsc(s.key === 'title')` (A–Z opens ASC; HOURS / RECENT / OWNED-SINCE open DESC);
+  re-tapping the active key still flips. Built + murr-SOUND (`collection.tsx` sort onPress). (raised by
+  murr verifying R1-1, 2026-07-03; ruled + built R2) [behavior]
+- ~~OQ-130~~ **RESOLVED (2026-07-05, R2 round-1, owner: "yes there should be a no-results state"):** a
+  **"NO MATCHES"** beat renders when `filtered.length === 0 && collectionTotal > 0`, with a **Clear**
+  affordance (drops filters + exits search); the Now-Playing hero also yields on filter-zero. Built +
+  murr-SOUND (`collection.tsx` `NoResults`). (raised by murr verifying R1-1, 2026-07-03; ruled + built R2)
+  [presentation]
+- OQ-127 → **RULED (decision 0062, M4-entry §0.6):** the shared stepped-path helper is the **m4 branch's first commit** — extend the R1-1 SVG step (the gold ADD button) to `GameCard` + `StateMark` + the ghost/skeleton/error placeholders (decision 0041 §2). Not authored onto `m3`. *Orig:* **The GameCard F-02 TL+BR pixel-step isn't rendered in the RN app.** `GameCard`
   (`apps/mobile/src/components/GameCard.tsx`) draws a plain square face (`borderRadius:
   theme.corner.screen` = 0) and `StateMark` (`StateMark.tsx`) fakes its notch with a no-op
   `borderTopLeftRadius:0` — so the card's signature stepped corner is on paper only, app-wide. R1-1
@@ -56,7 +52,7 @@
   sort re-points off the `ownedSince` interim onto `addedAt` (`collection.tsx` `filtered` memo).
   api-contract 0.50 documents the field. Distinct from the user-editable `ownedSince`. (raised
   2026-07-03; resolved 2026-07-04) [behavior]
-- OQ-126: **rule-02 gains a `// SYS-01-COMMUNITY-AGGREGATE` marker — the CAT-09 read class arrived
+- OQ-126 → **DEFERRED to M5 entry, folded into OQ-122 (decision 0062)** — the interim marker stands; the unified read-class model is settled at M5 entry with the concrete read-shapes in hand. *Orig:* **rule-02 gains a `// SYS-01-COMMUNITY-AGGREGATE` marker — the CAT-09 read class arrived
   at M3, ahead of OQ-122's M4-entry decision.** CAT-09a (`collectionsCount`) is a spec-sanctioned
   ANONYMOUS cross-user aggregate over the user-owned `collection_entries` — the F32 binary model
   (global vs actor-scoped) has no vocabulary for it. Interim: the marker exempts a **read** of a
@@ -142,7 +138,7 @@
   name/avatar/memberSince/mutuals (yet less than a friend), that's a spec refinement. Tagged
   `// ASSUMPTION(OQ-117)` in `apps/api/src/services/users-service.ts`; reversible, non-STOP (the
   conservative reading is implemented). (raised building G-D, 2026-06-30) [behavior] M2
-- OQ-122: **The F32 binary global/user-owned scope model doesn't cover the community / cross-user READS arriving at M4–M7** (foundation review F-09). `rule-02-scoping` admits two classes (global-listed vs user-owned fail-closed) + the auth-layer `AUTH-LOOKUP` exception. Coming reads fit none: the **published-card gallery / trending** (`card_designs` filtered by `published`, M4/M5), **invite-token resolution** by token value (SOC-10, M6 — partly covered only if the repo is named `*-token-repo`), and **feed fan-out** cross-user reads (SOC-06, M7). Each will either fail rule-02 (breeding ad-hoc `asActor`-shaped workarounds) or pressure the manifest to mislabel a user-owned table as global (silently disabling scoping for its private rows — the worse failure). **Proposed:** a third read class — a `// SYS-01-PUBLIC-READ` marker / `publishedOnly(table)` helper valid only for reads carrying an explicit visibility predicate, + a bearer-token-lookup variant of `AUTH-LOOKUP` scoped to an enumerated repo list. **Decide at M4 entry (G-H window)**, not mid-build. Related to OQ-115. (foundation review F-09, 2026-07-01) [behavior/process] M4-entry
+- OQ-122 → **DEFERRED to M5 entry (decision 0062):** under the §0.8 **DEFAULT** free/private boundary the published-card gallery/trending reads don't arrive until **M5** — so there's no M4-build pressure; fold OQ-122 + OQ-126 into the M5-entry scope-model decision (the third read-class `// SYS-01-PUBLIC-READ` / `publishedOnly(table)` + the bearer-token AUTH-LOOKUP variant), guard-surface → gate-3 when it lands. *(Flips to ratify-now only under a §0.8 pull-forward.)* *Orig:* **The F32 binary global/user-owned scope model doesn't cover the community / cross-user READS arriving at M4–M7** (foundation review F-09). `rule-02-scoping` admits two classes (global-listed vs user-owned fail-closed) + the auth-layer `AUTH-LOOKUP` exception. Coming reads fit none: the **published-card gallery / trending** (`card_designs` filtered by `published`, M4/M5), **invite-token resolution** by token value (SOC-10, M6 — partly covered only if the repo is named `*-token-repo`), and **feed fan-out** cross-user reads (SOC-06, M7). Each will either fail rule-02 (breeding ad-hoc `asActor`-shaped workarounds) or pressure the manifest to mislabel a user-owned table as global (silently disabling scoping for its private rows — the worse failure). **Proposed:** a third read class — a `// SYS-01-PUBLIC-READ` marker / `publishedOnly(table)` helper valid only for reads carrying an explicit visibility predicate, + a bearer-token-lookup variant of `AUTH-LOOKUP` scoped to an enumerated repo list. **Decide at M4 entry (G-H window)**, not mid-build. Related to OQ-115. (foundation review F-09, 2026-07-01) [behavior/process] M4-entry
 - OQ-118 → **RESOLVED (M3 step-1, 2026-07-01): rule-02 flipped to the read-verb ALLOWLIST** —
   detection now covers `.onConflictDoUpdate` upserts, raw `.execute`/`sql``` (fail-closed
   unconditionally inside `repositories/`+`*-repo` files), `db.query.*` relational reads, and
@@ -180,16 +176,16 @@
   the login-bonus amount/cadence and milestone thresholds? (tunable later, but design needs a
   starting number) [behavior]
 - OQ-009: **Vector-asset library scope** — how many/which starter SVG packs (shapes/letters/numbers/
-  icons) ship at launch, free vs premium split. (CARD-02/17) [content]
+  icons) ship at launch, free vs premium split. (CARD-02/17) [content] — **M4-entry (decision 0062): owner content input owed before the editor *build* (§3); not blocking entry formalization.** **→ Owner approved the proposed breadth 2026-07-05; COSM-02 formalization = early-M4 (product-spec §5.8 + decision 0063). Open pending that formalization.**
 - OQ-010: **Effect & finish roster** — the launch set of animated effects and finishes, free vs
-  premium split. (CARD-12) [content]
+  premium split. (CARD-12) [content] — **M4-entry (decision 0062): owner content input owed before the editor *build* (§3); not blocking entry formalization.** **→ Owner approved the proposed free/premium splits 2026-07-05 (+ dev-preview + pre-launch design-pass notes, decision-log); COSM-02 formalization = early-M4 (product-spec §5.8 + decision 0063). Open pending that formalization.**
 - OQ-011: **Store pricing** — currency-pack tiers/prices (IAP) and currency costs of premium
   cosmetics. (ECON-01/02/06) [tuning] — pairs with OQ-002.
 - OQ-004: Specific achievement & easter-egg **content** — which milestones, which eggs, their
   triggers and rewards. Dedicated brainstorm when the engine is built (ACH-*). [behavior/content]
   **Steering (decision 0015):** creation milestones — first card created / first publish / adoption
   milestones, with cosmetic rewards — must be on that brainstorm's list (closes the create→earn loop).
-- OQ-056: **Modular card saving — explicit named saves + reusable style presets + the customizations
+- OQ-056 → **RESOLVED (decision 0062, 2026-07-05):** formalized as **+CARD-24** (style presets & named save-targets) + the **`style_presets`** entity (product-spec 0.49) + **`/me/style-presets`** CRUD (api-contract 0.51); the customizations gallery is covered by existing routes (`/me/cards` shelf + `/me/collection/:entryId/cards` switcher — no new gallery routes); the preset cap = **30** (owner-set 2026-07-05, SYS-04-tunable). *Orig:* **Modular card saving — explicit named saves + reusable style presets + the customizations
   gallery.** Owner ruling (2026-06-13, brainstormed; chose "parts + presets" over full
   style×canvas decomposition and over anxiety-fix-only). The **card stays the atomic
   save/equip/publish/adopt unit** (CARD-01/15 unchanged); the editor gains:
@@ -358,8 +354,8 @@
   number formatting + width guards. (L061; pairs with OQ-091 cap) [presentation] M0/M4
 
 ### Sam first-impression presentation pains (UX audit; filed 2026-06-29 — design-spec/board follow-ups, not engineering-blocking)
-- OQ-107: **Editor running-cost meter.** Premium chips feel free — "CHARGED AT KEEP" is the only signal, no live running total while editing (styler:652 · device:777). CARD-13 specs the reconcile-at-KEEP step; this adds a running-cost meter *during* editing + "will charge at KEEP" clarity. (re-opens styler + device boards) [presentation] — M4
-- OQ-108: **Styler exit outcomes undefined.** KEEP / SAVE PRIVATE / CANVAS lack plain-language outcome labels, and there's no CANCEL-ALL / discard confirm (styler:584-611). (re-opens styler board) [presentation] — M4
+- OQ-107: **Editor running-cost meter.** Premium chips feel free — "CHARGED AT KEEP" is the only signal, no live running total while editing (styler:652 · device:777). CARD-13 specs the reconcile-at-KEEP step; this adds a running-cost meter *during* editing + "will charge at KEEP" clarity. (re-opens styler + device boards) [presentation] — M4 (build-time, folded into the editor manifests; decision 0062)
+- OQ-108: **Styler exit outcomes undefined.** KEEP / SAVE PRIVATE / CANVAS lack plain-language outcome labels, and there's no CANCEL-ALL / discard confirm (styler:584-611). (re-opens styler board) [presentation] — M4 (build-time, editor manifests; decision 0062)
 - OQ-109: **Returning sign-in below the hero.** Returning users scroll past the hero/cards to reach the sign-in box (welcome:442); + locked-nav silent + static fan. **NB:** the welcome-auth board is converged (Draft-A sign-in) — verify whether already addressed before re-opening. (may re-open welcome board) [presentation] — design close-out
 - OQ-110: **Spec IDs leak into UI copy.** "CARD-16"-style stable IDs appear in user-facing strings (styler:493); strip app-wide. (board copy cleanup) [presentation/QUICK] — any
 

@@ -4,7 +4,7 @@
 > be refined alongside the design-spec, because screens reveal exactly what each call must return.
 > Behavior lives in [`product-spec.md`](product-spec.md); shapes live here. Referenced by ID.
 
-**Version:** 0.50 (draft) · **Last updated:** 2026-07-04 · **Owner:** Claude Code
+**Version:** 0.51 (draft) · **Last updated:** 2026-07-05 · **Owner:** Claude Code
 
 ---
 
@@ -115,6 +115,10 @@
 | POST | `/games/:gameId/card-bases/surprise` | **"Surprise me"** — deals a fresh server-composed start from the free baseline (CARD-16) → `{ composition }`; non-idempotent by design (each call = a new deal) |
 | GET | `/cards/assets` | Vector/effect/finish/frame/**nameplate**/font library; filter type/free/premium/owned; search (CARD-17; nameplate per the styler gate ruling 2026-06-12 — COSM-01 wording ripple rides OQ-039's spec batch) |
 | GET | `/cards/:id/share-image` | **Share variant** of the flattened render — "made in InGame" mark + designer attribution composited server-side, CDN-cached; unavailable while moderation-hidden (CARD-21) |
+| GET | `/me/style-presets` | My saved **style presets** (CARD-24) — reusable **game-agnostic** closed-attribute recipes; the Styler/Canvas `BaseRail` merges these **client-side** beside the system start-from sources (`/games/:gameId/card-bases`). Response `[{ id, name, style: { frameId?, effect?{ id, intensity }, finishId?, nameplateId?, title?{ fontId, ink } }, isPremium, createdAt, updatedAt }]` — `isPremium` derived (any premium closed attribute; reconciles at KEEP, CARD-13). *Applying a preset is client-side (loads the snapshot into the editor's closed attributes) — no apply endpoint.* |
+| POST | `/me/style-presets` | `{ name, style: { frameId?, effect?{ id, intensity }, finishId?, nameplateId?, title?{ fontId, ink } } }` → **201** the preset (saves the editor's current closed attributes, CARD-24). **Capped at 30** (SYS-04) → **`409 PRESET_LIMIT`** when full |
+| PATCH | `/me/style-presets/:id` | Rename or re-snapshot own preset — `{ name?, style? }` → the updated preset |
+| DELETE | `/me/style-presets/:id` | Remove own preset → `{ ok: true }` |
 
 ## Device (`DEV-`)
 | Method | Path | Notes |
@@ -277,3 +281,4 @@
 | 2026-07-01 | 0.48 | **M3 collection seam pins** (decision 0058): `GET /me/collection` M3 posture — **unpaginated + no server query params** (D2/D4: the drawer executes client-side; `nextCursor` always null) and the **pre-M4 `card` = the CARD-18 default-face stub** (`id:'default'`, null urls); `POST /me/collection` → 201 the item + **422 `already_in_collection`** on a duplicate; `PATCH /me/collection/:entryId` body split — the **M3 field set** `{ status, hours, percentComplete, ownedSince, rating, notes }` with `platformIds`/`activeCardDesignId` **deferred to M4 with their substrates**; reorder = a **full permutation** → `{ ok: true }`; now-playing → `{ ok: true }` + 422 on an unknown game; DELETE → `{ ok: true }`. | COL-01/02/03/05/07, WTP-03, CARD-18 |
 | 2026-07-01 | 0.49 | **`/me` stats + expansions go LIVE** (decision 0058, with product-spec 0.47): real `stats { games, hours, completionPct, cardsDesigned, adoptionsReceived, friends }` (clout stats = honest zeros until M4/M5; percentile chips omitted below the PROF-07 floor); the **expanded `favouriteGame`/`nowPlaying`** `{ gameId, entryId?, title, hours, card }` (the P2 PINNED-FAVOURITE unblock; `card` = the CARD-18 stub); PATCH `/me` favourites now **validate against the live catalog + controlled genre list** (unknown → 422; the M2-deferred existence checks). `top10` stays un-emitted (**D3** — the curated store rides M4). The issuance `user` widens identically (one serializer, 0056). | PROF-01/04/05/07, WTP-03, CAT-04 |
 | 2026-07-04 | 0.50 | **Collection item gains `addedAt`** (OQ-128 resolved, M3-R R1-2): the `/me/collection` item enumeration adds **`addedAt`** — the ISO-8601 immutable shelf-add timestamp (entry `created_at`, already in the schema), the substrate for the board's **recently-added** (RECENT) sort, distinct from the user-editable `ownedSince`. Serializer maps `entry.createdAt.toISOString()`; the client RECENT sort re-points off the `ownedSince` interim onto `addedAt`. Additive field; no path/posture change. | COL-07, OQ-128 |
+| 2026-07-05 | 0.51 | **OQ-056 style presets** (decision 0062, with product-spec 0.49 / CARD-24): **+`GET·POST·PATCH·DELETE /me/style-presets`** — reusable **game-agnostic** closed-attribute recipes (`{ frameId?, effect?{id,intensity}, finishId?, nameplateId?, title?{fontId,ink} }`), **capped at 30** (SYS-04) → **`409 PRESET_LIMIT`**; the Styler/Canvas `BaseRail` merges them **client-side**, applying is client-side (no apply endpoint). **Page-audit:** the **customizations gallery is already covered** — `/me/cards` (My Designs shelf, CARD-14) + `/me/collection/:entryId/cards` (per-game switcher, COL-06) — **no new gallery routes**. `PRESET_LIMIT` appended to the error registry (the additive F-17 path). | CARD-24, COL-06 |
