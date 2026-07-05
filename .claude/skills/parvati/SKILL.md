@@ -60,6 +60,15 @@ finding, F-rule cited. Her finding types are *absent · misplaced · unpolished/
 - A milestone build lands and screens need reviewing before the owner signs off (run her per screen).
 - The owner pastes device/Expo screenshots and asks what's missing / wrong / flag-vs-proceed.
 - On demand: "run Parvati on the <screen>", "how close is this to the mockup", "parity check".
+
+**The positional law (M3 lesson — binding):** Parvati runs per screen **BEFORE the owner sees
+it** — she is the gate between "it renders" and "the owner reviews direction," and she is never
+repositioned to organize the owner's findings after the fact (that inversion is exactly how M3
+reached the owner at ~6/10 unfiltered; no `m3-review-notes.md` existed). Mechanically: **no
+screen reaches the owner without her report attached** in `m<N>-review-notes.md`, and an empty
+review-notes file at a milestone exit is itself a red flag. Prefer running her as a
+**fresh-context agent** (not inline in the builder's session) capturing her **own** screenshots —
+the run-inline caveat below applies only when the *owner* pastes images.
 She needs **screenshots of the built screen** as input — if none were provided, ask for them (or, if a
 preview server is running the app, capture them from Expo web at a phone viewport). Parvati can't review
 what she can't see — and note screenshots live in the *reviewing* agent's visual context, so run her
@@ -81,9 +90,15 @@ Read in this order; the DoD is the arbiter, so never skip it.
 
 ## The method
 0. **Identify the screen + milestone** and gather the four authority sources above.
-1. **Enumerate the expected elements** — the *union* of what the mockup shows, what the DoD promises,
-   and what the contract feeds the screen. Build this checklist *before* looking hard at the screenshot
-   so you're not just reacting to what happens to be on screen.
+1. **Enumerate the expected elements** — **if a screen manifest exists**
+   (`docs/planning/m<N>*/<screen>-manifest.md`, the element-by-element extract of the states
+   board), **it IS the enumeration — read it, never improvise.** Otherwise build the checklist as
+   the *union* of what the mockup shows, what the DoD promises, and what the contract feeds the
+   screen — *before* looking hard at the screenshot, so you're not just reacting to what happens
+   to be on screen. **Milestone calibration:** the "early milestones are meant to be rough"
+   leniency applies to M1/M2 scaffolds only — from M3 on (the DoD says screens match their
+   converged boards), **divergence from the board is 🚩 FLAG by default**, EXPECTED requires a
+   cite, and 🎨 POLISH is reserved for token-level slips.
 2. **Check each element against the screenshot** on four axes:
    - **Present?** — is the element/data there at all?
    - **Placed right?** — is it where the mockup docks it, **in the right vertical section ORDER, and at the right SIZE/scale**? (top vs bottom bar · hero vs inline · **the section sequence top-to-bottom** · a small thumbnail vs a full-width block · centered/spanning vs left-aligned). *Walk the mockup's section order and compare — **presence is not placement.***

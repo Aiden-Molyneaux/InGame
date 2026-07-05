@@ -13,6 +13,7 @@
     "apps/*"
   ],
   "scripts": {
+    "stack": "node scripts/dev-stack.mjs",
     "typecheck": "tsc -b tsconfig.json && tsc --noEmit -p apps/mobile/tsconfig.json",
     "build": "tsc -b tsconfig.json",
     "lint": "eslint . && npm run lint:custom",

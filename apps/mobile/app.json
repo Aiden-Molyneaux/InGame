@@ -7,9 +7,21 @@
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
-    "ios": { "supportsTablet": false, "bundleIdentifier": "com.ingame.app" },
-    "android": { "package": "com.ingame.app" },
-    "web": { "bundler": "metro", "output": "static" },
-    "plugins": ["expo-router"]
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.ingame.app"
+    },
+    "android": {
+      "package": "com.ingame.app"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-font"
+    ]
   }
 }

@@ -1,0 +1,444 @@
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import request from 'supertest';
+import { randomUUID } from 'node:crypto';
+import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
+import type { Express } from 'express';
+
+// AUTH-* email/password auth — the integration heart (supertest + a REAL Postgres). This is the
+// gate-3 (auth + SYS-01 seam) + G-G (auth fidelity: rotation rejects the old token · reset single-use ·
+// neutral anti-enumeration · limiter 429 under burst) evidence, and the F15 reuse-detection DoD test.
+// Tags: AUTH-01/02/04/05/08/11, SYS-05, SYS-07, MOD-09.
+
+let container: StartedPostgreSqlContainer;
+let app: Express;
+
+const PW = 'Sup3rSecret!';
+let counter = 0;
+
+function post(path: string, body?: unknown) {
+  return request(app)
+    .post(`/api${path}`)
+    .send(body ?? {});
+}
+function get(path: string) {
+  return request(app).get(`/api${path}`);
+}
+
+async function registerUser(over: Partial<{ email: string; username: string; password: string }> = {}) {
+  counter += 1;
+  const email = over.email ?? `u${counter}_${randomUUID().slice(0, 6)}@example.com`;
+  const username = over.username ?? `user${counter}${randomUUID().slice(0, 4)}`;
+  const password = over.password ?? PW;
+  const res = await post('/auth/register', { email, username, password, acceptedTerms: true });
+  return { email, username, password, res };
+}
+
+async function seedSuspension(subjectId: string, reason = 'abuse', endsAt: Date | null = null) {
+  const { getDb } = await import('../../src/db/client');
+  const { userSuspensions } = await import('../../src/db/schema');
+  await getDb().insert(userSuspensions).values({ subjectId, reason, endsAt });
+}
+
+beforeAll(async () => {
+  container = await new PostgreSqlContainer('postgres:16-alpine').start();
+  process.env.DATABASE_URL = container.getConnectionUri();
+  process.env.DISPOSABLE_DB = '1';
+  process.env.JWT_SIGNING_SECRET = 'test-signing-secret-at-least-16-chars-long';
+  process.env.DEV_CORS_ORIGINS = 'http://localhost:8081'; // OQ-120 — the mounted-in-app check below
+
+  const { runMigrations } = await import('../../src/db/migrate');
+  await runMigrations();
+  const { createApp } = await import('../../src/app');
+  app = createApp();
+}, 120_000);
+
+afterAll(async () => {
+  const { closeDb } = await import('../../src/db/client');
+  await closeDb();
+  if (container) await container.stop();
+});
+
+beforeEach(async () => {
+  const { resetDb } = await import('../../src/db/reset');
+  await resetDb();
+  const { resetRateLimitStore } = await import('../../src/http/rateLimit');
+  resetRateLimitStore();
+  const { clearRuleOverrides } = await import('../../src/config/rate-limits');
+  clearRuleOverrides();
+  const { clearOutbox } = await import('../../src/auth/email');
+  clearOutbox();
+});
+
+describe('AUTH-01 register', () => {
+  it('registers a new account → 201 { user, accessToken, refreshToken }', async () => {
+    const { res, username } = await registerUser();
+    expect(res.status).toBe(201);
+    expect(res.body.user.username).toBe(username);
+    expect(res.body.user.emailVerified).toBe(false); // AUTH-08 soft — sent, not yet verified
+    expect(typeof res.body.accessToken).toBe('string');
+    expect(typeof res.body.refreshToken).toBe('string');
+    expect('password' in res.body.user).toBe(false); // F06 allowlist — no secret leaks
+    expect('passwordHash' in res.body.user).toBe(false);
+  });
+
+  it('authz:register — actorB cannot register with actorA’s already-taken email → 422', async () => {
+    const actorA = await registerUser();
+    const attack = await post('/auth/register', {
+      email: actorA.email, // actorB tries actorA's email
+      username: `other${randomUUID().slice(0, 4)}`,
+      password: PW,
+      acceptedTerms: true,
+    });
+    expect(attack.status).toBe(422);
+    expect(attack.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('rejects a screened (reserved) username → 422', async () => {
+    const res = await post('/auth/register', {
+      email: `s_${randomUUID().slice(0, 6)}@example.com`,
+      username: 'admin', // MOD-07 reserved
+      password: PW,
+      acceptedTerms: true,
+    });
+    expect(res.status).toBe(422);
+  });
+
+  it('rejects a weak (<8) password → 422 (zod boundary)', async () => {
+    const res = await post('/auth/register', {
+      email: `w_${randomUUID().slice(0, 6)}@example.com`,
+      username: `weak${randomUUID().slice(0, 4)}`,
+      password: 'short',
+      acceptedTerms: true,
+    });
+    expect(res.status).toBe(422);
+  });
+
+  it('rejects missing terms acceptance → 422 (AUTH-10)', async () => {
+    const res = await post('/auth/register', {
+      email: `t_${randomUUID().slice(0, 6)}@example.com`,
+      username: `terms${randomUUID().slice(0, 4)}`,
+      password: PW,
+      acceptedTerms: false,
+    });
+    expect(res.status).toBe(422);
+  });
+
+  it('usernames are case-INSENSITIVE unique with display case PRESERVED (OQ-124)', async () => {
+    const mixed = `Aiden_${randomUUID().slice(0, 4)}`;
+    const first = await post('/auth/register', {
+      email: `ci1_${randomUUID().slice(0, 6)}@example.com`,
+      username: mixed,
+      password: PW,
+      acceptedTerms: true,
+    });
+    expect(first.status).toBe(201);
+    expect(first.body.user.username).toBe(mixed); // display casing preserved verbatim
+
+    const collision = await post('/auth/register', {
+      email: `ci2_${randomUUID().slice(0, 6)}@example.com`, // distinct email — the clash is the username
+      username: mixed.toLowerCase(), // same handle, different case → must be taken
+      password: PW,
+      acceptedTerms: true,
+    });
+    expect(collision.status).toBe(422);
+    expect(collision.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('concurrent same-username registers → exactly one 201, the rest 422 (never a 500 race)', async () => {
+    const uname = `Race_${randomUUID().slice(0, 4)}`;
+    const attempts = Array.from({ length: 6 }, (_, i) =>
+      post('/auth/register', {
+        email: `race${i}_${randomUUID().slice(0, 6)}@example.com`,
+        username: uname, // same handle → the DB unique index decides the race
+        password: PW,
+        acceptedTerms: true,
+      }),
+    );
+    const results = await Promise.all(attempts);
+    expect(results.filter((r) => r.status === 201)).toHaveLength(1);
+    expect(results.filter((r) => r.status === 500)).toHaveLength(0); // the race loser is a friendly 422
+    for (const r of results.filter((r) => r.status !== 201)) expect(r.status).toBe(422);
+  });
+});
+
+describe('AUTH-02 login + AUTH-11 anti-enumeration', () => {
+  it('logs in with correct credentials → 200 session', async () => {
+    const { email, password } = await registerUser();
+    const res = await post('/auth/login', { email, password });
+    expect(res.status).toBe(200);
+    expect(typeof res.body.accessToken).toBe('string');
+  });
+
+  it('authz:login — actorB with actorA’s email + WRONG password → neutral 401 AUTH_FAILED', async () => {
+    const actorA = await registerUser();
+    const res = await post('/auth/login', { email: actorA.email, password: 'WrongPassword1!' });
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe('AUTH_FAILED');
+  });
+
+  it('AUTH-11: an UNKNOWN account returns the SAME neutral 401 (no existence disclosure)', async () => {
+    const actorA = await registerUser();
+    const wrong = await post('/auth/login', { email: actorA.email, password: 'WrongPassword1!' });
+    const unknown = await post('/auth/login', {
+      email: `nobody_${randomUUID().slice(0, 6)}@example.com`,
+      password: 'WrongPassword1!',
+    });
+    expect(unknown.status).toBe(wrong.status);
+    expect(unknown.body).toEqual(wrong.body); // byte-for-byte identical — indistinguishable
+  });
+
+  it('MOD-09: a suspended account → 403 ACCOUNT_SUSPENDED + { reason, until }', async () => {
+    const { res, email, password } = await registerUser();
+    const until = new Date(Date.now() + 86_400_000);
+    await seedSuspension(res.body.user.id, 'tos_violation', until);
+    const login = await post('/auth/login', { email, password });
+    expect(login.status).toBe(403);
+    expect(login.body.error.code).toBe('ACCOUNT_SUSPENDED');
+    expect(login.body.error.reason).toBe('tos_violation');
+    expect(login.body.error.until).toBe(until.toISOString());
+  });
+});
+
+describe('AUTH-02 refresh rotation + F15 reuse-detection', () => {
+  it('authz:refresh — rotation returns a NEW pair; the OLD token is then rejected 401 (actorB reuse)', async () => {
+    const { res } = await registerUser();
+    const r0 = res.body.refreshToken as string;
+    const rotated = await post('/auth/refresh', { refreshToken: r0 });
+    expect(rotated.status).toBe(200);
+    expect(rotated.body.refreshToken).not.toBe(r0);
+    expect(typeof rotated.body.accessToken).toBe('string');
+
+    // actorB replaying the now-rotated r0 (a stolen/stale token) is refused.
+    const reuse = await post('/auth/refresh', { refreshToken: r0 });
+    expect(reuse.status).toBe(401);
+  });
+
+  it('F15: reuse of a rotated token REVOKES THE ENTIRE FAMILY — the current descendant also dies', async () => {
+    const { res } = await registerUser();
+    const r0 = res.body.refreshToken as string;
+    const r1 = (await post('/auth/refresh', { refreshToken: r0 })).body.refreshToken as string;
+
+    // Replay the compromised, already-rotated r0 → reuse-detection fires.
+    const replay = await post('/auth/refresh', { refreshToken: r0 });
+    expect(replay.status).toBe(401);
+
+    // The legitimate current token r1 is now ALSO dead (whole family revoked → forced re-auth).
+    const afterRevoke = await post('/auth/refresh', { refreshToken: r1 });
+    expect(afterRevoke.status).toBe(401);
+  });
+});
+
+describe('AUTH-05 logout', () => {
+  it('logout invalidates the refresh token (a subsequent refresh → 401)', async () => {
+    const { res } = await registerUser();
+    const refreshToken = res.body.refreshToken as string;
+    await post('/auth/logout', { refreshToken }).expect(200);
+    const after = await post('/auth/refresh', { refreshToken });
+    expect(after.status).toBe(401);
+  });
+
+  it('authz:logout — actorB bursting logout past the SYS-05 limit → 429', async () => {
+    const { overrideRuleForTest } = await import('../../src/config/rate-limits');
+    overrideRuleForTest('auth:logout', { limit: 2, windowMs: 60_000 });
+    const results = [];
+    for (let i = 0; i < 3; i++) results.push(await post('/auth/logout', { refreshToken: 'x' }));
+    expect(results.some((r) => r.status === 429 && r.body.error.code === 'RATE_LIMITED')).toBe(true);
+  });
+});
+
+describe('AUTH-04 password reset', () => {
+  it('authz:reset_request — actorB bursting reset-request past the SYS-05 resend cap → 429', async () => {
+    const { overrideRuleForTest } = await import('../../src/config/rate-limits');
+    overrideRuleForTest('auth:reset-request', { limit: 2, windowMs: 60_000 });
+    const results = [];
+    for (let i = 0; i < 3; i++)
+      results.push(await post('/auth/password-reset/request', { email: 'a@example.com' }));
+    expect(results.some((r) => r.status === 429)).toBe(true);
+  });
+
+  it('request is NEUTRAL (200) whether or not the account exists (AUTH-11)', async () => {
+    const { email } = await registerUser();
+    const known = await post('/auth/password-reset/request', { email });
+    const unknown = await post('/auth/password-reset/request', {
+      email: `nobody_${randomUUID().slice(0, 6)}@example.com`,
+    });
+    expect(known.status).toBe(200);
+    expect(unknown.status).toBe(200);
+    expect(unknown.body).toEqual(known.body);
+  });
+
+  it('confirm sets a new password (single-use); a valid old + new login proves the swap', async () => {
+    const { email, password } = await registerUser();
+    await post('/auth/password-reset/request', { email });
+    const { lastEmail } = await import('../../src/auth/email');
+    const token = lastEmail('password_reset', email)?.token;
+    expect(token).toBeTruthy();
+
+    const newPw = 'BrandNewPass9!';
+    await post('/auth/password-reset/confirm', { token, password: newPw }).expect(200);
+
+    // old password no longer works; new one does.
+    expect((await post('/auth/login', { email, password })).status).toBe(401);
+    expect((await post('/auth/login', { email, password: newPw })).status).toBe(200);
+  });
+
+  it('authz:reset_confirm — actorB REUSING a consumed reset token → 422 invalid_token (single-use)', async () => {
+    const { email } = await registerUser();
+    await post('/auth/password-reset/request', { email });
+    const { lastEmail } = await import('../../src/auth/email');
+    const token = lastEmail('password_reset', email)?.token as string;
+    await post('/auth/password-reset/confirm', { token, password: 'FirstNewPass9!' }).expect(200);
+
+    const reuse = await post('/auth/password-reset/confirm', { token, password: 'SecondTry9!' });
+    expect(reuse.status).toBe(422);
+    expect(reuse.body.error.reason).toBe('invalid_token');
+  });
+});
+
+describe('AUTH-08 email verification', () => {
+  it('authz:verify_confirm — a bogus verify token → 422 invalid_token (actorB)', async () => {
+    const res = await post('/auth/verify-email/confirm', { token: 'not-a-real-token' });
+    expect(res.status).toBe(422);
+    expect(res.body.error.reason).toBe('invalid_token');
+  });
+
+  it('confirm marks the email verified (GET /me reflects it)', async () => {
+    const { email, res } = await registerUser();
+    const accessToken = res.body.accessToken as string;
+    const { lastEmail } = await import('../../src/auth/email');
+    const token = lastEmail('email_verify', email)?.token as string;
+    expect(token).toBeTruthy();
+    await post('/auth/verify-email/confirm', { token }).expect(200);
+
+    const me = await get('/me').set({ Authorization: `Bearer ${accessToken}` });
+    expect(me.body.emailVerified).toBe(true);
+  });
+
+  it('authz:verify_request — an UNAUTHENTICATED resend is refused 401 (actorB)', async () => {
+    const res = await post('/auth/verify-email/request', {});
+    expect(res.status).toBe(401);
+  });
+});
+
+describe('AUTH-03/09 Sign-in-with-Apple (stub verifier)', () => {
+  it('authz:apple — a bogus identity token is refused 401 (actorB)', async () => {
+    const res = await post('/auth/apple', { identityToken: 'not-a-real-apple-token', nonce: 'n' });
+    expect(res.status).toBe(401);
+  });
+
+  it('a FIRST Apple sign-in creates an account with usernamePending=true + a session (AUTH-09)', async () => {
+    const { makeMockAppleToken } = await import('../../src/auth/apple-verifier');
+    const sub = `apple-sub-${randomUUID()}`;
+    const token = makeMockAppleToken({
+      sub,
+      email: `apple_${randomUUID().slice(0, 6)}@privaterelay.appleid.com`,
+      emailVerified: true,
+    });
+    const res = await post('/auth/apple', { identityToken: token, nonce: 'nonce123' });
+    expect(res.status).toBe(200);
+    expect(res.body.user.usernamePending).toBe(true);
+    expect(typeof res.body.accessToken).toBe('string');
+
+    // Repeating with the SAME Apple subject resolves the SAME account (no duplicate).
+    const again = await post('/auth/apple', { identityToken: token, nonce: 'nonce123' });
+    expect(again.body.user.id).toBe(res.body.user.id);
+  });
+
+  it('AUTH-09: an Apple sign-in whose verified email matches an existing account LINKS (no duplicate)', async () => {
+    const { email } = await registerUser(); // existing email/password account A
+    const loginA = await post('/auth/login', { email, password: PW });
+    const accountAId = loginA.body.user.id as string;
+
+    const { makeMockAppleToken } = await import('../../src/auth/apple-verifier');
+    const token = makeMockAppleToken({ sub: `apple-sub-${randomUUID()}`, email, emailVerified: true });
+    const res = await post('/auth/apple', { identityToken: token, nonce: 'n' });
+    expect(res.status).toBe(200);
+    expect(res.body.user.id).toBe(accountAId); // linked to the existing account
+    expect(res.body.user.usernamePending).toBe(false); // existing account keeps its username
+  });
+});
+
+describe('AUTH-11 username availability', () => {
+  it('reports taken / available / screened / invalid', async () => {
+    const { username } = await registerUser();
+    expect((await get(`/auth/username-available?u=${username}`)).body).toEqual({
+      available: false,
+      reason: 'taken',
+    });
+    expect((await get('/auth/username-available?u=admin')).body).toEqual({
+      available: false,
+      reason: 'screened',
+    });
+    expect((await get('/auth/username-available?u=AB')).body.available).toBe(false); // too short → invalid
+    const free = await get(`/auth/username-available?u=free${randomUUID().slice(0, 5)}`);
+    expect(free.body.available).toBe(true);
+  });
+});
+
+describe('G-G / SYS-05: the auth rate-limiter returns 429 under burst', () => {
+  it('login burst past the limit → 429 RATE_LIMITED', async () => {
+    const { overrideRuleForTest } = await import('../../src/config/rate-limits');
+    overrideRuleForTest('auth:login', { limit: 3, windowMs: 60_000 });
+    const results = [];
+    for (let i = 0; i < 4; i++)
+      results.push(await post('/auth/login', { email: 'x@example.com', password: 'whatever1!' }));
+    const limited = results.filter((r) => r.status === 429);
+    expect(limited.length).toBeGreaterThan(0);
+    expect(limited[0]?.body.error.code).toBe('RATE_LIMITED');
+  });
+});
+
+describe('OQ-121 / decision 0056: the session user IS the GET /me self-shape (ONE serializer)', () => {
+  it('register response user deep-equals GET /me at issuance', async () => {
+    const { res } = await registerUser();
+    expect(res.status).toBe(201);
+    const me = await request(app)
+      .get('/api/me')
+      .set('Authorization', `Bearer ${res.body.accessToken}`);
+    expect(me.status).toBe(200);
+    expect(res.body.user).toEqual(me.body);
+  });
+
+  it('login user INLINES the real gamertag rows and deep-equals GET /me (the drift Parvati caught)', async () => {
+    const { email, password, res } = await registerUser();
+    const tag = await request(app)
+      .post('/api/me/gamertags')
+      .set('Authorization', `Bearer ${res.body.accessToken}`)
+      .send({ platform: 'pc', handle: 'shape_check' });
+    expect(tag.status).toBe(201);
+
+    const login = await post('/auth/login', { email, password });
+    expect(login.status).toBe(200);
+    expect(login.body.user.gamertags).toHaveLength(1);
+    expect(login.body.user.gamertags[0]).toMatchObject({ platform: 'pc', handle: 'shape_check' });
+
+    const me = await request(app)
+      .get('/api/me')
+      .set('Authorization', `Bearer ${login.body.accessToken}`);
+    expect(login.body.user).toEqual(me.body);
+  });
+});
+
+describe('OQ-120: the dev CORS allowlist is mounted (Expo-web dev loop)', () => {
+  it('reflects an allowlisted localhost origin on a real route + answers preflight 204', async () => {
+    const preflight = await request(app)
+      .options('/api/auth/login')
+      .set('Origin', 'http://localhost:8081');
+    expect(preflight.status).toBe(204);
+    expect(preflight.headers['access-control-allow-origin']).toBe('http://localhost:8081');
+
+    const res = await post('/auth/login', { email: 'x@example.com', password: 'whatever1!' }).set(
+      'Origin',
+      'http://localhost:8081',
+    );
+    expect(res.headers['access-control-allow-origin']).toBe('http://localhost:8081');
+  });
+
+  it('sends no CORS headers for a non-allowlisted origin', async () => {
+    const res = await post('/auth/login', { email: 'x@example.com', password: 'whatever1!' }).set(
+      'Origin',
+      'http://localhost:9999',
+    );
+    expect(res.headers['access-control-allow-origin']).toBeUndefined();
+  });
+});

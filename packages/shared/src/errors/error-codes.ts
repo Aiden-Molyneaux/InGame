@@ -12,15 +12,51 @@ export const ERROR_CODES = [
   'RATE_LIMITED',
   'SERVER_ERROR',
   'ACCOUNT_SUSPENDED',
+  // The CAT-03 dedup warn (409) — appended 0.47 via the F-17 additive path (its first live use).
+  'DUPLICATE_SUSPECTED',
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];
+
+/**
+ * B1 (api-contract 0.46) — one field-targeted `VALIDATION_ERROR` detail. SANITIZED by construction:
+ * `path` is the schema field path and `message` is authored server-side from the zod issue METADATA —
+ * the submitted values never round-trip (SYS-02).
+ */
+export interface ValidationDetail {
+  path: string;
+  message: string;
+}
+
+/**
+ * One CAT-03 dedup candidate on a `DUPLICATE_SUSPECTED` 409 (api-contract 0.47) — the client's
+ * InlineBanner "did you mean …?" rows. `exact` = an exact-normalized match (never overridable).
+ */
+export interface DedupSuggestion {
+  id: string;
+  name: string;
+  studio: string | null;
+  releaseDate: string | null;
+  similarity: number;
+  exact: boolean;
+}
 
 /** The wire shape of every error response (api-contract Conventions). */
 export interface ApiErrorBody {
   error: {
     code: ErrorCode;
     message: string;
+    /**
+     * Optional machine-readable reason. Present on `VALIDATION_ERROR` `invalid_token` for AUTH-04
+     * reset/verify, and on `ACCOUNT_SUSPENDED` (MOD-09). Absent otherwise.
+     */
+    reason?: string;
+    /** `ACCOUNT_SUSPENDED` only (MOD-09) — the suspension end (ISO-8601 UTC) or null (indefinite). */
+    until?: string | null;
+    /** `VALIDATION_ERROR` only (B1, api-contract 0.32/0.46) — sanitized per-field detail. */
+    details?: ValidationDetail[];
+    /** `DUPLICATE_SUSPECTED` only (CAT-03, api-contract 0.47) — best-first dedup candidates. */
+    suggestions?: DedupSuggestion[];
   };
 }
 

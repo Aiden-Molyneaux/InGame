@@ -1,11 +1,11 @@
 import type { RequestHandler } from 'express';
 import { AuthFailedError } from '../errors/AppError';
+import { verifyAccessToken } from './tokens';
 
-// STUB/SEED principal resolution — NOT real Sign-in-with-Apple (that is M2). The authenticated user
-// id arrives as `Authorization: Bearer <userId>` where `<userId>` is a SEEDED user id. Token
-// issuance, refresh-token rotation, password hashing, and POST /auth/apple are deliberately NOT
-// built here (the F29 scope guard: exactly one entity, no second feature). SYS-01 still holds: the
-// server resolves the actor from this principal ONLY — it never trusts an id in the request body.
+// SYS-01 principal resolution — REAL auth (M2). The access token is a short-lived HS256 JWT presented
+// as `Authorization: Bearer <accessToken>`; it is verified (signature + issuer + expiry) and its `sub`
+// becomes the actor id. The server resolves the actor from this principal ONLY — it never trusts an id
+// in the request body. An invalid / expired / malformed token → a NEUTRAL AuthFailedError (401).
 export const resolvePrincipal: RequestHandler = (req, _res, next) => {
   const header = req.header('authorization') ?? '';
   const match = /^Bearer\s+(.+)$/i.exec(header);
@@ -13,6 +13,10 @@ export const resolvePrincipal: RequestHandler = (req, _res, next) => {
     next(new AuthFailedError());
     return;
   }
-  req.principal = { userId: match[1].trim() };
-  next();
+  verifyAccessToken(match[1].trim())
+    .then((claims) => {
+      req.principal = { userId: claims.userId };
+      next();
+    })
+    .catch(next);
 };

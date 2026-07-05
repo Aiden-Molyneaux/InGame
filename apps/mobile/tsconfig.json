@@ -5,9 +5,20 @@
     "jsx": "react-jsx",
     "moduleResolution": "Bundler",
     "paths": {
-      "@ingame/shared": ["../../packages/shared/src/index.ts"]
+      "@ingame/shared": [
+        "../../packages/shared/src/index.ts"
+      ]
     },
-    "types": ["jest", "react", "node"]
+    "types": [
+      "jest",
+      "react",
+      "node"
+    ]
   },
-  "include": ["app", "src", "*.ts", "*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+  "include": [
+    "app",
+    "src",
+    "*.ts",
+    "*.tsx"
+  ]
 }

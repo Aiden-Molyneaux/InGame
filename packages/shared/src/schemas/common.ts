@@ -4,8 +4,8 @@ import { z } from 'zod';
 // (input) and response (view) halves agree on the vocabulary without one importing the other.
 
 /**
- * PROF-03 privacy state. The literal token values are not pinned in the api-contract —
- * ASSUMPTION(OQ-112): modelled as 'friends' (the default, friends-only) | 'public' (limited public).
+ * PROF-03 privacy state. Pinned in api-contract 0.41 (OQ-112, RESOLVED 2026-06-30):
+ * 'friends' (the default, friends-only) | 'public' (limited public profile).
  */
 export const privacySchema = z.enum(['friends', 'public']);
 export type Privacy = z.infer<typeof privacySchema>;
@@ -19,3 +19,21 @@ export const adminTierSchema = z.number().int().min(1).max(4);
 /** SOC-01/08 relationship — drives ADD FRIEND / FRIEND-tag chrome on other-principal views. */
 export const relationshipSchema = z.enum(['none', 'outgoing', 'incoming', 'friend']);
 export type Relationship = z.infer<typeof relationshipSchema>;
+
+/** PROF-02 controlled platform list for gamertags. */
+export const platformSchema = z.enum(['pc', 'playstation', 'xbox', 'nintendo']);
+export type Platform = z.infer<typeof platformSchema>;
+
+/**
+ * COL-02 — the six per-game statuses. Wire spelling pinned api-contract 0.47
+ * (`completed` = the display name "Completed 100%"; display casing is the client's).
+ */
+export const collectionStatusSchema = z.enum([
+  'backlog',
+  'playing',
+  'beaten',
+  'completed',
+  'dropped',
+  'wishlist',
+]);
+export type CollectionStatus = z.infer<typeof collectionStatusSchema>;

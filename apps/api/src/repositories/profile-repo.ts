@@ -15,16 +15,25 @@ export async function getOwnProfile(
   return rows[0] ?? null;
 }
 
-export async function updateOwnBio(
+/** The fields PATCH /me may set (PROF-01/03/06; AUTH-09 completion). Only provided keys are written. */
+export interface ProfileUpdate {
+  username?: string;
+  bio?: string;
+  favouriteGameId?: string | null;
+  favouriteGenreIds?: string[];
+  privacy?: string;
+  usernamePending?: boolean;
+  usernameChangedAt?: Date;
+  /** WTP-03 — the single Now-Playing pin (PUT /me/now-playing). */
+  nowPlayingGameId?: string | null;
+}
+
+export async function updateOwnProfile(
   actorId: string,
-  bio: string,
+  fields: ProfileUpdate,
   exec: Executor = getDb(),
 ): Promise<UserRow | null> {
   const actor = asActor(actorId);
-  const rows = await exec
-    .update(users)
-    .set({ bio })
-    .where(ownedBy(actor, users.id))
-    .returning();
+  const rows = await exec.update(users).set(fields).where(ownedBy(actor, users.id)).returning();
   return rows[0] ?? null;
 }

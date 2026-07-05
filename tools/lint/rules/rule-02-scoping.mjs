@@ -4,14 +4,52 @@ import { loadGlobalTables } from '../util/manifest.mjs';
 // CONVENTIONS rule 2 [LINT] — every read/modify of user-owned data goes through the SYS-01 scoped
 // helper. The allowlist IS the F32 global-table manifest (decision 0051/F32): a table NOT on it is
 // user-owned and FAILS CLOSED. A `// SYS-01-EXEMPT` annotation is valid ONLY against a listed global
-// table (else CI fails). The lint targets the cross-user vectors — select/update/delete on an
-// existing row by id — not inserts (you cannot IDOR a brand-new actor-stamped row). The lint proves
-// the helper was CALLED; actor-id correctness is proven by the SYS-07 4xx tests.
+// table (else CI fails). The lint proves the helper was CALLED; actor-id correctness is proven by
+// the SYS-07 4xx tests.
+//
+// OQ-118 (M2 lead-audit): detection is an ALLOWLIST of recognized query verbs — not the old 3-verb
+// denylist — so the named bypasses fail closed:
+//   read-class  : .from(t) · .leftJoin/.rightJoin/.innerJoin/.fullJoin(t) · db.query.<t>.findFirst/findMany
+//   write-class : .update(t) · .delete(t) · an .insert(t)/.into(t) chained into .onConflictDoUpdate
+//                 (an upsert mutates an EXISTING row — the old hole)
+//   bare insert : exempt (you cannot IDOR a brand-new actor-stamped row)
+//   raw SQL     : `.execute(...)` / a sql`` template inside `repositories/` + `*-repo` files is
+//                 unclassifiable by a regex lint → FAILS CLOSED unconditionally (use the query
+//                 builder). db/ infra (the F03-guarded reset.ts, migrate.ts) is rule-f03's surface,
+//                 not a repository, and keeps only the verb checks.
 
-const ACCESS_RE = /\.(from|update|delete)\(\s*([A-Za-z_$][\w$]*)/g;
+const TABLE_VERB_RE =
+  /\.(from|update|delete|insert|into|leftJoin|rightJoin|innerJoin|fullJoin)\(\s*([A-Za-z_$][\w$]*)/g;
+const RQB_RE = /\bquery\.([A-Za-z_$][\w$]*)\.(?:findFirst|findMany)\s*\(/g;
+const RAW_RE = /\.execute\s*\(|\bsql\s*`/g;
 const SCOPE_SIGNAL_RE = /\b(ownedBy|asActor|scoped|scopedQuery)\s*\(/;
 const EXEMPT_RE = /\/\/\s*SYS-01-EXEMPT(?::\s*([A-Za-z_][\w]*))?/;
+// SYS-01-AUTH-LOOKUP: the ONE legitimate non-actor-scoped user read — a PRE-AUTHENTICATION or
+// bearer-credential lookup (by email / username / token-hash) that ESTABLISHES the actor or validates
+// a bearer credential (login, register-uniqueness, refresh, reset/verify-confirm, apple-linking,
+// username-available). The marker exempts a `.from` SELECT ONLY — its contract is "pre-auth
+// LOOKUPS only", so a marked write (update/delete/upsert), join, or relational read still FAILS
+// CLOSED. It is CONFINED to the auth-layer repos (path `/auth/` or a `(auth|token)…-repo` file) so it
+// can never grant a cross-user bypass to an ordinary repo — misuse-fixtures prove both guards.
+// Greppable + auditable at the gate-3 auth+SYS-01 seam review (OQ-115).
+const AUTH_LOOKUP_RE = /\/\/\s*SYS-01-AUTH-LOOKUP\b/;
+// SYS-01-COMMUNITY-AGGREGATE (OQ-126, the CAT-09 read class — interim pre-OQ-122): exempts a READ
+// of a user-owned table ONLY when the window also contains an aggregate call (`count(`) — anonymous
+// cross-user aggregates (collections-count per game), never row-level reads and NEVER writes. A
+// misuse fixture proves both guards. Guard-surface marker → auditable at the gate-3 seam review.
+const COMMUNITY_AGGREGATE_RE = /\/\/\s*SYS-01-COMMUNITY-AGGREGATE\b/;
+const AGGREGATE_CALL_RE = /\bcount\s*\(/;
 const WINDOW = 12;
+/** How far ahead an insert chain is scanned for `.onConflictDoUpdate(` (bounded by the next `;`). */
+const CHAIN_LOOKAHEAD = 2000;
+
+const isAuthLookupFile = (path) =>
+  /(^|\/)auth\//.test(path) || /(auth|token)[\w-]*-repo\.[mc]?tsx?$/.test(path);
+/** The strict repository surface (raw-SQL ban): `repositories/` dirs + `*-repo` files — NOT db/ infra. */
+const isStrictRepoFile = (path) =>
+  /(^|\/)repositories\//.test(path) || /-repo\.[mc]?tsx?$/.test(path);
+
+const READ_VERBS = new Set(['from', 'leftJoin', 'rightJoin', 'innerJoin', 'fullJoin']);
 
 export default {
   id: 'rule-02-scoping',
@@ -33,6 +71,21 @@ export default {
       const code = stripComments(file.text);
       const codeLines = code.split('\n');
 
+      /** Shared window predicates around a match's line number. */
+      const windowOf = (lineNo) => {
+        const from = Math.max(0, lineNo - 1 - WINDOW);
+        const to = Math.min(codeLines.length, lineNo + WINDOW);
+        const codeWindow = codeLines.slice(from, to).join('\n');
+        const origWindow = origLines.slice(from, to).join('\n');
+        return {
+          hasScope: SCOPE_SIGNAL_RE.test(codeWindow),
+          hasExemptComment: /SYS-01-EXEMPT/.test(origWindow),
+          hasAuthLookupComment: AUTH_LOOKUP_RE.test(origWindow),
+          hasAggregateComment: COMMUNITY_AGGREGATE_RE.test(origWindow),
+          hasAggregateCall: AGGREGATE_CALL_RE.test(codeWindow),
+        };
+      };
+
       // (a) EXEMPT cross-check: an exemption naming a non-global table is illegitimate.
       origLines.forEach((line, i) => {
         const exempt = EXEMPT_RE.exec(line);
@@ -45,22 +98,67 @@ export default {
         }
       });
 
-      // (b) each user-owned select/update/delete must have a scope signal nearby.
-      for (const match of code.matchAll(ACCESS_RE)) {
+      // (b) every recognized table-taking verb on a user-owned table must carry a scope signal.
+      for (const match of code.matchAll(TABLE_VERB_RE)) {
+        const verb = match[1];
         const table = match[2];
         if (isGlobal(table)) continue;
         const idx = match.index ?? 0;
+
+        // A bare insert is exempt — but an `.onConflictDoUpdate(` chain upgrades it to a WRITE of an
+        // existing row (the OQ-118 upsert hole). Scan the chain to the statement's `;` (bounded).
+        if (verb === 'insert' || verb === 'into') {
+          const semi = code.indexOf(';', idx);
+          const chainEnd = semi === -1 ? idx + CHAIN_LOOKAHEAD : Math.min(semi, idx + CHAIN_LOOKAHEAD);
+          if (!/\.onConflictDoUpdate\s*\(/.test(code.slice(idx, chainEnd))) continue;
+        }
+
         const lineNo = code.slice(0, idx).split('\n').length;
-        const from = Math.max(0, lineNo - 1 - WINDOW);
-        const to = Math.min(codeLines.length, lineNo + WINDOW);
-        const hasScope = SCOPE_SIGNAL_RE.test(codeLines.slice(from, to).join('\n'));
-        const hasExempt =
-          /SYS-01-EXEMPT/.test(origLines.slice(from, to).join('\n')) && isGlobal(table);
-        if (!hasScope && !hasExempt) {
+        const w = windowOf(lineNo);
+        const hasExempt = w.hasExemptComment && isGlobal(table);
+        // A pre-auth / bearer-credential lookup, valid ONLY in an auth-layer repo AND ONLY for a
+        // `.from` SELECT — a marked write/upsert/join still fails closed (reads-only contract).
+        const hasAuthLookup =
+          verb === 'from' && isAuthLookupFile(file.path) && w.hasAuthLookupComment;
+        // An anonymous cross-user AGGREGATE read (CAT-09/OQ-126): reads-only + count() required.
+        const hasCommunityAggregate =
+          READ_VERBS.has(verb) && w.hasAggregateComment && w.hasAggregateCall;
+        if (!w.hasScope && !hasExempt && !hasAuthLookup && !hasCommunityAggregate) {
+          const kind = READ_VERBS.has(verb) ? 'read' : verb === 'insert' || verb === 'into' ? 'upserted' : 'modified';
           violations.push({
             file: file.path,
             line: lineNo,
-            message: `user-owned table "${table}" read/modified without the SYS-01 scoped helper (fails closed — not on the F32 global manifest). Use asActor()/ownedBy().`,
+            message: `user-owned table "${table}" ${kind === 'read' ? 'read' : kind} via .${verb}() without the SYS-01 scoped helper (fails closed — not on the F32 global manifest). Use asActor()/ownedBy().`,
+          });
+        }
+      }
+
+      // (c) the relational query builder (`db.query.<table>.findFirst/findMany`) is a read with no
+      // `.from(...)` — the OQ-118 RQB hole. Same fail-closed treatment; no AUTH-LOOKUP escape.
+      for (const match of code.matchAll(RQB_RE)) {
+        const table = match[1];
+        if (isGlobal(table)) continue;
+        const idx = match.index ?? 0;
+        const lineNo = code.slice(0, idx).split('\n').length;
+        if (!windowOf(lineNo).hasScope) {
+          violations.push({
+            file: file.path,
+            line: lineNo,
+            message: `user-owned table "${table}" read via the relational query builder (query.${table}.find…) without the SYS-01 scoped helper (fails closed). Use asActor()/ownedBy().`,
+          });
+        }
+      }
+
+      // (d) raw SQL in the strict repository surface is unclassifiable → fail closed UNCONDITIONALLY
+      // (a nearby scope signal must not launder a raw statement — the OQ-118 raw-SQL hole).
+      if (isStrictRepoFile(file.path)) {
+        for (const match of code.matchAll(RAW_RE)) {
+          const idx = match.index ?? 0;
+          const lineNo = code.slice(0, idx).split('\n').length;
+          violations.push({
+            file: file.path,
+            line: lineNo,
+            message: `raw SQL (.execute() / sql\`\`) in a repository is unclassifiable by the SYS-01 scoping lint — fails closed (OQ-118). Use the query builder; infra SQL belongs in db/, guarded by rule-f03.`,
           });
         }
       }

@@ -8,6 +8,34 @@
       "when": 1782854273842,
       "tag": "0000_same_shinobi_shaw",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1782870521845,
+      "tag": "0001_chemical_kitty_pryde",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782873009356,
+      "tag": "0002_left_hemingway",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1782956067198,
+      "tag": "0003_pretty_retro_girl",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1783003373833,
+      "tag": "0004_fixed_rockslide",
+      "breakpoints": true
     }
   ]
 }

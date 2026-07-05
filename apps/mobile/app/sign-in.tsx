@@ -1,0 +1,380 @@
+import { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  Alert,
+} from 'react-native';
+import Svg, { Path } from 'react-native-svg';
+import { useRouter } from 'expo-router';
+import { TextField } from '../src/components/TextField';
+import { ScreenButton } from '../src/components/ScreenButton';
+import { TertiaryLink } from '../src/components/TertiaryLink';
+import { theme } from '../src/theme';
+import {
+  useLoginMutation,
+  useRegisterMutation,
+  useLazyUsernameAvailableQuery,
+} from '../src/store/api';
+import { useAppDispatch } from '../src/store/hooks';
+import { setSession } from '../src/store/authSlice';
+import { saveTokens } from '../src/auth/tokenStore';
+
+type Mode = 'signin' | 'create';
+
+// B1 (api-contract 0.46) — split an API error into the top-line message + the sanitized per-field
+// details (W4 grammar: field errors render under their inputs; the top line covers the rest).
+type ApiErrorPayload = {
+  error?: { message?: string; details?: { path: string; message: string }[] };
+};
+function errParts(e: unknown): { message: string; fields: Record<string, string> } {
+  const err = (e as { data?: ApiErrorPayload })?.data?.error;
+  const fields: Record<string, string> = {};
+  for (const d of err?.details ?? []) {
+    if (d.path && !fields[d.path]) fields[d.path] = d.message;
+  }
+  return { message: err?.message ?? 'Something went wrong. Please try again.', fields };
+}
+
+const USERNAME_CHECK_MIN = 3;
+const USERNAME_CHECK_DEBOUNCE_MS = 450;
+
+export default function SignIn() {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+  const [login, loginState] = useLoginMutation();
+  const [register, registerState] = useRegisterMutation();
+  // W3 (AUTH-11) — the debounced ADVISORY availability beat; never gates submit.
+  const [checkUsername, availability] = useLazyUsernameAvailableQuery();
+
+  const [mode, setMode] = useState<Mode>('signin');
+  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  // AUTH-10 (OQ-119) — real acceptance gate; registration cannot submit until this is checked.
+  const [accepted, setAccepted] = useState(false);
+
+  const busy = loginState.isLoading || registerState.isLoading;
+  const candidate = username.trim();
+
+  useEffect(() => {
+    if (mode !== 'create' || candidate.length < USERNAME_CHECK_MIN) return;
+    const t = setTimeout(() => void checkUsername(candidate), USERNAME_CHECK_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [mode, candidate, checkUsername]);
+
+  // S2-f — a field's error (and the top-line auth error) clears the moment the user edits it; for the
+  // username field that also un-gates the advisory availability line (which hides while it errors).
+  function editField(setter: (v: string) => void, field: string) {
+    return (v: string) => {
+      setter(v);
+      setError(null);
+      setFieldErrors((prev) => {
+        if (!prev[field]) return prev;
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    };
+  }
+
+  function toggleMode() {
+    setError(null);
+    setFieldErrors({});
+    setAccepted(false);
+    setMode((m) => (m === 'signin' ? 'create' : 'signin'));
+  }
+
+  // S2-h / S2-i — the FORGOT? and Sign-in-with-Apple affordances are present but the flows behind them
+  // (AUTH-04 reset · AUTH-03 SIWA) are deferred; a calm "coming soon" beat keeps them from dead-ending.
+  function comingSoon(feature: string) {
+    Alert.alert(`${feature} is coming soon`, "We're still building this — it lands in a later update.");
+  }
+
+  async function submit() {
+    setError(null);
+    setFieldErrors({});
+    try {
+      const session =
+        mode === 'signin'
+          ? await login({ email, password }).unwrap()
+          : // AUTH-10 (OQ-119): reachable only with `accepted` true — the Create button is disabled otherwise.
+            await register({ email, username, password, acceptedTerms: true }).unwrap();
+      await saveTokens({ accessToken: session.accessToken, refreshToken: session.refreshToken });
+      dispatch(setSession(session));
+      router.replace('/(tabs)/collection');
+    } catch (e) {
+      const { message, fields } = errParts(e);
+      setFieldErrors(fields);
+      // W4 — field errors live under their inputs; the top line only carries what has no field.
+      setError(Object.keys(fields).length > 0 ? null : message);
+    }
+  }
+
+  // S2-a — the primary is disabled while busy, while a required field is empty, or while any field is
+  // erroring (create additionally needs the AUTH-10 acceptance). Not only the checkbox, as before.
+  const requiredFilled =
+    mode === 'signin'
+      ? email.trim().length > 0 && password.length > 0
+      : email.trim().length > 0 && candidate.length > 0 && password.length > 0 && accepted;
+  const canSubmit = !busy && requiredFilled && Object.keys(fieldErrors).length === 0;
+
+  // W3 advisory line state — stale-guarded (only trust a result for the CURRENT candidate).
+  const availabilityFresh =
+    availability.originalArgs === candidate && !availability.isFetching && availability.data;
+  const showAvailability =
+    mode === 'create' && candidate.length >= USERNAME_CHECK_MIN && !fieldErrors.username;
+  const availabilityText = !availabilityFresh
+    ? 'CHECKING…'
+    : availability.data?.available
+      ? 'USERNAME AVAILABLE'
+      : // S2-c — a name that's simply taken reads "NOT AVAILABLE"; only a MOD-07 screened/reserved
+        // name reads "NOT ALLOWED" (a rule, not a coincidence of who registered first).
+        availability.data?.reason === 'taken'
+        ? 'USERNAME NOT AVAILABLE'
+        : 'USERNAME NOT ALLOWED';
+  const availabilityColor = !availabilityFresh
+    ? theme.scr.dim
+    : availability.data?.available
+      ? theme.brand.success
+      : theme.brand.alert;
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <Text style={styles.wordmark}>INGAME</Text>
+        <Text style={styles.tagline}>YOUR COLLECTION, ON DISPLAY</Text>
+
+        <View style={styles.form}>
+          <TextField
+            label="Email"
+            value={email}
+            onChangeText={editField(setEmail, 'email')}
+            placeholder="you@example.com"
+            keyboardType="email-address"
+            error={fieldErrors.email}
+          />
+          {mode === 'create' ? (
+            <View style={styles.usernameBlock}>
+              <TextField
+                label="Username"
+                value={username}
+                onChangeText={editField(setUsername, 'username')}
+                placeholder="A–Z, a–z, 0–9, _"
+                error={fieldErrors.username}
+              />
+              {showAvailability ? (
+                <Text style={[styles.availability, { color: availabilityColor }]}>
+                  {availabilityText}
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
+          <TextField
+            label="Password"
+            value={password}
+            onChangeText={editField(setPassword, 'password')}
+            placeholder="min 8 characters"
+            secureTextEntry
+            error={fieldErrors.password}
+            // S2-h — FORGOT? rides the password label row on sign-in only (create has the hint instead).
+            labelRight={
+              mode === 'signin' ? (
+                <TertiaryLink
+                  label="Forgot?"
+                  chevron="none"
+                  onPress={() => comingSoon('Password reset')}
+                />
+              ) : undefined
+            }
+          />
+
+          {mode === 'create' ? (
+            <View style={styles.consentRow}>
+              <Pressable
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: accepted }}
+                onPress={() => setAccepted((a) => !a)}
+                hitSlop={8}
+                style={[styles.checkbox, accepted && styles.checkboxOn]}
+              >
+                {accepted ? <Text style={styles.checkMark}>✓</Text> : null}
+              </Pressable>
+              <Text style={styles.consentLabel}>
+                I&apos;m 13 or older and agree to the{' '}
+                <Text style={styles.link} onPress={() => router.push('/legal/terms')}>
+                  Terms of Service
+                </Text>{' '}
+                and{' '}
+                <Text style={styles.link} onPress={() => router.push('/legal/privacy')}>
+                  Privacy Policy
+                </Text>
+                .
+              </Text>
+            </View>
+          ) : null}
+
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+
+          <ScreenButton
+            label={busy ? '…' : mode === 'signin' ? 'Sign in' : 'Create account'}
+            onPress={submit}
+            disabled={!canSubmit}
+            block
+          />
+
+          {/* S2-i — SIWA placeholder (AUTH-03 stub): iOS + sign-in only, per the board's platform fork
+              (W1 has it, W1b Android does not). Web/Android never render it. */}
+          {mode === 'signin' && Platform.OS === 'ios' ? (
+            <>
+              <View style={styles.orDiv}>
+                <View style={styles.orLine} />
+                <Text style={styles.orText}>OR CONTINUE WITH</Text>
+                <View style={styles.orLine} />
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Sign in with Apple"
+                onPress={() => comingSoon('Sign in with Apple')}
+                style={({ pressed }) => [styles.appleBtn, pressed && styles.applePressed]}
+              >
+                {/* Apple HIG-mandated control — black/white are token-exempt (board OQ-035). */}
+                <Svg width={14} height={14} viewBox="0 0 24 24">
+                  <Path
+                    d="M17.05 12.7c-.03-2.6 2.13-3.85 2.22-3.91-1.21-1.77-3.09-2.01-3.76-2.04-1.6-.16-3.12.94-3.93.94-.81 0-2.06-.92-3.39-.9-1.74.03-3.35 1.01-4.25 2.57-1.81 3.14-.46 7.79 1.3 10.34.86 1.25 1.88 2.65 3.22 2.6 1.29-.05 1.78-.83 3.34-.83 1.55 0 2 .83 3.37.81 1.39-.03 2.27-1.27 3.12-2.53.98-1.45 1.39-2.85 1.41-2.93-.03-.01-2.7-1.04-2.72-4.13zM14.6 5.1c.71-.86 1.19-2.06 1.06-3.25-1.02.04-2.26.68-2.99 1.54-.66.76-1.23 1.98-1.08 3.15 1.14.09 2.3-.58 3.01-1.44z"
+                    fill="#fff"
+                  />
+                </Svg>
+                <Text style={styles.appleText}>Sign in with Apple</Text>
+              </Pressable>
+            </>
+          ) : null}
+
+          {/* S2-g — the mode swap is a quiet footer text link, not a full button. */}
+          <View style={styles.swapFoot}>
+            <Text style={styles.swapText}>
+              {mode === 'signin' ? 'New to InGame?' : 'Already have one?'}
+            </Text>
+            <TertiaryLink
+              label={mode === 'signin' ? 'Create account' : 'Sign in'}
+              chevron="none"
+              onPress={toggleMode}
+            />
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  content: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    padding: theme.space.xxl,
+    gap: theme.space.sm,
+  },
+  wordmark: {
+    fontFamily: theme.font.shell, // Paytone (the brand voice)
+    fontSize: 34, // W2r — cream/34 (mockup --scr-head), not the F-05 shell-only pink
+    color: theme.brand.cream,
+    letterSpacing: 2,
+    textAlign: 'center',
+  },
+  tagline: {
+    fontFamily: theme.font.screen,
+    fontSize: theme.type.micro,
+    color: theme.scr.dim,
+    letterSpacing: 2,
+    textAlign: 'center',
+    marginBottom: theme.space.xl,
+  },
+  form: { gap: theme.space.lg },
+  usernameBlock: { gap: theme.space.xs },
+  availability: {
+    fontFamily: theme.font.screenSemi,
+    fontSize: theme.type.micro, // 9 — F-06
+    letterSpacing: 1,
+  },
+  error: {
+    fontFamily: theme.font.screen,
+    fontSize: theme.type.body,
+    color: theme.brand.alert,
+    textAlign: 'center',
+  },
+  consentRow: { flexDirection: 'row', alignItems: 'flex-start', gap: theme.space.md },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 1,
+    borderColor: theme.scr.faint,
+    backgroundColor: theme.scr.panel,
+    alignItems: 'center',
+    justifyContent: 'center', // F-07 — square on-screen chrome (no radius)
+  },
+  checkboxOn: { backgroundColor: theme.scr.accent, borderColor: theme.scr.accent },
+  checkMark: {
+    fontFamily: theme.font.screenBold,
+    fontSize: theme.type.body, // 11
+    color: theme.scr.accentInk,
+    lineHeight: 14,
+  },
+  consentLabel: {
+    flex: 1,
+    fontFamily: theme.font.screen,
+    fontSize: theme.type.body, // 11 — F-06
+    color: theme.scr.dim,
+    lineHeight: 16,
+  },
+  link: { color: theme.scr.accent, fontFamily: theme.font.screenSemi },
+  // S2-i — the OR divider + compact Apple stub (board `.ordiv` / `.apple.compact`).
+  orDiv: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md, marginVertical: theme.space.xs },
+  orLine: { flex: 1, height: 1, backgroundColor: theme.scr.hairline },
+  orText: {
+    fontFamily: theme.font.screenBold,
+    fontSize: theme.type.micro, // 9
+    color: theme.scr.faint,
+    letterSpacing: 2,
+  },
+  appleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.space.md,
+    alignSelf: 'center', // hugs its content + centred (board `.apple.compact`), not a full slab
+    backgroundColor: '#000', // HIG-mandated (token-exempt, board OQ-035)
+    paddingVertical: theme.space.md,
+    paddingHorizontal: theme.space.xl,
+  },
+  applePressed: { opacity: 0.85 },
+  appleText: {
+    fontFamily: theme.font.screenBold, // R2 (4a) — match the SIGN IN button label's weight so the two read the same size (both 11px)
+    fontSize: theme.type.body, // 11 — same as the ScreenButton label
+    color: '#fff', // HIG-mandated (token-exempt)
+    letterSpacing: 0.3,
+  },
+  // S2-g — the quiet swap footer (board `.swap-foot`: soft text + accent text link).
+  swapFoot: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: theme.space.xs,
+    marginTop: theme.space.sm,
+  },
+  swapText: {
+    fontFamily: theme.font.screen,
+    fontSize: theme.type.body, // 11
+    color: theme.scr.dim,
+    letterSpacing: 0.3,
+  },
+});
