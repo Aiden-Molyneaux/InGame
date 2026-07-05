@@ -6,6 +6,7 @@ import {
   type FetchBaseQueryError,
 } from '@reduxjs/toolkit/query/react';
 import { router } from 'expo-router';
+import { Platform } from 'react-native';
 import {
   selfProfileSchema,
   collectionResponseSchema,
@@ -37,7 +38,17 @@ import { saveTokens } from '../auth/tokenStore';
 // the schema so a FE↔BE shape drift is caught at the seam, not deep in a component. The access token
 // is attached from the in-memory auth slice (rehydrated from expo-secure-store, F14).
 
-const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:4000/api';
+// Base URL split by target. Native (the phone via Expo Go) uses this machine's LAN IP from
+// `apps/mobile/.env` so a device on the same Wi-Fi can reach the API. The dev browser (web target) runs
+// ON this machine, and a cross-origin POST from localhost:8082 → the LAN IP (192.168.x.x) trips Chrome's
+// Private Network Access guard — the login OPTIONS preflight returns 200 but the actual POST is silently
+// blocked (the "web login freeze" — reproduced 2026-07-05). `localhost` is same address-space, no PNA —
+// so on web we always talk to localhost:4000. Web is a dev/testing convenience only (CLAUDE.md), never
+// shipped, so this never reaches a real user. Leaves the phone's `.env` (and :8081 lane) untouched.
+const API_BASE =
+  Platform.OS === 'web'
+    ? 'http://localhost:4000/api'
+    : (process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:4000/api');
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: API_BASE,
