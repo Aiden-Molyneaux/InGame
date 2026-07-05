@@ -66,6 +66,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 12,
+    marginBottom: 5, // R2 — a 5px teal gap between the top bar and the screen (lifts the top bar off the bezel)
   },
   power: { alignItems: 'flex-start', gap: 3 },
   led: {
