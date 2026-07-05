@@ -128,3 +128,38 @@ stays COLLECTION-active through every state. L1/L2 not exercised (need a loading
   Surface reads "matches the converged board" within its declared EXPECTED/OQ envelope. → the first-article
   owner stop (screen + manifest + this report + the receipt).
 
+---
+
+## The Fable-audit stop (§4 — pulled forward by the owner, 2026-07-05) · verdict: **GO, two adjustments noted**
+
+**Mechanic:** the owner switched THIS session to Fable ahead of the §3.3 placement (usage window), with
+"focus on the hard decisions/work first." Run as the §4 architect read over the CARD-15 render module +
+the card-substrate architecture (the Styler aesthetic half re-runs at the §3.2 first-article, when a
+Styler exists to judge). Post-first-article: the owner reviewed §3.1 on device (found the GameCard
+container-overflow regression — fixed `8572156` — and the missing-entry-point gap — fixed `23b5f18`).
+
+- **(1) The render module — GO.** Boundary clean (elements shared / closed attrs render-local, 0064);
+  `buildCardElements` source-agnostic (one builder for the live `<Canvas>` + headless flatten); F-02 clip
+  via the shared helper; cap enforced at schema AND draw; effect = runtime overlay (CARD-12/15 faithful).
+  **Adjustment (a):** the text-width approximation (canvaskit-web lacks `measureText`) can drift a
+  headless flatten from the device render on text-heavy cards → **M5-entry item** (mooted at M4 by the
+  flatten-at-publish ruling). **Adjustment (b):** the untyped `SkiaCtx` interop is fine at current size;
+  revisit on a third consumer.
+- **(3) Architecture — the load-bearing rulings filed as decision 0066:** flatten-at-publish under the
+  0062 boundary (save-private validates + hashes; owner surfaces render live) · the `card_designs` /
+  `style_presets` model (adoption grants deliberately NOT in `card_designs` — a separate M5 table) ·
+  COL-06 equip semantics (own · same-game · private|published; drafts not equippable; `ON DELETE SET
+  NULL` backs the CARD-18 guarantee behind the 0040 409-guard) · the CARD-24a draft document (one row =
+  the draft; autosave PATCH; SAVE-AS-NEW = fresh POST; crash recovery = the row; the Styler↔Canvas
+  switch edits the same row) · the owner-only `composition` rider (the CARD-15 viewers-get-images
+  guarantee enforced at the serializer split).
+- **(4) Completeness critic — what's missing before the editors scale:** the card-substrate BACKEND
+  (in flight, this batch) · a seeded private design (so the Styler/switcher demo real data) · the COSM-02
+  roster as consumable assets (0063 is spec'd; the Styler build seeds the free set) · the CARD-16
+  a11y board (decision 0062 §4 — design-first, still owed before M4 exit) · the M5-entry ledger
+  (flatten/storage/CDN + text-measure + adoption grants + the cross-user composition-strip guard test).
+
+**Verdict: GO** — the render approach and the substrate architecture hold; no course-correction owed.
+The Styler §3.2 builds on 0066; its first-article (aesthetic half of this stop) still runs the full
+pipeline + the owner's gate-5 taste.
+
