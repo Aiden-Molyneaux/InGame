@@ -40,6 +40,7 @@ under Promoted.
 ## Canonized (CLAUDE.md law — the invariants)
 
 - Metro **:8081 is the owner's phone lane — never touch it**; agents use :8082 only.
+- The standing Metro on **:8082 is never killed** to "free the port" — `preview_start`'s "port in use" error means it is UP; killing it re-pays the cold start.
 - **Never create `apps/mobile/.env.local`** (also doctor-checked).
 - Behavior checks → **supertest integration tests first**; the :8082 browser lane is for visual/UI verification.
 - Destructive DB testing → parallel API on :4001 + disposable DB, killed after.
