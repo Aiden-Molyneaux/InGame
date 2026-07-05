@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -44,10 +44,25 @@ export default function GamePage() {
   const [inspectOpen, setInspectOpen] = useState(false);
   const [overflowOpen, setOverflowOpen] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const [updateEntry, updateState] = useUpdateEntryMutation();
   const [removeEntry, removeState] = useRemoveEntryMutation();
   const [setNowPlaying] = useSetNowPlayingMutation();
+
+  // Reset per-game view state when the route param changes — expo-router RE-RENDERS (does not remount)
+  // a dynamic route on param change, so a mid-edit draft/section would bleed across games if a future
+  // surface ever adds game→game navigation. Not reachable at M4 (only the Collection push enters here),
+  // but cheap to guard now. (murr — latent cross-game state leak.)
+  useEffect(() => {
+    setEditing(false);
+    setDraft(null);
+    setSection('play');
+    setInspectOpen(false);
+    setOverflowOpen(false);
+    setConfirmRemove(false);
+    setSaveError(null);
+  }, [id]);
 
   // ── lifecycle (L1 · L2) ────────────────────────────────────────────────────────────────────────
   if (isLoading) {
@@ -81,7 +96,10 @@ export default function GamePage() {
 
   // ── the resolved-entry screen ────────────────────────────────────────────────────────────────────
   const d = draft ?? draftFromEntry(entry);
-  const patchDraft = (p: Partial<PlayDraft>) => setDraft((prev) => ({ ...(prev ?? draftFromEntry(entry)), ...p }));
+  const patchDraft = (p: Partial<PlayDraft>) => {
+    setSaveError(null); // editing clears the last save error (mirrors TextField's clear-on-type)
+    setDraft((prev) => ({ ...(prev ?? draftFromEntry(entry)), ...p }));
+  };
 
   // The stats back reflects the DRAFT live while editing, else the saved entry.
   const eff = editing
@@ -100,21 +118,34 @@ export default function GamePage() {
   function cancelEdit() {
     setDraft(null);
     setEditing(false);
+    setSaveError(null);
   }
   async function saveEdit() {
+    // Client-guard the one field the server rejects hard: ownedSince must be YYYY-MM-DD (isoDateSchema)
+    // — catch a malformed date here with a clear message instead of a silent 422.
+    const since = d.ownedSince.trim();
+    if (since && !/^\d{4}-\d{2}-\d{2}$/.test(since)) {
+      setSaveError('Owned since must be a date — YYYY-MM-DD (e.g. 2022-02-25).');
+      return;
+    }
     const body: UpdateCollectionEntryRequest = {
       hours: Number.parseInt(d.hours, 10) || 0,
       percentComplete: d.percent === '' ? null : Math.max(0, Math.min(100, Number.parseInt(d.percent, 10) || 0)),
       status: d.status,
-      ...(d.ownedSince.trim() ? { ownedSince: d.ownedSince.trim() } : {}),
+      ...(since ? { ownedSince: since } : {}),
       ...(d.notes.trim() ? { notes: d.notes.trim() } : {}),
     };
     try {
       await updateEntry({ entryId: entry!.entryId, ...body }).unwrap();
       setDraft(null);
       setEditing(false);
-    } catch {
-      /* keep the form open on failure — the values are preserved for a retry */
+      setSaveError(null);
+    } catch (e) {
+      // Surface the failure (mirrors the reference LogHoursSheet) instead of swallowing it — the form
+      // stays open with the values preserved for a retry.
+      const err = (e as { data?: { error?: { message?: string; details?: { message?: string }[] } } })?.data
+        ?.error;
+      setSaveError(err?.details?.[0]?.message ?? err?.message ?? "Couldn't save. Check your entries and try again.");
     }
   }
   async function toggleNowPlaying() {
@@ -206,13 +237,17 @@ export default function GamePage() {
         {/* the pinned EDIT save bar — DONE always reachable, just above the section dock */}
         {editing ? (
           <View style={styles.editBar}>
-            <ScreenButton
-              label={updateState.isLoading ? '…' : '✓ Done editing'}
-              variant="primary"
-              onPress={saveEdit}
-              style={styles.editBtn}
-            />
-            <ScreenButton label="Cancel" variant="secondary" onPress={cancelEdit} style={styles.editBtn} />
+            {saveError ? <Text style={styles.saveError}>{saveError}</Text> : null}
+            <View style={styles.editBarRow}>
+              <ScreenButton
+                label={updateState.isLoading ? '…' : '✓ Done editing'}
+                variant="primary"
+                onPress={saveEdit}
+                disabled={updateState.isLoading}
+                style={styles.editBtn}
+              />
+              <ScreenButton label="Cancel" variant="secondary" onPress={cancelEdit} style={styles.editBtn} />
+            </View>
           </View>
         ) : null}
 
@@ -360,7 +395,6 @@ const styles = StyleSheet.create({
   actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.md },
   mini: { paddingVertical: theme.space.md, paddingHorizontal: theme.space.lg },
   editBar: {
-    flexDirection: 'row',
     gap: theme.space.md,
     paddingHorizontal: theme.space.lg,
     paddingVertical: theme.space.md,
@@ -368,7 +402,9 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: theme.scr.hairline,
   },
+  editBarRow: { flexDirection: 'row', gap: theme.space.md },
   editBtn: { flex: 1 },
+  saveError: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.brand.alert },
   about: { padding: theme.space.lg, backgroundColor: theme.scr.panel, borderWidth: 1, borderColor: theme.scr.hairline, gap: theme.space.sm },
   aboutTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 1 },
   aboutSub: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.dim, lineHeight: 16 },

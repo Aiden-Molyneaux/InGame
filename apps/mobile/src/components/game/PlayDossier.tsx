@@ -79,7 +79,7 @@ export function PlayDossier({
       <TextField
         label="Hours"
         value={draft.hours}
-        onChangeText={(v) => onDraftChange({ hours: v.replace(/[^0-9]/g, '') })}
+        onChangeText={(v) => onDraftChange({ hours: v.replace(/[^0-9]/g, '').slice(0, 5) })}
         keyboardType="number-pad"
         placeholder="0"
       />
