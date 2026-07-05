@@ -106,8 +106,8 @@ function ViewIcon({ view }: { view: CollectionView }) {
     </Svg>
   );
 }
-// The board's button "+" (`.btn` svg, currentColor = the button's ink). Enlarged to 20px on the tools
-// ADD (R2 2a — the '+' glyph is the CTA; the button stays base size); accent-ink at 11px on the hero.
+// The board's button "+" (`.btn` svg, currentColor = the button's ink). Default 15px on the ADD buttons;
+// accent-ink at 11px on the hero LOG HOURS. (R2 2a: the ADD-glyph enlargement to 20 was reverted to base.)
 function PlusIcon({ color = theme.brand.goldInk, size = 15 }: { color?: string; size?: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 11 11">
@@ -350,8 +350,8 @@ export default function Collection() {
             onLongPress={() => setDrawerOpen(true)}
           />
           <View style={styles.spacer} />
-          {/* R2 (2a) — the button is base size; only the '+' glyph is enlarged (size 20, was 15). */}
-          <ScreenButton label="Add" variant="add" icon={<PlusIcon size={20} />} onPress={() => router.push('/add-game')} />
+          {/* R2 (2a) — button + glyph both at base size (the owner reverted the glyph enlargement). */}
+          <ScreenButton label="Add" variant="add" icon={<PlusIcon />} onPress={() => router.push('/add-game')} />
         </View>
       )}
 
