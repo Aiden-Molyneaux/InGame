@@ -1,21 +1,16 @@
-// CARD-15 card composition — vector elements + closed attributes, flattened by skia (M4 §1 render
-// spike, GO 2026-07-05). Coordinates are normalized 0..1 of the card face, so ONE composition renders
-// at any size (the PROOF size-ladder). This is the render-consumable shape; the full zod formalization
-// into packages/shared + the product-spec/api-contract ripple is the next formalization pass.
-
-export const COMPOSITION_SCHEMA_VERSION = 1 as const;
-export const MAX_ELEMENTS = 30; // CARD-15 cap — server-configurable, starts at 30 (OQ-008)
-
-export type CardElement =
-  | { type: 'rect'; x: number; y: number; w: number; h: number; rotation?: number; fill: string }
-  | { type: 'ellipse'; x: number; y: number; w: number; h: number; rotation?: number; fill: string }
-  | { type: 'poly'; shape: 'star' | 'diamond' | 'triangle'; x: number; y: number; w: number; h: number; rotation?: number; fill: string }
-  | { type: 'text'; x: number; y: number; text: string; size: number; fill: string };
+// CARD-15 card composition (render module). The vector ELEMENT schema + the cap are now the single
+// source in @ingame/shared (formalized at M4); this module adds the render-consumable CLOSED
+// attributes (base/frame/nameplate/effect) that the skia flatten draws — they reference cosmetic ids
+// once the Styler + COSM roster (0063) formalize them, so they stay render-local for now. Coordinates
+// are normalized 0..1 of the card face (one composition renders at any size — the PROOF size-ladder).
+export { MAX_ELEMENTS, COMPOSITION_SCHEMA_VERSION } from '@ingame/shared';
+export type { CardElement } from '@ingame/shared';
+import { COMPOSITION_SCHEMA_VERSION, type CardElement } from '@ingame/shared';
 
 export type CardComposition = {
   schemaVersion: typeof COMPOSITION_SCHEMA_VERSION;
   base: { gradient: [string, string] } | { fill: string };
-  elements: CardElement[]; // cap MAX_ELEMENTS
+  elements: CardElement[]; // cap MAX_ELEMENTS (validated by the shared compositionSchema)
   frame?: { color: string; width: number }; // width normalized 0..1 of card width
   nameplate?: { title: string; plate: string; ink: string; size: number };
   effect?: { kind: 'none' | 'scanline'; intensity: number }; // rendered as a RUNTIME overlay, not baked
