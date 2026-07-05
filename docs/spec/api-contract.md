@@ -4,7 +4,7 @@
 > be refined alongside the design-spec, because screens reveal exactly what each call must return.
 > Behavior lives in [`product-spec.md`](product-spec.md); shapes live here. Referenced by ID.
 
-**Version:** 0.51 (draft) · **Last updated:** 2026-07-05 · **Owner:** Claude Code
+**Version:** 0.52 (draft) · **Last updated:** 2026-07-05 · **Owner:** Claude Code
 
 ---
 
@@ -103,7 +103,7 @@
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/games/:gameId/cards` | Published community cards for a game (gallery); each card object carries a read-only **`equipped`** readout — `{ base?, effect?{ name, intensity }, finish?, frame?, nameplate?, font? }` — **display labels/ids, not the composition JSON** (CARD-22). This `equipped` summary **— and the card's `designer { userId, username }` attribution (CARD-01/04, the card-back "CARD ARTIST" provenance; COL-12) —** **rides every card payload** (gallery · the switcher `/me/collection/:entryId/cards` · the collection-item `card` on `/me/collection` + `/users/:id/collection`) |
-| POST | `/cards` | `{ gameId, composition }` → **Draft** (vector composition JSON); `isPremium` + `compositionHash` derived (CARD-02/06/14) |
+| POST | `/cards` | `{ gameId, composition }` → **Draft** (vector composition JSON); `isPremium` + `compositionHash` derived (CARD-02/06/14). **`composition`** validates against the shared **`compositionSchema`** (`@ingame/shared`, decision 0064): `{ schemaVersion: 1, elements: [rect\|ellipse\|poly\|text …] }` capped at **30** (CARD-15/OQ-008), `.passthrough()` for the closed attributes (base/frame/effect/finish/nameplate — formalized with the Styler/COSM roster) |
 | PATCH | `/cards/:id` | Edit own **draft/private** design (autosave) — published cards are immutable (CARD-20) |
 | GET | `/me/cards` | My designs across games: drafts · private · published (the drafts shelf, CARD-14) |
 | POST | `/cards/:id/unpublish` | Delist own published card; existing adopters keep their grant (CARD-20) |
@@ -282,3 +282,4 @@
 | 2026-07-01 | 0.49 | **`/me` stats + expansions go LIVE** (decision 0058, with product-spec 0.47): real `stats { games, hours, completionPct, cardsDesigned, adoptionsReceived, friends }` (clout stats = honest zeros until M4/M5; percentile chips omitted below the PROF-07 floor); the **expanded `favouriteGame`/`nowPlaying`** `{ gameId, entryId?, title, hours, card }` (the P2 PINNED-FAVOURITE unblock; `card` = the CARD-18 stub); PATCH `/me` favourites now **validate against the live catalog + controlled genre list** (unknown → 422; the M2-deferred existence checks). `top10` stays un-emitted (**D3** — the curated store rides M4). The issuance `user` widens identically (one serializer, 0056). | PROF-01/04/05/07, WTP-03, CAT-04 |
 | 2026-07-04 | 0.50 | **Collection item gains `addedAt`** (OQ-128 resolved, M3-R R1-2): the `/me/collection` item enumeration adds **`addedAt`** — the ISO-8601 immutable shelf-add timestamp (entry `created_at`, already in the schema), the substrate for the board's **recently-added** (RECENT) sort, distinct from the user-editable `ownedSince`. Serializer maps `entry.createdAt.toISOString()`; the client RECENT sort re-points off the `ownedSince` interim onto `addedAt`. Additive field; no path/posture change. | COL-07, OQ-128 |
 | 2026-07-05 | 0.51 | **OQ-056 style presets** (decision 0062, with product-spec 0.49 / CARD-24): **+`GET·POST·PATCH·DELETE /me/style-presets`** — reusable **game-agnostic** closed-attribute recipes (`{ frameId?, effect?{id,intensity}, finishId?, nameplateId?, title?{fontId,ink} }`), **capped at 30** (SYS-04) → **`409 PRESET_LIMIT`**; the Styler/Canvas `BaseRail` merges them **client-side**, applying is client-side (no apply endpoint). **Page-audit:** the **customizations gallery is already covered** — `/me/cards` (My Designs shelf, CARD-14) + `/me/collection/:entryId/cards` (per-game switcher, COL-06) — **no new gallery routes**. `PRESET_LIMIT` appended to the error registry (the additive F-17 path). | CARD-24, COL-06 |
+| 2026-07-05 | 0.52 | **`composition` payload schema** (decision 0064, render-spike GO; product-spec 0.51): `POST /cards`'s `composition` now validates against the shared **`compositionSchema`** — `schemaVersion` + typed **vector elements** (rect/ellipse/poly/text) + the **cap-30** array ceiling; `.passthrough()` carries the closed attributes until they formalize (Styler/COSM). No new paths. | CARD-15, CARD-02 |
