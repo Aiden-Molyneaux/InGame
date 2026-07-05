@@ -50,6 +50,7 @@
   "@react-native-async-storage/async-storage": "The redux-persist storage engine on React Native (F20; persist holds drafts/cache only, never tokens). Provenance: React Native Community.",
   "expo-font": "Load the design-system fonts (F-08). Provenance: Expo.",
   "react-native-svg": "Vector glyphs on the NavKeycaps (component-map §5.1 — the mockup `.nav-btn` svg icons; owner directive 2026-07-01) + the M4 card-composition render path ahead. RN has no built-in vector primitive; hand-rolled View shapes can't draw the compass/bag/friends arcs. Expo-SDK-54-pinned via `expo install` (15.12.1). Provenance: Software Mansion.",
+  "@shopify/react-native-skia": "The CARD-15 flatten/render pipeline (M4 §1 spike, GO 2026-07-05): composition JSON -> skia -> flattened image (thumbnail + full) + effect/finish runtime overlays + the cap-30 PROOF size-ladder; offline client-flatten (P11). Included in Expo Go on SDK 54 (no dev build); web via CanvasKit. RN has no rasterizer, and the react-native-svg path can't makeImageSnapshot/flatten a composition. Expo-pinned via `expo install` (2.2.12). Provenance: Shopify.",
   "@expo-google-fonts/chakra-petch": "Chakra Petch — the on-screen typeface (F-08 / design-spec §1.2). Bundled font, no manual asset. Provenance: Expo.",
   "@expo-google-fonts/paytone-one": "Paytone One — the shell/wordmark typeface (F-08 / design-spec §1.2). Provenance: Expo.",
 
