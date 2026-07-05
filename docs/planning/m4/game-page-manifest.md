@@ -83,7 +83,7 @@ the YOUR PLAY dossier readout + an action row; the section dock sits at the bott
 | 1 | Hero title (game name) | Text | display 21 | scroll, centered | e.g. "Elden Ring" | OWED (`:463`) — from `entry.title` |
 | 2 | Facts line (dev · year · genre) | Text | micro 9, dim | under title | "FROMSOFTWARE · 2022 · SOULSLIKE" | OWED (`:464`) — from `entry` (NOT `/catalog/games/:id`, EXPECTED) |
 | 3 | Dual-face hero — FACE (left) + label "THE FACE" | `DualFaceHero` → `GameCard` face (fluid 63:88) | 2-up | hero row | — | OWED (`:465–469`); the **composed CARD-15 custom face → `EXPECTED`** (renders the CARD-18 default placeholder, decision 0058 §6) |
-| 4 | Dual-face hero — STATS BACK (right, `.flipy`) + label "YOUR STATS" (accent) | `StatsBack` (CARD-01) | 2-up | hero row | HOURS·COMPLETE·STATUS·SINCE + "CARD ARTIST" | OWED (`:470–484`) — composed client-side from `entry`; CARD ARTIST = default card's designer or "—" (default has none) |
+| 4 | Dual-face hero — STATS BACK (right, `.flipy`) + label "YOUR STATS" (accent) | `StatsBack` (CARD-01) | 2-up | hero row | HOURS·COMPLETE·STATUS·SINCE + "CARD ARTIST" | OWED (`:470–484`) — composed client-side from `entry`; CARD ARTIST = "DEFAULT" for the CARD-18 stub (real designer arrives with card_designs). Name rendered gold per the board `.cb-prov .p-name` (card-content provenance, not chrome — burt/owner call) |
 | 5 | Hero tap → enlarge `CardDetail` (CARD-23 INSPECT) | tap handle | — | on hero | — | OWED (`:519` caption; CARD-23/0048) — see CardDetail state |
 | 6 | "YOUR PLAY" section head | `ScreenHead`/sec | micro 9, dim | below hero | "YOUR PLAY" | OWED (`:486`) |
 | 7 | Dossier readout — PLATFORMS | `PlayDossier` row | — | dossier | "PC · PS" | **EXPECTED(COL-04 · decision 0058 §7 — no `platformIds` substrate)** (`:488`) — row omitted/deferred, not fabricated |
@@ -105,7 +105,7 @@ back updates live; a pinned save bar (DONE / CANCEL) seats above the section doc
 | 2 | "EDIT YOUR PLAY — THE FORM" section head | sec | micro 9 | below hero | "EDIT YOUR PLAY — THE FORM" | OWED (`:557`) |
 | 3 | HOURS field (editing state) | `PlayDossier` field (`field-inline` + caret) | title 15 | form | numeric | OWED (`:559`) — `PATCH hours` |
 | 4 | COMPLETE % field | field-inline + `%` | title 15 | form | "68%" | OWED (`:560`) — `PATCH percentComplete` |
-| 5 | STATUS chips (stacked, wrap) | `GenreTag`/`schip` row | selected=accent + StateMark corner | form | BACKLOG·PLAYING·BEATEN·COMPLETED·DROPPED | OWED (`:561`) — `PATCH status`; enum `backlog\|playing\|beaten\|completed\|dropped\|wishlist` (0058 §4) |
+| 5 | STATUS chips (stacked, wrap) — **5 chips; WISHLIST excluded** | `GenreTag` row | selected=accent | form | PLAYING·BACKLOG·BEATEN·COMPLETED·DROPPED | OWED (`:561`) — `PATCH status`; the owned editor offers **`OWNED_STATUSES`** = the storage enum (0058 §4) **minus `wishlist`** (the unowned/WTP-02 state — an owned entry is never settable to it) per **OQ-070 · decision 0025**; the board M2 draws 5 chips |
 | 6 | PLATFORMS chips (PC·PS·XB) | chip row | selected=accent | form | PC·PS·XB | **EXPECTED(COL-04 · decision 0058 §7)** (`:562`) — no `platformIds` substrate |
 | 7 | OWNED SINCE field | field-inline | title 15 | form | "SEP 2014" | OWED (`:563`) — `PATCH ownedSince` |
 | 8 | RATING (stars) | stars, dimmed | — | form | "PENDING (OQ-058)" | OWED as PENDING display (`:564`) — non-interactive |
