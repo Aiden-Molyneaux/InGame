@@ -35,6 +35,7 @@ export function CardSwitcher({
   onDesignNew,
   onRequestDelete,
   deleteError,
+  onClearDeleteError,
 }: {
   entry: CollectionItem;
   onEditInStyler: (cardId: string) => void;
@@ -42,6 +43,8 @@ export function CardSwitcher({
   /** The 0040 confirm renders at the PAGE root (D.27) — the switcher only asks. */
   onRequestDelete: (cardId: string, name: string) => void;
   deleteError?: string | null;
+  /** Selection changed — the page clears its delete error so it can't blame the wrong card. */
+  onClearDeleteError?: () => void;
 }) {
   const { data, isLoading } = useGetEntryCardsQuery(entry.entryId);
   const [updateEntry, equipState] = useUpdateEntryMutation();
@@ -103,7 +106,13 @@ export function CardSwitcher({
               accessibilityRole="button"
               accessibilityLabel={`Select ${row.name}`}
               accessibilityState={{ selected: sel }}
-              onPress={() => setSelectedId(row.id)} // CARD-23 ACT-IN-PLACE — select, never navigate
+              onPress={() => {
+                // CARD-23 ACT-IN-PLACE — select, never navigate; stale errors don't follow the
+                // selection onto a different card (murr, gate-5 round 2)
+                setSelectedId(row.id);
+                setInlineError(null);
+                onClearDeleteError?.();
+              }}
             >
               {sel ? <SelectRing /> : null}
               <View style={[styles.tag, TAG_STYLE[row.status]]}>

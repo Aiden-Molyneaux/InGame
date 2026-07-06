@@ -198,6 +198,7 @@ export default function GamePage() {
               onDesignNew={() => router.push(`/styler/${entry.gameId}`)}
               onRequestDelete={(id, name) => setConfirmDeleteCard({ id, name })}
               deleteError={deleteCardError}
+              onClearDeleteError={() => setDeleteCardError(null)}
             />
           ) : (
             <View style={styles.about}>

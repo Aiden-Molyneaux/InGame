@@ -131,6 +131,9 @@ export default function Styler() {
   const [saveOpen, setSaveOpen] = useState(false); // the SAVE ▸ outcome sheet (door 2)
   const [confirmDiscard, setConfirmDiscard] = useState(false); // the ✕ leave-without-keeping gate (door 1)
   const [busyKeep, setBusyKeep] = useState(false);
+  // one in-flight guard across the exit writes — a double-tap on DISCARD/SAVE PRIVATE/KEEP AS
+  // DRAFT ran the write twice and popped the router twice (murr round-2)
+  const [busyExit, setBusyExit] = useState(false);
 
   // The composition as it was when this session OPENED the card (resumed rows only). The autosave
   // writes to the same row (CARD-24a), so "discard" on an existing card must PATCH this back —
@@ -294,8 +297,10 @@ export default function Styler() {
           });
       }
       await savePrivateCard(cardRow.id).unwrap();
-      await updateEntry({ entryId: entry.entryId, activeCardDesignId: cardRow.id }).unwrap();
+      // the row IS private now — record it before the equip step, or a failed equip leaves local
+      // status 'draft' and ✕'s quiet-evaporate branch deletes a KEPT card (murr, gate-5 round 2)
       setCardRow((r) => (r ? { ...r, status: 'private' } : r));
+      await updateEntry({ entryId: entry.entryId, activeCardDesignId: cardRow.id }).unwrap();
       setMode('kept');
     } catch (e) {
       setInlineError(errMsg(e, 'Could not equip it. Your draft is safe — try again.'));
@@ -305,7 +310,8 @@ export default function Styler() {
   }
 
   async function savePrivateQuiet() {
-    if (!cardRow) return;
+    if (!cardRow || busyExit) return;
+    setBusyExit(true);
     setSaveOpen(false);
     setInlineError(null);
     try {
@@ -327,9 +333,12 @@ export default function Styler() {
           });
       }
       await savePrivateCard(cardRow.id).unwrap();
+      setCardRow((r) => (r ? { ...r, status: 'private' } : r));
       router.back(); // the quiet exit — it waits in the game's card switcher (no beat)
     } catch (e) {
       setInlineError(errMsg(e, 'Could not save. Your draft is safe — try again.'));
+    } finally {
+      setBusyExit(false);
     }
   }
 
@@ -358,15 +367,22 @@ export default function Styler() {
   }
 
   // SAVE ▸ → KEEP AS DRAFT: leave with the edits kept ON the draft row (the CARD-24a promise) —
-  // flush any pending debounced save first (murr F2) and go.
-  function keepAsDraftExit() {
+  // the flush is AWAITED so an immediate re-resume can't read the stale cached row and overwrite
+  // the newer draft (the murr-F1 pattern at the exit edge).
+  async function keepAsDraftExit() {
+    if (busyExit) return;
+    setBusyExit(true);
     setSaveOpen(false);
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-      const d = draftRef.current;
-      const row = cardRef.current;
-      if (d && row) void updateCard({ cardId: row.id, composition: d });
+    try {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+        const d = draftRef.current;
+        const row = cardRef.current;
+        if (d && row) await updateCard({ cardId: row.id, composition: d }).unwrap().catch(() => {}); // soft-fail: leave anyway (CARD-24a tolerance)
+      }
+    } finally {
+      setBusyExit(false);
     }
     router.back();
   }
@@ -376,7 +392,24 @@ export default function Styler() {
     creatingRef.current = true;
     setSaveOpen(false);
     try {
+      // the sheet promises "the card you opened stays as it is" — settle the OLD row before
+      // adopting the copy (murr round-2 blocker: the autosave had already written the session
+      // edits into a RESUMED original, and the pending timer could still fire against it):
+      const oldRow = cardRef.current;
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
       const row = await createCard({ gameId, composition: draft, name: `${title} II` }).unwrap();
+      if (oldRow) {
+        if (!createdHere && resumeSnapshotRef.current) {
+          // the resumed original goes back to how it was when opened
+          void updateCard({ cardId: oldRow.id, composition: resumeSnapshotRef.current });
+        } else if (createdHere && !explicitSave) {
+          // an implicit session draft folds into the copy — don't leave near-identical twins
+          void deleteCard(oldRow.id);
+        }
+      }
       setCardRow({ id: row.id, name: row.name, status: row.status });
       setCreatedHere(true);
       setExplicitSave(true); // the user ASKED for this row — quiet-exit must never delete it (murr F3)
@@ -404,7 +437,8 @@ export default function Styler() {
   }
 
   async function discardDraft() {
-    if (!cardRow) return;
+    if (!cardRow || busyExit) return;
+    setBusyExit(true);
     try {
       // silence the autosave first — a pending PATCH would either 404-loop against a deleted row
       // (murr F4) or re-write the edits we are about to revert (owner D.23)
@@ -426,6 +460,8 @@ export default function Styler() {
     } catch (e) {
       setConfirmDiscard(false);
       setInlineError(errMsg(e, 'Could not discard.'));
+    } finally {
+      setBusyExit(false);
     }
   }
 
@@ -731,7 +767,7 @@ export default function Styler() {
           <SaveOption
             label="Keep as draft"
             sub="Finish it later — it waits in the game's card switcher."
-            onPress={keepAsDraftExit}
+            onPress={() => void keepAsDraftExit()}
           />
         ) : null}
         <SaveOption
@@ -756,6 +792,7 @@ export default function Styler() {
             : `Your edits from this session are discarded — «${cardRow?.name ?? title}» stays as it was when you opened it.`
         }
         confirmLabel="Discard edits"
+        busy={busyExit}
         onConfirm={() => void discardDraft()}
         onClose={() => setConfirmDiscard(false)}
       />

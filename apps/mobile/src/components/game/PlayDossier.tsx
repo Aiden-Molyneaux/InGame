@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import type { CollectionItem, CollectionStatus, UpdateCollectionEntryRequest } from '@ingame/shared';
 import { GenreTag } from '../GenreTag';
@@ -39,6 +39,10 @@ export function PlayDossier({ entry }: { entry: CollectionItem }) {
   const [value, setValue] = useState('');
   const [status, setStatus] = useState<CollectionStatus>(entry.status);
   const [error, setError] = useState<string | null>(null);
+  // the status chip's save is fire-and-forget — its callbacks must not close/poison whichever
+  // editor happens to be open when the request resolves (murr, gate-5 round 2)
+  const openRef = useRef<EditableField | null>(null);
+  openRef.current = open;
 
   function beginEdit(f: EditableField) {
     setError(null);
@@ -170,8 +174,12 @@ export function PlayDossier({ entry }: { entry: CollectionItem }) {
                       setStatus(s);
                       void updateEntry({ entryId: entry.entryId, status: s })
                         .unwrap()
-                        .then(close)
-                        .catch(() => setError("Couldn't save — try again."));
+                        .then(() => {
+                          if (openRef.current === 'status') close();
+                        })
+                        .catch(() => {
+                          if (openRef.current === 'status') setError("Couldn't save — try again.");
+                        });
                     }}
                   />
                 ))}
