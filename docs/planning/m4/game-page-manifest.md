@@ -273,3 +273,18 @@ Collection card/chevron tap (CARD-23 NAVIGATE) — verify it MOUNTS without a ho
 crash (the class of bug static + screenshot lanes miss), then exercise PLAY · EDIT · CARDS · CardDetail ·
 the tab dock, and confirm the NavBand stays COLLECTION-active throughout. parvati captures her own
 390×844 web screenshots per state.
+
+## GATE-5 AMENDMENTS (owner rulings, 2026-07-06 — `gate5-notes.md` is the ledger; these override the rows above)
+- **EDIT-STATS is retired as a form state:** every stat (hours · completion · status · owned-since ·
+  notes, + the deferred platforms/rating rows) displays under YOUR PLAY and edits INDIVIDUALLY in
+  place (per-field PATCH; a status chip saves on tap; no layout shift of sibling rows). The pinned
+  DONE/CANCEL bar and the EDIT STATS action are gone (B.8).
+- **The blank default face is IMPLICIT (C.10):** never a switcher tile, never counted in "YOUR CARDS
+  — N"; zero designs → the design-nudge empty state. UNEQUIP on the worn card (options row) returns
+  to it; DELETE of the worn card stays refused until unequipped. The equipped marker is the orange
+  ◆ glyph chip beside the status tag, not a word (C.11).
+- **The dual-face hero renders at /grid 161×225** (one size up, B.5); title · facts · hero group
+  tight. CardDetail: sheet titled CARD DETAIL, card at 189×264, credit reads YOUR DESIGN (C.14).
+- **The card-delete 0040 confirm mounts at the PAGE root** (in-app bottom dock, D.27).
+- Every card face app-wide is display-only (`pointerEvents`) inside a full-card Pressable; Shelf /
+  Grid / Top faces navigate (A.3/C.12); the skia renderer preloads behind the shell (A.1).

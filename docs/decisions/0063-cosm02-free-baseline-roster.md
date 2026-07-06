@@ -40,8 +40,12 @@ No free/premium split (vector elements are all free, 0017). Themed packs are the
 ### 4. Frames · nameplates · fonts — OQ-010 (the remaining closed attributes)
 - **Frames — free (~6):** none/clean · thin-line · double-line · ticket-notch · bracket-corners ·
   pixel-border. *Premium (M5):* ornate · gold · animated.
-- **Nameplates — free (~3 + none):** none · SLAB · RIBBON · BEVEL (as drawn on the styler board, 0018).
+- **Nameplates — free (~3):** SLAB · RIBBON · BEVEL (as drawn on the styler board, 0018).
   *Premium (M5):* HOLO PLATE · ornate.
+  **AMENDED (owner gate-5 ruling, 2026-07-06 — resolves OQ-135): `none` is removed — a plate is
+  REQUIRED so the game name always renders (CARD-01; the styler board's "THE NAME ALWAYS RENDERS"
+  hint governs). Legacy `shape:'none'` compositions render as SLAB; the composition's nameplate
+  object (title/font/ink) is never stripped by any pick.**
 - **Fonts — free (~5):** clean-sans · bold-display · pixel/retro · serif · script (title font + ink;
   also the OQ-009 placeable glyphs). *Premium (M5):* fancy display / licensed.
 

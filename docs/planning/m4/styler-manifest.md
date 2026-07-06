@@ -198,3 +198,19 @@ if canvaskit/web breaks, that is a BOOT-check failure to surface, not to paper o
 swipe · a pick per section · intensity · SAVE PRIVATE · KEEP→KeepBeat→DONE (lands on the Game page
 wearing the card) · resume via EDIT IN STYLER · discard via ConfirmSheet. parvati captures per-state
 shots at ~390×844.
+
+## GATE-5 AMENDMENTS (owner rulings, 2026-07-06 — `gate5-notes.md` is the ledger; these override the rows above)
+- **The TWO-DOOR exit model replaces P2's outcome bar + the C4 ⋯ overflow (D.23/24/26):** ✕ =
+  leave-without-keeping (confirm when the session changed anything; a session-created row deletes, a
+  RESUMED card REVERTS to its open snapshot — discard can never destroy a pre-existing card) ·
+  one gold **SAVE ▸** opens the outcome sheet (KEEP — EQUIP IT ◆ · SAVE PRIVATE · KEEP AS DRAFT
+  [drafts only] · SAVE AS NEW CARD · SAVE STYLE AS PRESET), each with its consequence line. The
+  autosave still runs underneath (CARD-24a crash-safety).
+- **Header (D.20):** one line — `<GAME> — EDITING · SAVED Ns AGO` (ticking); the LIVE context line
+  is gone; **⤢ CANVAS sits on the tools bar** as an orange stepped button (disabled until §3.4).
+- **P1 (D.17/18):** the fan swipes + neighbours tap-to-front (Add-Game parity); the fore's style
+  details read as EquipReadout chips (no prose label line, no BROWSE); START WITH THIS above
+  SURPRISE ME.
+- **Rails (D.21/22):** no FREE tags (price overlays a tile's top-left when M5 prices arrive); PLATE
+  previews the plate polygon itself (title centred); TITLE previews the game title in each font;
+  **a plate is REQUIRED (OQ-135 ruled)** — NONE left the roster, legacy `shape:'none'` renders SLAB.
