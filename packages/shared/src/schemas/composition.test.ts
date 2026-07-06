@@ -34,6 +34,30 @@ describe('CARD-15/F21: composition schema + version-aware hash', () => {
     expect(compositionSchema.safeParse(over).success).toBe(false);
   });
 
+  it('takes the M4 Canvas additions — icon elements, new poly shapes, CARD-10 creative fields (additive at v1)', () => {
+    expect(cardElementSchema.safeParse({ type: 'icon', iconId: 'trophy', x: 0.5, y: 0.4, w: 0.3, h: 0.3, fill: '#e8c14a' }).success).toBe(true);
+    expect(cardElementSchema.safeParse({ type: 'poly', shape: 'hexagon', x: 0.5, y: 0.5, w: 0.4, h: 0.4, fill: '#7ad0e8' }).success).toBe(true);
+    expect(
+      cardElementSchema.safeParse({
+        ...rect('#fff'),
+        radius: 0.2,
+        opacity: 0.8,
+        fill2: '#000',
+        stroke: { color: '#e8c14a', width: 0.01 },
+        glow: true,
+        blend: 'screen',
+        flipH: true,
+        name: 'MY SLIP',
+        locked: true,
+        hidden: false,
+      }).success,
+    ).toBe(true);
+    expect(cardElementSchema.safeParse({ type: 'text', x: 0.5, y: 0.5, text: 'ARC', size: 0.08, fill: '#fff', fontId: 'bold-display', arc: 60 }).success).toBe(true);
+    // bounds still bite
+    expect(cardElementSchema.safeParse({ ...rect('#fff'), opacity: 1.4 }).success).toBe(false);
+    expect(cardElementSchema.safeParse({ type: 'text', x: 0, y: 0, text: 'X', size: 0.1, fill: '#fff', arc: 400 }).success).toBe(false);
+  });
+
   it('is a deterministic, content-sensitive, version-aware hash', () => {
     const a = compositionSchema.parse({ schemaVersion: 1, elements: [rect('#111')] });
     const b = compositionSchema.parse({ schemaVersion: 1, elements: [rect('#111')] });

@@ -87,7 +87,8 @@ export const INKS: Array<RosterItem & { color: string }> = [
 ];
 
 // ── Base palettes + the start-from sources (CARD-16 — never a blank canvas) ────────────────────
-const BASE_GRADIENTS: Array<[string, string]> = [
+// (exported for the Canvas ADD sheet's BASE row — one seed palette, no second source)
+export const BASE_GRADIENTS: Array<[string, string]> = [
   ['#241a4d', '#0e0b1e'],
   ['#0e2b26', '#08120f'],
   ['#3a1430', '#150713'],

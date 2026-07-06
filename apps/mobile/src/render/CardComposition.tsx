@@ -1,12 +1,17 @@
-import { Canvas, Group, Fill, Rect, Oval, Path, Text, LinearGradient, RadialGradient, Skia, useTypeface, drawAsImage } from '@shopify/react-native-skia';
+import { useEffect, useState } from 'react';
+import { Image, StyleSheet, View } from 'react-native';
+import { Canvas, Group, Fill, Rect, Oval, Path, Text, LinearGradient, RadialGradient, BlurMask, Skia, useTypeface, drawAsImage } from '@shopify/react-native-skia';
 import { ChakraPetch_700Bold } from '@expo-google-fonts/chakra-petch';
 import { PaytoneOne_400Regular } from '@expo-google-fonts/paytone-one';
-import { buildCardElements, type SkiaCtx } from './buildCard';
-import type { CardComposition as Comp } from './composition';
+import { buildCardElements, buildBedElements, buildOverlayElements, type SkiaCtx } from './buildCard';
+import { COMPOSITION_SCHEMA_VERSION, type CardComposition as Comp } from './composition';
 
 // CardComposition (CARD-15) — the react-native-skia consumer of the shared render module. The live
-// editor renders <CardComposition/>; flattenComposition() produces the static image (SAVE-PRIVATE /
-// the size-ladder). Both call the SAME buildCardElements the node harness (flatten.spike.ts) verifies.
+// editor renders <CardComposition/>; flattenComposition() produces the static image (PROOF / the
+// size-ladder). Both call the SAME buildCardElements the node harness (flatten.spike.ts) verifies.
+// M4 §3.4 adds the Canvas consumers: <CardBed/> (the press bed — bare base+vectors, isolation
+// ghosting) and <ProofPrint/> (the true print: the client flatten as a PNG + the effect/finish
+// painted live over it — the CARD-15 image+overlay viewer architecture, demonstrated in-app).
 
 /**
  * Skia context for the RN build — loads the title typefaces. Call from a component (it's a hook).
@@ -20,7 +25,7 @@ export function useCardSkiaCtx(): SkiaCtx {
   const typefaces: Record<string, unknown> = {};
   if (typeface) typefaces['clean-sans'] = typeface;
   if (display) typefaces['bold-display'] = display;
-  return { Group, Fill, Rect, Oval, Path, Text, LinearGradient, RadialGradient, Skia, typeface, typefaces };
+  return { Group, Fill, Rect, Oval, Path, Text, LinearGradient, RadialGradient, BlurMask, Skia, typeface, typefaces };
 }
 
 export function CardComposition({
@@ -38,10 +43,100 @@ export function CardComposition({
   return <Canvas style={{ width, height }}>{buildCardElements(composition, width, height, ctx, effect)}</Canvas>;
 }
 
+/** The press-bed draw (Canvas P1/P2) — base + vectors BARE; `pulledIndex` ghosts the rest to 28%. */
+export function CardBed({
+  composition,
+  width,
+  height,
+  pulledIndex = null,
+}: {
+  composition: Comp;
+  width: number;
+  height: number;
+  pulledIndex?: number | null;
+}) {
+  const ctx = useCardSkiaCtx();
+  return <Canvas style={{ width, height }}>{buildBedElements(composition, width, height, ctx, { pulledIndex })}</Canvas>;
+}
+
+/** A single element drawn alone on a transparent field (slip panes / the AssetShelf glyph cells). */
+export function ElementGlyph({
+  element,
+  width,
+  height,
+}: {
+  element: Comp['elements'][number];
+  width: number;
+  height: number;
+}) {
+  const ctx = useCardSkiaCtx();
+  const solo: Comp = {
+    schemaVersion: COMPOSITION_SCHEMA_VERSION,
+    base: { fill: 'transparent' },
+    elements: [{ ...element, hidden: false }],
+  };
+  return <Canvas style={{ width, height }}>{buildBedElements(solo, width, height, ctx, { plateZone: false })}</Canvas>;
+}
+
 /**
- * Flatten a composition to a PNG data URI (CARD-15 client/offline flatten, P11 — feeds
- * `POST /cards/:id/save-private`). The `effect` is a runtime overlay, so the flattened base excludes
- * it. `ctx` comes from `useCardSkiaCtx()` so the title font is available.
+ * The PROOF true print (Canvas P6): the composition CLIENT-FLATTENED to a PNG (CARD-15's flatten,
+ * its first in-app consumer) with the effect+finish painted live over the image — exactly what an
+ * M5 viewer will see. Flatten failure degrades to the live render (never a crash), reported up.
+ */
+export function ProofPrint({
+  composition,
+  width,
+  height,
+  onFlattenError,
+}: {
+  composition: Comp;
+  width: number;
+  height: number;
+  onFlattenError?: (e: unknown) => void;
+}) {
+  const ctx = useCardSkiaCtx();
+  const [uri, setUri] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  const typefaceReady = !!ctx.typeface;
+  useEffect(() => {
+    let live = true;
+    setUri(null);
+    setFailed(false);
+    flattenComposition(composition, width, height, ctx)
+      .then((u) => {
+        if (live) setUri(u);
+      })
+      .catch((e) => {
+        if (!live) return;
+        setFailed(true);
+        onFlattenError?.(e);
+      });
+    return () => {
+      live = false;
+    };
+    // ctx is rebuilt every render — the typefaces' arrival is the real dependency
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [composition, width, height, typefaceReady]);
+  return (
+    <View style={{ width, height }}>
+      {uri && !failed ? (
+        <Image source={{ uri }} style={{ width, height }} />
+      ) : (
+        // pending or failed → the live draw stands in (same tree, so nothing can visually drift)
+        <Canvas style={{ width, height }}>{buildCardElements(composition, width, height, ctx, false)}</Canvas>
+      )}
+      <Canvas pointerEvents="none" style={StyleSheet.absoluteFill}>
+        {buildOverlayElements(composition, width, height, ctx)}
+      </Canvas>
+    </View>
+  );
+}
+
+/**
+ * Flatten a composition to a PNG data URI (CARD-15 client/offline flatten, P11 — the PROOF print;
+ * the flatten-to-storage seam rides M5 publish, decision 0066 §1). The `effect` is a runtime
+ * overlay, so the flattened base excludes it. `ctx` comes from `useCardSkiaCtx()` so the title
+ * font is available.
  */
 export async function flattenComposition(composition: Comp, width: number, height: number, ctx: SkiaCtx): Promise<string> {
   const image = await drawAsImage(buildCardElements(composition, width, height, ctx, false), { width, height });

@@ -24,12 +24,16 @@ export function PulledSheet({
   visible,
   onClose,
   title,
+  dimScrim = true,
   children,
 }: {
   visible: boolean;
   onClose: () => void;
   /** Optional page title rendered under the grab handle (R2 0b — e.g. the Log-Hours drawer). */
   title?: string;
+  /** false = a transparent (still tap-to-close) scrim — the Canvas EDIT sheet keeps the bed lit
+   *  ("no scrim-dim on the work", board P4 / the Styler's no-scrim lesson). Variant, not a fork. */
+  dimScrim?: boolean;
   children: ReactNode;
 }) {
   const slide = useRef(new Animated.Value(0)).current; // 0 = off-stage, 1 = docked
@@ -64,7 +68,7 @@ export function PulledSheet({
       onLayout={() => overlayRef.current?.measureInWindow((_x, y) => setWellTopY(y))}
     >
       <Pressable style={StyleSheet.absoluteFill} accessibilityLabel="Close" onPress={onClose}>
-        <Animated.View style={[styles.scrim, { opacity: slide }]} />
+        <Animated.View style={[styles.scrim, !dimScrim && styles.scrimClear, { opacity: slide }]} />
       </Pressable>
       {/* the 75% cap lives on the LIFT WRAPPER (a definite % of the overlay) — on the sheet itself
           it resolves against the auto-sized wrapper and strands a dead band under the sheet */}
@@ -97,6 +101,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   scrim: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' },
+  scrimClear: { backgroundColor: 'transparent' },
   liftSlot: { maxHeight: '75%' },
   sheet: {
     backgroundColor: theme.scr.panel,

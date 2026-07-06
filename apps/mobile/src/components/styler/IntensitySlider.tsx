@@ -9,10 +9,15 @@ import { theme } from '../../theme';
 export function IntensitySlider({
   value,
   onChange,
+  label = 'INTENSITY',
+  accessibilityLabel = 'Effect intensity',
 }: {
   /** 0..1 */
   value: number;
   onChange: (v: number) => void;
+  /** Variant, not a fork — the Canvas EDIT sheet reuses the catalog slider as OPACITY (CARD-10). */
+  label?: string;
+  accessibilityLabel?: string;
 }) {
   const [trackW, setTrackW] = useState(0);
   const trackWRef = useRef(0);
@@ -41,12 +46,12 @@ export function IntensitySlider({
 
   return (
     <View style={styles.row}>
-      <Text style={styles.label}>INTENSITY</Text>
+      <Text style={styles.label}>{label}</Text>
       <View
         style={styles.trackWrap}
         onLayout={onLayout}
         accessibilityRole="adjustable"
-        accessibilityLabel="Effect intensity"
+        accessibilityLabel={accessibilityLabel}
         accessibilityValue={{ min: 0, max: 100, now: pct }}
         accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
         onAccessibilityAction={(e) => {

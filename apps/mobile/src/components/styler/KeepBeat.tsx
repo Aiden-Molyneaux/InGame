@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { View, Text, Animated, AccessibilityInfo, StyleSheet } from 'react-native';
+import { View, Text, Animated, AccessibilityInfo, Pressable, StyleSheet } from 'react-native';
 import { CardFace } from '../CardFace';
 import { ScreenButton } from '../ScreenButton';
 import { theme } from '../../theme';
@@ -15,11 +15,14 @@ export function KeepBeat({
   composition,
   cardsDesigned,
   onDone,
+  onEditArt,
 }: {
   title: string;
   composition: CardComposition;
   cardsDesigned: number | null;
   onDone: () => void;
+  /** The Canvas door (§3.4) — absent, the door renders as the disabled "arrives later" line. */
+  onEditArt?: () => void;
 }) {
   const pulse = useRef(new Animated.Value(0)).current;
 
@@ -70,7 +73,13 @@ export function KeepBeat({
         </Text>
       ) : null}
 
-      <Text style={styles.canvasDoor}>⤢ EDIT ART — the Canvas arrives with the deep editor</Text>
+      {onEditArt ? (
+        <Pressable accessibilityRole="button" accessibilityLabel="Edit art — open the Canvas" onPress={onEditArt} hitSlop={6}>
+          <Text style={styles.canvasDoorLive}>⤢ EDIT ART — REOPEN IN THE CANVAS</Text>
+        </Pressable>
+      ) : (
+        <Text style={styles.canvasDoor}>⤢ EDIT ART — the Canvas arrives with the deep editor</Text>
+      )}
       <ScreenButton label="Done — back to the game" onPress={onDone} block />
     </View>
   );
@@ -96,4 +105,5 @@ const styles = StyleSheet.create({
   okSub: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 0.5 },
   clout: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
   canvasDoor: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.faint, letterSpacing: 0.5 },
+  canvasDoorLive: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.accent, letterSpacing: 0.5 },
 });

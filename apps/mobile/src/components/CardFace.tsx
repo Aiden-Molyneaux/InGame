@@ -17,7 +17,33 @@ import type { CardComposition as Comp } from '../render/composition';
 // The Suspense fallback is the default face, so nothing flashes broken while the wasm arrives.
 
 type ComposedCardProps = { composition: Comp; width: number; height: number; effect?: boolean };
+type RenderModule = typeof import('../render/CardComposition');
+let renderModulePromise: Promise<RenderModule | null> | null = null;
 let composedCardPromise: Promise<{ default: ComponentType<ComposedCardProps> }> | null = null;
+
+/**
+ * The ONE lazy gate to the skia render module (wasm on web must load BEFORE any <Canvas>
+ * evaluates). Every skia consumer — CardFace here, the Canvas bed/proof/slips (§3.4) — funnels
+ * through this so a broken load degrades ONCE, consistently, to null (empty boxes, never a
+ * poisoned-lazy redbox; a reload retries).
+ */
+export function loadRenderModule(): Promise<RenderModule | null> {
+  renderModulePromise ??= (async () => {
+    try {
+      if (Platform.OS === 'web') {
+        const { LoadSkiaWeb } = await import('@shopify/react-native-skia/lib/module/web/LoadSkiaWeb');
+        await LoadSkiaWeb({ locateFile: (file: string) => `/${file}` });
+      }
+      // A chunk whose evaluation throws can still RESOLVE — with empty exports — in dev (Metro's
+      // guardedLoadModule reports the error itself), so the catch below never fires. Callers
+      // coalesce missing exports so a broken render module degrades to an empty box.
+      return await import('../render/CardComposition');
+    } catch {
+      return null;
+    }
+  })();
+  return renderModulePromise;
+}
 
 /**
  * Warm the skia renderer (wasm on web, the module + typefaces elsewhere) BEFORE a composed face
@@ -25,23 +51,9 @@ let composedCardPromise: Promise<{ default: ComponentType<ComposedCardProps> }> 
  * that snap to their styling a beat later (owner gate-5 A.1).
  */
 export function preloadComposedCard(): Promise<{ default: ComponentType<ComposedCardProps> }> {
-  composedCardPromise ??= (async () => {
-    try {
-      if (Platform.OS === 'web') {
-        const { LoadSkiaWeb } = await import('@shopify/react-native-skia/lib/module/web/LoadSkiaWeb');
-        await LoadSkiaWeb({ locateFile: (file: string) => `/${file}` });
-      }
-      const mod = await import('../render/CardComposition');
-      // A chunk whose evaluation throws can still RESOLVE — with empty exports — in dev (Metro's
-      // guardedLoadModule reports the error itself), so the catch below never fires. Coalesce so a
-      // broken render module degrades to an empty box, not a lazy-resolves-to-undefined redbox.
-      return { default: mod?.CardComposition ?? ((() => null) as ComponentType<ComposedCardProps>) };
-    } catch {
-      // The cached promise resolving to a fallback would otherwise throw from EVERY <CardFace>
-      // forever after one failed wasm fetch. Degrade to an empty box; a reload retries the load.
-      return { default: (() => null) as ComponentType<ComposedCardProps> };
-    }
-  })();
+  composedCardPromise ??= loadRenderModule().then((mod) => ({
+    default: mod?.CardComposition ?? ((() => null) as ComponentType<ComposedCardProps>),
+  }));
   return composedCardPromise;
 }
 

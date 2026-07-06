@@ -3,6 +3,8 @@ import { View, Text, Pressable, ScrollView, StyleSheet, ActivityIndicator } from
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import type { CardDesignView, StylePresetStyle } from '@ingame/shared';
 import { CardFace, parseComposition } from '../../src/components/CardFace';
+import { CanvasSurface } from '../../src/components/canvas/CanvasSurface';
+import { SaveOption } from '../../src/components/styler/SaveOption';
 import { BaseRail, type RailEntry } from '../../src/components/styler/BaseRail';
 import { SectionChips, STYLER_SECTIONS, type StylerSection } from '../../src/components/styler/SectionChips';
 import { AttributeSection, type AttributeOption } from '../../src/components/styler/AttributeSection';
@@ -48,6 +50,7 @@ import {
 // are EXPECTED(M5). Route: /styler/:gameId (+?cardId= resume from the switcher / My Designs).
 
 type Mode = 'pick' | 'edit' | 'kept';
+type Posture = 'styler' | 'canvas'; // ONE session, two postures (CARD-24a/0066 §6 — same row, same exits)
 type SaveState = 'saved' | 'saving' | 'error' | 'fresh';
 
 const AUTOSAVE_MS = 1200;
@@ -116,6 +119,9 @@ export default function Styler() {
   const title = entry?.title ?? 'GAME';
 
   const [mode, setMode] = useState<Mode>(cardId ? 'edit' : 'pick');
+  // The Canvas is a POSTURE of this session, not a route — the draft, autosave timer, snapshot and
+  // exit flags never unmount across the switch (§3.4 canvas-manifest ARCH; the D.23 lane).
+  const [posture, setPosture] = useState<Posture>('styler');
   const [section, setSection] = useState<StylerSection>('frame');
   const [foreIndex, setForeIndex] = useState(0);
   const [surprise, setSurprise] = useState<CardComposition | null>(null);
@@ -140,6 +146,12 @@ export default function Styler() {
   // the gate-5 walk proved the old delete path destroyed the user's real card (owner D.23).
   const resumeSnapshotRef = useRef<CardComposition | null>(null);
 
+  // The session undo/redo stacks (CARD-09) — declared up here so the resume effect can clear them
+  // for a fresh document; the pipeline functions live below with patchDraft.
+  const pastRef = useRef<CardComposition[]>([]);
+  const futureRef = useRef<CardComposition[]>([]);
+  const [histVersion, setHistVersion] = useState(0);
+
   // ── resume (?cardId= — the switcher's EDIT IN STYLER / a DRAFT tile; CARD-24a) ────────────────
   // Gated on FRESH data: the autosave PATCH invalidates ['Cards'], so a cached getMyCards row can be
   // the pre-edit composition — resuming from it would overwrite the newer server draft on the next
@@ -154,6 +166,9 @@ export default function Styler() {
       return;
     }
     resumeSnapshotRef.current = comp; // DISCARD on a resumed card REVERTS to this — never deletes
+    pastRef.current = [];
+    futureRef.current = [];
+    setHistVersion((v) => v + 1);
     setDraft(comp);
     setCardRow({ id: row.id, name: row.name, status: row.status });
     setMode('edit');
@@ -212,15 +227,63 @@ export default function Styler() {
     return () => clearInterval(iv);
   }, [mode, saveState, savedAt]);
 
+  // ── the session history (CARD-09 undo/redo — ONE bounded stack across BOTH postures: styler
+  // picks + canvas ops edit one document, so they share one history; surfaced by the Canvas
+  // EditBar). Continuous gestures push ONE entry via beginGesture (+ history:false per move). ────
+  const HISTORY_CAP = 60;
+
+  const pushHistory = useCallback((snapshot: CardComposition) => {
+    pastRef.current.push(snapshot);
+    if (pastRef.current.length > HISTORY_CAP) pastRef.current.shift();
+    futureRef.current = [];
+    setHistVersion((v) => v + 1);
+  }, []);
+
   const patchDraft = useCallback(
-    (fn: (d: CardComposition) => CardComposition) => {
+    (fn: (d: CardComposition) => CardComposition, opts?: { history?: boolean }) => {
       setInlineError(null);
-      setDraft((d) => (d ? fn(d) : d));
+      const cur = draftRef.current;
+      if (!cur) return;
+      const next = fn(cur);
+      if (next === cur) return;
+      if (opts?.history !== false) pushHistory(cur);
+      draftRef.current = next; // keep the ref hot for same-tick follow-ups (gesture streams)
+      setDraft(next);
       setUserEdits((n) => n + 1);
       scheduleSave();
     },
-    [scheduleSave],
+    [scheduleSave, pushHistory],
   );
+
+  /** One history entry for a coming continuous run (a drag / a nudge burst start). */
+  const beginGesture = useCallback(() => {
+    const cur = draftRef.current;
+    if (cur) pushHistory(cur);
+  }, [pushHistory]);
+
+  const undo = useCallback(() => {
+    const cur = draftRef.current;
+    const prev = pastRef.current.pop();
+    if (!cur || !prev) return;
+    futureRef.current.push(cur);
+    draftRef.current = prev;
+    setDraft(prev);
+    setUserEdits((n) => n + 1); // undone work still counts — ✕ stays conservative (state-walk 4)
+    setHistVersion((v) => v + 1);
+    scheduleSave();
+  }, [scheduleSave]);
+
+  const redo = useCallback(() => {
+    const cur = draftRef.current;
+    const next = futureRef.current.pop();
+    if (!cur || !next) return;
+    pastRef.current.push(cur);
+    draftRef.current = next;
+    setDraft(next);
+    setUserEdits((n) => n + 1);
+    setHistVersion((v) => v + 1);
+    scheduleSave();
+  }, [scheduleSave]);
 
   // ── the BaseRail sources: system bases + [CARD-24b] saved presets, merged client-side ─────────
   const railEntries = useMemo<RailEntry[]>(() => {
@@ -255,6 +318,9 @@ export default function Styler() {
     try {
       const row = await createCard({ gameId, composition: comp, name: title }).unwrap();
       setCardRow({ id: row.id, name: row.name, status: row.status });
+      pastRef.current = [];
+      futureRef.current = [];
+      setHistVersion((v) => v + 1);
       setDraft(comp);
       setCreatedHere(true);
       setExplicitSave(false);
@@ -301,6 +367,12 @@ export default function Styler() {
       // status 'draft' and ✕'s quiet-evaporate branch deletes a KEPT card (murr, gate-5 round 2)
       setCardRow((r) => (r ? { ...r, status: 'private' } : r));
       await updateEntry({ entryId: entry.entryId, activeCardDesignId: cardRow.id }).unwrap();
+      // The KEPT state becomes the session's new baseline: if the user re-enters editing (the
+      // KeepBeat's Canvas door, §3.4), ✕ must REVERT to what they kept — never delete the now-real
+      // card (the D.23 rule extended to the post-KEEP session).
+      resumeSnapshotRef.current = draftRef.current ?? resumeSnapshotRef.current;
+      setCreatedHere(false);
+      setUserEdits(0);
       setMode('kept');
     } catch (e) {
       setInlineError(errMsg(e, 'Could not equip it. Your draft is safe — try again.'));
@@ -411,6 +483,9 @@ export default function Styler() {
         }
       }
       setCardRow({ id: row.id, name: row.name, status: row.status });
+      pastRef.current = [];
+      futureRef.current = [];
+      setHistVersion((v) => v + 1);
       setCreatedHere(true);
       setExplicitSave(true); // the user ASKED for this row — quiet-exit must never delete it (murr F3)
       setUserEdits(0);
@@ -607,6 +682,11 @@ export default function Styler() {
           composition={draft}
           cardsDesigned={me?.stats.cardsDesigned ?? null}
           onDone={() => router.replace(`/game/${gameId}`)}
+          onEditArt={() => {
+            // the Canvas door goes live (§3.4): back onto the SAME document, canvas posture
+            setMode('edit');
+            setPosture('canvas');
+          }}
         />
       </Frame>
     );
@@ -681,6 +761,34 @@ export default function Styler() {
         ? `${title.toUpperCase()} — EDITING · NOT SAVED — RETRYING`
         : `${title.toUpperCase()} — EDITING · SAVED${savedAt ? ` ${Math.max(0, Math.round((Date.now() - savedAt) / 1000))}s AGO` : ''}`;
 
+  // ── the CANVAS posture (§3.4 — the same session wearing the workshop; board P1–P7) ────────────
+  if (posture === 'canvas') {
+    const status = (cardRow?.status ?? 'draft').toUpperCase();
+    const canvasSub =
+      saveState === 'saving'
+        ? `${title.toUpperCase()} · ${status} · SAVING…`
+        : saveState === 'error'
+          ? `${title.toUpperCase()} · ${status} · NOT SAVED — RETRYING`
+          : `${title.toUpperCase()} · ${status} · AUTOSAVED${savedAt ? ` ${Math.max(0, Math.round((Date.now() - savedAt) / 1000))}S AGO` : ''}`;
+    return (
+      <CanvasSurface
+        title={title}
+        composition={draft}
+        subLine={canvasSub}
+        inlineError={inlineError}
+        patchDraft={patchDraft}
+        beginGesture={beginGesture}
+        canUndo={histVersion >= 0 && pastRef.current.length > 0}
+        canRedo={histVersion >= 0 && futureRef.current.length > 0}
+        onUndo={undo}
+        onRedo={redo}
+        busyExit={busyExit || busyKeep}
+        onBackToStyler={() => setPosture('styler')}
+        onSavePrivate={() => void savePrivateQuiet()}
+      />
+    );
+  }
+
   return (
     <Frame onBack={requestExit} closeGlyph="✕" saveLine={saveLine}>
       <View style={styles.heroWrap}>
@@ -743,7 +851,7 @@ export default function Styler() {
           label="⤢ Canvas"
           variant="primary"
           stepped
-          disabled // the deep editor arrives at §3.4 — present-but-disabled, the drawn posture
+          onPress={() => setPosture('canvas')} // §3.4 LIVE — the posture switch, same session/row
           style={styles.toolBtn}
         />
         <View style={styles.spacer} />
@@ -800,35 +908,8 @@ export default function Styler() {
   );
 }
 
-// A SAVE-sheet row: the action + its consequence in one tile (the two-door model's legibility).
-function SaveOption({ label, sub, gold = false, onPress }: { label: string; sub: string; gold?: boolean; onPress: () => void }) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      onPress={onPress}
-      style={[saveOptStyles.row, gold && saveOptStyles.rowGold]}
-    >
-      <Text style={[saveOptStyles.label, gold && saveOptStyles.labelGold]}>{label.toUpperCase()}</Text>
-      <Text style={[saveOptStyles.sub, gold && saveOptStyles.subGold]}>{sub}</Text>
-    </Pressable>
-  );
-}
-
-const saveOptStyles = StyleSheet.create({
-  row: {
-    gap: 2,
-    padding: theme.space.lg,
-    borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    backgroundColor: theme.scr.panelHi,
-  },
-  rowGold: { backgroundColor: theme.brand.gold, borderColor: theme.brand.gold },
-  label: { fontFamily: theme.font.screenBold, fontSize: theme.type.body, color: theme.scr.ink, letterSpacing: 1 },
-  labelGold: { color: theme.brand.goldInk },
-  sub: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.dim, lineHeight: 15 },
-  subGold: { color: theme.brand.goldInk, opacity: 0.85 },
-});
+// (SaveOption moved to src/components/styler/SaveOption.tsx — shared with the Canvas PressSheet
+// so the outcome grammar can't drift between postures.)
 
 function basePlate(title: string) {
   return { shape: 'slab' as const, fontId: 'clean-sans', title: title.toUpperCase(), plate: '#141026', ink: '#f3ecd9', size: 0.05 };
