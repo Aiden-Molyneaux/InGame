@@ -2,7 +2,7 @@ import { View, Text, Pressable, ScrollView, StyleSheet, ActivityIndicator } from
 import { useRouter } from 'expo-router';
 import { IdentityBlock } from '../../src/components/IdentityBlock';
 import { ScreenHead } from '../../src/components/ScreenHead';
-import { GameCard } from '../../src/components/GameCard';
+import { CardFace, parseComposition } from '../../src/components/CardFace';
 import { StatTile } from '../../src/components/StatTile';
 import { ScreenButton } from '../../src/components/ScreenButton';
 import { MiniDevice } from '../../src/components/MiniDevice';
@@ -99,7 +99,13 @@ export default function Profile() {
                 accessibilityLabel={`Open ${me.favouriteGame.title}`}
                 onPress={() => router.push(`/game/${me.favouriteGame!.gameId}`)}
               >
-                <GameCard title={me.favouriteGame.title} size="grid" style={styles.favCard} />
+                <CardFace
+                  title={me.favouriteGame.title}
+                  composition={parseComposition(me.favouriteGame.card.composition)}
+                  size="grid"
+                  width={120}
+                  height={168}
+                />
               </Pressable>
               <View style={styles.heroMeta}>
                 <Text style={styles.heroTitle}>{me.favouriteGame.title.toUpperCase()}</Text>
@@ -122,7 +128,7 @@ export default function Profile() {
                   accessibilityLabel={`Open ${g.title}`}
                   onPress={() => router.push(`/game/${g.gameId}`)}
                 >
-                  <GameCard title={g.title} size="cell" />
+                  <CardFace title={g.title} composition={parseComposition(g.card.composition)} size="cell" />
                   <RankChip rank={i + 1} />
                 </Pressable>
               ))}
@@ -140,7 +146,12 @@ export default function Profile() {
                 accessibilityLabel={`Open ${me.nowPlaying.title}`}
                 onPress={() => router.push(`/game/${me.nowPlaying!.gameId}`)}
               >
-                <GameCard title={me.nowPlaying.title} size="cell" nowPlaying />
+                <CardFace
+                  title={me.nowPlaying.title}
+                  composition={parseComposition(me.nowPlaying.card.composition)}
+                  size="cell"
+                  nowPlaying
+                />
               </Pressable>
               <View style={styles.nowMeta}>
                 <Text style={styles.nowTitle}>{me.nowPlaying.title}</Text>

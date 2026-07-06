@@ -4,7 +4,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import type { CollectionItem, CollectionStatus, GenreView } from '@ingame/shared';
 import { ScreenHead } from '../../src/components/ScreenHead';
-import { GameCard } from '../../src/components/GameCard';
+import { CardFace, parseComposition } from '../../src/components/CardFace';
 import { ScreenButton } from '../../src/components/ScreenButton';
 import { ToolButton } from '../../src/components/ToolButton';
 import { SearchField } from '../../src/components/SearchField';
@@ -398,7 +398,13 @@ function NowPlayingHero({ hero, onLogHours }: { hero: CollectionItem | null; onL
         accessibilityLabel={`Open ${hero.title}`}
         onPress={() => router.push(`/game/${hero.gameId}`)}
       >
-        <GameCard title={hero.title} size="grid" style={styles.heroCard} />
+        <CardFace
+          title={hero.title}
+          composition={parseComposition(hero.card.composition)}
+          size="grid"
+          width={138}
+          height={193}
+        />
       </Pressable>
       <View style={styles.heroMeta}>
         <Text style={styles.heroEyebrow}>NOW PLAYING</Text>
@@ -425,7 +431,14 @@ function ShelfView({ items }: { items: CollectionItem[] }) {
       <View style={styles.shelfStack}>
         {items.map((i) => (
           <View key={i.entryId} style={styles.stackRow}>
-            <GameCard title={i.title} size="grid" nowPlaying={i.nowPlaying} style={styles.heroCard} />
+            <CardFace
+              title={i.title}
+              composition={parseComposition(i.card.composition)}
+              size="grid"
+              width={138}
+              height={193}
+              nowPlaying={i.nowPlaying}
+            />
             <View style={styles.heroMeta}>
               <Text style={styles.heroStat}>{statLine(i)}</Text>
               <Text style={styles.heroTitle}>{i.title.toUpperCase()}</Text>
@@ -446,7 +459,13 @@ function GridView({ items }: { items: CollectionItem[] }) {
       <View style={styles.gridWrap}>
         {items.map((i) => (
           <View key={i.entryId} style={styles.gridCol}>
-            <GameCard title={i.title} size="grid" nowPlaying={i.nowPlaying} style={styles.fluidCard} />
+            <CardFace
+              title={i.title}
+              composition={parseComposition(i.card.composition)}
+              size="grid"
+              nowPlaying={i.nowPlaying}
+              style={styles.fluidCard}
+            />
           </View>
         ))}
       </View>
@@ -469,7 +488,7 @@ function ListView({ items }: { items: CollectionItem[] }) {
             accessibilityLabel={`Open ${i.title}`}
             onPress={() => router.push(`/game/${i.gameId}`)}
           >
-            <GameCard title={i.title} size="thumb" />
+            <CardFace title={i.title} composition={parseComposition(i.card.composition)} size="thumb" />
             <View style={styles.stripMeta}>
               <View style={styles.stripTitleRow}>
                 <Text style={styles.stripTitle} numberOfLines={1}>
@@ -500,7 +519,11 @@ function TopView({ items }: { items: CollectionItem[] }) {
       {top.map((i, idx) => (
         <View key={i.entryId} style={[styles.topRow, idx === 0 && styles.topRowFirst]}>
           <Text style={[styles.rank, idx === 0 && styles.rankFirst]}>#{idx + 1}</Text>
-          <GameCard title={i.title} size={idx === 0 ? 'cell' : 'mini'} />
+          <CardFace
+            title={i.title}
+            composition={parseComposition(i.card.composition)}
+            size={idx === 0 ? 'cell' : 'mini'}
+          />
           <View style={styles.rowMeta}>
             <Text style={styles.rowTitle} numberOfLines={1}>
               {i.title}

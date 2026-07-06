@@ -1,5 +1,6 @@
-import { lazy, Suspense } from 'react';
-import { Platform, View, type ViewStyle } from 'react-native';
+import { lazy, Suspense, useState } from 'react';
+import { Platform, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
+import { theme } from '../theme';
 import { compositionSchema } from '@ingame/shared';
 import { GameCard, type GameCardSize } from './GameCard';
 import type { CardComposition as Comp } from '../render/composition';
@@ -60,14 +61,57 @@ export function CardFace({
 }) {
   const w = width ?? SIZE_DIMS[size].w;
   const h = height ?? SIZE_DIMS[size].h;
+  // The skia canvas needs PIXEL dims, but callers may resize via `style` (fixed or fluid/aspectRatio)
+  // — so the custom branch draws at the MEASURED box (the same lesson as GameCard's overflow fix),
+  // with the intrinsic dims as the first-frame fallback.
+  const [box, setBox] = useState<{ w: number; h: number }>({ w, h });
+  const onLayout = (e: LayoutChangeEvent) => {
+    const { width: bw, height: bh } = e.nativeEvent.layout;
+    if (bw > 0 && bh > 0) {
+      setBox((prev) => (prev.w === bw && prev.h === bh ? prev : { w: bw, h: bh }));
+    }
+  };
   if (!composition) {
     return <GameCard title={title} size={size} nowPlaying={nowPlaying} style={{ width: w, height: h, ...style }} />;
   }
   return (
-    <View style={[{ width: w, height: h }, style]} accessibilityRole="image" accessibilityLabel={`${title} card`}>
-      <Suspense fallback={<GameCard title={title} size={size} style={{ width: w, height: h }} />}>
-        <LazyComposedCard composition={composition} width={w} height={h} effect />
+    <View
+      style={[{ width: w, height: h }, style]}
+      onLayout={onLayout}
+      accessibilityRole="image"
+      accessibilityLabel={`${title} card`}
+    >
+      <Suspense fallback={<GameCard title={title} size={size} style={{ width: box.w, height: box.h }} />}>
+        <LazyComposedCard composition={composition} width={box.w} height={box.h} effect />
       </Suspense>
+      {nowPlaying ? <NowTag /> : null}
+    </View>
+  );
+}
+
+/** Mirrors GameCard's ▶ NOW tag so the custom branch keeps the WTP-03 marker. */
+function NowTag() {
+  return (
+    <View
+      style={{
+        position: 'absolute',
+        top: 4,
+        right: 4,
+        backgroundColor: theme.scr.accent,
+        paddingHorizontal: 4,
+        paddingVertical: 1,
+      }}
+    >
+      <Text
+        style={{
+          fontFamily: theme.font.screenBold,
+          fontSize: theme.type.micro,
+          color: theme.scr.accentInk,
+          letterSpacing: 0.5,
+        }}
+      >
+        ▶ NOW
+      </Text>
     </View>
   );
 }
