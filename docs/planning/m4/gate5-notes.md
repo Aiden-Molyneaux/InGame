@@ -74,8 +74,9 @@
   the two heaviest rails cheaper (plate/font previews replace full cards), and tiles can be
   rasterized-once later without changing the UI. Not a now-problem; flagged on the M5-entry ledger.
 
-## BLOCKED — owner answers needed
-1. **Exit model** (D.23/24/26) — approve/adjust the two-door proposal (see chat).
-2. **D.26 is cut off** — "I think that 'Save Private' should become …" — become what?
-3. **C.10 un-equip path** — with the DEFAULT tile gone, how does the user go back to the blank
-   default (or delete their only, currently-equipped design)?
+## ~~BLOCKED~~ — owner answered same-session (2026-07-06), all built
+1. **Exit model** (D.23/24/26) — **approved as proposed** (✕ confirm-discard · SAVE ▸ outcome
+   sheet · overflow removed). Built + murr round-2 hardened + live-verified.
+2. **D.26** — **moot under the new exit model** (SAVE PRIVATE is an option inside SAVE ▸).
+3. **C.10 un-equip path** — **UNEQUIP action on the equipped card** (back to the implicit blank
+   default; delete stays blocked while worn). Built + live-verified.
