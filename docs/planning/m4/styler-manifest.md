@@ -171,6 +171,26 @@ cart) — never co-located (map 15b).
   multi-card list from `GET /me/collection/:entryId/cards` (replacing the §3.1 default-only interim) —
   update the game-page manifest rows CARDS-2/3/6/7/8 statuses at this pass.
 
+## ADDENDUM — build notes (2026-07-05, commit `55a0386`; self-verified BOOT walk on Expo web)
+
+- **P2 row 3 (swipe sections) — INTERIM:** section switching ships as **chip-tap + the tappable dots**
+  (the CARD-16 non-gesture baseline); the swipe GESTURE is deferred to the §3.6 CARD-16/gesture pass —
+  a horizontal pan across the section area conflicts with the attr-rail's own horizontal scroll and
+  wants the deliberate gesture treatment, not a bolt-on. parvati: treat swipe-absence as this recorded
+  interim, not a flag.
+- **C4 overflow (⋯) =** SAVE AS NEW (CARD-24a) · **SAVE STYLE AS PRESET (the CARD-24b WRITE half —
+  spec-driven addition; derives the recipe from the draft's closed attributes → `POST
+  /me/style-presets`, PRESET_LIMIT surfaced inline)** · DISCARD DRAFT (0040 ConfirmSheet).
+- **TITLE fonts — 2 of 5 REAL** (clean-sans/Chakra + bold-display/Paytone, both already bundled);
+  pixel/serif/script ride the 0063 pre-launch roster design pass (new font deps, rule-08). The ink
+  row ships the 6 free inks.
+- **Web/skia BOOT verified live:** LoadSkiaWeb gate + `/canvaskit.wasm` (public/) + the useTypeface
+  fix (a Font-extracted typeface is a raw pointer canvaskit refuses). Walk evidence: BaseRail (presets
+  merged, CARD-24b) → draft create ("SAVED 0s AGO") → PIXEL frame + SOFT GLOW picks → KEEP → KeepBeat
+  ("2 CARDS DESIGNED · 0 ADOPTIONS", honest-real) → DONE landed on the Game page WEARING the card.
+- **The dev-time premium preview (0063 §6):** nothing premium exists client-side at M4 (the free
+  roster only) — the dev-unlock becomes meaningful when the M5 premium kinds land; carried forward.
+
 ## Browser BOOT check (binding rule (c))
 Login → Game page → DESIGN NEW → the BaseRail MOUNTS (P1); START WITH THIS → the P2 surface mounts
 with the **skia hero rendering the draft on web** (the render module's first in-app web appearance —

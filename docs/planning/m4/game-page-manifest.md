@@ -250,6 +250,22 @@ Building L3 would need a new NetInfo/`navigator.onLine` signal + redux-persist r
 
 ---
 
+## ADDENDUM — the OQ-133 substrate LANDED (2026-07-05, decision 0066; commits `926c36f`/`55a0386`/`e9138ce`)
+
+The SUBSTRATE-REALITY banner above is now HISTORY, kept for the record. Status flips vs the tables:
+- **CARDS row 2 (switcher grid): LIVE multi-card** — the real `GET /me/collection/:entryId/cards` feed;
+  the DEFAULT face rides the roster as the CARD-18 un-equip target; state tags real (EQUIPPED/DRAFT/
+  PRIVATE); custom faces render LIVE via `CardFace` (0066 §2).
+- **CARDS rows 3/6/7/8: LIVE** — DESIGN NEW → `/styler/:gameId`; SET AS MAIN = the COL-06 equip PATCH
+  (drafts + already-equipped disabled); EDIT IN STYLER → `/styler/:gameId?cardId=`; DELETE = the 0040
+  `ConfirmSheet` → `DELETE /cards/:id` (equipped disabled client-side + 409 CARD_EQUIPPED server-side).
+- **PLAY row 3 + CardDetail rows 3/6: LIVE** — the hero/detail render the equipped composition
+  (skia; web via the lazy CanvasKit gate); CardDetail EDIT resumes the design in the Styler. The
+  EquipReadout derives real labels from the composition. SHARE stays EXPECTED(CARD-21·M5).
+- **PLAY row 9 (NOTES readback) + EDIT row 8 (RATING): OQ-134 resolved server-side** (notes/rating on
+  the item, api 0.53) — the dossier readout upgrade is a small client follow-up on this page.
+- CARDS row 9 (community gallery) unchanged — **EXPECTED(M5)**.
+
 ## Browser BOOT check (binding rule (c) — mandatory)
 
 Route `/game/:gameId` must be reached via a real login (web pipeline now unblocked, 2026-07-05) and a
