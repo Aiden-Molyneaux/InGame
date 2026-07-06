@@ -73,12 +73,23 @@ export function GameCard({
       accessibilityLabel={`${title} card`}
       style={[{ width: w, height: h }, style]}
       onLayout={onLayout}
+      // display-only — the react-native-svg face must not claim touches from a wrapping Pressable
+      // (owner gate-5 A.3/C.12; mirrors CardFace's composed branch)
+      pointerEvents="none"
     >
       {/* F-02 silhouette (decision 0041): the face fill + a hairline stepped border, the plate strip
           (BR notch only), and an inset stepped bevel — all one shared steppedRectPath helper, drawn to
           the MEASURED box (bw×bh) so it fills the container at any size. */}
       <Svg width={bw} height={bh} style={StyleSheet.absoluteFill}>
-        <Path d={steppedRectPath(bw, bh, u)} fill={faceFill} stroke={theme.scr.hairline} strokeWidth={1} />
+        {/* border inset by half the stroke — an edge-centred stroke loses its outer half to the
+            Svg clip, which read as "no bottom border" on resized faces (owner gate-5 A.2) */}
+        <Path
+          d={steppedRectPath(bw - 1, bh - 1, u)}
+          transform="translate(0.5 0.5)"
+          fill={faceFill}
+          stroke={theme.scr.hairline}
+          strokeWidth={1}
+        />
         <Path
           d={steppedRectPath(bw - 8, bh - 8, u)}
           transform="translate(4 4)"

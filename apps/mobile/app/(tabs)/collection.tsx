@@ -426,11 +426,18 @@ function NowPlayingHero({ hero, onLogHours }: { hero: CollectionItem | null; onL
 // the hero treatment (full face + stat-line · title · catalog line). LOG HOURS stays hero-exclusive
 // (the NowPlayingHero above, rendered by the parent); ▶ NOW marks the pinned game in the stack.
 function ShelfView({ items }: { items: CollectionItem[] }) {
+  const router = useRouter(); // CARD-23 NAVIGATE — every shelf entry is a Game-page tap-target (gate-5 A.3)
   return (
     <View style={styles.shelf}>
       <View style={styles.shelfStack}>
         {items.map((i) => (
-          <View key={i.entryId} style={styles.stackRow}>
+          <Pressable
+            key={i.entryId}
+            style={styles.stackRow}
+            accessibilityRole="button"
+            accessibilityLabel={`Open ${i.title}`}
+            onPress={() => router.push(`/game/${i.gameId}`)}
+          >
             <CardFace
               title={i.title}
               composition={parseComposition(i.card.composition)}
@@ -444,7 +451,7 @@ function ShelfView({ items }: { items: CollectionItem[] }) {
               <Text style={styles.heroTitle}>{i.title.toUpperCase()}</Text>
               <Text style={styles.heroCatalog}>{catalogLine(i)}</Text>
             </View>
-          </View>
+          </Pressable>
         ))}
       </View>
     </View>
@@ -454,11 +461,18 @@ function ShelfView({ items }: { items: CollectionItem[] }) {
 // GRID (decision 0061 — compact browsing): a two-per-row grid of bare card FACES (never cropped,
 // F-01), ▶ NOW in-flow on the pinned face; no per-row meta. The hero renders above (parent).
 function GridView({ items }: { items: CollectionItem[] }) {
+  const router = useRouter(); // CARD-23 NAVIGATE — grid faces open the Game page too (gate-5 A.3)
   return (
     <View style={styles.shelf}>
       <View style={styles.gridWrap}>
         {items.map((i) => (
-          <View key={i.entryId} style={styles.gridCol}>
+          <Pressable
+            key={i.entryId}
+            style={styles.gridCol}
+            accessibilityRole="button"
+            accessibilityLabel={`Open ${i.title}`}
+            onPress={() => router.push(`/game/${i.gameId}`)}
+          >
             <CardFace
               title={i.title}
               composition={parseComposition(i.card.composition)}
@@ -466,7 +480,7 @@ function GridView({ items }: { items: CollectionItem[] }) {
               nowPlaying={i.nowPlaying}
               style={styles.fluidCard}
             />
-          </View>
+          </Pressable>
         ))}
       </View>
     </View>
@@ -513,11 +527,18 @@ function ListView({ items }: { items: CollectionItem[] }) {
 // TOP (D3) — read-only, hours-derived placeholder for the curated Top-10 (COL-13 curation rides
 // M4). The #1 rank marker is scr.accent ORANGE — never gold (C6/F-02).
 function TopView({ items }: { items: CollectionItem[] }) {
+  const router = useRouter(); // CARD-23 NAVIGATE (gate-5 A.3 — every card face opens its game)
   const top = [...items].sort((a, b) => b.hours - a.hours).slice(0, 10);
   return (
     <View style={styles.list}>
       {top.map((i, idx) => (
-        <View key={i.entryId} style={[styles.topRow, idx === 0 && styles.topRowFirst]}>
+        <Pressable
+          key={i.entryId}
+          style={[styles.topRow, idx === 0 && styles.topRowFirst]}
+          accessibilityRole="button"
+          accessibilityLabel={`Open ${i.title}`}
+          onPress={() => router.push(`/game/${i.gameId}`)}
+        >
           <Text style={[styles.rank, idx === 0 && styles.rankFirst]}>#{idx + 1}</Text>
           <CardFace
             title={i.title}
@@ -530,7 +551,7 @@ function TopView({ items }: { items: CollectionItem[] }) {
             </Text>
             <Text style={styles.rowSub}>{i.hours} HRS</Text>
           </View>
-        </View>
+        </Pressable>
       ))}
     </View>
   );

@@ -17,24 +17,35 @@ import type { CardComposition as Comp } from '../render/composition';
 // The Suspense fallback is the default face, so nothing flashes broken while the wasm arrives.
 
 type ComposedCardProps = { composition: Comp; width: number; height: number; effect?: boolean };
-const LazyComposedCard = lazy(async (): Promise<{ default: ComponentType<ComposedCardProps> }> => {
-  try {
-    if (Platform.OS === 'web') {
-      const { LoadSkiaWeb } = await import('@shopify/react-native-skia/lib/module/web/LoadSkiaWeb');
-      await LoadSkiaWeb({ locateFile: (file: string) => `/${file}` });
+let composedCardPromise: Promise<{ default: ComponentType<ComposedCardProps> }> | null = null;
+
+/**
+ * Warm the skia renderer (wasm on web, the module + typefaces elsewhere) BEFORE a composed face
+ * first renders — the authenticated shell calls this so the Collection doesn't flash default faces
+ * that snap to their styling a beat later (owner gate-5 A.1).
+ */
+export function preloadComposedCard(): Promise<{ default: ComponentType<ComposedCardProps> }> {
+  composedCardPromise ??= (async () => {
+    try {
+      if (Platform.OS === 'web') {
+        const { LoadSkiaWeb } = await import('@shopify/react-native-skia/lib/module/web/LoadSkiaWeb');
+        await LoadSkiaWeb({ locateFile: (file: string) => `/${file}` });
+      }
+      const mod = await import('../render/CardComposition');
+      // A chunk whose evaluation throws can still RESOLVE — with empty exports — in dev (Metro's
+      // guardedLoadModule reports the error itself), so the catch below never fires. Coalesce so a
+      // broken render module degrades to an empty box, not a lazy-resolves-to-undefined redbox.
+      return { default: mod?.CardComposition ?? ((() => null) as ComponentType<ComposedCardProps>) };
+    } catch {
+      // The cached promise resolving to a fallback would otherwise throw from EVERY <CardFace>
+      // forever after one failed wasm fetch. Degrade to an empty box; a reload retries the load.
+      return { default: (() => null) as ComponentType<ComposedCardProps> };
     }
-    const mod = await import('../render/CardComposition');
-    // A chunk whose evaluation throws can still RESOLVE — with empty exports — in dev (Metro's
-    // guardedLoadModule reports the error itself), so the catch below never fires. Coalesce so a
-    // broken render module degrades to an empty box, not a lazy-resolves-to-undefined redbox.
-    return { default: mod?.CardComposition ?? (() => null) };
-  } catch {
-    // lazy() caches a rejection — one failed wasm fetch would otherwise throw from EVERY
-    // <CardFace> forever. Degrade to an empty box (the wrapper keeps the card's dims); a
-    // reload retries the load.
-    return { default: () => null };
-  }
-});
+  })();
+  return composedCardPromise;
+}
+
+const LazyComposedCard = lazy(preloadComposedCard);
 
 const SIZE_DIMS: Record<GameCardSize, { w: number; h: number }> = {
   hero: { w: 224, h: 313 },
@@ -91,6 +102,9 @@ export function CardFace({
       onLayout={onLayout}
       accessibilityRole="image"
       accessibilityLabel={`${title} card`}
+      // A card face is pure DISPLAY — the native skia <Canvas> otherwise claims the touch and the
+      // wrapping Pressable (hero/tile/row) never fires (owner gate-5 A.3/C.12).
+      pointerEvents="none"
     >
       <Suspense fallback={<GameCard title={title} size={size} style={{ width: box.w, height: box.h }} />}>
         <LazyComposedCard composition={composition} width={box.w} height={box.h} effect />
