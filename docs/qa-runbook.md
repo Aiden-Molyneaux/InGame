@@ -35,6 +35,12 @@ under Promoted.
 - **Fix:** open a fresh tab (the only reliable clear). Avoid `zoom` on RN-web QA tabs; use `computer` screenshot + region math instead.
 - **Verified:** 2026-07-06 · **Hits:** 1 *(parvati's §3.2 walk)*
 
+## On-device "X is not installed!" from an optional-dep proxy — check TRANSITIVE native versions
+- **Symptom:** Expo Go redboxes "react-native-reanimated is not installed!" (skia's `OptionalDependencyNotInstalledError`) even though the package is installed and present in the served chunk.
+- **Diagnosis:** the proxy's `try { require(...) } catch` swallows the REAL error — here a JS/native mismatch: reanimated 4.1.7 pulled `react-native-worklets@0.8.3` while Expo Go SDK 54 ships worklets **0.5.1** natively; worklets threw at init. `expo install` pins only the package you name — its transitive native deps can still drift off the SDK matrix (F41's blind spot).
+- **Fix:** compare `npm ls <transitive-native-dep>` against `node_modules/expo/bundledNativeModules.json`; pin the SDK version direct (`npx expo install react-native-worklets`) **plus a root `overrides` entry** (npm otherwise keeps the newer copy nested under the parent). Rebuild Metro with cleared caches.
+- **Verified:** 2026-07-06 · **Hits:** 1
+
 ## Phone can't reach the dev stack — Expo Go silently boots a STALE cached bundle
 - **Symptom:** the phone shows errors from OLD code (already-fixed redboxes) and reload / app-restart / phone-restart change nothing; `.devstack/metro.log` shows NO phone requests (only agent curls); local curls to the LAN IP (`http://192.168.68.58:8082/status`) answer fine.
 - **Diagnosis:** Windows Firewall. The Wi-Fi is on the **Public** profile and the inbound allow rules for node cover only specific binaries (`%LOCALAPPDATA%\nvm\v20.19.6\node.exe` — the owner's terminal spawns). Agent shells resolve node via the **`C:\nvm4w\nodejs` junction**, which has NO rule → inbound to :8082/:4000 is dropped → Expo Go can't fetch a manifest and quietly falls back to its per-project cached bundle, replaying stale code. A local curl does not prove the phone can connect.
