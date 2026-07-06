@@ -205,14 +205,18 @@ export const api = createApi({
       query: (body) => ({ url: '/cards', method: 'POST', body }),
       invalidatesTags: ['Cards'],
     }),
-    // The CARD-24a AUTOSAVE — deliberately invalidates NOTHING (the editor owns the draft state;
-    // lists refresh on create/save-private/delete, not on every debounced keystroke).
+    // The CARD-24a AUTOSAVE. It DOES invalidate (murr F1 — the stale-cache resume destroyed edits:
+    // a cached getMyCards row served the OLD composition on re-entry, and the next autosave
+    // overwrote the new one on the server). The PATCH is debounced ~1.2s, so the refetch cost is a
+    // couple of small GETs per editing PAUSE — personal scale; simple beats clever here.
     updateCard: build.mutation<CardDesignView, { cardId: string } & UpdateCardRequest>({
       query: ({ cardId, ...body }) => ({ url: `/cards/${cardId}`, method: 'PATCH', body }),
+      invalidatesTags: ['Cards', 'Collection'], // Collection — the equipped card's rider (murr F4)
     }),
     savePrivateCard: build.mutation<CardDesignView, string>({
       query: (cardId) => ({ url: `/cards/${cardId}/save-private`, method: 'POST' }),
-      invalidatesTags: ['Cards', 'Me'], // Me — stats.cardsDesigned counts finished designs
+      // Me — stats.cardsDesigned counts finished designs; Collection — the equipped rider (murr F4).
+      invalidatesTags: ['Cards', 'Me', 'Collection'],
     }),
     deleteCard: build.mutation<OkResponse, string>({
       query: (cardId) => ({ url: `/cards/${cardId}`, method: 'DELETE' }),

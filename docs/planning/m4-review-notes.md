@@ -163,3 +163,260 @@ container-overflow regression — fixed `8572156` — and the missing-entry-poin
 The Styler §3.2 builds on 0066; its first-article (aesthetic half of this stop) still runs the full
 pipeline + the owner's gate-5 taste.
 
+---
+
+## Styler (§3.2 — the in-frame card editor) · parvati (M4, 2026-07-06)
+
+**Verdict:** 2 🚩 flag · 13 ✅ expected (all cited) · 4 🎨 polish · (extensive ✔ matches) — measured vs
+the M4 DoD (§8), `styler-manifest.md` **+ its ADDENDUM** (the fixed enumeration; 0062 boundary banner
+governing), `styler-states.html` P1–P11, the 0066/0063 seams (`POST/PATCH/DELETE /cards`,
+`/cards/:id/save-private`, `/me/style-presets`, COL-06 equip `PATCH /me/collection/:entryId`), and the
+game-page manifest ADDENDUM rows (CARDS switcher gone live — re-verified here).
+**Reviewed from:** own Expo-web walk (fresh session, real login), full P1→P7 + the game-page switcher +
+Collection wear-through. **Environment caveat:** desktop-web viewport only (~1045–1280×470–575 CSS — the
+review rig's window would not shrink to the ~390×844 phone target), and the screenshot lane degraded
+mid-run (Chrome background-tab throttling froze CDP captures + the tooling's `zoom` action left a stuck
+viewport-metrics override — doctor-nick candidates, filed below). States whose pixels couldn't be
+captured fresh were verified via the a11y tree, page text, and the network log instead; key visual
+states (P1 fan ×4 rotations, P2 surface, live hero redraw w/ pixel-frame+glow, overflow sheet, 0040
+ConfirmSheets, KeepBeat, game-page wearing, switcher tags) have own screenshots.
+
+### 🚩 Flag (owed at M4)
+- **Composition patch — an INK pick rewrites the FONT** — behavior/coherence — the draft (a SURPRISE
+  deal) read `NAMEPLATE · RIBBON / FONT · PAYTONE` in the switcher readout; the Styler session's picks
+  were frame PIXEL · effect SOFT GLOW · finish SUBTLE GLOSS · plate NONE→SLAB · **GOLD ink** — *no font
+  pick* — yet the kept card reads `FONT · CHAKRA`. A pick in the TITLE-ink slot (or the plate re-pick)
+  reset the font to its default — cross-attribute contamination in the roster→composition patch, exactly
+  the "patch correctness" lane the build receipt flagged for murr. The closed attributes are independent
+  objects (CARD-12 grammar); a pick must patch only its own slot. → Fix the title/ink patch to preserve
+  the sibling font (and audit every roster patch for wholesale-object overwrites). Cite: manifest P3–P5b
+  row 5 (font + ink are separate picks) · `styler-receipt.md` "roster→composition patch correctness"
+  (murr priority) · repro above (readouts before/after, same document `32abbbd5…`).
+- **CARDS head — the ⇅ SORT affordance is still absent now the switcher is live multi-card** — ABSENT —
+  the board's switcher head draws `YOUR CARDS FOR <GAME> — N` **+ a ⇅ SORT link** (board
+  `game-page-states.html:610`); the built head shows the (real, correct) count but no SORT. The §3.1
+  cite that covered this ("SORT inert while N=1", game-page manifest CARDS row 1) no longer applies —
+  N=3 real cards render today and the Styler pass explicitly flipped this surface to live multi-card.
+  Small: add the (even inert-but-present) SORT tertiary or record the deferral in the game-page
+  manifest ADDENDUM. Cite: board `:610` · game-page manifest CARDS row 1 · ADDENDUM (rows 2/3/6/7/8
+  flipped, row 1 not addressed).
+
+### ✅ Expected (deferred — proceed; the 0062 banner governs)
+- **PX wallet counter (ccount)** in the flow head — absent. Cite: manifest C3 — EXPECTED(M5 ·
+  wallet/ECON-07, 0062).
+- **Price-chips · PREVIEW flag · cost-stack · premium-picks header line · owned-tags** across P2–P5b —
+  none rendered; every rail is FREE-only. Cite: manifest banner + P3–P5b rows — EXPECTED(M5 ·
+  CARD-13/COSM-03, 0062 §2).
+- **P6 ReconcileSheet + funded/short fragment** — whole state absent; KEEP never owes a reconcile at M4.
+  Cite: manifest P6 — EXPECTED(M5).
+- **Received-base / adopt-then-edit P1 fragment** ("CHANGE BASE", credit line) — absent. Cite: manifest
+  P1 row 8 — EXPECTED(M5 · adopt · board `:534–547`).
+- **⤢ CANVAS chip + the KeepBeat EDIT-ART door — present-but-disabled** — both render (chip orange in
+  the row, `aria-disabled="true"`, SR label "Open the Canvas"; the beat's door says "the Canvas arrives
+  with the deep editor"). Cite: manifest P2 row 2 / P7 row 4 — EXPECTED(§3.4), exactly the drawn
+  posture.
+- **Section swipe gesture + "SWIPE SECTIONS" label** — sections switch by chip-tap (+ the dots are
+  tab-role tappables); no pan gesture, no swipe label. Cite: manifest ADDENDUM (recorded interim; the
+  gesture rides §3.6). *Note: the BaseRail's swipe shares the interim in practice (its label honestly
+  reads "BROWSE", chevron-rotate works) — the fan's gesture deferral isn't explicitly recorded in the
+  ADDENDUM; worth a one-line fold-in.*
+- **Fonts 2-of-5** — CHAKRA + PAYTONE real; pixel/serif/script absent. Cite: ADDENDUM (roster design
+  pass owns the rest). The 6 free inks all present (CREAM/MIDNIGHT/GOLD/PINK/CYAN/MOSS, SR-labeled).
+- **`GET /games/:gameId/card-bases` + `/surprise` unimplemented** — the BaseRail composes client-side;
+  SURPRISE ME is a client deal (dealt a real multi-attribute start: VIGNETTE + RIBBON + PAYTONE). Cite:
+  manifest banner ASSUMPTION(card-bases client-side), recorded 0058-style.
+- **"ALL N ›" full-attribute browser** — absent; the free roster fits the rails. Cite: manifest P2 row 4
+  — EXPECTED(CARD-17 at-scale).
+- **P11 Offline** — not built. Cite: manifest P9–P11 row 3 — EXPECTED(SYS-10, same stance as §3.1 L3).
+- **Dev premium-preview (0063 §6)** — nothing premium exists client-side to unlock. Cite: ADDENDUM
+  (carried to M5).
+- **Community gallery row** on the game page — still the clean "arrives in a later release" placeholder.
+  Cite: game-page manifest CARDS row 9 — EXPECTED(M5), unchanged.
+- **Publish** — nowhere on the surface. Correct: not even on this board (canvas-tier, 0014).
+- **KeepBeat PX-spent ledger line** — the ok-strip subline is "Your shelf wears it now." with no spend
+  fragment. Cite: manifest P7 row 1 — EXPECTED(M5).
+
+### 🎨 Polish / iteration (built-app visual/DS; the owner's gate-5 eye)
+- **START WITH THIS renders gold/stepped** — the board draws it as the plain primary `btn` (board
+  `:520`); built wears the gold create-family treatment (matching DESIGN NEW + KEEP). Coherent as a
+  family, but it's a token-level divergence from the drawn control — owner's taste call.
+- **KEEP — EQUIP IT is missing its ◆ diamond icon** — the board/manifest spec the gold stepped button
+  *with* the ◆ glyph (board `:615`, manifest P2 row 5); built is text-only. One glyph.
+- **BaseRail fore-label doubles on the default** — "MIDNIGHT GILT · **DEFAULT — DEFAULT · FOREFRONT** ·
+  NEBULA" (name — type · role grammar collides when name=type=DEFAULT); board grammar is "DEFAULT —
+  FOREFRONT" (`:516`). Suppress the type token when it equals the name.
+- **Two skins of "the default face"** — the switcher/collection DEFAULT tile is the M2/M3 static purple
+  CARD-18 asset, while the BaseRail's DEFAULT base (and any near-default composition) renders the skia
+  module's dark-indigo face. Adjacent surfaces show different "defaults"; resolves whenever the CARD-18
+  face becomes one composition render everywhere — flagging for coherence, not blocking.
+- *(Owner/spec-owner note, not a flag: plate **NONE** — sanctioned by decision 0063 §4 ("none · SLAB ·
+  RIBBON · BEVEL") and built — renders a face with **no title at all**, which sits oddly against the
+  board's "THE NAME ALWAYS RENDERS (CURATED SHAPES)" hint (`:907`) and the CARD-01 legibility instinct.
+  If the guarantee is meant to survive plate-NONE, that's a spec/OQ line for the owner; the build
+  faithfully implements 0063 as written.)*
+
+### ✔ Matches (present · placed · behaving · on-aesthetic)
+- **P1 BaseRail (CARD-16 never-blank):** opens already-composed; 3-up fan (fore + 2 neighbours) with 8
+  bases — DEFAULT · NEBULA/HORIZON (TEMPLATE) · ARCADE/MUSEUM (KIT) · **QUIET SLATE / MIDNIGHT GILT
+  typed PRESET — the CARD-24b merge is real** (`GET /me/style-presets` feeds the rail); ‹ › chevron
+  rotate walks the fan with the dot rail tracking; label line names the 3 visible with the fore bolded;
+  templates-vs-kits hint extended honestly ("your saved presets ride alongside"); **⯒ SURPRISE ME dealt
+  a genuine composed start** (vignette + ribbon plate + Paytone font — inserted forefront, re-dealable);
+  START WITH THIS → `POST /cards` → P2 on the new draft; adopt-door hint clean ("Adopting arrives with
+  the gallery" — OQ-110-clean, no spec-IDs anywhere on the surface).
+- **P2 the surface:** C4 save-state line LIVE and honest — "EDITING «Elden Ring» · SAVING…" → "SAVED 0s
+  AGO" → ticks up ("SAVED 87s AGO"), debounced `PATCH /cards/:id` 200s observed per pick; C5 context
+  line ("ELDEN RING · LIVE — EVERY PICK REDRAWS THE CARD"); **the skia hero renders the draft
+  composition on web and REDRAWS on picks** (verified visually: the cyan PIXEL frame + SOFT GLOW beam +
+  plate-NONE→SLAB transitions all appeared on the hero; CanvasKit boot clean); SectionChips = proper
+  ARIA tabs (FRAME·EFFECT·FINISH·PLATE·TITLE + the always-present orange disabled ⤢ CANVAS); 5
+  section dots, tap-navigable; pinned outcome bar exactly as drawn — SAVE PRIVATE quiet tert left, gold
+  stepped KEEP — EQUIP IT right.
+- **The five rails = decision 0063 to the letter:** FRAME 6 free (CLEAN·THIN LINE·DOUBLE LINE·TICKET·
+  BRACKETS·PIXEL) · EFFECT none+5 (SOFT GLOW·SCANLINE·SHEEN·DUST·VIGNETTE), **NONE row first**, head
+  "ONE AT A TIME", swap-hint cleaned ("Picking another effect swaps it — the slot holds one.") ·
+  FINISH none+2 (STANDARD·MATTE·SUBTLE GLOSS), head "STACKS OVER THE EFFECT" · NAMEPLATE none+3
+  (NONE·SLAB·RIBBON·BEVEL), head "NAMEPLATE — SHAPE" (premium MATERIAL correctly stripped) · TITLE
+  2 fonts + 6 SR-labeled ink swatches. Every tile FREE-tagged; atile samples are live 64×100 skia
+  renders (the manifest's allowed judgment call — noted).
+- **IntensitySlider:** appears with an active effect, `role=slider` + "Effect intensity" label, bound at
+  the deal's persisted 58% (OQ-048's intensity-in-composition write verified via the persisted value).
+- **C4 ⋯ overflow = the ADDENDUM set exactly:** THIS DRAFT sheet → SAVE AS NEW CARD · SAVE STYLE AS
+  PRESET · DISCARD DRAFT (danger). **Preset write verified live:** POST `/me/style-presets` → 201 +
+  list refetch (and the client recovered a 401 via token-refresh-and-retry en route — resilience
+  observed). DISCARD DRAFT → the 0040 ConfirmSheet ("DISCARD THIS DRAFT?" + consequence line + danger/
+  CANCEL pair) → CANCEL leaves the draft intact.
+- **KEEP (state-walk 5, end to end):** `POST /cards/:id/save-private` 200 → COL-06 equip
+  `PATCH /me/collection/:entryId` 200 → **KeepBeat**: header ◂ flips to ✕, the finished card centered
+  wearing a gold edge (the 0015 light tier), ✓ strip "EQUIPPED FOR ELDEN RING / Your shelf wears it
+  now.", **honest-real clout "3 CARDS DESIGNED · 0 ADOPTIONS"** (incremented from the builder's 2 by
+  this very review's card — live `/me` stats), disabled Canvas door, DONE — BACK TO THE GAME → lands on
+  `/game/:gameId` **wearing the card** (PLAY hero face + CARD ARTIST YOU), collection caches invalidated
+  (refetches observed).
+- **SAVE PRIVATE (the quiet exit):** second draft → SAVE PRIVATE → no beat, straight back to the Game
+  page; the card lists PRIVATE and NOT equipped. (The OQ-108 toast copy itself expired before capture —
+  see not-exercised.)
+- **Resume + crash-safety:** EDIT IN STYLER → `/styler/:gameId?cardId=` skips P1 and edits the same
+  document; a mid-edit browser-tab kill lost nothing — the draft survived server-side and listed as
+  DRAFT in the switcher (the CARD-24a document doing its job).
+- **The game-page ADDENDUM rows (re-verified live):** multi-card switcher with real state tags
+  (DEFAULT · DRAFT · ◆ EQUIPPED · PRIVATE) and live CardFace tiles; count line tracked 3→4→3 truthfully
+  through my create/delete; select-ring moves on plain tap (ACT-IN-PLACE); per-state guards all correct —
+  equipped → SET-AS-MAIN + DELETE disabled **with the note** ("Your shelf wears this card. Equip another
+  before deleting it."), draft → SET-AS-MAIN disabled with "A draft resumes in the Styler — finish it
+  (KEEP or SAVE PRIVATE) to equip it." + DELETE enabled, private → all live with DELETE danger-red,
+  default → EDIT/DELETE disabled; **equip round-trip verified** (SET AS MAIN moved ◆ EQUIPPED to the
+  walk card, PATCH 200); DELETE → 0040 sheet ("DELETE THIS CARD?" + "deleted everywhere… can't be
+  undone.") → confirmed on my own cards only; EquipReadout chips derive the real composition (my kept
+  card read exactly FRAME·PIXEL / EFFECT·SOFT GLOW / FINISH·SUBTLE GLOSS / NAMEPLATE·SLAB).
+- **CARD-07 wear-through:** the Collection hero + row thumb render the equipped composition as live skia
+  canvases (2 `<canvas>` mounts verified; the hero face visibly matches the equipped design, not the
+  DEFAULT tile).
+- **Shared chrome:** NavBand COLLECTION-active through every Styler state; flow-head ◂/STYLER; screen
+  palette the app Midnight `theme.scr.*` (the recorded token note, not a finding).
+
+### Not exercised
+- **P9 loading skeleton · P10 LoadError (draft-safe copy)** — need a slow/failed fetch; not triggerable
+  on a warm authenticated stack (same stance as the §3.1 L1/L2 rows). **Autosave failure-tolerance**
+  ("NOT SAVED — RETRYING" + soft-fail) likewise — that's murr's named autosave lane; I did not kill the
+  shared :4000 API to fake it.
+- **IntensitySlider drag/tap** — RN-web PanResponder ignores CDP synthetic drags (known web-loop
+  automation flakiness); value binding + persistence verified read-only at 58%.
+- **KeepBeat pulse + reduce-motion honoring** — no OS reduce-motion toggle on the rig; the strip/static
+  composition verified.
+- **◂ quiet-exit tap + the zero-edit silent draft delete** (state-walk 6's no-orphan rule) — the
+  autosave-survival half is proven (tab-kill), the silent-delete half isn't.
+- **SAVE PRIVATE toast copy** (OQ-108 label) — the landing was verified; the transient toast (if
+  rendered) expired before capture.
+- **PRESET_LIMIT (cap-30 → 409)** — would need 29 more presets; the 201 write + refetch verified.
+- **Profile favourite/now-playing CardFace** — "if quick" walk item; not visited (Collection wearing
+  verified instead).
+- **BaseRail growth after the preset save** — the POST + list refetch verified; P1 not re-opened to
+  count 9 dots.
+
+### Residue + workflow notes (doctor-nick / qa-runbook candidates)
+- **Seed state restored:** walk card "Elden Ring" re-equipped as MAIN; both review-created cards
+  deleted (0040-confirmed); Aurora untouched. **One residue:** a style preset created by the
+  walk-ordered CARD-24b write test now lives in `/me/style-presets` (harmless under cap-30; owner may
+  delete).
+- **Workflow friction (capture for the ladder):** (1) Chrome MCP `zoom` left a stuck device-metrics
+  override on the tab (viewport frozen at the zoom-region size; `resize_window`/Ctrl+0 don't clear it —
+  only a fresh tab does). (2) A **hidden/backgrounded tab** throttles RN-web: CDP screenshots time out
+  ("renderer frozen") or serve stale frames, timers freeze (the C4 ticker read "SAVED 0s AGO"
+  perpetually) — check `document.visibilityState` before trusting captures; keep the review tab
+  foreground (closing sibling tabs is not sufficient if the WINDOW's active tab is a non-group tab).
+  (3) At ≤~575px viewport height the Styler's fixed column squeezes — the hero can measure 0 and the
+  attr-rail slides under the pinned tools bar; desktop-web-only artifact (phone heights fit), but it
+  makes short-window web QA misleading.
+
+### The read of it
+The Styler is **the board's free/private path, built for real, end to end** — never-blank entry with
+the preset shelf merged in, a genuinely live skia hero that redraws per pick on web, the five 0063
+rails exact, the draft document autosaving/ surviving crashes/ resuming by id, both outcomes (KEEP's
+light beat with honest clout · SAVE PRIVATE's quiet exit) landing where the board says, and the
+switcher + shelf wearing the result app-wide with correct per-state guards. The 0062 boundary is
+respected everywhere premium is drawn, and the copy law held on every string I read. The two flags are
+small and surgical — one real correctness bug in the composition patch (ink pick clobbers the font;
+murr's named lane, catch it on the diff) and one board affordance (⇅ SORT) orphaned by the multi-card
+flip. Nothing here blocks the surface from the owner's gate-5 taste stop once the patch bug closes —
+**the trophy-case feel is now the owner's question, not fidelity's.**
+
+### murr (diff review, `55a0386`+`e9138ce`, fresh-context, 2026-07-06) · verdict: **1 🔴 blocker · 5 🟠 major + minors**
+Three of the top six shared one root cause — **the autosave PATCH invalidated no cache** — and the
+exit paths each leaked user work:
+- 🔴 **F1 stale-cache resume destroys edits** — resume read `getMyCards` from cache; re-entering a
+  just-edited draft within the cache window resumed the OLD composition and the next autosave
+  overwrote the new one server-side.
+- 🟠 **F2** quiet-exit (◂) didn't flush a pending debounced save — the last edit inside the 1.2s
+  window was dropped despite the "the draft is autosaved" promise.
+- 🟠 **F3** SAVE-AS-NEW then ◂ silently deleted the explicitly saved card (it matched the
+  zero-edit-delete signature).
+- 🟠 **F4** the retry re-arm survived unmount/discard → a 404 PATCH loop every 3s until app restart.
+- 🟠 **F5** equipped-card edits never reached the Collection surfaces on non-KEEP exits
+  (invalidation gap).
+- 🟠 **F6** the PLATE and TITLE rails rendered identical previews — tiles drew at 64px where the
+  renderer drops the plate (the BOOT walk picked FRAME+EFFECT only, so it slipped).
+- Minors: poisoned-lazy skia loader (one failed wasm fetch throws from every CardFace forever) ·
+  `!.id` asserts on the selected-option lookups · no busy guards on the non-idempotent creates ·
+  stale/foreign `?cardId=` spins forever · saveState lies "SAVING…" after a KEEP failure · slider
+  children swallow `locationX` + no SR adjust actions.
+- Clean confirmations where it matters: the KEEP invalidation chain, hooks order, the walk-6 delete
+  heuristic (except the F3 arm), dust determinism, overlay order, preset round-trip fidelity, and
+  every server guard attacked.
+
+### Fix-round (builder, 2026-07-06) → **0 open flags**
+- **🚩 #1 ink-pick-rewrites-font — CLOSED at the model.** `NameplateShape` gains `'none'`: a NONE
+  plate pick patches ONLY `shape` — the nameplate object (title/font/ink) always survives in the
+  document; nothing strips it, so no later pick can resurrect defaults (`composition.ts` ·
+  `roster.ts` · `buildCard.ts` draws no plate/title for `shape:'none'`; the server schema's
+  `.passthrough()` envelope takes it as-is). **Verified live end-to-end:** ARCADE start (PAYTONE) →
+  plate NONE → GOLD ink → font still PAYTONE, round-tripped through quiet-exit flush → server →
+  fresh resume (readout `NAMEPLATE · NONE / FONT · PAYTONE`, GOLD swatch selected). *The board's
+  "THE NAME ALWAYS RENDERS" hint vs a titleless plate-NONE face is now **OQ-135** (owner/spec).*
+- **🚩 #2 ⇅ SORT — CLOSED.** The switcher head renders `⇅ SORT` present-but-disabled (the surface's
+  posture for deferred actions; ordering rides CARD-17 at-scale). Verified live next to the real
+  count.
+- **🔴 F1 — CLOSED.** `updateCard` now invalidates `['Cards','Collection']` (debounced autosave = a
+  couple of tiny refetches per editing pause — personal scale, simple beats clever) and the resume
+  effect gates on **fresh** data (`isSuccess && !isFetching`). Verified live: edit → exit → resume
+  reads the flushed composition.
+- **🟠 F2 — CLOSED.** ◂ flushes a pending/errored save fire-and-forget before navigating. Verified
+  live under a frozen debounce timer (hidden-tab throttle): the picks reached the server anyway.
+- **🟠 F3 — CLOSED.** An `explicitSave` flag from SAVE-AS-NEW vetoes the zero-edit delete (reset on
+  a fresh START). *Code-level only — not live-walked.*
+- **🟠 F4 — CLOSED.** An `aliveRef` guard stops the post-unmount re-arm; DISCARD clears the pending
+  timer before deleting. Verified live: post-discard network log shows zero stray PATCHes.
+- **🟠 F5 — CLOSED** by the F1 invalidation (`savePrivateCard` also gains `Collection`).
+- **🟠 F6 — CLOSED.** PLATE/TITLE rails render their tiles at cell size (96×134, where the renderer
+  draws the plate); the other rails stay 64×89. Verified live (canvas boxes measured).
+- **Minors — all addressed:** lazy skia loader catches + degrades to an empty box (reload retries) ·
+  selected-option lookups fall back to `'none'` · one in-flight guard across the three creates +
+  busy START button · dead `?cardId=` → an honest **CARD NOT FOUND** state (verified live) ·
+  KEEP/SAVE-PRIVATE set `saveState` truthfully on flush success/failure · slider children get
+  `pointerEvents="none"` + SR increment/decrement actions.
+- **Suite:** typecheck ✓ · custom lint ✓ · **262/262 tests** ✓ · zero console errors on the walk ·
+  seed state restored (walk card equipped, count 3, QA draft discarded).
+- **Result:** **0 open 🚩 flags** · 13 ✅ expected (all cited) · 4 🎨 held for the owner's gate-5 eye
+  (START-WITH-THIS gold treatment · EQUIP-IT ◆ glyph · BaseRail label doubling · two default-face
+  skins) + OQ-135 filed. → **the §3.2 gate-5 taste stop — the owner's call on the trophy-case feel.**
+

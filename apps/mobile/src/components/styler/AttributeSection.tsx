@@ -22,12 +22,17 @@ export function AttributeSection({
   options,
   selectedId,
   onSelect,
+  previewW = 64,
+  previewH = 89,
   children,
 }: {
   heading: string;
   options: AttributeOption[];
   selectedId: string;
   onSelect: (id: string) => void;
+  /** Tile preview dims — PLATE/TITLE pass cell size (96×134) so the renderer draws the plate. */
+  previewW?: number;
+  previewH?: number;
   /** Section extras under the rail (the EFFECT IntensitySlider, the TITLE ink row). */
   children?: ReactNode;
 }) {
@@ -47,7 +52,7 @@ export function AttributeSection({
               style={[styles.tile, sel && styles.tileSel]}
             >
               {sel ? <StateMark size={8} style={styles.pip} /> : null}
-              <CardFace title={o.name} composition={o.preview} width={64} height={89} />
+              <CardFace title={o.name} composition={o.preview} width={previewW} height={previewH} />
               <Text style={[styles.name, sel && styles.nameSel]} numberOfLines={1}>
                 {o.name}
               </Text>

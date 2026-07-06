@@ -14,7 +14,9 @@ import { COMPOSITION_SCHEMA_VERSION, type CardElement } from '@ingame/shared';
 export type FrameKind = 'thin-line' | 'double-line' | 'ticket-notch' | 'bracket-corners' | 'pixel-border';
 export type EffectKind = 'none' | 'soft-glow' | 'scanline' | 'gradient-sheen' | 'dust' | 'vignette';
 export type FinishKind = 'none' | 'matte' | 'subtle-gloss';
-export type NameplateShape = 'slab' | 'ribbon' | 'bevel';
+// 'none' KEEPS the nameplate object (title/font/ink survive in the document) but renders no plate —
+// stripping the object destroyed the sibling attributes on later picks (parvati flag, 2026-07-06).
+export type NameplateShape = 'slab' | 'ribbon' | 'bevel' | 'none';
 
 export type CardComposition = {
   schemaVersion: typeof COMPOSITION_SCHEMA_VERSION;

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useState, type ComponentType } from 'react';
 import { Platform, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import { theme } from '../theme';
 import { compositionSchema } from '@ingame/shared';
@@ -16,13 +16,21 @@ import type { CardComposition as Comp } from '../render/composition';
 // rn-skia dependency). Native imports it directly (skia ships in Expo Go SDK 54, decision 0064).
 // The Suspense fallback is the default face, so nothing flashes broken while the wasm arrives.
 
-const LazyComposedCard = lazy(async () => {
-  if (Platform.OS === 'web') {
-    const { LoadSkiaWeb } = await import('@shopify/react-native-skia/lib/module/web/LoadSkiaWeb');
-    await LoadSkiaWeb({ locateFile: (file: string) => `/${file}` });
+type ComposedCardProps = { composition: Comp; width: number; height: number; effect?: boolean };
+const LazyComposedCard = lazy(async (): Promise<{ default: ComponentType<ComposedCardProps> }> => {
+  try {
+    if (Platform.OS === 'web') {
+      const { LoadSkiaWeb } = await import('@shopify/react-native-skia/lib/module/web/LoadSkiaWeb');
+      await LoadSkiaWeb({ locateFile: (file: string) => `/${file}` });
+    }
+    const mod = await import('../render/CardComposition');
+    return { default: mod.CardComposition };
+  } catch {
+    // lazy() caches a rejection — one failed wasm fetch would otherwise throw from EVERY
+    // <CardFace> forever. Degrade to an empty box (the wrapper keeps the card's dims); a
+    // reload retries the load.
+    return { default: () => null };
   }
-  const mod = await import('../render/CardComposition');
-  return { default: mod.CardComposition };
 });
 
 const SIZE_DIMS: Record<GameCardSize, { w: number; h: number }> = {

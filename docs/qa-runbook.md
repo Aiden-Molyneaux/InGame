@@ -23,7 +23,23 @@ under Promoted.
 
 ## Active lessons
 
-*(none yet — first agent to hit novel QA friction appends here)*
+## Hidden/backgrounded Chrome tab throttles RN-web QA
+- **Symptom:** CDP screenshots time out ("renderer frozen"), captures serve stale frames, and RN-web timers freeze (the Styler save-line ticker stuck at "SAVED 0s AGO"; debounced autosaves never fire).
+- **Diagnosis:** Chrome background-tab throttling — `document.visibilityState === 'hidden'` on the QA tab. Closing sibling tabs is NOT enough if the whole window is behind another.
+- **Fix:** check `document.visibilityState` via `javascript_tool` before trusting captures. While hidden, verify via a11y tree / `get_page_text` / network log instead of screenshots (all still work), and prefer flows that flush explicitly (KEEP, ◂ quiet-exit) over waiting on debounce timers. Screenshots resume when the window comes forward.
+- **Verified:** 2026-07-06 · **Hits:** 2 *(parvati's §3.2 walk 2026-07-06, then the fix-round verification the same day; not promotable — `doctor` can't probe Chrome tab visibility)*
+
+## Chrome MCP `zoom` leaves a stuck viewport override
+- **Symptom:** after a `zoom` capture, the tab's viewport stays frozen at the zoom-region size; `resize_window` and Ctrl+0 don't clear it.
+- **Diagnosis:** the tooling's `zoom` sets a device-metrics override it never removes.
+- **Fix:** open a fresh tab (the only reliable clear). Avoid `zoom` on RN-web QA tabs; use `computer` screenshot + region math instead.
+- **Verified:** 2026-07-06 · **Hits:** 1 *(parvati's §3.2 walk)*
+
+## Hard URL navigation logs the web session out
+- **Symptom:** navigating the QA tab to an app URL (deep link like `/styler/:gameId?cardId=…`) lands on `/sign-in`; the deep link is not replayed after login.
+- **Diagnosis:** the web dev session's access token lives in memory only (nothing in `localStorage` but `persist:ingame_prefs`) — a full page load wipes it, and the auth guard redirects before the refresh flow can restore anything.
+- **Fix:** deep-link WITHOUT reloading: `history.pushState(null, '', '<path>'); window.dispatchEvent(new PopStateEvent('popstate'))` via `javascript_tool` — expo-router picks it up client-side and the session survives.
+- **Verified:** 2026-07-06 · **Hits:** 1
 
 ---
 

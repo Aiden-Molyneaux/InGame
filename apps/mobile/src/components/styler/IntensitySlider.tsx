@@ -48,11 +48,18 @@ export function IntensitySlider({
         accessibilityRole="adjustable"
         accessibilityLabel="Effect intensity"
         accessibilityValue={{ min: 0, max: 100, now: pct }}
+        accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+        onAccessibilityAction={(e) => {
+          const step = e.nativeEvent.actionName === 'increment' ? 0.05 : -0.05;
+          onChange(Math.min(1, Math.max(0, value + step)));
+        }}
         {...pan.panHandlers}
       >
-        <View style={styles.track} />
-        <View style={[styles.fill, { width: thumbX }]} />
-        <View style={[styles.thumb, { left: Math.max(0, thumbX - 7) }]} />
+        {/* pointerEvents none — a touch landing ON a child reports locationX relative to that
+            child, snapping the value toward 0; the track wrap must own every touch */}
+        <View style={styles.track} pointerEvents="none" />
+        <View style={[styles.fill, { width: thumbX }]} pointerEvents="none" />
+        <View style={[styles.thumb, { left: Math.max(0, thumbX - 7) }]} pointerEvents="none" />
       </View>
       <Text style={styles.value}>{pct}%</Text>
     </View>

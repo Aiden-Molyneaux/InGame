@@ -106,6 +106,11 @@ export function CardSwitcher({
         <Text style={styles.sectionHead}>
           YOUR CARDS FOR {entry.title.toUpperCase()} — {count}
         </Text>
+        {/* board `:610` draws ⇅ SORT in the head; ordering lands with the at-scale roster
+            (CARD-17) — present-but-disabled, the surface's posture for deferred actions */}
+        <Pressable accessibilityRole="button" accessibilityLabel="Sort your cards" accessibilityState={{ disabled: true }} disabled>
+          <Text style={styles.sortLink}>⇅ SORT</Text>
+        </Pressable>
       </View>
 
       <View style={styles.grid}>
@@ -252,6 +257,7 @@ const styles = StyleSheet.create({
   loading: { paddingVertical: theme.space.xxl, alignItems: 'center' },
   sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   sectionHead: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },
+  sortLink: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.faint, letterSpacing: 1 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.lg },
   cellWrap: { width: CELL_W, height: CELL_H, position: 'relative' },
   tag: { position: 'absolute', top: 4, left: 4, zIndex: 3, paddingHorizontal: 4, paddingVertical: 2 },

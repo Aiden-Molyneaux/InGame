@@ -94,7 +94,11 @@ export default function Styler() {
 
   const { data: shelf, isLoading: shelfLoading, isError: shelfError, refetch } = useGetCollectionQuery();
   const { data: presets } = useGetStylePresetsQuery();
-  const { data: myCards } = useGetMyCardsQuery(undefined, { skip: !cardId });
+  const {
+    data: myCards,
+    isFetching: cardsFetching,
+    isSuccess: cardsSuccess,
+  } = useGetMyCardsQuery(undefined, { skip: !cardId });
   const { data: me } = useGetMeQuery();
 
   const [createCard] = useCreateCardMutation();
@@ -114,6 +118,8 @@ export default function Styler() {
   const [draft, setDraft] = useState<CardComposition | null>(null);
   const [cardRow, setCardRow] = useState<{ id: string; name: string; status: string } | null>(null);
   const [createdHere, setCreatedHere] = useState(false);
+  const [explicitSave, setExplicitSave] = useState(false); // SAVE-AS-NEW — vetoes the zero-edit delete
+  const [resumeFailed, setResumeFailed] = useState(false);
   const [userEdits, setUserEdits] = useState(0);
   const [saveState, setSaveState] = useState<SaveState>('fresh');
   const [savedAt, setSavedAt] = useState<number | null>(null);
@@ -123,18 +129,24 @@ export default function Styler() {
   const [busyKeep, setBusyKeep] = useState(false);
 
   // ── resume (?cardId= — the switcher's EDIT IN STYLER / a DRAFT tile; CARD-24a) ────────────────
+  // Gated on FRESH data: the autosave PATCH invalidates ['Cards'], so a cached getMyCards row can be
+  // the pre-edit composition — resuming from it would overwrite the newer server draft on the next
+  // autosave (murr F1, the blocker). A fresh fetch with no matching/parseable row is a dead resume
+  // link (deleted card / foreign id) → the not-found state, not an eternal spinner.
   useEffect(() => {
-    if (!cardId || draft || !myCards) return;
+    if (!cardId || draft || !cardsSuccess || cardsFetching || !myCards) return;
     const row = myCards.items.find((c) => c.id === cardId);
-    if (!row) return;
-    const comp = parseComposition(row.composition);
-    if (!comp) return;
+    const comp = row ? parseComposition(row.composition) : null;
+    if (!row || !comp) {
+      setResumeFailed(true);
+      return;
+    }
     setDraft(comp);
     setCardRow({ id: row.id, name: row.name, status: row.status });
     setMode('edit');
     setSaveState('saved');
     setSavedAt(Date.now());
-  }, [cardId, draft, myCards]);
+  }, [cardId, draft, myCards, cardsSuccess, cardsFetching]);
 
   // ── the autosave document (CARD-24a · 0066 §6): debounced PATCH; failure-tolerant ─────────────
   const draftRef = useRef<CardComposition | null>(null);
@@ -142,17 +154,23 @@ export default function Styler() {
   const cardRef = useRef(cardRow);
   cardRef.current = cardRow;
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The retry re-arm lives in flushSave's catch — without an alive guard, a PATCH that fails
+  // in-flight across an unmount (or after DISCARD deletes the row) re-arms forever: a 404 loop
+  // every RETRY_MS until app restart (murr F4).
+  const aliveRef = useRef(true);
 
   const flushSave = useCallback(async () => {
     const d = draftRef.current;
     const row = cardRef.current;
-    if (!d || !row) return;
+    if (!d || !row || !aliveRef.current) return;
     setSaveState('saving');
     try {
       await updateCard({ cardId: row.id, composition: d }).unwrap();
+      if (!aliveRef.current) return;
       setSaveState('saved');
       setSavedAt(Date.now());
     } catch {
+      if (!aliveRef.current) return;
       setSaveState('error'); // "NOT SAVED — RETRYING" (soft-fail; the local draft is intact)
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => void flushSave(), RETRY_MS);
@@ -165,8 +183,12 @@ export default function Styler() {
     timerRef.current = setTimeout(() => void flushSave(), AUTOSAVE_MS);
   }, [flushSave]);
 
-  useEffect(() => () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
+  useEffect(() => {
+    aliveRef.current = true;
+    return () => {
+      aliveRef.current = false;
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, []);
 
   const patchDraft = useCallback(
@@ -199,20 +221,31 @@ export default function Styler() {
     return [...deal, ...sys, ...fromPresets];
   }, [title, presets, surprise]);
 
+  // One in-flight guard for the three non-idempotent creates — a double-tap must not POST twice
+  // (an orphan draft / a duplicate preset).
+  const creatingRef = useRef(false);
+  const [busyStart, setBusyStart] = useState(false);
+
   async function startWith(comp: CardComposition) {
-    if (!gameId) return;
+    if (!gameId || creatingRef.current) return;
+    creatingRef.current = true;
+    setBusyStart(true);
     setInlineError(null);
     try {
       const row = await createCard({ gameId, composition: comp, name: title }).unwrap();
       setCardRow({ id: row.id, name: row.name, status: row.status });
       setDraft(comp);
       setCreatedHere(true);
+      setExplicitSave(false);
       setUserEdits(0);
       setMode('edit');
       setSaveState('saved');
       setSavedAt(Date.now());
     } catch (e) {
       setInlineError(errMsg(e, 'Could not start the card. Try again.'));
+    } finally {
+      creatingRef.current = false;
+      setBusyStart(false);
     }
   }
 
@@ -222,9 +255,25 @@ export default function Styler() {
     setBusyKeep(true);
     setInlineError(null);
     try {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
       const d = draftRef.current;
-      if (d) await updateCard({ cardId: cardRow.id, composition: d }).unwrap(); // flush the draft first
+      if (d) {
+        // flush the draft first — and keep the save-state line honest either way (a KEEP failure
+        // used to leave it stuck on "SAVING…").
+        await updateCard({ cardId: cardRow.id, composition: d })
+          .unwrap()
+          .then(() => {
+            setSaveState('saved');
+            setSavedAt(Date.now());
+          })
+          .catch((e) => {
+            setSaveState('error');
+            throw e;
+          });
+      }
       await savePrivateCard(cardRow.id).unwrap();
       await updateEntry({ entryId: entry.entryId, activeCardDesignId: cardRow.id }).unwrap();
       setCardRow((r) => (r ? { ...r, status: 'private' } : r));
@@ -240,9 +289,23 @@ export default function Styler() {
     if (!cardRow) return;
     setInlineError(null);
     try {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
       const d = draftRef.current;
-      if (d) await updateCard({ cardId: cardRow.id, composition: d }).unwrap();
+      if (d) {
+        await updateCard({ cardId: cardRow.id, composition: d })
+          .unwrap()
+          .then(() => {
+            setSaveState('saved');
+            setSavedAt(Date.now());
+          })
+          .catch((e) => {
+            setSaveState('error');
+            throw e;
+          });
+      }
       await savePrivateCard(cardRow.id).unwrap();
       router.back(); // the quiet exit — it waits in the game's card switcher (no beat)
     } catch (e) {
@@ -252,41 +315,62 @@ export default function Styler() {
 
   function quietExit() {
     // ◂ = the draft is autosaved (CARD-24a). A never-edited, never-kept draft created HERE is
-    // deleted silently (no orphan rows) — state-walk 6.
-    if (mode === 'edit' && cardRow && createdHere && userEdits === 0 && cardRow.status === 'draft') {
+    // deleted silently (no orphan rows) — state-walk 6 — UNLESS the user explicitly asked for the
+    // row (SAVE AS NEW; deleting it would silently destroy an explicit save — murr F3).
+    if (mode === 'edit' && cardRow && createdHere && !explicitSave && userEdits === 0 && cardRow.status === 'draft') {
       void deleteCard(cardRow.id);
+    } else if (timerRef.current) {
+      // A save is still debounced/retrying — ◂ promised "the draft is autosaved", so flush it
+      // fire-and-forget before leaving (murr F2; the last edit inside the 1.2s window was dropped).
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+      const d = draftRef.current;
+      const row = cardRef.current;
+      if (d && row) void updateCard({ cardId: row.id, composition: d });
     }
     router.back();
   }
 
   async function saveAsNew() {
-    if (!draft || !gameId) return;
+    if (!draft || !gameId || creatingRef.current) return;
+    creatingRef.current = true;
     setOverflowOpen(false);
     try {
       const row = await createCard({ gameId, composition: draft, name: `${title} II` }).unwrap();
       setCardRow({ id: row.id, name: row.name, status: row.status });
       setCreatedHere(true);
+      setExplicitSave(true); // the user ASKED for this row — quiet-exit must never delete it (murr F3)
       setUserEdits(0);
       setSaveState('saved');
       setSavedAt(Date.now());
     } catch (e) {
       setInlineError(errMsg(e, 'Could not duplicate. Try again.'));
+    } finally {
+      creatingRef.current = false;
     }
   }
 
   async function saveStyleAsPreset() {
-    if (!draft) return;
+    if (!draft || creatingRef.current) return;
+    creatingRef.current = true;
     setOverflowOpen(false);
     try {
       await createStylePreset({ name: `${title} style`.slice(0, 40), style: draftToPresetStyle(draft) }).unwrap();
     } catch (e) {
       setInlineError(errMsg(e, 'Could not save the preset.'));
+    } finally {
+      creatingRef.current = false;
     }
   }
 
   async function discardDraft() {
     if (!cardRow) return;
     try {
+      // the row is about to go — a pending autosave/retry PATCHing it would 404-loop (murr F4)
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
       await deleteCard(cardRow.id).unwrap();
       setConfirmDiscard(false);
       router.back();
@@ -323,7 +407,7 @@ export default function Styler() {
         );
       }
       case 'effect': {
-        const selected = EFFECTS.find((e) => e.kind === (draft.effect?.kind ?? 'none'))!.id;
+        const selected = EFFECTS.find((e) => e.kind === (draft.effect?.kind ?? 'none'))?.id ?? 'none';
         return opts(
           EFFECTS.map((e) => ({
             id: e.id,
@@ -346,7 +430,7 @@ export default function Styler() {
         );
       }
       case 'finish': {
-        const selected = FINISHES.find((f) => f.kind === (draft.finish?.kind ?? 'none'))!.id;
+        const selected = FINISHES.find((f) => f.kind === (draft.finish?.kind ?? 'none'))?.id ?? 'none';
         return opts(
           FINISHES.map((f) => ({
             id: f.id,
@@ -362,22 +446,22 @@ export default function Styler() {
         );
       }
       case 'plate': {
+        // Every pick — NONE included — patches ONLY `shape`; the nameplate object (title/font/ink)
+        // always survives in the document, so a later ink/font pick can never resurrect defaults
+        // (the parvati ink-clobbers-font flag, 2026-07-06).
         const selected = draft.nameplate ? (NAMEPLATES.find((p) => p.shape === (draft.nameplate!.shape ?? 'slab'))?.id ?? 'slab') : 'none';
         return opts(
           NAMEPLATES.map((p) => ({
             id: p.id,
             name: p.name,
-            preview: p.shape
-              ? { ...draft, nameplate: { ...(draft.nameplate ?? basePlate(title)), shape: p.shape } }
-              : stripKey(draft, 'nameplate'),
+            preview: { ...draft, nameplate: { ...(draft.nameplate ?? basePlate(title)), shape: p.shape } },
           })),
           selected,
           'NAMEPLATE — SHAPE',
           (id) => {
-            const p = NAMEPLATES.find((x) => x.id === id)!;
-            patchDraft((d) =>
-              p.shape ? { ...d, nameplate: { ...(d.nameplate ?? basePlate(title)), shape: p.shape } } : stripKey(d, 'nameplate'),
-            );
+            const p = NAMEPLATES.find((x) => x.id === id);
+            if (!p) return;
+            patchDraft((d) => ({ ...d, nameplate: { ...(d.nameplate ?? basePlate(title)), shape: p.shape } }));
           },
         );
       }
@@ -468,7 +552,12 @@ export default function Styler() {
               setForeIndex(0);
             }}
           />
-          <ScreenButton label="Start with this" variant="add" onPress={() => fore && void startWith(fore.composition)} />
+          <ScreenButton
+            label={busyStart ? '…' : 'Start with this'}
+            variant="add"
+            disabled={busyStart}
+            onPress={() => fore && void startWith(fore.composition)}
+          />
           <Text style={styles.adoptHint}>Looking for community faces? Adopting arrives with the gallery.</Text>
         </View>
       </Frame>
@@ -477,6 +566,18 @@ export default function Styler() {
 
   // ── edit (P2–P5b: the carousel surface) ───────────────────────────────────────────────────────
   if (!draft) {
+    // A dead resume link (?cardId= for a deleted card / someone else's id / an unreadable
+    // composition) gets an honest state, not an eternal spinner.
+    if (resumeFailed) {
+      return (
+        <Frame onBack={() => router.back()} saveLine={null}>
+          <View style={styles.center}>
+            <Text style={styles.errTitle}>CARD NOT FOUND</Text>
+            <Text style={styles.errSub}>This card isn't on your shelf anymore — it may have been deleted. Head back and pick another.</Text>
+          </View>
+        </Frame>
+      );
+    }
     return (
       <Frame onBack={quietExit} saveLine={null}>
         <View style={styles.center}>
@@ -519,6 +620,10 @@ export default function Styler() {
             options={sectionUi.list}
             selectedId={sectionUi.selectedId}
             onSelect={sectionUi.onSelect}
+            // the renderer drops the plate below 96px (F-06) — PLATE/TITLE tiles must draw at cell
+            // size or every option previews identically (murr F6)
+            previewW={section === 'plate' || section === 'title' ? 96 : 64}
+            previewH={section === 'plate' || section === 'title' ? 134 : 89}
           >
             {section === 'effect' && draft.effect && draft.effect.kind !== 'none' ? (
               <IntensitySlider
@@ -590,7 +695,7 @@ function basePlate(title: string) {
   return { shape: 'slab' as const, fontId: 'clean-sans', title: title.toUpperCase(), plate: '#141026', ink: '#f3ecd9', size: 0.05 };
 }
 
-function stripKey(d: CardComposition, key: 'frame' | 'effect' | 'finish' | 'nameplate'): CardComposition {
+function stripKey(d: CardComposition, key: 'frame' | 'effect' | 'finish'): CardComposition {
   const next = { ...d };
   delete next[key];
   return next;

@@ -61,10 +61,12 @@ export const FINISHES: FinishDef[] = [
 
 // ── Nameplates (0063 §4 / decision 0018 — the plate OBJECT; shapes keep the name legible) ──────
 export interface NameplateDef extends RosterItem {
-  shape: NameplateShape | null; // null = no plate
+  // 'none' is a SHAPE, not an absent object — the nameplate (title/font/ink) always stays in the
+  // composition so sibling picks survive a NONE plate (the parvati ink-clobbers-font flag, 2026-07-06).
+  shape: NameplateShape;
 }
 export const NAMEPLATES: NameplateDef[] = [
-  { id: 'none', name: 'NONE', shape: null },
+  { id: 'none', name: 'NONE', shape: 'none' },
   { id: 'slab', name: 'SLAB', shape: 'slab' },
   { id: 'ribbon', name: 'RIBBON', shape: 'ribbon' },
   { id: 'bevel', name: 'BEVEL', shape: 'bevel' },

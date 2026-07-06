@@ -220,7 +220,8 @@ export function buildCardElements(c: CardComposition, W: number, H: number, ctx:
   const { Group, Fill, Rect, Path, Text, LinearGradient, Skia, typeface } = ctx;
   const u = W >= 96 ? 6 : 3; // matches GameCard: plated sizes step 6, mini/thumb 3
   const clip = Skia.Path.MakeFromSVGString(steppedRectPath(W, H, u));
-  const plated = W >= 96 && !!c.nameplate; // F-06 drops the plate on mini/thumb
+  // F-06 drops the plate on mini/thumb; shape 'none' keeps the object (font/ink) but draws no plate.
+  const plated = W >= 96 && !!c.nameplate && c.nameplate.shape !== 'none';
   const plateH = plated ? Math.round(H * 0.11) : 0;
 
   const children: any[] = [];
