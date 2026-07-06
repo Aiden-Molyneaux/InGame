@@ -74,6 +74,7 @@ export function NavKeycap({
   active = false,
   disabled = false,
   accent = 'default',
+  showLabels = true,
   onPress,
 }: {
   label: string;
@@ -84,6 +85,8 @@ export function NavKeycap({
   active?: boolean;
   disabled?: boolean;
   accent?: 'default' | 'collection' | 'store';
+  /** TEMP: when false, the outside label + its reserved slot collapse (screen-real-estate experiment). */
+  showLabels?: boolean;
   onPress?: () => void;
 }) {
   const keyTint =
@@ -99,13 +102,15 @@ export function NavKeycap({
     >
       {({ pressed }) => (
         <>
-          <View style={styles.lblSlot}>
-            {labelPosition === 'above' ? (
-              <Text style={[styles.lbl, styles.lblAbove]} numberOfLines={1}>
-                {label}
-              </Text>
-            ) : null}
-          </View>
+          {showLabels ? (
+            <View style={styles.lblSlot}>
+              {labelPosition === 'above' ? (
+                <Text style={[styles.lbl, styles.lblAbove]} numberOfLines={1}>
+                  {label}
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
           <View
             style={[
               styles.key,
@@ -118,13 +123,15 @@ export function NavKeycap({
           <View style={styles.pipRow}>
             <PipLight size={7} on={active} />
           </View>
-          <View style={styles.lblSlot}>
-            {labelPosition === 'below' ? (
-              <Text style={styles.lbl} numberOfLines={1}>
-                {label}
-              </Text>
-            ) : null}
-          </View>
+          {showLabels ? (
+            <View style={styles.lblSlot}>
+              {labelPosition === 'below' ? (
+                <Text style={styles.lbl} numberOfLines={1}>
+                  {label}
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
         </>
       )}
     </Pressable>

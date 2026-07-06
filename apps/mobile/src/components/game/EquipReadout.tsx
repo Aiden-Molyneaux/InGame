@@ -33,7 +33,8 @@ export function EquipReadout({
   card,
   composition,
 }: {
-  card: CollectionCard;
+  /** Optional when a composition is given (the BaseRail readout) — only consulted for the default/no-parse branches. */
+  card?: CollectionCard;
   composition?: CardComposition | null;
 }) {
   const chips: Array<[string, string]> = composition
@@ -41,10 +42,11 @@ export function EquipReadout({
         ['FRAME', label(composition.frame?.kind, 'CLEAN')],
         ['EFFECT', label(composition.effect?.kind === 'none' ? null : composition.effect?.kind, 'NONE')],
         ['FINISH', label(composition.finish?.kind === 'none' ? null : composition.finish?.kind, 'STANDARD')],
-        ['NAMEPLATE', composition.nameplate ? label(composition.nameplate.shape ?? 'slab', 'SLAB') : 'NONE'],
+        // legacy 'none' renders as slab (OQ-135: a plate is required) — the readout tells that truth
+        ['NAMEPLATE', composition.nameplate ? label(composition.nameplate.shape === 'none' ? 'slab' : (composition.nameplate.shape ?? 'slab'), 'SLAB') : 'SLAB'],
         ['FONT', label(composition.nameplate?.fontId, 'CHAKRA')],
       ]
-    : card.isCustom
+    : card?.isCustom !== false
       ? [] // a custom card whose composition didn't parse — show nothing rather than fabricate
       : [
           ['FRAME', 'STANDARD'],

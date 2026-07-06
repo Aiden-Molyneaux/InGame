@@ -14,8 +14,9 @@ import { COMPOSITION_SCHEMA_VERSION, type CardElement } from '@ingame/shared';
 export type FrameKind = 'thin-line' | 'double-line' | 'ticket-notch' | 'bracket-corners' | 'pixel-border';
 export type EffectKind = 'none' | 'soft-glow' | 'scanline' | 'gradient-sheen' | 'dust' | 'vignette';
 export type FinishKind = 'none' | 'matte' | 'subtle-gloss';
-// 'none' KEEPS the nameplate object (title/font/ink survive in the document) but renders no plate —
-// stripping the object destroyed the sibling attributes on later picks (parvati flag, 2026-07-06).
+// 'none' survives only as a LEGACY document value — the roster no longer offers it and the
+// renderer coerces it to slab (OQ-135 ruling: a plate is required, the name always renders). The
+// object model still never strips: title/font/ink live through every pick (parvati, 2026-07-06).
 export type NameplateShape = 'slab' | 'ribbon' | 'bevel' | 'none';
 
 export type CardComposition = {

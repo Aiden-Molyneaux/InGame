@@ -38,6 +38,7 @@ export function ScreenButton({
   block,
   icon,
   style,
+  stepped: steppedProp,
 }: {
   label: string;
   onPress?: () => void;
@@ -47,8 +48,10 @@ export function ScreenButton({
   /** Optional leading icon (e.g. the ADD "+"); rendered before the label. */
   icon?: ReactNode;
   style?: ViewStyle;
+  /** Force the F-02 pixel-step face on a non-`add` variant (the Styler's orange ⤢ CANVAS, gate-5 D.20). */
+  stepped?: boolean;
 }) {
-  const stepped = variant === 'add';
+  const stepped = steppedProp ?? variant === 'add';
   const [size, setSize] = useState<{ w: number; h: number } | null>(null);
   const onLayout = stepped
     ? (e: LayoutChangeEvent) => {
@@ -69,7 +72,7 @@ export function ScreenButton({
         // The gold face is the SVG polygon for `add`; other variants keep a square fill. Until
         // onLayout delivers a size there is no polygon yet — fall back to a square gold fill for
         // that first frame rather than rendering goldInk text on the bare screen bg.
-        stepped ? (size ? styles.steppedBase : { backgroundColor: FILL.add }) : { backgroundColor: FILL[variant] },
+        stepped ? (size ? styles.steppedBase : { backgroundColor: FILL[variant] }) : { backgroundColor: FILL[variant] },
         block && styles.block,
         pressed && styles.pressed, // F-03 scanline-energize (darken, no travel)
         disabled && styles.disabled,
@@ -78,7 +81,7 @@ export function ScreenButton({
     >
       {stepped && size ? (
         <Svg width={size.w} height={size.h} style={StyleSheet.absoluteFill}>
-          <Path d={steppedRectPath(size.w, size.h, ADD_STEP_UNIT)} fill={FILL.add} />
+          <Path d={steppedRectPath(size.w, size.h, ADD_STEP_UNIT)} fill={FILL[variant]} />
         </Svg>
       ) : null}
       <View style={styles.content}>

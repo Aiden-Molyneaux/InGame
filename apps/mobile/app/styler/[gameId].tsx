@@ -39,9 +39,13 @@ import {
 
 // The Styler (§3.2 · design-spec §2.5 · decision 0014 stage 2) — the in-frame card editor over the
 // CARD-24a draft document (decision 0066): pick a start (BaseRail, CARD-16 never-blank) → the live
-// carousel (five closed attributes redrawing the skia hero) → KEEP (save-private + equip) / SAVE
-// PRIVATE / quiet-exit autosave. M4 = the 0063 FREE roster; every premium surface is EXPECTED(M5)
-// (styler-manifest). Route: /styler/:gameId (+?cardId= resume from the switcher / My Designs).
+// carousel (five closed attributes redrawing the skia hero) → the TWO-DOOR exit model (owner
+// gate-5 D.23/24/26): ✕ = leave WITHOUT keeping (confirm-discard; a session-created row deletes, a
+// resumed card REVERTS to its open-snapshot) · SAVE ▸ = one sheet with every keep-outcome (KEEP —
+// EQUIP IT · SAVE PRIVATE · KEEP AS DRAFT · SAVE AS NEW · SAVE STYLE AS PRESET), each with its
+// consequence named. The ⋯ overflow is gone. Autosave still runs underneath (crash-safety, CARD-24a)
+// — the snapshot is what makes "without keeping" true. M4 = the 0063 FREE roster; premium surfaces
+// are EXPECTED(M5). Route: /styler/:gameId (+?cardId= resume from the switcher / My Designs).
 
 type Mode = 'pick' | 'edit' | 'kept';
 type SaveState = 'saved' | 'saving' | 'error' | 'fresh';
@@ -124,8 +128,8 @@ export default function Styler() {
   const [saveState, setSaveState] = useState<SaveState>('fresh');
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [inlineError, setInlineError] = useState<string | null>(null);
-  const [overflowOpen, setOverflowOpen] = useState(false);
-  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [saveOpen, setSaveOpen] = useState(false); // the SAVE ▸ outcome sheet (door 2)
+  const [confirmDiscard, setConfirmDiscard] = useState(false); // the ✕ leave-without-keeping gate (door 1)
   const [busyKeep, setBusyKeep] = useState(false);
 
   // The composition as it was when this session OPENED the card (resumed rows only). The autosave
@@ -197,6 +201,14 @@ export default function Styler() {
     };
   }, []);
 
+  // the "SAVED Ns AGO" clock ticks on its own — it only advanced on incidental re-renders (D.20)
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    if (mode !== 'edit' || saveState !== 'saved' || savedAt == null) return;
+    const iv = setInterval(() => setTick((t) => (t + 1) % 3600), 1000);
+    return () => clearInterval(iv);
+  }, [mode, saveState, savedAt]);
+
   const patchDraft = useCallback(
     (fn: (d: CardComposition) => CardComposition) => {
       setInlineError(null);
@@ -258,6 +270,7 @@ export default function Styler() {
   // ── outcomes (OQ-108 labels; state-walks 5–7) ─────────────────────────────────────────────────
   async function keep() {
     if (!cardRow || !entry) return;
+    setSaveOpen(false);
     setBusyKeep(true);
     setInlineError(null);
     try {
@@ -293,6 +306,7 @@ export default function Styler() {
 
   async function savePrivateQuiet() {
     if (!cardRow) return;
+    setSaveOpen(false);
     setInlineError(null);
     try {
       if (timerRef.current) {
@@ -319,15 +333,35 @@ export default function Styler() {
     }
   }
 
-  function quietExit() {
-    // ◂ = the draft is autosaved (CARD-24a). A never-edited, never-kept draft created HERE is
-    // deleted silently (no orphan rows) — state-walk 6 — UNLESS the user explicitly asked for the
-    // row (SAVE AS NEW; deleting it would silently destroy an explicit save — murr F3).
-    if (mode === 'edit' && cardRow && createdHere && !explicitSave && userEdits === 0 && cardRow.status === 'draft') {
+  // ── door 1: ✕ — leave WITHOUT keeping (gate-5 D.23/24) ────────────────────────────────────────
+  function requestExit() {
+    if (mode !== 'edit' || !cardRow) {
+      router.back();
+      return;
+    }
+    // A never-edited, never-kept draft created HERE evaporates silently (no orphan rows) —
+    // state-walk 6 — unless the user explicitly asked for the row (SAVE AS NEW, murr F3).
+    if (createdHere && !explicitSave && userEdits === 0 && cardRow.status === 'draft') {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
       void deleteCard(cardRow.id);
-    } else if (timerRef.current) {
-      // A save is still debounced/retrying — ◂ promised "the draft is autosaved", so flush it
-      // fire-and-forget before leaving (murr F2; the last edit inside the 1.2s window was dropped).
+      router.back();
+      return;
+    }
+    if (userEdits === 0) {
+      router.back(); // nothing changed this session — nothing to ask about
+      return;
+    }
+    setConfirmDiscard(true); // changes exist — ✕ must never lose work on one tap
+  }
+
+  // SAVE ▸ → KEEP AS DRAFT: leave with the edits kept ON the draft row (the CARD-24a promise) —
+  // flush any pending debounced save first (murr F2) and go.
+  function keepAsDraftExit() {
+    setSaveOpen(false);
+    if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
       const d = draftRef.current;
@@ -340,7 +374,7 @@ export default function Styler() {
   async function saveAsNew() {
     if (!draft || !gameId || creatingRef.current) return;
     creatingRef.current = true;
-    setOverflowOpen(false);
+    setSaveOpen(false);
     try {
       const row = await createCard({ gameId, composition: draft, name: `${title} II` }).unwrap();
       setCardRow({ id: row.id, name: row.name, status: row.status });
@@ -359,7 +393,7 @@ export default function Styler() {
   async function saveStyleAsPreset() {
     if (!draft || creatingRef.current) return;
     creatingRef.current = true;
-    setOverflowOpen(false);
+    setSaveOpen(false);
     try {
       await createStylePreset({ name: `${title} style`.slice(0, 40), style: draftToPresetStyle(draft) }).unwrap();
     } catch (e) {
@@ -546,7 +580,7 @@ export default function Styler() {
   if (mode === 'pick') {
     const fore = railEntries[Math.min(foreIndex, railEntries.length - 1)];
     return (
-      <Frame onBack={quietExit} saveLine={null}>
+      <Frame onBack={() => router.back()} saveLine={null}>
         <Text style={styles.contextLine}>
           {title.toUpperCase()} · NEW CARD — <Text style={styles.contextBold}>PICK A START</Text>
         </Text>
@@ -559,6 +593,13 @@ export default function Styler() {
         />
         {inlineError ? <Text style={styles.inlineErr}>{inlineError}</Text> : null}
         <View style={styles.pickCtas}>
+          {/* START above SURPRISE — the forward action leads (gate-5 D.18) */}
+          <ScreenButton
+            label={busyStart ? '…' : 'Start with this'}
+            variant="add"
+            disabled={busyStart}
+            onPress={() => fore && void startWith(fore.composition)}
+          />
           <ScreenButton
             label="Surprise me — deal a start"
             variant="secondary"
@@ -566,12 +607,6 @@ export default function Styler() {
               setSurprise(surpriseDeal(title));
               setForeIndex(0);
             }}
-          />
-          <ScreenButton
-            label={busyStart ? '…' : 'Start with this'}
-            variant="add"
-            disabled={busyStart}
-            onPress={() => fore && void startWith(fore.composition)}
           />
           <Text style={styles.adoptHint}>Looking for community faces? Adopting arrives with the gallery.</Text>
         </View>
@@ -594,7 +629,7 @@ export default function Styler() {
       );
     }
     return (
-      <Frame onBack={quietExit} saveLine={null}>
+      <Frame onBack={requestExit} saveLine={null}>
         <View style={styles.center}>
           <ActivityIndicator color={theme.scr.accent} accessibilityLabel="Loading the draft" />
         </View>
@@ -602,19 +637,16 @@ export default function Styler() {
     );
   }
 
+  // ONE header line — game · mode · save-state (gate-5 D.20; the LIVE context line is gone)
   const saveLine =
     saveState === 'saving'
-      ? `EDITING «${cardRow?.name ?? title}» · SAVING…`
+      ? `${title.toUpperCase()} — EDITING · SAVING…`
       : saveState === 'error'
-        ? `EDITING «${cardRow?.name ?? title}» · NOT SAVED — RETRYING`
-        : `EDITING «${cardRow?.name ?? title}» · SAVED${savedAt ? ` ${Math.max(0, Math.round((Date.now() - savedAt) / 1000))}s AGO` : ''}`;
+        ? `${title.toUpperCase()} — EDITING · NOT SAVED — RETRYING`
+        : `${title.toUpperCase()} — EDITING · SAVED${savedAt ? ` ${Math.max(0, Math.round((Date.now() - savedAt) / 1000))}s AGO` : ''}`;
 
   return (
-    <Frame onBack={quietExit} saveLine={saveLine} onOverflow={() => setOverflowOpen(true)}>
-      <Text style={styles.contextLine}>
-        {title.toUpperCase()} · <Text style={styles.contextBold}>LIVE</Text> — EVERY PICK REDRAWS THE CARD
-      </Text>
-
+    <Frame onBack={requestExit} closeGlyph="✕" saveLine={saveLine}>
       <View style={styles.heroWrap}>
         <CardFace title={title} composition={draft} width={189} height={264} />
       </View>
@@ -635,10 +667,8 @@ export default function Styler() {
             options={sectionUi.list}
             selectedId={sectionUi.selectedId}
             onSelect={sectionUi.onSelect}
-            // the renderer drops the plate below 96px (F-06) — PLATE/TITLE tiles must draw at cell
-            // size or every option previews identically (murr F6)
-            previewW={section === 'plate' || section === 'title' ? 96 : 64}
-            previewH={section === 'plate' || section === 'title' ? 134 : 89}
+            // PLATE previews the plate itself, TITLE previews the title in the font (gate-5 D.21)
+            previewKind={section === 'plate' ? 'plate' : section === 'title' ? 'font' : 'card'}
           >
             {section === 'effect' && draft.effect && draft.effect.kind !== 'none' ? (
               <IntensitySlider
@@ -671,44 +701,97 @@ export default function Styler() {
         {inlineError ? <Text style={styles.inlineErr}>{inlineError}</Text> : null}
       </ScrollView>
 
-      {/* the pinned outcome bar (OQ-108 labels) */}
+      {/* the pinned tools bar (gate-5 D.20/D.23): the Canvas door + the ONE forward door */}
       <View style={styles.tools}>
-        <Pressable accessibilityRole="button" onPress={() => void savePrivateQuiet()} hitSlop={8}>
-          <Text style={styles.savePrivate}>SAVE PRIVATE</Text>
-        </Pressable>
+        <ScreenButton
+          label="⤢ Canvas"
+          variant="primary"
+          stepped
+          disabled // the deep editor arrives at §3.4 — present-but-disabled, the drawn posture
+          style={styles.toolBtn}
+        />
         <View style={styles.spacer} />
-        <ScreenButton label={busyKeep ? '…' : 'Keep — equip it'} variant="add" disabled={busyKeep} onPress={() => void keep()} />
+        <ScreenButton label={busyKeep ? '…' : 'Save ▸'} variant="add" disabled={busyKeep} onPress={() => setSaveOpen(true)} />
       </View>
 
-      {/* the C4 overflow: SAVE AS NEW · SAVE STYLE AS PRESET · DISCARD (CARD-24a/b · OQ-108) */}
-      <PulledSheet visible={overflowOpen} onClose={() => setOverflowOpen(false)} title="This draft">
-        <ScreenButton label="Save as new card" variant="secondary" onPress={() => void saveAsNew()} block />
-        <ScreenButton label="Save style as preset" variant="secondary" onPress={() => void saveStyleAsPreset()} block />
-        <ScreenButton
-          label={createdHere ? 'Discard draft' : 'Discard changes'}
-          variant="destructive"
-          onPress={() => {
-            setOverflowOpen(false);
-            setConfirmDiscard(true);
-          }}
-          block
+      {/* door 2 — every keep-outcome in one sheet, consequences named (OQ-108 labels) */}
+      <PulledSheet visible={saveOpen} onClose={() => setSaveOpen(false)} title="Keep this design?">
+        <SaveOption
+          label="Keep — equip it ◆"
+          sub="Your shelf wears it now."
+          gold
+          onPress={() => void keep()}
+        />
+        <SaveOption
+          label="Save private"
+          sub="Kept on your shelf — not worn."
+          onPress={() => void savePrivateQuiet()}
+        />
+        {cardRow?.status === 'draft' ? (
+          <SaveOption
+            label="Keep as draft"
+            sub="Finish it later — it waits in the game's card switcher."
+            onPress={keepAsDraftExit}
+          />
+        ) : null}
+        <SaveOption
+          label="Save as new card"
+          sub="The card you opened stays as it is — this becomes a copy."
+          onPress={() => void saveAsNew()}
+        />
+        <SaveOption
+          label="Save style as preset"
+          sub="Remember this recipe — it rides the start rail for any game."
+          onPress={() => void saveStyleAsPreset()}
         />
       </PulledSheet>
+
+      {/* door 1's gate — ✕ with unsaved-session changes */}
       <ConfirmSheet
         visible={confirmDiscard}
-        title={createdHere ? 'Discard this draft?' : 'Discard your changes?'}
+        title="Leave without keeping?"
         message={
           createdHere
-            ? 'The draft is deleted — the card you started from is not affected.'
-            : `«${cardRow?.name ?? title}» goes back to how it was when you opened it.`
+            ? 'Your edits from this session are discarded — the draft is deleted.'
+            : `Your edits from this session are discarded — «${cardRow?.name ?? title}» stays as it was when you opened it.`
         }
-        confirmLabel="Discard"
+        confirmLabel="Discard edits"
         onConfirm={() => void discardDraft()}
         onClose={() => setConfirmDiscard(false)}
       />
     </Frame>
   );
 }
+
+// A SAVE-sheet row: the action + its consequence in one tile (the two-door model's legibility).
+function SaveOption({ label, sub, gold = false, onPress }: { label: string; sub: string; gold?: boolean; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={[saveOptStyles.row, gold && saveOptStyles.rowGold]}
+    >
+      <Text style={[saveOptStyles.label, gold && saveOptStyles.labelGold]}>{label.toUpperCase()}</Text>
+      <Text style={[saveOptStyles.sub, gold && saveOptStyles.subGold]}>{sub}</Text>
+    </Pressable>
+  );
+}
+
+const saveOptStyles = StyleSheet.create({
+  row: {
+    gap: 2,
+    padding: theme.space.lg,
+    borderWidth: 1,
+    borderColor: theme.scr.hairline,
+    backgroundColor: theme.scr.panelHi,
+  },
+  rowGold: { backgroundColor: theme.brand.gold, borderColor: theme.brand.gold },
+  label: { fontFamily: theme.font.screenBold, fontSize: theme.type.body, color: theme.scr.ink, letterSpacing: 1 },
+  labelGold: { color: theme.brand.goldInk },
+  sub: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.dim, lineHeight: 15 },
+  subGold: { color: theme.brand.goldInk, opacity: 0.85 },
+});
 
 function basePlate(title: string) {
   return { shape: 'slab' as const, fontId: 'clean-sans', title: title.toUpperCase(), plate: '#141026', ink: '#f3ecd9', size: 0.05 };
@@ -725,33 +808,32 @@ function errMsg(e: unknown, fallback: string): string {
   return err?.details?.[0]?.message ?? err?.message ?? fallback;
 }
 
-// ── the flow frame: ◂/✕ · STYLER · the CARD-24a save-state line + ⋯ ───────────────────────────────
+// ── the flow frame: ◂/✕ · STYLER · the CARD-24a save-state line (the ⋯ overflow died with the
+// two-door exit model — its actions live in ✕ and SAVE ▸ now; gate-5 D.24) ───────────────────────
 function Frame({
   children,
   onBack,
   saveLine,
-  onOverflow,
   closeGlyph = '◂',
 }: {
   children: ReactNode;
   onBack: () => void;
   saveLine: string | null;
-  onOverflow?: () => void;
   closeGlyph?: string;
 }) {
   return (
     <View style={styles.screen}>
       <View style={styles.head}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={onBack} hitSlop={8}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={closeGlyph === '✕' ? 'Leave without keeping' : 'Back'}
+          onPress={onBack}
+          hitSlop={8}
+        >
           <Text style={styles.backKey}>{closeGlyph}</Text>
         </Pressable>
         <Text style={styles.title}>STYLER</Text>
         <View style={styles.spacer} />
-        {onOverflow ? (
-          <Pressable accessibilityRole="button" accessibilityLabel="Draft options" onPress={onOverflow} hitSlop={8}>
-            <Text style={styles.ovf}>⋯</Text>
-          </Pressable>
-        ) : null}
       </View>
       {saveLine ? <Text style={styles.saveLine}>{saveLine}</Text> : null}
       {children}
@@ -765,7 +847,6 @@ const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md, paddingTop: theme.space.lg },
   backKey: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.dim, paddingHorizontal: theme.space.sm },
   title: { fontFamily: theme.font.screenBold, fontSize: theme.type.display, color: theme.scr.ink, letterSpacing: 1.5 },
-  ovf: { fontFamily: theme.font.screenBold, fontSize: theme.type.display, color: theme.scr.dim, marginTop: -6 },
   saveLine: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 0.5 },
   contextLine: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1, textAlign: 'center' },
   contextBold: { color: theme.scr.accent, fontFamily: theme.font.screenBold },
@@ -787,7 +868,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: theme.scr.hairline,
   },
-  savePrivate: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },
+  toolBtn: { paddingVertical: theme.space.md, paddingHorizontal: theme.space.lg },
   spacer: { flex: 1 },
   pickCtas: { alignItems: 'center', gap: theme.space.md, paddingVertical: theme.space.md },
   adoptHint: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.faint, textAlign: 'center' },

@@ -220,8 +220,9 @@ export function buildCardElements(c: CardComposition, W: number, H: number, ctx:
   const { Group, Fill, Rect, Path, Text, LinearGradient, Skia, typeface } = ctx;
   const u = W >= 96 ? 6 : 3; // matches GameCard: plated sizes step 6, mini/thumb 3
   const clip = Skia.Path.MakeFromSVGString(steppedRectPath(W, H, u));
-  // F-06 drops the plate on mini/thumb; shape 'none' keeps the object (font/ink) but draws no plate.
-  const plated = W >= 96 && !!c.nameplate && c.nameplate.shape !== 'none';
+  // F-06 drops the plate on mini/thumb. A plate is REQUIRED (OQ-135 ruling) — legacy 'none'
+  // documents keep their object and render as SLAB (see the shape coercion below).
+  const plated = W >= 96 && !!c.nameplate;
   const plateH = plated ? Math.round(H * 0.11) : 0;
 
   const children: any[] = [];
@@ -237,7 +238,8 @@ export function buildCardElements(c: CardComposition, W: number, H: number, ctx:
     if (el) children.push(el);
   });
   if (plated && c.nameplate) {
-    const shape = c.nameplate.shape ?? 'slab';
+    const raw = c.nameplate.shape ?? 'slab';
+    const shape = raw === 'none' ? 'slab' : raw; // OQ-135: the name always renders
     if (shape === 'slab') {
       children.push(h(Rect, { key: 'plate', x: 0, y: H - plateH, width: W, height: plateH, color: c.nameplate.plate }));
     } else {

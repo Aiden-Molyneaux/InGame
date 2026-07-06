@@ -2,10 +2,10 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { StateMark } from '../StateMark';
 import { theme } from '../../theme';
 
-// SectionChips (component-map §8a / the board `.schips`) — the five attribute chips + the ALWAYS-
-// PRESENT sixth ⤢ CANVAS chip (orange — a posture switch, not a section; owner ruling 2026-06-13).
-// Chip-TAP is the non-gesture section switch (the CARD-16 baseline beside the swipe). F-09 selection:
-// accent border + pip; F-07 square.
+// SectionChips (component-map §8a / the board `.schips`) — the five attribute chips. Chip-TAP is
+// the non-gesture section switch (the CARD-16 baseline beside the swipe). F-09 selection: accent
+// border + pip; F-07 square. The ⤢ CANVAS door moved OFF the rail onto the tools bar as a stepped
+// button beside SAVE (owner gate-5 D.20 — a posture switch, not a section).
 
 export type StylerSection = 'frame' | 'effect' | 'finish' | 'plate' | 'title';
 export const STYLER_SECTIONS: Array<{ id: StylerSection; label: string }> = [
@@ -19,12 +19,9 @@ export const STYLER_SECTIONS: Array<{ id: StylerSection; label: string }> = [
 export function SectionChips({
   value,
   onChange,
-  onCanvas,
 }: {
   value: StylerSection;
   onChange: (s: StylerSection) => void;
-  /** The Canvas posture door — undefined = disabled (the Canvas arrives at §3.4). */
-  onCanvas?: () => void;
 }) {
   return (
     <View style={styles.row} accessibilityRole="tablist">
@@ -43,16 +40,6 @@ export function SectionChips({
           </Pressable>
         );
       })}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Open the Canvas"
-        accessibilityState={{ disabled: !onCanvas }}
-        disabled={!onCanvas}
-        onPress={onCanvas}
-        style={[styles.chip, styles.canvasChip, !onCanvas && styles.canvasDisabled]}
-      >
-        <Text style={styles.canvasLabel}>⤢ CANVAS</Text>
-      </Pressable>
     </View>
   );
 }
@@ -72,7 +59,4 @@ const styles = StyleSheet.create({
   chipActive: { borderColor: theme.scr.accent, backgroundColor: 'rgba(255,159,67,0.10)' },
   label: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
   labelActive: { color: theme.scr.ink },
-  canvasChip: { borderColor: theme.scr.accent, backgroundColor: 'rgba(255,159,67,0.06)' },
-  canvasDisabled: { opacity: 0.45 },
-  canvasLabel: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.accent, letterSpacing: 1 },
 });
