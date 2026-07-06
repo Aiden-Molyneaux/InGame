@@ -24,7 +24,10 @@ const LazyComposedCard = lazy(async (): Promise<{ default: ComponentType<Compose
       await LoadSkiaWeb({ locateFile: (file: string) => `/${file}` });
     }
     const mod = await import('../render/CardComposition');
-    return { default: mod.CardComposition };
+    // A chunk whose evaluation throws can still RESOLVE — with empty exports — in dev (Metro's
+    // guardedLoadModule reports the error itself), so the catch below never fires. Coalesce so a
+    // broken render module degrades to an empty box, not a lazy-resolves-to-undefined redbox.
+    return { default: mod?.CardComposition ?? (() => null) };
   } catch {
     // lazy() caches a rejection — one failed wasm fetch would otherwise throw from EVERY
     // <CardFace> forever. Degrade to an empty box (the wrapper keeps the card's dims); a
