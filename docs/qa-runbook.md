@@ -35,6 +35,12 @@ under Promoted.
 - **Fix:** open a fresh tab (the only reliable clear). Avoid `zoom` on RN-web QA tabs; use `computer` screenshot + region math instead.
 - **Verified:** 2026-07-06 · **Hits:** 1 *(parvati's §3.2 walk)*
 
+## Metro won't start — expo-cli dies with "Body is unusable: Body has already been read"
+- **Symptom:** `dev-stack up` reports metro down; `.devstack/metro.log` ends with `TypeError: Body is unusable` at `getNativeModuleVersionsAsync` (expo-cli's dependency-validation step) and `expo start` exits 1.
+- **Diagnosis:** expo-cli's version-check call to the Expo API double-reads a fetch response (upstream CLI bug); clearing `~/.expo/native-modules-cache` + `~/.expo/versions-cache` did NOT fix it.
+- **Fix:** `EXPO_OFFLINE=1 node scripts/dev-stack.mjs up` — skips the validation (LAN bundle serving is unaffected; Expo Go connects via `exp://<LAN-IP>:8082`). If this re-hits, bake `EXPO_OFFLINE=1` into the supervisor's metro spawn.
+- **Verified:** 2026-07-06 · **Hits:** 1
+
 ## Hard URL navigation logs the web session out
 - **Symptom:** navigating the QA tab to an app URL (deep link like `/styler/:gameId?cardId=…`) lands on `/sign-in`; the deep link is not replayed after login.
 - **Diagnosis:** the web dev session's access token lives in memory only (nothing in `localStorage` but `persist:ingame_prefs`) — a full page load wipes it, and the auth guard redirects before the refresh flow can restore anything.
