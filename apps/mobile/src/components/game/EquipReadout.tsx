@@ -1,22 +1,57 @@
 import { View, Text, StyleSheet } from 'react-native';
 import type { CollectionCard } from '@ingame/shared';
 import { theme } from '../../theme';
+import type { CardComposition } from '../../render/composition';
 
-// EquipReadout (CARD-22) — the read-only summary of a card's equipped closed attributes (base ·
-// effect · finish · frame · nameplate · font) as DISPLAY metadata, never the editable composition
-// (CARD-15: viewers get the flattened image + overlays, not the layers). At M4 the only card is the
-// CARD-18 DEFAULT stub (no custom attributes) so the readout shows the STANDARD/none values; the real
-// per-attribute values arrive with the `card_designs` substrate (EXPECTED · Styler §3.2 / OQ-133).
-export function EquipReadout({ card }: { card: CollectionCard }) {
-  // Until card_designs lands, every card resolves to the default stub — one honest readout.
-  const chips: Array<[string, string]> = card.isCustom
-    ? [] // real closed attributes arrive with the render substrate (EXPECTED)
-    : [
-        ['FRAME', 'STANDARD'],
-        ['EFFECT', 'NONE'],
-        ['FINISH', 'NONE'],
-        ['NAMEPLATE', 'STANDARD'],
-      ];
+// EquipReadout (CARD-22) — the read-only summary of a card's equipped closed attributes as DISPLAY
+// metadata, never the editable layers (CARD-15). With a parsed composition (an owner-side custom
+// design) the labels derive from its closed attributes; without one, the CARD-18 default reads
+// STANDARD/none. Display names mirror the 0063 roster ids (no spec-ID strings — OQ-110).
+
+const NAME: Record<string, string> = {
+  'thin-line': 'THIN LINE',
+  'double-line': 'DOUBLE LINE',
+  'ticket-notch': 'TICKET',
+  'bracket-corners': 'BRACKETS',
+  'pixel-border': 'PIXEL',
+  'soft-glow': 'SOFT GLOW',
+  scanline: 'SCANLINE',
+  'gradient-sheen': 'SHEEN',
+  dust: 'DUST',
+  vignette: 'VIGNETTE',
+  matte: 'MATTE',
+  'subtle-gloss': 'SUBTLE GLOSS',
+  slab: 'SLAB',
+  ribbon: 'RIBBON',
+  bevel: 'BEVEL',
+  'clean-sans': 'CHAKRA',
+  'bold-display': 'PAYTONE',
+};
+const label = (id: string | undefined | null, fallback: string) => (id ? (NAME[id] ?? id.toUpperCase()) : fallback);
+
+export function EquipReadout({
+  card,
+  composition,
+}: {
+  card: CollectionCard;
+  composition?: CardComposition | null;
+}) {
+  const chips: Array<[string, string]> = composition
+    ? [
+        ['FRAME', label(composition.frame?.kind, 'CLEAN')],
+        ['EFFECT', label(composition.effect?.kind === 'none' ? null : composition.effect?.kind, 'NONE')],
+        ['FINISH', label(composition.finish?.kind === 'none' ? null : composition.finish?.kind, 'STANDARD')],
+        ['NAMEPLATE', composition.nameplate ? label(composition.nameplate.shape ?? 'slab', 'SLAB') : 'NONE'],
+        ['FONT', label(composition.nameplate?.fontId, 'CHAKRA')],
+      ]
+    : card.isCustom
+      ? [] // a custom card whose composition didn't parse — show nothing rather than fabricate
+      : [
+          ['FRAME', 'STANDARD'],
+          ['EFFECT', 'NONE'],
+          ['FINISH', 'NONE'],
+          ['NAMEPLATE', 'STANDARD'],
+        ];
   return (
     <View style={styles.wrap}>
       {chips.map(([k, v]) => (

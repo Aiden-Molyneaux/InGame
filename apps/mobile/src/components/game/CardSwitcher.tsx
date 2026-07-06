@@ -1,20 +1,32 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { useMemo, useState } from 'react';
+import { View, Text, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import type { CollectionItem } from '@ingame/shared';
-import { GameCard } from '../GameCard';
+import { CardFace, parseComposition } from '../CardFace';
 import { ScreenButton } from '../ScreenButton';
+import { ConfirmSheet } from '../ConfirmSheet';
 import { EquipReadout } from './EquipReadout';
 import { theme } from '../../theme';
 import { steppedRectPath } from '../../theme/steppedPath';
+import { useGetEntryCardsQuery, useUpdateEntryMutation, useDeleteCardMutation } from '../../store/api';
 
-// CardSwitcher (component-map §9 · OQ-056/CARD-24) — the CARDS tab: your cards for THIS game (COL-06),
-// state-tagged, tap-select with inline options. **SUBSTRATE-LIMITED (OQ-133):** with no card_designs
-// feed the grid renders the ONE CARD-18 default card (client-derived from entry.card, EQUIPPED) + the
-// DESIGN NEW tile. Multi-card SELECT / SET-AS-MAIN / DELETE / EDIT-IN-STYLER + the community gallery
-// are structure-present, behaviour-EXPECTED (Styler §3.2 / M5). Board `:599–659`.
+// CardSwitcher (component-map §9 · CARD-24c/COL-06) — the CARDS tab: MY designs for THIS game from
+// the real switcher feed (GET /me/collection/:entryId/cards — LIVE as of decision 0066; the §3.1
+// default-only interim is retired). Tap-select (CARD-23 ACT-IN-PLACE) → inline options: SET AS MAIN
+// (equip, private|published only) · EDIT IN STYLER (the §3.2 route) · DELETE (0040 ConfirmSheet; the
+// equipped design is refused server-side with 409 CARD_EQUIPPED and disabled here). The DEFAULT face
+// is always present as the un-equip target (CARD-18). Community gallery + adopt stay M5.
 const CELL_W = 96;
 const CELL_H = 134;
 const RING = 4;
+
+type Row = {
+  id: string; // 'default' or the design id
+  name: string;
+  status: 'default' | 'draft' | 'private' | 'published';
+  composition: ReturnType<typeof parseComposition>;
+  equipped: boolean;
+};
 
 export function CardSwitcher({
   entry,
@@ -22,26 +34,104 @@ export function CardSwitcher({
   onDesignNew,
 }: {
   entry: CollectionItem;
-  onEditInStyler: () => void;
+  onEditInStyler: (cardId: string) => void;
   onDesignNew: () => void;
 }) {
+  const { data, isLoading } = useGetEntryCardsQuery(entry.entryId);
+  const [updateEntry, equipState] = useUpdateEntryMutation();
+  const [deleteCard, deleteState] = useDeleteCardMutation();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [inlineError, setInlineError] = useState<string | null>(null);
+
+  const rows = useMemo<Row[]>(() => {
+    const designs: Row[] = (data?.items ?? []).map((c) => ({
+      id: c.id,
+      name: c.name,
+      status: c.status,
+      composition: parseComposition(c.composition),
+      equipped: entry.card.id === c.id,
+    }));
+    // The DEFAULT face rides the roster as the CARD-18 fallback / un-equip target.
+    const def: Row = {
+      id: 'default',
+      name: entry.title,
+      status: 'default',
+      composition: null,
+      equipped: entry.card.id === 'default',
+    };
+    return [def, ...designs];
+  }, [data, entry]);
+
+  const selected = rows.find((r) => r.id === selectedId) ?? rows.find((r) => r.equipped) ?? rows[0]!;
+  const count = rows.length;
+
+  async function setAsMain(row: Row) {
+    setInlineError(null);
+    try {
+      await updateEntry({
+        entryId: entry.entryId,
+        activeCardDesignId: row.id === 'default' ? null : row.id,
+      }).unwrap();
+    } catch (e) {
+      setInlineError(errMsg(e, 'Could not equip it. Try again.'));
+    }
+  }
+
+  async function doDelete(designId: string) {
+    setInlineError(null);
+    try {
+      await deleteCard(designId).unwrap();
+      setConfirmDeleteId(null);
+      if (selectedId === designId) setSelectedId(null);
+    } catch (e) {
+      setConfirmDeleteId(null);
+      setInlineError(errMsg(e, 'Could not delete it.'));
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator color={theme.scr.accent} accessibilityLabel="Loading your cards" />
+      </View>
+    );
+  }
+
+  const confirmTarget = rows.find((r) => r.id === confirmDeleteId);
+
   return (
     <View style={styles.wrap}>
       <View style={styles.sectionRow}>
-        <Text style={styles.sectionHead}>YOUR CARDS FOR {entry.title.toUpperCase()} — 1</Text>
+        <Text style={styles.sectionHead}>
+          YOUR CARDS FOR {entry.title.toUpperCase()} — {count}
+        </Text>
       </View>
 
       <View style={styles.grid}>
-        {/* the equipped default card, selected (the lone card at M4) */}
-        <View style={styles.cellWrap}>
-          <SelectRing />
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>◆ EQUIPPED</Text>
-          </View>
-          <GameCard title={entry.title} size="cell" />
-        </View>
+        {rows.map((row) => {
+          const sel = row.id === selected.id;
+          return (
+            <Pressable
+              key={row.id}
+              style={styles.cellWrap}
+              accessibilityRole="button"
+              accessibilityLabel={`Select ${row.name}`}
+              accessibilityState={{ selected: sel }}
+              onPress={() => setSelectedId(row.id)} // CARD-23 ACT-IN-PLACE — select, never navigate
+            >
+              {sel ? <SelectRing /> : null}
+              <View style={[styles.tag, TAG_STYLE[row.equipped ? 'equipped' : row.status]]}>
+                <Text style={[styles.tagText, TAG_TEXT[row.equipped ? 'equipped' : row.status]]}>
+                  {row.equipped ? '◆ EQUIPPED' : TAG_LABEL[row.status]}
+                </Text>
+              </View>
+              <CardFace title={row.name} composition={row.composition} size="cell" />
+            </Pressable>
+          );
+        })}
 
-        {/* DESIGN NEW — gold dashed, card-creating (F-02). Target = the Styler (§3.2, EXPECTED). */}
+        {/* DESIGN NEW — gold dashed, card-creating (F-02) → the Styler (§3.2, LIVE). */}
         <Pressable
           style={styles.newTile}
           accessibilityRole="button"
@@ -55,34 +145,72 @@ export function CardSwitcher({
 
       {/* the selected card's inline options (no drawer — surfaced on the screen) */}
       <View style={styles.opts}>
-        <Text style={styles.optsTitle}>Your default {entry.title} card</Text>
-        <EquipReadout card={entry.card} />
-        <View style={styles.actions}>
-          <ScreenButton label="Set as main" variant="secondary" disabled style={styles.miniBtn} />
-          <ScreenButton label="Edit in Styler" variant="secondary" onPress={onEditInStyler} disabled style={styles.miniBtn} />
-          {/* DELETE is a deferred, non-functional affordance at M4 (default card is non-deletable) — render
-              it greyed like its siblings, NOT danger-red (which reads as actionable). It becomes the
-              destructive variant once the card-delete substrate lands (OQ-133 · 0058 §7 · board `:625`). */}
-          <ScreenButton label="Delete" variant="secondary" disabled style={styles.miniBtn} />
-        </View>
-        <Text style={styles.note}>
-          More cards — and SET-AS-MAIN · EDIT-IN-STYLER · DELETE — arrive with the card editor and the
-          card_designs store (Styler §3.2 · OQ-133). The default card is always your equipped MAIN
-          (CARD-18) and can't be deleted.
+        <Text style={styles.optsTitle}>
+          {selected.id === 'default'
+            ? `The default ${entry.title} face`
+            : `${selected.name} — ${TAG_LABEL[selected.status]}`}
         </Text>
+        <EquipReadout
+          card={selected.id === 'default' ? { ...entry.card, isCustom: false } : { ...entry.card, isCustom: true }}
+          composition={selected.composition}
+        />
+        <View style={styles.actions}>
+          <ScreenButton
+            label={equipState.isLoading ? '…' : 'Set as main'}
+            variant="secondary"
+            disabled={selected.equipped || selected.status === 'draft' || equipState.isLoading}
+            onPress={() => void setAsMain(selected)}
+            style={styles.miniBtn}
+          />
+          <ScreenButton
+            label="Edit in Styler"
+            variant="secondary"
+            disabled={selected.id === 'default'}
+            onPress={() => selected.id !== 'default' && onEditInStyler(selected.id)}
+            style={styles.miniBtn}
+          />
+          <ScreenButton
+            label="Delete"
+            variant={selected.equipped || selected.id === 'default' ? 'secondary' : 'destructive'}
+            disabled={selected.equipped || selected.id === 'default' || deleteState.isLoading}
+            onPress={() => setConfirmDeleteId(selected.id)}
+            style={styles.miniBtn}
+          />
+        </View>
+        {selected.status === 'draft' ? (
+          <Text style={styles.note}>A draft resumes in the Styler — finish it (KEEP or SAVE PRIVATE) to equip it.</Text>
+        ) : selected.equipped && selected.id !== 'default' ? (
+          <Text style={styles.note}>Your shelf wears this card. Equip another before deleting it.</Text>
+        ) : null}
+        {inlineError ? <Text style={styles.err}>{inlineError}</Text> : null}
       </View>
 
-      {/* community gallery + adopt — the whole browse→adopt is M5 (decision 0062 §2) */}
+      {/* community gallery + adopt — M5 (decision 0062 §2) */}
       <View style={styles.community}>
         <Text style={styles.communityText}>BROWSE THE COMMUNITY</Text>
-        <Text style={styles.communityNote}>Adopt other players' cards — arrives in M5.</Text>
+        <Text style={styles.communityNote}>Adopt other players' cards — arrives in a later release.</Text>
       </View>
+
+      <ConfirmSheet
+        visible={confirmDeleteId !== null}
+        title="Delete this card?"
+        message={`"${confirmTarget?.name ?? ''}" is deleted everywhere — the switcher and your designs shelf. This can't be undone.`}
+        confirmLabel="Delete"
+        busy={deleteState.isLoading}
+        onConfirm={() => confirmDeleteId && void doDelete(confirmDeleteId)}
+        onClose={() => setConfirmDeleteId(null)}
+      />
     </View>
   );
 }
 
+function errMsg(e: unknown, fallback: string): string {
+  const err = (e as { data?: { error?: { message?: string } } })?.data?.error;
+  return err?.message ?? fallback;
+}
+
 // SelectRing — the tap-select indicator (board `:207–209`): a thin accent STEPPED ring around the
-// selected cell, via the shared F-02 stepped-path helper. At M4 the lone card is always selected.
+// selected cell, via the shared F-02 stepped-path helper.
 function SelectRing() {
   const w = CELL_W + RING * 2;
   const h = CELL_H + RING * 2;
@@ -98,22 +226,36 @@ function SelectRing() {
   );
 }
 
+const TAG_LABEL: Record<Row['status'], string> = {
+  default: 'DEFAULT',
+  draft: 'DRAFT',
+  private: 'PRIVATE',
+  published: 'PUBLISHED',
+};
+const TAG_STYLE: Record<'equipped' | Row['status'], object> = {
+  equipped: { backgroundColor: theme.scr.accent },
+  default: { backgroundColor: theme.scr.panelHi },
+  draft: { backgroundColor: 'rgba(13,11,30,0.78)', borderWidth: 1, borderColor: theme.scr.hairline },
+  private: { backgroundColor: theme.brand.cream },
+  published: { backgroundColor: theme.brand.gold },
+};
+const TAG_TEXT: Record<'equipped' | Row['status'], object> = {
+  equipped: { color: theme.scr.accentInk },
+  default: { color: theme.scr.dim },
+  draft: { color: theme.scr.dim },
+  private: { color: theme.brand.navy },
+  published: { color: theme.brand.goldInk },
+};
+
 const styles = StyleSheet.create({
   wrap: { gap: theme.space.lg },
+  loading: { paddingVertical: theme.space.xxl, alignItems: 'center' },
   sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   sectionHead: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.lg },
   cellWrap: { width: CELL_W, height: CELL_H, position: 'relative' },
-  tag: {
-    position: 'absolute',
-    top: 4,
-    left: 4,
-    zIndex: 3,
-    backgroundColor: theme.scr.accent,
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-  },
-  tagText: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.accentInk, letterSpacing: 0.5 },
+  tag: { position: 'absolute', top: 4, left: 4, zIndex: 3, paddingHorizontal: 4, paddingVertical: 2 },
+  tagText: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, letterSpacing: 0.5 },
   newTile: {
     width: CELL_W,
     height: CELL_H,
@@ -138,12 +280,8 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.sm },
   miniBtn: { paddingVertical: theme.space.md, paddingHorizontal: theme.space.md },
   note: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.faint, lineHeight: 15 },
-  community: {
-    padding: theme.space.lg,
-    borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    gap: theme.space.xs,
-  },
+  err: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.brand.alert },
+  community: { padding: theme.space.lg, borderWidth: 1, borderColor: theme.scr.hairline, gap: theme.space.xs },
   communityText: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },
   communityNote: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.faint },
 });

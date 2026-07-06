@@ -2,28 +2,33 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import type { CollectionItem } from '@ingame/shared';
 import { PulledSheet } from '../PulledSheet';
 import { ScreenButton } from '../ScreenButton';
-import { GameCard } from '../GameCard';
+import { CardFace } from '../CardFace';
 import { EquipReadout } from './EquipReadout';
 import { theme } from '../../theme';
+import type { CardComposition } from '../../render/composition';
 
 // CardDetailSheet (component-map §9 `CardDetail`, CARD-22/CARD-23) — the hero-tap ENLARGE: the card
-// large + designer credit + the EquipReadout, in the one bottom-sheet drawer grammar (CARD-23 mode 3
-// INSPECT / decision 0048). For YOUR card the actions are share/edit (a friend's M7 → adopt, EXPECTED).
-// Board sheet `:688–706` (drawn for a community card; the owned variant reuses the structure). At M4
-// the card is the CARD-18 default (no designer, composed face EXPECTED). SHARE = CARD-21 (M5).
+// large + credit + the EquipReadout, in the one bottom-sheet drawer grammar (CARD-23 mode 3 INSPECT /
+// decision 0048). A custom design renders LIVE (0066) and EDIT resumes it in the Styler; SHARE =
+// CARD-21 (M5). A friend's variant (adopt) is M7.
 export function CardDetailSheet({
   visible,
   entry,
+  composition,
   onClose,
+  onEdit,
 }: {
   visible: boolean;
   entry: CollectionItem;
+  composition: CardComposition | null;
   onClose: () => void;
+  /** Resume the equipped design in the Styler — undefined (the default face) disables EDIT. */
+  onEdit?: () => void;
 }) {
+  const custom = composition !== null;
   return (
     <PulledSheet visible={visible} onClose={onClose}>
-      {/* custom sheet head with a visible ✕ (the board `sh-h` carries one, `:691`) — dismissal isn't
-          scrim-only. */}
+      {/* custom sheet head with a visible ✕ (the board `sh-h` carries one, `:691`) */}
       <View style={styles.head}>
         <Text style={styles.headTitle}>YOUR {entry.title.toUpperCase()} CARD</Text>
         <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={8}>
@@ -31,17 +36,26 @@ export function CardDetailSheet({
         </Pressable>
       </View>
       <View style={styles.cardWrap}>
-        <GameCard title={entry.title} size="pick" />
+        <CardFace title={entry.title} composition={composition} size="pick" />
       </View>
-      <Text style={styles.credit}>STANDARD CARD · THE DEFAULT FACE (CARD-18)</Text>
-      <EquipReadout card={entry.card} />
+      <Text style={styles.credit}>
+        {custom && entry.card.name ? `«${entry.card.name.toUpperCase()}» · YOUR DESIGN` : 'THE STANDARD FACE'}
+      </Text>
+      <EquipReadout card={entry.card} composition={composition} />
       <View style={styles.actions}>
         <ScreenButton label="Share" variant="secondary" disabled style={styles.actionBtn} />
-        <ScreenButton label="Edit in Styler" variant="secondary" disabled style={styles.actionBtn} />
+        <ScreenButton
+          label="Edit in Styler"
+          variant="secondary"
+          disabled={!onEdit}
+          onPress={onEdit}
+          style={styles.actionBtn}
+        />
       </View>
       <Text style={styles.note}>
-        SHARE (a "made in InGame" image, CARD-21) and EDIT (the Styler) arrive with the card editor
-        (§3.2 / M5). Your custom card FACE renders here once the composition pipeline lands.
+        {custom
+          ? 'SHARE (an image with your credit) arrives in a later release.'
+          : 'Design your own card from the CARDS tab — the Styler is open.'}
       </Text>
     </PulledSheet>
   );

@@ -13,7 +13,7 @@ async function main() {
   const { LoadSkiaWeb } = require('@shopify/react-native-skia/lib/commonjs/web/LoadSkiaWeb');
   await LoadSkiaWeb();
   const hs = require('@shopify/react-native-skia/lib/commonjs/headless');
-  const { getSkiaExports, makeOffscreenSurface, drawOffscreen, Group, Fill, Rect, Oval, Path, Text, LinearGradient } = hs;
+  const { getSkiaExports, makeOffscreenSurface, drawOffscreen, Group, Fill, Rect, Oval, Path, Text, LinearGradient, RadialGradient } = hs;
   const { Skia } = getSkiaExports();
 
   let typeface: any;
@@ -24,7 +24,7 @@ async function main() {
     console.warn('  (font skipped:', (e as Error).message, ')');
   }
 
-  const ctx = { Group, Fill, Rect, Oval, Path, Text, LinearGradient, Skia, typeface };
+  const ctx = { Group, Fill, Rect, Oval, Path, Text, LinearGradient, RadialGradient, Skia, typeface };
   const outDir = process.argv[2] || process.cwd();
   const SIZES: Record<string, [number, number]> = { full: [224, 313], grid: [161, 225], mini: [64, 89], thumb: [48, 67] };
 

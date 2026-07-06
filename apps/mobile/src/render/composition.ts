@@ -7,13 +7,23 @@ export { MAX_ELEMENTS, COMPOSITION_SCHEMA_VERSION } from '@ingame/shared';
 export type { CardElement } from '@ingame/shared';
 import { COMPOSITION_SCHEMA_VERSION, type CardElement } from '@ingame/shared';
 
+// The 0063 free-baseline closed-attribute kinds (COSM-02 — the Styler build makes them real,
+// decision 0066/styler-manifest). All ADDITIVE inside the shared schema's `.passthrough()` envelope:
+// schemaVersion stays 1 (F21 — older renderers ignore unknown fields; flatten still dispatches on
+// the version). Premium kinds (frost/fire/galaxy · holo/foil/metallic · ornate/gold frames) are M5.
+export type FrameKind = 'thin-line' | 'double-line' | 'ticket-notch' | 'bracket-corners' | 'pixel-border';
+export type EffectKind = 'none' | 'soft-glow' | 'scanline' | 'gradient-sheen' | 'dust' | 'vignette';
+export type FinishKind = 'none' | 'matte' | 'subtle-gloss';
+export type NameplateShape = 'slab' | 'ribbon' | 'bevel';
+
 export type CardComposition = {
   schemaVersion: typeof COMPOSITION_SCHEMA_VERSION;
   base: { gradient: [string, string] } | { fill: string };
   elements: CardElement[]; // cap MAX_ELEMENTS (validated by the shared compositionSchema)
-  frame?: { color: string; width: number }; // width normalized 0..1 of card width
-  nameplate?: { title: string; plate: string; ink: string; size: number };
-  effect?: { kind: 'none' | 'scanline'; intensity: number }; // rendered as a RUNTIME overlay, not baked
+  frame?: { kind?: FrameKind; color: string; width: number }; // width normalized 0..1 of card width; kind defaults thin-line
+  nameplate?: { shape?: NameplateShape; fontId?: string; title: string; plate: string; ink: string; size: number }; // shape defaults slab; fontId defaults clean-sans
+  effect?: { kind: EffectKind; intensity: number }; // ONE at a time (CARD-12) — a RUNTIME overlay, not baked
+  finish?: { kind: FinishKind }; // stacks OVER the effect; binary material, no slider (CARD-12/OQ-048)
 };
 
 /** The spike's sample card (the AURORA / CELESTE composition), also used by the render tests. */

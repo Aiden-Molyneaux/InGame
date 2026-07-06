@@ -1,7 +1,8 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { GameCard } from '../GameCard';
+import { CardFace } from '../CardFace';
 import { StatsBack } from './StatsBack';
 import { theme } from '../../theme';
+import type { CardComposition } from '../../render/composition';
 
 // DualFaceHero (component-map §9) — the Game-page hero: your card's FACE + the standardized stats
 // BACK side-by-side, no flip (the dual-face survives the merge, board `:465–485`). Tapping the FACE
@@ -11,6 +12,7 @@ import { theme } from '../../theme';
 // visibly reflects the in-progress form.
 export function DualFaceHero({
   title,
+  composition = null,
   hours,
   percent,
   status,
@@ -20,6 +22,8 @@ export function DualFaceHero({
   onInspect,
 }: {
   title: string;
+  /** The equipped design's composition (owner-side live render, 0066) — null → the default face. */
+  composition?: CardComposition | null;
   hours: number;
   percent: number | null;
   status: string;
@@ -36,7 +40,7 @@ export function DualFaceHero({
         accessibilityLabel={`Inspect your ${title} card`}
         onPress={onInspect}
       >
-        <GameCard title={title} size="pick" />
+        <CardFace title={title} composition={composition} size="pick" />
         <Text style={styles.label}>THE FACE</Text>
       </Pressable>
       <View style={styles.face}>

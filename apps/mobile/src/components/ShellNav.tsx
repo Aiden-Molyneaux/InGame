@@ -30,13 +30,14 @@ export function ShellNav({ bottomInset = 0 }: { bottomInset?: number }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Add-game AND the Game page (`/game/:id`, CARD-23 NAVIGATE target) are FlowTakeovers OF Collection
-  // (board: NavBand untouched, COLLECTION keycap active) — the nav stays live and a keypress switches
-  // tabs, it is NOT locked. Both count as Collection context.
+  // Add-game, the Game page (`/game/:id`, CARD-23 NAVIGATE target) AND the Styler (`/styler/:gameId`,
+  // §3.2) are FlowTakeovers OF Collection (board: NavBand untouched, COLLECTION keycap active) — the
+  // nav stays live and a keypress switches tabs, it is NOT locked. All count as Collection context.
   const onCollection =
     pathname.startsWith('/collection') ||
     pathname.startsWith('/add-game') ||
-    pathname.startsWith('/game');
+    pathname.startsWith('/game') ||
+    pathname.startsWith('/styler');
   const onProfile = pathname.startsWith('/profile');
   const locked = !(onCollection || onProfile); // sign-in, index redirect, splash
   const activeKey = onProfile ? 'profile' : 'collection';

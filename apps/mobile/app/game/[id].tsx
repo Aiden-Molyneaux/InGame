@@ -3,6 +3,7 @@ import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import type { CollectionItem, UpdateCollectionEntryRequest } from '@ingame/shared';
+import { parseComposition } from '../../src/components/CardFace';
 import { DualFaceHero } from '../../src/components/game/DualFaceHero';
 import { PlayDossier, draftFromEntry, type PlayDraft } from '../../src/components/game/PlayDossier';
 import { CardSwitcher } from '../../src/components/game/CardSwitcher';
@@ -36,6 +37,11 @@ export default function GamePage() {
   const entry = useMemo<CollectionItem | undefined>(
     () => data?.items.find((it) => it.gameId === id),
     [data, id],
+  );
+  // The equipped design renders LIVE from its composition (0066; null → the CARD-18 default face).
+  const equippedComposition = useMemo(
+    () => parseComposition(entry?.card.composition),
+    [entry?.card.composition],
   );
 
   const [section, setSection] = useState<GameSection>('play');
@@ -199,11 +205,12 @@ export default function GamePage() {
               <Text style={styles.factsLine}>{factsLine(entry)}</Text>
               <DualFaceHero
                 title={entry.title}
+                composition={equippedComposition}
                 hours={eff.hours}
                 percent={eff.percent}
                 status={eff.status}
                 since={eff.since}
-                artist={null}
+                artist={entry.card.isCustom ? 'YOU' : null}
                 statsLabel={editing ? '↻ UPDATES LIVE' : 'YOUR STATS'}
                 onInspect={() => setInspectOpen(true)}
               />
@@ -222,7 +229,11 @@ export default function GamePage() {
               ) : null}
             </>
           ) : section === 'cards' ? (
-            <CardSwitcher entry={entry} onEditInStyler={() => {}} onDesignNew={() => {}} />
+            <CardSwitcher
+              entry={entry}
+              onEditInStyler={(cardId) => router.push(`/styler/${entry.gameId}?cardId=${cardId}`)}
+              onDesignNew={() => router.push(`/styler/${entry.gameId}`)}
+            />
           ) : (
             <View style={styles.about}>
               <Text style={styles.aboutTitle}>ABOUT</Text>
@@ -261,7 +272,20 @@ export default function GamePage() {
       </View>
 
       {/* overlays — mounted at the screen root (PulledSheet contract) */}
-      <CardDetailSheet visible={inspectOpen} entry={entry} onClose={() => setInspectOpen(false)} />
+      <CardDetailSheet
+        visible={inspectOpen}
+        entry={entry}
+        composition={equippedComposition}
+        onClose={() => setInspectOpen(false)}
+        onEdit={
+          entry.card.isCustom
+            ? () => {
+                setInspectOpen(false);
+                router.push(`/styler/${entry.gameId}?cardId=${entry.card.id}`);
+              }
+            : undefined
+        }
+      />
 
       <PulledSheet visible={overflowOpen} onClose={() => setOverflowOpen(false)} title="Game options">
         <ScreenButton

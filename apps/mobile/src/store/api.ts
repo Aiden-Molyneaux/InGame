@@ -28,6 +28,14 @@ import {
   type UpdateCollectionEntryRequest,
   type NowPlayingRequest,
   type OkResponse,
+  type CardDesignView,
+  type CreateCardRequest,
+  type UpdateCardRequest,
+  type MyCardsResponse,
+  type EntryCardsResponse,
+  type StylePresetsResponse,
+  type CreateStylePresetRequest,
+  type StylePresetView,
 } from '@ingame/shared';
 import type { RootState } from './index';
 import { setTokens } from './authSlice';
@@ -133,7 +141,7 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
 export const api = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Me', 'Collection', 'Catalog'],
+  tagTypes: ['Me', 'Collection', 'Catalog', 'Cards', 'Presets'],
   endpoints: (build) => ({
     // ── auth ──────────────────────────────────────────────────────────────────────────────────
     register: build.mutation<AuthSession, RegisterRequest>({
@@ -184,6 +192,41 @@ export const api = createApi({
       invalidatesTags: ['Collection', 'Me'],
     }),
 
+    // ── cards + style presets (CARD-14/24, COL-06 — decision 0066 / api 0.53) ─────────────────
+    getMyCards: build.query<MyCardsResponse, void>({
+      query: () => '/me/cards',
+      providesTags: ['Cards'],
+    }),
+    getEntryCards: build.query<EntryCardsResponse, string>({
+      query: (entryId) => `/me/collection/${entryId}/cards`,
+      providesTags: ['Cards'],
+    }),
+    createCard: build.mutation<CardDesignView, CreateCardRequest>({
+      query: (body) => ({ url: '/cards', method: 'POST', body }),
+      invalidatesTags: ['Cards'],
+    }),
+    // The CARD-24a AUTOSAVE — deliberately invalidates NOTHING (the editor owns the draft state;
+    // lists refresh on create/save-private/delete, not on every debounced keystroke).
+    updateCard: build.mutation<CardDesignView, { cardId: string } & UpdateCardRequest>({
+      query: ({ cardId, ...body }) => ({ url: `/cards/${cardId}`, method: 'PATCH', body }),
+    }),
+    savePrivateCard: build.mutation<CardDesignView, string>({
+      query: (cardId) => ({ url: `/cards/${cardId}/save-private`, method: 'POST' }),
+      invalidatesTags: ['Cards', 'Me'], // Me — stats.cardsDesigned counts finished designs
+    }),
+    deleteCard: build.mutation<OkResponse, string>({
+      query: (cardId) => ({ url: `/cards/${cardId}`, method: 'DELETE' }),
+      invalidatesTags: ['Cards', 'Me'],
+    }),
+    getStylePresets: build.query<StylePresetsResponse, void>({
+      query: () => '/me/style-presets',
+      providesTags: ['Presets'],
+    }),
+    createStylePreset: build.mutation<StylePresetView, CreateStylePresetRequest>({
+      query: (body) => ({ url: '/me/style-presets', method: 'POST', body }),
+      invalidatesTags: ['Presets'],
+    }),
+
     // ── catalog (CAT-01..05/09) ───────────────────────────────────────────────────────────────
     getGenres: build.query<GenresResponse, void>({
       query: () => '/genres',
@@ -219,4 +262,12 @@ export const {
   useLazySearchCatalogQuery,
   useGetPopularQuery,
   useCreateGameMutation,
+  useGetMyCardsQuery,
+  useGetEntryCardsQuery,
+  useCreateCardMutation,
+  useUpdateCardMutation,
+  useSavePrivateCardMutation,
+  useDeleteCardMutation,
+  useGetStylePresetsQuery,
+  useCreateStylePresetMutation,
 } = api;
