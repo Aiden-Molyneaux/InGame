@@ -9,9 +9,9 @@ import { theme } from '../../theme';
 // PlayDossier (component-map §9 `PlayStats`) — the "YOUR PLAY" readout that flips to a FORM in EDIT
 // (edited in a form, NOT on the card — board M1 readout `:486–491` / M2 form `:557–566`). The
 // stats the card back already shows (hours · % · status · since) are edited here; the card back
-// reflects the draft live (the screen recomputes it). M4 substrate limits (surfaced, not faked):
-// PLATFORMS is EXPECTED(COL-04 · decision 0058 §7 — no platforms table), NOTES is write-only with no
-// readback (OQ-134 — the CollectionItem response omits notes), RATING is PENDING (OQ-058).
+// reflects the draft live (the screen recomputes it). NOTES reads back + pre-fills (OQ-134 resolved,
+// api 0.53). Still surfaced-not-faked: PLATFORMS is EXPECTED(COL-04 · decision 0058 §7 — no
+// platforms table); RATING stays PENDING (OQ-058 — the game-rating display question is open).
 export interface PlayDraft {
   hours: string;
   percent: string;
@@ -26,7 +26,7 @@ export function draftFromEntry(entry: CollectionItem): PlayDraft {
     percent: entry.percentComplete == null ? '' : String(entry.percentComplete),
     status: entry.status,
     ownedSince: entry.ownedSince ?? '',
-    notes: '', // OQ-134 — the response carries no notes, so EDIT starts blank (write-only)
+    notes: entry.notes ?? '', // pre-fills from the item (OQ-134 resolved, api 0.53)
   };
 }
 
@@ -62,12 +62,16 @@ export function PlayDossier({
             <PendingRating />
           </Row>
           <Row label="NOTES">
-            <Text style={styles.deferVal}>—</Text>
+            {entry.notes ? (
+              <Text style={styles.notesVal}>“{entry.notes}”</Text>
+            ) : (
+              <Text style={styles.deferVal}>—</Text>
+            )}
           </Row>
         </View>
         <Text style={styles.caption}>
-          PLATFORMS (COL-04) &amp; your NOTES (OQ-134) surface once their data ships; RATING is pending
-          (OQ-058). Hours · completion · status · owned-since edit in EDIT STATS.
+          Platforms surface once their data ships; rating is pending. Hours · completion · status ·
+          owned-since · notes edit in EDIT STATS.
         </Text>
       </View>
     );
@@ -114,14 +118,12 @@ export function PlayDossier({
         <Text style={styles.fieldLabel}>RATING</Text>
         <PendingRating />
       </View>
-      {/* NOTES — write-only at M4 (OQ-134): PATCH accepts it, the response omits it, so it can't
-          pre-fill/read back yet. Included so the write path exists; starts blank. */}
       <TextField
         label="Notes"
         value={draft.notes}
         onChangeText={(v) => onDraftChange({ notes: v })}
         autoCapitalize="sentences"
-        placeholder="Add a note (saved; readback lands with OQ-134)"
+        placeholder="Add a note"
       />
     </View>
   );
@@ -157,6 +159,13 @@ const styles = StyleSheet.create({
   rowLabel: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
   rowValue: { flexShrink: 1, alignItems: 'flex-end' },
   deferVal: { fontFamily: theme.font.screenBold, fontSize: theme.type.body, color: theme.scr.faint },
+  notesVal: {
+    fontFamily: theme.font.screen,
+    fontSize: theme.type.body, // 11 (F-06) — the board's notes row reads at body
+    color: theme.scr.dim,
+    lineHeight: 16,
+    textAlign: 'right',
+  },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md },
   stars: { fontSize: theme.type.body, color: theme.scr.faint, letterSpacing: 1 },
   pending: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.faint, letterSpacing: 0.5 },
