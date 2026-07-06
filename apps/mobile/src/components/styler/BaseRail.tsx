@@ -113,9 +113,11 @@ export function BaseRail({
         </Pressable>
       </View>
 
-      {/* the fore, named once + its style details as the app-wide chip tiles (gate-5 D.17) */}
+      {/* the fore, named once + its style details as the app-wide chip tiles (gate-5 D.17);
+          the type token is suppressed when it equals the name — no "DEFAULT — DEFAULT" (taste #1) */}
       <Text style={styles.foreName}>
-        {fore.name} <Text style={styles.foreKind}>— {fore.kindLabel}</Text>
+        {fore.name}
+        {fore.kindLabel !== fore.name ? <Text style={styles.foreKind}> — {fore.kindLabel}</Text> : null}
       </Text>
       <View style={styles.chips}>
         <EquipReadout composition={fore.composition} />
