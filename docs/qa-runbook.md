@@ -35,6 +35,13 @@ under Promoted.
 - **Fix:** open a fresh tab (the only reliable clear). Avoid `zoom` on RN-web QA tabs; use `computer` screenshot + region math instead.
 - **Verified:** 2026-07-06 · **Hits:** 1 *(parvati's §3.2 walk)*
 
+## Phone can't reach the dev stack — Expo Go silently boots a STALE cached bundle
+- **Symptom:** the phone shows errors from OLD code (already-fixed redboxes) and reload / app-restart / phone-restart change nothing; `.devstack/metro.log` shows NO phone requests (only agent curls); local curls to the LAN IP (`http://192.168.68.58:8082/status`) answer fine.
+- **Diagnosis:** Windows Firewall. The Wi-Fi is on the **Public** profile and the inbound allow rules for node cover only specific binaries (`%LOCALAPPDATA%\nvm\v20.19.6\node.exe` — the owner's terminal spawns). Agent shells resolve node via the **`C:\nvm4w\nodejs` junction**, which has NO rule → inbound to :8082/:4000 is dropped → Expo Go can't fetch a manifest and quietly falls back to its per-project cached bundle, replaying stale code. A local curl does not prove the phone can connect.
+- **Fix:** restart the stack from the allowed binary:
+  `"C:/Users/aiden.molyneaux/AppData/Local/nvm/v20.19.6/node.exe" scripts/dev-stack.mjs up` (with the same dir prefixed to PATH so npm/expo children inherit it). Verify with `(Get-Process -Id <pid-of-:8082>).Path` — it must be the appdata nvm path, not `C:\nvm4w\...`. (Durable alternative, owner-only: add a firewall allow rule for `C:\nvm4w\nodejs\node.exe`.)
+- **Verified:** 2026-07-06 · **Hits:** 1
+
 ## Metro won't start — expo-cli dies with "Body is unusable: Body has already been read"
 - **Symptom:** `dev-stack up` reports metro down; `.devstack/metro.log` ends with `TypeError: Body is unusable` at `getNativeModuleVersionsAsync` (expo-cli's dependency-validation step) and `expo start` exits 1.
 - **Diagnosis:** expo-cli's version-check call to the Expo API double-reads a fetch response (upstream CLI bug); clearing `~/.expo/native-modules-cache` + `~/.expo/versions-cache` did NOT fix it.
