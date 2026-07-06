@@ -420,3 +420,45 @@ exit paths each leaked user work:
   (START-WITH-THIS gold treatment · EQUIP-IT ◆ glyph · BaseRail label doubling · two default-face
   skins) + OQ-135 filed. → **the §3.2 gate-5 taste stop — the owner's call on the trophy-case feel.**
 
+
+---
+
+## Gate-5 amendment round (§3.1+§3.2 owner notes → build) · builder + fresh murr (M4, 2026-07-06)
+
+**Input:** the owner's 27-step device walk (`gate5-walkthrough.md`) → 27 notes triaged in
+`gate5-notes.md` (14 FIX · 3 DESIGN · 1 RULED · 4 SPEC · 1 ANSWERED · 3 owner-answered). All
+built same-day; three owner decisions taken in-session: the two-door exit model (approved as
+proposed) · D.26 moot under it · UNEQUIP as the C.10 un-equip path.
+
+**Landed (commits `caa8b05..` this round):** display-only card faces + full-card tap targets
+app-wide (A.3/C.12) + Shelf/Grid/Top navigate + renderer preload (A.1) + border inset (A.2) ·
+per-stat inline dossier editing, form retired (B.8; B.5 hero /grid; B.6 keyboard insets) · the
+implicit blank default + UNEQUIP + ◆ glyph chip + bigger cells (C.10/11) · CardDetail titled/
+larger/clean credit (C.14) · page-root delete confirm (D.27) · the TWO-DOOR Styler exit (✕
+confirm-discard-or-revert · SAVE ▸ outcome sheet · overflow gone; D.23/24/26) · one ticking
+header line + ⤢ CANVAS on the tools bar (D.20) · fan swipe/tap-to-front + chip readout (D.17) ·
+START leads (D.18) · FREE tags gone + plate/font previews (D.21) · **OQ-135 RULED: plate
+required** (NONE off the roster; legacy `none`→SLAB; 0063 §4 amended) · OQ-136/137 filed.
+**P0 first:** DISCARD on a resumed card REVERTS (never deletes) — the owner's D.23 data loss;
+the seed shelf was re-run (the hand-kept walk card was unrecoverable).
+
+**murr round-2 (fresh, on the amendment diff): 1 🔴 · 1 🟠 · 5 minor — all closed same-day:**
+🔴 SAVE-AS-NEW left a resumed original silently mutated (autosave had written the session edits
+into it) → it now settles the old row first (revert-to-snapshot / fold-in a non-explicit session
+draft, timer cleared) · 🟠 a failed equip step after save-private left local status 'draft' and
+✕ could quiet-delete a KEPT card → status records immediately · minors: busyExit double-tap
+guard (+ ConfirmSheet busy) · KEEP-AS-DRAFT awaits its flush (the F1 window at the exit edge) ·
+status-chip async callbacks scoped to the still-open editor · stale switcher errors cleared on
+selection. Clean lanes: pointerEvents fallout (none), BaseRail gestures, legacy-'none' coercion,
+EquipReadout call sites. *Pre-existing hole noted, not this round: the switcher shows the empty
+state on a feed ERROR (data undefined) — carried.*
+
+**Live evidence (web :8082):** shelf/grid/top taps navigate (18 targets) · hours 96→97→96 in
+place (row + stats back) · UNEQUIP→implicit default→SET AS MAIN round-trip · ✕-discard on a
+resumed draft REVERTED (font stayed PAYTONE, card survived — the exact D.23 kill-path) · the
+SAVE ▸ sheet + KEEP AS DRAFT exit · **the murr-blocker repro: resumed original stayed TICKET
+while the copy carried PIXEL** · plate rail = 3 plate-polygon previews, title rail = fonts ·
+ticker ticks · zero console errors · seed restored. Suite: typecheck ✓ lint ✓ 13/13 mobile +
+262/262 full ✓ /health 🟢.
+
+**→ the owner re-walks the amended surfaces on device; then the Canvas (§3.4).**
