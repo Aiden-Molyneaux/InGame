@@ -128,6 +128,11 @@ export default function Styler() {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [busyKeep, setBusyKeep] = useState(false);
 
+  // The composition as it was when this session OPENED the card (resumed rows only). The autosave
+  // writes to the same row (CARD-24a), so "discard" on an existing card must PATCH this back —
+  // the gate-5 walk proved the old delete path destroyed the user's real card (owner D.23).
+  const resumeSnapshotRef = useRef<CardComposition | null>(null);
+
   // ── resume (?cardId= — the switcher's EDIT IN STYLER / a DRAFT tile; CARD-24a) ────────────────
   // Gated on FRESH data: the autosave PATCH invalidates ['Cards'], so a cached getMyCards row can be
   // the pre-edit composition — resuming from it would overwrite the newer server draft on the next
@@ -141,6 +146,7 @@ export default function Styler() {
       setResumeFailed(true);
       return;
     }
+    resumeSnapshotRef.current = comp; // DISCARD on a resumed card REVERTS to this — never deletes
     setDraft(comp);
     setCardRow({ id: row.id, name: row.name, status: row.status });
     setMode('edit');
@@ -366,12 +372,21 @@ export default function Styler() {
   async function discardDraft() {
     if (!cardRow) return;
     try {
-      // the row is about to go — a pending autosave/retry PATCHing it would 404-loop (murr F4)
+      // silence the autosave first — a pending PATCH would either 404-loop against a deleted row
+      // (murr F4) or re-write the edits we are about to revert (owner D.23)
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
       }
-      await deleteCard(cardRow.id).unwrap();
+      if (createdHere) {
+        // a row this session created IS the draft — deleting it discards it
+        await deleteCard(cardRow.id).unwrap();
+      } else {
+        // a RESUMED card pre-exists this session; the autosave already wrote into it, so discard
+        // = revert the row to the composition captured at open. NEVER delete (D.23 data loss).
+        const snap = resumeSnapshotRef.current;
+        if (snap) await updateCard({ cardId: cardRow.id, composition: snap }).unwrap();
+      }
       setConfirmDiscard(false);
       router.back();
     } catch (e) {
@@ -670,7 +685,7 @@ export default function Styler() {
         <ScreenButton label="Save as new card" variant="secondary" onPress={() => void saveAsNew()} block />
         <ScreenButton label="Save style as preset" variant="secondary" onPress={() => void saveStyleAsPreset()} block />
         <ScreenButton
-          label="Discard draft"
+          label={createdHere ? 'Discard draft' : 'Discard changes'}
           variant="destructive"
           onPress={() => {
             setOverflowOpen(false);
@@ -681,8 +696,12 @@ export default function Styler() {
       </PulledSheet>
       <ConfirmSheet
         visible={confirmDiscard}
-        title="Discard this draft?"
-        message="The draft is deleted — the card you started from is not affected."
+        title={createdHere ? 'Discard this draft?' : 'Discard your changes?'}
+        message={
+          createdHere
+            ? 'The draft is deleted — the card you started from is not affected.'
+            : `«${cardRow?.name ?? title}» goes back to how it was when you opened it.`
+        }
         confirmLabel="Discard"
         onConfirm={() => void discardDraft()}
         onClose={() => setConfirmDiscard(false)}
