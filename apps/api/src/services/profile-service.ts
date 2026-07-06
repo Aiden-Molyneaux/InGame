@@ -6,7 +6,7 @@ import type {
   SelfProfile,
   GamertagView,
 } from '@ingame/shared';
-import { DEFAULT_CARD_STUB, type SelfGameExpansion, type SelfStats } from '@ingame/shared';
+import type { SelfGameExpansion, SelfStats } from '@ingame/shared';
 import { mutation } from '../db/mutation';
 import type { Executor } from '../db/client';
 import * as profileRepo from '../repositories/profile-repo';
@@ -17,6 +17,8 @@ import * as collectionRepo from '../repositories/collection-repo';
 import * as catalogRepo from '../repositories/catalog-repo';
 import { isUniqueViolation } from '../db/pg-errors';
 import * as relationshipRepo from '../repositories/relationship-repo';
+import * as cardRepo from '../repositories/card-repo';
+import { toCardRider } from './card-service';
 import { NotFoundError, ValidationError } from '../errors/AppError';
 import { toSelfShape, toGamertagView } from '../serializers/user-shape';
 import type { CollectionEntryRow } from '../db/schema';
@@ -45,7 +47,7 @@ export function usernameNextChangeAt(row: UserRow): string | null {
 }
 
 /** PROF-04 stats derived from the real shelf; completionPct per decision 0058. */
-function statsOf(entries: CollectionEntryRow[], friends: number): SelfStats {
+function statsOf(entries: CollectionEntryRow[], friends: number, cardsDesigned: number): SelfStats {
   const nonWishlist = entries.filter((e) => e.status !== 'wishlist');
   const done = nonWishlist.filter((e) => e.status === 'beaten' || e.status === 'completed');
   return {
@@ -53,8 +55,8 @@ function statsOf(entries: CollectionEntryRow[], friends: number): SelfStats {
     hours: entries.reduce((sum, e) => sum + e.hours, 0),
     completionPct:
       nonWishlist.length === 0 ? 0 : Math.round((100 * done.length) / nonWishlist.length),
-    cardsDesigned: 0, // honest zero — card_designs is M4
-    adoptionsReceived: 0, // honest zero — adoptions are M4/M5
+    cardsDesigned, // REAL as of M4 (card_designs, decision 0066) — finished designs, not drafts
+    adoptionsReceived: 0, // honest zero — adoptions are M5
     friends,
   };
 }
@@ -77,8 +79,12 @@ export async function assembleSelfShape(row: UserRow, exec?: Executor): Promise<
   const friends = exec
     ? await relationshipRepo.countFriends(row.id, exec)
     : await relationshipRepo.countFriends(row.id);
+  const cardsDesigned = exec
+    ? await cardRepo.countOwnedDesigns(row.id, exec)
+    : await cardRepo.countOwnedDesigns(row.id);
 
   // The expanded favouriteGame / nowPlaying pins (M3 — the P2 PINNED FAVOURITE unblock, WTP-03).
+  // M4 (0066): the pin's card rider resolves the entry's EQUIPPED design (CARD-07/18).
   const expand = async (gameId: string | null): Promise<SelfGameExpansion | null> => {
     if (!gameId) return null;
     const [game] = exec
@@ -86,19 +92,24 @@ export async function assembleSelfShape(row: UserRow, exec?: Executor): Promise<
       : await catalogRepo.gamesByIds([gameId]);
     if (!game) return null; // soft-deleted from the catalog → honest null
     const entry = entries.find((e) => e.gameId === gameId);
+    const design = entry?.activeCardDesignId
+      ? exec
+        ? await cardRepo.findOwnedDesign(row.id, entry.activeCardDesignId, exec)
+        : await cardRepo.findOwnedDesign(row.id, entry.activeCardDesignId)
+      : null;
     return {
       gameId,
       ...(entry ? { entryId: entry.id } : {}),
       title: game.name,
       hours: entry?.hours ?? 0,
-      card: { ...DEFAULT_CARD_STUB },
+      card: toCardRider(design),
     };
   };
 
   return toSelfShape(row, {
     gamertags: gamertagRows.map(toGamertagView),
     usernameNextChangeAt: usernameNextChangeAt(row),
-    stats: statsOf(entries, friends),
+    stats: statsOf(entries, friends, cardsDesigned),
     favouriteGame: await expand(row.favouriteGameId),
     nowPlaying: await expand(row.nowPlayingGameId),
   });

@@ -361,8 +361,9 @@ export const gameGenres = pgTable(
  *    the anomaly pending-review is M7). `hoursSource` keeps the column import-ready.
  *  - `position` — the COL-07 manual order (append on add; `PATCH /me/collection/reorder` rewrites).
  *  - `notes`/`rating` — COL-05/COL-03 PRIVATE personal fields (never serialized to others).
- *  - NO `active_card_design_id` yet (COL-06 needs the M4 card_designs table — additive later) and NO
- *    `collection_platforms` (COL-04 rides the platform work; `platformIds` deferred with it).
+ *  - `activeCardDesignId` — COL-06 equip (M4, decision 0066): the owner's selected design; ON DELETE
+ *    SET NULL backs the CARD-18 default-face guarantee behind the 0040 409-guard. NO
+ *    `collection_platforms` yet (COL-04 rides the platform work; `platformIds` deferred with it).
  */
 export const collectionEntries = pgTable(
   'collection_entries',
@@ -381,6 +382,10 @@ export const collectionEntries = pgTable(
     ownedSince: date('owned_since'), // COL-03 date acquired — defaults to the add date in code
     rating: integer('rating'), // COL-03 private ⭐ (1..5)
     notes: text('notes'), // COL-05 (column now; the write path rides later scope)
+    // COL-06 (M4, decision 0066 §5) — the equipped design; SET NULL degrades to the CARD-18 default.
+    activeCardDesignId: uuid('active_card_design_id').references((): AnyPgColumn => cardDesigns.id, {
+      onDelete: 'set null',
+    }),
     position: integer('position').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(), // recently-added
   },
@@ -388,6 +393,66 @@ export const collectionEntries = pgTable(
     userGameIdx: uniqueIndex('collection_entries_user_game_idx').on(table.userId, table.gameId),
     userIdx: index('collection_entries_user_idx').on(table.userId),
     userPositionIdx: index('collection_entries_user_position_idx').on(table.userId, table.position),
+  }),
+);
+
+/**
+ * `card_designs` — the CARD-24a draft document + saved designs (M4, decision 0066 §3). USER-OWNED
+ * (owner key = `owner_id`; NOT on the F32 manifest — rule-2 fails closed).
+ *  - `status ∈ draft|private|published` — the CARD-14 lifecycle (`published` unused until M5 publish;
+ *    kept now so M5 needs no migration). The shared zod schema owns the wire values.
+ *  - `composition` — the CARD-15 source of truth (shared compositionSchema-validated at the boundary);
+ *    OWNER-ONLY on the wire (0066 §2 — viewers get flattened images at M5, never layers).
+ *  - `compositionHash` — the version-aware content hash (CARD-19's dedup substrate).
+ *  - `imageUrl`/`thumbUrl` — NULL until the M5 flatten-to-storage (0066 §1).
+ *  - `isPremium` — CARD-06 derived; always false on the M4 free baseline (COSM-02/0063).
+ *  - Adoption grants deliberately DO NOT live here (a separate M5 table — 0066 §3).
+ */
+export const cardDesigns = pgTable(
+  'card_designs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    ownerId: uuid('owner_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    gameId: uuid('game_id')
+      .notNull()
+      .references(() => games.id),
+    name: text('name').notNull(),
+    status: text('status').notNull().default('draft'),
+    composition: jsonb('composition').notNull().$type<Record<string, unknown>>(),
+    compositionHash: text('composition_hash').notNull(),
+    imageUrl: text('image_url'),
+    thumbUrl: text('thumb_url'),
+    isPremium: boolean('is_premium').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    ownerGameIdx: index('card_designs_owner_game_idx').on(table.ownerId, table.gameId),
+  }),
+);
+
+/**
+ * `style_presets` — CARD-24b reusable game-agnostic closed-attribute recipes (M4, decision 0066 §4).
+ * USER-OWNED (owner key = `owner_id`). The cap-30 (SYS-04) is SERVICE-enforced (409 PRESET_LIMIT),
+ * not a DB constraint; `style` is the api-contract 0.51 recipe shape (shared zod-validated).
+ */
+export const stylePresets = pgTable(
+  'style_presets',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    ownerId: uuid('owner_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    style: jsonb('style').notNull().$type<Record<string, unknown>>(),
+    isPremium: boolean('is_premium').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    ownerIdx: index('style_presets_owner_idx').on(table.ownerId),
   }),
 );
 
@@ -406,6 +471,8 @@ export type DomainEventInsert = typeof domainEvents.$inferInsert;
 export type GenreRow = typeof genres.$inferSelect;
 export type GameRow = typeof games.$inferSelect;
 export type NewGameRow = typeof games.$inferInsert;
+export type CardDesignRow = typeof cardDesigns.$inferSelect;
+export type StylePresetRow = typeof stylePresets.$inferSelect;
 export type GameGenreRow = typeof gameGenres.$inferSelect;
 export type CollectionEntryRow = typeof collectionEntries.$inferSelect;
 export type NewCollectionEntryRow = typeof collectionEntries.$inferInsert;

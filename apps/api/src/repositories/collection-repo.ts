@@ -167,7 +167,7 @@ export async function insertEntry(
   return rows[0]!;
 }
 
-/** The COL-02/03 fields PATCH may set. Only provided keys are written. */
+/** The COL-02/03/06 fields PATCH may set. Only provided keys are written. */
 export interface EntryUpdate {
   status?: string;
   hours?: number;
@@ -175,6 +175,7 @@ export interface EntryUpdate {
   ownedSince?: string;
   rating?: number | null;
   notes?: string | null;
+  activeCardDesignId?: string | null; // COL-06 equip (api 0.53 / decision 0066)
 }
 
 export async function updateOwnedEntry(

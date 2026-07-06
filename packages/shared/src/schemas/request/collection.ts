@@ -35,6 +35,10 @@ export const updateCollectionEntryRequestSchema = z
     ownedSince: isoDateSchema.optional(),
     rating: z.number().int().min(1).max(5).nullable().optional(),
     notes: boundedText(NOTES_MAX).nullable().optional(),
+    // COL-06 equip (LIVE api 0.53 / decision 0066 §5): the caller's OWN design, for THIS game,
+    // status ∈ private|published (drafts are not equippable); null re-equips the CARD-18 default.
+    // `platformIds` (COL-04) stays 0058-deferred with the platforms table.
+    activeCardDesignId: z.string().uuid().nullable().optional(),
   })
   .strict();
 

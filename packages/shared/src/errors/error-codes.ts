@@ -14,6 +14,9 @@ export const ERROR_CODES = [
   'ACCOUNT_SUSPENDED',
   // The CAT-03 dedup warn (409) — appended 0.47 via the F-17 additive path (its first live use).
   'DUPLICATE_SUSPECTED',
+  // M4 card substrate (decision 0066 / api-contract 0.51+0.53) — the F-17 additive path.
+  'CARD_EQUIPPED', // 409 — DELETE /cards/:id refused: the design is equipped (switch first, COL-06/0040)
+  'PRESET_LIMIT', // 409 — POST /me/style-presets refused: the cap-30 is full (CARD-24, SYS-04)
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];

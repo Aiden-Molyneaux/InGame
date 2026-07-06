@@ -1,5 +1,4 @@
 import {
-  DEFAULT_CARD_STUB,
   type AddCollectionEntryRequest,
   type CollectionItem,
   type CollectionResponse,
@@ -14,8 +13,10 @@ import { isUniqueViolation } from '../db/pg-errors';
 import * as collectionRepo from '../repositories/collection-repo';
 import * as catalogRepo from '../repositories/catalog-repo';
 import * as profileRepo from '../repositories/profile-repo';
+import * as cardRepo from '../repositories/card-repo';
+import { toCardRider } from './card-service';
 import { NotFoundError, ValidationError } from '../errors/AppError';
-import type { CollectionEntryRow, GameRow } from '../db/schema';
+import type { CardDesignRow, CollectionEntryRow, GameRow } from '../db/schema';
 
 // A malformed :entryId path param would otherwise reach Postgres as an invalid uuid cast (22P02 → 500);
 // treat it as the same 404 an unknown id gets (mirrors users-service's target-id guard).
@@ -26,7 +27,9 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 // (no existence oracle). M3 posture (decision 0058/D2/D4): the list is unpaginated with honest
 // totals; the drawer's sort/filter/search executes client-side.
 
-// Pre-M4 the `card` rider is the shared CARD-18 default-face stub (api-contract 0.48).
+// The `card` rider resolves per CARD-18 (decision 0066 §5): the EQUIPPED design → else the shared
+// default-face stub. An equipped design carries `name` + `composition` — OWNER-ONLY (0066 §2; this
+// serializer feeds /me only. A cross-user serializer must NEVER emit `composition` — CARD-15).
 
 function releaseYearOf(releaseDate: string | null): number | null {
   if (!releaseDate) return null;
@@ -39,6 +42,7 @@ function toItem(
   game: GameRow,
   genres: GenreView[],
   nowPlayingGameId: string | null,
+  design: CardDesignRow | null = null,
 ): CollectionItem {
   return {
     entryId: entry.id,
@@ -54,7 +58,9 @@ function toItem(
     ownedSince: entry.ownedSince,
     addedAt: entry.createdAt.toISOString(), // OQ-128 — immutable add timestamp for the RECENT sort
     nowPlaying: game.id === nowPlayingGameId,
-    card: { ...DEFAULT_CARD_STUB },
+    card: toCardRider(design),
+    rating: entry.rating, // OQ-134 (api 0.53) — owner-only readback
+    notes: entry.notes,
   };
 }
 
@@ -80,7 +86,12 @@ async function assembleItem(
   const user = exec
     ? await profileRepo.getOwnProfile(actorId, exec)
     : await profileRepo.getOwnProfile(actorId);
-  return toItem(entry, game, genres.get(game.id) ?? [], user?.nowPlayingGameId ?? null);
+  const design = entry.activeCardDesignId
+    ? exec
+      ? await cardRepo.findOwnedDesign(actorId, entry.activeCardDesignId, exec)
+      : await cardRepo.findOwnedDesign(actorId, entry.activeCardDesignId)
+    : null;
+  return toItem(entry, game, genres.get(game.id) ?? [], user?.nowPlayingGameId ?? null, design);
 }
 
 /** GET /me/collection — the whole shelf in manual order; honest totals (the C4 class). */
@@ -88,8 +99,19 @@ export async function listCollection(actorId: string): Promise<CollectionRespons
   const rows = await collectionRepo.listEntriesWithGames(actorId);
   const user = await profileRepo.getOwnProfile(actorId);
   const genres = await genresByGameId(rows.map((r) => r.game.id));
+  // Bulk-resolve the equipped designs (COL-06/CARD-18) — own rows only, one query.
+  const equippedIds = rows
+    .map((r) => r.entry.activeCardDesignId)
+    .filter((id): id is string => id !== null);
+  const designs = await cardRepo.ownedDesignsByIds(actorId, equippedIds);
   const items = rows.map((r) =>
-    toItem(r.entry, r.game, genres.get(r.game.id) ?? [], user?.nowPlayingGameId ?? null),
+    toItem(
+      r.entry,
+      r.game,
+      genres.get(r.game.id) ?? [],
+      user?.nowPlayingGameId ?? null,
+      r.entry.activeCardDesignId ? (designs.get(r.entry.activeCardDesignId) ?? null) : null,
+    ),
   );
   return { items, nextCursor: null, total: items.length, collectionTotal: items.length };
 }
@@ -147,9 +169,12 @@ export async function addEntry(
   }
 }
 
-/** @mutation — PATCH /me/collection/:entryId (COL-02/03/05 — the M3 field set). */
+/** @mutation — PATCH /me/collection/:entryId (COL-02/03/05 + the COL-06 equip, api 0.53/0066). */
 export const updateEntry = mutation(
-  { name: 'collection.updateEntry', specIds: ['COL-02', 'COL-03', 'COL-05', 'SYS-01', 'SYS-02'] },
+  {
+    name: 'collection.updateEntry',
+    specIds: ['COL-02', 'COL-03', 'COL-05', 'COL-06', 'SYS-01', 'SYS-02'],
+  },
   async (
     ctx,
     actorId,
@@ -169,6 +194,32 @@ export const updateEntry = mutation(
       }
     }
 
+    // COL-06 equip (decision 0066 §5): the caller's OWN design, for THIS game, private|published —
+    // a failed validation must NOT equip (422, a body-field error, not a 404).
+    if (input.activeCardDesignId !== undefined) {
+      if (input.activeCardDesignId !== null) {
+        const design = await cardRepo.findOwnedDesign(actorId, input.activeCardDesignId, ctx.tx);
+        if (!design) {
+          throw new ValidationError('That card design does not exist.', 'unknown_design', [
+            { path: 'activeCardDesignId', message: 'Pick one of your own designs.' },
+          ]);
+        }
+        if (design.gameId !== current.gameId) {
+          throw new ValidationError('That design is for a different game.', 'design_wrong_game', [
+            { path: 'activeCardDesignId', message: 'Pick a design made for this game.' },
+          ]);
+        }
+        if (design.status === 'draft') {
+          // Drafts are resume-editing handles, not equippable faces (0066 §5).
+          throw new ValidationError('Drafts cannot be equipped.', 'design_not_equippable', [
+            { path: 'activeCardDesignId', message: 'Finish the draft first (KEEP or SAVE PRIVATE).' },
+          ]);
+        }
+      }
+      fields.activeCardDesignId = input.activeCardDesignId;
+      changed.push('activeCardDesignId');
+    }
+
     // An empty PATCH body is a no-op that would slip past a mutation without emitting (rule-5) — reject it.
     if (changed.length === 0) {
       throw new ValidationError('Provide at least one field to update.', 'empty_update');
@@ -179,6 +230,13 @@ export const updateEntry = mutation(
       entityRef: { type: 'collection_entry', id: entryId },
       payload: { fields: changed }, // the changed field-set, never the values (F18)
     });
+    if (changed.includes('activeCardDesignId')) {
+      await ctx.emit({
+        eventType: 'collection.card_equipped',
+        entityRef: { type: 'collection_entry', id: entryId },
+        payload: { designId: input.activeCardDesignId ?? null },
+      });
+    }
     const game = await liveGameOr422(entry.gameId, ctx.tx);
     return assembleItem(actorId, entry, game, ctx.tx);
   },
