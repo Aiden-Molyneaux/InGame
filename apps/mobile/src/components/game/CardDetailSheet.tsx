@@ -28,19 +28,18 @@ export function CardDetailSheet({
   const custom = composition !== null;
   return (
     <PulledSheet visible={visible} onClose={onClose}>
-      {/* custom sheet head with a visible ✕ (the board `sh-h` carries one, `:691`) */}
+      {/* the sheet TITLE + a visible ✕ (owner gate-5 C.14; board `sh-h` `:691`) */}
       <View style={styles.head}>
-        <Text style={styles.headTitle}>YOUR {entry.title.toUpperCase()} CARD</Text>
+        <Text style={styles.headTitle}>CARD DETAIL</Text>
         <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={8}>
           <Text style={styles.close}>✕</Text>
         </Pressable>
       </View>
       <View style={styles.cardWrap}>
-        <CardFace title={entry.title} composition={composition} size="pick" />
+        {/* larger than the hero it enlarges FROM (C.14) — /grid is 161, this inspects at 189×264 */}
+        <CardFace title={entry.title} composition={composition} size="pick" width={189} height={264} />
       </View>
-      <Text style={styles.credit}>
-        {custom && entry.card.name ? `«${entry.card.name.toUpperCase()}» · YOUR DESIGN` : 'THE STANDARD FACE'}
-      </Text>
+      <Text style={styles.credit}>{custom ? 'YOUR DESIGN' : 'THE STANDARD FACE'}</Text>
       <EquipReadout card={entry.card} composition={composition} />
       <View style={styles.actions}>
         <ScreenButton label="Share" variant="secondary" disabled style={styles.actionBtn} />

@@ -4,26 +4,27 @@ import Svg, { Path } from 'react-native-svg';
 import type { CollectionItem } from '@ingame/shared';
 import { CardFace, parseComposition } from '../CardFace';
 import { ScreenButton } from '../ScreenButton';
-import { ConfirmSheet } from '../ConfirmSheet';
 import { EquipReadout } from './EquipReadout';
 import { theme } from '../../theme';
 import { steppedRectPath } from '../../theme/steppedPath';
-import { useGetEntryCardsQuery, useUpdateEntryMutation, useDeleteCardMutation } from '../../store/api';
+import { useGetEntryCardsQuery, useUpdateEntryMutation } from '../../store/api';
 
 // CardSwitcher (component-map §9 · CARD-24c/COL-06) — the CARDS tab: MY designs for THIS game from
-// the real switcher feed (GET /me/collection/:entryId/cards — LIVE as of decision 0066; the §3.1
-// default-only interim is retired). Tap-select (CARD-23 ACT-IN-PLACE) → inline options: SET AS MAIN
-// (equip, private|published only) · EDIT IN STYLER (the §3.2 route) · DELETE (0040 ConfirmSheet; the
-// equipped design is refused server-side with 409 CARD_EQUIPPED and disabled here). The DEFAULT face
-// is always present as the un-equip target (CARD-18). Community gallery + adopt stay M5.
-const CELL_W = 96;
-const CELL_H = 134;
+// the switcher feed (GET /me/collection/:entryId/cards). The blank default face is IMPLICIT (owner
+// gate-5 C.10): it is never listed as a tile and never counted — a game with no designs shows the
+// design-nudge empty state instead. Tap-select (CARD-23 ACT-IN-PLACE) → inline options: SET AS MAIN /
+// UNEQUIP (COL-06; unequip = back to the blank default) · EDIT IN STYLER (§3.2) · DELETE (0040 —
+// confirm HOISTED to the page root so the sheet docks to the in-app bottom, gate-5 D.27; the worn
+// design stays refused until unequipped, 409 CARD_EQUIPPED). ◆ marks the equipped tile as a glyph
+// chip beside the status tag (gate-5 C.11). Community gallery + adopt stay M5.
+const CELL_W = 120; // "a bit bigger" than /cell 96 (gate-5 C.10)
+const CELL_H = 168;
 const RING = 4;
 
 type Row = {
-  id: string; // 'default' or the design id
+  id: string;
   name: string;
-  status: 'default' | 'draft' | 'private' | 'published';
+  status: 'draft' | 'private' | 'published';
   composition: ReturnType<typeof parseComposition>;
   equipped: boolean;
 };
@@ -32,61 +33,42 @@ export function CardSwitcher({
   entry,
   onEditInStyler,
   onDesignNew,
+  onRequestDelete,
+  deleteError,
 }: {
   entry: CollectionItem;
   onEditInStyler: (cardId: string) => void;
   onDesignNew: () => void;
+  /** The 0040 confirm renders at the PAGE root (D.27) — the switcher only asks. */
+  onRequestDelete: (cardId: string, name: string) => void;
+  deleteError?: string | null;
 }) {
   const { data, isLoading } = useGetEntryCardsQuery(entry.entryId);
   const [updateEntry, equipState] = useUpdateEntryMutation();
-  const [deleteCard, deleteState] = useDeleteCardMutation();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [inlineError, setInlineError] = useState<string | null>(null);
 
-  const rows = useMemo<Row[]>(() => {
-    const designs: Row[] = (data?.items ?? []).map((c) => ({
-      id: c.id,
-      name: c.name,
-      status: c.status,
-      composition: parseComposition(c.composition),
-      equipped: entry.card.id === c.id,
-    }));
-    // The DEFAULT face rides the roster as the CARD-18 fallback / un-equip target.
-    const def: Row = {
-      id: 'default',
-      name: entry.title,
-      status: 'default',
-      composition: null,
-      equipped: entry.card.id === 'default',
-    };
-    return [def, ...designs];
-  }, [data, entry]);
+  const rows = useMemo<Row[]>(
+    () =>
+      (data?.items ?? []).map((c) => ({
+        id: c.id,
+        name: c.name,
+        status: c.status as Row['status'],
+        composition: parseComposition(c.composition),
+        equipped: entry.card.id === c.id,
+      })),
+    [data, entry],
+  );
 
-  const selected = rows.find((r) => r.id === selectedId) ?? rows.find((r) => r.equipped) ?? rows[0]!;
-  const count = rows.length;
+  const selected = rows.find((r) => r.id === selectedId) ?? rows.find((r) => r.equipped) ?? rows[0] ?? null;
+  const count = rows.length; // real designs only — the implicit blank default is not a card (C.10)
 
-  async function setAsMain(row: Row) {
+  async function setMain(designId: string | null) {
     setInlineError(null);
     try {
-      await updateEntry({
-        entryId: entry.entryId,
-        activeCardDesignId: row.id === 'default' ? null : row.id,
-      }).unwrap();
+      await updateEntry({ entryId: entry.entryId, activeCardDesignId: designId }).unwrap();
     } catch (e) {
       setInlineError(errMsg(e, 'Could not equip it. Try again.'));
-    }
-  }
-
-  async function doDelete(designId: string) {
-    setInlineError(null);
-    try {
-      await deleteCard(designId).unwrap();
-      setConfirmDeleteId(null);
-      if (selectedId === designId) setSelectedId(null);
-    } catch (e) {
-      setConfirmDeleteId(null);
-      setInlineError(errMsg(e, 'Could not delete it.'));
     }
   }
 
@@ -97,8 +79,6 @@ export function CardSwitcher({
       </View>
     );
   }
-
-  const confirmTarget = rows.find((r) => r.id === confirmDeleteId);
 
   return (
     <View style={styles.wrap}>
@@ -115,7 +95,7 @@ export function CardSwitcher({
 
       <View style={styles.grid}>
         {rows.map((row) => {
-          const sel = row.id === selected.id;
+          const sel = selected !== null && row.id === selected.id;
           return (
             <Pressable
               key={row.id}
@@ -126,17 +106,21 @@ export function CardSwitcher({
               onPress={() => setSelectedId(row.id)} // CARD-23 ACT-IN-PLACE — select, never navigate
             >
               {sel ? <SelectRing /> : null}
-              <View style={[styles.tag, TAG_STYLE[row.equipped ? 'equipped' : row.status]]}>
-                <Text style={[styles.tagText, TAG_TEXT[row.equipped ? 'equipped' : row.status]]}>
-                  {row.equipped ? '◆ EQUIPPED' : TAG_LABEL[row.status]}
-                </Text>
+              <View style={[styles.tag, TAG_STYLE[row.status]]}>
+                <Text style={[styles.tagText, TAG_TEXT[row.status]]}>{TAG_LABEL[row.status]}</Text>
               </View>
-              <CardFace title={row.name} composition={row.composition} size="cell" />
+              {row.equipped ? (
+                // the worn marker is a GLYPH chip, not a word — it coexists with the status tag (C.11)
+                <View style={styles.wornChip} accessibilityLabel="Equipped">
+                  <Text style={styles.wornGlyph}>◆</Text>
+                </View>
+              ) : null}
+              <CardFace title={row.name} composition={row.composition} size="cell" width={CELL_W} height={CELL_H} />
             </Pressable>
           );
         })}
 
-        {/* DESIGN NEW — gold dashed, card-creating (F-02) → the Styler (§3.2, LIVE). */}
+        {/* DESIGN NEW — gold dashed, card-creating (F-02) → the Styler (§3.2). */}
         <Pressable
           style={styles.newTile}
           accessibilityRole="button"
@@ -148,63 +132,62 @@ export function CardSwitcher({
         </Pressable>
       </View>
 
-      {/* the selected card's inline options (no drawer — surfaced on the screen) */}
-      <View style={styles.opts}>
-        <Text style={styles.optsTitle}>
-          {selected.id === 'default'
-            ? `The default ${entry.title} face`
-            : `${selected.name} — ${TAG_LABEL[selected.status]}`}
+      {rows.length === 0 ? (
+        <Text style={styles.emptyLine}>
+          No cards designed yet — the blank default face is on duty until you make one.
         </Text>
-        <EquipReadout
-          card={selected.id === 'default' ? { ...entry.card, isCustom: false } : { ...entry.card, isCustom: true }}
-          composition={selected.composition}
-        />
-        <View style={styles.actions}>
-          <ScreenButton
-            label={equipState.isLoading ? '…' : 'Set as main'}
-            variant="secondary"
-            disabled={selected.equipped || selected.status === 'draft' || equipState.isLoading}
-            onPress={() => void setAsMain(selected)}
-            style={styles.miniBtn}
-          />
-          <ScreenButton
-            label="Edit in Styler"
-            variant="secondary"
-            disabled={selected.id === 'default'}
-            onPress={() => selected.id !== 'default' && onEditInStyler(selected.id)}
-            style={styles.miniBtn}
-          />
-          <ScreenButton
-            label="Delete"
-            variant={selected.equipped || selected.id === 'default' ? 'secondary' : 'destructive'}
-            disabled={selected.equipped || selected.id === 'default' || deleteState.isLoading}
-            onPress={() => setConfirmDeleteId(selected.id)}
-            style={styles.miniBtn}
-          />
+      ) : selected ? (
+        <View style={styles.opts}>
+          <Text style={styles.optsTitle}>
+            {selected.name} — {TAG_LABEL[selected.status]}
+          </Text>
+          <EquipReadout card={{ ...entry.card, isCustom: true }} composition={selected.composition} />
+          <View style={styles.actions}>
+            {selected.equipped ? (
+              <ScreenButton
+                label={equipState.isLoading ? '…' : 'Unequip'}
+                variant="secondary"
+                disabled={equipState.isLoading}
+                onPress={() => void setMain(null)} // back to the implicit blank default (C.10)
+                style={styles.miniBtn}
+              />
+            ) : (
+              <ScreenButton
+                label={equipState.isLoading ? '…' : 'Set as main'}
+                variant="secondary"
+                disabled={selected.status === 'draft' || equipState.isLoading}
+                onPress={() => void setMain(selected.id)}
+                style={styles.miniBtn}
+              />
+            )}
+            <ScreenButton
+              label="Edit in Styler"
+              variant="secondary"
+              onPress={() => onEditInStyler(selected.id)}
+              style={styles.miniBtn}
+            />
+            <ScreenButton
+              label="Delete"
+              variant={selected.equipped ? 'secondary' : 'destructive'}
+              disabled={selected.equipped}
+              onPress={() => onRequestDelete(selected.id, selected.name)}
+              style={styles.miniBtn}
+            />
+          </View>
+          {selected.status === 'draft' ? (
+            <Text style={styles.note}>A draft resumes in the Styler — finish it (KEEP or SAVE PRIVATE) to equip it.</Text>
+          ) : selected.equipped ? (
+            <Text style={styles.note}>Your shelf wears this card. Unequip it before deleting it.</Text>
+          ) : null}
+          {inlineError || deleteError ? <Text style={styles.err}>{inlineError ?? deleteError}</Text> : null}
         </View>
-        {selected.status === 'draft' ? (
-          <Text style={styles.note}>A draft resumes in the Styler — finish it (KEEP or SAVE PRIVATE) to equip it.</Text>
-        ) : selected.equipped && selected.id !== 'default' ? (
-          <Text style={styles.note}>Your shelf wears this card. Equip another before deleting it.</Text>
-        ) : null}
-        {inlineError ? <Text style={styles.err}>{inlineError}</Text> : null}
-      </View>
+      ) : null}
 
       {/* community gallery + adopt — M5 (decision 0062 §2) */}
       <View style={styles.community}>
         <Text style={styles.communityText}>BROWSE THE COMMUNITY</Text>
         <Text style={styles.communityNote}>Adopt other players' cards — arrives in a later release.</Text>
       </View>
-
-      <ConfirmSheet
-        visible={confirmDeleteId !== null}
-        title="Delete this card?"
-        message={`"${confirmTarget?.name ?? ''}" is deleted everywhere — the switcher and your designs shelf. This can't be undone.`}
-        confirmLabel="Delete"
-        busy={deleteState.isLoading}
-        onConfirm={() => confirmDeleteId && void doDelete(confirmDeleteId)}
-        onClose={() => setConfirmDeleteId(null)}
-      />
     </View>
   );
 }
@@ -232,21 +215,16 @@ function SelectRing() {
 }
 
 const TAG_LABEL: Record<Row['status'], string> = {
-  default: 'DEFAULT',
   draft: 'DRAFT',
   private: 'PRIVATE',
   published: 'PUBLISHED',
 };
-const TAG_STYLE: Record<'equipped' | Row['status'], object> = {
-  equipped: { backgroundColor: theme.scr.accent },
-  default: { backgroundColor: theme.scr.panelHi },
+const TAG_STYLE: Record<Row['status'], object> = {
   draft: { backgroundColor: 'rgba(13,11,30,0.78)', borderWidth: 1, borderColor: theme.scr.hairline },
   private: { backgroundColor: theme.brand.cream },
   published: { backgroundColor: theme.brand.gold },
 };
-const TAG_TEXT: Record<'equipped' | Row['status'], object> = {
-  equipped: { color: theme.scr.accentInk },
-  default: { color: theme.scr.dim },
+const TAG_TEXT: Record<Row['status'], object> = {
   draft: { color: theme.scr.dim },
   private: { color: theme.brand.navy },
   published: { color: theme.brand.goldInk },
@@ -262,6 +240,16 @@ const styles = StyleSheet.create({
   cellWrap: { width: CELL_W, height: CELL_H, position: 'relative' },
   tag: { position: 'absolute', top: 4, left: 4, zIndex: 3, paddingHorizontal: 4, paddingVertical: 2 },
   tagText: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, letterSpacing: 0.5 },
+  wornChip: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    zIndex: 3,
+    backgroundColor: theme.scr.accent,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+  },
+  wornGlyph: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.accentInk },
   newTile: {
     width: CELL_W,
     height: CELL_H,
@@ -275,6 +263,7 @@ const styles = StyleSheet.create({
   },
   newPlus: { fontFamily: theme.font.screenBold, fontSize: theme.type.display, color: theme.scr.accent },
   newLabel: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.accent, letterSpacing: 1 },
+  emptyLine: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.faint, lineHeight: 16 },
   opts: {
     padding: theme.space.lg,
     backgroundColor: theme.scr.panel,

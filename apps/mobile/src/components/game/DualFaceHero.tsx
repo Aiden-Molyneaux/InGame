@@ -40,11 +40,12 @@ export function DualFaceHero({
         accessibilityLabel={`Inspect your ${title} card`}
         onPress={onInspect}
       >
-        <CardFace title={title} composition={composition} size="pick" />
+        {/* /grid (161×225) — one size up from /pick per the owner's gate-5 B.5 */}
+        <CardFace title={title} composition={composition} size="grid" />
         <Text style={styles.label}>THE FACE</Text>
       </Pressable>
       <View style={styles.face}>
-        <StatsBack hours={hours} percent={percent} status={status} since={since} artist={artist} />
+        <StatsBack hours={hours} percent={percent} status={status} since={since} artist={artist} width={161} height={225} />
         <Text style={[styles.label, styles.labelAcc]}>{statsLabel}</Text>
       </View>
     </View>
@@ -57,7 +58,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-start',
     gap: theme.space.lg,
-    paddingVertical: theme.space.lg,
+    paddingVertical: theme.space.sm, // tightened toward the title/facts block (gate-5 B.5)
   },
   face: { alignItems: 'center', gap: theme.space.sm },
   label: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },

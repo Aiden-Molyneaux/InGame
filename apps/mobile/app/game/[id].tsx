@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import type { CollectionItem, UpdateCollectionEntryRequest } from '@ingame/shared';
+import type { CollectionItem } from '@ingame/shared';
 import { parseComposition } from '../../src/components/CardFace';
 import { DualFaceHero } from '../../src/components/game/DualFaceHero';
-import { PlayDossier, draftFromEntry, type PlayDraft } from '../../src/components/game/PlayDossier';
+import { PlayDossier } from '../../src/components/game/PlayDossier';
 import { CardSwitcher } from '../../src/components/game/CardSwitcher';
 import { CardDetailSheet } from '../../src/components/game/CardDetailSheet';
 import { GameTabDock, type GameSection } from '../../src/components/game/GameTabDock';
@@ -17,9 +17,9 @@ import { theme } from '../../src/theme';
 import { steppedRectPath } from '../../src/theme/steppedPath';
 import {
   useGetCollectionQuery,
-  useUpdateEntryMutation,
   useRemoveEntryMutation,
   useSetNowPlayingMutation,
+  useDeleteCardMutation,
 } from '../../src/store/api';
 
 // Game page hub shell (§3.1 · design-spec §2.4b / §4.2) — the CARD-23 NAVIGATE target + the
@@ -45,29 +45,29 @@ export default function GamePage() {
   );
 
   const [section, setSection] = useState<GameSection>('play');
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState<PlayDraft | null>(null);
   const [inspectOpen, setInspectOpen] = useState(false);
   const [overflowOpen, setOverflowOpen] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
+  // the switcher's card-delete confirm lives HERE — a sheet mounted inside the ScrollView docks to
+  // the switcher's box, not the screen bottom (PulledSheet's screen-root contract; gate-5 D.27)
+  const [confirmDeleteCard, setConfirmDeleteCard] = useState<{ id: string; name: string } | null>(null);
+  const [deleteCardError, setDeleteCardError] = useState<string | null>(null);
 
-  const [updateEntry, updateState] = useUpdateEntryMutation();
   const [removeEntry, removeState] = useRemoveEntryMutation();
   const [setNowPlaying] = useSetNowPlayingMutation();
+  const [deleteCard, deleteCardState] = useDeleteCardMutation();
 
   // Reset per-game view state when the route param changes — expo-router RE-RENDERS (does not remount)
   // a dynamic route on param change, so a mid-edit draft/section would bleed across games if a future
   // surface ever adds game→game navigation. Not reachable at M4 (only the Collection push enters here),
   // but cheap to guard now. (murr — latent cross-game state leak.)
   useEffect(() => {
-    setEditing(false);
-    setDraft(null);
     setSection('play');
     setInspectOpen(false);
     setOverflowOpen(false);
     setConfirmRemove(false);
-    setSaveError(null);
+    setConfirmDeleteCard(null);
+    setDeleteCardError(null);
   }, [id]);
 
   // ── lifecycle (L1 · L2) ────────────────────────────────────────────────────────────────────────
@@ -100,60 +100,7 @@ export default function GamePage() {
     );
   }
 
-  // ── the resolved-entry screen ────────────────────────────────────────────────────────────────────
-  const d = draft ?? draftFromEntry(entry);
-  const patchDraft = (p: Partial<PlayDraft>) => {
-    setSaveError(null); // editing clears the last save error (mirrors TextField's clear-on-type)
-    setDraft((prev) => ({ ...(prev ?? draftFromEntry(entry)), ...p }));
-  };
-
-  // The stats back reflects the DRAFT live while editing, else the saved entry.
-  const eff = editing
-    ? {
-        hours: Number.parseInt(d.hours, 10) || 0,
-        percent: d.percent === '' ? null : Math.min(100, Number.parseInt(d.percent, 10) || 0),
-        status: d.status,
-        since: d.ownedSince.trim() || null,
-      }
-    : { hours: entry.hours, percent: entry.percentComplete, status: entry.status, since: entry.ownedSince };
-
-  function startEdit() {
-    setDraft(draftFromEntry(entry!));
-    setEditing(true);
-  }
-  function cancelEdit() {
-    setDraft(null);
-    setEditing(false);
-    setSaveError(null);
-  }
-  async function saveEdit() {
-    // Client-guard the one field the server rejects hard: ownedSince must be YYYY-MM-DD (isoDateSchema)
-    // — catch a malformed date here with a clear message instead of a silent 422.
-    const since = d.ownedSince.trim();
-    if (since && !/^\d{4}-\d{2}-\d{2}$/.test(since)) {
-      setSaveError('Owned since must be a date — YYYY-MM-DD (e.g. 2022-02-25).');
-      return;
-    }
-    const body: UpdateCollectionEntryRequest = {
-      hours: Number.parseInt(d.hours, 10) || 0,
-      percentComplete: d.percent === '' ? null : Math.max(0, Math.min(100, Number.parseInt(d.percent, 10) || 0)),
-      status: d.status,
-      ...(since ? { ownedSince: since } : {}),
-      ...(d.notes.trim() ? { notes: d.notes.trim() } : {}),
-    };
-    try {
-      await updateEntry({ entryId: entry!.entryId, ...body }).unwrap();
-      setDraft(null);
-      setEditing(false);
-      setSaveError(null);
-    } catch (e) {
-      // Surface the failure (mirrors the reference LogHoursSheet) instead of swallowing it — the form
-      // stays open with the values preserved for a retry.
-      const err = (e as { data?: { error?: { message?: string; details?: { message?: string }[] } } })?.data
-        ?.error;
-      setSaveError(err?.details?.[0]?.message ?? err?.message ?? "Couldn't save. Check your entries and try again.");
-    }
-  }
+  // ── the resolved-entry screen (stats edit PER-ROW inside PlayDossier — gate-5 B.8) ─────────────
   async function toggleNowPlaying() {
     setOverflowOpen(false);
     try {
@@ -168,6 +115,18 @@ export default function GamePage() {
       router.back();
     } catch {
       setConfirmRemove(false);
+    }
+  }
+  async function doDeleteCard() {
+    if (!confirmDeleteCard) return;
+    setDeleteCardError(null);
+    try {
+      await deleteCard(confirmDeleteCard.id).unwrap();
+      setConfirmDeleteCard(null);
+    } catch (e) {
+      setConfirmDeleteCard(null);
+      const err = (e as { data?: { error?: { message?: string } } })?.data?.error;
+      setDeleteCardError(err?.message ?? 'Could not delete it.');
     }
   }
 
@@ -196,43 +155,49 @@ export default function GamePage() {
           </View>
         </View>
 
-        <ScrollView style={styles.flex} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          style={styles.flex}
+          contentContainerStyle={styles.body}
+          keyboardShouldPersistTaps="handled"
+          automaticallyAdjustKeyboardInsets // the NOTES editor must not hide behind the keyboard (B.6)
+        >
           <TertiaryLink label="Return to collection" chevron="leading-back" onPress={() => router.back()} />
 
           {section === 'play' ? (
             <>
-              <Text style={styles.heroTitle}>{entry.title}</Text>
-              <Text style={styles.factsLine}>{factsLine(entry)}</Text>
-              <DualFaceHero
-                title={entry.title}
-                composition={equippedComposition}
-                hours={eff.hours}
-                percent={eff.percent}
-                status={eff.status}
-                since={eff.since}
-                artist={entry.card.isCustom ? 'YOU' : null}
-                statsLabel={editing ? '↻ UPDATES LIVE' : 'YOUR STATS'}
-                onInspect={() => setInspectOpen(true)}
-              />
-              <PlayDossier entry={entry} editing={editing} draft={d} onDraftChange={patchDraft} />
-              {!editing ? (
-                <View style={styles.actionRow}>
-                  <ScreenButton label="Edit stats" variant="primary" onPress={startEdit} style={styles.mini} />
-                  <ScreenButton
-                    label="Switch card"
-                    variant="secondary"
-                    onPress={() => setSection('cards')}
-                    style={styles.mini}
-                  />
-                  <ScreenButton label="Share" variant="secondary" disabled style={styles.mini} />
-                </View>
-              ) : null}
+              {/* title · facts · hero as one tight group (gate-5 B.5) */}
+              <View style={styles.heroGroup}>
+                <Text style={styles.heroTitle}>{entry.title}</Text>
+                <Text style={styles.factsLine}>{factsLine(entry)}</Text>
+                <DualFaceHero
+                  title={entry.title}
+                  composition={equippedComposition}
+                  hours={entry.hours}
+                  percent={entry.percentComplete}
+                  status={entry.status}
+                  since={entry.ownedSince}
+                  artist={entry.card.isCustom ? 'YOU' : null}
+                  onInspect={() => setInspectOpen(true)}
+                />
+              </View>
+              <PlayDossier entry={entry} />
+              <View style={styles.actionRow}>
+                <ScreenButton
+                  label="Switch card"
+                  variant="secondary"
+                  onPress={() => setSection('cards')}
+                  style={styles.mini}
+                />
+                <ScreenButton label="Share" variant="secondary" disabled style={styles.mini} />
+              </View>
             </>
           ) : section === 'cards' ? (
             <CardSwitcher
               entry={entry}
               onEditInStyler={(cardId) => router.push(`/styler/${entry.gameId}?cardId=${cardId}`)}
               onDesignNew={() => router.push(`/styler/${entry.gameId}`)}
+              onRequestDelete={(id, name) => setConfirmDeleteCard({ id, name })}
+              deleteError={deleteCardError}
             />
           ) : (
             <View style={styles.about}>
@@ -245,30 +210,7 @@ export default function GamePage() {
           )}
         </ScrollView>
 
-        {/* the pinned EDIT save bar — DONE always reachable, just above the section dock */}
-        {editing ? (
-          <View style={styles.editBar}>
-            {saveError ? <Text style={styles.saveError}>{saveError}</Text> : null}
-            <View style={styles.editBarRow}>
-              <ScreenButton
-                label={updateState.isLoading ? '…' : '✓ Done editing'}
-                variant="primary"
-                onPress={saveEdit}
-                disabled={updateState.isLoading}
-                style={styles.editBtn}
-              />
-              <ScreenButton label="Cancel" variant="secondary" onPress={cancelEdit} style={styles.editBtn} />
-            </View>
-          </View>
-        ) : null}
-
-        <GameTabDock
-          value={section}
-          onChange={(s) => {
-            if (editing) cancelEdit();
-            setSection(s);
-          }}
-        />
+        <GameTabDock value={section} onChange={setSection} />
       </View>
 
       {/* overlays — mounted at the screen root (PulledSheet contract) */}
@@ -313,6 +255,17 @@ export default function GamePage() {
         busy={removeState.isLoading}
         onConfirm={doRemove}
         onClose={() => setConfirmRemove(false)}
+      />
+
+      {/* the switcher's card delete — at the screen root so it docks to the in-app bottom (D.27) */}
+      <ConfirmSheet
+        visible={confirmDeleteCard !== null}
+        title="Delete this card?"
+        message={`"${confirmDeleteCard?.name ?? ''}" is deleted everywhere — the switcher and your designs shelf. This can't be undone.`}
+        confirmLabel="Delete"
+        busy={deleteCardState.isLoading}
+        onConfirm={() => void doDeleteCard()}
+        onClose={() => setConfirmDeleteCard(null)}
       />
     </View>
   );
@@ -407,6 +360,7 @@ const styles = StyleSheet.create({
   nowTagText: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.accentInk, letterSpacing: 0.5 },
   ovf: { fontFamily: theme.font.screenBold, fontSize: theme.type.display, color: theme.scr.dim, marginTop: -6 },
   body: { paddingHorizontal: theme.space.lg, paddingBottom: theme.space.xl, gap: theme.space.lg },
+  heroGroup: { gap: theme.space.xs }, // title · facts · dual-face read as one unit (gate-5 B.5)
   heroTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.display, color: theme.scr.ink, textAlign: 'center', letterSpacing: 0.5 },
   factsLine: {
     fontFamily: theme.font.screenSemi,
@@ -414,21 +368,9 @@ const styles = StyleSheet.create({
     color: theme.scr.dim,
     textAlign: 'center',
     letterSpacing: 1,
-    marginTop: -theme.space.sm,
   },
   actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.md },
   mini: { paddingVertical: theme.space.md, paddingHorizontal: theme.space.lg },
-  editBar: {
-    gap: theme.space.md,
-    paddingHorizontal: theme.space.lg,
-    paddingVertical: theme.space.md,
-    backgroundColor: theme.scr.panel,
-    borderTopWidth: 1,
-    borderTopColor: theme.scr.hairline,
-  },
-  editBarRow: { flexDirection: 'row', gap: theme.space.md },
-  editBtn: { flex: 1 },
-  saveError: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.brand.alert },
   about: { padding: theme.space.lg, backgroundColor: theme.scr.panel, borderWidth: 1, borderColor: theme.scr.hairline, gap: theme.space.sm },
   aboutTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 1 },
   aboutSub: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.dim, lineHeight: 16 },
