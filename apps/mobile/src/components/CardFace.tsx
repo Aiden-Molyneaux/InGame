@@ -3,6 +3,7 @@ import { Platform, Text, View, type LayoutChangeEvent, type ViewStyle } from 're
 import { theme } from '../theme';
 import { compositionSchema } from '@ingame/shared';
 import { GameCard, type GameCardSize } from './GameCard';
+import { SkiaErrorBoundary } from './SkiaErrorBoundary';
 import type { CardComposition as Comp } from '../render/composition';
 
 // CardFace — the composition-aware face (CARD-07/18, decision 0066): a CUSTOM design renders LIVE
@@ -118,9 +119,11 @@ export function CardFace({
       // wrapping Pressable (hero/tile/row) never fires (owner gate-5 A.3/C.12).
       pointerEvents="none"
     >
-      <Suspense fallback={<GameCard title={title} size={size} style={{ width: box.w, height: box.h }} />}>
-        <LazyComposedCard composition={composition} width={box.w} height={box.h} effect />
-      </Suspense>
+      <SkiaErrorBoundary fallback={<GameCard title={title} size={size} style={{ width: box.w, height: box.h }} />}>
+        <Suspense fallback={<GameCard title={title} size={size} style={{ width: box.w, height: box.h }} />}>
+          <LazyComposedCard composition={composition} width={box.w} height={box.h} effect />
+        </Suspense>
+      </SkiaErrorBoundary>
       {nowPlaying ? <NowTag /> : null}
     </View>
   );

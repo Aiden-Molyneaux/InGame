@@ -2,6 +2,7 @@ import { Suspense, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { theme } from '../../theme';
 import { PulledSheet } from '../PulledSheet';
+import { SkiaErrorBoundary } from '../SkiaErrorBoundary';
 import { LazyBaseStrip, LazyGlyphStrip } from './lazySkia';
 import { ESSENTIAL_ICONS } from '../../render/icons';
 import { BASE_GRADIENTS } from '../../styler/roster';
@@ -213,18 +214,20 @@ function GlyphGrid({
   return (
     <View style={{ width, height }}>
       <View pointerEvents="none" style={styles.gridStrip}>
-        <Suspense fallback={null}>
-          <LazyGlyphStrip
-            cells={items.map((it) => ({ el: it.preview, bg: theme.scr.panel }))}
-            cellW={GLYPH}
-            cellH={GLYPH}
-            strideX={CELL_STRIDE}
-            strideY={CELL_STRIDE}
-            cols={COLS}
-            width={width}
-            height={height}
-          />
-        </Suspense>
+        <SkiaErrorBoundary fallback={null}>
+          <Suspense fallback={null}>
+            <LazyGlyphStrip
+              cells={items.map((it) => ({ el: it.preview, bg: theme.scr.panel }))}
+              cellW={GLYPH}
+              cellH={GLYPH}
+              strideX={CELL_STRIDE}
+              strideY={CELL_STRIDE}
+              cols={COLS}
+              width={width}
+              height={height}
+            />
+          </Suspense>
+        </SkiaErrorBoundary>
       </View>
       {items.map((it, i) => (
         <Pressable
@@ -262,9 +265,11 @@ function BaseRowStrip({
   return (
     <View style={{ width, height: cell }}>
       <View pointerEvents="none" style={styles.baseStripWrap}>
-        <Suspense fallback={null}>
-          <LazyBaseStrip bases={bases} cell={cell} stride={stride} width={width} height={cell} />
-        </Suspense>
+        <SkiaErrorBoundary fallback={null}>
+          <Suspense fallback={null}>
+            <LazyBaseStrip bases={bases} cell={cell} stride={stride} width={width} height={cell} />
+          </Suspense>
+        </SkiaErrorBoundary>
       </View>
       {bases.map((b, i) => {
         const selected = sameBase(b, current);

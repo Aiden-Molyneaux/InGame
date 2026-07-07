@@ -1,6 +1,7 @@
 import { Suspense, useMemo, useRef, useState } from 'react';
 import { PanResponder, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import { theme } from '../../theme';
+import { SkiaErrorBoundary } from '../SkiaErrorBoundary';
 import { LazyCardBed } from './lazySkia';
 import { NumPop, type NumPopField } from './NumPop';
 import { PLATE_H_RATIO } from '../../render/buildCard';
@@ -227,9 +228,11 @@ export function CanvasStage({
           <View style={[styles.corner, styles.br]} />
           <View style={{ width: bed.w, height: bed.h }}>
             <View pointerEvents="none">
-              <Suspense fallback={<View style={{ width: bed.w, height: bed.h, backgroundColor: theme.scr.panel }} />}>
-                <LazyCardBed composition={composition} width={bed.w} height={bed.h} pulledIndex={pulledIndex} />
-              </Suspense>
+              <SkiaErrorBoundary fallback={<View style={{ width: bed.w, height: bed.h, backgroundColor: theme.scr.panel }} />}>
+                <Suspense fallback={<View style={{ width: bed.w, height: bed.h, backgroundColor: theme.scr.panel }} />}>
+                  <LazyCardBed composition={composition} width={bed.w} height={bed.h} pulledIndex={pulledIndex} />
+                </Suspense>
+              </SkiaErrorBoundary>
             </View>
             {/* the thumbnail safe-area (board `.safe`) */}
             <View pointerEvents="none" style={styles.safe} />

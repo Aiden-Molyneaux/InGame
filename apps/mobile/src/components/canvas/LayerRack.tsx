@@ -1,6 +1,7 @@
 import { Suspense, useMemo, useRef, useState } from 'react';
 import { PanResponder, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { theme } from '../../theme';
+import { SkiaErrorBoundary } from '../SkiaErrorBoundary';
 import { Slip, SLIP_GAP, SLIP_LIFT, SLIP_PANE_H, SLIP_PANE_W, SLIP_W } from './Slip';
 import { LazyGlyphStrip } from './lazySkia';
 import type { StripCell } from '../../render/buildCard';
@@ -106,9 +107,11 @@ export function LayerRack({
           <View style={{ width: elements.length * SLIP_STRIDE - SLIP_GAP, paddingTop: SLIP_LIFT }}>
             {/* ONE canvas for every pane glyph (context budget); cells lift in sync with the chrome */}
             <View pointerEvents="none" style={styles.stripWrap}>
-              <Suspense fallback={null}>
-                <StripView elements={elements} pulledIndex={pulledIndex} />
-              </Suspense>
+              <SkiaErrorBoundary fallback={null}>
+                <Suspense fallback={null}>
+                  <StripView elements={elements} pulledIndex={pulledIndex} />
+                </Suspense>
+              </SkiaErrorBoundary>
             </View>
             <View style={styles.slips}>
               {elements.map((e, i) => (

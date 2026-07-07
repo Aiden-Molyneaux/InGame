@@ -1,6 +1,7 @@
 import { Suspense, useState, type ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { theme } from '../../theme';
+import { SkiaErrorBoundary } from '../SkiaErrorBoundary';
 import { LazyProofPrint } from './lazySkia';
 import { CardFace } from '../CardFace';
 import type { CardComposition } from '../../render/composition';
@@ -18,9 +19,11 @@ export function ProofView({ composition, title }: { composition: CardComposition
   return (
     <View style={styles.wrap}>
       <View style={styles.bedWell}>
-        <Suspense fallback={<View style={styles.printFallback} />}>
-          <LazyProofPrint composition={composition} width={189} height={264} onFlattenError={() => setFlattenFailed(true)} />
-        </Suspense>
+        <SkiaErrorBoundary fallback={<View style={styles.printFallback} />}>
+          <Suspense fallback={<View style={styles.printFallback} />}>
+            <LazyProofPrint composition={composition} width={189} height={264} onFlattenError={() => setFlattenFailed(true)} />
+          </Suspense>
+        </SkiaErrorBoundary>
       </View>
       {flattenFailed ? <Text style={styles.flattenErr}>The flatten hiccuped — showing the live draw instead. Nothing is lost.</Text> : null}
       <Text style={styles.hint}>

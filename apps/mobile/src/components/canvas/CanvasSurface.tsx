@@ -227,7 +227,8 @@ export function CanvasSurface({
         <Text style={styles.title}>CANVAS</Text>
         <View style={styles.spacer} />
       </View>
-      <Text style={styles.subLine}>{subLine}</Text>
+      {/* the sub-line flips to the PROOFING state while the print is stamped (board :743, parvati 🚩1) */}
+      <Text style={styles.subLine}>{proofing ? `${title.toUpperCase()} · PROOFING` : subLine}</Text>
 
       {proofing ? (
         <ProofView composition={composition} title={title} />
