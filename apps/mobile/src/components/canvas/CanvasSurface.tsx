@@ -75,6 +75,7 @@ export function CanvasSurface({
   // the scoped RESET SLIP snapshot — the pulled element as it was when PULLED (CARD-09)
   const pullSnapshotRef = useRef<{ index: number; el: CardElement } | null>(null);
   const pull = (i: number | null) => {
+    if (i != null && i === pulledIndex) return; // re-tapping the pulled slip must not rebase RESET (murr)
     setPulledIndex(i);
     setNumPopOpen(false);
     pullSnapshotRef.current = i != null && elements[i] ? { index: i, el: elements[i]! } : null;
@@ -126,7 +127,12 @@ export function CanvasSurface({
   const proofPressOut = () => {
     const held = Date.now() - proofDownAt.current > 450;
     if (held || proofWasOn.current) setProofing(false); // a HOLD releases; a tap-while-on lifts
-    // a quick tap from off leaves it stamped — the next tap lifts it
+    // a quick tap from off leaves it stamped — the next tap lifts it.
+    // clear the handled mark AFTER any same-gesture onPress has consumed it — a cancelled gesture
+    // (pressIn, no onPress) must not eat the NEXT click's fallback (murr)
+    setTimeout(() => {
+      proofHandled.current = false;
+    }, 0);
   };
   const proofPress = () => {
     if (proofHandled.current) {
@@ -155,14 +161,20 @@ export function CanvasSurface({
     }
   };
   const opDuplicate = (i: number) => {
-    const src = elements[i];
-    if (!src || atCap) return;
-    patchDraft((d) => duplicateElement(d, i) ?? d);
-    // the copy lands just above its source, pulled (its nudged position is the pull snapshot)
-    const copy: CardElement = { ...src, x: Math.min(1.25, src.x + 0.05), y: Math.min(1.25, src.y + 0.05) };
-    setPulledIndex(i + 1);
-    setNumPopOpen(false);
-    pullSnapshotRef.current = { index: i + 1, el: copy };
+    // same live-document rule as opAdd (murr — stale atCap / double-fire)
+    let copy: CardElement | null = null;
+    patchDraft((d) => {
+      const next = duplicateElement(d, i);
+      if (!next) return d;
+      copy = next.elements[i + 1] ?? null;
+      return next;
+    });
+    if (copy) {
+      // the copy lands just above its source, pulled (its nudged position is the pull snapshot)
+      setPulledIndex(i + 1);
+      setNumPopOpen(false);
+      pullSnapshotRef.current = { index: i + 1, el: copy };
+    }
   };
   const opDelete = (i: number) => {
     setEditOpen(false);
@@ -172,18 +184,26 @@ export function CanvasSurface({
     pullSnapshotRef.current = null;
   };
   const opAdd = (el: CardElement) => {
-    const newIndex = elements.length;
-    patchDraft((d) => addElement(d, el) ?? d);
-    if (!atCap) {
-      setAddOpen(false);
-      pull(newIndex); // a picked glyph lands as a NEW PULLED SLIP (board P3)
-      // the fresh element is the pull snapshot
-      pullSnapshotRef.current = { index: newIndex, el };
+    // decide against the LIVE document inside the patch — the render-stale `elements`/`atCap`
+    // let a double-fired pick add twice or poison the pull snapshot at the cap edge (murr)
+    let added = -1;
+    patchDraft((d) => {
+      const next = addElement(d, el);
+      if (!next) return d; // at cap — the red meter is the answer
+      added = d.elements.length;
+      return next;
+    });
+    if (added >= 0) {
+      setAddOpen(false); // a picked glyph lands as a NEW PULLED SLIP (board P3)
+      setPulledIndex(added);
+      setNumPopOpen(false);
+      pullSnapshotRef.current = { index: added, el };
     }
   };
   const opReset = () => {
     const snap = pullSnapshotRef.current;
     if (!snap || pulledIndex == null || snap.index !== pulledIndex) return;
+    if (elements[pulledIndex]?.locked) return; // the CARD-08 lock covers the reset too (murr)
     beginGesture();
     patchDraft((d) => replaceElement(d, pulledIndex, snap.el), { history: false });
   };
@@ -236,7 +256,7 @@ export function CanvasSurface({
         <EditBar
           canUndo={canUndo && !proofing}
           canRedo={canRedo && !proofing}
-          canReset={pulledIndex != null && !proofing}
+          canReset={pulledIndex != null && !proofing && !pulled?.locked}
           onUndo={onUndo}
           onRedo={onRedo}
           onReset={opReset}

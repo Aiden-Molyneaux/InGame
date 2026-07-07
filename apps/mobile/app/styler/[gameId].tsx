@@ -187,21 +187,35 @@ export default function Styler() {
   // every RETRY_MS until app restart (murr F4).
   const aliveRef = useRef(true);
 
+  // The in-flight autosave PATCH — exit writes (discard-revert, SAVE-AS-NEW settle) must await it
+  // or the server can apply the autosave AFTER the revert and "discarded" edits survive (murr).
+  const inflightRef = useRef<Promise<unknown> | null>(null);
+
   const flushSave = useCallback(async () => {
     const d = draftRef.current;
     const row = cardRef.current;
     if (!d || !row || !aliveRef.current) return;
     setSaveState('saving');
+    const p = updateCard({ cardId: row.id, composition: d }).unwrap();
+    inflightRef.current = p;
     try {
-      await updateCard({ cardId: row.id, composition: d }).unwrap();
+      await p;
       if (!aliveRef.current) return;
       setSaveState('saved');
       setSavedAt(Date.now());
-    } catch {
+    } catch (e) {
       if (!aliveRef.current) return;
       setSaveState('error'); // "NOT SAVED — RETRYING" (soft-fail; the local draft is intact)
+      const status = (e as { status?: number })?.status;
+      if (typeof status === 'number' && status >= 400 && status < 500) {
+        // a rejected document will never self-heal — surface it instead of a silent 3s 400-loop
+        setInlineError(errMsg(e, 'Could not save this change.'));
+        return;
+      }
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => void flushSave(), RETRY_MS);
+    } finally {
+      if (inflightRef.current === p) inflightRef.current = null;
     }
   }, [updateCard]);
 
@@ -358,21 +372,30 @@ export default function Styler() {
             setSavedAt(Date.now());
           })
           .catch((e) => {
+            // re-arm the retry — "NOT SAVED — RETRYING" must not lie after a failed exit write (murr)
             setSaveState('error');
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => void flushSave(), RETRY_MS);
             throw e;
           });
       }
       await savePrivateCard(cardRow.id).unwrap();
       // the row IS private now — record it before the equip step, or a failed equip leaves local
-      // status 'draft' and ✕'s quiet-evaporate branch deletes a KEPT card (murr, gate-5 round 2)
+      // status 'draft' and ✕'s quiet-evaporate branch deletes a KEPT card (murr, gate-5 round 2).
+      // The KEPT state also becomes the session's new baseline RIGHT HERE — a failed equip must
+      // not leave ✕ pointing at a delete/stale-revert of a card that is already private (murr):
+      // from now on, discard means revert-to-kept, never delete (the D.23 rule, post-KEEP).
       setCardRow((r) => (r ? { ...r, status: 'private' } : r));
-      await updateEntry({ entryId: entry.entryId, activeCardDesignId: cardRow.id }).unwrap();
-      // The KEPT state becomes the session's new baseline: if the user re-enters editing (the
-      // KeepBeat's Canvas door, §3.4), ✕ must REVERT to what they kept — never delete the now-real
-      // card (the D.23 rule extended to the post-KEEP session).
       resumeSnapshotRef.current = draftRef.current ?? resumeSnapshotRef.current;
       setCreatedHere(false);
+      setExplicitSave(true);
       setUserEdits(0);
+      // undo must not walk an EQUIPPED card behind its kept state with no door (murr owner-call —
+      // conservative default: the KEEP boundary clears the stacks, like resume/START/SAVE-AS-NEW)
+      pastRef.current = [];
+      futureRef.current = [];
+      setHistVersion((v) => v + 1);
+      await updateEntry({ entryId: entry.entryId, activeCardDesignId: cardRow.id }).unwrap();
       setMode('kept');
     } catch (e) {
       setInlineError(errMsg(e, 'Could not equip it. Your draft is safe — try again.'));
@@ -400,12 +423,18 @@ export default function Styler() {
             setSavedAt(Date.now());
           })
           .catch((e) => {
+            // re-arm the retry — "NOT SAVED — RETRYING" must not lie after a failed exit write (murr)
             setSaveState('error');
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => void flushSave(), RETRY_MS);
             throw e;
           });
       }
       await savePrivateCard(cardRow.id).unwrap();
       setCardRow((r) => (r ? { ...r, status: 'private' } : r));
+      resumeSnapshotRef.current = draftRef.current ?? resumeSnapshotRef.current; // saved = the new baseline
+      setCreatedHere(false);
+      setExplicitSave(true);
       router.back(); // the quiet exit — it waits in the game's card switcher (no beat)
     } catch (e) {
       setInlineError(errMsg(e, 'Could not save. Your draft is safe — try again.'));
@@ -449,9 +478,14 @@ export default function Styler() {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
-        const d = draftRef.current;
-        const row = cardRef.current;
-        if (d && row) await updateCard({ cardId: row.id, composition: d }).unwrap().catch(() => {}); // soft-fail: leave anyway (CARD-24a tolerance)
+      }
+      const d = draftRef.current;
+      const row = cardRef.current;
+      // flush whenever the row isn't clean — a prior exit write may have cleared the timer with
+      // the flush FAILED (saveState 'error'), and gating on the timer alone dropped those edits
+      // despite the row promise (murr)
+      if (d && row && saveState !== 'saved') {
+        await updateCard({ cardId: row.id, composition: d }).unwrap().catch(() => {}); // soft-fail: leave anyway (CARD-24a tolerance)
       }
     } finally {
       setBusyExit(false);
@@ -472,22 +506,29 @@ export default function Styler() {
         clearTimeout(timerRef.current);
         timerRef.current = null;
       }
+      // an in-flight autosave against the OLD row must land before we settle it (murr — the
+      // settle/revert otherwise races the PATCH and the session edits can survive the revert)
+      if (inflightRef.current) await inflightRef.current.catch(() => {});
+      const oldSnapshot = resumeSnapshotRef.current;
       const row = await createCard({ gameId, composition: draft, name: `${title} II` }).unwrap();
       if (oldRow) {
-        if (!createdHere && resumeSnapshotRef.current) {
+        if (!createdHere && oldSnapshot) {
           // the resumed original goes back to how it was when opened
-          void updateCard({ cardId: oldRow.id, composition: resumeSnapshotRef.current });
+          void updateCard({ cardId: oldRow.id, composition: oldSnapshot });
         } else if (createdHere && !explicitSave) {
           // an implicit session draft folds into the copy — don't leave near-identical twins
           void deleteCard(oldRow.id);
         }
       }
       setCardRow({ id: row.id, name: row.name, status: row.status });
+      // the COPY's creation state is the new baseline — ✕-discard on the copy must REVERT to what
+      // the user saved, never delete it (murr blocker: the old snapshot pointed at the OLD row)
+      resumeSnapshotRef.current = draft;
       pastRef.current = [];
       futureRef.current = [];
       setHistVersion((v) => v + 1);
       setCreatedHere(true);
-      setExplicitSave(true); // the user ASKED for this row — quiet-exit must never delete it (murr F3)
+      setExplicitSave(true); // the user ASKED for this row — no discard path may delete it (murr F3)
       setUserEdits(0);
       setSaveState('saved');
       setSavedAt(Date.now());
@@ -511,6 +552,12 @@ export default function Styler() {
     }
   }
 
+  // Discard DELETES only a row that is (a) session-created, (b) never explicitly saved, and
+  // (c) still a draft — everything else REVERTS to the open/kept/saved baseline. One predicate,
+  // shared with the ConfirmSheet copy (murr blocker: SAVE-AS-NEW copies and KEEP-partial rows
+  // reached the delete branch through `createdHere` alone).
+  const discardDeletes = createdHere && !explicitSave && cardRow?.status === 'draft';
+
   async function discardDraft() {
     if (!cardRow || busyExit) return;
     setBusyExit(true);
@@ -521,12 +568,15 @@ export default function Styler() {
         clearTimeout(timerRef.current);
         timerRef.current = null;
       }
-      if (createdHere) {
-        // a row this session created IS the draft — deleting it discards it
+      // and an ALREADY-DISPATCHED PATCH must land before the revert, or server ordering can put
+      // the discarded edits back after it (murr)
+      if (inflightRef.current) await inflightRef.current.catch(() => {});
+      if (discardDeletes) {
+        // an implicit session draft IS the discard — deleting it discards it
         await deleteCard(cardRow.id).unwrap();
       } else {
-        // a RESUMED card pre-exists this session; the autosave already wrote into it, so discard
-        // = revert the row to the composition captured at open. NEVER delete (D.23 data loss).
+        // every other row pre-exists this session's claim on it (resumed, kept, or explicitly
+        // saved-as-new); discard = revert to the baseline snapshot. NEVER delete (D.23).
         const snap = resumeSnapshotRef.current;
         if (snap) await updateCard({ cardId: cardRow.id, composition: snap }).unwrap();
       }
@@ -895,9 +945,9 @@ export default function Styler() {
         visible={confirmDiscard}
         title="Leave without keeping?"
         message={
-          createdHere
+          discardDeletes
             ? 'Your edits from this session are discarded — the draft is deleted.'
-            : `Your edits from this session are discarded — «${cardRow?.name ?? title}» stays as it was when you opened it.`
+            : `Your edits from this session are discarded — «${cardRow?.name ?? title}» keeps its last saved state.`
         }
         confirmLabel="Discard edits"
         busy={busyExit}

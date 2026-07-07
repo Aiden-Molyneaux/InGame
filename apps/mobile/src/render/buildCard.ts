@@ -486,7 +486,10 @@ export function buildCellStrip(
   ctx: SkiaCtx,
 ): any {
   const h = createElement;
-  const { Group, Rect } = ctx;
+  const { Group, Rect, Skia } = ctx;
+  // per-cell clip — an off-edge element (x/y may run −0.25..1.25) must not paint into the
+  // neighbouring pane (murr)
+  const cellClip = Skia?.XYWHRect ? Skia.XYWHRect(0, 0, cellW, cellH) : undefined;
   const children: any[] = [];
   cells.forEach((cell, i) => {
     const col = i % cols;
@@ -500,6 +503,7 @@ export function buildCellStrip(
       key: `c${i}`,
       transform: [{ translateX: col * strideX }, { translateY: row * strideY + (cell.lift ?? 0) }],
     };
+    if (cellClip) props.clip = cellClip;
     if (cell.dim != null) props.opacity = cell.dim;
     children.push(h(Group, props, ...inner));
   });

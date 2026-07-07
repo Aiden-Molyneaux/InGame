@@ -32,6 +32,17 @@ function elementBox(e: CardElement, bedW: number, fieldH: number): Box {
 const inBox = (px: number, py: number, b: Box, slop = 4) =>
   px >= b.left - slop && px <= b.left + b.width + slop && py >= b.top - slop && py <= b.top + b.height + slop;
 
+/** Rotate a touch into the element's unrotated space so hit-tests match the DRAWN shape (murr). */
+function unrotate(px: number, py: number, e: CardElement, bedW: number, fieldH: number): [number, number] {
+  if (!e.rotation) return [px, py];
+  const cx = e.x * bedW;
+  const cy = e.y * fieldH;
+  const a = (-e.rotation * Math.PI) / 180;
+  const dx = px - cx;
+  const dy = py - cy;
+  return [cx + dx * Math.cos(a) - dy * Math.sin(a), cy + dx * Math.sin(a) + dy * Math.cos(a)];
+}
+
 export function CanvasStage({
   composition,
   pulledIndex,
@@ -68,7 +79,8 @@ export function CanvasStage({
   const fieldH = bed.h * (1 - PLATE_H_RATIO); // elements live above the plate zone (WYSIWYG)
 
   const pulled = pulledIndex != null ? composition.elements[pulledIndex] : undefined;
-  const pulledBox = pulled && bed.w > 0 ? elementBox(pulled, bed.w, fieldH) : null;
+  // a HIDDEN slip leaves the bed entirely — no ring, no gestures (manifest P2 row 5 / murr)
+  const pulledBox = pulled && !pulled.hidden && bed.w > 0 ? elementBox(pulled, bed.w, fieldH) : null;
 
   // gesture bookkeeping (refs — PanResponder callbacks must see current values)
   const stateRef = useRef({
@@ -119,7 +131,7 @@ export function CanvasStage({
           const hit = corners.find(
             (k) => Math.abs(px - (pb.left + k.rx * pb.width)) <= 14 && Math.abs(py - (pb.top + k.ry * pb.height)) <= 14,
           );
-          if (hit && el && !el.locked) {
+          if (hit && el && !el.locked && !el.hidden) {
             g.mode = 'scale';
             g.corner = hit;
             g.startW = el.type === 'text' ? 0 : el.w;
@@ -127,7 +139,7 @@ export function CanvasStage({
             g.startSize = el.type === 'text' ? el.size : 0;
             return;
           }
-          if (inBox(px, py, pb) && el && !el.locked) {
+          if (inBox(px, py, pb) && el && !el.locked && !el.hidden) {
             g.mode = 'move';
             g.startX = el.x;
             g.startY = el.y;
@@ -141,7 +153,7 @@ export function CanvasStage({
         if (Math.abs(gs.dx) + Math.abs(gs.dy) > 6) g.moved = true;
         if (g.mode === 'idle' || pi == null || bedW <= 0) return;
         const el = c.elements[pi];
-        if (!el || el.locked) return;
+        if (!el || el.locked || el.hidden) return;
         if (!g.began && g.moved) {
           g.began = true;
           onBeginGesture(); // one history entry per drag
@@ -177,7 +189,8 @@ export function CanvasStage({
           for (let i = c.elements.length - 1; i >= 0; i--) {
             const el = c.elements[i]!;
             if (el.hidden) continue;
-            if (inBox(g.downX, g.downY, elementBox(el, bedW, fh))) hits.push(i);
+            const [ux, uy] = unrotate(g.downX, g.downY, el, bedW, fh); // hit the DRAWN shape, not the AABB
+            if (inBox(ux, uy, elementBox(el, bedW, fh))) hits.push(i);
           }
           if (!hits.length) {
             onPull(null);
@@ -266,6 +279,7 @@ type PatchFns = {
 };
 
 function nudge(field: NumPopField, delta: number, e: CardElement, i: number, bedW: number, fieldH: number, fns: PatchFns) {
+  if (e.locked) return; // the CARD-08 lock covers the numeric pair too (murr)
   fns.onBeginGesture();
   if (field === 'x') fns.onMove(i, e.x + delta / bedW, e.y);
   else if (field === 'y') fns.onMove(i, e.x, e.y + delta / fieldH);
@@ -276,6 +290,7 @@ function nudge(field: NumPopField, delta: number, e: CardElement, i: number, bed
 }
 
 function setAbs(field: NumPopField, value: number, e: CardElement, i: number, bedW: number, fieldH: number, fns: PatchFns) {
+  if (e.locked) return; // the CARD-08 lock covers the numeric pair too (murr)
   fns.onBeginGesture();
   if (field === 'x') fns.onMove(i, value / bedW, e.y);
   else if (field === 'y') fns.onMove(i, e.x, value / fieldH);

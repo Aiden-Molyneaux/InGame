@@ -120,8 +120,13 @@ export function EditSlipSheet({
       ) : null}
 
       <Row label="LIGHT">
-        <Text style={styles.subLabel}>GLOW</Text>
-        <Tog label={e.glow ? 'ON' : 'OFF'} on={!!e.glow} onPress={() => onPatch({ glow: e.glow ? undefined : true })} />
+        {!isText ? (
+          <>
+            {/* the renderer draws no text glow yet — offering the toggle there persisted a no-op (murr) */}
+            <Text style={styles.subLabel}>GLOW</Text>
+            <Tog label={e.glow ? 'ON' : 'OFF'} on={!!e.glow} onPress={() => onPatch({ glow: e.glow ? undefined : true })} />
+          </>
+        ) : null}
         <Text style={styles.subLabel}>BLEND</Text>
         <Tog label="NORMAL" on={!e.blend} onPress={() => onPatch({ blend: undefined })} />
         <Tog label="SCREEN" on={e.blend === 'screen'} onPress={() => onPatch({ blend: 'screen' })} />

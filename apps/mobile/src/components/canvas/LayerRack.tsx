@@ -43,6 +43,12 @@ export function LayerRack({
   // ── drag-Z (long-press arms, horizontal pan reorders one notch per stride) ────────────────────
   const dragRef = useRef<{ index: number; moved: number } | null>(null);
   const [dragging, setDragging] = useState(false);
+  const lenRef = useRef(elements.length);
+  lenRef.current = elements.length;
+  const disarmDrag = () => {
+    dragRef.current = null;
+    setDragging(false);
+  };
   const pan = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponderCapture: () => dragRef.current !== null,
@@ -52,19 +58,15 @@ export function LayerRack({
         const notches = Math.trunc((g.dx - d.moved) / SLIP_STRIDE);
         if (notches !== 0) {
           const dir: -1 | 1 = notches > 0 ? 1 : -1;
+          const target = d.index + dir;
+          if (target < 0 || target >= lenRef.current) return; // a no-op reorder must not advance the notch (murr)
           onReorder(d.index, dir);
-          d.index += dir;
+          d.index = target;
           d.moved += dir * SLIP_STRIDE;
         }
       },
-      onPanResponderRelease: () => {
-        dragRef.current = null;
-        setDragging(false);
-      },
-      onPanResponderTerminate: () => {
-        dragRef.current = null;
-        setDragging(false);
-      },
+      onPanResponderRelease: disarmDrag,
+      onPanResponderTerminate: disarmDrag,
     }),
   ).current;
 
@@ -86,7 +88,9 @@ export function LayerRack({
   };
 
   return (
-    <View style={styles.rack} onTouchEnd={() => { dragRef.current = null; setDragging(false); }} {...pan.panHandlers}>
+    // onTouchEnd disarms on native; onPointerUp is the WEB disarm — mouse input never fires
+    // touchend, and an armed dragRef otherwise captures every later press over the rack (murr)
+    <View style={styles.rack} onTouchEnd={disarmDrag} onPointerUp={disarmDrag} {...pan.panHandlers}>
       <View style={styles.head}>
         <Text style={styles.headText}>
           {pulledIndex == null ? 'THE SLIPS — PULL ONE TO WORK IT' : 'LONG-PRESS FOR OPS · DRAG TO REORDER Z'}
@@ -152,7 +156,7 @@ export function LayerRack({
             <Op label="GROUP" disabled onPress={() => {}} />
             <Op label="◂" disabled={pulledIndex === 0} onPress={() => onReorder(pulledIndex, -1)} accessibilityLabel="Move slip back" />
             <Op label="▸" disabled={pulledIndex === elements.length - 1} onPress={() => onReorder(pulledIndex, 1)} accessibilityLabel="Move slip forward" />
-            <Op label="X·Y" onPress={onNumPop} accessibilityLabel="Numeric position and size" />
+            <Op label="X·Y" disabled={!!pulled.locked} onPress={onNumPop} accessibilityLabel="Numeric position and size" />
             <Op label="DELETE" danger onPress={() => { setOpsOpen(false); onDelete(pulledIndex); }} />
           </View>
         )
