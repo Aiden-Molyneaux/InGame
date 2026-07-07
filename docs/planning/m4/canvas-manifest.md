@@ -250,6 +250,62 @@ tree by construction.
   "arrives with the deep editor" posture — update the styler-manifest rows (P2 row 2 / P7 row 4)
   via this manifest's cite at parvati time.
 
+## ADDENDUM — build notes (2026-07-06, commits `3cfaa43` + `08738fd`; self-verified BOOT walk on Expo web)
+
+- **ONE-CANVAS STRIPS (architecture, found live):** one skia `<Canvas>` per slip pane / glyph cell
+  **evicts WebGL contexts** at rack scale (observed: 33 canvases, 17 lost contexts, the bed went
+  gray — browsers cap ~16 contexts). The LayerRack panes, AssetShelf glyph grids, and base
+  swatches all draw through single-context strip builders (`buildCellStrip`/`buildBaseStrip`);
+  page total ≤5 contexts at cap-30. **Consequence:** the slip tilt dressing (board r1/r2/r3 ±2°)
+  is dropped (token-level; the pulled lift IS kept, synced canvas+chrome). **App-wide note filed
+  to open-questions:** any surface rendering many composed CardFaces at once (Collection GRID at
+  scale) inherits the same ceiling — an M5-entry render-budget item.
+- **Icons 20 real** (star·bolt·crown·heart·ring·moon·invader·arrow·trophy·sword·shield·potion·
+  coin·flame·crosshair·dpad·joystick·flag·sparkle·medal); the full ~30 curated set rides the
+  pre-launch roster pass (0063 §6) — the styler fonts-2-of-5 precedent.
+- **AssetShelf ★ favourites present-but-disabled · search absent** — EXPECTED(CARD-17 at-scale,
+  banner row P3-4). **GROUP present-but-disabled** — CARD-08 multi-select/group rides the
+  at-scale/§3.6 lane. **Pan/zoom · align/distribute (CARD-09) · true eyedropper/saved palettes ·
+  text spacing/align/case (CARD-11)** — not drawn on the converged board; at-scale items. The
+  EDIT sheet's fill rows carry the in-card used-colours as the eyedropper stand-in.
+- **Ops-row additions beyond the drawn set (a11y-mandated, banner CARD-16 table):** ◂ ▸ MOVE
+  (OQ-105 non-gesture Z-reorder) + X·Y (opens the NumPop — CARD-09 numeric). RENAME is an inline
+  bounded input in the rack.
+- **PROOF:** the true print = `flattenComposition` PNG + the effect/finish painted live over it
+  (the CARD-15 viewer architecture, demonstrated in-app); ladder labels **CELL·96 · MINI·64 ·
+  THUMB·48** (the app's real `SIZE_DIMS`; the board's GRID·96/THUMB·44 map here). Interactions:
+  hold = momentary, tap = toggle, plus a **guarded onPress fallback** (the web press-in responder
+  path can go quiet — BOOT-walk find; without the fallback the key was dead on web).
+- **Undo/redo** = ONE bounded (60) session stack across both postures (styler picks + canvas ops
+  — one document, one history); continuous gestures collapse to one entry (`beginGesture`).
+  **RESET SLIP** = revert the pulled element to its PULL-time snapshot (CARD-09 scoped reset).
+- **KEEP rebaselines the session** (route change, D.23 extension): on KEEP success the kept
+  composition becomes the open-snapshot and `createdHere` clears — re-entering editing via the
+  KeepBeat's now-live EDIT-ART door and then ✕-discarding REVERTS to the kept state, never
+  deletes the kept card.
+- **Entry beat:** the shell-swing decor renders ~1.6s and fades (reduce-motion: no decor — the
+  fade IS the CARD-16 posture); the full hinge-swing motion rides the motion-polish pass.
+- **BOOT walk evidence (Expo web, ~500×1075 window):** ⤢ CANVAS mounts the workshop; bed = bare
+  base+vectors with corners+safe-area; pull=tap → isolation 28% + sel-ring + ISOLATION·ON; ops
+  row (◂▸ reorder verified, ring follows, autosave fires); NumPop X/ROT nudges + live drag
+  readout; **bed drag gesture works** (star moved, snap guides armed); ADD → shapes grid (one
+  canvas) → star lands PULLED, cap 6→7/30; EDIT sheet → pink fill + GRADIENT + STOP-2 + GLOW
+  verified on bed+strip; **PROOF stamps the flatten+overlay print + the 96/64/48 ladder (plate
+  at 96 only, dropped mini/thumb — F-06/0047 visible)**; PRESS sheet exact (◆ PUBLISH
+  disabled-gold · SAVE PRIVATE · TO THE STYLER · CANCEL); TO-THE-STYLER round-trip keeps the
+  session; **✕ → "LEAVE WITHOUT KEEPING?" (revert wording) → DISCARD EDITS → server-side revert
+  confirmed by fresh resume (ticket frame gone, snapshot intact)**; session edits survived a full
+  reload+re-login+resume (CARD-24a). Zero console errors on the final bundle. *(The discard
+  `router.back()` no-op seen mid-walk is a pushState-deep-link automation artifact — real
+  navigation history pops correctly, proven in the styler rounds.)*
+- **Not exercised (parvati/murr lanes):** RENAME/LOCK/HIDE/DUPLICATE/DELETE op taps ·
+  letters/numbers/ADD-TEXT picks · UNDO/REDO taps (ops unit-tested) · long-press drag-Z
+  (◂▸ verified; CDP long-press is flaky) · the PressSheet SAVE-PRIVATE full exit (shares the
+  PRE `savePrivateQuiet` verified in the styler rounds) · the KeepBeat EDIT-ART door ·
+  P11/offline (EXPECTED).
+- **Walk residue:** the seeded Aurora carries the walk's element edits — **re-run the seed shelf
+  before the owner stop** (`db:seed-dev`, the §3.2-round precedent).
+
 ## Browser BOOT check (binding rule (c))
 
 Login → Game page → EDIT IN STYLER (the seeded Aurora or a fresh draft) → **⤢ CANVAS mounts the
