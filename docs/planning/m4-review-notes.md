@@ -462,3 +462,200 @@ ticker ticks · zero console errors · seed restored. Suite: typecheck ✓ lint 
 262/262 full ✓ /health 🟢.
 
 **→ the owner re-walks the amended surfaces on device; then the Canvas (§3.4).**
+
+---
+
+## Canvas (§3.4 — the deep gesture editor, the Styler's breakout posture) · parvati (M4, 2026-07-07, head `cd6cd1f`)
+
+**Verdict:** 2 🚩 flag · 12 ✅ expected (all cited) · 2 🎨 polish · (extensive ✔ matches) — measured vs
+the M4 DoD (§8), `canvas-manifest.md` **+ its banner (0062 boundary · ARCH one-document · CARD-16
+pairs table) + its ADDENDUM** (recorded interims honored), `canvas-states.html` P1–P11, and the
+declared seams (autosave `PATCH /cards/:id` · `POST /cards/:id/save-private` — **no new endpoints
+observed in the network log**, PROOF fired no server call).
+**Reviewed from:** own Expo-web walk (fresh session, real login, ~554×891 CSS viewport), on a card I
+created via DESIGN NEW → START WITH THIS, plus a resume pass on it and a RESET/RADIUS pass on the
+residue draft. Both CARD-16 columns walked where the rig allowed: taps/steppers fully; the gesture
+column via stepped synthetic mouse events (CDP `left_click_drag` would not drive the PanResponder
+this run — see workflow notes). Entry exercised through BOTH doors (⤢ CANVAS tools-bar + the
+KeepBeat EDIT-ART door).
+
+### 🚩 Flag (owed at M4)
+- **PROOF · top-bar sub "· PROOFING" missing** — MISPLACED — during proof the top bar keeps
+  "ELDEN RING · DRAFT · AUTOSAVED Ns AGO"; the PROOFING signal renders only as the bed caption
+  ("PROOFING — THE TRUE PRINT, CLOSED ATTRIBUTES LIVE…") + the key's ON state. The manifest OWES the
+  saveLine variant. Small: swap the sub to "· PROOFING" while proofing (the honest save-line can
+  return on lift). Cite: manifest P6 row 5 (OWED) · board `:743` (`DESTINY · PROOFING`).
+- **WebGL-context exhaustion after a Canvas session → UNCAUGHT canvaskit error + a blank switcher
+  tile** — behavior/regression — after the full canvas walk, the game-page CARDS switcher raised an
+  **uncaught** `TypeError: Cannot read properties of null (reading 'rangeMin')` from CanvasKit
+  `MakeWebGLCanvasSurface → _MakeGrContext` (surface creation failing at the browser's WebGL-context
+  ceiling), and the residue DRAFT tile rendered **blank white** — while the SAME composition renders
+  fine on the Canvas bed (7 elements). The LogBox overlay re-expands on every remount/refetch and
+  **steals taps** (it ate a KEEP tap and a RADIUS tap mid-walk). The strips architecture solved the
+  ceiling *inside* the Canvas (ADDENDUM), and the murr fix covers the *loader*; **surface-creation
+  failure has no catch-and-degrade** — the F21 default-face envelope should cover it instead of an
+  uncaught throw. Repro: make→canvas walk→SAVE PRIVATE→CARDS. Cite: ADDENDUM "ONE-CANVAS STRIPS"
+  (the app-wide ceiling note filed to open-questions is the *at-scale budget* item — this flag is
+  the missing graceful degrade + uncaught console error on an M4 surface, against the standing
+  "zero console errors" bar).
+
+### ✅ Expected (deferred — proceed; the 0062 banner governs)
+- **◆ PUBLISH present-but-DISABLED** — gold row, `aria-disabled="true"`, sub-line "Adoptable by
+  everyone — arrives with the community release." Exactly the drawn posture. Cite: manifest P7 row 4
+  — EXPECTED(M5 · CARD-04/19/20, 0062 §2).
+- **CARD-19 checklist** (complexity · hash-dedup · premium-owned) — not rendered on the PressSheet.
+  Cite: manifest P7 row 3 — EXPECTED(M5).
+- **P8 PrintRitual** (whole state, incl. SHARE CARD-21 + NOTIF-04) — not built; KEEP's light beat
+  remains the celebration (verified live). Cite: manifest P8 — EXPECTED(M5 · OQ-040/0062 §2/§7).
+- **Publish rate-limit (SYS-05)** — rides publish. Cite: manifest P7 row 8 — EXPECTED(M5).
+- **★ favourites present-but-disabled** — SR label "Favourites — arrives with the full library".
+  Cite: manifest P3 row 4 + ADDENDUM — CARD-17 at-scale.
+- **SEARCH absent** from the AssetShelf. Cite: same ADDENDUM line.
+- **GROUP present-but-disabled** in the ops row. Cite: manifest P5 row 3 — CARD-08 at-scale/§3.6.
+- **Icons = the 20-real subset** — verified by SR label, exactly the ADDENDUM list (star…medal).
+  Cite: ADDENDUM "Icons 20 real" (0063 §6 owns the rest).
+- **Pan/zoom · align/distribute · true eyedropper/saved palettes · text spacing/align/case** — all
+  absent; the EDIT sheet's used-colours row (a 9th in-card swatch appeared on the residue draft)
+  stands in for the eyedropper. Cite: ADDENDUM at-scale block.
+- **P9 skeleton / P10 SIGNAL-LOST** — not independently reachable; the posture switch is synchronous
+  on an in-memory session; lifecycle crossed in the Styler posture. Cite: manifest P9–P11 row 1
+  (SUBSUMED).
+- **P11 offline** — not built. Cite: manifest P9–P11 row 2 — EXPECTED(SYS-10); soft-fail autosave is
+  murr's lane, not exercised here (shared API left alive).
+- **Slip tilt dressing (r1/r2/r3 ±2°) dropped** — rack panes upright; the pulled lift IS kept.
+  Cite: ADDENDUM ONE-CANVAS STRIPS consequence (token-level, recorded).
+
+### 🎨 Polish / iteration (built-app visual/DS)
+- **Text slips draw late on the bed at posture mount** — re-entering the Canvas on a card carrying a
+  text element, shapes draw immediately but the text element pops in ~2–2.5s later (font/paragraph
+  async); observed twice (post-delete redraw + the KeepBeat-door entry). Self-heals, rack pane
+  unaffected — but the bed briefly lies about the composition. → have the bed redraw on font-ready.
+- **The EDIT slip-sheet's SR "Close" node is not activatable** — the a11y tree exposes a "Close"
+  generic on all three drawers; on the EDIT sheet, activating it did nothing twice (bed-tap and the
+  grab-handle dismiss fine; the board draws handle-only, so no visible-✕ divergence). CARD-16-adjacent
+  nit for the §3.6 pass — same family as the §3.1 CardDetail ✕ finding.
+
+### ✔ Matches (present · placed · behaving · on-aesthetic)
+- **Entry (P1, both doors):** the Styler's ⤢ CANVAS tools-bar key is LIVE and flips the posture
+  in-route (URL unchanged — the ARCH one-document rail holds: same `/styler/[gameId]` route
+  throughout); the KeepBeat door reads "⤢ EDIT ART — REOPEN IN THE CANVAS" LIVE and opens the
+  posture from `kept`. Entry beat: the shell-swing edge decor renders and fades (~1.6s, caught on
+  camera); NavBand (COLLECTION active) + DeviceShell persist through every canvas state.
+- **C2 top bar:** ◂ key · "CANVAS" display · sub-line "«ELDEN RING» · DRAFT/PRIVATE · AUTOSAVED Ns
+  AGO / SAVING…" — ticking, and the DRAFT→PRIVATE token tracked the card's real status across the
+  save-private boundary.
+- **The bed (P1):** registration corners + dashed safe-area + the composition BARE — base + vectors
+  only; frame/plate/effect appeared NOWHERE on the bed and EVERYWHERE on PROOF. Empty-rack state
+  honest ("NO SLIPS YET — ADD ONE TO START LAYERING", editbar dim, cap 0 / 30 gold).
+- **ADD (P3):** PulledSheet grammar (handle + grab), head "ADD A SLIP — ALL FREE" (OQ-110-clean, no
+  spec-IDs anywhere on the surface), cap-meter in-sheet, categories SHAPES·LETTERS·NUMBERS·ICONS·
+  BASE·★ with active pip; **13 shapes** (square rounded circle ellipse triangle pentagon hexagon
+  octagon star diamond line heart arrow — the 0063 §1 roster); LETTERS = A–Z + the **ADD TEXT…**
+  row (typed "GUARDIAN" → landed as a text slip); BASE row = 4 gradient swatches, picking is a
+  base patch not an element; **every pick lands ON THE BED as a new pulled slip, the sheet closes,
+  the cap ticks** (0→1→2→3 across star/invader/text).
+- **Pull + isolation (P2):** pull = tap; ONE pulled at a time (tap another switches, tap again
+  releases); unpulled elements ghost to ~28% with the pulled one full; "ISOLATION · ON" stat-chip
+  top-right; sel-ring = accent box + 4 cream corner handles riding the element through every move.
+- **Ops row (P5):** opened via the pulled slip's **⋯ badge** (the CARD-16 tap pair for long-press);
+  RENAME (inline bounded input + ✓ SAVE/CANCEL — STAR→"HERO" persisted to the rack + SR labels) ·
+  LOCK (🔒 badge; **bed drag refused AND NumPop steppers refused** — X frozen at 126 under both;
+  X·Y op + EDIT THIS SLIP + RESET disable) · UNLOCK restores · HIDE (HID badge, dimmed pane, the
+  element LEAVES the bed; op flips to SHOW; still pullable via rack) · DUPLICATE (4/30, dup lands
+  pulled, offset) · **◂ ▸ MOVE ops** (dup walked to rack end; ▸ disables at the end; ring follows;
+  Z-order = rack order visible on the bed) · DELETE (danger, **no ConfirmSheet — undo-covered**,
+  cap back to 3/30, pull released).
+- **NumPop (CARD-09/16):** X·Y op opens the popover — X/Y/W/H/ROT steppers + **tap-to-type**
+  (typed Y=100 → the element moved, the rack pane synced); values are bed-pixel truth and refresh
+  from the element (drag → re-open showed the moved values).
+- **Bed gestures:** drag moved the element (sel-ring + rack pane + autosave all followed);
+  corner-handle scale grew it; **UNDO reversed the whole scale drag as ONE history entry**, REDO
+  reapplied; each step scheduled a save. **RESET SLIP** reverted the pulled element to its
+  PULL-time snapshot (radius 18→0 + fill, verified on the residue-draft pass).
+- **EDIT slip-sheet (P4):** the bed stays LIT in isolation above the sheet — **no scrim-dim on the
+  work** (the ADD sheet correctly dims; the EDIT sheet correctly doesn't). Shape sheet ("THE HERO
+  SLIP · VECTOR · SHAPE · ISOLATION ON"): OPACITY slider · FILL palette · STYLE SOLID/**GRADIENT →
+  a STOP 2 row appears** (fill2, cream→pink live on the bed) · STROKE NONE/THIN/THICK → **a STROKE
+  INK colour row appears** · GLOW ON (real bloom, live) · BLEND NORMAL/SCREEN/MULTIPLY · FLIP ↔/↕ ·
+  DUP · DELETE; **RADIUS renders on the rect sheet only** (present on SQUARE, absent on STAR —
+  rect-only per the manifest), cycles live. Text sheet ("THE GUARDIAN SLIP · TEXT"): content
+  editable · FONT CHAKRA/PAYTONE · CURVE NONE/**ARC** — Paytone + arc + cyan fill all redrew the
+  bed instantly (CARD-11 arc text real).
+- **PROOF (P6):** tap TOGGLES ("👁 PROOF — ON" state) — the true print stamps: the flatten with the
+  F-02 stepped corners, frame CLEAN + plate SLAB "ELDEN RING" live (closed attributes appear ONLY
+  here); slips/editbar hide behind the proof panel; **the ladder reads CELL·96 · MINI·64 · THUMB·48**
+  (the app's real dims) with the **plate legible at 96 and DROPPED at 64/48** (F-06/0047, visible);
+  ladder hint verbatim-faithful ("what you proof is what the shelf, top lists & rows show"); re-tap
+  lifts it and the slips return. No network call fired during proof (client flatten confirmed).
+- **PRESS (P7):** gold PRESS ▸ raises the finish-up sheet over the dimmed bed — "THE PRESS — WHERE
+  DOES IT GO?" · ◆ PUBLISH (disabled-gold, above) · SAVE PRIVATE ("Kept on your shelf — not worn.")
+  · TO THE STYLER ("Swap posture — same draft…") · CANCEL (dim tert; verified it just closes —
+  editing continued).
+- **TO THE STYLER round-trip:** posture flips back with the session intact — the Styler hero AND
+  every FRAME-rail tile render the canvas elements (one document, one render tree — WYSIWYG across
+  postures); nothing written on the switch.
+- **SAVE PRIVATE exit:** flush → `POST /cards/:id/save-private` 200 → lands on the game page; the
+  card lists PRIVATE, NOT equipped; the switcher count tracked 5→6 truthfully. (En route the client
+  recovered a 401 with token-refresh-and-retry on the flush PATCH — resilience observed again.)
+- **The two-door regression walk (murr's priority, state-walk 8):** resume by `?cardId=` skips P1
+  and edits the same document; canvas element edits **count as `userEdits`** — ✕ raised "LEAVE
+  WITHOUT KEEPING?" with the REVERT wording ("…keeps its last saved state"); CANCEL kept the
+  session; **DISCARD EDITS fired a revert PATCH 200 and the card SURVIVED with the deleted element
+  RESTORED** (invader back on tile + in the re-entered rack at 3/30) — the D.23 kill-path holds for
+  canvas edits. **KEEP rebaselined:** ✕ straight after KEEP exited silently (no confirm, no delete
+  of the kept card). KEEP itself: `save-private` + equip chain → KeepBeat (gold-edged card, ✓
+  EQUIPPED strip, honest clout "10 CARDS DESIGNED · 0 ADOPTIONS") → the now-live EDIT-ART door
+  re-opened the canvas on the kept state.
+- **Autosave (C4/CARD-24a):** every mutation class fired the debounced PATCH (add/move/scale/rotate/
+  field-edit/rename/lock/hide/dup/reorder/delete/base — "SAVING…" → "AUTOSAVED 0S AGO" observed
+  repeatedly); the save-line never lied within the walk's observation.
+- **Coherence:** the cap meter tracked the true element count through every mutation (0→…→4→3;
+  3 on revert); the switcher count line tracked create/delete (5→6→5); EquipReadout on the saved
+  card read exactly the closed attributes the canvas never touched (CLEAN/NONE/STANDARD/SLAB/CHAKRA).
+
+### Not exercised
+- **Long-press → ops row** and **long-press drag-Z reorder** — CDP long-press is flaky (known);
+  the built-alongside pairs (⋯ badge · ◂ ▸ ops) are verified — the CARD-16 table's non-gesture
+  column is fully green, the gesture column verified for tap/drag/scale but not the two
+  long-press gestures.
+- **PROOF press-and-hold (momentary)** — synthetic mousedown didn't engage the responder on web;
+  the tap-toggle pair verified both ways (the ADDENDUM's guarded onPress fallback is why tap is
+  the web-reliable path).
+- **Center snap-guide flash** — drags moved elements fine but the transient guide flash isn't
+  capturable via CDP stills; not judged.
+- **Stacked-tap disambiguation** (repeat-tap cycles deeper) — not exercised.
+- **At-cap 30/30** (meter reds + picks disable) — not walked to 30.
+- **Autosave failure tolerance** ("NOT SAVED — RETRYING") — murr's named lane; the shared :4000 API
+  was left alive.
+- **Reduce-motion entry fade** — no OS toggle on the rig.
+
+### Residue + workflow notes
+- **Residue:** net-zero on my part — the walk card (star/invader/GUARDIAN) was created, saved
+  private, KEPT (equipped), unequipped via SET-AS-MAIN back to Aurora, and DELETED through the 0040
+  sheet; the residue draft "Elden Ring II" had a square added and session-DISCARDED (reverted);
+  final state = the 5 cards I found, Aurora ◆ MAIN. Two clout side-effects persist: "CARDS
+  DESIGNED" incremented by my create (displayed 10 at the beat; deletes don't decrement) — and the
+  pre-existing walk residue (the white-rendering DRAFT + Aurora's element edits) still argues for
+  the ADDENDUM's **re-run `db:seed-dev` before the owner stop**.
+- **Workflow (qa-runbook candidates):** (1) the whole-hidden-window fix needed re-running ~5×
+  (the window falls back after every shell round-trip; `visibilityState` stayed 'hidden' the entire
+  run yet **timers ran at ~57ms drift and clicks/network all worked — only `Page.captureScreenshot`
+  froze**; the a11y/page-text/network lanes never broke). (2) **CDP `left_click_drag` did NOT drive
+  the PanResponder this run** — stepped synthetic `mousedown/mousemove×8/mouseup` via
+  `javascript_tool` DID (bed drag + corner scale both verified through it); worth folding into the
+  runbook as the reliable RN-web drag recipe. (3) The RN-web LogBox overlay from flag #2 re-expands
+  over the UI and **eats taps** — dismiss before every interaction once it's up.
+
+### The read of it
+The Canvas is **the board's press-shop, built and behaving as one posture of the Styler's document**
+— the entry beat lands, the bed is honestly bare, pull/isolation/sel-ring feel exactly like the
+thesis, the ops row + NumPop give every gesture its tap twin (LOCK genuinely locks both lanes), the
+EDIT sheets are the full CARD-10/11 grammar with live redraws, PROOF is a real client flatten
+wearing the closed attributes with the honest 96/64/48 legibility ladder, and the PressSheet's
+0062 posture is exact — publish present, disabled, correctly worded. The exit model survived its
+own kill-path: discard reverted canvas element edits server-side and never touched the kept card.
+The two flags are one small copy-dock miss (the PROOFING sub-line) and one real robustness gap the
+walk itself smoked out — WebGL-context exhaustion after a canvas session throws uncaught and blanks
+a switcher tile instead of degrading to the default face. Close those and this surface is ready for
+the owner's gate-5 hands — **the depth is real; what's left to judge is whether the workshop
+*feels* like the trophy case's back room.**
