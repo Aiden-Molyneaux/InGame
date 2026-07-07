@@ -108,18 +108,34 @@ export function CanvasSurface({
     };
   }, [swing]);
 
-  // PROOF: hold = momentary, tap = toggle (the CARD-16 pair)
+  // PROOF: hold = momentary, tap = toggle (the CARD-16 pair). ONE constant handler set — swapping
+  // handlers on state made a single click stamp-then-lift within its own gesture; and on web the
+  // press-in responder path can go quiet entirely (BOOT-walk find), so a guarded onPress fallback
+  // keeps the tap-toggle alive wherever only click events arrive. pressIn marks the gesture
+  // handled; onPress toggles only when the pressIn path never ran.
   const proofDownAt = useRef(0);
+  const proofWasOn = useRef(false);
+  const proofHandled = useRef(false);
   const proofPressIn = () => {
+    proofHandled.current = true;
+    proofWasOn.current = proofing;
     proofDownAt.current = Date.now();
-    setProofing(true);
     setNumPopOpen(false);
+    if (!proofing) setProofing(true);
   };
   const proofPressOut = () => {
-    if (Date.now() - proofDownAt.current > 450) setProofing(false); // a HOLD releases
-    // a quick TAP leaves it stamped — the next tap lifts it
+    const held = Date.now() - proofDownAt.current > 450;
+    if (held || proofWasOn.current) setProofing(false); // a HOLD releases; a tap-while-on lifts
+    // a quick tap from off leaves it stamped — the next tap lifts it
   };
-  const proofTapWhileOn = () => setProofing(false);
+  const proofPress = () => {
+    if (proofHandled.current) {
+      proofHandled.current = false; // the pressIn/Out pair already decided this gesture
+      return;
+    }
+    setNumPopOpen(false);
+    setProofing((p) => !p);
+  };
 
   // ── ops wrappers — every mutation runs the one patch pipeline ─────────────────────────────────
   const opMove = (i: number, x: number, y: number) => patchDraft((d) => moveElement(d, i, x, y), { history: false });
@@ -256,9 +272,9 @@ export function CanvasSurface({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={proofing ? 'Lift the proof' : 'Proof the true print — hold or tap'}
-          onPressIn={proofing ? undefined : proofPressIn}
-          onPressOut={proofing ? undefined : proofPressOut}
-          onPress={proofing ? proofTapWhileOn : undefined}
+          onPressIn={proofPressIn}
+          onPressOut={proofPressOut}
+          onPress={proofPress}
           style={[styles.proofKey, proofing && styles.proofKeyOn]}
         >
           <Text style={styles.proofKeyText}>{proofing ? '👁 PROOF — ON' : '👁 PROOF'}</Text>

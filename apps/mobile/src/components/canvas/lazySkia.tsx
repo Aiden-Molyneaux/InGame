@@ -1,10 +1,12 @@
 import { lazy, type ComponentType } from 'react';
 import { loadRenderModule } from '../CardFace';
-import type { CardComposition as Comp, CardElement } from '../../render/composition';
+import type { CardComposition as Comp } from '../../render/composition';
+import type { StripCell } from '../../render/buildCard';
 
 // The Canvas surface's skia consumers, funneled through the ONE lazy render-module gate
 // (CardFace.loadRenderModule — wasm-before-<Canvas> on web; a failed load degrades every consumer
-// to an empty box consistently, never a poisoned-lazy redbox).
+// to an empty box consistently, never a poisoned-lazy redbox). Multi-cell previews use the STRIP
+// components — one canvas per surface, never one per cell (the ~16-WebGL-context ceiling).
 
 const nullComponent = (() => null) as ComponentType<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -13,9 +15,23 @@ export const LazyCardBed = lazy(() =>
   loadRenderModule().then((m) => ({ default: (m?.CardBed ?? nullComponent) as ComponentType<CardBedProps> })),
 );
 
-export type ElementGlyphProps = { element: CardElement; width: number; height: number };
-export const LazyElementGlyph = lazy(() =>
-  loadRenderModule().then((m) => ({ default: (m?.ElementGlyph ?? nullComponent) as ComponentType<ElementGlyphProps> })),
+export type GlyphStripProps = {
+  cells: StripCell[];
+  cellW: number;
+  cellH: number;
+  strideX: number;
+  strideY: number;
+  cols: number;
+  width: number;
+  height: number;
+};
+export const LazyGlyphStrip = lazy(() =>
+  loadRenderModule().then((m) => ({ default: (m?.GlyphStrip ?? nullComponent) as ComponentType<GlyphStripProps> })),
+);
+
+export type BaseStripProps = { bases: Array<Comp['base']>; cell: number; stride: number; width: number; height: number };
+export const LazyBaseStrip = lazy(() =>
+  loadRenderModule().then((m) => ({ default: (m?.BaseStrip ?? nullComponent) as ComponentType<BaseStripProps> })),
 );
 
 export type ProofPrintProps = { composition: Comp; width: number; height: number; onFlattenError?: (e: unknown) => void };

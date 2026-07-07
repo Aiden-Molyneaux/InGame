@@ -3,8 +3,8 @@ import { Image, StyleSheet, View } from 'react-native';
 import { Canvas, Group, Fill, Rect, Oval, Path, Text, LinearGradient, RadialGradient, BlurMask, Skia, useTypeface, drawAsImage } from '@shopify/react-native-skia';
 import { ChakraPetch_700Bold } from '@expo-google-fonts/chakra-petch';
 import { PaytoneOne_400Regular } from '@expo-google-fonts/paytone-one';
-import { buildCardElements, buildBedElements, buildOverlayElements, type SkiaCtx } from './buildCard';
-import { COMPOSITION_SCHEMA_VERSION, type CardComposition as Comp } from './composition';
+import { buildCardElements, buildBedElements, buildOverlayElements, buildCellStrip, buildBaseStrip, type SkiaCtx, type StripCell } from './buildCard';
+import type { CardComposition as Comp } from './composition';
 
 // CardComposition (CARD-15) — the react-native-skia consumer of the shared render module. The live
 // editor renders <CardComposition/>; flattenComposition() produces the static image (PROOF / the
@@ -59,23 +59,53 @@ export function CardBed({
   return <Canvas style={{ width, height }}>{buildBedElements(composition, width, height, ctx, { pulledIndex })}</Canvas>;
 }
 
-/** A single element drawn alone on a transparent field (slip panes / the AssetShelf glyph cells). */
-export function ElementGlyph({
-  element,
+// (No per-element thumbnail component exists on purpose — a <Canvas> per cell provably evicts
+// WebGL contexts at rack scale; multi-cell previews MUST ride the strip components below.)
+
+/**
+ * A grid/row of element cells in ONE canvas — the LayerRack panes + AssetShelf glyph grids ride
+ * this so the page never approaches the browser's ~16-WebGL-context ceiling (one <Canvas> per
+ * cell provably evicts contexts at rack scale).
+ */
+export function GlyphStrip({
+  cells,
+  cellW,
+  cellH,
+  strideX,
+  strideY,
+  cols,
   width,
   height,
 }: {
-  element: Comp['elements'][number];
+  cells: StripCell[];
+  cellW: number;
+  cellH: number;
+  strideX: number;
+  strideY: number;
+  cols: number;
   width: number;
   height: number;
 }) {
   const ctx = useCardSkiaCtx();
-  const solo: Comp = {
-    schemaVersion: COMPOSITION_SCHEMA_VERSION,
-    base: { fill: 'transparent' },
-    elements: [{ ...element, hidden: false }],
-  };
-  return <Canvas style={{ width, height }}>{buildBedElements(solo, width, height, ctx, { plateZone: false })}</Canvas>;
+  return <Canvas style={{ width, height }}>{buildCellStrip(cells, cellW, cellH, strideX, strideY, cols, ctx)}</Canvas>;
+}
+
+/** A row of base swatches in ONE canvas (the AssetShelf BASE rows). */
+export function BaseStrip({
+  bases,
+  cell,
+  stride,
+  width,
+  height,
+}: {
+  bases: Array<Comp['base']>;
+  cell: number;
+  stride: number;
+  width: number;
+  height: number;
+}) {
+  const ctx = useCardSkiaCtx();
+  return <Canvas style={{ width, height }}>{buildBaseStrip(bases, cell, stride, ctx)}</Canvas>;
 }
 
 /**

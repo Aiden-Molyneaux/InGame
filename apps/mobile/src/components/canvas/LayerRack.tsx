@@ -1,7 +1,9 @@
-import { useRef, useState } from 'react';
+import { Suspense, useMemo, useRef, useState } from 'react';
 import { PanResponder, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { theme } from '../../theme';
-import { Slip } from './Slip';
+import { Slip, SLIP_GAP, SLIP_LIFT, SLIP_PANE_H, SLIP_PANE_W, SLIP_W } from './Slip';
+import { LazyGlyphStrip } from './lazySkia';
+import type { StripCell } from '../../render/buildCard';
 import { MAX_ELEMENTS, type CardElement } from '../../render/composition';
 
 // LayerRack (component-map §8b / board P1/P2/P5) — the Ops dashboard at the foot: each layer a
@@ -10,9 +12,10 @@ import { MAX_ELEMENTS, type CardElement } from '../../render/composition';
 // without a gesture (CARD-16/OQ-105, built alongside). Long-press (or the pulled slip's ⋯ badge)
 // opens the ops row: RENAME · LOCK · HIDE · DUPLICATE · GROUP (at-scale, disabled) · ◂ ▸ · X·Y ·
 // DELETE (undo-covered — 0040's ConfirmSheet is reserved for non-undoable destroys). The
-// cap-meter holds the line at 30 (OQ-008), red at cap.
+// cap-meter holds the line at 30 (OQ-008), red at cap. The pane GLYPHS all draw in ONE strip
+// canvas behind the Slip chrome — one WebGL context for the whole rack, never one per slip.
 
-const SLIP_STRIDE = 60; // slip width + gap — one drag "notch"
+const SLIP_STRIDE = SLIP_W + SLIP_GAP; // one drag "notch"
 
 export function LayerRack({
   elements,
@@ -95,21 +98,31 @@ export function LayerRack({
       {elements.length === 0 ? (
         <Text style={styles.empty}>NO SLIPS YET — ADD ONE TO START LAYERING</Text>
       ) : (
-        <ScrollView horizontal scrollEnabled={!dragging} showsHorizontalScrollIndicator={false} contentContainerStyle={styles.slips}>
-          {elements.map((e, i) => (
-            <Slip
-              key={i}
-              element={e}
-              index={i}
-              pulled={i === pulledIndex}
-              onPress={() => {
-                setOpsOpen(false);
-                setRenaming(false);
-                onPull(i === pulledIndex ? null : i);
-              }}
-              onLongPress={() => armOps(i)}
-            />
-          ))}
+        <ScrollView horizontal scrollEnabled={!dragging} showsHorizontalScrollIndicator={false}>
+          <View style={{ width: elements.length * SLIP_STRIDE - SLIP_GAP, paddingTop: SLIP_LIFT }}>
+            {/* ONE canvas for every pane glyph (context budget); cells lift in sync with the chrome */}
+            <View pointerEvents="none" style={styles.stripWrap}>
+              <Suspense fallback={null}>
+                <StripView elements={elements} pulledIndex={pulledIndex} />
+              </Suspense>
+            </View>
+            <View style={styles.slips}>
+              {elements.map((e, i) => (
+                <Slip
+                  key={i}
+                  element={e}
+                  index={i}
+                  pulled={i === pulledIndex}
+                  onPress={() => {
+                    setOpsOpen(false);
+                    setRenaming(false);
+                    onPull(i === pulledIndex ? null : i);
+                  }}
+                  onLongPress={() => armOps(i)}
+                />
+              ))}
+            </View>
+          </View>
         </ScrollView>
       )}
 
@@ -145,6 +158,34 @@ export function LayerRack({
         )
       ) : null}
     </View>
+  );
+}
+
+/** The rack's one glyph canvas — cells align 1:1 under the Slip chrome (stride/lift shared). */
+function StripView({ elements, pulledIndex }: { elements: CardElement[]; pulledIndex: number | null }) {
+  const cells = useMemo<StripCell[]>(
+    () =>
+      elements.map((e, i) => ({
+        el: e,
+        dim: e.hidden ? 0.42 : undefined,
+        lift: i === pulledIndex ? 0 : SLIP_LIFT,
+        bg: theme.scr.panelHi,
+      })),
+    [elements, pulledIndex],
+  );
+  const w = elements.length * SLIP_STRIDE;
+  const h = SLIP_PANE_H + SLIP_LIFT;
+  return (
+    <LazyGlyphStrip
+      cells={cells}
+      cellW={SLIP_PANE_W - 2}
+      cellH={SLIP_PANE_H - 2}
+      strideX={SLIP_STRIDE}
+      strideY={0}
+      cols={Math.max(1, elements.length)}
+      width={w}
+      height={h}
+    />
   );
 }
 
@@ -208,7 +249,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(227,65,78,0.1)',
   },
   empty: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.faint, letterSpacing: 1, paddingVertical: theme.space.md },
-  slips: { gap: theme.space.sm + 1, alignItems: 'flex-end', paddingVertical: theme.space.sm, paddingTop: theme.space.lg },
+  stripWrap: { position: 'absolute', left: 3, top: 1 }, // pane inset (border 1 + centering 2)
+  slips: { flexDirection: 'row', gap: SLIP_GAP },
   opsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.sm + 1 },
   renameRow: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md },
   renameInput: {

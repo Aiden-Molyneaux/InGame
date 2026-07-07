@@ -462,6 +462,78 @@ export function buildBedElements(
 }
 
 /**
+ * A grid/row of element cells drawn in ONE canvas (the LayerRack slip panes + the AssetShelf glyph
+ * grids). One skia <Canvas> per cell blows the browser's ~16-WebGL-context ceiling long before the
+ * cap-30 rack fills (observed live: 33 canvases, 17 lost contexts, the bed evicted to gray) — so
+ * every multi-cell preview surface draws through this single-context builder.
+ */
+export type StripCell = {
+  el: CardElement;
+  /** cell opacity (the rack's HID slips draw at 0.42) */
+  dim?: number;
+  /** vertical offset in px (the pulled slip lifts −8, synced with its overlay) */
+  lift?: number;
+  /** cell background fill (the slip pane tone); absent = transparent */
+  bg?: string;
+};
+export function buildCellStrip(
+  cells: StripCell[],
+  cellW: number,
+  cellH: number,
+  strideX: number,
+  strideY: number,
+  cols: number,
+  ctx: SkiaCtx,
+): any {
+  const h = createElement;
+  const { Group, Rect } = ctx;
+  const children: any[] = [];
+  cells.forEach((cell, i) => {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const inner: any[] = [];
+    if (cell.bg) inner.push(h(Rect, { key: 'bg', x: 0, y: 0, width: cellW, height: cellH, color: cell.bg }));
+    const node = element({ ...cell.el, hidden: false, opacity: cell.el.opacity } as CardElement, cellW, cellH, ctx, 'el');
+    if (node) inner.push(node);
+    if (!inner.length) return;
+    const props: any = {
+      key: `c${i}`,
+      transform: [{ translateX: col * strideX }, { translateY: row * strideY + (cell.lift ?? 0) }],
+    };
+    if (cell.dim != null) props.opacity = cell.dim;
+    children.push(h(Group, props, ...inner));
+  });
+  return h(Group, {}, ...children);
+}
+
+/** A row of card-base swatches (solid / gradient) in ONE canvas (the AssetShelf BASE rows). */
+export function buildBaseStrip(
+  bases: Array<CardComposition['base']>,
+  cell: number,
+  stride: number,
+  ctx: SkiaCtx,
+): any {
+  const h = createElement;
+  const { Group, Rect, LinearGradient } = ctx;
+  const children: any[] = [];
+  bases.forEach((b, i) => {
+    const x = i * stride;
+    if ('gradient' in b) {
+      children.push(
+        h(
+          Rect,
+          { key: `b${i}`, x, y: 0, width: cell, height: cell },
+          h(LinearGradient, { start: { x, y: 0 }, end: { x, y: cell }, colors: b.gradient }),
+        ),
+      );
+    } else {
+      children.push(h(Rect, { key: `b${i}`, x, y: 0, width: cell, height: cell, color: b.fill }));
+    }
+  });
+  return h(Group, {}, ...children);
+}
+
+/**
  * The PROOF overlay draw — effect + finish ONLY, clipped to the card silhouette; painted OVER the
  * flattened PNG (the CARD-15 viewer architecture: one image + the runtime overlay on top).
  */

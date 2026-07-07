@@ -2,10 +2,10 @@ import { Suspense, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { theme } from '../../theme';
 import { PulledSheet } from '../PulledSheet';
-import { LazyCardBed, LazyElementGlyph } from './lazySkia';
+import { LazyBaseStrip, LazyGlyphStrip } from './lazySkia';
 import { ESSENTIAL_ICONS } from '../../render/icons';
 import { BASE_GRADIENTS } from '../../styler/roster';
-import { COMPOSITION_SCHEMA_VERSION, MAX_ELEMENTS, type CardComposition, type CardElement } from '../../render/composition';
+import { MAX_ELEMENTS, type CardComposition, type CardElement } from '../../render/composition';
 
 // AssetShelf / ElementTray (component-map §8b / board P3) — the ADD drawer: the app's ONE
 // summoned-sheet grammar (PulledSheet — never a second summons). Categories SHAPES · LETTERS ·
@@ -106,25 +106,23 @@ export function AssetShelf({
       </View>
 
       {cat === 'shapes' ? (
-        <View style={styles.grid}>
-          {SHAPES.map((s) => (
-            <GlyphCell key={s.id} label={s.name} disabled={atCap} onPress={() => pick(s.make(nextFill))} preview={s.make('#c9c5e6')} />
-          ))}
-        </View>
+        <GlyphGrid
+          items={SHAPES.map((s) => ({ label: s.name, preview: s.make('#c9c5e6'), make: () => s.make(nextFill) }))}
+          disabled={atCap}
+          onPick={pick}
+        />
       ) : null}
 
       {cat === 'icons' ? (
-        <View style={styles.grid}>
-          {ESSENTIAL_ICONS.map((ic) => (
-            <GlyphCell
-              key={ic.id}
-              label={ic.name}
-              disabled={atCap}
-              onPress={() => pick({ type: 'icon', iconId: ic.id, x: 0.5, y: 0.42, w: 0.3, h: 0.22, fill: nextFill })}
-              preview={{ type: 'icon', iconId: ic.id, x: 0.5, y: 0.5, w: 0.8, h: 0.8, fill: '#c9c5e6' }}
-            />
-          ))}
-        </View>
+        <GlyphGrid
+          items={ESSENTIAL_ICONS.map((ic) => ({
+            label: ic.name,
+            preview: { type: 'icon', iconId: ic.id, x: 0.5, y: 0.5, w: 0.8, h: 0.8, fill: '#c9c5e6' } as CardElement,
+            make: () => ({ type: 'icon', iconId: ic.id, x: 0.5, y: 0.42, w: 0.3, h: 0.22, fill: nextFill }) as CardElement,
+          }))}
+          disabled={atCap}
+          onPick={pick}
+        />
       ) : null}
 
       {cat === 'letters' || cat === 'numbers' ? (
@@ -175,19 +173,11 @@ export function AssetShelf({
         </View>
       ) : null}
 
-      {cat === 'base' ? (
-        <View style={styles.grid}>
-          {baseOptions.map((b, i) => (
-            <BaseSwatch key={i} base={b} selected={sameBase(b, currentBase)} onPress={() => onBase(b)} size={36} />
-          ))}
-        </View>
-      ) : null}
+      {cat === 'base' ? <BaseRowStrip bases={baseOptions} current={currentBase} onBase={onBase} cell={36} /> : null}
 
       <View style={styles.baseRow}>
         <Text style={styles.baseLabel}>BASE</Text>
-        {baseOptions.slice(0, 4).map((b, i) => (
-          <BaseSwatch key={i} base={b} selected={sameBase(b, currentBase)} onPress={() => onBase(b)} size={26} />
-        ))}
+        <BaseRowStrip bases={baseOptions.slice(0, 4)} current={currentBase} onBase={onBase} cell={26} />
         <Text style={styles.baseHint}>A NEW SLIP JOINS THE RACK, PULLED</Text>
       </View>
     </PulledSheet>
@@ -200,38 +190,98 @@ function sameBase(a: CardComposition['base'], b: CardComposition['base']): boole
   return false;
 }
 
-function GlyphCell({ label, preview, disabled, onPress }: { label: string; preview: CardElement; disabled: boolean; onPress: () => void }) {
+// ONE canvas per grid (the WebGL-context budget): the strip draws every glyph; transparent
+// Pressables overlay each cell for taps + a11y.
+const CELL = 36;
+const CELL_GAP = 5;
+const CELL_STRIDE = CELL + CELL_GAP;
+const GLYPH = 28;
+const COLS = 8;
+
+function GlyphGrid({
+  items,
+  disabled,
+  onPick,
+}: {
+  items: Array<{ label: string; preview: CardElement; make: () => CardElement }>;
+  disabled: boolean;
+  onPick: (el: CardElement) => void;
+}) {
+  const rows = Math.ceil(items.length / COLS);
+  const width = COLS * CELL_STRIDE - CELL_GAP;
+  const height = rows * CELL_STRIDE - CELL_GAP;
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`Add ${label.toLowerCase()}`}
-      accessibilityState={{ disabled }}
-      disabled={disabled}
-      onPress={onPress}
-      style={[styles.cell, disabled && styles.cellDisabled]}
-    >
-      <Suspense fallback={<View style={styles.cellFill} />}>
-        <LazyElementGlyph element={preview} width={30} height={30} />
-      </Suspense>
-    </Pressable>
+    <View style={{ width, height }}>
+      <View pointerEvents="none" style={styles.gridStrip}>
+        <Suspense fallback={null}>
+          <LazyGlyphStrip
+            cells={items.map((it) => ({ el: it.preview, bg: theme.scr.panel }))}
+            cellW={GLYPH}
+            cellH={GLYPH}
+            strideX={CELL_STRIDE}
+            strideY={CELL_STRIDE}
+            cols={COLS}
+            width={width}
+            height={height}
+          />
+        </Suspense>
+      </View>
+      {items.map((it, i) => (
+        <Pressable
+          key={it.label + i}
+          accessibilityRole="button"
+          accessibilityLabel={`Add ${it.label.toLowerCase()}`}
+          accessibilityState={{ disabled }}
+          disabled={disabled}
+          onPress={() => onPick(it.make())}
+          style={[
+            styles.cellOverlay,
+            { position: 'absolute', left: (i % COLS) * CELL_STRIDE, top: Math.floor(i / COLS) * CELL_STRIDE },
+            disabled && styles.cellDisabled,
+          ]}
+        />
+      ))}
+    </View>
   );
 }
 
-function BaseSwatch({ base, selected, onPress, size }: { base: CardComposition['base']; selected: boolean; onPress: () => void; size: number }) {
-  const comp: CardComposition = { schemaVersion: COMPOSITION_SCHEMA_VERSION, base, elements: [] };
+/** A base-swatch row/grid — ONE canvas + overlay Pressables (selection ring on the overlay). */
+function BaseRowStrip({
+  bases,
+  current,
+  onBase,
+  cell,
+}: {
+  bases: Array<CardComposition['base']>;
+  current: CardComposition['base'];
+  onBase: (b: CardComposition['base']) => void;
+  cell: number;
+}) {
+  const stride = cell + CELL_GAP;
+  const width = bases.length * stride - CELL_GAP;
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`Base ${'gradient' in base ? `gradient ${base.gradient[0]}` : base.fill}`}
-      accessibilityState={{ selected }}
-      onPress={onPress}
-      style={[styles.baseSwatch, { width: size, height: size }, selected && styles.baseSel]}
-    >
-      <Suspense fallback={<View style={styles.cellFill} />}>
-        <LazyCardBed composition={comp} width={size - 3} height={size - 3} />
-      </Suspense>
-      {selected ? <View style={styles.swPip} /> : null}
-    </Pressable>
+    <View style={{ width, height: cell }}>
+      <View pointerEvents="none" style={styles.baseStripWrap}>
+        <Suspense fallback={null}>
+          <LazyBaseStrip bases={bases} cell={cell} stride={stride} width={width} height={cell} />
+        </Suspense>
+      </View>
+      {bases.map((b, i) => {
+        const selected = sameBase(b, current);
+        return (
+          <Pressable
+            key={i}
+            accessibilityRole="button"
+            accessibilityLabel={`Base ${'gradient' in b ? `gradient ${b.gradient[0]}` : b.fill}`}
+            accessibilityState={{ selected }}
+            onPress={() => onBase(b)}
+            style={[styles.baseSwatch, { position: 'absolute', left: i * stride, width: cell, height: cell }, selected && styles.baseSel]}
+          >
+            {selected ? <View style={styles.swPip} /> : null}
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 
@@ -248,16 +298,24 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.sm + 1 },
   gap: { gap: theme.space.md },
   cell: {
-    width: 36,
-    height: 36,
+    width: CELL,
+    height: CELL,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: theme.scr.panel,
     borderWidth: 1,
     borderColor: theme.scr.hairline,
   },
+  cellOverlay: {
+    width: CELL,
+    height: CELL,
+    borderWidth: 1,
+    borderColor: theme.scr.hairline,
+    backgroundColor: 'transparent', // the strip canvas behind carries the glyph
+  },
   cellDisabled: { opacity: 0.35 },
-  cellFill: { width: 30, height: 30, backgroundColor: theme.scr.panelHi },
+  gridStrip: { position: 'absolute', left: 4, top: 4 },
+  baseStripWrap: { position: 'absolute', left: 0, top: 0 },
   alpha: { fontFamily: theme.font.screenBold, fontSize: theme.type.body, color: theme.scr.ink },
   textRow: { flexDirection: 'row', gap: theme.space.md, alignItems: 'center' },
   textInput: {
