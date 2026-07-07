@@ -659,3 +659,26 @@ walk itself smoked out — WebGL-context exhaustion after a canvas session throw
 a switcher tile instead of degrading to the default face. Close those and this surface is ready for
 the owner's gate-5 hands — **the depth is real; what's left to judge is whether the workshop
 *feels* like the trophy case's back room.**
+
+### Fix-round (builder, 2026-07-07, commit follows) → **0 open flags**
+- **🚩 #1 PROOFING sub-line — CLOSED.** The Canvas top bar flips to `«GAME» · PROOFING` while the
+  print is stamped (board `:743`, manifest P6 row 5). **Verified live** on :8082 — the sub read
+  "ELDEN RING · PROOFING" during proof and returned to the ticking AUTOSAVED line on lift.
+- **🚩 #2 WebGL surface-creation crash — CLOSED at the F21 posture.** New `SkiaErrorBoundary`
+  (catch-and-degrade for the `MakeWebGLCanvasSurface` mount throw at the browser context ceiling)
+  now wraps EVERY skia consumer: `CardFace` degrades to the **default face** (the F21 rule),
+  the press bed / rack strip / shelf strips / proof print degrade to an empty pane. No more
+  uncaught LogBox, no blank switcher tile. *Code-level: the boundary catches the mount-throw path
+  (verified by construction + clean boot); the exhaustion itself was not re-provoked — the strip
+  architecture keeps the Canvas ≤5 contexts, so the boundary is the last-resort catch, and OQ-138
+  owns the app-wide budget stance at M5 entry.*
+- **🎨 both recorded, not fixed this round:** the text-slip font-async first paint (~2s on a cold
+  posture mount) rides the render-module warmup; the EDIT sheet's SR-"Close" activation rides the
+  §3.6 a11y pass (bed-tap/handle dismissal work).
+- **Suite:** typecheck ✓ · lint ✓ · 20/20 mobile ✓. **Seed state restored for the owner stop:**
+  all four walk/QA residue cards deleted through the 0040 sheets, Aurora deleted + `db:seed-dev`
+  re-run — the switcher reads exactly the pristine seed ("YOUR CARDS FOR ELDEN RING — 1", Aurora
+  ◆ equipped, original composition). parvati's runbook candidates (window re-front hits, the
+  stepped-mouse drag recipe, LogBox tap-stealing) are captured in `docs/qa-runbook.md`.
+- **Result:** **0 open 🚩 flags** · 12 ✅ expected (all cited) · 2 🎨 recorded → **the §3.4
+  first-article + gate-5 taste stop — the owner's call on the workshop's feel.**

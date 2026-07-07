@@ -28,7 +28,7 @@ under Promoted.
 - **Diagnosis:** Chrome background-tab throttling — `document.visibilityState === 'hidden'` on the QA tab. Closing sibling tabs is NOT enough if the whole window is behind another.
 - **Fix:** check `document.visibilityState` via `javascript_tool` before trusting captures. While hidden, verify via a11y tree / `get_page_text` / network log instead of screenshots (all still work), and prefer flows that flush explicitly (KEEP, ◂ quiet-exit) over waiting on debounce timers. Screenshots resume when the window comes forward. **The MCP tab group may live in a WHOLE-HIDDEN browser window** (the §3.4 walk found it in a minimized Edge window — `IsWindowVisible` false, every screenshot frozen): force it forward from the shell —
   enumerate top-level windows for a `localhost` title, then `ShowWindow(hWnd, 9)` + `SetForegroundWindow(hWnd)` via a PowerShell `Add-Type` user32 P/Invoke. Re-run it whenever captures freeze again mid-walk (the window falls back).
-- **Verified:** 2026-07-06 · **Hits:** 3 *(parvati's §3.2 walk; the fix-round; the §3.4 BOOT walk — window-level variant. Not promotable — `doctor` can't probe tab visibility)*
+- **Verified:** 2026-07-07 · **Hits:** 4 *(parvati's §3.2 walk; the fix-round; the §3.4 BOOT walk; parvati's §3.4 walk — re-front ~5× per long session, the window keeps falling back. Not promotable — `doctor` can't probe tab visibility)*
 
 ## Chrome MCP `zoom` leaves a stuck viewport override
 - **Symptom:** after a `zoom` capture, the tab's viewport stays frozen at the zoom-region size; `resize_window` and Ctrl+0 don't clear it.
@@ -60,6 +60,18 @@ under Promoted.
 - **Diagnosis:** the web dev session's access token lives in memory only (nothing in `localStorage` but `persist:ingame_prefs`) — a full page load wipes it, and the auth guard redirects before the refresh flow can restore anything.
 - **Fix:** deep-link WITHOUT reloading: `history.pushState(null, '', '<path>'); window.dispatchEvent(new PopStateEvent('popstate'))` via `javascript_tool` — expo-router picks it up client-side and the session survives. **Corollaries (§3.4 walk):** a Metro module-graph change (new files/dirs) forces a full refresh → same logout — re-login is the cost of editing code mid-walk; and `router.back()` after a pushState deep-link can no-op (no real history entry) — an automation artifact, not a product bug; exit flows verify on real navigation.
 - **Verified:** 2026-07-06 · **Hits:** 2
+
+## RN-web drags: CDP `left_click_drag` works on PanResponder overlays, NOT everywhere
+- **Symptom:** `left_click_drag` moves elements on the §3.4 press bed fine, but some RN-web drag targets (IntensitySlider, long-press drag-Z) ignore it.
+- **Diagnosis:** single-shot CDP drags dispatch a tight down/move/up burst; responders that need long-press arming or granular move events never engage.
+- **Fix:** dispatch a STEPPED mouse sequence via `javascript_tool` — `mousedown`, several spaced `mousemove`s, `mouseup` (see parvati's §3.4 workflow notes in `m4-review-notes.md` for the working recipe). Long-press arming stays flaky under automation — judge via the built-alongside tap pair instead.
+- **Verified:** 2026-07-07 · **Hits:** 2 *(styler slider ×1; §3.4 walk ×1)*
+
+## Dev LogBox overlay steals taps after an uncaught error
+- **Symptom:** after any uncaught error, the RN-web LogBox banner re-EXPANDS on every remount/navigation and eats taps meant for the app (walk actions silently no-op).
+- **Diagnosis:** dev-only LogBox; it re-opens itself per mount while the error list is non-empty.
+- **Fix:** dismiss it via its own Dismiss/✕ each time (or fix the underlying error and reload — a clean console spawns no LogBox). Budget for it whenever a walk intentionally provokes errors.
+- **Verified:** 2026-07-07 · **Hits:** 1 *(parvati's §3.4 walk)*
 
 ---
 
