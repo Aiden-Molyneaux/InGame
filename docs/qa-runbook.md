@@ -26,8 +26,9 @@ under Promoted.
 ## Hidden/backgrounded Chrome tab throttles RN-web QA
 - **Symptom:** CDP screenshots time out ("renderer frozen"), captures serve stale frames, and RN-web timers freeze (the Styler save-line ticker stuck at "SAVED 0s AGO"; debounced autosaves never fire).
 - **Diagnosis:** Chrome background-tab throttling — `document.visibilityState === 'hidden'` on the QA tab. Closing sibling tabs is NOT enough if the whole window is behind another.
-- **Fix:** check `document.visibilityState` via `javascript_tool` before trusting captures. While hidden, verify via a11y tree / `get_page_text` / network log instead of screenshots (all still work), and prefer flows that flush explicitly (KEEP, ◂ quiet-exit) over waiting on debounce timers. Screenshots resume when the window comes forward.
-- **Verified:** 2026-07-06 · **Hits:** 2 *(parvati's §3.2 walk 2026-07-06, then the fix-round verification the same day; not promotable — `doctor` can't probe Chrome tab visibility)*
+- **Fix:** check `document.visibilityState` via `javascript_tool` before trusting captures. While hidden, verify via a11y tree / `get_page_text` / network log instead of screenshots (all still work), and prefer flows that flush explicitly (KEEP, ◂ quiet-exit) over waiting on debounce timers. Screenshots resume when the window comes forward. **The MCP tab group may live in a WHOLE-HIDDEN browser window** (the §3.4 walk found it in a minimized Edge window — `IsWindowVisible` false, every screenshot frozen): force it forward from the shell —
+  enumerate top-level windows for a `localhost` title, then `ShowWindow(hWnd, 9)` + `SetForegroundWindow(hWnd)` via a PowerShell `Add-Type` user32 P/Invoke. Re-run it whenever captures freeze again mid-walk (the window falls back).
+- **Verified:** 2026-07-06 · **Hits:** 3 *(parvati's §3.2 walk; the fix-round; the §3.4 BOOT walk — window-level variant. Not promotable — `doctor` can't probe tab visibility)*
 
 ## Chrome MCP `zoom` leaves a stuck viewport override
 - **Symptom:** after a `zoom` capture, the tab's viewport stays frozen at the zoom-region size; `resize_window` and Ctrl+0 don't clear it.
@@ -57,8 +58,8 @@ under Promoted.
 ## Hard URL navigation logs the web session out
 - **Symptom:** navigating the QA tab to an app URL (deep link like `/styler/:gameId?cardId=…`) lands on `/sign-in`; the deep link is not replayed after login.
 - **Diagnosis:** the web dev session's access token lives in memory only (nothing in `localStorage` but `persist:ingame_prefs`) — a full page load wipes it, and the auth guard redirects before the refresh flow can restore anything.
-- **Fix:** deep-link WITHOUT reloading: `history.pushState(null, '', '<path>'); window.dispatchEvent(new PopStateEvent('popstate'))` via `javascript_tool` — expo-router picks it up client-side and the session survives.
-- **Verified:** 2026-07-06 · **Hits:** 1
+- **Fix:** deep-link WITHOUT reloading: `history.pushState(null, '', '<path>'); window.dispatchEvent(new PopStateEvent('popstate'))` via `javascript_tool` — expo-router picks it up client-side and the session survives. **Corollaries (§3.4 walk):** a Metro module-graph change (new files/dirs) forces a full refresh → same logout — re-login is the cost of editing code mid-walk; and `router.back()` after a pushState deep-link can no-op (no real history entry) — an automation artifact, not a product bug; exit flows verify on real navigation.
+- **Verified:** 2026-07-06 · **Hits:** 2
 
 ---
 
