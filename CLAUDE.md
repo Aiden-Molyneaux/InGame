@@ -140,3 +140,33 @@ pre-warms the web bundle. Logs/pidfiles live in `.devstack/` (gitignored).
   parallel API — `PORT=4001` + a disposable DB; kill it after (task-stop orphans the tsx child —
   find it with `netstat -ano | findstr :4001`).
 Login: `demo@ingame.app` / `InGameDemo1!` (the idempotent `npm -w @ingame/api run db:seed-dev` shelf).
+
+## Model selection for workflows & subagents (owner directive, 2026-07-09)
+Rankings, higher = better. Cost reflects what the owner actually pays, not list price.
+Intelligence is how hard a problem you can hand the model unsupervised. Taste covers UI/UX,
+code quality, API design, and copy.
+
+| model    | cost | intelligence | taste |
+|----------|------|--------------|-------|
+| sonnet-5 | 5    | 5            | 7     |
+| opus-4.8 | 4    | 7            | 8     |
+| fable-5  | 2    | 9            | 9     |
+
+How to apply:
+- **Defaults, not limits.** Standing permission to override: if a cheaper model's output
+  doesn't meet the bar, rerun or redo the work with a smarter model without asking. Judge
+  the output, not the price tag. Escalating costs less than shipping mediocre work.
+- **Cost is a tie-breaker only**; when axes conflict for anything that ships,
+  intelligence > taste > cost.
+- **Bulk/mechanical work** (clear-spec implementation, data analysis, migrations):
+  sonnet-5 — the cheapest model that clears the bar.
+- **Anything user-facing** (UI, copy, API design) needs taste ≥ 7 — opus-4.8 or fable-5;
+  sonnet-5 only for low-stakes surfaces.
+- **Anything hard enough that you'd want to double-check the answer:** fable-5.
+- **Reviews of plans/implementations:** fable-5 or opus-4.8; for anything important, run
+  both as independent perspectives.
+- **Never use Haiku.**
+- **Mechanics:** all three run via the Agent/Workflow `model` parameter (`sonnet`, `opus`,
+  `fable`). Omit the parameter to inherit the session model; pair cheap models with
+  `effort: 'low'` for mechanical stages and reserve higher effort tiers for the hardest
+  verify/judge stages.
