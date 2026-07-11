@@ -14,6 +14,7 @@ export interface DesignInsert {
   composition: Record<string, unknown>;
   compositionHash: string;
   isPremium: boolean;
+  derivedFromCardId?: string | null; // CARD-24a copy-on-write origin (decision 0067)
 }
 
 export async function insertDesign(

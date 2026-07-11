@@ -14,14 +14,14 @@ export type ScreenButtonVariant = 'primary' | 'action-alt' | 'secondary' | 'dest
 const FILL: Record<ScreenButtonVariant, string> = {
   primary: theme.scr.accent,
   'action-alt': theme.scr.accent,
-  secondary: theme.scr.panelHi,
+  secondary: theme.brand.cream, // decision 0069 — the one cream secondary/keycap voice (was scr.panelHi grey)
   destructive: theme.brand.alert,
   add: theme.brand.gold, // F-02 acquisitive
 };
 const INK: Record<ScreenButtonVariant, string> = {
   primary: theme.scr.accentInk,
   'action-alt': theme.scr.accentInk,
-  secondary: theme.scr.ink,
+  secondary: theme.brand.navy, // decision 0069 — navy on cream
   destructive: theme.brand.cream,
   add: theme.brand.goldInk, // F-02
 };
@@ -33,60 +33,80 @@ const ADD_STEP_UNIT = theme.step / 2;
 export function ScreenButton({
   label,
   onPress,
+  onPressIn,
+  onPressOut,
   variant = 'primary',
+  size,
+  active = false,
   disabled,
   block,
   icon,
   style,
+  accessibilityLabel,
   stepped: steppedProp,
 }: {
   label: string;
   onPress?: () => void;
+  /** momentary-key passthrough (the Canvas PROOF hold-or-tap key, decision 0069). */
+  onPressIn?: () => void;
+  onPressOut?: () => void;
   variant?: ScreenButtonVariant;
+  /** `mini` = the compact cream keycap (TRANSFORM / panel-door EDIT); default = full button. */
+  size?: 'mini';
+  /** persistent ON state for a cream mode-key (PROOF proofing · TRANSFORM open) — darkened-cream fill. */
+  active?: boolean;
   disabled?: boolean;
   block?: boolean;
   /** Optional leading icon (e.g. the ADD "+"); rendered before the label. */
   icon?: ReactNode;
   style?: ViewStyle;
+  /** Accessibility name override (defaults to the visible label). */
+  accessibilityLabel?: string;
   /** Force the F-02 pixel-step face on a non-`add` variant (the Styler's orange ⤢ CANVAS, gate-5 D.20). */
   stepped?: boolean;
 }) {
   const stepped = steppedProp ?? variant === 'add';
-  const [size, setSize] = useState<{ w: number; h: number } | null>(null);
+  const mini = size === 'mini';
+  const [polySize, setPolySize] = useState<{ w: number; h: number } | null>(null);
   const onLayout = stepped
     ? (e: LayoutChangeEvent) => {
         const { width, height } = e.nativeEvent.layout;
-        setSize((prev) => (prev?.w === width && prev?.h === height ? prev : { w: width, h: height }));
+        setPolySize((prev) => (prev?.w === width && prev?.h === height ? prev : { w: width, h: height }));
       }
     : undefined;
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ disabled: !!disabled }}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={{ disabled: !!disabled, selected: active }}
       disabled={disabled}
       onPress={onPress}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
       onLayout={onLayout}
       style={({ pressed }) => [
         styles.base,
+        mini && styles.mini,
         // The gold face is the SVG polygon for `add`; other variants keep a square fill. Until
         // onLayout delivers a size there is no polygon yet — fall back to a square gold fill for
         // that first frame rather than rendering goldInk text on the bare screen bg.
-        stepped ? (size ? styles.steppedBase : { backgroundColor: FILL[variant] }) : { backgroundColor: FILL[variant] },
+        stepped ? (polySize ? styles.steppedBase : { backgroundColor: FILL[variant] }) : { backgroundColor: FILL[variant] },
+        active && styles.active, // decision 0069 — darkened-cream ON state (F-03, no travel)
         block && styles.block,
         pressed && styles.pressed, // F-03 scanline-energize (darken, no travel)
         disabled && styles.disabled,
         style,
       ]}
     >
-      {stepped && size ? (
-        <Svg width={size.w} height={size.h} style={StyleSheet.absoluteFill}>
-          <Path d={steppedRectPath(size.w, size.h, ADD_STEP_UNIT)} fill={FILL[variant]} />
+      {stepped && polySize ? (
+        <Svg width={polySize.w} height={polySize.h} style={StyleSheet.absoluteFill}>
+          <Path d={steppedRectPath(polySize.w, polySize.h, ADD_STEP_UNIT)} fill={FILL[variant]} />
         </Svg>
       ) : null}
       <View style={styles.content}>
         {icon ? <View style={styles.icon}>{icon}</View> : null}
-        <Text style={[styles.label, { color: INK[variant] }]}>{label.toUpperCase()}</Text>
+        <Text style={[styles.label, mini && styles.labelMini, { color: INK[variant] }]}>{label.toUpperCase()}</Text>
       </View>
     </Pressable>
   );
@@ -100,7 +120,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  mini: { paddingVertical: theme.space.md, paddingHorizontal: theme.space.md }, // compact cream keycap (decision 0069)
   steppedBase: { backgroundColor: 'transparent' }, // the gold face is the SVG polygon (notched corners show through)
+  active: { backgroundColor: theme.brand.creamPressed }, // darkened-cream ON state (decision 0069)
   content: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md },
   icon: { alignItems: 'center', justifyContent: 'center' },
   block: { alignSelf: 'stretch' },
@@ -111,4 +133,5 @@ const styles = StyleSheet.create({
     fontSize: theme.type.body,
     letterSpacing: 1.5,
   },
+  labelMini: { fontSize: theme.type.micro, letterSpacing: 1 }, // 9px keycap label (decision 0069)
 });

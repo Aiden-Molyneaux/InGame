@@ -17,8 +17,11 @@ import { useGetEntryCardsQuery, useUpdateEntryMutation } from '../../store/api';
 // confirm HOISTED to the page root so the sheet docks to the in-app bottom, gate-5 D.27; the worn
 // design stays refused until unequipped, 409 CARD_EQUIPPED). ◆ marks the equipped tile as a glyph
 // chip beside the status tag (gate-5 C.11). Community gallery + adopt stay M5.
-const CELL_W = 120; // "a bit bigger" than /cell 96 (gate-5 C.10)
-const CELL_H = 168;
+// CR-22 (gate-5): revert 2-up → 3-up. CELL_W=120 came from gate-5 C.10/C.11 ("a bit bigger" cells)
+// but wrapped 2-per-row on a ~390pt phone; the owner wants 3-up, so this re-tensions toward smaller
+// cells. 96 (with the space.lg grid gap) lays three across; height keeps the ~1.4 card ratio.
+const CELL_W = 96;
+const CELL_H = 134;
 const RING = 4;
 
 type Row = {
@@ -259,6 +262,7 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
   },
   wornGlyph: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.accentInk },
+  // decision 0069 — DESIGN NEW is GOLD (F-02 acquisitive: it creates a card); was orange scr.accent.
   newTile: {
     width: CELL_W,
     height: CELL_H,
@@ -267,11 +271,11 @@ const styles = StyleSheet.create({
     gap: theme.space.sm,
     borderWidth: 1.5,
     borderStyle: 'dashed',
-    borderColor: theme.scr.accent,
-    backgroundColor: 'rgba(255,159,67,0.05)',
+    borderColor: theme.brand.gold,
+    backgroundColor: 'rgba(255,210,63,0.06)',
   },
-  newPlus: { fontFamily: theme.font.screenBold, fontSize: theme.type.display, color: theme.scr.accent },
-  newLabel: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.accent, letterSpacing: 1 },
+  newPlus: { fontFamily: theme.font.screenBold, fontSize: theme.type.display, color: theme.brand.gold },
+  newLabel: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.brand.gold, letterSpacing: 1 },
   emptyLine: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.faint, lineHeight: 16 },
   opts: {
     padding: theme.space.lg,

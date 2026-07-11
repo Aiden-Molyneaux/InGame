@@ -6,12 +6,14 @@ import { MAX_ELEMENTS, type CardComposition, type CardElement } from '../render/
 // (CARD-08: "Z-order is the rack order").
 
 /** Bed positions may hang off the edge (clipped at draw) but never get lost off-world. */
-const POS_MIN = -0.25;
-const POS_MAX = 1.25;
-const SIZE_MIN = 0.02;
-const SIZE_MAX = 1.5;
-const TEXT_SIZE_MIN = 0.02;
-const TEXT_SIZE_MAX = 0.4;
+// Transform ranges (exported so the TransformDrawer maps its sliders/steppers to the SAME bounds the
+// ops clamp to — else the precision surface under-reports and fights the bed's range, murr m2/m3).
+export const POS_MIN = -0.25;
+export const POS_MAX = 1.25;
+export const SIZE_MIN = 0.02;
+export const SIZE_MAX = 1.5;
+export const TEXT_SIZE_MIN = 0.02;
+export const TEXT_SIZE_MAX = 0.4;
 
 export const clamp = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, v));
 
@@ -37,7 +39,7 @@ export function resizeElement(c: CardComposition, i: number, w: number, h: numbe
 }
 
 export function rotateElement(c: CardComposition, i: number, deg: number): CardComposition {
-  const norm = ((deg % 360) + 540) % 360 - 180; // → (-180, 180]
+  const norm = ((deg % 360) + 540) % 360 - 180; // → [-180, 180) (180° lands at -180 — same pose)
   return withElement(c, i, (e) => ({ ...e, rotation: norm === 0 ? undefined : norm }));
 }
 

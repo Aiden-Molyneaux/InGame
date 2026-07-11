@@ -56,7 +56,7 @@ export function KeepBeat({
           },
         ]}
       >
-        <CardFace title={title} composition={composition} size="pick" />
+        <CardFace title={title} composition={composition} size="pick" animate />
       </Animated.View>
 
       <View style={styles.okStrip}>

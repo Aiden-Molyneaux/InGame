@@ -3,7 +3,13 @@ import { Image, StyleSheet, View } from 'react-native';
 import { Canvas, Group, Fill, Rect, Oval, Path, Text, LinearGradient, RadialGradient, BlurMask, Skia, useTypeface, drawAsImage } from '@shopify/react-native-skia';
 import { ChakraPetch_700Bold } from '@expo-google-fonts/chakra-petch';
 import { PaytoneOne_400Regular } from '@expo-google-fonts/paytone-one';
-import { buildCardElements, buildBedElements, buildOverlayElements, buildCellStrip, buildBaseStrip, type SkiaCtx, type StripCell } from './buildCard';
+import { PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
+import { Bitter_700Bold } from '@expo-google-fonts/bitter';
+import { SpaceMono_700Bold } from '@expo-google-fonts/space-mono';
+import { Pacifico_400Regular } from '@expo-google-fonts/pacifico';
+import { AllertaStencil_400Regular } from '@expo-google-fonts/allerta-stencil';
+import { buildCardElements, buildBedElements, buildOverlayElements, buildCellStrip, buildBaseStrip, buildCompositionStrip, type SkiaCtx, type StripCell } from './buildCard';
+import { AnimatedCardLayer, hasMotion } from './animated';
 import type { CardComposition as Comp } from './composition';
 
 // CardComposition (CARD-15) — the react-native-skia consumer of the shared render module. The live
@@ -22,9 +28,21 @@ import type { CardComposition as Comp } from './composition';
 export function useCardSkiaCtx(): SkiaCtx {
   const typeface = useTypeface(ChakraPetch_700Bold) ?? undefined; // 0063 "clean-sans"
   const display = useTypeface(PaytoneOne_400Regular) ?? undefined; // 0063 "bold-display" — already bundled
+  // decision 0068 title fonts — a missing typeface (still loading) falls back to `typeface` in the
+  // builder, so a slow font never crashes the draw (buildCard's face resolution).
+  const pixel = useTypeface(PressStart2P_400Regular) ?? undefined;
+  const slab = useTypeface(Bitter_700Bold) ?? undefined;
+  const mono = useTypeface(SpaceMono_700Bold) ?? undefined;
+  const script = useTypeface(Pacifico_400Regular) ?? undefined;
+  const stencil = useTypeface(AllertaStencil_400Regular) ?? undefined;
   const typefaces: Record<string, unknown> = {};
   if (typeface) typefaces['clean-sans'] = typeface;
   if (display) typefaces['bold-display'] = display;
+  if (pixel) typefaces['press-start'] = pixel;
+  if (slab) typefaces['bitter'] = slab;
+  if (mono) typefaces['space-mono'] = mono;
+  if (script) typefaces['pacifico'] = script;
+  if (stencil) typefaces['stencil'] = stencil;
   return { Group, Fill, Rect, Oval, Path, Text, LinearGradient, RadialGradient, BlurMask, Skia, typeface, typefaces };
 }
 
@@ -33,14 +51,26 @@ export function CardComposition({
   width,
   height,
   effect = false,
+  animate = false,
 }: {
   composition: Comp;
   width: number;
   height: number;
   effect?: boolean;
+  animate?: boolean;
 }) {
   const ctx = useCardSkiaCtx();
-  return <Canvas style={{ width, height }}>{buildCardElements(composition, width, height, ctx, effect)}</Canvas>;
+  // The static tree + (where the surface opts in) the additive motion overlay. `animate` is an
+  // EXPLICIT per-surface opt-in (owner iteration 2026-07-09 — the old ≥180px width heuristic left
+  // every out-of-Styler surface static): hero/detail surfaces pass it, grids and tiles never do,
+  // so the clock budget stays one-or-two animated cards per screen by construction.
+  const motion = animate && effect && hasMotion(composition);
+  return (
+    <Canvas style={{ width, height }}>
+      {buildCardElements(composition, width, height, ctx, effect)}
+      {motion ? <AnimatedCardLayer composition={composition} width={width} height={height} /> : null}
+    </Canvas>
+  );
 }
 
 /** The press-bed draw (Canvas P1/P2) — base + vectors BARE; `pulledIndex` ghosts the rest to 28%. */
@@ -88,6 +118,35 @@ export function GlyphStrip({
 }) {
   const ctx = useCardSkiaCtx();
   return <Canvas style={{ width, height }}>{buildCellStrip(cells, cellW, cellH, strideX, strideY, cols, ctx)}</Canvas>;
+}
+
+/**
+ * A row of FULL-composition tiles in ONE canvas (the Styler FRAME/EFFECT/FINISH preview rails). The
+ * strip is display-only (`pointerEvents="none"`) — the AttributeSection lays transparent Pressables
+ * over it for taps + a11y, exactly like the AssetShelf glyph grid. One canvas, not one-per-tile (the
+ * WebGL-context ceiling — decision 0068 pushed the frame rail to 16 tiles).
+ */
+export function CompositionStrip({
+  comps,
+  cellW,
+  cellH,
+  strideX,
+  width,
+  height,
+}: {
+  comps: Comp[];
+  cellW: number;
+  cellH: number;
+  strideX: number;
+  width: number;
+  height: number;
+}) {
+  const ctx = useCardSkiaCtx();
+  return (
+    <Canvas style={{ width, height }} pointerEvents="none">
+      {buildCompositionStrip(comps, cellW, cellH, strideX, ctx, true)}
+    </Canvas>
+  );
 }
 
 /** A row of base swatches in ONE canvas (the AssetShelf BASE rows). */
@@ -157,6 +216,10 @@ export function ProofPrint({
       )}
       <Canvas pointerEvents="none" style={StyleSheet.absoluteFill}>
         {buildOverlayElements(composition, width, height, ctx)}
+        {hasMotion(composition) ? (
+          // the PROOF is the one bed-size print on screen — it always animates when the kinds do
+          <AnimatedCardLayer composition={composition} width={width} height={height} />
+        ) : null}
       </Canvas>
     </View>
   );

@@ -1,19 +1,21 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { theme } from '../../theme';
 import { PulledSheet } from '../PulledSheet';
+import { ColorField } from '../ColorPicker';
 import { IntensitySlider } from '../styler/IntensitySlider';
+import { ScrollLockContext, useScrollLockHost } from '../ScrollLock';
 import { elementLabel } from '../../canvas/ops';
-import type { CardElement } from '../../render/composition';
+import type { CardComposition, CardElement } from '../../render/composition';
 
-// EditSlipSheet (board P4 — §1.5 prose "the EDIT slip-sheet"; code name PROVISIONAL, the SaveBar
-// precedent) — the pulled slip's second drawer: OPACITY (the catalog slider, CARD-10) · FILL +
-// SOLID/GRADIENT · STROKE · GLOW · BLEND · FLIP/RADIUS/DUP/DELETE; text slips add FONT · CURVE
-// (ARC, CARD-11) · the content itself. NO scrim-dim on the work — the bed stays lit above the
-// sheet (the Styler's no-scrim lesson, PulledSheet dimScrim=false). The eyedropper interim: the
-// swatch row carries the colours already in this card (canvas-manifest ADDENDUM, CARD-11 at-scale).
+// EditSlipSheet (board P4 — §1.5 prose "the EDIT slip-sheet") — the pulled slip's second drawer:
+// OPACITY · FILL · SOLID/GRADIENT · STROKE · GLOW · BLEND · FLIP/RADIUS/DUP/DELETE; text slips add
+// FONT · CURVE · content. NO scrim-dim on the work and CAPPED so it opens only to the bottom of the
+// card (the gamecard stays visible above it — owner gate-5). Colours pick through the shared
+// `ColorField`: the picker is CLOSED by default, showing the last-10 recents + an OPEN-PICKER button +
+// a FROM-CARD grab (CR-11 gate-5). The BASE is a non-deletable slip whose EDIT is colour-only (CR-08
+// gate-5): `baseMode` renders just its colour control.
 
-const PALETTE = ['#f3ecd9', '#e8c14a', '#e85ad0', '#7ad0e8', '#a8c980', '#ff9f43', '#14121f', '#ffffff'];
 const RADII = [0, 0.18, 0.35];
 
 export function EditSlipSheet({
@@ -21,39 +23,103 @@ export function EditSlipSheet({
   onClose,
   element,
   index,
-  usedColors,
+  recents,
+  cardColors,
+  onColorCommit,
   atCap,
   onPatch,
+  onBeginGesture,
   onDuplicate,
   onDelete,
+  baseMode,
+  showHandles,
+  onToggleHandles,
+  inline = false,
 }: {
   visible: boolean;
   onClose: () => void;
   element: CardElement | undefined;
   index: number;
-  usedColors: string[];
+  /** last-10 used colours (most-recent-first) + every colour on the card, for the ColorField */
+  recents: string[];
+  cardColors: string[];
+  onColorCommit: (hex: string) => void;
   atCap: boolean;
-  onPatch: (patch: Partial<CardElement>) => void;
+  /** opts.history:false = a continuous-gesture frame (the caller pushed its one entry via onBeginGesture) */
+  onPatch: (patch: Partial<CardElement>, opts?: { history?: boolean }) => void;
+  /** push ONE history entry for a coming continuous run (the OPACITY drag — murr round 4 F2) */
+  onBeginGesture?: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  /** when set, the sheet edits the BASE (colour only — non-deletable slip, CR-08) instead of an element */
+  baseMode?: { base: CardComposition['base']; onBase: (base: CardComposition['base']) => void } | null;
+  /** the RESIZE BOX toggle rides here too (round 3) — same state the TransformDrawer drives */
+  showHandles?: boolean;
+  onToggleHandles?: () => void;
+  /** render inline in the CanvasSurface bottom panel (no PulledSheet/scrim/handle/title) */
+  inline?: boolean;
 }) {
+  // a held slider/picker must not pan this panel (the round-3 scroll-lock rule)
+  const { scrollEnabled, api: scrollLockApi } = useScrollLockHost();
+  // In inline mode CanvasSurface renders the panel header + close; here we render only the inner
+  // controls in a plain ScrollView. Otherwise keep the PulledSheet drawer (nothing else changes).
+  const wrap = (title: string, children: ReactNode) =>
+    inline ? (
+      <ScrollView style={styles.inlineScroll} contentContainerStyle={styles.inlineBody} keyboardShouldPersistTaps="handled" scrollEnabled={scrollEnabled}>
+        <ScrollLockContext.Provider value={scrollLockApi}>{children}</ScrollLockContext.Provider>
+      </ScrollView>
+    ) : (
+      <PulledSheet visible={visible} onClose={onClose} dimScrim={false} maxFraction={0.5} title={title}>
+        {children}
+      </PulledSheet>
+    );
+
+  // ── BASE mode: a non-deletable slip, colour-only (CR-08 gate-5) ────────────────────────────────
+  if (baseMode) {
+    const b = baseMode.base;
+    const isGrad = 'gradient' in b;
+    const g0 = isGrad ? b.gradient[0] : b.fill;
+    const g1 = isGrad ? b.gradient[1] : '#0e0b1e';
+    const setGrad = (i: 0 | 1, c: string) =>
+      baseMode.onBase({ gradient: [i === 0 ? c : g0, i === 1 ? c : g1] });
+    return wrap(
+      "Editing the 'Base' slip",
+      <>
+        <Text style={styles.meta}>BASE · COLOUR ONLY</Text>
+        <Row label="STYLE">
+          <Tog label="SOLID" on={!isGrad} onPress={() => baseMode.onBase({ fill: g0 })} />
+          <Tog label="GRADIENT" on={isGrad} onPress={() => baseMode.onBase({ gradient: [g0, g1] })} />
+        </Row>
+        {isGrad ? (
+          <>
+            <View style={styles.pickerBlock}>
+              <Text style={styles.pickerLabel}>TOP</Text>
+              <ColorField value={g0} onChange={(c) => setGrad(0, c)} onCommit={onColorCommit} recents={recents} cardColors={cardColors} />
+            </View>
+            <View style={styles.pickerBlock}>
+              <Text style={styles.pickerLabel}>BOTTOM</Text>
+              <ColorField value={g1} onChange={(c) => setGrad(1, c)} onCommit={onColorCommit} recents={recents} cardColors={cardColors} />
+            </View>
+          </>
+        ) : (
+          <View style={styles.pickerBlock}>
+            <Text style={styles.pickerLabel}>FILL</Text>
+            <ColorField value={g0} onChange={(c) => baseMode.onBase({ fill: c })} onCommit={onColorCommit} recents={recents} cardColors={cardColors} />
+          </View>
+        )}
+      </>,
+    );
+  }
+
   if (!element) return null;
   const e = element;
-  const swatches = [...PALETTE, ...usedColors.filter((c) => !PALETTE.includes(c))].slice(0, 12);
   const isText = e.type === 'text';
-  const kindMeta = isText ? 'TEXT · SLIP' : e.type === 'icon' ? 'ICON · SLIP' : 'VECTOR · SHAPE';
 
-  return (
-    <PulledSheet visible={visible} onClose={onClose} dimScrim={false} title={`The ${elementLabel(e, index).toLowerCase()} slip`}>
-      <Text style={styles.meta}>{kindMeta} · ISOLATION ON</Text>
-
-      <IntensitySlider
-        label="OPACITY"
-        accessibilityLabel="Slip opacity"
-        value={e.opacity ?? 1}
-        onChange={(v) => onPatch({ opacity: v >= 0.995 ? undefined : v })}
-      />
-
+  // round 4 — the kind meta-line ("VECTOR · SHAPE"/"TEXT · SLIP") is dropped; OPACITY moved under
+  // the FILL cluster (fill → style/stop-2 → opacity → stroke)
+  return wrap(
+    `Editing the '${elementLabel(e, index)}' slip`,
+    <>
       {isText ? (
         <>
           <Row label="TEXT">
@@ -77,13 +143,10 @@ export function EditSlipSheet({
         </>
       ) : null}
 
-      <Row label="FILL">
-        <View style={styles.swatches}>
-          {swatches.map((c) => (
-            <Swatch key={c} color={c} selected={e.fill === c} onPress={() => onPatch({ fill: c })} label={`Fill ${c}`} />
-          ))}
-        </View>
-      </Row>
+      <View style={styles.pickerBlock}>
+        <Text style={styles.pickerLabel}>FILL</Text>
+        <ColorField value={e.fill} onChange={(c) => onPatch({ fill: c })} onCommit={onColorCommit} recents={recents} cardColors={cardColors} />
+      </View>
       {!isText ? (
         <Row label="STYLE">
           <Tog label="SOLID" on={!e.fill2} onPress={() => onPatch({ fill2: undefined })} />
@@ -91,14 +154,19 @@ export function EditSlipSheet({
         </Row>
       ) : null}
       {!isText && e.fill2 ? (
-        <Row label="STOP 2">
-          <View style={styles.swatches}>
-            {swatches.map((c) => (
-              <Swatch key={c} color={c} selected={e.fill2 === c} onPress={() => onPatch({ fill2: c })} label={`Gradient stop ${c}`} />
-            ))}
-          </View>
-        </Row>
+        <View style={styles.pickerBlock}>
+          <Text style={styles.pickerLabel}>STOP 2</Text>
+          <ColorField value={e.fill2} onChange={(c) => onPatch({ fill2: c })} onCommit={onColorCommit} recents={recents} cardColors={cardColors} />
+        </View>
       ) : null}
+
+      <IntensitySlider
+        label="OPACITY"
+        accessibilityLabel="Slip opacity"
+        value={e.opacity ?? 1}
+        onBegin={onBeginGesture}
+        onChange={(v) => onPatch({ opacity: v >= 0.995 ? undefined : v }, { history: false })}
+      />
 
       {!isText ? (
         <>
@@ -108,36 +176,46 @@ export function EditSlipSheet({
             <Tog label="THICK" on={e.stroke?.width === 0.022} onPress={() => onPatch({ stroke: { color: e.stroke?.color ?? '#f3ecd9', width: 0.022 } })} />
           </Row>
           {e.stroke ? (
-            <Row label="STROKE INK">
-              <View style={styles.swatches}>
-                {swatches.map((c) => (
-                  <Swatch key={c} color={c} selected={e.stroke?.color === c} onPress={() => onPatch({ stroke: { color: c, width: e.stroke!.width } })} label={`Stroke ${c}`} />
-                ))}
-              </View>
-            </Row>
+            <View style={styles.pickerBlock}>
+              <Text style={styles.pickerLabel}>STROKE INK</Text>
+              <ColorField
+                value={e.stroke.color}
+                onChange={(c) => onPatch({ stroke: { color: c, width: e.stroke!.width } })}
+                onCommit={onColorCommit}
+                recents={recents}
+                cardColors={cardColors}
+              />
+            </View>
           ) : null}
         </>
       ) : null}
 
-      <Row label="LIGHT">
-        {!isText ? (
-          <>
-            {/* the renderer draws no text glow yet — offering the toggle there persisted a no-op (murr) */}
-            <Text style={styles.subLabel}>GLOW</Text>
-            <Tog label={e.glow ? 'ON' : 'OFF'} on={!!e.glow} onPress={() => onPatch({ glow: e.glow ? undefined : true })} />
-          </>
-        ) : null}
-        <Text style={styles.subLabel}>BLEND</Text>
+      {/* round 3 — the LIGHT umbrella row was opaque; GLOW and BLEND are their own labeled rows */}
+      {!isText ? (
+        <Row label="GLOW">
+          <Tog label="OFF" on={!e.glow} onPress={() => onPatch({ glow: undefined })} />
+          <Tog label="ON" on={!!e.glow} onPress={() => onPatch({ glow: true })} />
+        </Row>
+      ) : null}
+      <Row label="BLEND">
         <Tog label="NORMAL" on={!e.blend} onPress={() => onPatch({ blend: undefined })} />
         <Tog label="SCREEN" on={e.blend === 'screen'} onPress={() => onPatch({ blend: 'screen' })} />
         <Tog label="MULTIPLY" on={e.blend === 'multiply'} onPress={() => onPatch({ blend: 'multiply' })} />
       </Row>
 
+      {/* round 3 — the RESIZE BOX toggle rides the EDIT sheet too (the same state as TRANSFORM's;
+          ON/OFF vocabulary). Round 5: MORE moves UNDER it (last). */}
+      {onToggleHandles ? (
+        <Row label="RESIZE BOX">
+          <Tog label={showHandles ? 'ON' : 'OFF'} on={!!showHandles} onPress={onToggleHandles} />
+        </Row>
+      ) : null}
+
       <Row label="MORE">
         {!isText ? (
           <>
-            <Tog label="FLIP ↔" on={!!e.flipH} onPress={() => onPatch({ flipH: e.flipH ? undefined : true })} />
-            <Tog label="FLIP ↕" on={!!e.flipV} onPress={() => onPatch({ flipV: e.flipV ? undefined : true })} />
+            <Tog label="FLIP" glyph={<FlipGlyph axis="h" />} on={!!e.flipH} onPress={() => onPatch({ flipH: e.flipH ? undefined : true })} />
+            <Tog label="FLIP" glyph={<FlipGlyph axis="v" />} on={!!e.flipV} onPress={() => onPatch({ flipV: e.flipV ? undefined : true })} />
           </>
         ) : null}
         {e.type === 'rect' ? (
@@ -154,7 +232,7 @@ export function EditSlipSheet({
         <Tog label="DUP" on={false} disabled={atCap} onPress={onDuplicate} />
         <Tog label="DELETE" danger on={false} onPress={onDelete} />
       </Row>
-    </PulledSheet>
+    </>,
   );
 }
 
@@ -169,12 +247,15 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 
 function Tog({
   label,
+  glyph,
   on,
   onPress,
   danger = false,
   disabled = false,
 }: {
   label: string;
+  /** Optional drawn glyph rendered before the label (no emoji — CR-14/gate-5). */
+  glyph?: ReactNode;
   on: boolean;
   onPress: () => void;
   danger?: boolean;
@@ -187,37 +268,35 @@ function Tog({
       accessibilityState={{ selected: on, disabled }}
       disabled={disabled}
       onPress={onPress}
-      style={[styles.tog, on && styles.togOn, disabled && styles.togDisabled]}
+      style={[styles.tog, glyph ? styles.togGlyphed : null, on && styles.togOn, danger && styles.togDangerBox, disabled && styles.togDisabled]}
     >
+      {glyph ?? null}
       <Text style={[styles.togText, danger && styles.togDanger]}>{label}</Text>
     </Pressable>
   );
 }
 
-function Swatch({ color, selected, onPress, label }: { color: string; selected: boolean; onPress: () => void; label: string }) {
+// FLIP glyph (CR-14 gate-5) — two small mirrored triangles drawn with Views, guaranteed no emoji.
+// axis 'h' = a horizontal pair (◀ ▶) for FLIP-H; axis 'v' = a vertical pair (▲ ▼) for FLIP-V.
+function FlipGlyph({ axis }: { axis: 'h' | 'v' }) {
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ selected }}
-      onPress={onPress}
-      style={[styles.swatch, { backgroundColor: color }, selected && styles.swatchSel]}
-    >
-      {selected ? <View style={styles.swPip} /> : null}
-    </Pressable>
+    <View style={axis === 'h' ? styles.flipRow : styles.flipCol} pointerEvents="none">
+      <View style={axis === 'h' ? styles.triLeft : styles.triUp} />
+      <View style={axis === 'h' ? styles.triRight : styles.triDown} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  inlineScroll: { flexGrow: 0 },
+  inlineBody: { gap: theme.space.md, paddingBottom: theme.space.md },
   meta: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },
   row: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md },
   label: { width: 66, fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },
   rowBody: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: theme.space.sm + 1 },
   subLabel: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5, marginLeft: theme.space.sm },
-  swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.sm + 1 },
-  swatch: { width: 22, height: 22, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
-  swatchSel: { borderWidth: 1.5, borderColor: theme.scr.accent },
-  swPip: { position: 'absolute', top: -2.5, right: -2.5, width: 6, height: 6, backgroundColor: theme.scr.accent },
+  pickerBlock: { gap: theme.space.sm },
+  pickerLabel: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },
   tog: {
     borderWidth: 1,
     borderColor: theme.scr.hairline,
@@ -225,10 +304,56 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space.md,
     paddingVertical: theme.space.sm + 1,
   },
+  togGlyphed: { flexDirection: 'row', alignItems: 'center', gap: theme.space.sm },
   togOn: { borderWidth: 1.5, borderColor: theme.scr.accent, backgroundColor: 'rgba(255,159,67,0.08)' },
   togDisabled: { opacity: 0.4 },
+  // decision 0069 — destructive = alert FILL (not red text on grey); ink flips to cream.
+  togDangerBox: { backgroundColor: theme.brand.alert, borderColor: theme.brand.alert },
   togText: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.ink, letterSpacing: 0.5 },
-  togDanger: { color: theme.brand.alert },
+  togDanger: { color: theme.brand.cream },
+  // FLIP glyph — two mirrored CSS-border triangles (ink), a small gap between them.
+  flipRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  flipCol: { flexDirection: 'column', alignItems: 'center', gap: 2 },
+  triLeft: {
+    width: 0,
+    height: 0,
+    borderTopWidth: 4,
+    borderBottomWidth: 4,
+    borderRightWidth: 6,
+    borderTopColor: 'transparent',
+    borderBottomColor: 'transparent',
+    borderRightColor: theme.scr.ink,
+  },
+  triRight: {
+    width: 0,
+    height: 0,
+    borderTopWidth: 4,
+    borderBottomWidth: 4,
+    borderLeftWidth: 6,
+    borderTopColor: 'transparent',
+    borderBottomColor: 'transparent',
+    borderLeftColor: theme.scr.ink,
+  },
+  triUp: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 4,
+    borderRightWidth: 4,
+    borderBottomWidth: 6,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: theme.scr.ink,
+  },
+  triDown: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 4,
+    borderRightWidth: 4,
+    borderTopWidth: 6,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: theme.scr.ink,
+  },
   textInput: {
     flex: 1,
     fontFamily: theme.font.screen,

@@ -44,7 +44,7 @@ export function ProofView({ composition, title }: { composition: CardComposition
             <CardFace title={title} composition={composition} size="thumb" />
           </LadderItem>
         </View>
-        <Text style={styles.sizesHint}>WHAT YOU PROOF IS WHAT THE SHELF, TOP LISTS &amp; ROWS SHOW — THE ART MUST STILL READ SMALL</Text>
+        {/* CR-16 — the proof-ladder coaching hint is removed (the owner walked it) */}
       </View>
     </View>
   );

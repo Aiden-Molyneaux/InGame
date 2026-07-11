@@ -21,6 +21,9 @@ export const cardDesignSchema = z
     imageUrl: z.string().nullable(), // null until the M5 flatten-to-storage (0066 §1)
     thumbUrl: z.string().nullable(),
     isPremium: z.boolean(), // CARD-06 derived; always false on the M4 free baseline
+    // CARD-24a copy-on-write origin (decision 0067): set on a draft COPY of a committed card; null
+    // otherwise. A crash-recovered copy knows its origin — resuming then KEEPing merges it home.
+    derivedFromCardId: z.string().uuid().nullable(),
     createdAt: z.string(), // ISO-8601
     updatedAt: z.string(),
   })

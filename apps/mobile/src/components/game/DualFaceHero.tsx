@@ -40,8 +40,9 @@ export function DualFaceHero({
         accessibilityLabel={`Inspect your ${title} card`}
         onPress={onInspect}
       >
-        {/* /grid (161×225) — one size up from /pick per the owner's gate-5 B.5 */}
-        <CardFace title={title} composition={composition} size="grid" />
+        {/* /grid (161×225) — one size up from /pick per the owner's gate-5 B.5. `animate`: the
+            game-page hero is the shelf's showpiece — animated cosmetics run here (0068 opt-in). */}
+        <CardFace title={title} composition={composition} size="grid" animate />
         <Text style={styles.label}>THE FACE</Text>
       </Pressable>
       <View style={styles.face}>

@@ -13,7 +13,8 @@ export const theme = {
     accent: '#ff3d77', // pink LED (shell) — F-05 round pink
     gold: '#ffd23f', // value / acquisitive (F-02)
     goldInk: '#3c2a09',
-    cream: '#f5f1e4', // silk / plastic face text
+    cream: '#f5f1e4', // silk / plastic face text · on-screen keycap/secondary fill (decision 0069)
+    creamPressed: '#d9d4c2', // darkened cream — pressed/active keycap (F-03 scanline-energize; decision 0069)
     navy: '#1d2a4a',
     alert: '#e3414e',
     success: '#d3e95e',

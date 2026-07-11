@@ -127,6 +127,10 @@ function startDetached(name, args) {
     detached: true,
     windowsHide: true,
     stdio: ['ignore', out, out],
+    // EXPO_OFFLINE baked in (runbook promotion — Hits≥2): expo-cli's dependency-version validation
+    // fetch double-reads a response / throws in getVersionedNativeModulesAsync and kills `expo start`.
+    // Offline mode skips that network step; LAN/web bundle serving is unaffected. Harmless for the API.
+    env: { ...process.env, EXPO_OFFLINE: '1' },
   });
   fs.writeFileSync(pidFile(name), String(child.pid));
   child.unref();

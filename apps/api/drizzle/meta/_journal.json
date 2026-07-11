@@ -43,6 +43,13 @@
       "when": 1783301152842,
       "tag": "0005_friendly_masque",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1783545394237,
+      "tag": "0006_wakeful_captain_marvel",
+      "breakpoints": true
     }
   ]
 }

@@ -70,11 +70,21 @@ function roundedRectPath(x: number, y: number, w: number, h: number, r: number):
 /** The per-char approximate width (canvaskit-web lacks measureText — the recorded 0066 limit). */
 const CHAR_W = 0.58;
 
+/**
+ * Per-typeface optical correction (owner iteration 2026-07-09): Press Start 2P renders visually
+ * huge at a given em, so the PIXEL font draws smaller for the same composition `size`. Keyed by
+ * fontId; absent = 1. Applied everywhere a composition size becomes a skia font size (straight
+ * text, arc text, the nameplate title) so live/flatten/preview can't disagree.
+ */
+export const FONT_SCALE: Record<string, number> = { 'press-start': 0.6 };
+const scaledSize = (size: number, H: number, fontId?: string) => size * H * (FONT_SCALE[fontId ?? ''] ?? 1);
+
 /** CARD-11 arc text — per-char placement along a circle; deterministic, same math live + flatten. */
 function arcTextNodes(e: Extract<CardElement, { type: 'text' }>, W: number, H: number, ctx: SkiaCtx, font: any): any[] {
   const h = createElement;
   const { Text, Group } = ctx;
-  const fontSize = e.size * H;
+  const fontSize = scaledSize(e.size, H, e.fontId); // must match the font the caller built
+
   const chars = [...e.text];
   const charW = fontSize * CHAR_W;
   const totalW = chars.length * charW;
@@ -131,7 +141,7 @@ function element(e: CardElement, W: number, H: number, ctx: SkiaCtx, key: string
   if (e.type === 'text') {
     const face = (e.fontId && ctx.typefaces?.[e.fontId]) || typeface;
     if (!face) return null;
-    const fontSize = e.size * H;
+    const fontSize = scaledSize(e.size, H, e.fontId);
     const font = Skia.Font(face, fontSize);
     if (e.arc) return dress(arcTextNodes(e, W, H, ctx, font));
     const tw = e.text.length * fontSize * CHAR_W; // approx (measureText unimplemented on the web backend)
@@ -256,12 +266,104 @@ function dustOverlay(W: number, H: number, intensity: number, ctx: SkiaCtx): any
   return h(Group, { key: 'fx-dust' }, ...motes);
 }
 
+/** Fine film speckle (grain) — deterministic LCG, light+dark motes. Static. */
+function grainOverlay(W: number, H: number, intensity: number, ctx: SkiaCtx): any {
+  const h = createElement;
+  const { Group, Rect } = ctx;
+  let s = 7;
+  const rand = () => ((s = (s * 1664525 + 1013904223) % 4294967296) / 4294967296);
+  const dots: any[] = [];
+  for (let i = 0; i < 90; i++) {
+    const bright = rand() > 0.5;
+    dots.push(h(Rect, { key: `gr${i}`, x: rand() * W, y: rand() * H, width: 1, height: 1, color: `rgba(${bright ? '255,255,255' : '0,0,0'},${(0.05 + rand() * 0.12) * intensity})` }));
+  }
+  return h(Group, { key: 'fx-grain' }, ...dots);
+}
+
+/** Comic dot-screen (halftone) — a regular grid of dark dots. Static. */
+function halftoneOverlay(W: number, H: number, intensity: number, ctx: SkiaCtx): any {
+  const h = createElement;
+  const { Group, Oval } = ctx;
+  const gap = Math.max(8, Math.round(W / 9));
+  const r = gap * 0.28;
+  const dots: any[] = [];
+  for (let y = gap / 2; y < H; y += gap) for (let x = gap / 2; x < W; x += gap) {
+    dots.push(h(Oval, { key: `ht${Math.round(x)}-${Math.round(y)}`, x: x - r, y: y - r, width: r * 2, height: r * 2, color: `rgba(20,16,26,${0.22 * intensity})` }));
+  }
+  return h(Group, { key: 'fx-halftone' }, ...dots);
+}
+
+/**
+ * Frost v2 — crystalline, not foggy (owner iteration 2026-07-09): softer corner blooms + a
+ * deterministic spray of thin ICE SHARDS radiating inward from the corners, with brighter cores.
+ * Static keyframe; the live layer sweeps a cold shimmer over it.
+ */
+function frostOverlay(W: number, H: number, intensity: number, ctx: SkiaCtx): any {
+  const h = createElement;
+  const { Group, Rect, Path, Skia, RadialGradient } = ctx;
+  const nodes: any[] = [];
+  if (RadialGradient) {
+    ([[0, 0], [W, 0], [W, H], [0, H]] as Array<[number, number]>).forEach(([cx, cy], i) => {
+      nodes.push(h(Rect, { key: `frost${i}`, x: 0, y: 0, width: W, height: H }, h(RadialGradient, { c: { x: cx, y: cy }, r: W * 0.42, colors: [`rgba(210,236,255,${0.34 * intensity})`, 'rgba(210,236,255,0)'] })));
+    });
+  } else {
+    nodes.push(h(Rect, { key: 'frost-flat', x: 0, y: 0, width: W, height: H, color: `rgba(210,236,255,${0.1 * intensity})` }));
+  }
+  // the shard spray — LCG-seeded (deterministic: flatten and live agree), 5 shards per corner
+  let s = 1337;
+  const rand = () => ((s = (s * 1664525 + 1013904223) % 4294967296) / 4294967296);
+  const corners: Array<[number, number, number]> = [
+    [0, 0, 0], // corner x, y, base angle pointing inward (radians offset applied below)
+    [W, 0, Math.PI / 2],
+    [W, H, Math.PI],
+    [0, H, -Math.PI / 2],
+  ];
+  corners.forEach(([cx, cy, base], ci) => {
+    for (let i = 0; i < 5; i++) {
+      const ang = base + (Math.PI / 2) * (0.12 + 0.76 * rand()); // spread across the inward quadrant
+      const len = W * (0.14 + rand() * 0.2);
+      const wd = Math.max(1, W * (0.006 + rand() * 0.008)); // half-width at the base
+      const dx = Math.cos(ang);
+      const dy = Math.sin(ang);
+      const px = -dy; // perpendicular
+      const py = dx;
+      const p = Skia.Path.Make();
+      p.moveTo(cx + px * wd, cy + py * wd);
+      p.lineTo(cx - px * wd, cy - py * wd);
+      p.lineTo(cx + dx * len, cy + dy * len); // the shard tip
+      p.close();
+      nodes.push(h(Path, { key: `shard${ci}-${i}`, path: p, color: `rgba(232,246,255,${(0.28 + rand() * 0.3) * intensity})` }));
+    }
+  });
+  return h(Group, { key: 'fx-frost' }, ...nodes);
+}
+
+/** Embers — a warm hearth glow rising from the base + a few rest-motes (the static keyframe). */
+function embersOverlay(W: number, H: number, intensity: number, ctx: SkiaCtx): any {
+  const h = createElement;
+  const { Group, Rect, Oval, LinearGradient } = ctx;
+  const nodes: any[] = [
+    h(Rect, { key: 'ember-glow', x: 0, y: H * 0.5, width: W, height: H * 0.5 }, h(LinearGradient, { start: { x: 0, y: H }, end: { x: 0, y: H * 0.5 }, colors: [`rgba(255,120,40,${0.4 * intensity})`, 'rgba(255,120,40,0)'] })),
+  ];
+  let s = 99;
+  const rand = () => ((s = (s * 1664525 + 1013904223) % 4294967296) / 4294967296);
+  for (let i = 0; i < 7; i++) {
+    const r = 0.8 + rand() * 1.6;
+    nodes.push(h(Oval, { key: `em${i}`, x: rand() * W, y: H * 0.6 + rand() * H * 0.35, width: r * (W / 90), height: r * (W / 90), color: `rgba(255,${150 + Math.floor(rand() * 80)},60,${(0.3 + rand() * 0.4) * intensity})` }));
+  }
+  return h(Group, { key: 'fx-embers' }, ...nodes);
+}
+
 function effectOverlay(kind: string, intensity: number, W: number, H: number, ctx: SkiaCtx): any {
   const h = createElement;
   const { Rect, RadialGradient } = ctx;
   if (kind === 'scanline') return scanlineOverlay(W, H, intensity, ctx);
   if (kind === 'gradient-sheen') return sheenOverlay(W, H, 0.34 * intensity, ctx, 'fx-sheen');
   if (kind === 'dust') return dustOverlay(W, H, intensity, ctx);
+  if (kind === 'grain') return grainOverlay(W, H, intensity, ctx);
+  if (kind === 'halftone') return halftoneOverlay(W, H, intensity, ctx);
+  if (kind === 'frost') return frostOverlay(W, H, intensity, ctx);
+  if (kind === 'embers') return embersOverlay(W, H, intensity, ctx);
   if (kind === 'soft-glow' && RadialGradient) {
     return h(
       Rect,
@@ -288,6 +390,90 @@ function effectOverlay(kind: string, intensity: number, W: number, H: number, ct
   return null;
 }
 
+/** Woven-paper texture — a faint crosshatch. Static (a binary material). */
+function linenOverlay(W: number, H: number, ctx: SkiaCtx): any {
+  const h = createElement;
+  const { Group, Rect } = ctx;
+  const gap = Math.max(4, Math.round(W / 44));
+  const lines: any[] = [];
+  for (let x = 0; x < W; x += gap) lines.push(h(Rect, { key: `lv${x}`, x, y: 0, width: 1, height: H, color: 'rgba(255,255,255,0.05)' }));
+  for (let y = 0; y < H; y += gap) lines.push(h(Rect, { key: `lh${y}`, x: 0, y, width: W, height: 1, color: 'rgba(0,0,0,0.05)' }));
+  return h(Group, { key: 'fin-linen' }, ...lines);
+}
+
+/**
+ * Holographic v2 — banded rainbow film, not a single flat wash (owner iteration 2026-07-09): a
+ * diagonal spectrum with REPEATED hue bands + a counter-diagonal white shimmer, both screened.
+ * Static wash; the live SheenSweep travels a highlight over it.
+ */
+function holoOverlay(W: number, H: number, ctx: SkiaCtx): any {
+  const h = createElement;
+  const { Group, Rect, LinearGradient } = ctx;
+  const a = 0.2; // band alpha
+  const bands = ['rgba(232,90,208,A)', 'rgba(122,208,232,A)', 'rgba(169,227,75,A)', 'rgba(232,193,74,A)'];
+  const colors: string[] = [];
+  for (let i = 0; i < 8; i++) colors.push(bands[i % 4]!.replace('A', String(a)));
+  return h(
+    Group,
+    { key: 'fin-holo' },
+    h(
+      Rect,
+      { key: 'holo-bands', x: 0, y: 0, width: W, height: H, blendMode: 'screen' },
+      h(LinearGradient, { start: { x: 0, y: H * 0.2 }, end: { x: W, y: H * 0.8 }, colors }),
+    ),
+    h(
+      Rect,
+      { key: 'holo-shimmer', x: 0, y: 0, width: W, height: H, blendMode: 'screen' },
+      h(LinearGradient, {
+        start: { x: W, y: 0 },
+        end: { x: 0, y: H },
+        colors: ['rgba(255,255,255,0)', 'rgba(255,255,255,0.14)', 'rgba(255,255,255,0)'],
+        positions: [0.35, 0.5, 0.65],
+      }),
+    ),
+  );
+}
+
+/**
+ * Metallic v2 — brushed gold that reads as metal (owner iteration 2026-07-09): a warm tone wash,
+ * DIAGONAL brush striations (alternating light/dark hairlines), and one strong diagonal specular.
+ * Static wash; the live SheenSweep travels the specular.
+ */
+function metalOverlay(W: number, H: number, ctx: SkiaCtx): any {
+  const h = createElement;
+  const { Group, Rect, Path, Skia, LinearGradient } = ctx;
+  const nodes: any[] = [
+    // the warm tone wash
+    h(Rect, { key: 'metal-tone', x: 0, y: 0, width: W, height: H, blendMode: 'overlay' }, h(LinearGradient, { start: { x: 0, y: 0 }, end: { x: W, y: H * 0.4 }, colors: ['rgba(150,110,30,0.3)', 'rgba(244,222,150,0.34)', 'rgba(130,95,25,0.3)'] })),
+  ];
+  // diagonal brush striations — one Path of hairlines, slanted ~10°
+  const slant = H * 0.18;
+  const gap = Math.max(3, Math.round(W / 55));
+  const light = Skia.Path.Make();
+  const dark = Skia.Path.Make();
+  for (let x = -slant, i = 0; x < W; x += gap, i++) {
+    const p = i % 2 === 0 ? light : dark;
+    p.moveTo(x + slant, 0);
+    p.lineTo(x, H);
+  }
+  nodes.push(h(Path, { key: 'metal-brush-l', path: light, style: 'stroke', strokeWidth: 1, color: 'rgba(255,242,200,0.10)' }));
+  nodes.push(h(Path, { key: 'metal-brush-d', path: dark, style: 'stroke', strokeWidth: 1, color: 'rgba(60,42,9,0.10)' }));
+  // the specular catch
+  nodes.push(
+    h(
+      Rect,
+      { key: 'metal-spec', x: 0, y: 0, width: W, height: H, blendMode: 'screen' },
+      h(LinearGradient, {
+        start: { x: 0, y: H * 0.1 },
+        end: { x: W, y: H * 0.9 },
+        colors: ['rgba(255,246,210,0)', 'rgba(255,246,210,0.3)', 'rgba(255,246,210,0)'],
+        positions: [0.32, 0.5, 0.68],
+      }),
+    ),
+  );
+  return h(Group, { key: 'fin-metal' }, ...nodes);
+}
+
 function finishOverlay(kind: string, W: number, H: number, ctx: SkiaCtx): any {
   const h = createElement;
   const { Rect } = ctx;
@@ -296,10 +482,19 @@ function finishOverlay(kind: string, W: number, H: number, ctx: SkiaCtx): any {
     return h(Rect, { key: 'fin-matte', x: 0, y: 0, width: W, height: H, color: 'rgba(16,14,26,0.10)' });
   }
   if (kind === 'subtle-gloss') return sheenOverlay(W, H, 0.16, ctx, 'fin-gloss');
+  if (kind === 'linen') return linenOverlay(W, H, ctx);
+  if (kind === 'holographic') return holoOverlay(W, H, ctx);
+  if (kind === 'metallic') return metalOverlay(W, H, ctx);
   return null;
 }
 
-/** The 0063 free frame kinds — drawn over the elements, inside the stepped clip. */
+/**
+ * The frame kinds — drawn over the elements, inside the stepped clip. FILLED-BAND model (owner
+ * iteration 2026-07-09): `frame.width` is the band's VISIBLE thickness; band kinds stroke the
+ * silhouette at 2× so the clip takes the outer half and a solid border of exactly that thickness
+ * remains. Double-line/chrome keep their two-rule structure (the thickness reference); brackets
+ * keep corner arms. `pixel-border` is retired from the roster but still draws (F21 legacy).
+ */
 function frameNodes(
   frame: { kind?: string; color: string; width: number },
   W: number,
@@ -310,11 +505,14 @@ function frameNodes(
   const h = createElement;
   const { Path, Skia } = ctx;
   const kind = frame.kind ?? 'thin-line';
-  const sw = Math.max(1, frame.width * W);
+  const sw = Math.max(1, frame.width * W); // the visible band thickness (band kinds)
   const stepped = (inset: number, unit: number) =>
     Skia.Path.MakeFromSVGString(steppedRectPath(W - inset * 2, H - inset * 2, unit));
   const stroke = (key: string, path: any, width: number, transform?: any[]) =>
     h(Path, { key, path, style: 'stroke', strokeWidth: width, color: frame.color, ...(transform ? { transform } : {}) });
+  /** The solid border band: stroke the edge at 2× — the clip eats the outer half. */
+  const band = (key: string, children?: any, color?: string) =>
+    h(Path, { key, path: stepped(0, u), style: 'stroke', strokeWidth: sw * 2, ...(children ? {} : { color: color ?? frame.color }) }, children);
 
   if (kind === 'double-line') {
     const inset = sw * 2.5;
@@ -324,13 +522,13 @@ function frameNodes(
     ];
   }
   if (kind === 'pixel-border') {
-    // The chunky retro border — a doubled stair unit + a thicker stroke.
+    // RETIRED (ledger 2026-07-09) — legacy documents still draw the chunky retro border (F21).
     return [stroke('frame', stepped(0, u * 2), sw * 1.8)];
   }
   if (kind === 'bracket-corners') {
     // Four corner brackets, no full border. Arm length ~18% of the width.
     const a = W * 0.18;
-    const m = sw * 1.5; // margin off the edge
+    const m = sw; // margin off the edge
     const p = Skia.Path.Make();
     p.moveTo(m, m + a); p.lineTo(m, m); p.lineTo(m + a, m);
     p.moveTo(W - m - a, m); p.lineTo(W - m, m); p.lineTo(W - m, m + a);
@@ -339,18 +537,150 @@ function frameNodes(
     return [stroke('frame', p, sw)];
   }
   if (kind === 'ticket-notch') {
-    // The stepped stroke + two side punch-notches (ticket grammar); punched in the base tone.
+    // The solid band + two side punch-notches (ticket grammar).
     const notchR = W * 0.045;
     const punch = (key: string, x: number) =>
-      h(ctx.Oval, { key, x: x - notchR, y: H / 2 - notchR, width: notchR * 2, height: notchR * 2, color: frame.color, style: 'stroke', strokeWidth: Math.max(1, sw * 0.75) });
-    return [stroke('frame', stepped(0, u), sw), punch('notchL', 0), punch('notchR', W)];
+      h(ctx.Oval, { key, x: x - notchR, y: H / 2 - notchR, width: notchR * 2, height: notchR * 2, color: frame.color, style: 'stroke', strokeWidth: Math.max(1.5, sw * 0.35) });
+    return [band('frame'), punch('notchL', 0), punch('notchR', W)];
   }
-  // thin-line (the default)
-  return [stroke('frame', stepped(0, u), sw)];
+  // ── decision 0068 kinds (static keyframes; the motion ones ride render/animated.tsx live) ───────
+  if (kind === 'ornate') {
+    // ORNATE GOLD v2: a solid gold band with a vertical grade, a fine cream pinstripe riding its
+    // inner edge, and four corner diamond rosettes (light diamond + dark core). Static.
+    const nodes: any[] = [
+      band('frame', h(ctx.LinearGradient, { start: { x: 0, y: 0 }, end: { x: 0, y: H }, colors: ['#f8e08a', '#e8c14a', '#9a7418'] })),
+    ];
+    const pin = sw + Math.max(1.5, W * 0.008);
+    nodes.push(
+      h(Path, {
+        key: 'frame2',
+        path: stepped(pin, u),
+        style: 'stroke',
+        strokeWidth: Math.max(1, W * 0.006),
+        color: '#f8e9c0', // the cream pinstripe riding the band's inner edge
+        transform: [{ translateX: pin }, { translateY: pin }],
+      }),
+    );
+    const d = sw * 0.85; // rosette half-diagonal
+    const m = sw / 2; // band centreline
+    ([[m + d, m + d], [W - m - d, m + d], [W - m - d, H - m - d], [m + d, H - m - d]] as Array<[number, number]>).forEach(([dx, dy], i) => {
+      const p = Skia.Path.Make();
+      p.moveTo(dx, dy - d); p.lineTo(dx + d, dy); p.lineTo(dx, dy + d); p.lineTo(dx - d, dy); p.close();
+      nodes.push(h(Path, { key: `orn${i}`, path: p, color: '#f8e08a' }));
+      const c = d * 0.32;
+      const q = Skia.Path.Make();
+      q.moveTo(dx, dy - c); q.lineTo(dx + c, dy); q.lineTo(dx, dy + c); q.lineTo(dx - c, dy); q.close();
+      nodes.push(h(Path, { key: `ornc${i}`, path: q, color: '#5a4310' }));
+    });
+    return nodes;
+  }
+  if (kind === 'glow') {
+    // a solid band over a blurred ghost of itself (the bloom) — degrades to the band alone.
+    const nodes: any[] = [];
+    if (ctx.BlurMask) {
+      nodes.push(h(Path, { key: 'glow', path: stepped(0, u), style: 'stroke', strokeWidth: sw * 3.2, color: frame.color }, h(ctx.BlurMask, { blur: Math.max(4, W * 0.05), style: 'normal' })));
+    }
+    nodes.push(band('frame'));
+    return nodes;
+  }
+  if (kind === 'foil') {
+    // an iridescent holo band — a fixed diagonal spectrum (the live SheenSweep travels a highlight).
+    return [band('frame', h(ctx.LinearGradient, { start: { x: 0, y: 0 }, end: { x: W, y: H }, colors: ['#e85ad0', '#7ad0e8', '#e8c14a', '#e85ad0'] }))];
+  }
+  if (kind === 'marquee') {
+    // the DIM gilded track (the static keyframe); the live MarqueeChase runs a bright light around it.
+    return [band('frame', undefined, '#6b5c28')];
+  }
+  // thin-line + the default: the solid band
+  return [band('frame')];
+}
+
+/** The title's left inset as a fraction of W — pointed/notched shapes need more room. */
+function plateTextInset(shape: string): number {
+  if (shape === 'slab' || shape === 'brass' || shape === 'arch') return 0.08;
+  if (shape === 'dogtag') return 0.14;
+  return 0.12; // ribbon · bevel · capsule · tab
+}
+
+/** The plate background node(s) for a shape (the bottom `plateH` band). One node except brass (2). */
+function buildPlate(shape: string, W: number, H: number, plateH: number, plateColor: string, ctx: SkiaCtx): any[] {
+  const h = createElement;
+  const { Rect, Path, Skia, LinearGradient } = ctx;
+  const top = H - plateH;
+  if (shape === 'brass') {
+    // a gold-gradient face + a bright top-edge highlight (the bevel catch) — ignores plateColor.
+    return [
+      h(Rect, { key: 'plate', x: 0, y: top, width: W, height: plateH }, h(LinearGradient, { start: { x: 0, y: top }, end: { x: 0, y: H }, colors: ['#f6d879', '#c9971f', '#8a6410'] })),
+      h(Rect, { key: 'plateHi', x: 0, y: top, width: W, height: Math.max(1, plateH * 0.12), color: 'rgba(255,240,190,0.5)' }),
+    ];
+  }
+  if (shape === 'capsule') {
+    const p = Skia.Path.MakeFromSVGString(roundedRectPath(0, top, W, plateH, plateH / 2));
+    if (p) return [h(Path, { key: 'plate', path: p, color: plateColor })];
+    // else fall through to the slab rect — the name always renders (OQ-135), never a missing plate.
+  }
+  if (shape === 'arch') {
+    // rounded TOP corners, flat bottom (a cabinet marquee).
+    const r = Math.min(plateH * 0.7, W / 2);
+    const p = Skia.Path.MakeFromSVGString(`M0 ${top + r} A${r} ${r} 0 0 1 ${r} ${top} H${W - r} A${r} ${r} 0 0 1 ${W} ${top + r} V${H} H0 Z`);
+    if (p) return [h(Path, { key: 'plate', path: p, color: plateColor })];
+    // else fall through to the slab rect (OQ-135).
+  }
+  if (shape === 'ribbon' || shape === 'bevel' || shape === 'dogtag' || shape === 'tab') {
+    const p = Skia.Path.Make();
+    if (shape === 'ribbon') {
+      const nx = W * 0.06;
+      p.moveTo(nx, top); p.lineTo(W - nx, top); p.lineTo(W, top + plateH / 2); p.lineTo(W - nx, H); p.lineTo(nx, H); p.lineTo(0, top + plateH / 2);
+    } else if (shape === 'dogtag') {
+      const ch = plateH * 0.5;
+      p.moveTo(ch, top); p.lineTo(W - ch, top); p.lineTo(W, top + plateH / 2); p.lineTo(W - ch, H); p.lineTo(ch, H); p.lineTo(0, top + plateH / 2);
+    } else if (shape === 'tab') {
+      const tabH = plateH * 0.32; const t0 = W * 0.06; const t1 = W * 0.42;
+      p.moveTo(0, top); p.lineTo(t0, top); p.lineTo(t0, top - tabH); p.lineTo(t1, top - tabH); p.lineTo(t1, top); p.lineTo(W, top); p.lineTo(W, H); p.lineTo(0, H);
+    } else {
+      const ch = plateH * 0.35;
+      p.moveTo(ch, top); p.lineTo(W - ch, top); p.lineTo(W, top + ch); p.lineTo(W, H); p.lineTo(0, H); p.lineTo(0, top + ch);
+    }
+    p.close();
+    return [h(Path, { key: 'plate', path: p, color: plateColor })];
+  }
+  // slab (the default)
+  return [h(Rect, { key: 'plate', x: 0, y: top, width: W, height: plateH, color: plateColor })];
 }
 
 /** The plate reservation shared by the plated draw and the bed (positions must agree — WYSIWYG). */
 export const PLATE_H_RATIO = 0.11;
+
+/**
+ * The plate + title as ONE group, drawn TOPMOST (owner ruling 2026-07-09): the plate rides above
+ * frame, effect AND finish, lifted a couple px off the card's bottom edge. Shared by the plated
+ * draw and the PROOF overlay builder so the two stacks can't disagree.
+ */
+function plateGroup(c: CardComposition, W: number, H: number, plateH: number, ctx: SkiaCtx): any | null {
+  if (!c.nameplate) return null;
+  const h = createElement;
+  const { Group, Text, Skia, typeface } = ctx;
+  const raw = c.nameplate.shape ?? 'slab';
+  const shape = raw === 'none' ? 'slab' : raw; // OQ-135: the name always renders
+  const lift = Math.max(2, Math.round(H * 0.012)); // "a couple pixels from the bottom"
+  const children: any[] = buildPlate(shape, W, H, plateH, c.nameplate.plate, ctx);
+  const face = (c.nameplate.fontId && ctx.typefaces?.[c.nameplate.fontId]) || typeface;
+  if (face) {
+    const fontSize = scaledSize(c.nameplate.size, H, c.nameplate.fontId);
+    const font = Skia.Font(face, fontSize);
+    children.push(
+      h(Text, {
+        key: 'title',
+        x: Math.round(W * plateTextInset(shape)),
+        y: H - plateH / 2 + fontSize / 3,
+        text: c.nameplate.title,
+        font,
+        color: c.nameplate.ink,
+      }),
+    );
+  }
+  return h(Group, { key: 'plate', transform: [{ translateY: -lift }] }, ...children);
+}
 
 /** Build the skia element tree for a composition at the given pixel size (the size-ladder input). */
 export function buildCardElements(c: CardComposition, W: number, H: number, ctx: SkiaCtx, withEffect = false): any {
@@ -358,7 +688,7 @@ export function buildCardElements(c: CardComposition, W: number, H: number, ctx:
     throw new Error(`CARD-15 cap-${MAX_ELEMENTS} exceeded: ${c.elements.length}`);
   }
   const h = createElement;
-  const { Group, Fill, Rect, Path, Text, LinearGradient, Skia, typeface } = ctx;
+  const { Group, Fill, Rect, LinearGradient, Skia } = ctx;
   const u = W >= 96 ? 6 : 3; // matches GameCard: plated sizes step 6, mini/thumb 3
   const clip = Skia.Path.MakeFromSVGString(steppedRectPath(W, H, u));
   // F-06 drops the plate on mini/thumb. A plate is REQUIRED (OQ-135 ruling) — legacy 'none'
@@ -378,33 +708,6 @@ export function buildCardElements(c: CardComposition, W: number, H: number, ctx:
     const el = element(e, W, H - plateH, ctx, `el${i}`);
     if (el) children.push(el);
   });
-  if (plated && c.nameplate) {
-    const raw = c.nameplate.shape ?? 'slab';
-    const shape = raw === 'none' ? 'slab' : raw; // OQ-135: the name always renders
-    if (shape === 'slab') {
-      children.push(h(Rect, { key: 'plate', x: 0, y: H - plateH, width: W, height: plateH, color: c.nameplate.plate }));
-    } else {
-      // ribbon = side-notched banner (the board `.pl-ribbon` grammar); bevel = chamfered corners.
-      const p = Skia.Path.Make();
-      const top = H - plateH;
-      if (shape === 'ribbon') {
-        const nx = W * 0.06;
-        p.moveTo(nx, top); p.lineTo(W - nx, top); p.lineTo(W, top + plateH / 2); p.lineTo(W - nx, H);
-        p.lineTo(nx, H); p.lineTo(0, top + plateH / 2);
-      } else {
-        const ch = plateH * 0.35;
-        p.moveTo(ch, top); p.lineTo(W - ch, top); p.lineTo(W, top + ch); p.lineTo(W, H);
-        p.lineTo(0, H); p.lineTo(0, top + ch);
-      }
-      p.close();
-      children.push(h(Path, { key: 'plate', path: p, color: c.nameplate.plate }));
-    }
-    const face = (c.nameplate.fontId && ctx.typefaces?.[c.nameplate.fontId]) || typeface;
-    if (face) {
-      const font = Skia.Font(face, c.nameplate.size * H);
-      children.push(h(Text, { key: 'title', x: Math.round(W * (shape === 'slab' ? 0.08 : 0.12)), y: H - plateH / 2 + (c.nameplate.size * H) / 3, text: c.nameplate.title, font, color: c.nameplate.ink }));
-    }
-  }
   if (c.frame) {
     children.push(...frameNodes(c.frame, W, H, u, ctx));
   }
@@ -417,6 +720,11 @@ export function buildCardElements(c: CardComposition, W: number, H: number, ctx:
   if (withEffect && c.finish && c.finish.kind !== 'none') {
     const fin = finishOverlay(c.finish.kind, W, H, ctx);
     if (fin) children.push(fin);
+  }
+  // The plate rides TOPMOST — above frame, effect and finish (owner ruling 2026-07-09).
+  if (plated) {
+    const plate = plateGroup(c, W, H, plateH, ctx);
+    if (plate) children.push(plate);
   }
   return h(Group, { clip }, ...children);
 }
@@ -510,6 +818,30 @@ export function buildCellStrip(
   return h(Group, {}, ...children);
 }
 
+/**
+ * A horizontal row of FULL compositions in ONE canvas (the Styler attribute preview rails). Per-tile
+ * <CardFace> canvases blow the browser's ~16-WebGL-context ceiling once a rail has >~15 tiles (the
+ * decision-0068 FRAME rail has 16 + the hero → blank tiles) — so every card-preview rail draws through
+ * this single-context builder, the same rule the AssetShelf/LayerRack strips already follow (the
+ * canvas ADDENDUM "ONE-CANVAS STRIPS": one canvas per surface, never one per cell). Each cell reuses
+ * buildCardElements (self-clipped to the F-02 silhouette), so a tile can never drift from the hero.
+ */
+export function buildCompositionStrip(
+  comps: CardComposition[],
+  cellW: number,
+  cellH: number,
+  strideX: number,
+  ctx: SkiaCtx,
+  withEffect = true,
+): any {
+  const h = createElement;
+  const { Group } = ctx;
+  const children = comps.map((c, i) =>
+    h(Group, { key: `c${i}`, transform: [{ translateX: i * strideX }] }, buildCardElements(c, cellW, cellH, ctx, withEffect)),
+  );
+  return h(Group, {}, ...children);
+}
+
 /** A row of card-base swatches (solid / gradient) in ONE canvas (the AssetShelf BASE rows). */
 export function buildBaseStrip(
   bases: Array<CardComposition['base']>,
@@ -554,6 +886,13 @@ export function buildOverlayElements(c: CardComposition, W: number, H: number, c
   if (c.finish && c.finish.kind !== 'none') {
     const fin = finishOverlay(c.finish.kind, W, H, ctx);
     if (fin) children.push(fin);
+  }
+  // Plate-on-top parity (owner ruling 2026-07-09): the flattened PNG under this overlay carries the
+  // plate, but the effect/finish just painted over it — re-stamp the plate so PROOF (and the M5
+  // viewer) shows the same topmost plate as the live draw. Opaque, so the double-draw is invisible.
+  if (W >= 96 && c.nameplate) {
+    const plate = plateGroup(c, W, H, Math.round(H * PLATE_H_RATIO), ctx);
+    if (plate) children.push(plate);
   }
   return h(Group, { clip }, ...children);
 }

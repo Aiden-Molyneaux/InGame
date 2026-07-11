@@ -62,6 +62,7 @@ export function toCardView(row: CardDesignRow): CardDesignView {
     imageUrl: row.imageUrl,
     thumbUrl: row.thumbUrl,
     isPremium: row.isPremium,
+    derivedFromCardId: row.derivedFromCardId, // CARD-24a copy-on-write origin (decision 0067)
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -81,6 +82,20 @@ export const createDraft = mutation(
         { path: 'gameId', message: 'That game is not in the catalog.' },
       ]);
     }
+    // CARD-24a copy-on-write (decision 0067): a draft COPY of a committed card records its origin.
+    // Validate the origin is the actor's OWN design for the SAME game (else the copy could claim a
+    // stranger's card or cross games — a 422, same as any bad reference; no existence oracle since
+    // findOwnedDesign is actor-scoped, so a foreign id reads as "not found").
+    let derivedFromCardId: string | null = null;
+    if (input.derivedFromCardId) {
+      const origin = await cardRepo.findOwnedDesign(actorId, input.derivedFromCardId, ctx.tx);
+      if (!origin || origin.gameId !== input.gameId) {
+        throw new ValidationError('That source card is not available for this game.', 'invalid_origin', [
+          { path: 'derivedFromCardId', message: 'Unknown source card for this game.' },
+        ]);
+      }
+      derivedFromCardId = origin.id;
+    }
     const composition = input.composition as Composition;
     const row = await cardRepo.insertDesign(
       actorId,
@@ -90,6 +105,7 @@ export const createDraft = mutation(
         composition: composition as Record<string, unknown>,
         compositionHash: compositionHash(composition),
         isPremium: deriveIsPremium(composition),
+        derivedFromCardId,
       },
       ctx.tx,
     );

@@ -14,8 +14,13 @@
     "test": "jest --passWithNoTests=false"
   },
   "dependencies": {
+    "@expo-google-fonts/allerta-stencil": "^0.4.1",
+    "@expo-google-fonts/bitter": "^0.4.1",
     "@expo-google-fonts/chakra-petch": "^0.4.1",
+    "@expo-google-fonts/pacifico": "^0.4.1",
     "@expo-google-fonts/paytone-one": "^0.4.2",
+    "@expo-google-fonts/press-start-2p": "^0.4.1",
+    "@expo-google-fonts/space-mono": "^0.4.2",
     "@expo/metro-runtime": "~6.1.2",
     "@ingame/shared": "*",
     "@react-native-async-storage/async-storage": "2.2.0",

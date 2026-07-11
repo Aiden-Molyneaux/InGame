@@ -4,11 +4,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import type { CardDesignView, StylePresetStyle } from '@ingame/shared';
 import { CardFace, parseComposition } from '../../src/components/CardFace';
 import { CanvasSurface } from '../../src/components/canvas/CanvasSurface';
+import { useBreakout } from '../../src/components/BreakoutContext';
 import { SaveOption } from '../../src/components/styler/SaveOption';
 import { BaseRail, type RailEntry } from '../../src/components/styler/BaseRail';
 import { SectionChips, STYLER_SECTIONS, type StylerSection } from '../../src/components/styler/SectionChips';
 import { AttributeSection, type AttributeOption } from '../../src/components/styler/AttributeSection';
 import { IntensitySlider } from '../../src/components/styler/IntensitySlider';
+import { ScrollLockContext, useScrollLockHost } from '../../src/components/ScrollLock';
 import { KeepBeat } from '../../src/components/styler/KeepBeat';
 import { ScreenButton } from '../../src/components/ScreenButton';
 import { PulledSheet } from '../../src/components/PulledSheet';
@@ -76,7 +78,8 @@ function presetToComposition(style: StylePresetStyle, base: CardComposition): Ca
 function draftToPresetStyle(d: CardComposition): StylePresetStyle {
   const style: StylePresetStyle = {};
   if (d.frame?.kind) {
-    const f = FRAMES.find((x) => x.kind === d.frame!.kind);
+    // kind+color so a preset derived from THIN GOLD doesn't resolve to THIN LINE (decision 0068).
+    const f = FRAMES.find((x) => x.kind === d.frame!.kind && x.color === d.frame!.color) ?? FRAMES.find((x) => x.kind === d.frame!.kind);
     if (f) style.frameId = f.id;
   }
   if (d.effect && d.effect.kind !== 'none') {
@@ -98,6 +101,7 @@ function draftToPresetStyle(d: CardComposition): StylePresetStyle {
 export default function Styler() {
   const { gameId, cardId } = useLocalSearchParams<{ gameId: string; cardId?: string }>();
   const router = useRouter();
+  const { setActive: setBreakout } = useBreakout();
 
   const { data: shelf, isLoading: shelfLoading, isError: shelfError, refetch } = useGetCollectionQuery();
   const { data: presets } = useGetStylePresetsQuery();
@@ -122,6 +126,17 @@ export default function Styler() {
   // The Canvas is a POSTURE of this session, not a route — the draft, autosave timer, snapshot and
   // exit flags never unmount across the switch (§3.4 canvas-manifest ARCH; the D.23 lane).
   const [posture, setPosture] = useState<Posture>('styler');
+  // CR-20 — did this session ever enter the Canvas? If so, a save from the Styler discloses it also
+  // persists the Canvas art (it's ONE document, CARD-24a — any save flushes both postures' edits).
+  const [visitedCanvas, setVisitedCanvas] = useState(false);
+
+  // BREAKOUT (§2.5b / 0014 stage-3 · CR-01 zoom): the canvas posture asks the DeviceShell to zoom the
+  // screen to full-bleed. Boolean-only — the session stays entirely in this route.
+  useEffect(() => {
+    setBreakout(posture === 'canvas');
+    if (posture === 'canvas') setVisitedCanvas(true);
+    return () => setBreakout(false); // restore the shell if this route unmounts mid-breakout
+  }, [posture, setBreakout]);
   const [section, setSection] = useState<StylerSection>('frame');
   const [foreIndex, setForeIndex] = useState(0);
   const [surprise, setSurprise] = useState<CardComposition | null>(null);
@@ -141,10 +156,22 @@ export default function Styler() {
   // DRAFT ran the write twice and popped the router twice (murr round-2)
   const [busyExit, setBusyExit] = useState(false);
 
-  // The composition as it was when this session OPENED the card (resumed rows only). The autosave
-  // writes to the same row (CARD-24a), so "discard" on an existing card must PATCH this back —
-  // the gate-5 walk proved the old delete path destroyed the user's real card (owner D.23).
+  // The composition as it was when this session OPENED the card (resumed DRAFT rows only). Editing a
+  // draft autosaves in-place, so "discard" on a resumed draft PATCHes this back (owner D.23). A
+  // resumed PRIVATE card is copy-on-write (below) — the original is never mutated, so this snapshot
+  // is unused on that path; discard simply deletes the throwaway copy.
   const resumeSnapshotRef = useRef<CardComposition | null>(null);
+
+  // COPY-ON-WRITE (CARD-24a · decision 0067 · CR-21). Editing a COMMITTED (private) card must never
+  // PATCH it in place: the first edit spins a draft COPY (`derivedFromCardId → origin`) and the copy
+  // becomes the autosave target. `originRef` is the commit-back target so KEEP / SAVE-PRIVATE land on
+  // the original (stable id + equip pointer); `copyingRef` guards the one-shot copy POST. A crash
+  // leaves the copy as a resumable DRAFT and the original pristine.
+  const originRef = useRef<{ id: string; name: string } | null>(null);
+  const copyingRef = useRef(false);
+  // the in-flight copy POST — exit/save paths await it before committing so they never race the copy
+  // creation (murr M1). Tracked separately from inflightRef (which is the autosave PATCH).
+  const copyInflightRef = useRef<Promise<unknown> | null>(null);
 
   // The session undo/redo stacks (CARD-09) — declared up here so the resume effect can clear them
   // for a fresh document; the pipeline functions live below with patchDraft.
@@ -165,7 +192,13 @@ export default function Styler() {
       setResumeFailed(true);
       return;
     }
-    resumeSnapshotRef.current = comp; // DISCARD on a resumed card REVERTS to this — never deletes
+    resumeSnapshotRef.current = comp; // DISCARD on a resumed DRAFT REVERTS to this (private = copy-on-write)
+    // COPY-ON-WRITE resume (0067): a resumed DRAFT that carries `derivedFromCardId` is a crash-recovered
+    // copy — edit it in place (it's already a draft), but KEEP merges it home onto the origin + discards
+    // the copy. If the origin was since deleted the FK is null (ON DELETE SET NULL) → a plain draft.
+    // A resumed PRIVATE card has no origin ref yet; ensureEditableCopy sets it on the first edit.
+    originRef.current = row.derivedFromCardId ? { id: row.derivedFromCardId, name: row.name } : null;
+    copyingRef.current = false;
     pastRef.current = [];
     futureRef.current = [];
     setHistVersion((v) => v + 1);
@@ -181,6 +214,8 @@ export default function Styler() {
   draftRef.current = draft;
   const cardRef = useRef(cardRow);
   cardRef.current = cardRow;
+  // a held slider (the EFFECT intensity) must not scroll the edit body (round-3 scroll-lock rule)
+  const { scrollEnabled: editScrollEnabled, api: editScrollLock } = useScrollLockHost();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // The retry re-arm lives in flushSave's catch — without an alive guard, a PATCH that fails
   // in-flight across an unmount (or after DISCARD deletes the row) re-arms forever: a 404 loop
@@ -195,6 +230,10 @@ export default function Styler() {
     const d = draftRef.current;
     const row = cardRef.current;
     if (!d || !row || !aliveRef.current) return;
+    // COPY-ON-WRITE guard (CARD-24a/0067): autosave NEVER PATCHes a committed row. A private card is
+    // display-only until the first edit spins a draft copy (ensureEditableCopy); until then this
+    // no-ops so no autosave can overwrite the original (belt-and-braces alongside patchDraft's route).
+    if (row.status !== 'draft') return;
     setSaveState('saving');
     const p = updateCard({ cardId: row.id, composition: d }).unwrap();
     inflightRef.current = p;
@@ -233,11 +272,13 @@ export default function Styler() {
     };
   }, []);
 
-  // the "SAVED Ns AGO" clock ticks on its own — it only advanced on incidental re-renders (D.20)
+  // the "SAVED Ns AGO" clock re-renders on its own — CR-04: a COARSE ~15s cadence (not 1s), both
+  // postures. Display-only — the debounced autosave PATCH is untouched. (The owner found the 1s
+  // ticking too busy at the gate-5 walk.)
   const [, setTick] = useState(0);
   useEffect(() => {
     if (mode !== 'edit' || saveState !== 'saved' || savedAt == null) return;
-    const iv = setInterval(() => setTick((t) => (t + 1) % 3600), 1000);
+    const iv = setInterval(() => setTick((t) => (t + 1) % 3600), 15000);
     return () => clearInterval(iv);
   }, [mode, saveState, savedAt]);
 
@@ -253,6 +294,42 @@ export default function Styler() {
     setHistVersion((v) => v + 1);
   }, []);
 
+  // COPY-ON-WRITE (CARD-24a/0067): on the FIRST edit of a committed (private) card, spin a draft copy
+  // (`derivedFromCardId → origin`) and retarget the session to it. The copy is created carrying the
+  // current draft; later edits autosave the copy. Guarded to run once; if the POST fails the edits
+  // stay in memory (the origin is never autosaved) and a later edit retries.
+  const ensureEditableCopy = useCallback(async () => {
+    const row = cardRef.current;
+    if (!row || row.status === 'draft' || copyingRef.current || !gameId) return;
+    copyingRef.current = true;
+    originRef.current = { id: row.id, name: row.name }; // the commit-back target (set before the await)
+    const p = createCard({
+      gameId,
+      composition: draftRef.current as CardComposition,
+      name: row.name,
+      derivedFromCardId: row.id,
+    }).unwrap();
+    // track the in-flight copy POST so an exit/save tapped mid-flight settles it FIRST (murr M1 — else
+    // KEEP raced the copy creation, leaked an orphan, and re-pointed the kept session at it).
+    copyInflightRef.current = p;
+    try {
+      const copy = await p;
+      const next = { id: copy.id, name: copy.name, status: copy.status };
+      cardRef.current = next; // hot ref: any in-flight scheduleSave / awaiting exit now sees the copy
+      setCardRow(next);
+      setCreatedHere(true); // a session-created copy → ✕ evaporates it, the original untouched
+      setExplicitSave(false);
+      setSaveState('saved');
+      setSavedAt(Date.now());
+      scheduleSave(); // flush any edits made while the copy POST was in flight
+    } catch (e) {
+      setInlineError(errMsg(e, 'Could not open this card for editing — retrying on the next change.'));
+    } finally {
+      copyingRef.current = false;
+      if (copyInflightRef.current === p) copyInflightRef.current = null;
+    }
+  }, [gameId, createCard, scheduleSave]);
+
   const patchDraft = useCallback(
     (fn: (d: CardComposition) => CardComposition, opts?: { history?: boolean }) => {
       setInlineError(null);
@@ -264,9 +341,12 @@ export default function Styler() {
       draftRef.current = next; // keep the ref hot for same-tick follow-ups (gesture streams)
       setDraft(next);
       setUserEdits((n) => n + 1);
-      scheduleSave();
+      // copy-on-write: a committed row spins a draft copy (which then autosaves); a draft row
+      // autosaves in place (CARD-24a/0067).
+      if (cardRef.current && cardRef.current.status !== 'draft') void ensureEditableCopy();
+      else scheduleSave();
     },
-    [scheduleSave, pushHistory],
+    [scheduleSave, pushHistory, ensureEditableCopy],
   );
 
   /** One history entry for a coming continuous run (a drag / a nudge burst start). */
@@ -361,11 +441,20 @@ export default function Styler() {
         clearTimeout(timerRef.current);
         timerRef.current = null;
       }
+      // settle any in-flight copy-on-write POST first so cardRef reflects the copy (murr M1)
+      if (copyInflightRef.current) await copyInflightRef.current.catch(() => {});
+      // COPY-ON-WRITE (0067): KEEP commits onto the ORIGIN — editing a copy folds the draft back onto
+      // the original (stable id + equip pointer), and the throwaway copy is deleted after. Else (a
+      // from-scratch / resumed draft) commitTarget is this row itself. Read the HOT ref, not the stale
+      // `cardRow` closure — the copy's row lands via ensureEditableCopy's async continuation (murr M1).
+      const curRow = cardRef.current ?? cardRow;
+      const commitTarget = originRef.current?.id ?? curRow.id;
+      const copyToDiscard = originRef.current && curRow.id !== commitTarget ? curRow.id : null;
       const d = draftRef.current;
       if (d) {
-        // flush the draft first — and keep the save-state line honest either way (a KEEP failure
-        // used to leave it stuck on "SAVING…").
-        await updateCard({ cardId: cardRow.id, composition: d })
+        // flush the draft onto the commit target — keep the save-state line honest either way (a KEEP
+        // failure used to leave it stuck on "SAVING…").
+        await updateCard({ cardId: commitTarget, composition: d })
           .unwrap()
           .then(() => {
             setSaveState('saved');
@@ -379,13 +468,14 @@ export default function Styler() {
             throw e;
           });
       }
-      await savePrivateCard(cardRow.id).unwrap();
-      // the row IS private now — record it before the equip step, or a failed equip leaves local
-      // status 'draft' and ✕'s quiet-evaporate branch deletes a KEPT card (murr, gate-5 round 2).
-      // The KEPT state also becomes the session's new baseline RIGHT HERE — a failed equip must
-      // not leave ✕ pointing at a delete/stale-revert of a card that is already private (murr):
-      // from now on, discard means revert-to-kept, never delete (the D.23 rule, post-KEEP).
-      setCardRow((r) => (r ? { ...r, status: 'private' } : r));
+      await savePrivateCard(commitTarget).unwrap();
+      // the committed card IS private now + becomes the session baseline. Record it before the equip
+      // step, or a failed equip leaves local status 'draft' and ✕'s quiet-evaporate branch deletes a
+      // KEPT card (murr, gate-5 round 2). Post-KEEP, discard means revert-to-kept, never delete (D.23).
+      const keptRow = { id: commitTarget, name: curRow.name, status: 'private' };
+      cardRef.current = keptRow;
+      setCardRow(keptRow);
+      originRef.current = null; // committed home — a later re-edit spins a fresh copy of this card
       resumeSnapshotRef.current = draftRef.current ?? resumeSnapshotRef.current;
       setCreatedHere(false);
       setExplicitSave(true);
@@ -395,7 +485,10 @@ export default function Styler() {
       pastRef.current = [];
       futureRef.current = [];
       setHistVersion((v) => v + 1);
-      await updateEntry({ entryId: entry.entryId, activeCardDesignId: cardRow.id }).unwrap();
+      await updateEntry({ entryId: entry.entryId, activeCardDesignId: commitTarget }).unwrap();
+      // discard the throwaway copy AFTER the origin is committed + equipped — never before, so a
+      // failure above leaves the copy intact and no work is lost.
+      if (copyToDiscard) void deleteCard(copyToDiscard);
       setMode('kept');
     } catch (e) {
       setInlineError(errMsg(e, 'Could not equip it. Your draft is safe — try again.'));
@@ -414,9 +507,16 @@ export default function Styler() {
         clearTimeout(timerRef.current);
         timerRef.current = null;
       }
+      // settle any in-flight copy-on-write POST first, then read the HOT ref (murr M1)
+      if (copyInflightRef.current) await copyInflightRef.current.catch(() => {});
+      // COPY-ON-WRITE (0067): SAVE PRIVATE commits onto the ORIGIN (like KEEP, minus the equip) and
+      // discards the throwaway copy after; else this row itself.
+      const curRow = cardRef.current ?? cardRow;
+      const commitTarget = originRef.current?.id ?? curRow.id;
+      const copyToDiscard = originRef.current && curRow.id !== commitTarget ? curRow.id : null;
       const d = draftRef.current;
       if (d) {
-        await updateCard({ cardId: cardRow.id, composition: d })
+        await updateCard({ cardId: commitTarget, composition: d })
           .unwrap()
           .then(() => {
             setSaveState('saved');
@@ -430,11 +530,15 @@ export default function Styler() {
             throw e;
           });
       }
-      await savePrivateCard(cardRow.id).unwrap();
-      setCardRow((r) => (r ? { ...r, status: 'private' } : r));
+      await savePrivateCard(commitTarget).unwrap();
+      const savedRow = { id: commitTarget, name: curRow.name, status: 'private' };
+      cardRef.current = savedRow;
+      setCardRow(savedRow);
+      originRef.current = null;
       resumeSnapshotRef.current = draftRef.current ?? resumeSnapshotRef.current; // saved = the new baseline
       setCreatedHere(false);
       setExplicitSave(true);
+      if (copyToDiscard) void deleteCard(copyToDiscard); // the copy's edits now live on the origin
       router.back(); // the quiet exit — it waits in the game's card switcher (no beat)
     } catch (e) {
       setInlineError(errMsg(e, 'Could not save. Your draft is safe — try again.'));
@@ -479,6 +583,9 @@ export default function Styler() {
         clearTimeout(timerRef.current);
         timerRef.current = null;
       }
+      // settle the copy-on-write POST so `row` is the COPY, never the committed origin (murr M1 —
+      // else KEEP-AS-DRAFT could PATCH the private original mid-copy).
+      if (copyInflightRef.current) await copyInflightRef.current.catch(() => {});
       const d = draftRef.current;
       const row = cardRef.current;
       // flush whenever the row isn't clean — a prior exit write may have cleared the timer with
@@ -501,7 +608,6 @@ export default function Styler() {
       // the sheet promises "the card you opened stays as it is" — settle the OLD row before
       // adopting the copy (murr round-2 blocker: the autosave had already written the session
       // edits into a RESUMED original, and the pending timer could still fire against it):
-      const oldRow = cardRef.current;
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
@@ -509,20 +615,31 @@ export default function Styler() {
       // an in-flight autosave against the OLD row must land before we settle it (murr — the
       // settle/revert otherwise races the PATCH and the session edits can survive the revert)
       if (inflightRef.current) await inflightRef.current.catch(() => {});
+      // and the copy-on-write POST must settle so `oldRow` (the hot ref) is the copy, not the origin,
+      // and `editingCopy` is decided from refs not stale closures (murr M1)
+      if (copyInflightRef.current) await copyInflightRef.current.catch(() => {});
+      const settledOld = cardRef.current;
+      const editingCopy = !!(originRef.current && settledOld && settledOld.id !== originRef.current.id);
       const oldSnapshot = resumeSnapshotRef.current;
       const row = await createCard({ gameId, composition: draft, name: `${title} II` }).unwrap();
-      if (oldRow) {
-        if (!createdHere && oldSnapshot) {
+      if (settledOld) {
+        if (editingCopy) {
+          // a copy-on-write copy folds into the fork — the card you opened (the origin) stays as-is
+          void deleteCard(settledOld.id);
+        } else if (!createdHere && oldSnapshot) {
           // the resumed original goes back to how it was when opened
-          void updateCard({ cardId: oldRow.id, composition: oldSnapshot });
+          void updateCard({ cardId: settledOld.id, composition: oldSnapshot });
         } else if (createdHere && !explicitSave) {
           // an implicit session draft folds into the copy — don't leave near-identical twins
-          void deleteCard(oldRow.id);
+          void deleteCard(settledOld.id);
         }
       }
       setCardRow({ id: row.id, name: row.name, status: row.status });
-      // the COPY's creation state is the new baseline — ✕-discard on the copy must REVERT to what
-      // the user saved, never delete it (murr blocker: the old snapshot pointed at the OLD row)
+      // SAVE AS NEW forks into an INDEPENDENT card (copy-on-write, 0067): clear the origin ref so a
+      // later KEEP commits onto THIS fork, not back onto the card the user opened (which stays as-is).
+      originRef.current = null;
+      // the fork's creation state is the new baseline — ✕-discard on it must REVERT to what the user
+      // saved, never delete it (murr blocker: the old snapshot pointed at the OLD row)
       resumeSnapshotRef.current = draft;
       pastRef.current = [];
       futureRef.current = [];
@@ -571,14 +688,20 @@ export default function Styler() {
       // and an ALREADY-DISPATCHED PATCH must land before the revert, or server ordering can put
       // the discarded edits back after it (murr)
       if (inflightRef.current) await inflightRef.current.catch(() => {});
-      if (discardDeletes) {
-        // an implicit session draft IS the discard — deleting it discards it
-        await deleteCard(cardRow.id).unwrap();
+      // settle the copy-on-write POST so the hot ref + the copy decision are correct (murr M1)
+      if (copyInflightRef.current) await copyInflightRef.current.catch(() => {});
+      const curRow = cardRef.current ?? cardRow;
+      // a copy-on-write copy (origin set + a distinct row) IS a session-created draft — deleting it
+      // discards it and leaves the committed origin untouched (it was never mutated). No revert.
+      const editingCopy = !!(originRef.current && curRow.id !== originRef.current.id);
+      if (discardDeletes || editingCopy) {
+        // an implicit session draft (or a copy-on-write copy) IS the discard — deleting it discards it
+        await deleteCard(curRow.id).unwrap();
       } else {
-        // every other row pre-exists this session's claim on it (resumed, kept, or explicitly
+        // every other row pre-exists this session's claim on it (resumed draft, kept, or explicitly
         // saved-as-new); discard = revert to the baseline snapshot. NEVER delete (D.23).
         const snap = resumeSnapshotRef.current;
-        if (snap) await updateCard({ cardId: cardRow.id, composition: snap }).unwrap();
+        if (snap) await updateCard({ cardId: curRow.id, composition: snap }).unwrap();
       }
       setConfirmDiscard(false);
       router.back();
@@ -601,7 +724,10 @@ export default function Styler() {
     });
     switch (section) {
       case 'frame': {
-        const selected = FRAMES.find((f) => f.kind === (draft.frame?.kind ?? null))?.id ?? 'clean';
+        // Match kind AND color — several frames share a kind (THIN LINE/GOLD/LIME/BUBBLEGUM are all
+        // `thin-line`), so kind alone would highlight the wrong tile (decision 0068).
+        const selected =
+          FRAMES.find((f) => (f.kind ?? null) === (draft.frame?.kind ?? null) && f.color === (draft.frame?.color ?? ''))?.id ?? 'clean';
         return opts(
           FRAMES.map((f) => ({
             id: f.id,
@@ -812,14 +938,16 @@ export default function Styler() {
         : `${title.toUpperCase()} — EDITING · SAVED${savedAt ? ` ${Math.max(0, Math.round((Date.now() - savedAt) / 1000))}s AGO` : ''}`;
 
   // ── the CANVAS posture (§3.4 — the same session wearing the workshop; board P1–P7) ────────────
-  if (posture === 'canvas') {
-    const status = (cardRow?.status ?? 'draft').toUpperCase();
+  // The DeviceShell hides its chrome while this is active (BreakoutContext), so CanvasSurface —
+  // rendered in the normal screen slot, where skia paints correctly — fills the whole device.
+  if (posture === 'canvas' && draft) {
+    const canvasStatus = (cardRow?.status ?? 'draft').toUpperCase();
     const canvasSub =
       saveState === 'saving'
-        ? `${title.toUpperCase()} · ${status} · SAVING…`
+        ? `${title.toUpperCase()} · ${canvasStatus} · SAVING…`
         : saveState === 'error'
-          ? `${title.toUpperCase()} · ${status} · NOT SAVED — RETRYING`
-          : `${title.toUpperCase()} · ${status} · AUTOSAVED${savedAt ? ` ${Math.max(0, Math.round((Date.now() - savedAt) / 1000))}S AGO` : ''}`;
+          ? `${title.toUpperCase()} · ${canvasStatus} · NOT SAVED — RETRYING`
+          : `${title.toUpperCase()} · ${canvasStatus} · AUTOSAVED${savedAt ? ` ${Math.max(0, Math.round((Date.now() - savedAt) / 1000))}S AGO` : ''}`;
     return (
       <CanvasSurface
         title={title}
@@ -842,7 +970,7 @@ export default function Styler() {
   return (
     <Frame onBack={requestExit} closeGlyph="✕" saveLine={saveLine}>
       <View style={styles.heroWrap}>
-        <CardFace title={title} composition={draft} width={189} height={264} />
+        <CardFace title={title} composition={draft} width={189} height={264} animate />
       </View>
 
       <SectionChips value={section} onChange={setSection} />
@@ -854,7 +982,7 @@ export default function Styler() {
         ))}
       </View>
 
-      <ScrollView style={styles.flex} contentContainerStyle={styles.sectionBody} keyboardShouldPersistTaps="handled">
+      <ScrollView style={styles.flex} contentContainerStyle={styles.sectionBody} keyboardShouldPersistTaps="handled" scrollEnabled={editScrollEnabled}>
         {sectionUi ? (
           <AttributeSection
             heading={sectionUi.heading}
@@ -865,10 +993,12 @@ export default function Styler() {
             previewKind={section === 'plate' ? 'plate' : section === 'title' ? 'font' : 'card'}
           >
             {section === 'effect' && draft.effect && draft.effect.kind !== 'none' ? (
-              <IntensitySlider
-                value={draft.effect.intensity}
-                onChange={(v) => patchDraft((d) => (d.effect ? { ...d, effect: { ...d.effect, intensity: v } } : d))}
-              />
+              <ScrollLockContext.Provider value={editScrollLock}>
+                <IntensitySlider
+                  value={draft.effect.intensity}
+                  onChange={(v) => patchDraft((d) => (d.effect ? { ...d, effect: { ...d.effect, intensity: v } } : d))}
+                />
+              </ScrollLockContext.Provider>
             ) : null}
             {section === 'effect' ? (
               <Text style={styles.railHint}>Picking another effect swaps it — the slot holds one.</Text>
@@ -910,6 +1040,10 @@ export default function Styler() {
 
       {/* door 2 — every keep-outcome in one sheet, consequences named (OQ-108 labels) */}
       <PulledSheet visible={saveOpen} onClose={() => setSaveOpen(false)} title="Keep this design?">
+        {/* CR-20 — one document: disclose that a save also persists the Canvas art */}
+        {visitedCanvas ? (
+          <Text style={styles.crossPostureNote}>Saving keeps the whole card — your Canvas art too.</Text>
+        ) : null}
         <SaveOption
           label="Keep — equip it ◆"
           sub="Your shelf wears it now."
@@ -954,6 +1088,7 @@ export default function Styler() {
         onConfirm={() => void discardDraft()}
         onClose={() => setConfirmDiscard(false)}
       />
+
     </Frame>
   );
 }
@@ -1011,6 +1146,14 @@ function Frame({
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  crossPostureNote: {
+    fontFamily: theme.font.screenSemi,
+    fontSize: theme.type.micro,
+    color: theme.scr.dim,
+    letterSpacing: 0.5,
+    paddingHorizontal: theme.space.xl,
+    paddingBottom: theme.space.sm,
+  },
   screen: { flex: 1, backgroundColor: theme.scr.bg, paddingHorizontal: theme.space.lg, gap: theme.space.md },
   head: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md, paddingTop: theme.space.lg },
   backKey: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.dim, paddingHorizontal: theme.space.sm },

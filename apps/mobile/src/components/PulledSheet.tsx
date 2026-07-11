@@ -3,6 +3,7 @@ import { Animated, BackHandler, Keyboard, Platform, Pressable, ScrollView, Style
 import type { ReactNode } from 'react';
 import { theme } from '../theme';
 import { KeyboardLift } from './KeyboardLift';
+import { ScrollLockContext, useScrollLockHost } from './ScrollLock';
 
 // PulledSheet (component-map §5.7) — the GRAB-HANDLE bottom drawer (sort/filter, log-hours, store
 // detail). One primitive; scrim tap dismisses.
@@ -25,6 +26,7 @@ export function PulledSheet({
   onClose,
   title,
   dimScrim = true,
+  maxFraction = 0.75,
   children,
 }: {
   visible: boolean;
@@ -34,11 +36,17 @@ export function PulledSheet({
   /** false = a transparent (still tap-to-close) scrim — the Canvas EDIT sheet keeps the bed lit
    *  ("no scrim-dim on the work", board P4 / the Styler's no-scrim lesson). Variant, not a fork. */
   dimScrim?: boolean;
+  /** cap the sheet to a fraction of the overlay height (default 0.75). The Canvas EDIT/TRANSFORM
+   *  drawers pass a smaller value so they "open up to the bottom of the card" and leave the gamecard
+   *  visible above them (owner gate-5 note) — a stopgap before the drawer overhaul. */
+  maxFraction?: number;
   children: ReactNode;
 }) {
   const slide = useRef(new Animated.Value(0)).current; // 0 = off-stage, 1 = docked
   const [wellTopY, setWellTopY] = useState<number | undefined>(undefined);
   const overlayRef = useRef<View>(null);
+  // a held slider/picker inside the sheet must not scroll the sheet body (round-3 scroll-lock rule)
+  const { scrollEnabled, api: scrollLockApi } = useScrollLockHost();
 
   useEffect(() => {
     if (visible) {
@@ -70,9 +78,9 @@ export function PulledSheet({
       <Pressable style={StyleSheet.absoluteFill} accessibilityLabel="Close" onPress={onClose}>
         <Animated.View style={[styles.scrim, !dimScrim && styles.scrimClear, { opacity: slide }]} />
       </Pressable>
-      {/* the 75% cap lives on the LIFT WRAPPER (a definite % of the overlay) — on the sheet itself
+      {/* the height cap lives on the LIFT WRAPPER (a definite % of the overlay) — on the sheet itself
           it resolves against the auto-sized wrapper and strands a dead band under the sheet */}
-      <KeyboardLift style={styles.liftSlot} minTopY={wellTopY}>
+      <KeyboardLift style={{ ...styles.liftSlot, maxHeight: `${Math.round(maxFraction * 100)}%` as `${number}%` }} minTopY={wellTopY}>
         <Animated.View
           role="dialog"
           accessibilityViewIsModal
@@ -86,8 +94,8 @@ export function PulledSheet({
         >
           <View style={styles.handle} />
           {title ? <Text style={styles.title}>{title.toUpperCase()}</Text> : null}
-          <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-            {children}
+          <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" scrollEnabled={scrollEnabled}>
+            <ScrollLockContext.Provider value={scrollLockApi}>{children}</ScrollLockContext.Provider>
           </ScrollView>
         </Animated.View>
       </KeyboardLift>

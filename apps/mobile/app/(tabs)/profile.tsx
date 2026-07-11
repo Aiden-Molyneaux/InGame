@@ -105,6 +105,7 @@ export default function Profile() {
                   size="grid"
                   width={120}
                   height={168}
+                  animate // the pinned-favourite hero (0068 opt-in)
                 />
               </Pressable>
               <View style={styles.heroMeta}>
@@ -151,6 +152,7 @@ export default function Profile() {
                   composition={parseComposition(me.nowPlaying.card.composition)}
                   size="cell"
                   nowPlaying
+                  animate // the one now-playing card (0068 opt-in)
                 />
               </Pressable>
               <View style={styles.nowMeta}>

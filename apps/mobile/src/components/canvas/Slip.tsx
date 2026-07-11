@@ -4,12 +4,14 @@ import { elementLabel } from '../../canvas/ops';
 import type { CardElement } from '../../render/composition';
 
 // Slip (component-map §8b / board P2/P5) — one physical layer in the rack: the pane frame, the
-// name, the 🔒/HID badges, the pulled treatment (raised + accent ring + the square pip — StateMark
-// grammar, F-05/F-09). The pane's GLYPH is drawn by the rack's single strip canvas BEHIND this
-// overlay (one WebGL context for the whole rack — see LayerRack); the Slip itself is chrome only.
-// TAP toggles pulled (CARD-16: the pull is a tap); LONG-PRESS asks for the ops row (CARD-08) —
-// the pulled slip also carries a ⋯ badge that taps the ops open (the non-gesture pair). The badge
-// is a SIBLING of the main Pressable, never nested (button-in-button is invalid on web).
+// name, the LOCK-glyph/HID badges, the pulled treatment (raised + accent ring — StateMark grammar,
+// F-05/F-09). The pane's GLYPH is drawn by the rack's single strip canvas BEHIND this overlay (one
+// WebGL context for the whole rack — see LayerRack); the Slip itself is chrome only. TAP toggles
+// pulled (CARD-16: the pull is a tap); LONG-PRESS asks for the ops row (CARD-08) — the pulled slip
+// also carries a ⋯ badge that taps the ops open (the non-gesture pair). The badge is a SIBLING of
+// the main Pressable, never nested (button-in-button is invalid on web).
+// CR-13 (gate-5): lock = a small drawn padlock glyph (a body + a shackle), not a 🔒 emoji.
+// CR-19 (gate-5): the pulled slip's orange StateMark pip is dropped — the raise + accent ring carry it.
 
 export const SLIP_PANE_W = 50;
 export const SLIP_PANE_H = 70;
@@ -43,14 +45,13 @@ export function Slip({
         style={styles.press}
       >
         <View style={[styles.pane, pulled && styles.panePulled, element.hidden && styles.hiddenly]}>
-          {element.locked ? <Text style={styles.badge}>🔒</Text> : null}
+          {element.locked ? <LockGlyph /> : null}
           {element.hidden ? <Text style={styles.badge}>HID</Text> : null}
         </View>
         <Text style={[styles.name, element.hidden && styles.hiddenly]} numberOfLines={1}>
           {label}
         </Text>
       </Pressable>
-      {pulled ? <View style={styles.pip} pointerEvents="none" /> : null}
       {pulled ? (
         <Pressable
           accessibilityRole="button"
@@ -62,6 +63,18 @@ export function Slip({
           <Text style={styles.opsBadgeText}>⋯</Text>
         </Pressable>
       ) : null}
+    </View>
+  );
+}
+
+/** A small drawn padlock badge (CR-13) — a shackle (bordered arch) over a body with a keyhole. */
+function LockGlyph() {
+  return (
+    <View style={styles.lock} accessibilityLabel="Locked">
+      <View style={styles.lockShackle} />
+      <View style={styles.lockBody}>
+        <View style={styles.lockHole} />
+      </View>
     </View>
   );
 }
@@ -102,8 +115,36 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   opsBadgeText: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.ink },
-  // the pulled slip's square StateMark pip (F-05 — square on-screen, never round/pink)
-  pip: { position: 'absolute', top: -4, right: 4, width: 7, height: 7, backgroundColor: theme.scr.accent },
+  // the drawn padlock badge (CR-13) — sits where the 🔒 emoji did (pane top-right), same badge box
+  lock: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    alignItems: 'center',
+    backgroundColor: theme.scr.bg,
+    borderWidth: 1,
+    borderColor: theme.scr.hairline,
+    paddingHorizontal: 2,
+    paddingTop: 2,
+    paddingBottom: 1,
+  },
+  lockShackle: {
+    width: 6,
+    height: 4,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    borderColor: theme.scr.dim,
+    borderTopLeftRadius: 3,
+    borderTopRightRadius: 3,
+  },
+  lockBody: {
+    width: 8,
+    height: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.scr.dim,
+  },
+  lockHole: { width: 1.5, height: 1.5, backgroundColor: theme.scr.bg },
   name: {
     fontFamily: theme.font.screenBold,
     fontSize: theme.type.micro,

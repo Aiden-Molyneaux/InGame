@@ -404,6 +404,7 @@ function NowPlayingHero({ hero, onLogHours }: { hero: CollectionItem | null; onL
           size="grid"
           width={138}
           height={193}
+          animate // the ONE now-playing hero — animated cosmetics run here (0068 opt-in)
         />
       </Pressable>
       <View style={styles.heroMeta}>

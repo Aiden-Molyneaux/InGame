@@ -1,9 +1,8 @@
 import { Suspense, useMemo, useRef, useState } from 'react';
-import { PanResponder, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { PanResponder, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import { theme } from '../../theme';
 import { SkiaErrorBoundary } from '../SkiaErrorBoundary';
 import { LazyCardBed } from './lazySkia';
-import { NumPop, type NumPopField } from './NumPop';
 import { PLATE_H_RATIO } from '../../render/buildCard';
 import type { CardComposition, CardElement } from '../../render/composition';
 
@@ -44,6 +43,14 @@ function unrotate(px: number, py: number, e: CardElement, bedW: number, fieldH: 
   return [cx + dx * Math.cos(a) - dy * Math.sin(a), cy + dx * Math.sin(a) + dy * Math.cos(a)];
 }
 
+// the rotation handle (round 4) — a knob this far off the ring's top edge; drag it to rotate.
+// Light snap at the quarters (0/90/180/270) within this tolerance.
+const ROT_KNOB_DIST = 24;
+const ROT_SNAP_DEG = 5;
+
+/** the knob flips BELOW the box when the top side would leave the gesture surface (murr F3) */
+const knobBelow = (b: Box) => b.top - ROT_KNOB_DIST - 10 < 0;
+
 export function CanvasStage({
   composition,
   pulledIndex,
@@ -52,8 +59,9 @@ export function CanvasStage({
   onMove,
   onResize,
   onRotate,
-  numPopOpen,
-  onNumPopClose,
+  isolationOn,
+  onToggleIsolation,
+  showHandles = true,
 }: {
   composition: CardComposition;
   pulledIndex: number | null;
@@ -62,9 +70,13 @@ export function CanvasStage({
   onBeginGesture: () => void;
   onMove: (i: number, x: number, y: number) => void; // normalized
   onResize: (i: number, w: number, h: number) => void; // normalized (text: h → size)
+  /** degrees — the sel-ring rotation handle (round 4; the TransformDrawer slider is its CARD-16 pair) */
   onRotate: (i: number, deg: number) => void;
-  numPopOpen: boolean;
-  onNumPopClose: () => void;
+  /** CR-05 isolation toggle — when off, the bed stops ghosting the other elements */
+  isolationOn: boolean;
+  onToggleIsolation: () => void;
+  /** the RESIZE BOX toggle — when false the WHOLE sel-ring hides (border + handles + corner grab; round 3) */
+  showHandles?: boolean;
 }) {
   const [zone, setZone] = useState({ w: 0, h: 0 });
   const [guides, setGuides] = useState({ v: false, h: false });
@@ -77,41 +89,49 @@ export function CanvasStage({
     const w = Math.min(availW, (availH * 63) / 88);
     return { w, h: (w * 88) / 63 };
   }, [zone]);
+
   const fieldH = bed.h * (1 - PLATE_H_RATIO); // elements live above the plate zone (WYSIWYG)
 
   const pulled = pulledIndex != null ? composition.elements[pulledIndex] : undefined;
   // a HIDDEN slip leaves the bed entirely — no ring, no gestures (manifest P2 row 5 / murr)
   const pulledBox = pulled && !pulled.hidden && bed.w > 0 ? elementBox(pulled, bed.w, fieldH) : null;
 
-  // gesture bookkeeping (refs — PanResponder callbacks must see current values)
+  // gesture bookkeeping (refs — the PanResponder is created ONCE, so its handlers must read current
+  // values AND current callbacks through this ref; a frozen `onPull` called the mount-time `pull`
+  // whose stale pulledIndex/elements re-armed the RESET-rebase bug on bed re-taps (murr round 3)
   const stateRef = useRef({
     composition,
     pulledIndex,
     pulledBox,
     bedW: bed.w,
     fieldH,
+    showHandles,
+    onPull,
+    onRotate,
   });
-  stateRef.current = { composition, pulledIndex, pulledBox, bedW: bed.w, fieldH };
+  stateRef.current = { composition, pulledIndex, pulledBox, bedW: bed.w, fieldH, showHandles, onPull, onRotate };
   const gestureRef = useRef<{
-    mode: 'idle' | 'move' | 'scale';
+    mode: 'idle' | 'move' | 'scale' | 'rotate';
     corner: { rx: number; ry: number } | null;
     startX: number;
     startY: number;
     startW: number;
     startH: number;
     startSize: number;
+    /** rotate mode: the touch's start angle (deg, screen space) minus the element's start rotation */
+    rotOffset: number;
     moved: boolean;
     began: boolean;
     downX: number;
     downY: number;
-  }>({ mode: 'idle', corner: null, startX: 0, startY: 0, startW: 0, startH: 0, startSize: 0, moved: false, began: false, downX: 0, downY: 0 });
+  }>({ mode: 'idle', corner: null, startX: 0, startY: 0, startW: 0, startH: 0, startSize: 0, rotOffset: 0, moved: false, began: false, downX: 0, downY: 0 });
 
   const pan = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: (e) => {
-        const { pulledIndex: pi, pulledBox: pb, composition: c } = stateRef.current;
+        const { pulledIndex: pi, pulledBox: pb, composition: c, showHandles: sh, bedW, fieldH: fh } = stateRef.current;
         const px = e.nativeEvent.locationX;
         const py = e.nativeEvent.locationY;
         const g = gestureRef.current;
@@ -123,24 +143,44 @@ export function CanvasStage({
         g.downY = py;
         if (pi != null && pb) {
           const el = c.elements[pi];
-          const corners = [
-            { rx: 0, ry: 0 },
-            { rx: 1, ry: 0 },
-            { rx: 0, ry: 1 },
-            { rx: 1, ry: 1 },
-          ];
-          const hit = corners.find(
-            (k) => Math.abs(px - (pb.left + k.rx * pb.width)) <= 14 && Math.abs(py - (pb.top + k.ry * pb.height)) <= 14,
-          );
-          if (hit && el && !el.locked && !el.hidden) {
-            g.mode = 'scale';
-            g.corner = hit;
-            g.startW = el.type === 'text' ? 0 : el.w;
-            g.startH = el.type === 'text' ? 0 : el.h;
-            g.startSize = el.type === 'text' ? el.size : 0;
-            return;
+          if (!el || el.locked || el.hidden) return;
+          // the ring ROTATES with the slip (round 4) — so grab tests run in the element's UNROTATED
+          // space: unrotate the touch around the render anchor (the same pivot buildCard uses).
+          const [ux, uy] = unrotate(px, py, el, bedW, fh);
+          if (sh) {
+            // CR-10 — larger corner hit-areas: a 22px grab radius so the sel-ring handles are easy to
+            // catch on a small bed. Corners test FIRST so they win a tie with the knob's square on
+            // narrow slips (murr round 4 F5). gate-5 (murr m2): RESIZE BOX OFF disables both grabs.
+            const hit = [
+              { rx: 0, ry: 0 },
+              { rx: 1, ry: 0 },
+              { rx: 0, ry: 1 },
+              { rx: 1, ry: 1 },
+            ].find(
+              (k) => Math.abs(ux - (pb.left + k.rx * pb.width)) <= 22 && Math.abs(uy - (pb.top + k.ry * pb.height)) <= 22,
+            );
+            if (hit) {
+              g.mode = 'scale';
+              g.corner = hit;
+              g.startW = el.type === 'text' ? 0 : el.w;
+              g.startH = el.type === 'text' ? 0 : el.h;
+              g.startSize = el.type === 'text' ? el.size : 0;
+              return;
+            }
+            // the rotation handle — a knob off the ring's top-centre; it FLIPS below the box when the
+            // top side would leave the gesture surface (murr round 4 F3 — a knob drawn above the bed
+            // was visible but ungrabbable). knobSide() keeps the draw + the hit-test in agreement.
+            const knobX = pb.left + pb.width / 2;
+            const knobY = knobBelow(pb) ? pb.top + pb.height + ROT_KNOB_DIST : pb.top - ROT_KNOB_DIST;
+            if (Math.abs(ux - knobX) <= 22 && Math.abs(uy - knobY) <= 22) {
+              g.mode = 'rotate';
+              // screen-space angle from the anchor to the touch, minus the current rotation
+              const aDeg = (Math.atan2(py - el.y * fh, px - el.x * bedW) * 180) / Math.PI;
+              g.rotOffset = aDeg - (el.rotation ?? 0);
+              return;
+            }
           }
-          if (inBox(px, py, pb) && el && !el.locked && !el.hidden) {
+          if (inBox(ux, uy, pb)) {
             g.mode = 'move';
             g.startX = el.x;
             g.startY = el.y;
@@ -170,21 +210,40 @@ export function CanvasStage({
           setGuides((prev) => (prev.v === snapV && prev.h === snapH ? prev : { v: snapV, h: snapH }));
           onMove(pi, nx, ny);
         } else if (g.mode === 'scale' && g.corner) {
-          const sx = (g.corner.rx === 1 ? gs.dx : -gs.dx) * 2;
-          const sy = (g.corner.ry === 1 ? gs.dy : -gs.dy) * 2;
+          // a rotated slip's corners move along ROTATED axes — rotate the screen delta into the
+          // element's local space before applying it (round 4; the ring rotates with the slip now)
+          const a = (-(el.rotation ?? 0) * Math.PI) / 180;
+          const ldx = gs.dx * Math.cos(a) - gs.dy * Math.sin(a);
+          const ldy = gs.dx * Math.sin(a) + gs.dy * Math.cos(a);
+          const sx = (g.corner.rx === 1 ? ldx : -ldx) * 2;
+          const sy = (g.corner.ry === 1 ? ldy : -ldy) * 2;
           if (el.type === 'text') {
             onResize(pi, 0, g.startSize + sy / fh);
           } else {
             onResize(pi, g.startW + sx / bedW, g.startH + sy / fh);
           }
+        } else if (g.mode === 'rotate') {
+          // the touch's live screen angle around the anchor, minus the grab offset (round 4)
+          const tx = g.downX + gs.dx;
+          const ty = g.downY + gs.dy;
+          const aDeg = (Math.atan2(ty - el.y * fh, tx - el.x * bedW) * 180) / Math.PI;
+          let deg = (((aDeg - g.rotOffset) % 360) + 360) % 360;
+          // a light snap at the quarters (0/90/180/270)
+          const quarter = Math.round(deg / 90) * 90;
+          if (Math.abs(deg - quarter) <= ROT_SNAP_DEG) deg = quarter % 360;
+          stateRef.current.onRotate(pi, deg);
         }
       },
       onPanResponderRelease: () => {
         const g = gestureRef.current;
         setGuides({ v: false, h: false });
-        if (!g.moved) {
-          // a TAP — select topmost under the touch; repeat-tap cycles deeper (CARD-08)
-          const { composition: c, pulledIndex: pi, bedW, fieldH: fh } = stateRef.current;
+        // a non-moved ROTATE/SCALE grant is a fumbled handle grab — a NO-OP, never a tap-select
+        // (murr round 4 🔴F1: the knob point sits outside every element box, so the old tap branch
+        // deselected the slip — or selected whatever lay underneath — on every fumbled grab)
+        if (!g.moved && (g.mode === 'idle' || g.mode === 'move')) {
+          // a TAP — select topmost under the touch; repeat-tap cycles deeper (CARD-08). Read the
+          // LIVE onPull through stateRef — the mount-time prop closed over stale state (murr).
+          const { composition: c, pulledIndex: pi, bedW, fieldH: fh, onPull: livePull } = stateRef.current;
           if (bedW <= 0) return;
           const hits: number[] = [];
           for (let i = c.elements.length - 1; i >= 0; i--) {
@@ -194,12 +253,12 @@ export function CanvasStage({
             if (inBox(ux, uy, elementBox(el, bedW, fh))) hits.push(i);
           }
           if (!hits.length) {
-            onPull(null);
+            livePull(null);
           } else if (pi != null && hits.includes(pi)) {
             const next = hits[(hits.indexOf(pi) + 1) % hits.length]!;
-            onPull(next === pi ? pi : next);
+            livePull(next === pi ? pi : next);
           } else {
-            onPull(hits[0]!);
+            livePull(hits[0]!);
           }
         }
         g.mode = 'idle';
@@ -230,7 +289,7 @@ export function CanvasStage({
             <View pointerEvents="none">
               <SkiaErrorBoundary fallback={<View style={{ width: bed.w, height: bed.h, backgroundColor: theme.scr.panel }} />}>
                 <Suspense fallback={<View style={{ width: bed.w, height: bed.h, backgroundColor: theme.scr.panel }} />}>
-                  <LazyCardBed composition={composition} width={bed.w} height={bed.h} pulledIndex={pulledIndex} />
+                  <LazyCardBed composition={composition} width={bed.w} height={bed.h} pulledIndex={isolationOn ? pulledIndex : null} />
                 </Suspense>
               </SkiaErrorBoundary>
             </View>
@@ -241,66 +300,69 @@ export function CanvasStage({
             {guides.h ? <View pointerEvents="none" style={[styles.guideH, { top: fieldH / 2 }]} /> : null}
             {/* the gesture surface — the skia bed never owns a touch */}
             <View style={StyleSheet.absoluteFill} {...pan.panHandlers} accessibilityLabel="Press bed" />
-            {/* sel-ring + handles over the pulled element */}
-            {pulledBox ? (
-              <View pointerEvents="none" style={[styles.selRing, pulledBox]}>
-                <View style={[styles.handle, { left: -5, top: -5 }]} />
-                <View style={[styles.handle, { right: -5, top: -5 }]} />
-                <View style={[styles.handle, { left: -5, bottom: -5 }]} />
-                <View style={[styles.handle, { right: -5, bottom: -5 }]} />
+            {/* sel-ring + handles over the pulled element (larger cream handles — CR-10). RESIZE BOX
+                OFF hides the WHOLE ring — border AND handles (round 3). Round 4: the ring ROTATES
+                WITH the slip (same pivot as the renderer — the element anchor) and carries a
+                ROTATION KNOB off its top edge (drag to rotate; the TransformDrawer slider is the
+                CARD-16 pair). Hit-tests unrotate the touch, so the drawn ring and the grabs agree. */}
+            {pulledBox && showHandles && pulled ? (
+              <View
+                pointerEvents="none"
+                style={[
+                  styles.selRing,
+                  pulledBox,
+                  pulled.rotation
+                    ? {
+                        transform: [{ rotate: `${pulled.rotation}deg` }],
+                        // the renderer rotates around the ANCHOR (e.x, e.y) — for text that sits
+                        // above the box centre, so pin the origin to it
+                        transformOrigin: [
+                          pulledBox.width / 2,
+                          pulled.type === 'text' ? pulled.size * fieldH * 0.9 : pulledBox.height / 2,
+                          0,
+                        ],
+                      }
+                    : null,
+                ]}
+              >
+                <View style={[styles.handle, { left: -6, top: -6 }]} />
+                <View style={[styles.handle, { right: -6, top: -6 }]} />
+                <View style={[styles.handle, { left: -6, bottom: -6 }]} />
+                <View style={[styles.handle, { right: -6, bottom: -6 }]} />
+                {/* the rotation handle — stem + knob off the top edge; flips below when the box sits
+                    near the bed's top so it stays grabbable (murr F3 — hit-test agrees via knobBelow) */}
+                {knobBelow(pulledBox) ? (
+                  <>
+                    <View style={[styles.rotStem, { left: pulledBox.width / 2 - 0.75, bottom: -(ROT_KNOB_DIST - 7), height: ROT_KNOB_DIST - 7 }]} />
+                    <View style={[styles.rotKnob, { left: pulledBox.width / 2 - 7, bottom: -ROT_KNOB_DIST - 7 }]} />
+                  </>
+                ) : (
+                  <>
+                    <View style={[styles.rotStem, { left: pulledBox.width / 2 - 0.75, top: -(ROT_KNOB_DIST - 7), height: ROT_KNOB_DIST - 7 }]} />
+                    <View style={[styles.rotKnob, { left: pulledBox.width / 2 - 7, top: -ROT_KNOB_DIST - 7 }]} />
+                  </>
+                )}
               </View>
             ) : null}
           </View>
         </View>
       ) : null}
+      {/* CR-05 — the ISOLATION stat is now a session TOGGLE (tap to stop the others ghosting) */}
       {pulledIndex != null ? (
-        <View style={styles.isoChip} pointerEvents="none">
+        <Pressable
+          accessibilityRole="switch"
+          accessibilityLabel="Isolation"
+          accessibilityState={{ checked: isolationOn }}
+          onPress={onToggleIsolation}
+          style={[styles.isoChip, isolationOn && styles.isoChipOn]}
+        >
           <Text style={styles.isoText}>
-            ISOLATION · <Text style={styles.isoOn}>ON</Text>
+            ISOLATION · <Text style={isolationOn ? styles.isoOn : styles.isoOff}>{isolationOn ? 'ON' : 'OFF'}</Text>
           </Text>
-        </View>
-      ) : null}
-      {numPopOpen && pulled && pulledIndex != null ? (
-        <NumPop
-          element={pulled}
-          bedW={bed.w}
-          bedH={fieldH}
-          onNudge={(field, delta) => nudge(field, delta, pulled, pulledIndex, bed.w, fieldH, { onBeginGesture, onMove, onResize, onRotate })}
-          onSet={(field, value) => setAbs(field, value, pulled, pulledIndex, bed.w, fieldH, { onBeginGesture, onMove, onResize, onRotate })}
-          onClose={onNumPopClose}
-        />
+        </Pressable>
       ) : null}
     </View>
   );
-}
-
-type PatchFns = {
-  onBeginGesture: () => void;
-  onMove: (i: number, x: number, y: number) => void;
-  onResize: (i: number, w: number, h: number) => void;
-  onRotate: (i: number, deg: number) => void;
-};
-
-function nudge(field: NumPopField, delta: number, e: CardElement, i: number, bedW: number, fieldH: number, fns: PatchFns) {
-  if (e.locked) return; // the CARD-08 lock covers the numeric pair too (murr)
-  fns.onBeginGesture();
-  if (field === 'x') fns.onMove(i, e.x + delta / bedW, e.y);
-  else if (field === 'y') fns.onMove(i, e.x, e.y + delta / fieldH);
-  else if (field === 'rot') fns.onRotate(i, (e.rotation ?? 0) + delta);
-  else if (e.type === 'text') fns.onResize(i, 0, e.size + delta / fieldH);
-  else if (field === 'w') fns.onResize(i, e.w + delta / bedW, e.h);
-  else fns.onResize(i, e.w, e.h + delta / fieldH);
-}
-
-function setAbs(field: NumPopField, value: number, e: CardElement, i: number, bedW: number, fieldH: number, fns: PatchFns) {
-  if (e.locked) return; // the CARD-08 lock covers the numeric pair too (murr)
-  fns.onBeginGesture();
-  if (field === 'x') fns.onMove(i, value / bedW, e.y);
-  else if (field === 'y') fns.onMove(i, e.x, value / fieldH);
-  else if (field === 'rot') fns.onRotate(i, value);
-  else if (e.type === 'text') fns.onResize(i, 0, value / fieldH);
-  else if (field === 'w') fns.onResize(i, value / bedW, e.h);
-  else fns.onResize(i, e.w, value / fieldH);
 }
 
 const styles = StyleSheet.create({
@@ -333,22 +395,35 @@ const styles = StyleSheet.create({
   selRing: { position: 'absolute', borderWidth: 1.5, borderColor: theme.scr.accent },
   handle: {
     position: 'absolute',
-    width: 9,
-    height: 9,
+    width: 12,
+    height: 12,
     backgroundColor: theme.brand.cream,
     borderWidth: 1.5,
     borderColor: theme.scr.accent,
   },
+  // the rotation handle — a cream knob off the ring's top edge + a hairline stem (round 4; F-07 square)
+  rotKnob: {
+    position: 'absolute',
+    width: 14,
+    height: 14,
+    backgroundColor: theme.brand.cream,
+    borderWidth: 1.5,
+    borderColor: theme.scr.accent,
+  },
+  rotStem: { position: 'absolute', width: 1.5, backgroundColor: theme.scr.accent },
+  // round 4 — the chip rides the zone's top edge (clear of the card) + reads accent when ON
   isoChip: {
     position: 'absolute',
-    right: theme.space.md,
-    top: theme.space.md,
+    right: 0,
+    top: 0,
     backgroundColor: theme.scr.bg,
     borderWidth: 1,
     borderColor: theme.scr.hairline,
     paddingHorizontal: theme.space.md,
     paddingVertical: theme.space.sm,
   },
+  isoChipOn: { borderWidth: 1.5, borderColor: theme.scr.accent, backgroundColor: 'rgba(255,159,67,0.08)' },
   isoText: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
-  isoOn: { color: theme.scr.ink },
+  isoOn: { color: theme.scr.accent },
+  isoOff: { color: theme.scr.faint },
 });

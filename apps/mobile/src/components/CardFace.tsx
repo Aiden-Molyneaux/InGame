@@ -17,7 +17,7 @@ import type { CardComposition as Comp } from '../render/composition';
 // rn-skia dependency). Native imports it directly (skia ships in Expo Go SDK 54, decision 0064).
 // The Suspense fallback is the default face, so nothing flashes broken while the wasm arrives.
 
-type ComposedCardProps = { composition: Comp; width: number; height: number; effect?: boolean };
+type ComposedCardProps = { composition: Comp; width: number; height: number; effect?: boolean; animate?: boolean };
 type RenderModule = typeof import('../render/CardComposition');
 let renderModulePromise: Promise<RenderModule | null> | null = null;
 let composedCardPromise: Promise<{ default: ComponentType<ComposedCardProps> }> | null = null;
@@ -83,6 +83,7 @@ export function CardFace({
   width,
   height,
   nowPlaying = false,
+  animate = false,
   style,
 }: {
   title: string;
@@ -92,6 +93,12 @@ export function CardFace({
   width?: number;
   height?: number;
   nowPlaying?: boolean;
+  /**
+   * Opt this surface into the LIVE motion overlay for animated cosmetics (decision 0068, owner
+   * iteration 2026-07-09). Hero/detail surfaces (one card on screen) pass true; grids, rails and
+   * switcher cells never do — the per-surface opt-in IS the clock budget.
+   */
+  animate?: boolean;
   style?: ViewStyle;
 }) {
   const w = width ?? SIZE_DIMS[size].w;
@@ -121,7 +128,7 @@ export function CardFace({
     >
       <SkiaErrorBoundary fallback={<GameCard title={title} size={size} style={{ width: box.w, height: box.h }} />}>
         <Suspense fallback={<GameCard title={title} size={size} style={{ width: box.w, height: box.h }} />}>
-          <LazyComposedCard composition={composition} width={box.w} height={box.h} effect />
+          <LazyComposedCard composition={composition} width={box.w} height={box.h} effect animate={animate} />
         </Suspense>
       </SkiaErrorBoundary>
       {nowPlaying ? <NowTag /> : null}

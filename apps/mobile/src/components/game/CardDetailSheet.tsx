@@ -36,8 +36,9 @@ export function CardDetailSheet({
         </Pressable>
       </View>
       <View style={styles.cardWrap}>
-        {/* larger than the hero it enlarges FROM (C.14) — /grid is 161, this inspects at 189×264 */}
-        <CardFace title={entry.title} composition={composition} size="pick" width={189} height={264} />
+        {/* larger than the hero it enlarges FROM (C.14) — /grid is 161, this inspects at 189×264.
+            `animate`: the INSPECT view is exactly where a card shows off (0068 opt-in). */}
+        <CardFace title={entry.title} composition={composition} size="pick" width={189} height={264} animate />
       </View>
       <Text style={styles.credit}>{custom ? 'YOUR DESIGN' : 'THE STANDARD FACE'}</Text>
       <EquipReadout card={entry.card} composition={composition} />

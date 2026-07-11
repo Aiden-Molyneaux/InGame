@@ -18,6 +18,9 @@ export const createCardRequestSchema = z
     gameId: z.string().uuid(),
     composition: compositionSchema,
     name: boundedText(CARD_NAME_MAX).optional(),
+    // CARD-24a copy-on-write (decision 0067): editing a committed card spins a draft COPY that
+    // records its origin here. The service validates it as the actor's OWN card for the SAME game.
+    derivedFromCardId: z.string().uuid().optional(),
   })
   .strict();
 export type CreateCardRequest = z.infer<typeof createCardRequestSchema>;

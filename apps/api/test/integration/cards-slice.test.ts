@@ -481,3 +481,79 @@ describe('COL-06: the switcher feed + the My Designs shelf', () => {
     expect(mine.body.items).toHaveLength(3);
   });
 });
+
+describe('CARD-24a copy-on-write: editing a committed card spins a draft copy (decision 0067)', () => {
+  it('a from-scratch draft has derivedFromCardId=null; a COPY of an own card carries the origin (+ rides /me/cards)', async () => {
+    const a = await registerUser();
+    const game = await seedGame(a.token, 'Copy Origin Game');
+    const orig = await createDraft(a.token, game.id, 'Original');
+    await savePrivate(a.token, orig.id);
+
+    const scratch = await request(app)
+      .post('/api/cards')
+      .set(authed(a.token))
+      .send({ gameId: game.id, composition: composition() });
+    expect(scratch.status).toBe(201);
+    expect(scratch.body.derivedFromCardId).toBeNull();
+
+    const copy = await request(app)
+      .post('/api/cards')
+      .set(authed(a.token))
+      .send({ gameId: game.id, composition: composition(), derivedFromCardId: orig.id });
+    expect(copy.status).toBe(201);
+    expect(copy.body.status).toBe('draft'); // a copy opens as a draft (autosave targets it, not the origin)
+    expect(copy.body.derivedFromCardId).toBe(orig.id);
+
+    // the origin is untouched (still private, its own composition) — the copy is a separate row
+    const mine = await request(app).get('/api/me/cards').set(authed(a.token));
+    const listedOrig = mine.body.items.find((c: { id: string }) => c.id === orig.id);
+    expect(listedOrig.status).toBe('private');
+    const listedCopy = mine.body.items.find((c: { id: string }) => c.id === copy.body.id);
+    expect(listedCopy.derivedFromCardId).toBe(orig.id); // crash-recovery reads the origin back
+  });
+
+  it('SYS-07: actor-B cannot derive a copy from actor-A’s card → 422 (no cross-owner origin)', async () => {
+    const a = await registerUser();
+    const b = await registerUser();
+    const game = await seedGame(a.token, 'Copy Authz Game');
+    const aCard = await createDraft(a.token, game.id);
+    await savePrivate(a.token, aCard.id);
+    const attempt = await request(app)
+      .post('/api/cards')
+      .set(authed(b.token))
+      .send({ gameId: game.id, composition: composition(), derivedFromCardId: aCard.id });
+    expect(attempt.status).toBe(422); // A's card is not B's own → invalid_origin
+  });
+
+  it('a wrong-game origin is refused → 422 (the copy must match the origin’s game)', async () => {
+    const a = await registerUser();
+    const gameA = await seedGame(a.token, 'Copy Right Game');
+    const gameB = await seedGame(a.token, 'Copy Wrong Kart Racer');
+    const origin = await createDraft(a.token, gameA.id);
+    await savePrivate(a.token, origin.id);
+    const wrong = await request(app)
+      .post('/api/cards')
+      .set(authed(a.token))
+      .send({ gameId: gameB.id, composition: composition(), derivedFromCardId: origin.id });
+    expect(wrong.status).toBe(422);
+  });
+
+  it('ON DELETE SET NULL: deleting the origin degrades the copy to a standalone draft, never a broken ref', async () => {
+    const a = await registerUser();
+    const game = await seedGame(a.token, 'Copy Orphan Game');
+    const origin = await createDraft(a.token, game.id, 'Origin');
+    await savePrivate(a.token, origin.id);
+    const copy = await request(app)
+      .post('/api/cards')
+      .set(authed(a.token))
+      .send({ gameId: game.id, composition: composition(), derivedFromCardId: origin.id });
+    expect(copy.body.derivedFromCardId).toBe(origin.id);
+
+    const del = await request(app).delete(`/api/cards/${origin.id}`).set(authed(a.token));
+    expect(del.status).toBe(200); // private + unequipped → deletable
+
+    const mine = await request(app).get('/api/me/cards').set(authed(a.token));
+    const listedCopy = mine.body.items.find((c: { id: string }) => c.id === copy.body.id);
+    expect(listedCopy.derivedFromCardId).toBeNull(); // FK set null — the copy survives as a draft
+  });
+});

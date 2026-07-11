@@ -9,15 +9,20 @@ import type {
   NameplateShape,
 } from '../render/composition';
 
-// The COSM-02 FREE-BASELINE roster (decision 0063 — the owner-blessed seed the Styler consumes;
-// decision 0066/styler-manifest: client constants at M4, cosmetic entities + the `/card-bases`
-// routes ride the curated/premium roster later). Ids are stable strings (the CARD-24b preset
-// recipes reference them). Premium kinds (frost/fire/galaxy · holo/foil · ornate/gold · fancy
-// fonts) are M5 (COSM-03) and deliberately absent. NO spec-ID strings in the display names (OQ-110).
+// The COSM-02 roster (decision 0063, EXPANDED by decision 0068 — the Styler consumes it as client
+// constants at M4; cosmetic entities + the `/card-bases` routes ride the curated roster later,
+// 0066/styler-manifest). Ids are stable strings (the CARD-24b preset recipes reference them).
+// 2026-07-09: the once-deferred premium kinds (ornate/glow/foil/marquee frames · grain/halftone/
+// frost/embers effects · linen/holographic/metallic finishes · 5 fonts) land NOW, ALL as `tier:
+// 'basic'` — the owner uses the whole set pre-store, and re-tags individual items 'premium' later
+// (0068 §3). The entitlement gate is a no-op until COSM-03/M5, so tier is declarative metadata only.
+// NO spec-ID strings in the display names (OQ-110).
 
+export type CosmeticTier = 'basic' | 'premium';
 export interface RosterItem<T extends string = string> {
   id: T;
   name: string; // display copy (F-06-sized by the consumer)
+  tier?: CosmeticTier; // COSM-03 gating metadata; absent = basic (the pre-0068 entries are all basic)
 }
 
 // ── Frames (0063 §4 — structural kinds; neutral free tones) ─────────────────────────────────────
@@ -26,13 +31,32 @@ export interface FrameDef extends RosterItem {
   color: string;
   width: number; // normalized 0..1 of card width
 }
+// FILLED BANDS (owner iteration, 2026-07-09): every band frame is a SOLID border about as thick as
+// the Double Line/Chrome footprint — `width` is the band's VISIBLE thickness (normalized to card W;
+// frameNodes strokes 2× and lets the clip take the outer half). Double Line/Chrome keep their
+// two-rule structure (they ARE the thickness reference); brackets keep corner arms, beefed to match.
+// PIXEL retired to the ledger (docs/design/cosmetics-ledger.md) — the renderer keeps the kind for
+// legacy documents (F21). Same-KIND frames are disambiguated by `color` downstream (styler selection,
+// preset derive, EquipReadout — kind+color, never kind alone).
+const BAND = 0.045; // the Double-Line-footprint band thickness
 export const FRAMES: FrameDef[] = [
-  { id: 'clean', name: 'CLEAN', kind: null, color: '', width: 0 },
-  { id: 'thin-line', name: 'THIN LINE', kind: 'thin-line', color: '#c9c5e6', width: 0.012 },
-  { id: 'double-line', name: 'DOUBLE LINE', kind: 'double-line', color: '#9b97c0', width: 0.011 },
-  { id: 'ticket-notch', name: 'TICKET', kind: 'ticket-notch', color: '#f3ecd9', width: 0.012 },
-  { id: 'bracket-corners', name: 'BRACKETS', kind: 'bracket-corners', color: '#f3ecd9', width: 0.014 },
-  { id: 'pixel-border', name: 'PIXEL', kind: 'pixel-border', color: '#7ad0e8', width: 0.011 },
+  { id: 'clean', name: 'CLEAN', kind: null, color: '', width: 0, tier: 'basic' },
+  { id: 'thin-line', name: 'LINE', kind: 'thin-line', color: '#c9c5e6', width: BAND, tier: 'basic' },
+  { id: 'double-line', name: 'DOUBLE LINE', kind: 'double-line', color: '#9b97c0', width: 0.017, tier: 'basic' },
+  { id: 'ticket-notch', name: 'TICKET', kind: 'ticket-notch', color: '#f3ecd9', width: BAND, tier: 'basic' },
+  { id: 'bracket-corners', name: 'BRACKETS', kind: 'bracket-corners', color: '#f3ecd9', width: 0.028, tier: 'basic' },
+  // ── decision 0068 additions (all basic-now) ──────────────────────────────────────────────────
+  { id: 'thin-gold', name: 'GOLD', kind: 'thin-line', color: '#e8c14a', width: BAND, tier: 'basic' },
+  { id: 'lime', name: 'LIME', kind: 'thin-line', color: '#a9e34b', width: BAND, tier: 'basic' },
+  { id: 'bubblegum', name: 'BUBBLEGUM', kind: 'thin-line', color: '#e85ad0', width: BAND, tier: 'basic' },
+  { id: 'chrome', name: 'CHROME', kind: 'double-line', color: '#d8d5ec', width: 0.017, tier: 'basic' },
+  // STUB rides the ticket-notch kind in the app accent-orange so it stays distinct from cream TICKET.
+  { id: 'stub', name: 'STUB', kind: 'ticket-notch', color: '#ff9f43', width: BAND, tier: 'basic' },
+  { id: 'ornate-gold', name: 'ORNATE GOLD', kind: 'ornate', color: '#e8c14a', width: BAND, tier: 'basic' },
+  { id: 'ember-glow', name: 'EMBER GLOW', kind: 'glow', color: '#ff5a5a', width: 0.04, tier: 'basic' },
+  { id: 'plasma', name: 'PLASMA', kind: 'glow', color: '#5ad0ff', width: 0.04, tier: 'basic' },
+  { id: 'holo-foil', name: 'HOLO FOIL', kind: 'foil', color: '#e85ad0', width: BAND, tier: 'basic' },
+  { id: 'marquee', name: 'MARQUEE', kind: 'marquee', color: '#e8c14a', width: BAND, tier: 'basic' },
 ];
 
 // ── Effects (0063 §2 — ONE at a time + intensity, CARD-12) ─────────────────────────────────────
@@ -46,6 +70,11 @@ export const EFFECTS: EffectDef[] = [
   { id: 'gradient-sheen', name: 'SHEEN', kind: 'gradient-sheen' },
   { id: 'dust', name: 'DUST', kind: 'dust' },
   { id: 'vignette', name: 'VIGNETTE', kind: 'vignette' },
+  // ── decision 0068 additions (all basic-now; FROST + EMBERS animate live). GRAIN retired to the
+  // ledger (owner iteration 2026-07-09); the renderer keeps the kind for legacy documents (F21). ──
+  { id: 'halftone', name: 'HALFTONE', kind: 'halftone', tier: 'basic' },
+  { id: 'frost', name: 'FROST', kind: 'frost', tier: 'basic' },
+  { id: 'embers', name: 'EMBERS', kind: 'embers', tier: 'basic' },
 ];
 export const DEFAULT_INTENSITY = 0.6;
 
@@ -57,6 +86,10 @@ export const FINISHES: FinishDef[] = [
   { id: 'none', name: 'STANDARD', kind: 'none' },
   { id: 'matte', name: 'MATTE', kind: 'matte' },
   { id: 'subtle-gloss', name: 'SUBTLE GLOSS', kind: 'subtle-gloss' },
+  // ── decision 0068 additions (all basic-now; HOLOGRAPHIC + METALLIC sweep a sheen live) ────────
+  { id: 'linen', name: 'LINEN', kind: 'linen', tier: 'basic' },
+  { id: 'holographic', name: 'HOLOGRAPHIC', kind: 'holographic', tier: 'basic' },
+  { id: 'metallic', name: 'METALLIC', kind: 'metallic', tier: 'basic' },
 ];
 
 // ── Nameplates (0063 §4 / decision 0018 — the plate OBJECT; shapes keep the name legible) ──────
@@ -69,13 +102,26 @@ export const NAMEPLATES: NameplateDef[] = [
   { id: 'slab', name: 'SLAB', shape: 'slab' },
   { id: 'ribbon', name: 'RIBBON', shape: 'ribbon' },
   { id: 'bevel', name: 'BEVEL', shape: 'bevel' },
+  // ── decision 0068 additions (all basic-now; static geometry) ──────────────────────────────────
+  { id: 'capsule', name: 'CAPSULE', shape: 'capsule', tier: 'basic' },
+  { id: 'tab', name: 'TAB', shape: 'tab', tier: 'basic' },
+  { id: 'arch', name: 'ARCH', shape: 'arch', tier: 'basic' },
+  { id: 'dogtag', name: 'DOGTAG', shape: 'dogtag', tier: 'basic' },
+  { id: 'brass', name: 'BRASS', shape: 'brass', tier: 'basic' },
 ];
 
-// ── Title styling (CARD-11 — font + ink). Two fonts are REAL at M4 (already bundled); the 0063
-// pixel/serif/script trio rides the pre-launch roster design pass (new font deps, rule-08). ──────
+// ── Title styling (CARD-11 — font + ink). CHAKRA + PAYTONE were the M4 pair; decision 0068 adds
+// five more (each a bundled @expo-google-fonts dep, registered by fontId in useCardSkiaCtx). A
+// fontId with no loaded typeface falls back to the default face — never a crash (CardComposition). ──
 export const FONTS: RosterItem[] = [
   { id: 'clean-sans', name: 'CHAKRA' },
   { id: 'bold-display', name: 'PAYTONE' },
+  // ── decision 0068 additions (all basic-now) ──────────────────────────────────────────────────
+  { id: 'press-start', name: 'PIXEL', tier: 'basic' },
+  { id: 'bitter', name: 'SLAB', tier: 'basic' },
+  { id: 'space-mono', name: 'MONO', tier: 'basic' },
+  { id: 'pacifico', name: 'SCRIPT', tier: 'basic' },
+  { id: 'stencil', name: 'STENCIL', tier: 'basic' },
 ];
 export const INKS: Array<RosterItem & { color: string }> = [
   { id: 'cream', name: 'CREAM', color: '#f3ecd9' },
@@ -161,7 +207,8 @@ export const START_SOURCES: StartSource[] = [
         { type: 'poly', shape: 'triangle', x: 0.5, y: 0.36, w: 0.42, h: 0.38, fill: '#e85ad0' },
         { type: 'rect', x: 0.5, y: 0.62, w: 0.56, h: 0.02, fill: '#7ad0e8' },
       ],
-      frame: { kind: 'pixel-border', color: '#7ad0e8', width: 0.011 },
+      // (pixel-border retired 2026-07-09 — the kit wears cyan brackets now; ledger entry)
+      frame: { kind: 'bracket-corners', color: '#7ad0e8', width: 0.028 },
       effect: { kind: 'scanline', intensity: 0.55 },
       nameplate: plate(t, '#f3ecd9', 'slab', 'bold-display'),
     }),

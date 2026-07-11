@@ -425,6 +425,13 @@ export const cardDesigns = pgTable(
     imageUrl: text('image_url'),
     thumbUrl: text('thumb_url'),
     isPremium: boolean('is_premium').notNull().default(false),
+    // CARD-24a copy-on-write (decision 0067): editing a committed card spins a draft COPY that
+    // points here at its origin. NULL for from-scratch drafts. ON DELETE SET NULL — if the origin
+    // is deleted the copy degrades to a standalone draft, never a broken ref (belt-and-braces).
+    derivedFromCardId: uuid('derived_from_card_id').references(
+      (): AnyPgColumn => cardDesigns.id,
+      { onDelete: 'set null' },
+    ),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

@@ -34,6 +34,11 @@ export const LazyBaseStrip = lazy(() =>
   loadRenderModule().then((m) => ({ default: (m?.BaseStrip ?? nullComponent) as ComponentType<BaseStripProps> })),
 );
 
+export type CompositionStripProps = { comps: Comp[]; cellW: number; cellH: number; strideX: number; width: number; height: number };
+export const LazyCompositionStrip = lazy(() =>
+  loadRenderModule().then((m) => ({ default: (m?.CompositionStrip ?? nullComponent) as ComponentType<CompositionStripProps> })),
+);
+
 export type ProofPrintProps = { composition: Comp; width: number; height: number; onFlattenError?: (e: unknown) => void };
 export const LazyProofPrint = lazy(() =>
   loadRenderModule().then((m) => ({ default: (m?.ProofPrint ?? nullComponent) as ComponentType<ProofPrintProps> })),

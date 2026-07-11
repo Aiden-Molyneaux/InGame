@@ -1,0 +1,2 @@
+ALTER TABLE "card_designs" ADD COLUMN "derived_from_card_id" uuid;--> statement-breakpoint
+ALTER TABLE "card_designs" ADD CONSTRAINT "card_designs_derived_from_card_id_card_designs_id_fk" FOREIGN KEY ("derived_from_card_id") REFERENCES "public"."card_designs"("id") ON DELETE set null ON UPDATE no action;

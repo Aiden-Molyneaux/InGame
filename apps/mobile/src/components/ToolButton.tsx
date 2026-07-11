@@ -12,6 +12,7 @@ export function ToolButton({
   icon,
   label,
   active,
+  disabled,
   onPress,
   onLongPress,
 }: {
@@ -20,6 +21,8 @@ export function ToolButton({
   /** Accessibility name only — the keycap renders no visible label (S3-n). */
   label: string;
   active?: boolean;
+  /** Dim + inert when there is nothing to act on (e.g. undo/redo at the ends of history — decision 0069). */
+  disabled?: boolean;
   onPress?: () => void;
   onLongPress?: () => void;
 }) {
@@ -27,13 +30,14 @@ export function ToolButton({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityState={{ selected: !!active }}
+      accessibilityState={{ selected: !!active, disabled: !!disabled }}
+      disabled={disabled}
       onPress={onPress}
       onLongPress={onLongPress}
       // The 32×30 keycap sits under the 44pt platform tap-target floor; the bar's 12px gap leaves
       // room to make up the difference outside the visible cap.
       hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-      style={({ pressed }) => [styles.key, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.key, pressed && styles.pressed, disabled && styles.disabled]}
     >
       {icon}
       {active ? <StateMark size={6} style={styles.mark} /> : null}
@@ -43,6 +47,7 @@ export function ToolButton({
 
 const styles = StyleSheet.create({
   pressed: { opacity: 0.75 }, // F-03 — energize, no travel
+  disabled: { opacity: 0.4 },
   key: {
     width: 32,
     height: 30,

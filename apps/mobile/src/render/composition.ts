@@ -10,14 +10,54 @@ import { COMPOSITION_SCHEMA_VERSION, type CardElement } from '@ingame/shared';
 // The 0063 free-baseline closed-attribute kinds (COSM-02 — the Styler build makes them real,
 // decision 0066/styler-manifest). All ADDITIVE inside the shared schema's `.passthrough()` envelope:
 // schemaVersion stays 1 (F21 — older renderers ignore unknown fields; flatten still dispatches on
-// the version). Premium kinds (frost/fire/galaxy · holo/foil/metallic · ornate/gold frames) are M5.
-export type FrameKind = 'thin-line' | 'double-line' | 'ticket-notch' | 'bracket-corners' | 'pixel-border';
-export type EffectKind = 'none' | 'soft-glow' | 'scanline' | 'gradient-sheen' | 'dust' | 'vignette';
-export type FinishKind = 'none' | 'matte' | 'subtle-gloss';
+// the version).
+// 2026-07-09 roster expansion (decision 0068): the once-premium-flagged kinds land NOW as the
+// all-basic set the owner uses pre-store — ornate/glow/foil/marquee frames · grain/halftone/frost/
+// embers effects · linen/holographic/metallic finishes · capsule/tab/arch/dogtag/brass plates. The
+// motion kinds (marquee frame · frost/embers effects · holographic/metallic finishes) draw a STATIC
+// keyframe here; the live <Canvas> adds an ADDITIVE motion overlay (render/animated.tsx) — the
+// flatten stays a still image (CARD-15), so the driver never touches this builder or the schema.
+export type FrameKind =
+  | 'thin-line'
+  | 'double-line'
+  | 'ticket-notch'
+  | 'bracket-corners'
+  | 'pixel-border'
+  | 'ornate' // detailed gold rule + corner filigree (static)
+  | 'glow' // a soft bloom around the stroke (ember/plasma — the glow colour is `color`)
+  | 'foil' // an iridescent holo stroke (fixed spectrum, `color` tints the rest position)
+  | 'marquee'; // a dim gilded track; the live layer chases a light around it
+export type EffectKind =
+  | 'none'
+  | 'soft-glow'
+  | 'scanline'
+  | 'gradient-sheen'
+  | 'dust'
+  | 'vignette'
+  | 'grain' // fine film speckle (static)
+  | 'halftone' // comic dot-screen (static)
+  | 'frost' // ice crystals from the edges (static keyframe; live shimmer)
+  | 'embers'; // a warm hearth glow (static keyframe; live rising motes)
+export type FinishKind =
+  | 'none'
+  | 'matte'
+  | 'subtle-gloss'
+  | 'linen' // woven-paper texture wash
+  | 'holographic' // iridescent film (static wash; live sweeping sheen)
+  | 'metallic'; // brushed-gold specular (static wash; live sweeping sheen)
 // 'none' survives only as a LEGACY document value — the roster no longer offers it and the
 // renderer coerces it to slab (OQ-135 ruling: a plate is required, the name always renders). The
 // object model still never strips: title/font/ink live through every pick (parvati, 2026-07-06).
-export type NameplateShape = 'slab' | 'ribbon' | 'bevel' | 'none';
+export type NameplateShape =
+  | 'slab'
+  | 'ribbon'
+  | 'bevel'
+  | 'none'
+  | 'capsule' // fully rounded lozenge
+  | 'tab' // file-folder tab
+  | 'arch' // domed top, flat bottom (a cabinet marquee)
+  | 'dogtag' // notched/chamfered ends
+  | 'brass'; // bevelled plate with a gold-gradient face
 
 export type CardComposition = {
   schemaVersion: typeof COMPOSITION_SCHEMA_VERSION;
