@@ -220,7 +220,8 @@
   .state-tag.private { background: var(--cream); color: var(--navy); }
   .state-tag.draft { background: rgba(13,11,30,.78); color: var(--scr-soft); border: 1px solid var(--scr-hairline); }
   .state-tag.adopted { background: var(--scr-panel); color: var(--scr-soft); border: 1px solid color-mix(in srgb, var(--scr-accent) 50%, transparent); }
-  .newtile { width: 100%; aspect-ratio: 96/134; height: auto; align-self: start; flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: 1.5px dashed var(--scr-accent); background: rgba(255,159,67,.05); color: var(--scr-accent); box-sizing: border-box; }
+  /* decision 0069 — DESIGN NEW is GOLD (F-02 acquisitive: it creates a card); was orange scr-accent. */
+  .newtile { width: 100%; aspect-ratio: 96/134; height: auto; align-self: start; flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: 1.5px dashed var(--gold); background: rgba(255,210,63,.06); color: var(--gold); box-sizing: border-box; }
   .newtile .plus { font: 700 21px/1 var(--pk); } .newtile .nl { font: 700 9px var(--pk); letter-spacing: 1px; }
   .gw-credit { font: 600 9px var(--pk); letter-spacing: .3px; color: var(--scr-dim); text-align: center; } .gw-credit b { color: var(--scr-soft); }
 
@@ -289,8 +290,8 @@
      Ported from collection-flat-buttons-drafts.html. The in-screen Keycap
      system drops shadow.key — the 0 Npx 0 raised edge + the clipped
      drop-shadow (.add/.alt) + the top bevel — so every button reads flat.
-     PRESSED/ACTIVE: the fill darkens a step + an inner shadow sinks it IN,
-     with NO movement (no translate). The C5 square chrome and the .add/.alt
+     PRESSED/ACTIVE is now the SCANLINE ENERGIZE model (block below; the Inset-Recess press
+     rules were removed — decision 0069). The C5 square chrome and the .add/.alt
      corner-notch (clip-path) are kept; the shell NavBand keys (0 4px 0) stay
      physical hardware, out of scope. .is-pressed forces the pressed state for
      static demo / verification; :active is live (hold a button in-browser).
@@ -303,19 +304,9 @@
   .btn, .btn.add, .btn.alt, .btn.cream, .btn.danger, .ovf-key
     { transition: background .07s linear, box-shadow .07s linear; }
 
-  /* pressed / active = darken a step + inner shadow, no transform (depth, no motion) */
-  .btn:active,        .btn.is-pressed
-    { background: color-mix(in srgb, var(--scr-accent) 80%, #000); box-shadow: inset 0 2px 5px rgba(0,0,0,.5); }
-  .btn.alt:active,    .btn.alt.is-pressed
-    { background: color-mix(in srgb, var(--scr-accent) 80%, #000); box-shadow: inset 0 2px 5px rgba(0,0,0,.5); }
-  .btn.add:active,    .btn.add.is-pressed
-    { background: color-mix(in srgb, var(--gold) 82%, #000);       box-shadow: inset 0 2px 5px rgba(0,0,0,.5); }
-  .btn.cream:active,    .btn.cream.is-pressed
-    { background: color-mix(in srgb, var(--cream) 84%, #000);      box-shadow: inset 0 2px 5px rgba(0,0,0,.4); }
-  .btn.danger:active, .btn.danger.is-pressed
-    { background: color-mix(in srgb, var(--alert) 80%, #000);      box-shadow: inset 0 2px 5px rgba(0,0,0,.45); }
-  .ovf-key:active, .ovf-key.is-pressed
-    { background: color-mix(in srgb, var(--scr-chip) 84%, #000);   box-shadow: inset 0 2px 4px rgba(0,0,0,.32); }
+  /* pressed/active is defined ONCE in the SCANLINE ENERGIZE block below (F-03, locked 2026-06-18).
+     The superseded Inset-Recess :active rules were removed 2026-07-10 (decision 0069) — they were dead
+     (same base specificity, lost on source order) and duplicated .btn.cream:active. */
 
   /* ════════════════════════════════════════════════════════════════════
      LIFECYCLE / SYSTEM STATES (converge add) — grammar reused verbatim from

@@ -1,5 +1,10 @@
 # canvas — screen manifest (from canvas-states.html, 2026-07-06)
 
+> **⚠ GATE-5 REVISED 2026-07-08 (decision 0067).** The owner's device acceptance walk redirected the
+> breakout to a **zoom** (not a cabinet-swing) and ruled **copy-on-write** for committed-card edits,
+> plus 21 more CRs. **The corrected C1 / C3 / ARCH rows + the "GATE-5 REVISION ADDENDUM" below govern
+> — read them before building.** The rest of this manifest is the original 2026-07-06 contract.
+
 > **Surface:** M4 §3.4 Canvas (the deep gesture editor — decision 0014 stage 3, the breakout tier).
 > **Board:** `docs/design/mockups/canvas/canvas-states.html` (P1–P11, converged 2026-06-13 "Let's go
 > with C" — the print-shop grammar; the two ruled changes baked in: editbar-above-rack ·
@@ -40,6 +45,24 @@
 >   (PRE: `[gameId].tsx:312–343`); no second exit implementation exists.
 > - **Canvas edits count as `userEdits`** — ✕ after canvas work confirms before discarding,
 >   exactly as styler picks do (the D.23/D.24 lane; murr's named attack surface).
+>
+> **⚠ GATE-5 REVISION (decision 0067, 2026-07-08) — two architecture amendments:**
+> - **The breakout is a ZOOM, not a cabinet-swing (CR-01).** On entry the screen area **zooms to
+>   full-bleed** via an animated **scale-transform**; the DeviceShell chrome yields (0014 stage-3);
+>   it reverses on exit. **Animate a transform ONLY — the `/styler` route + the rn-skia bed must
+>   NEVER unmount** across the posture switch (the no-remount invariant is now load-bearing for the
+>   zoom; it protects CARD-24a). Prior dead-ends that all failed and must not return: a root RN
+>   `Modal` (inline on rn-web, clipped) · `createPortal` to body (broke rn-skia paint) · a
+>   `position:fixed` layer (z-trapped). Watch the rn-skia **web** paint-race on the end relayout
+>   (native unaffected — owner-verified 2026-07-08). The shipped **chrome-hide** breakout diff is
+>   **superseded** — reworked to the zoom, not committed as-is.
+> - **CARD-24a is COPY-ON-WRITE for committed cards (CR-21).** Editing an existing **private** card
+>   never PATCHes it in place: the **first edit** spins off a **draft copy**
+>   (`card_designs.derived_from_card_id → origin`); autosave targets the **copy**. **KEEP** commits
+>   copy→origin (stable id) + deletes the copy; **SAVE AS NEW** forks; **✕** deletes the copy; a
+>   **crash** leaves the copy as a resumable DRAFT (original pristine). The `resumeSnapshotRef`
+>   revert is no longer used on the private-edit path (the original is never mutated). Editing a
+>   **draft** stays in-place. Spec: product-spec CARD-24a (0.53) + api-contract (0.54).
 >
 > **⚠ ELEMENT SCHEMA — ADDITIVE AT VERSION 1 (F21 note, recorded).** The board's editor needs
 > element kinds/fields the M4-formalized schema doesn't carry yet: **`icon`** elements (the 0063 §1
@@ -86,9 +109,9 @@
 
 | # | Element | Component | Notes | Status |
 |---|---------|-----------|-------|--------|
-| C1 | DeviceShell + NavBand (COLLECTION active) persist — the breakout is a posture INSIDE the routed screen, the shell never actually leaves (the swing is drawn dressing) | DeviceShell·NavBand | decision 0014: FlowTakeover tier + NavBand persist | PRE — the styler route already lives in the shell (`[gameId].tsx` renders inside ShellNav) |
+| C1 | **⚠ CORRECTED (0067/CR-01) — the shell YIELDS.** On Canvas entry the **screen zooms to full-bleed**: the DeviceShell chrome (top-band · bezel · NavBand) **yields** via an animated **scale-transform** (0014 stage-3 = "the frame yields to maximal canvas"; the earlier "shell never leaves / swing is drawn dressing" wording was wrong). **⚠ transform-only — the `/styler` route + the rn-skia bed NEVER unmount** (CARD-24a one-document; identical tree, animated). Reverses on exit. | DeviceShell (breakout transform) + `BreakoutContext` | decision 0014 stage-3 + **0067** (zoom) | OWED — the zoom rework (**supersedes** the shipped chrome-hide diff) |
 | C2 | Top bar — **◂** key (returns TO THE STYLER posture) · "CANVAS" (display 21) · sub-line "«GAME» · DRAFT/PRIVATE · SAVED Ns AGO / SAVING… / NOT SAVED — RETRYING" (ticking) | flow-head + saveLine | board `:417–420`, `:468–470`; the save-line is the styler's existing ticking line re-labeled | OWED — reuses the PRE saveLine machinery (`[gameId].tsx:207–213, 676–682`) |
-| C3 | The workshop dressing — bench-tone backdrop + the shell-swing edge decor on ENTRY (P1 beat, fades; reduce-motion = fade only, CARD-16) | CanvasStage backdrop | board `:413–415`, `:434`, caption `:455–459` | OWED — token-mapped (scr.bg ramp + shell.plastic edge at low opacity); the swing is a brief entry beat, not a persistent layout |
+| C3 | The workshop dressing — bench-tone backdrop (scr.bg ramp). **⚠ CORRECTED (0067/CR-01) — the shell-swing edge decor is REMOVED** (the breakout is a *zoom*, not a swing; the `CanvasSurface` swing-decor layer is deleted). Reduce-motion = the zoom without the flourish (CARD-16) | CanvasStage backdrop | board `:413–415` (swing decor superseded by 0067) | OWED — bench backdrop only; **no swing layer** |
 | C4 | Autosave — every canvas mutation runs the SAME `patchDraft` → debounced PATCH + retry + honest save-line | (session) | CARD-24a/0066 §6 | PRE (`[gameId].tsx:164–223`) — canvas ops call `patchDraft`, nothing new |
 
 ## P1 — Entry: the card goes to the press (board `:410–461`)
@@ -305,6 +328,126 @@ tree by construction.
   P11/offline (EXPECTED).
 - **Walk residue:** the seeded Aurora carries the walk's element edits — **re-run the seed shelf
   before the owner stop** (`db:seed-dev`, the §3.2-round precedent).
+
+## GATE-5 REVISION ADDENDUM (decision 0067 · owner acceptance walk 2026-07-08)
+
+The owner's device acceptance walk returned 23 CRs (ledger: [`canvas-gate-notes.md`](canvas-gate-notes.md)).
+Per-item manifest impact — the build is held to THIS + the corrected **C1 / C3 / ARCH** rows above.
+
+**Architecture (RULED):**
+- **CR-01 zoom** — C1/C3/ARCH corrected above. Reuse `BreakoutContext`; replace the DeviceShell
+  chrome-hide with an animated **scale-transform**; remove the `CanvasSurface` swing decor. **No remount.**
+- **CR-21 copy-on-write** — ARCH amended above. First edit of a private card spins a draft copy; KEEP
+  commits copy→origin. Migration: `card_designs.derived_from_card_id` (additive nullable FK).
+- **CR-08 base pseudo-slip** — P3 rows 3/7 + P5: **BASE drops from the ADD categories**; `base` renders
+  as a **pinned, non-deletable, recolour-only pseudo-slip** at the rack bottom (its EDIT controls = the
+  former BASE solid/gradient swatches, surfaced only when pulled). No schema / cap-30 / Z change.
+- **CR-10 TransformDrawer** — P5 row 6 (`NumPop`) becomes the **`TransformDrawer`**: an editbar button
+  **between RESET SLIP and UNDO**; **position** (joystick + X/Y steppers) · **size** (W/H sliders +
+  steppers) · **rotation** (dial + stepper); **subsumes NumPop**; + **enlarge the sel-ring corner
+  hit-areas** (P2 row 3).
+- **CR-11 ColorPicker** — P4 row 4 (FILL) + row 5 (STROKE ink): the shared **`ColorPicker`** (HS area +
+  value + **hex**) beside the swatches + in-card used-colours. (Styler title ink stays curated — OQ-137/M5.)
+- **CR-17 light press beat** — P7 SAVE PRIVATE gains gold weight + a **light press beat** (0015 tier,
+  distinct from the M5 `PrintRitual`).
+
+**DESIGN:**
+- **CR-05 isolation toggle** — P2 row 2: a per-session ISOLATION on/off near the ISOLATION·ON chip; the
+  pulled element still selects/edits, the others simply stop ghosting.
+- **CR-09 add→open EDIT** — P3 row 8 / **state-walk 5 REVERSED**: a picked glyph lands pulled **and**
+  raises its EDIT sheet immediately (colour-first).
+- **CR-20 cross-posture disclaimer** — P7 (+ the Styler outcome sheet): KEEP / PRESS / SAVE-PRIVATE from
+  either posture discloses it also flushes the other posture's pending edits (one document, CARD-24a).
+
+**FIX:**
+- **CR-02** copy: "Add a slip"→**"Add slip"**, "Edit this slip"→**"Edit slip"** (P3–P4).
+- **CR-03** cap-meter → **`scr.accent` orange**, not gold (P1 row 5 / P5 row 8).
+- **CR-04** save-line label ticks **~every 15s**, not 1s — Canvas C2/C4 **+ Styler** (the debounced PATCH is unchanged).
+- **CR-06** LayerRack drag-Z: the **HELD** slip stays highlighted through the z-stack, not the displaced one (P5 row 5).
+- **CR-07** **bigger ADD glyph cells** (P3 row 5) — keep the single-context strip builder (WebGL ceiling, ADDENDUM).
+- **CR-12** ops row: an explicit **close** affordance (tap-out / close) (P5 row 1).
+- **CR-13** **lock → a glyph badge**, not text/emoji (P2 row 5).
+- **CR-14** PROOF **👁 emoji → a glyph**; **interaction unchanged — hold + tap twin kept (CARD-16)** (P2 row 7 / P6).
+- **CR-15** **editbar hidden while `proofing`** (P6 / state-walk 6).
+- **CR-16** remove the **bench hint** (P2 row 8) + the **proof-ladder hint** (P6 row 4).
+- **CR-18** drop **CANCEL** from the PressSheet; handle/scrim still dismiss (P7 row 7).
+- **CR-19** remove the **selected-slip orange pip** (P2 row 1).
+- **CR-22** (game page, not Canvas) — CARDS switcher **2-up → 3-up** (`CardSwitcher.tsx:20` `CELL_W`).
+
+**Deferred:** **CR-23** canvas-composition presets → **M5** (OQ-140, CARD-24b).
+
+**DEVICE-WALK ROUND 2 (owner, 2026-07-08) — supersedes parts of the above.** After the reworked Canvas
+went to device, the owner ruled: **abandon the overlay drawers — EDIT / TRANSFORM / ADD open INLINE in
+a bottom panel** below the card (card stays visible/undimmed; **PRESS stays a drawer**); the **base
+slip lives IN the slip rail** (a non-deletable rail slip, not a separate row); the **`TransformDrawer`
+is direction-arrows-only (press-and-hold repeats) + a rotation SLIDER + a hide-resize-box toggle** (the
+joystick + circular dial are dropped; the resize-box OFF disables corner-scale, not just its handles);
+**FLIP + eyedropper use drawn glyphs** (no emoji); the colour control is a **`ColorField`** (recents +
+PICK button + FROM-CARD pipette; picker closed by default); the breakout zoom is a **cross-dissolve**
+(masks the framed↔full-bleed swap). Built + suite-green + **murr 0 blockers** (M1 rotation-% read-out,
+m2 corner-scale gate, m3 dead-code — all fixed) + **parvati 8/8 directives MATCH on the running app**.
+NumPop.tsx deleted (subsumed).
+
+**DEVICE-WALK ROUND 3 (owner, 2026-07-09) — the in-app notes batch (design-spec 0.54 owns it).**
+Thirteen notes, all presentation/flow (no product-spec/api-contract ripple; CR-21 untouched): **(1)** the
+breakout dissolve becomes **one continuous zoom** (outgoing scales into the move, incoming settles it,
+gentler easing; a mask-free measured-rect zoom ruled out — aspect distortion + rn-skia per-frame
+re-surface); **(2)** the slip rail reads **z-ascending L→R with BASE leading** (leftmost); **(3)**
+TRANSFORM gains accent weight on the editbar + a door in the EDIT panel head; **(4)** the bottom panel
+holds **one bench-measured height** across bench/ADD/EDIT/TRANSFORM (PROOF hides it, PRESS is a drawer —
+exempt); **(5)** TransformDrawer: **0.5% arrow nudges + slow-start hold ramp + an X·Y read-out**;
+RESIZE BOX OFF hides the **whole sel-ring** (was handles-only) and the toggle **also rides the EDIT
+sheet**; **(6)** the **scroll-lock rule** — a held slider/colour-area/hue-strip disables its host scroll
+for the gesture (new `ScrollLock` context; web adds `touchAction:none`); **(7)** the colour picker
+**applies on RELEASE** (live in-picker preview; no per-frame patches; the cursor no longer re-seeds off
+its own echo); **(8)** GROUP stays present-but-disabled (CARD-08 at-scale/§3.6 — answered, no build);
+**(9)** the ADD grid **spans the panel width** (even-fill cell math); **(10)** the ADD panel carries the
+**rack's orange cap-meter chip** (retires a leftover GOLD count — the CR-03/F-02 trim this file missed);
+**(11)** the EDIT sheet's LIGHT row splits into **GLOW** and **BLEND** rows; **(12)** EDIT panel titles
+read **EDITING THE '«NAME»' SLIP**; **(13)** FROM-CARD carries **every card colour incl. the base**
+(the recents-filter that hid them is removed).
+
+**DEVICE-WALK ROUND 4 (owner, 2026-07-10) — the second in-app notes batch (design-spec 0.55 owns it).**
+Thirteen notes, all presentation/flow (CR-21/server untouched): **(1)** TRANSFORM buttons wear the
+**cream key** treatment (the PROOF voice) — editbar + panel-head doors; **(2)** the TransformDrawer
+condenses — **ROTATE joins the POSITION section**; **(3)** arrow feel — a **tap is exactly one 0.5%
+nudge** (~350ms initial repeat delay kills the accidental double-step) and the **hold ramps harder**
+(fast beats step 1%, ~2.5× round 3's top speed); **(4)** the TRANSFORM panel head carries an **EDIT
+door** (the mirror of EDIT's TRANSFORM door); **(5)** the drawer's RESIZE BOX takes the **EDIT sheet's
+row grammar**; **(6)** BUG: the sel-ring now **rotates with the slip** (box + handles at the element's
+rotation; corner/body grabs unrotate the touch first); **(7)** the ring gains a **rotation handle**
+(top-edge knob, drag-to-rotate, light quarter snaps; the drawer slider remains the CARD-16 non-gesture
+pair — CanvasStage gains `onRotate`); **(8)** the **divider above the editbar row is dropped**;
+**(9)** the rack's caption moves **UNDER the rail** with the **cap-meter chip on its left**; **(10)**
+**PROOF docks immediately left of PRESS** and the pair **holds position while PROOFING** (Add/Edit
+yield; **PRESS works from the proof**); **(11)** the EDIT sheet drops the kind meta-line and **OPACITY
+moves under the FILL cluster**; **(12)** *(same note)*; **(13)** the ISOLATION chip rides **higher**
+(clear of the card) and reads **accent-orange when ON**.
+
+**DEVICE-WALK ROUND 5 (owner, 2026-07-10) — the third in-app notes batch (design-spec 0.56 owns it).**
+Six notes, all presentation/flow (CR-21/server untouched): **(1)** the breakout transition is **rebuilt
+as a boundary-continuous zoom** — the dip-through-background is retired (it read as a blink after two
+tuning rounds); the screen container transform-animates its edges from the framed rect to the
+**measured** full-bleed rect, the layout swaps at the boundary-coincidence frame, reversed on exit; no
+dark dip, no boundary jump; transform-only/no-remount held; native-only (web instant); the mid-motion
+~12% aspect stretch is the accepted cost, and the recorded fallback if the feel still misses is an
+instant cut. **(2)** the rack caption row **reverts to round 3** (caption above the rail, chip right).
+**(3)** the ops/rename shift is solved by **swapping them INTO the bench-button slot**: the ops become
+a single-line horizontally-scrolling row at the same height as the buttons they replace, RENAME swaps
+the same slot to an input row riding **`KeyboardLift`** (the keyboard no longer covers it) — the panel
+never changes height. **(4)** the **editbar goes persistent** across bench/EDIT/TRANSFORM: RESET SLIP ·
+the cream TRANSFORM key · **unlabelled ↺/↻** as one same-height cluster — undo/redo reachable from both
+menus and the TRANSFORM key never moves (the EDIT-head TRANSFORM door retires; the TRANSFORM head keeps
+its EDIT door). **(5)** the EDIT sheet's **MORE row moves under RESIZE BOX**. **(6)** the TransformDrawer
+**drops its sliders for arrow-stepper rows** in one grammar — POSITION's four directional arrows sit
+INLINE in the row (the centred d-pad cross retires) beside the X·Y read-out; **W · H (text: SIZE) ·
+ROTATE (1° taps, hold-ramping)** are each a **◀ value ▶** stepper row; RESIZE BOX unchanged.
+
+**Web bed-paint quirk (owed here from the acceptance walk).** On the `:8082` web preview the press bed
+comes up blank on first open until a browser-window resize — a **react-native-skia-WEB** CanvasKit
+surface-init race with the breakout relayout, **not** drivable from React. **Native paints on first
+open (owner-verified 2026-07-08).** Web is a dev-only surface (CLAUDE.md); this does **not** gate the
+native ship. `SkiaErrorBoundary` (F21 degrade) is the last-resort catch. (Also in `docs/qa-runbook.md`.)
 
 ## Browser BOOT check (binding rule (c))
 

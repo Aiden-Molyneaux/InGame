@@ -682,3 +682,361 @@ the owner's gate-5 hands — **the depth is real; what's left to judge is whethe
   stepped-mouse drag recipe, LogBox tap-stealing) are captured in `docs/qa-runbook.md`.
 - **Result:** **0 open 🚩 flags** · 12 ✅ expected (all cited) · 2 🎨 recorded → **the §3.4
   first-article + gate-5 taste stop — the owner's call on the workshop's feel.**
+
+---
+
+## Canvas (§3.4) — gate-5 acceptance fix pass · builder + fresh murr (M4, 2026-07-08, spec-owner)
+
+**Input:** the owner's device acceptance walk of the whole Canvas → **23 CRs** triaged in
+`canvas-gate-notes.md` (all 7 decision-needed RULED same-day). **Specs formalized first** (00-INDEX §4):
+decision **0067** anchors the batch; product-spec 0.53 (CARD-24a copy-on-write), api-contract 0.54,
+design-spec 0.53, component-map 0.5, OQ-139/140, OQ-007 re-resolved, the manifest C1/C3/ARCH corrected +
+a GATE-5 REVISION ADDENDUM. `/health` 🟢.
+
+**Built (all 23 CRs):** the breakout is a **scale-transform ZOOM** (CR-01, transform-only, no remount) ·
+**copy-on-write** for committed-card edits (CR-21 — the data-model change: `derived_from_card_id`) ·
+the **`TransformDrawer`** subsumes `NumPop` (CR-10) · `base` = a pinned recolour-only **pseudo-slip**,
+BASE off ADD (CR-08) · a shared **`ColorPicker`**+hex on Canvas fill/stroke (CR-11; title ink stays
+curated, OQ-137/M5) · SAVE PRIVATE gold + a light press beat (CR-17) · isolation toggle (CR-05) ·
+add→open-EDIT (CR-09) · cross-posture save disclaimer (CR-20) · the FIX bundle (CR-02/03/04/06/07/12/
+13/14/15/16/18/19) · game-page CARDS switcher 3-up (CR-22). The FIX/DESIGN Canvas-component bundle ran
+through a builder subagent; the load-bearing CR-21/CR-01 + the two new components were built directly.
+
+**murr (fresh, adversarial diff review) → 1🟠 + 3🟡; M1 fixed + murr-re-verified CLOSED:**
+🟠 **M1** — a KEEP/SAVE tapped **during the in-flight copy POST** leaked an orphan copy + re-pointed the
+kept session at it (the copy `createCard` promise was untracked). **Fixed:** `copyInflightRef` tracks
+the POST; `keep`/`savePrivateQuiet`/`keepAsDraftExit`/`saveAsNew`/`discardDraft` all **settle it first**
+and read the hot `cardRef` (not the stale `cardRow` closure); the copy-vs-fork decision derives from
+`originRef`. **murr re-verified: CLOSED** (orphan leak · microtask ordering · POST-failure path ·
+double-nav · the crash-recovered-copy resume case). 🟡 m2/m3 — the TransformDrawer clamps/slider ranges
+now match the ops bounds (exported `POS/SIZE/TEXT_SIZE` constants). 🟡 m1 — a dead `resumeSnapshotRef`
+assignment on the private path (documented, harmless). **Six lanes murr confirmed clean:** copy-on-write
+origin preservation · no-remount-across-zoom · two-door exit/CARD-24a (draft path unchanged) ·
+base-pseudo-slip immutability · roster→composition patch-correctness · autosave/BackHandler/lock.
+
+**Suite:** typecheck ✓ · eslint + custom lint ✓ · **267/267** vitest (+4 new copy-on-write integration
+tests) · **20/20** mobile jest · **/health 🟢**. **Live dev env:** migration 0006 applied to the dev DB;
+the running API `:4000` serves the new schema — an end-to-end copy-on-write POST round-tripped
+(`derivedFromCardId` accepted + returned); seed pristine.
+
+**Owed to the owner's gate-5 (native):** the **parvati VISUAL walk** — the web `:8082` lane was
+infra-blocked this pass (an expo-cli dependency-validation crash `EXPO_OFFLINE` didn't dodge; runbook
+noted), and web can't show the native zoom + comes up bed-blank regardless. The zoom *feel* + bed paint
++ the new-surface taste are the owner's native call.
+
+**→ ⛔ HARD STOP: the owner's gate-5 taste on the reworked Canvas + sign-off on the CR-21
+`derived_from_card_id` data-model (0067 §2); run parvati on device. §3.5 Device NOT started.**
+
+---
+
+## Canvas (§3.4) — gate-5 device-walk directives · parvati VISUAL walk (M4, 2026-07-08)
+
+**The walk owed by the fix-pass note above.** Ran on the `:8082` web preview (Chrome), demo@ingame.app,
+against the 8 owner device-walk directives (the CR checklist in `canvas-gate-notes.md` / decision 0067).
+Path: login → Elden Ring → CARDS → Aurora → EDIT IN STYLER → ⤢ CANVAS. Measured vs the
+`canvas-manifest.md` GATE-5 REVISION ADDENDUM + the 23-CR ledger.
+
+**Verdict: 8/8 directives MATCH · 0 🚩 flag · 2 🎨 polish/observation.** (measured vs the M4 Canvas
+manifest + CR-01/02/03/08/10/11/13/14/19 + items 1–8)
+
+**✅ MATCHES (directive-by-directive, with evidence):**
+1. **Bottom panel, not drawers (item 1).** EDIT opens as an INLINE bottom panel ("THE «NAME» SLIP" +
+   ✕) below the card; the card + sel-ring stay fully lit/undimmed above it (no scrim on the work).
+   TRANSFORM + base-EDIT open the same way. (PRESS still a drawer — correct, not checked destructively.)
+2. **Base slip in the rail (item 2 / CR-08).** `base` is the rightmost slip in the horizontal rail
+   (after ARROW), non-deletable; tapping it + EDIT opens **"THE BASE SLIP · BASE · COLOUR ONLY"** —
+   colour-only (STYLE SOLID/GRADIENT + FILL, no opacity/stroke/flip). Pinned pseudo-slip confirmed.
+3. **Transform menu (item 3 / CR-10).** POSITION = **4 direction arrows** (d-pad ▲◀▶▼), NO joystick;
+   SIZE = W/H sliders + steppers; ROTATION = **ROTATE slider** (0°), NO circular dial; **RESIZE BOX ·
+   ON** toggle present. TRANSFORM is an editbar button **between RESET SLIP and UNDO**. Sel-ring corner
+   handles enlarged. *(Note: built to the owner's SPOKEN walk directive — arrows + slider — which
+   diverges from the CR-10 written wording "joystick + dial" in canvas-gate-notes.md §CR-10. The build
+   made the right call; flagged below as a doc-consistency 🎨.)*
+4. **Flip glyphs, not emoji (item 4 / CR-13/14).** MORE row FLIP-H / FLIP-V use drawn double-arrow
+   glyphs. Whole-app emoji audit (DOM text-node scan): **zero emoji** outside two benign unicode marks
+   (`⇅` SORT on the game page behind, `✕` close). No 👁, no ↔/↕. UI draws glyphs via 23 `<svg>` + 15
+   `<canvas>`.
+5. **Eyedropper pipette (item 5).** FROM-CARD control carries a drawn pipette glyph (1 `<svg>` in the
+   button), not a plain circle/emoji.
+6. **Colour control closed by default (item 6 / CR-11).** FILL shows swatch + recents row + PICK COLOUR
+   + FROM CARD, picker COLLAPSED. Tapping PICK COLOUR opens the full picker (HS sat/val area + hue bar +
+   **# hex field**, read `1C1A2E`) and the button flips to CLOSE PICKER. Closes back to collapsed.
+7. **Recents populate (item 7).** Picked 2–3 colours → FILL recents row went from "NO RECENT COLOURS
+   YET" to 3 swatches, most-recent-first; recents persist session-wide (survived base→star slip switch).
+8. **Sanity (item 8).** ⤢ CANVAS entry (no route change — posture switch on `/styler/...`; zoom to
+   full-bleed, shell yields) and ◂ exit (zoom reverses, shell + composited card restore, session
+   continues) both clean. Cap-meter "8 / 30" renders **orange** (CR-03). PROOF drawn-glyph. **Zero
+   uncaught console errors** across the whole walk. 15 canvases at peak — under the ~16 WebGL ceiling.
+   Also observed live: editing the PRIVATE Aurora spun a **DRAFT copy** (sub-line PRIVATE→DRAFT on first
+   edit) — CR-21 copy-on-write visibly working.
+
+**🎨 Polish / observations (not milestone blockers):**
+- **CR-10 doc-vs-build wording drift** — the BUILT TransformDrawer uses **4 arrows + a rotation slider**
+  (matching the owner's spoken walk directive), but `canvas-gate-notes.md` CR-10 + the manifest ADDENDUM
+  still say "joystick + dial." The build is correct to the owner's intent; the DOC wording should be
+  reconciled to "arrows + slider" so a future reader isn't misled. Spec-owner nit, not a build change.
+- **rn-skia-WEB bed paint + CDP capture race (rig limit, already owned).** The large press-bed skia
+  surface intermittently comes up blank / stalls CDP screenshots until a viewport nudge — the documented
+  web-only CanvasKit init race (manifest "Web bed-paint quirk"; native paints on first open per owner
+  2026-07-08). Rack strip thumbnails + all RN panels/controls render fine throughout. Not a product bug;
+  does not gate the native ship.
+
+**Not exercised (rig limits, stated honestly):** PRESS→SAVE-PRIVATE full exit + light press beat
+(CR-17), ✕→discard revert, PROOF flatten+ladder stamp, long-press ops row (CR-12 close affordance),
+lock-glyph badge (CR-13) on a locked slip, UNDO/REDO taps, isolation on/off toggle (CR-05), cross-posture
+save disclaimer (CR-20) — these need a driven interaction or destructive step the web CDP lane couldn't
+reliably reach this pass; the BOOT-walk + murr rounds cover most. **The zoom *feel*, native bed paint,
+and the reworked-surface taste remain the owner's native gate-5 call.**
+
+**Seed residue:** the walk's colour edits landed on a copy-on-write DRAFT of Aurora (original PRIVATE
+pristine by CR-21). Re-run `npm -w @ingame/api run db:seed-dev` before the owner stop to clear the draft
+(the §3.2-round precedent). **→ DONE: seed re-run — Aurora private+equipped, shelf 17/17, draft cleared.**
+
+### murr (device-walk round 2, fresh-context, same day) → 0 blockers · 1🟠 + 3🟡 — all fixed/dispositioned
+All seven risk lanes CLEAN (bottom-panel mode exclusivity · hold-to-repeat interval cleanup ·
+recents-debounce teardown · base-in-rail index safety · the zoom cover's no-remount — the cover is a
+SIBLING of `{children}`, so the route + skia bed never remount · showHandles · patch-correctness), and
+murr independently **re-confirmed CR-21 copy-on-write / two-door exit holds**. **Fixed:** 🟠 **M1** — the
+rotation slider reused `IntensitySlider` and showed a bogus "N%" beside the degrees (+ SR announced a
+percent) → `IntensitySlider` gained a `valueText` prop; rotation shows `NNN°`, W/H show size-%. 🟡 **m2** —
+RESIZE BOX OFF now **disables the corner-scale hit-test** (was hiding only the handles) so box-off truly
+lets you drag-move without a stray scale. 🟡 **m3** — deleted orphaned `NumPop.tsx` + dead
+`dimmed`/`benchHint*` styles. **Dispositioned:** 🟡 **m1** — the copy-POST lost-response duplicate edge →
+**OQ-141** (defer; non-data-loss). Suite after fixes: typecheck ✓ · lint ✓ · 20/20 mobile ✓. Docs
+reconciled (design-spec/component-map/manifest ADDENDUM now say arrows+slider, not joystick+dial).
+
+**→ ⛔ HARD STOP: the owner's device re-walk of the reworked Canvas** (bottom panel · base-in-rail ·
+arrows+slider transform · the zoom feel) + sign-off on the CR-21 data-model. Web `:8082` is up. §3.5 not started.
+
+---
+
+## Styler roster expansion + animation driver (decision 0068) · parvati (M4, 2026-07-09)
+
+**Verdict:** 3 🚩 flag (ALL found + fixed + re-verified in-session → **0 open**) · 3 🎨 polish/notes · (all
+rails + render paths MATCH) — measured vs decision **0068** (the all-basic-now expansion + the animation
+invariant) and the `styler-manifest.md` attribute-rail rows (D.21 preview grammar).
+**Reviewed from:** own web `:8082` walk (fresh login → Elden Ring → CARDS → EDIT IN STYLER on the Aurora
+private card), the FRAME/EFFECT/PLATE/TITLE rails + the hero wearing EMBER GLOW frame and the EMBERS
+effect; console read clean throughout; seed restored (session copy discarded — copy-on-write left the
+original Aurora untouched). **Static-screenshot limit noted:** continuous MOTION (marquee chase · ember
+rise · frost/holo/metallic sheen sweep) cannot be verified from stills — owed on device; the driver
+MOUNTING + the static keyframes ARE verified here.
+
+### 🚩 Flags (found DURING this pass; fixed + re-verified — 0 open)
+- **FRAME rail blanked most tiles** — behavior/regression — the AttributeSection drew one live `<CardFace>`
+  `<Canvas>` per tile; the 16-frame rail + the hero = 17 skia contexts, over the browser's ~16-WebGL ceiling
+  → tiles 4-16 rendered blank. Exactly the exhaustion the §3.4 review filed. **FIXED:** all card-preview
+  rails now draw through ONE strip canvas (`buildCompositionStrip` → `CompositionStrip` → the AttributeSection
+  `CardRail` — transparent Pressable overlays for taps/a11y/labels, one pip over the selected tile), the same
+  ADDENDUM "ONE-CANVAS STRIPS" rule the AssetShelf/LayerRack follow. **Re-verified:** all 16 FRAME + 10 EFFECT
+  tiles render live.
+- **New font previews rendered in Chakra** — MISPLACED (wrong face) — the TITLE `FontPreview` `<Text>` maps
+  fontId→RN family via `FONT_FAMILY`, which only had the two original fonts, and the 5 new RN fonts weren't
+  loaded in `_layout`. **FIXED:** `FONT_FAMILY` + `useFonts` gained press-start/bitter/space-mono/pacifico/
+  stencil. **Re-verified:** the TITLE rail shows all 7 fonts in their real faces (Pacifico script · Space Mono ·
+  Bitter serif visibly distinct).
+- **PLATE rail previewed the 5 new shapes as SLAB** — MISPLACED — `PlatePreview` (an SVG) only drew ribbon/
+  bevel/slab; capsule/tab/arch/dogtag/brass fell through to the slab rect, so the tiles lied about the pick
+  (D.21 says the plate tile previews the actual plate). **FIXED:** added the five SVG paths + brass gold tint.
+  **Re-verified:** all 8 plate tiles render distinct (CAPSULE rounded · TAB folder-tab · ARCH domed · DOGTAG
+  hexagon ends · BRASS gold).
+
+### 🎨 Polish / notes (built-app; owner's eye)
+- **Marquee chase light traces a plain rectangle, not the F-02 stepped notch** (murr minor) — the static track
+  hugs the stepped silhouette but the live light cuts across the TL/BR notches. Hero-only, softened by the
+  blur; owner-taste call whether to trace the stepped arc-length.
+- **STUB rides ticket-notch in the app accent-orange** (`#ff9f43`) — a deliberate de-dup so it isn't a second
+  cream TICKET (0068). Colour is the owner's to re-tune.
+- **All entries are `tier:'basic'`** by 0068 — no premium tag/lock renders anywhere (correct; the split is
+  deferred to when the owner finalizes the sets).
+
+### ✅ Matches (present · placed · on-aesthetic)
+- FRAME rail — 16 tiles, each the draft wearing that frame (glow bloom, foil/ornate/chrome/pixel all visible);
+  EMBER GLOW applied to the hero renders its red bloom. EFFECT rail — 10 tiles (halftone dot-screen, grain,
+  frost, embers all reading); EMBERS on the hero renders the warm hearth keyframe + rising motes (the driver
+  mounts, zero console errors). PLATE rail — 8 distinct shapes. TITLE rail — 7 real faces + the ink row.
+  Autosave ticks + persists; the two-door exit (✕ → discard-the-copy) behaves per 0067.
+
+### Residue
+- One orphan DRAFT created during the walk (a START-WITH-THIS on the first pass, before a reload) — harmless
+  under cap-30; owner may delete from the Elden Ring switcher.
+
+**→ owner's gate-5 taste on the reworked rails + the MOTION on device (the one thing stills can't show).**
+
+---
+
+## Canvas (§3.4) — gate-5 device-walk ROUND 3 · builder + fresh murr + fresh parvati (M4, 2026-07-09, Fable)
+
+**Input:** the owner's 13 in-app notes on the round-2 Canvas. All triaged **presentation/flow** (00-INDEX §4) —
+no product-spec/api-contract ripple, CR-21 untouched. **Formalized first:** design-spec **0.54** (§2.5b
+"Gate-5 iteration round 3") · component-map **0.6** · canvas-manifest **DEVICE-WALK ROUND 3** addendum ·
+`/health` 🟢.
+
+**Built (12 client files + new `ScrollLock.tsx`):** the breakout dissolve reads as **one continuous zoom**
+(outgoing scales into the move · swap behind the `scr.bg` dip · incoming settles it; no-remount held; a
+mask-free measured-rect zoom ruled out — aspect distortion + rn-skia per-frame re-surface) · slip rail
+**z-ascending L→R, BASE leading** · **TRANSFORM accent chip** on the editbar + a **door in the EDIT panel
+head** · the bottom panel pins to **ONE bench-measured height** across bench/ADD/EDIT/TRANSFORM
+(PROOF/PRESS exempt) · TransformDrawer **0.5% nudges + slow-start hold ramp (110→45ms) + live X·Y
+read-out**; **RESIZE BOX OFF hides the whole sel-ring** + the toggle rides the EDIT sheet · the **scroll-lock
+rule** (`ScrollLock` context: a held slider/SV-area/hue-strip disables its host ScrollView; web adds
+`touchAction:none`) wired through the inline panels, PulledSheet, and the styler edit body · the colour
+picker **applies on RELEASE** (live in-picker preview; echo-guard so the cursor never re-seeds off its own
+emission) · **FROM CARD unfiltered** (the recents-filter that hid the base colour removed) · ADD grid
+**spans the panel width** + the **orange cap-meter chip** (the leftover gold count — CR-03/F-02) · **GLOW/BLEND
+rows** replace LIGHT · titles **EDITING THE '«NAME»' SLIP**. GROUP: answered (present-but-disabled by design,
+CARD-08 at-scale/§3.6) — no build.
+
+**murr (fresh, adversarial, scoped to the round-3 files) → 1🔴 + 3🟠 + 3🟡, then 2🟠 + 1🟡 more on re-verify —
+ALL fixed + murr-re-verified CLOSED (0 open):**
+🔴 **F1 frozen-PanResponder closures** — `useRef(PanResponder.create()).current` froze mount-time `onChange`
+in IntensitySlider + the picker's SVArea/HueStrip: a hue-then-SV drag snapped the pick back to the mount hue
+(the owner's exact "resets itself" complaint), the Transform W drag reverted H, OPACITY wrote a stale slip.
+**Fixed:** every live callback ref-routed. murr's re-verify then flushed the same class in two PRE-EXISTING
+spots — 🟠 CanvasStage's frozen `onPull` (bed re-taps re-armed the RESET-rebase bug; snapshots taken from
+canvas-entry elements) and 🟠 LayerRack drag-Z's frozen `onReorder` (pull-highlight desync after a drag) —
+both ref-routed + CLOSED. 🟠 F2 the full dip+zoom played on native MOUNT (first-run guard added) · 🟠 F3 the
+echo-guard stuck (cleared on real reseeds) · 🟠 F4 benchH max-capture polluted by the ops row (now MIN-at-width,
+self-healing) · 🟡 F5 scroll-lock leak on unmount-mid-drag (heldRef + cleanup unlock) · 🟡 F6 rotation-slider
+right edge snapped to 0° (capped 359) · 🟡 F7 mid-flight re-toggle scale pop (no setValue reset) · 🟡 N1
+stranded `editOpen` popped the EDIT panel open on unlock (pull() clears it on null/locked pulls; live
+retarget to an unlocked pull kept).
+
+**parvati (fresh, `:8082` web walk) → 0 🚩 · 1 ✅ · 2 🎨 — all 8 web-verifiable directives MATCH** (rail
+order w/ live z-proof · both TRANSFORM doors · bed pixel-pinned across all four panel modes · X·Y read-out
++ half-step ticks + whole-ring hide from BOTH homes · full-width ADD grid + orange chip · GLOW/BLEND +
+title copy · apply-on-release w/ ONE autosave per gesture + no hue snap-back + base colour in FROM CARD ·
+zero scroll displacement under drags). 🎨 both fixed same-pass: the RESIZE BOX ON/OFF↔SHOWN/HIDDEN label
+drift (unified ON/OFF) + web drag text-selection (`userSelect:none` on the control labels). Zero console
+errors. Copy-on-write re-confirmed live (PRIVATE→DRAFT on first edit). **Not exercisable on the rig:**
+single-tap nudge exactness, the mid-drag preview frame, and the zoom feel (native-only).
+
+**Suite at end:** typecheck ✓ · eslint + custom lint ✓ · 267/267 vitest ✓ · **41/41** mobile jest ✓ ·
+`/health` 🟢 · seed restored (Aurora private+equipped, 17/17 — parvati's copy-draft cleared).
+
+**→ ⛔ HARD STOP: the owner's device walk on round 3** — the continuous-zoom feel (native-only), real-finger
+arrow taps + the hold ramp, and the round-3 taste overall — **+ the CR-21 data-model sign-off (0067 §2) still
+owed from round 1.** §3.5 Device NOT started.
+
+---
+
+## Canvas (§3.4) — gate-5 device-walk ROUND 4 · builder + fresh murr + fresh parvati (M4, 2026-07-10, Fable)
+
+**Input:** the owner's 13 round-4 notes (on the round-3 Canvas). All **presentation/flow** (00-INDEX §4) —
+no product-spec/api-contract ripple, CR-21 untouched. **Formalized first:** design-spec **0.55** (§2.5b
+"Gate-5 iteration round 4") · component-map **0.7** · canvas-manifest **DEVICE-WALK ROUND 4** addendum.
+
+**Built:** TRANSFORM in the **cream-key voice** (editbar + panel-head doors, like PROOF) · head doors
+**both ways** (EDIT↔TRANSFORM) · the TransformDrawer **condensed** (ROTATE inside POSITION; RESIZE BOX
+as the EDIT row grammar) · **tap = exactly one 0.5% nudge** (~350ms initial repeat delay) + a **harder
+hold ramp** (fast beats 1%, ~2.5× round 3) · the **sel-ring rotates WITH the slip** (same pivot as the
+renderer — the element anchor; corner/body grabs unrotate the touch; corner-scale deltas rotate into
+local space) · a **rotation handle** on the ring (top-edge knob + stem; drag-to-rotate with quarter
+snaps; flips below the box near the bed top; the drawer slider stays the CARD-16 pair — `CanvasStage`
+gains `onRotate`) · the editbar **divider dropped** · the rack **caption + cap-chip under the rail**
+(chip left) · **PROOF docks left of PRESS** and the pair **holds position through PROOFING** (PRESS
+works from the proof) · EDIT sheet: **kind meta-line removed + OPACITY under the FILL cluster** ·
+ISOLATION chip **higher + accent-when-ON**.
+
+**murr (fresh, adversarial) → 1🔴 + 2🟠 + 3🟡 — all fixed/dispositioned; re-verify 5/5 CLOSED, 0 open:**
+the rotation MATH was verified sound (anchors/signs/inverse maps/corner-delta, by hand); the holes were
+interaction-layer: 🔴 **F1** a non-moved knob/corner grant fell into the tap branch and **deselected the
+slip** (the knob point sits outside every element box) → the release is now **mode-aware** (tap logic
+only for idle/move grants). 🟠 **F2** slider drags pushed **one history entry per frame** (a 1s sweep
+evicted the whole 60-cap undo past) → `IntensitySlider` gained `onBegin` (once per gesture); the
+drawer's per-frame begins removed; OPACITY patches ride `history:false` — **one entry per sweep**
+(parvati re-proved it live). 🟠 **F3** the knob was drawn but **dead** for slips near the bed top (it
+overflowed the gesture surface) → it **flips below the box** (draw + hit-test share `knobBelow`).
+🟡 **F4** hidden slips were precision-editable blind → a shared `editable` gate (locked OR hidden)
+covers EDIT/TRANSFORM/X·Y/doors. 🟡 **F5** the knob's hit square ate narrow slips' top corners →
+corners test first. 🟡 **F6** web `transformOrigin` unverifiable statically → parvati verified the
+pivot on web (below). **Dispositioned:** one residual 🟡 — `knobBelow` decides in unrotated space, so
+extreme poses (a 180°-rotated slip at the bed top; 90°/270° near a side edge) can park the knob
+off-surface: draw + hit-test stay consistent and the drawer slider covers the pose — ledger, not a
+blocker. Plus nits: the PROOFING sub-line masks a retrying save-state (honesty nit, no loss — exits
+await their writes); two-finger arrow-holds degrade gracefully.
+
+**parvati (fresh, `:8082` walk) → 0 🚩 · 1 ✅ · 0 🎨 — all 10 web-verifiable directives MATCH** (cream
+computed-style byte-identical to PROOF · condensed drawer · both doors swap in place, bed pixel-pinned ·
+divider gone · caption+chip under the rail · **PROOF/PRESS DOM rects pixel-identical across modes** +
+the finish-up sheet opens over the proof · the ring rotates with vector AND text slips with a correct
+pivot on web (murr F6 answered) + **CDP drag-to-rotate worked** + the knob flipped below at Y 9% ·
+EDIT-sheet order right · ISOLATION accent-when-ON · **one UNDO reverts a whole opacity sweep** + tap =
+exactly 0.5%). ✅ deferred-to-device: the zoom feel, the quarter-snap feel, the ramp acceleration
+timing. Zero console errors. Residue draft cleared (seed re-run — Aurora private+equipped, 17/17).
+**Workflow friction:** the Chrome-MCP zoom-override trap hit #2 (recovered per runbook); Metro found
+down mid-walk (doctor → `dev-stack up`, ~2min).
+
+**Suite at end:** typecheck ✓ · eslint + custom lint ✓ · 267/267 vitest ✓ · 41/41 mobile jest ✓ ·
+`/health` 🟢 · seed pristine.
+
+**→ ⛔ HARD STOP: the owner's device walk on round 4** — the rotation-handle feel (snap + drag), the
+tap/hold nudge feel, the cream TRANSFORM keys, the PROOF∥PRESS pair — **+ the CR-21 data-model sign-off
+(0067 §2), still owed.** §3.5 Device NOT started.
+
+---
+
+## Canvas (§3.4) — gate-5 device-walk ROUND 5 · builder + fresh murr + fresh parvati (M4, 2026-07-10, Fable)
+
+**Input:** the owner's 6 round-5 notes. All **presentation/flow** (00-INDEX §4); CR-21/server untouched.
+**Formalized first:** design-spec **0.56** (§2.5b round 5) · component-map **0.8** · manifest **ROUND 5**.
+
+**Built:** the breakout **rebuilt as a boundary-continuous zoom** (the dip retired after two tuning
+rounds — it read as a blink): the screen container transform-animates its edges from the framed rect to
+the **measured** full-bleed rect, the layout swaps at the boundary-coincidence frame, reversed on exit —
+no dark dip, no boundary jump, transform-only/no-remount held, the ~12% mid-motion aspect stretch is the
+accepted cost (native-only; the recorded fallback if the feel still misses = an instant cut) · the rack
+caption row **reverted to round 3** · the ops/rename shift **solved by slot-swapping**: they render IN
+the bench-button slot (fixed 44px; ops = a single-line scrolling row; rename = an input row on
+`KeyboardLift`) — the panel never changes height · the **editbar persists** across bench/EDIT/TRANSFORM
+(RESET · the cream TRANSFORM key · **unlabelled ↺/↻**, one 30px cluster — undo/redo reachable from both
+menus, the TRANSFORM key never moves; the EDIT-head door retired) · EDIT sheet **MORE under RESIZE
+BOX** · the TransformDrawer **sliders → arrow-stepper rows** (POSITION's four arrows inline + X·Y;
+W/H/SIZE/ROTATE as ◀ value ▶ rows; 1° rotate taps, hold-ramping ×5).
+
+**murr (fresh, adversarial; three passes) → ALL CLOSED, 0 open:** 🔴 **R5-1** the exit swap re-measured
+the framed rect THROUGH the covering transform — `rectsRef` poisoned after ONE cycle, silently reverting
+the zoom to the blink → measurement is now **animation-gated** (`animatingRef`) + an explicit **at-rest
+re-measure** on exit completion + a breakout-resize invalidation (R5-4) + a guardless-core hardening
+(N3). 🟠 **R5-2** undo could re-lock/re-hide the pulled slip UNDER an open panel, stranding
+`transformOpen`/`editOpen` (panel teleported open on the next UNLOCK) → an effect clears them whenever
+`editable` collapses (baseEdit protected). 🟠 **R5-3** a rename left open across a history walk could
+SAVE onto the wrong/locked slip → undo/redo close the ops context + a lock re-check at commit.
+🟡 R5-5 corner flash (radius flattens during the motion) · 🟡 R5-6 a scroll starting on a stepper arrow
+mutated + polluted history → press-in only ARMS; a tap steps via onPress; a stolen press mutates
+NOTHING · 🟡 R5-7/N2 per-press+per-fired **tokens** (two-finger chains can't kill or double-step each
+other; SR increments never suppressed) · 🟡 R5-9/N1/N1b keyboard dismissed on EVERY rename exit incl.
+posture-leave (unmount cleanup) · 🟡 N4 `editable` now requires the element to EXIST (undo-away no
+longer shells the panel; the opAdd batching verified against the real `patchDraft` source) · 🟡 R5-8
+the stepper rows regained the **adjustable role** + increment/decrement actions. **Ledger (accepted):**
+POSITION arrows are plain buttons (a11y at-scale) · Android double-focus on adjustable rows · the
+extreme-pose knob reach (round 4) · benchH transient on rotate-mid-panel · desktop-web mouse-wheel over
+the panel once dismissed it (parvati; not a native gesture).
+
+**parvati (fresh, `:8082`) → 0 🚩 · 1 ✅ · 1 🎨 — all 8 round-5 directives MATCH** (caption reverted ·
+ops/rename slot-swap with the editbar/rail/card **pixel-unmoved** · the persistent editbar
+**DOM-rect-identical across EDIT/TRANSFORM**, unlabelled 30px keys, undo-from-EDIT proven · EDIT-head
+door gone · MORE last · stepper drawer with **step-exactness proven** (0.5%/1°) + per-step undo · 3
+clean zoom cycles, zero console errors · CR-21 re-confirmed live). 🎨 the TRANSFORM pressed-state read →
+fixed same-pass (active never dims + an accent keel on the pressed key). **Owed to device:** the zoom
+feel (the headline), hold-ramp cadence, KeyboardLift, ops-row scroll at phone width.
+
+**Suite at end:** typecheck ✓ · lint ✓ · 267/267 vitest ✓ · 41/41 mobile jest ✓ · `/health` 🟢 · seed
+pristine (walk drafts cleared).
+
+**→ ⛔ HARD STOP: the owner's device walk on round 5** — **the boundary-continuous zoom feel is the
+headline** (if it still misses, the recorded fallback is an instant cut), plus the slot-swap ops, the
+persistent editbar, the stepper drawer — **+ the CR-21 data-model sign-off (0067 §2), still owed.**
+§3.5 Device NOT started.
+
+---
+
+## Canvas (§3.4) — GATE CLEARED (owner, 2026-07-10)
+
+The owner walked round 5 on device: **gate-5 taste PASSED ("looks great")** — the boundary-continuous
+zoom landed (the instant-cut fallback retires unexercised). The **0069 button-convention parvati
+re-walk** of the five re-skinned surfaces is **confirmed done by the owner's own walk**. And **CR-21 is
+SIGNED OFF** — the `derived_from_card_id` copy-on-write data-model is approved as ruled (0067 §2 note);
+migration 0006 ships. **All three §3.4 gates are clear → the §3.4 tree (Canvas rounds 1–5 + the 0069
+sweep) is commit-ready; §3.5 Device is UNBLOCKED.** Next: the m4 commit (owner-triggered), then Device —
+planned on Fable, built by Opus packet agents, reviewed on Fable (owner's model directive, 2026-07-10).

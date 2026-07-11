@@ -36,6 +36,12 @@ under Promoted.
 - **Fix:** open a fresh tab (the only reliable clear). Avoid `zoom` on RN-web QA tabs; use `computer` screenshot + region math instead.
 - **Verified:** 2026-07-06 · **Hits:** 1 *(parvati's §3.2 walk)*
 
+## `resize_window` mid-walk latches a CDP device-metrics override on the skia surface
+- **Symptom:** nudging the browser window mid-walk (to clear the rn-skia-web blank bed) shrank the tab's viewport to ~183×22 and froze its captures for the rest of the walk.
+- **Diagnosis:** same class as the `zoom` override — `resize_window` sets a device-metrics override that the skia surface + CDP capture path don't recover from cleanly.
+- **Fix:** don't `resize_window` mid-walk on a page with a live skia canvas. Drive from a **fresh tab + re-login** to get a clean viewport; if the bed is blank, a full fresh-tab reload beats an in-place resize.
+- **Verified:** 2026-07-08 · **Hits:** 1 *(parvati's §3.4 device-walk)*
+
 ## On-device "X is not installed!" from an optional-dep proxy — check TRANSITIVE native versions
 - **Symptom:** Expo Go redboxes "react-native-reanimated is not installed!" (skia's `OptionalDependencyNotInstalledError`) even though the package is installed and present in the served chunk.
 - **Diagnosis:** the proxy's `try { require(...) } catch` swallows the REAL error — here a JS/native mismatch: reanimated 4.1.7 pulled `react-native-worklets@0.8.3` while Expo Go SDK 54 ships worklets **0.5.1** natively; worklets threw at init. `expo install` pins only the package you name — its transitive native deps can still drift off the SDK matrix (F41's blind spot).
@@ -48,12 +54,13 @@ under Promoted.
 - **Fix:** restart the stack from the allowed binary:
   `"C:/Users/aiden.molyneaux/AppData/Local/nvm/v20.19.6/node.exe" scripts/dev-stack.mjs up` (with the same dir prefixed to PATH so npm/expo children inherit it). Verify with `(Get-Process -Id <pid-of-:8082>).Path` — it must be the appdata nvm path, not `C:\nvm4w\...`. (Durable alternative, owner-only: add a firewall allow rule for `C:\nvm4w\nodejs\node.exe`.)
 - **Verified:** 2026-07-06 · **Hits:** 1
+- **⚠ Correction (2026-07-08):** the "Expo Go connects via `exp://…:8082`" line is wrong — :8082 is **web-only** (`--web`). Device tests need a **native** Metro on **:8081** (see "Device (Expo Go) tests need a NATIVE Metro"). The firewall/allowed-node lesson here still applies to the shared **API :4000** the phone must reach.
 
 ## Metro won't start — expo-cli dies with "Body is unusable: Body has already been read"
 - **Symptom:** `dev-stack up` reports metro down; `.devstack/metro.log` ends with `TypeError: Body is unusable` at `getNativeModuleVersionsAsync` (expo-cli's dependency-validation step) and `expo start` exits 1.
 - **Diagnosis:** expo-cli's version-check call to the Expo API double-reads a fetch response (upstream CLI bug); clearing `~/.expo/native-modules-cache` + `~/.expo/versions-cache` did NOT fix it.
 - **Fix:** `EXPO_OFFLINE=1 node scripts/dev-stack.mjs up` — skips the validation (LAN bundle serving is unaffected; Expo Go connects via `exp://<LAN-IP>:8082`). If this re-hits, bake `EXPO_OFFLINE=1` into the supervisor's metro spawn.
-- **Verified:** 2026-07-06 · **Hits:** 1
+- **Verified:** 2026-07-08 · **Hits:** 2 → **PROMOTED (done).** `EXPO_OFFLINE=1` is now **baked into `startDetached`'s child `env`** in `scripts/dev-stack.mjs` (the metro + api spawn), so `up` no longer needs the shell prefix. *The 2026-07-08 device-walk re-hit surfaced the real story: the crash text (`getVersionedNativeModulesAsync`/`Body is unusable`) was a red herring — the metro actually **bundled fine** on the offline run and only died because a `timeout`-wrapped `dev-stack up` (bash tool) **cascade-killed the detached child** (see the "console-cascade" entry). Fix that stuck: (1) baked-in EXPO_OFFLINE, (2) launch via PowerShell `Start-Process -WindowStyle Hidden node scripts/dev-stack.mjs up` (survives), (3) poll `:8082` — came up HTTP 200. `up`'s prewarm can log a non-fatal SSR `window is not defined` (expo-router web prerender + async-storage) — ignore it; the interactive bundle serves.*
 
 ## Hard URL navigation logs the web session out
 - **Symptom:** navigating the QA tab to an app URL (deep link like `/styler/:gameId?cardId=…`) lands on `/sign-in`; the deep link is not replayed after login.
@@ -72,6 +79,24 @@ under Promoted.
 - **Diagnosis:** dev-only LogBox; it re-opens itself per mount while the error list is non-empty.
 - **Fix:** dismiss it via its own Dismiss/✕ each time (or fix the underlying error and reload — a clean console spawns no LogBox). Budget for it whenever a walk intentionally provokes errors.
 - **Verified:** 2026-07-07 · **Hits:** 1 *(parvati's §3.4 walk)*
+
+## Device (Expo Go) tests need a NATIVE Metro — `dev-stack up` only serves web-only :8082
+- **Symptom:** owner "can't connect" / stuck on the sign-in screen on the phone even though the dev stack is green and the web preview (:8082) works; `.devstack/metro.log` shows only `platform=web` requests, never `ios`/`android`.
+- **Diagnosis:** the dev-stack Metro is `expo start --web --port 8082` (`scripts/dev-stack.mjs:353`) — a **web-only** server. Expo Go cannot pull a **native** bundle from a `--web` server, and `dev-stack up` never starts a native Metro. The phone lane (:8081) is a SEPARATE native `expo start` that has to be running. *(This corrects the older "Phone can't reach the dev stack" entry, which says "Expo Go connects via exp://…:8082" — :8082 is web-only.)*
+- **Fix:** start a native Metro under the firewall-allowed node, **detached via Start-Process** (see the next entry): `…/v20.19.6/node.exe node_modules/expo/bin/cli start --port 8081` (CWD `apps/mobile`, `EXPO_OFFLINE=1`). Point Expo Go at `exp://<LAN-IP>:8081` (or reopen the project). The API (:4000) is shared and fine. Verify it's on the allowed node: `(Get-Process -Id <pid-of-:8081>).Path`.
+- **Verified:** 2026-07-08 · **Hits:** 1
+
+## Servers spawned from the bash tool die on a later command's kill (Windows console-cascade)
+- **Symptom:** the API (:4000) and/or a hand-started Metro were up a moment ago, then vanish mid-session; `.devstack/api.log` ends with npm exit **3221225786** (`0xC000013A` = STATUS_CONTROL_C_EXIT). Seen right after a `dev-stack up` that the bash tool **terminated on timeout**, and after `nohup … & disown` background starts.
+- **Diagnosis:** Git-Bash `nohup`/`disown` does **not** detach from the tool's Windows console; when the tool kills a timed-out command it delivers a console-close (CTRL_CLOSE) to **every** process attached to that console — including "backgrounded"/detached children and the supervisor's just-spawned API+Metro.
+- **Fix:** start durable servers with **PowerShell `Start-Process -WindowStyle Hidden -RedirectStandardOutput <log> -RedirectStandardError <err>`** under the firewall-allowed node — a real detached process, immune to the bash-tool lifecycle. AND don't let `dev-stack up` be killed by a too-short tool timeout — give it **≥300s** so its prewarm finishes and its detached children survive. Re-check the port after an unrelated command to confirm survival.
+- **Verified:** 2026-07-08 · **Hits:** 1
+
+## `findstr -E` silently matches nothing (that's grep syntax, not findstr)
+- **Symptom:** a port check like `netstat -ano | findstr -E ":4000 :8081"` returns EMPTY → you wrongly conclude the ports are down.
+- **Diagnosis:** `findstr` has no `-E` flag; it treats `-E` as a literal token and matches nothing (silent false-negative).
+- **Fix:** one pattern per findstr — `netstat -ano | findstr ":4000" | findstr "LISTENING"`; for several ports run separate checks (or `findstr /R /C:"…"`).
+- **Verified:** 2026-07-08 · **Hits:** 1
 
 ---
 

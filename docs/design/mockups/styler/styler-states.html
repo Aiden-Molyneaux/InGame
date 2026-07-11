@@ -243,8 +243,9 @@
   .schips .chip { padding: 6px 7px; font-size: 9px; letter-spacing: .8px; font-weight: 700; }
   /* the persistent CANVAS door — a chip in the row but ORANGE (a posture switch, not an attribute
      section); always present so EDIT ART is one tap from anywhere in the Styler (owner, 2026-06-13) */
-  .schips .chip.canvas { background: var(--scr-accent); color: var(--scr-accent-ink); margin-left: 6px;
-    box-shadow: 0 2px 0 color-mix(in srgb, var(--scr-accent) 45%, #000), inset 0 1px 0 rgba(255,255,255,.4); }
+  /* decision 0069 — FLAT (F-03): the raised 3px drop-edge was removed 2026-07-10 (the build renders
+     CANVAS as a flat orange `stepped` ScreenButton). */
+  .schips .chip.canvas { background: var(--scr-accent); color: var(--scr-accent-ink); margin-left: 6px; }
   .sdots { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 8px 0 0; }
   .sdots .fdot { width: 5px; height: 5px; border-radius: 50%; background: var(--scr-grip); }
   .sdots .fdot.on { background: var(--scr-accent); box-shadow: 0 0 5px 1px rgba(255,159,67,.55); }
@@ -358,8 +359,9 @@
      raised bottom edge, no drop-shadow — and on PRESS/active show "Scanline Energize": fine
      CRT scanlines over a hairline-darkened fill, NO movement, no pip. COUNT keycap (.ccount)
      is flatten-ONLY (not pressable). Clip-path notches (.btn.add/.alt) are KEPT.
-     LEFT UNTOUCHED: physical .nav-btn (3D); the .schips section switcher (.chip / .chip.active /
-     .chip.canvas — accent-pip + raised active stay); .atile.sel accent border; sliders (.is-thumb). */
+     LEFT UNTOUCHED: physical .nav-btn (3D); the .schips section switcher (.chip / .chip.active —
+     accent-pip active). .chip.canvas was FLATTENED 2026-07-10 (decision 0069 — no raised edge on
+     screen, F-03); .atile.sel accent border; sliders (.is-thumb). */
   /* 1) IDLE = flat fill */
   .sk2 .btn { box-shadow: none; }
   .sk2 .btn.add { box-shadow: none; filter: none; }   /* KEEP clip-path */
