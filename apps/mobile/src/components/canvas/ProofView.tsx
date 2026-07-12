@@ -1,6 +1,6 @@
 import { Suspense, useState, type ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { theme } from '../../theme';
+import { Text, View } from 'react-native';
+import { themedStyles } from '../../theme';
 import { SkiaErrorBoundary } from '../SkiaErrorBoundary';
 import { LazyProofPrint } from './lazySkia';
 import { CardFace } from '../CardFace';
@@ -15,6 +15,7 @@ import type { CardComposition } from '../../render/composition';
 // MINI·64 · THUMB·48 (the board's GRID·96/THUMB·44 labels map to the app truth — manifest P6).
 
 export function ProofView({ composition, title }: { composition: CardComposition; title: string }) {
+  const styles = useStyles();
   const [flattenFailed, setFlattenFailed] = useState(false);
   return (
     <View style={styles.wrap}>
@@ -51,6 +52,7 @@ export function ProofView({ composition, title }: { composition: CardComposition
 }
 
 function LadderItem({ label, children }: { label: string; children: ReactNode }) {
+  const styles = useStyles();
   return (
     <View style={styles.ladderItem}>
       {children}
@@ -59,22 +61,22 @@ function LadderItem({ label, children }: { label: string; children: ReactNode })
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: { flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center', gap: theme.space.md },
+const useStyles = themedStyles((t) => ({
+  wrap: { flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center', gap: t.space.md },
   bedWell: {
-    padding: theme.space.lg,
+    padding: t.space.lg,
     backgroundColor: 'rgba(0,0,0,0.45)',
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
+    borderColor: t.scr.hairline,
   },
-  printFallback: { width: 189, height: 264, backgroundColor: theme.scr.panel },
-  flattenErr: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.brand.alert, textAlign: 'center' },
-  hint: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 0.5, textAlign: 'center' },
-  hintBold: { color: theme.scr.ink, fontFamily: theme.font.screenBold },
-  sizes: { alignSelf: 'stretch', borderTopWidth: 1, borderTopColor: theme.scr.hairline, paddingTop: theme.space.md, gap: theme.space.md },
-  sizesHead: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 2 },
-  ladder: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: theme.space.xl },
-  ladderItem: { alignItems: 'center', gap: theme.space.sm },
-  ladderLabel: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
-  sizesHint: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.faint, letterSpacing: 0.5, textAlign: 'center' },
-});
+  printFallback: { width: 189, height: 264, backgroundColor: t.scr.panel },
+  flattenErr: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.brand.alert, textAlign: 'center' },
+  hint: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5, textAlign: 'center' },
+  hintBold: { color: t.scr.ink, fontFamily: t.font.screenBold },
+  sizes: { alignSelf: 'stretch', borderTopWidth: 1, borderTopColor: t.scr.hairline, paddingTop: t.space.md, gap: t.space.md },
+  sizesHead: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 2 },
+  ladder: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: t.space.xl },
+  ladderItem: { alignItems: 'center', gap: t.space.sm },
+  ladderLabel: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
+  sizesHint: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5, textAlign: 'center' },
+}));

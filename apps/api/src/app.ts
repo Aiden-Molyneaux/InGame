@@ -9,6 +9,7 @@ import { usersRoutes } from './routes/users-routes';
 import { catalogRoutes } from './routes/catalog-routes';
 import { collectionRoutes } from './routes/collection-routes';
 import { cardRoutes } from './routes/card-routes';
+import { deviceRoutes } from './routes/device-routes';
 
 // The Express app factory. All paths mount under `/api` (api-contract base). The error middleware is
 // registered LAST so every thrown AppError / ZodError is mapped to the fixed envelope.
@@ -31,6 +32,7 @@ export function createApp(): Express {
       ...catalogRoutes,
       ...collectionRoutes,
       ...cardRoutes,
+      ...deviceRoutes,
     ]),
   );
 

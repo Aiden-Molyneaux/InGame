@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { theme } from '../../theme';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { useTheme, themedStyles } from '../../theme';
 import { PulledSheet } from '../PulledSheet';
 import { ColorField } from '../ColorPicker';
 import { IntensitySlider } from '../styler/IntensitySlider';
@@ -59,6 +59,8 @@ export function EditSlipSheet({
   /** render inline in the CanvasSurface bottom panel (no PulledSheet/scrim/handle/title) */
   inline?: boolean;
 }) {
+  const styles = useStyles();
+  const t = useTheme();
   // a held slider/picker must not pan this panel (the round-3 scroll-lock rule)
   const { scrollEnabled, api: scrollLockApi } = useScrollLockHost();
   // In inline mode CanvasSurface renders the panel header + close; here we render only the inner
@@ -130,7 +132,7 @@ export function EditSlipSheet({
               style={styles.textInput}
               accessibilityLabel="Slip text"
               placeholder="Text"
-              placeholderTextColor={theme.scr.faint}
+              placeholderTextColor={t.scr.faint}
             />
           </Row>
           <Row label="FONT">
@@ -237,6 +239,7 @@ export function EditSlipSheet({
 }
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
+  const styles = useStyles();
   return (
     <View style={styles.row}>
       <Text style={styles.label}>{label}</Text>
@@ -261,6 +264,7 @@ function Tog({
   danger?: boolean;
   disabled?: boolean;
 }) {
+  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="button"
@@ -279,6 +283,7 @@ function Tog({
 // FLIP glyph (CR-14 gate-5) — two small mirrored triangles drawn with Views, guaranteed no emoji.
 // axis 'h' = a horizontal pair (◀ ▶) for FLIP-H; axis 'v' = a vertical pair (▲ ▼) for FLIP-V.
 function FlipGlyph({ axis }: { axis: 'h' | 'v' }) {
+  const styles = useStyles();
   return (
     <View style={axis === 'h' ? styles.flipRow : styles.flipCol} pointerEvents="none">
       <View style={axis === 'h' ? styles.triLeft : styles.triUp} />
@@ -287,30 +292,30 @@ function FlipGlyph({ axis }: { axis: 'h' | 'v' }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   inlineScroll: { flexGrow: 0 },
-  inlineBody: { gap: theme.space.md, paddingBottom: theme.space.md },
-  meta: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md },
-  label: { width: 66, fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },
-  rowBody: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: theme.space.sm + 1 },
-  subLabel: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5, marginLeft: theme.space.sm },
-  pickerBlock: { gap: theme.space.sm },
-  pickerLabel: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },
+  inlineBody: { gap: t.space.md, paddingBottom: t.space.md },
+  meta: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
+  label: { width: 66, fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
+  rowBody: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: t.space.sm + 1 },
+  subLabel: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5, marginLeft: t.space.sm },
+  pickerBlock: { gap: t.space.sm },
+  pickerLabel: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
   tog: {
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    backgroundColor: theme.scr.panel,
-    paddingHorizontal: theme.space.md,
-    paddingVertical: theme.space.sm + 1,
+    borderColor: t.scr.hairline,
+    backgroundColor: t.scr.panel,
+    paddingHorizontal: t.space.md,
+    paddingVertical: t.space.sm + 1,
   },
-  togGlyphed: { flexDirection: 'row', alignItems: 'center', gap: theme.space.sm },
-  togOn: { borderWidth: 1.5, borderColor: theme.scr.accent, backgroundColor: 'rgba(255,159,67,0.08)' },
+  togGlyphed: { flexDirection: 'row', alignItems: 'center', gap: t.space.sm },
+  togOn: { borderWidth: 1.5, borderColor: t.scr.accent, backgroundColor: 'rgba(255,159,67,0.08)' },
   togDisabled: { opacity: 0.4 },
   // decision 0069 — destructive = alert FILL (not red text on grey); ink flips to cream.
-  togDangerBox: { backgroundColor: theme.brand.alert, borderColor: theme.brand.alert },
-  togText: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.ink, letterSpacing: 0.5 },
-  togDanger: { color: theme.brand.cream },
+  togDangerBox: { backgroundColor: t.brand.alert, borderColor: t.brand.alert },
+  togText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.ink, letterSpacing: 0.5 },
+  togDanger: { color: t.brand.cream },
   // FLIP glyph — two mirrored CSS-border triangles (ink), a small gap between them.
   flipRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   flipCol: { flexDirection: 'column', alignItems: 'center', gap: 2 },
@@ -322,7 +327,7 @@ const styles = StyleSheet.create({
     borderRightWidth: 6,
     borderTopColor: 'transparent',
     borderBottomColor: 'transparent',
-    borderRightColor: theme.scr.ink,
+    borderRightColor: t.scr.ink,
   },
   triRight: {
     width: 0,
@@ -332,7 +337,7 @@ const styles = StyleSheet.create({
     borderLeftWidth: 6,
     borderTopColor: 'transparent',
     borderBottomColor: 'transparent',
-    borderLeftColor: theme.scr.ink,
+    borderLeftColor: t.scr.ink,
   },
   triUp: {
     width: 0,
@@ -342,7 +347,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 6,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderBottomColor: theme.scr.ink,
+    borderBottomColor: t.scr.ink,
   },
   triDown: {
     width: 0,
@@ -352,17 +357,17 @@ const styles = StyleSheet.create({
     borderTopWidth: 6,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderTopColor: theme.scr.ink,
+    borderTopColor: t.scr.ink,
   },
   textInput: {
     flex: 1,
-    fontFamily: theme.font.screen,
-    fontSize: theme.type.body,
-    color: theme.scr.ink,
-    backgroundColor: theme.scr.panel,
+    fontFamily: t.font.screen,
+    fontSize: t.type.body,
+    color: t.scr.ink,
+    backgroundColor: t.scr.panel,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    paddingHorizontal: theme.space.md,
-    paddingVertical: theme.space.sm + 2,
+    borderColor: t.scr.hairline,
+    paddingHorizontal: t.space.md,
+    paddingVertical: t.space.sm + 2,
   },
-});
+}));

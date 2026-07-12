@@ -1,9 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, Platform, View, Text, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { theme } from '../theme';
+import type { StickerZone } from '@ingame/shared';
+import { themedStyles } from '../theme';
 import { ShellNav } from './ShellNav';
 import { useBreakout } from './BreakoutContext';
+import { useAppSelector } from '../store/hooks';
+import { EMPTY_COMPOSITION } from './device/stickerGeometry';
+import { useStickerContext } from './device/DeviceStickerContext';
+import { StickerBandLayer, type ZoneGeom } from './device/StickerBandLayer';
 
 // DeviceShell (component-map §5.1 · design-spec §1.5) — the F-03 teal plastic that **wraps every
 // screen**. ONE persistent instance is mounted at the ROOT layout so the device frame containerizes
@@ -17,6 +22,27 @@ import { useBreakout } from './BreakoutContext';
 export function DeviceShell({ children }: { children: React.ReactNode }) {
   const insets = useSafeAreaInsets();
   const { active: breakout } = useBreakout();
+  const styles = useStyles();
+
+  // ── ARCH 2 · the sticker layer that rides the plastic bands on EVERY screen ────────────────────────
+  // The persisted (optimistic) composition — the editor writes it locally on each mutation, so this
+  // repaints live while editing AND persists app-wide. PASSIVE unless the /device editor publishes an
+  // edit `session` (then the bands turn interactive). The 5 nav keycaps paint ABOVE every decal (F-04)
+  // because the chin layer is an EARLIER sibling than ShellNav (opaque caps win the z-order by
+  // construction). navWarn (a drag over a no-go area) is owned here so the forehead drag can light the
+  // chin's NAV — KEEP CLEAR overlay across the two separate band layers.
+  const composition = useAppSelector((s) => s.prefs.stickerComposition) ?? EMPTY_COMPOSITION;
+  const { session } = useStickerContext();
+  const zoneGeom = useRef<Record<StickerZone, import('./device/StickerBandLayer').WindowRect | null>>({
+    forehead: null,
+    chin: null,
+  }) as ZoneGeom;
+  const [navWarn, setNavWarn] = useState(false);
+  const foreheadStickers = useMemo(
+    () => composition.stickers.filter((s) => s.zone === 'forehead'),
+    [composition],
+  );
+  const chinStickers = useMemo(() => composition.stickers.filter((s) => s.zone === 'chin'), [composition]);
 
   // BREAKOUT = a ZOOM (decision 0067/CR-01 · 0014 stage-3 · §2.5b). The deep Canvas editor escapes the
   // arcade: on entry the screen **zooms to full-bleed** (a scale-transform) as the chrome (top-band +
@@ -205,6 +231,16 @@ export function DeviceShell({ children }: { children: React.ReactNode }) {
             <View key={i} style={styles.slat} />
           ))}
         </View>
+        {/* forehead decals — an overlay filling the top-band (hidden with the band in breakout). Last
+            child so decals paint over the logo/grille (the board sits them on the plastic forehead). */}
+        <StickerBandLayer
+          zone="forehead"
+          stickers={foreheadStickers}
+          session={session}
+          zoneGeom={zoneGeom}
+          navWarn={navWarn}
+          onNavWarn={setNavWarn}
+        />
       </View>
 
       {/* screen-bezel (pad 9, r20) holding the Midnight screen (r13) where the routed screen renders.
@@ -222,8 +258,22 @@ export function DeviceShell({ children }: { children: React.ReactNode }) {
       </View>
 
       {/* nav-band — the trailing child: safe to conditionally drop (removing the LAST child never
-          shifts {children}'s index, so no remount). Gone during the breakout zoom. */}
-      {showBreakout ? null : <ShellNav bottomInset={insets.bottom} />}
+          shifts {children}'s index, so no remount). Gone during the breakout zoom. The chin decal
+          layer rides BEHIND ShellNav (earlier sibling) so the opaque keycaps paint over every decal —
+          the F-04 z-order proof by construction. */}
+      {showBreakout ? null : (
+        <View style={styles.navWrap}>
+          <StickerBandLayer
+            zone="chin"
+            stickers={chinStickers}
+            session={session}
+            zoneGeom={zoneGeom}
+            navWarn={navWarn}
+            onNavWarn={setNavWarn}
+          />
+          <ShellNav bottomInset={insets.bottom} />
+        </View>
+      )}
     </View>
   );
 }
@@ -235,20 +285,20 @@ export function DeviceShell({ children }: { children: React.ReactNode }) {
 const TOP_BAND = 36;
 const TOP_PAD = 4;
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   plastic: {
     flex: 1, // fills the viewport (the shell IS the device body)
-    backgroundColor: theme.shell.plastic,
-    borderRadius: theme.corner.device, // ~30 (mockup `.device`)
+    backgroundColor: t.shell.plastic,
+    borderRadius: t.corner.device, // ~30 (mockup `.device`)
     paddingHorizontal: 14,
     overflow: 'hidden',
   },
   // breakout overrides — the plastic body becomes the flat workshop field (no teal, no radius, no
   // side padding). The `{children}` chain is unchanged; only these styles differ. The dark bg also
   // backs the ~8% margin around the zooming screen so no teal chrome flashes during the zoom.
-  plasticBreakout: { backgroundColor: theme.scr.bg, borderRadius: 0, paddingHorizontal: 0 },
+  plasticBreakout: { backgroundColor: t.scr.bg, borderRadius: 0, paddingHorizontal: 0 },
   hidden: { display: 'none' },
-  bezelBreakout: { backgroundColor: theme.scr.bg, borderRadius: 0, padding: 0 },
+  bezelBreakout: { backgroundColor: t.scr.bg, borderRadius: 0, padding: 0 },
   screenBreakout: { borderRadius: 0 },
   topBand: {
     flexDirection: 'row',
@@ -262,12 +312,12 @@ const styles = StyleSheet.create({
     width: 9,
     height: 9,
     borderRadius: 5, // round LED (F-05 shell light)
-    backgroundColor: theme.shell.led,
+    backgroundColor: t.shell.led,
   },
   powerLbl: {
-    fontFamily: theme.font.shell, // Paytone One on the plastic (F-08)
-    fontSize: theme.type.micro, // 9
-    color: theme.shell.silk,
+    fontFamily: t.font.shell, // Paytone One on the plastic (F-08)
+    fontSize: t.type.micro, // 9
+    color: t.shell.silk,
     opacity: 0.75,
     letterSpacing: 0.5,
   },
@@ -280,31 +330,33 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logo: {
-    fontFamily: theme.font.shell, // Paytone One (F-08)
-    fontSize: theme.type.display, // 21
+    fontFamily: t.font.shell, // Paytone One (F-08)
+    fontSize: t.type.display, // 21
     letterSpacing: 7,
-    color: theme.shell.lo, // faint emboss on the plastic (full 3D emboss = iteration lane)
+    color: t.shell.lo, // faint emboss on the plastic (full 3D emboss = iteration lane)
   },
   grille: { flexDirection: 'row', gap: 6 },
   slat: {
     width: 5,
     height: 23,
     borderRadius: 2,
-    backgroundColor: theme.shell.lo,
+    backgroundColor: t.shell.lo,
     transform: [{ skewX: '-22deg' }],
   },
   bezel: {
     flex: 1,
     minHeight: 0,
-    backgroundColor: theme.shell.bezel,
-    borderRadius: theme.corner.bezel, // 20 (mockup `.screen-bezel`)
+    backgroundColor: t.shell.bezel,
+    borderRadius: t.corner.bezel, // 20 (mockup `.screen-bezel`)
     padding: 6, // S6-b (M3-R): thinner black frame/screen border (board is 9) — R2-tunable
     zIndex: 2, // the growing screen covers the chrome during the boundary zoom (round 5)
   },
   screen: {
     flex: 1,
-    backgroundColor: theme.scr.bg, // the Midnight screen
-    borderRadius: theme.corner.glass, // 13 (mockup `.screen`)
+    backgroundColor: t.scr.bg, // the Midnight screen
+    borderRadius: t.corner.glass, // 13 (mockup `.screen`)
     overflow: 'hidden',
   },
-});
+  // wraps ShellNav so the chin decal layer can absolute-fill BEHIND it (keycaps paint above — F-04).
+  navWrap: { position: 'relative' },
+}));

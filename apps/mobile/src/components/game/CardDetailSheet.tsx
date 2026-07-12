@@ -1,10 +1,10 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import type { CollectionItem } from '@ingame/shared';
 import { PulledSheet } from '../PulledSheet';
 import { ScreenButton } from '../ScreenButton';
 import { CardFace } from '../CardFace';
 import { EquipReadout } from './EquipReadout';
-import { theme } from '../../theme';
+import { themedStyles } from '../../theme';
 import type { CardComposition } from '../../render/composition';
 
 // CardDetailSheet (component-map §9 `CardDetail`, CARD-22/CARD-23) — the hero-tap ENLARGE: the card
@@ -26,6 +26,7 @@ export function CardDetailSheet({
   onEdit?: () => void;
 }) {
   const custom = composition !== null;
+  const styles = useStyles();
   return (
     <PulledSheet visible={visible} onClose={onClose}>
       {/* the sheet TITLE + a visible ✕ (owner gate-5 C.14; board `sh-h` `:691`) */}
@@ -61,19 +62,19 @@ export function CardDetailSheet({
   );
 }
 
-const styles = StyleSheet.create({
-  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: theme.space.sm },
-  headTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.ink, letterSpacing: 1.5 },
-  close: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.dim },
-  cardWrap: { alignItems: 'center', paddingVertical: theme.space.sm },
+const useStyles = themedStyles((t) => ({
+  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: t.space.sm },
+  headTitle: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.ink, letterSpacing: 1.5 },
+  close: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.dim },
+  cardWrap: { alignItems: 'center', paddingVertical: t.space.sm },
   credit: {
-    fontFamily: theme.font.screenSemi,
-    fontSize: theme.type.micro,
-    color: theme.scr.dim,
+    fontFamily: t.font.screenSemi,
+    fontSize: t.type.micro,
+    color: t.scr.dim,
     letterSpacing: 0.5,
     textAlign: 'center',
   },
-  actions: { flexDirection: 'row', gap: theme.space.md },
+  actions: { flexDirection: 'row', gap: t.space.md },
   actionBtn: { flex: 1 },
-  note: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.faint, lineHeight: 15 },
-});
+  note: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, lineHeight: 15 },
+}));

@@ -11,6 +11,7 @@ const SOURCE_ROOTS = [
   'apps/api/src',
   'apps/api/test',
   'apps/mobile/src',
+  'apps/mobile/app', // the expo-router screens — covered so the theme-token guard is a real completeness gate
   'packages/shared/src',
 ];
 

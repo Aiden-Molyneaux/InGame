@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, BackHandler, Keyboard, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { ReactNode } from 'react';
-import { theme } from '../theme';
+import { themedStyles } from '../theme';
 import { KeyboardLift } from './KeyboardLift';
 import { ScrollLockContext, useScrollLockHost } from './ScrollLock';
 
@@ -42,6 +42,7 @@ export function PulledSheet({
   maxFraction?: number;
   children: ReactNode;
 }) {
+  const styles = useStyles();
   const slide = useRef(new Animated.Value(0)).current; // 0 = off-stage, 1 = docked
   const [wellTopY, setWellTopY] = useState<number | undefined>(undefined);
   const overlayRef = useRef<View>(null);
@@ -103,7 +104,7 @@ export function PulledSheet({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   overlay: {
     ...StyleSheet.absoluteFillObject, // the routed screen area INSIDE the well — not the OS window
     justifyContent: 'flex-end',
@@ -112,25 +113,25 @@ const styles = StyleSheet.create({
   scrimClear: { backgroundColor: 'transparent' },
   liftSlot: { maxHeight: '75%' },
   sheet: {
-    backgroundColor: theme.scr.panel,
+    backgroundColor: t.scr.panel,
     borderTopWidth: 1,
-    borderTopColor: theme.scr.hairline,
+    borderTopColor: t.scr.hairline,
     flexShrink: 1,
   },
   handle: {
     alignSelf: 'center',
     width: 44,
     height: 4,
-    marginTop: theme.space.md,
-    backgroundColor: theme.scr.faint,
+    marginTop: t.space.md,
+    backgroundColor: t.scr.faint,
   },
   title: {
-    fontFamily: theme.font.screenBold,
-    fontSize: theme.type.title, // 15 — the drawer page title (R2 0b)
-    color: theme.scr.ink,
+    fontFamily: t.font.screenBold,
+    fontSize: t.type.title, // 15 — the drawer page title (R2 0b)
+    color: t.scr.ink,
     letterSpacing: 1,
-    paddingHorizontal: theme.space.xl,
-    paddingTop: theme.space.md,
+    paddingHorizontal: t.space.xl,
+    paddingTop: t.space.md,
   },
-  body: { padding: theme.space.xl, gap: theme.space.xl },
-});
+  body: { padding: t.space.xl, gap: t.space.xl },
+}));

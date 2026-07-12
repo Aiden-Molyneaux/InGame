@@ -1,6 +1,6 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { StateMark } from '../StateMark';
-import { theme } from '../../theme';
+import { themedStyles } from '../../theme';
 
 // SectionChips (component-map §8a / the board `.schips`) — the five attribute chips. Chip-TAP is
 // the non-gesture section switch (the CARD-16 baseline beside the swipe). F-09 selection: accent
@@ -23,6 +23,7 @@ export function SectionChips({
   value: StylerSection;
   onChange: (s: StylerSection) => void;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.row} accessibilityRole="tablist">
       {STYLER_SECTIONS.map((s) => {
@@ -44,19 +45,19 @@ export function SectionChips({
   );
 }
 
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.sm, justifyContent: 'center' },
+const useStyles = themedStyles((t) => ({
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.sm, justifyContent: 'center' },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: theme.space.md,
-    paddingVertical: theme.space.sm,
+    paddingHorizontal: t.space.md,
+    paddingVertical: t.space.sm,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    backgroundColor: theme.scr.panel,
-    borderRadius: theme.corner.screen, // F-07 square
+    borderColor: t.scr.hairline,
+    backgroundColor: t.scr.panel,
+    borderRadius: t.corner.screen, // F-07 square
   },
-  chipActive: { borderColor: theme.scr.accent, backgroundColor: 'rgba(255,159,67,0.10)' },
-  label: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
-  labelActive: { color: theme.scr.ink },
-});
+  chipActive: { borderColor: t.scr.accent, backgroundColor: 'rgba(255,159,67,0.10)' },
+  label: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
+  labelActive: { color: t.scr.ink },
+}));

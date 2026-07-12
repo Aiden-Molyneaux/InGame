@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, type ComponentType } from 'react';
 import { Platform, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
-import { theme } from '../theme';
+import { useTheme } from '../theme';
 import { compositionSchema } from '@ingame/shared';
 import { GameCard, type GameCardSize } from './GameCard';
 import { SkiaErrorBoundary } from './SkiaErrorBoundary';
@@ -138,22 +138,23 @@ export function CardFace({
 
 /** Mirrors GameCard's ▶ NOW tag so the custom branch keeps the WTP-03 marker. */
 function NowTag() {
+  const t = useTheme();
   return (
     <View
       style={{
         position: 'absolute',
         top: 4,
         right: 4,
-        backgroundColor: theme.scr.accent,
+        backgroundColor: t.scr.accent,
         paddingHorizontal: 4,
         paddingVertical: 1,
       }}
     >
       <Text
         style={{
-          fontFamily: theme.font.screenBold,
-          fontSize: theme.type.micro,
-          color: theme.scr.accentInk,
+          fontFamily: t.font.screenBold,
+          fontSize: t.type.micro,
+          color: t.scr.accentInk,
           letterSpacing: 0.5,
         }}
       >

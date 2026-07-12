@@ -1,4 +1,4 @@
-import { View, Text, Pressable, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { IdentityBlock } from '../../src/components/IdentityBlock';
 import { ScreenHead } from '../../src/components/ScreenHead';
@@ -8,8 +8,10 @@ import { ScreenButton } from '../../src/components/ScreenButton';
 import { MiniDevice } from '../../src/components/MiniDevice';
 import { RankChip } from '../../src/components/RankChip';
 import { TertiaryLink } from '../../src/components/TertiaryLink';
-import { theme } from '../../src/theme';
-import { useGetMeQuery, useGetCollectionQuery } from '../../src/store/api';
+import { theme, themedStyles } from '../../src/theme';
+import { SHELL_NAMES, SCREEN_THEME_NAMES, resolveShellId, resolveScreenThemeId } from '../../src/theme/palettes';
+import { deviceStripCopy } from '../../src/components/device/deviceCopy';
+import { useGetMeQuery, useGetCollectionQuery, useGetDeviceQuery } from '../../src/store/api';
 import { useAppDispatch } from '../../src/store/hooks';
 import { setCollectionView } from '../../src/store/prefsSlice';
 import { logoutTeardown } from '../../src/store';
@@ -24,6 +26,8 @@ export default function Profile() {
   const dispatch = useAppDispatch();
   const { data: me, isLoading, isError, refetch } = useGetMeQuery();
   const { data: collection } = useGetCollectionQuery();
+  const { data: device } = useGetDeviceQuery();
+  const styles = useStyles();
 
   async function signOut() {
     await logoutTeardown(); // F20/F14 — purge persisted prefs + reset cache + clear secure-store tokens
@@ -165,15 +169,30 @@ export default function Profile() {
           )}
         </Section>
 
-        {/* MY DEVICE — a small labelled thumbnail; NOT the app-wrapping DeviceShell */}
+        {/* MY DEVICE — a small labelled thumbnail; NOT the app-wrapping DeviceShell. PRESSABLE →
+            the §3.5 Device editor (C1); DYNAMIC from GET /me/device (shell·theme·sticker count).
+            While the device query is loading, keep today's live shell + a resolved title. */}
         <Section title="My Device">
-          <View style={styles.devRow}>
-            <MiniDevice />
-            <View style={styles.devMeta}>
-              <Text style={styles.devTitle}>POCKET · TEAL</Text>
-              <Text style={styles.devSub}>MIDNIGHT SCREEN</Text>
-            </View>
-          </View>
+          {(() => {
+            const dShell = resolveShellId(device?.activeShellId);
+            const dTheme = resolveScreenThemeId(device?.screenThemeId);
+            const stickers = device?.stickerComposition.stickers.length ?? 0;
+            const copy = deviceStripCopy(SHELL_NAMES[dShell], SCREEN_THEME_NAMES[dTheme], stickers);
+            return (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Edit your device"
+                onPress={() => router.push('/device')}
+                style={({ pressed }) => [styles.devRow, pressed && styles.devRowPressed]}
+              >
+                <MiniDevice shellId={dShell} themeId={dTheme} />
+                <View style={styles.devMeta}>
+                  <Text style={styles.devTitle}>{copy.title}</Text>
+                  <Text style={styles.devSub}>{copy.sub}</Text>
+                </View>
+              </Pressable>
+            );
+          })()}
         </Section>
 
         <ScreenButton label="Sign out" variant="secondary" onPress={signOut} block />
@@ -191,6 +210,7 @@ function Section({
   action?: React.ReactNode;
   children: React.ReactNode;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.section}>
       <View style={styles.sectionRow}>
@@ -205,6 +225,7 @@ function Section({
 // A stats cell — a 3-per-row PANEL container (mockup `.stat`: panel bg, centred value/label — owner
 // ruling 2026-07-01) with the boxless StatTile centred inside it. P9.
 function Stat({ value, label }: { value: string | number; label: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.statCell}>
       <StatTile value={value} label={label} />
@@ -212,47 +233,48 @@ function Stat({ value, label }: { value: string | number; label: string }) {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: theme.scr.bg },
+const useStyles = themedStyles((t) => ({
+  screen: { flex: 1, backgroundColor: t.scr.bg },
   // S5-a — the fixed title-band wrapper (mirrors collection.tsx `pad`; horizontal pad aligns with body).
-  pad: { paddingHorizontal: theme.space.lg, paddingTop: theme.space.lg, paddingBottom: theme.space.md },
+  pad: { paddingHorizontal: t.space.lg, paddingTop: t.space.lg, paddingBottom: t.space.md },
   scroll: { flex: 1 },
-  center: { alignItems: 'center', justifyContent: 'center', gap: theme.space.lg },
-  body: { padding: theme.space.lg, gap: theme.space.xl },
-  errTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.accent, letterSpacing: 1 },
-  errSub: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.dim, textAlign: 'center', lineHeight: 16, paddingHorizontal: theme.space.xl },
-  section: { gap: theme.space.md },
+  center: { alignItems: 'center', justifyContent: 'center', gap: t.space.lg },
+  body: { padding: t.space.lg, gap: t.space.xl },
+  errTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.accent, letterSpacing: 1 },
+  errSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, textAlign: 'center', lineHeight: 16, paddingHorizontal: t.space.xl },
+  section: { gap: t.space.md },
   sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sectionHead: { fontFamily: theme.font.screenBold, fontSize: theme.type.body, color: theme.scr.dim, letterSpacing: 1.5 },
-  stats: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.md },
+  sectionHead: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.dim, letterSpacing: 1.5 },
+  stats: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.md },
   statCell: {
     flexBasis: '31%',
     flexGrow: 1,
     alignItems: 'center',
-    backgroundColor: theme.scr.panel,
-    paddingVertical: theme.space.md,
-    paddingHorizontal: theme.space.sm,
+    backgroundColor: t.scr.panel,
+    paddingVertical: t.space.md,
+    paddingHorizontal: t.space.sm,
   },
-  heroRow: { flexDirection: 'row', alignItems: 'center', gap: theme.space.lg },
+  heroRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.lg },
   favCard: { width: 120, height: 168 },
   heroMeta: { flex: 1, gap: 3 },
-  heroTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 0.5 },
-  heroSub: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.brand.gold, letterSpacing: 1 },
-  top3: { flexDirection: 'row', gap: theme.space.lg, justifyContent: 'space-between' },
-  topSeat: { gap: theme.space.sm, alignItems: 'center' },
-  nowRow: { flexDirection: 'row', alignItems: 'center', gap: theme.space.lg },
+  heroTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5 },
+  heroSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.brand.gold, letterSpacing: 1 },
+  top3: { flexDirection: 'row', gap: t.space.lg, justifyContent: 'space-between' },
+  topSeat: { gap: t.space.sm, alignItems: 'center' },
+  nowRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.lg },
   nowMeta: { gap: 2 },
-  nowTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink },
-  nowSub: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.accent, letterSpacing: 1 },
-  emptyLine: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.faint },
+  nowTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink },
+  nowSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 1 },
+  emptyLine: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.faint },
   devRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.space.lg,
-    backgroundColor: theme.scr.panel,
-    padding: theme.space.lg,
+    gap: t.space.lg,
+    backgroundColor: t.scr.panel,
+    padding: t.space.lg,
   },
+  devRowPressed: { opacity: 0.82 },
   devMeta: { gap: 2 },
-  devTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 0.5 },
-  devSub: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
-});
+  devTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5 },
+  devSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
+}));

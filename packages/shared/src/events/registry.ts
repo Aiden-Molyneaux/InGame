@@ -40,6 +40,10 @@ export const DOMAIN_EVENT_TYPES = [
   'style_preset.updated', // CARD-24b — rename / re-snapshot.
   'style_preset.deleted', // CARD-24b
   'collection.card_equipped', // COL-06 — activeCardDesignId set/cleared (the equip write).
+  // M4 §3.5 Device editor (decision 0030: device_configs + device_looks). Append at the END.
+  'device.updated', // DEV-01/02/03/04 — PATCH /me/device; payload = the changed facet-set (shell/theme/stickers).
+  'device.look_saved', // DEV-05 — SAVE CURRENT snapshotted the live combo into a new look.
+  'device.look_deleted', // DEV-05 — a saved look removed.
 ] as const;
 
 export type DomainEventType = (typeof DOMAIN_EVENT_TYPES)[number];

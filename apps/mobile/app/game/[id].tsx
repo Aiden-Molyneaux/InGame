@@ -13,7 +13,7 @@ import { ConfirmSheet } from '../../src/components/ConfirmSheet';
 import { PulledSheet } from '../../src/components/PulledSheet';
 import { ScreenButton } from '../../src/components/ScreenButton';
 import { TertiaryLink } from '../../src/components/TertiaryLink';
-import { theme } from '../../src/theme';
+import { theme, themedStyles, useTheme } from '../../src/theme';
 import { steppedRectPath } from '../../src/theme/steppedPath';
 import {
   useGetCollectionQuery,
@@ -33,6 +33,7 @@ export default function GamePage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { data, isLoading, isError, refetch } = useGetCollectionQuery();
+  const styles = useStyles();
 
   const entry = useMemo<CollectionItem | undefined>(
     () => data?.items.find((it) => it.gameId === id),
@@ -281,6 +282,7 @@ function factsLine(entry: CollectionItem): string {
 
 // ── the shared frame for the lifecycle/edge states (header + return, no data yet) ──────────────────
 function Frame({ children, onBack }: { children: ReactNode; onBack: () => void }) {
+  const styles = useStyles();
   return (
     <View style={styles.flex}>
       <View style={styles.screen}>
@@ -300,6 +302,7 @@ function Frame({ children, onBack }: { children: ReactNode; onBack: () => void }
 
 // L1 — the §1.6 Skeleton: solid scr.panel fills in the exact PLAY shapes (never dashed).
 function GameSkeleton() {
+  const styles = useStyles();
   return (
     <View style={{ gap: theme.space.lg }} accessibilityLabel="Loading">
       <View style={[styles.skBar, { height: 21, width: '46%', alignSelf: 'center' }]} />
@@ -319,14 +322,16 @@ function GameSkeleton() {
 
 // L2 — the §1.8 LoadError: dashed stepped card + accent ! + SIGNAL LOST + orange RETRY + GO BACK.
 function GameLoadError({ onRetry, onBack }: { onRetry: () => void; onBack: () => void }) {
+  const styles = useStyles();
+  const t = useTheme();
   return (
     <View style={styles.errWrap}>
       <View style={styles.errCard}>
         <Svg width={96} height={134} style={StyleSheet.absoluteFill}>
           <Path
             d={steppedRectPath(96, 134, theme.step / 2, { tl: true, br: true })}
-            fill={theme.scr.panel}
-            stroke={theme.scr.faint}
+            fill={t.scr.panel}
+            stroke={t.scr.faint}
             strokeWidth={2}
             strokeDasharray="5 4"
           />
@@ -344,49 +349,49 @@ function GameLoadError({ onRetry, onBack }: { onRetry: () => void; onBack: () =>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   flex: { flex: 1 },
-  screen: { flex: 1, backgroundColor: theme.scr.bg },
+  screen: { flex: 1, backgroundColor: t.scr.bg },
   head: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: theme.space.lg,
-    paddingTop: theme.space.lg,
-    paddingBottom: theme.space.sm,
+    paddingHorizontal: t.space.lg,
+    paddingTop: t.space.lg,
+    paddingBottom: t.space.sm,
   },
-  title: { fontFamily: theme.font.screenBold, fontSize: theme.type.display, color: theme.scr.ink, letterSpacing: 1.5 },
-  headRight: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md },
-  nowTag: { backgroundColor: theme.scr.accent, paddingHorizontal: theme.space.md, paddingVertical: 3 },
-  nowTagText: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.accentInk, letterSpacing: 0.5 },
-  ovf: { fontFamily: theme.font.screenBold, fontSize: theme.type.display, color: theme.scr.dim, marginTop: -6 },
-  body: { paddingHorizontal: theme.space.lg, paddingBottom: theme.space.xl, gap: theme.space.lg },
-  heroGroup: { gap: theme.space.xs }, // title · facts · dual-face read as one unit (gate-5 B.5)
-  heroTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.display, color: theme.scr.ink, textAlign: 'center', letterSpacing: 0.5 },
+  title: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, letterSpacing: 1.5 },
+  headRight: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
+  nowTag: { backgroundColor: t.scr.accent, paddingHorizontal: t.space.md, paddingVertical: 3 },
+  nowTagText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accentInk, letterSpacing: 0.5 },
+  ovf: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.dim, marginTop: -6 },
+  body: { paddingHorizontal: t.space.lg, paddingBottom: t.space.xl, gap: t.space.lg },
+  heroGroup: { gap: t.space.xs }, // title · facts · dual-face read as one unit (gate-5 B.5)
+  heroTitle: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, textAlign: 'center', letterSpacing: 0.5 },
   factsLine: {
-    fontFamily: theme.font.screenSemi,
-    fontSize: theme.type.body,
-    color: theme.scr.dim,
+    fontFamily: t.font.screenSemi,
+    fontSize: t.type.body,
+    color: t.scr.dim,
     textAlign: 'center',
     letterSpacing: 1,
   },
-  actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.md },
-  mini: { paddingVertical: theme.space.md, paddingHorizontal: theme.space.lg },
-  about: { padding: theme.space.lg, backgroundColor: theme.scr.panel, borderWidth: 1, borderColor: theme.scr.hairline, gap: theme.space.sm },
-  aboutTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 1 },
-  aboutSub: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.dim, lineHeight: 16 },
-  notOwned: { alignItems: 'center', gap: theme.space.md, paddingVertical: theme.space.xxl },
-  notOwnedTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 1 },
-  notOwnedSub: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.dim, textAlign: 'center', lineHeight: 16 },
+  actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.md },
+  mini: { paddingVertical: t.space.md, paddingHorizontal: t.space.lg },
+  about: { padding: t.space.lg, backgroundColor: t.scr.panel, borderWidth: 1, borderColor: t.scr.hairline, gap: t.space.sm },
+  aboutTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
+  aboutSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, lineHeight: 16 },
+  notOwned: { alignItems: 'center', gap: t.space.md, paddingVertical: t.space.xxl },
+  notOwnedTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
+  notOwnedSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, textAlign: 'center', lineHeight: 16 },
   // skeleton
-  skBar: { backgroundColor: theme.scr.panel },
-  skDual: { flexDirection: 'row', justifyContent: 'center', gap: theme.space.lg, paddingVertical: theme.space.md },
-  skCard: { width: 138, height: 193, backgroundColor: theme.scr.panel },
+  skBar: { backgroundColor: t.scr.panel },
+  skDual: { flexDirection: 'row', justifyContent: 'center', gap: t.space.lg, paddingVertical: t.space.md },
+  skCard: { width: 138, height: 193, backgroundColor: t.scr.panel },
   // load error
-  errWrap: { alignItems: 'center', gap: theme.space.md, paddingTop: theme.space.xxl },
-  errCard: { width: 96, height: 134, alignItems: 'center', justifyContent: 'center', marginBottom: theme.space.sm },
-  errBang: { fontFamily: theme.font.screenBold, fontSize: theme.type.display, color: theme.scr.accent },
-  errEyebrow: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 2 },
-  errTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 1.5 },
-  errSub: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.dim, textAlign: 'center', lineHeight: 16, maxWidth: 260 },
-});
+  errWrap: { alignItems: 'center', gap: t.space.md, paddingTop: t.space.xxl },
+  errCard: { width: 96, height: 134, alignItems: 'center', justifyContent: 'center', marginBottom: t.space.sm },
+  errBang: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.accent },
+  errEyebrow: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 2 },
+  errTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1.5 },
+  errSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, textAlign: 'center', lineHeight: 16, maxWidth: 260 },
+}));

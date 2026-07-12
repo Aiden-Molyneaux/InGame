@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { BackHandler, Keyboard, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { BackHandler, Keyboard, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { theme } from '../../theme';
+import { useTheme, themedStyles } from '../../theme';
 import { KeyboardLift } from '../KeyboardLift';
 import { CanvasStage } from './CanvasStage';
 import { LayerRack } from './LayerRack';
@@ -65,6 +65,8 @@ export function CanvasSurface({
   onBackToStyler: () => void;
   onSavePrivate: () => void;
 }) {
+  const styles = useStyles();
+  const t = useTheme();
   const [pulledIndex, setPulledIndex] = useState<number | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -451,7 +453,7 @@ export function CanvasSurface({
                           maxLength={24}
                           autoFocus
                           placeholder="Slip name"
-                          placeholderTextColor={theme.scr.faint}
+                          placeholderTextColor={t.scr.faint}
                           style={styles.renameInput}
                           accessibilityLabel="Slip name"
                         />
@@ -649,6 +651,7 @@ function Op({
   danger?: boolean;
   accessibilityLabel?: string;
 }) {
+  const opStyles = useOpStyles();
   return (
     <Pressable
       accessibilityRole="button"
@@ -663,68 +666,68 @@ function Op({
   );
 }
 
-const opStyles = StyleSheet.create({
+const useOpStyles = themedStyles((t) => ({
   op: {
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    backgroundColor: theme.scr.panel,
-    paddingHorizontal: theme.space.md,
-    paddingVertical: theme.space.sm + 1,
+    borderColor: t.scr.hairline,
+    backgroundColor: t.scr.panel,
+    paddingHorizontal: t.space.md,
+    paddingVertical: t.space.sm + 1,
   },
   // decision 0069 — destructive = alert FILL (not red text on grey); ink flips to cream for contrast.
-  dangerBox: { backgroundColor: theme.brand.alert, borderColor: theme.brand.alert },
+  dangerBox: { backgroundColor: t.brand.alert, borderColor: t.brand.alert },
   disabled: { opacity: 0.4 },
-  text: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.ink, letterSpacing: 0.5 },
-  danger: { color: theme.brand.cream },
-});
+  text: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.ink, letterSpacing: 0.5 },
+  danger: { color: t.brand.cream },
+}));
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: theme.scr.bg, paddingHorizontal: theme.space.lg, gap: theme.space.md },
-  head: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md, paddingTop: theme.space.lg },
-  backKey: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.dim, paddingHorizontal: theme.space.sm },
-  title: { fontFamily: theme.font.screenBold, fontSize: theme.type.display, color: theme.scr.ink, letterSpacing: 1.5 },
-  subLine: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 0.5 },
+const useStyles = themedStyles((t) => ({
+  screen: { flex: 1, backgroundColor: t.scr.bg, paddingHorizontal: t.space.lg, gap: t.space.md },
+  head: { flexDirection: 'row', alignItems: 'center', gap: t.space.md, paddingTop: t.space.lg },
+  backKey: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.dim, paddingHorizontal: t.space.sm },
+  title: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, letterSpacing: 1.5 },
+  subLine: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
   spacer: { flex: 1 },
   // the bottom panel — its own bordered container below the bed (the card stays visible above it).
   // Inline modes (ADD/EDIT/TRANSFORM) are capped to 48% so the card keeps room + the inner ScrollView
   // scrolls; the bench sizes naturally (its content is compact + the rail scrolls horizontally).
   // round 4 — the divider above the editbar row is dropped (no borderTop on the panel)
   panel: {
-    paddingTop: theme.space.md,
-    gap: theme.space.md,
+    paddingTop: t.space.md,
+    gap: t.space.md,
   },
   panelBounded: { maxHeight: '48%' },
-  panelHead: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md },
-  panelTitle: { flexShrink: 1, fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 1 },
+  panelHead: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
+  panelTitle: { flexShrink: 1, fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
   panelClose: {
     width: 28,
     height: 28,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    backgroundColor: theme.scr.panel,
+    borderColor: t.scr.hairline,
+    backgroundColor: t.scr.panel,
   },
-  panelCloseText: { fontFamily: theme.font.screenBold, fontSize: theme.type.body, color: theme.scr.dim },
+  panelCloseText: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.dim },
   // the bench-button slot (round 5) — ONE fixed height whichever content is in it (buttons/ops/rename)
   slotRow: { height: 44, justifyContent: 'center' },
   slotFill: { flex: 1, justifyContent: 'center' },
-  benchrow: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md },
-  opsRow: { flexDirection: 'row', alignItems: 'center', gap: theme.space.sm + 1 },
-  renameRow: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md },
+  benchrow: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
+  opsRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.sm + 1 },
+  renameRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
   renameInput: {
     flex: 1,
-    fontFamily: theme.font.screen,
-    fontSize: theme.type.body,
-    color: theme.scr.ink,
-    backgroundColor: theme.scr.panel,
+    fontFamily: t.font.screen,
+    fontSize: t.type.body,
+    color: t.scr.ink,
+    backgroundColor: t.scr.panel,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    paddingHorizontal: theme.space.md,
-    paddingVertical: theme.space.sm,
+    borderColor: t.scr.hairline,
+    paddingHorizontal: t.space.md,
+    paddingVertical: t.space.sm,
   },
   // matches the benchrow geometry so PROOF/PRESS hold their spot through proofing (round 4)
-  proofBar: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md, paddingTop: theme.space.md },
-  benchBtn: { paddingVertical: theme.space.md, paddingHorizontal: theme.space.md },
-  inlineErr: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.brand.alert, textAlign: 'center' },
-});
+  proofBar: { flexDirection: 'row', alignItems: 'center', gap: t.space.md, paddingTop: t.space.md },
+  benchBtn: { paddingVertical: t.space.md, paddingHorizontal: t.space.md },
+  inlineErr: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.brand.alert, textAlign: 'center' },
+}));

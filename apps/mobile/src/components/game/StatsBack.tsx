@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { theme } from '../../theme';
+import { themedStyles, useTheme } from '../../theme';
 import { steppedRectPath } from '../../theme/steppedPath';
 
 // StatsBack (CARD-01) — the STANDARDIZED stats back of a game card: the auto-stats layout + printed
@@ -26,13 +26,15 @@ export function StatsBack({
   width?: number;
   height?: number;
 }) {
+  const t = useTheme();
+  const styles = useStyles();
   return (
     <View style={{ width, height }} accessibilityLabel="Your stats card back">
       <Svg width={width} height={height} style={StyleSheet.absoluteFill}>
         <Path
-          d={steppedRectPath(width, height, theme.step, { tr: true, bl: true })}
-          fill={theme.scr.panel}
-          stroke={theme.scr.hairline}
+          d={steppedRectPath(width, height, t.step, { tr: true, bl: true })}
+          fill={t.scr.panel}
+          stroke={t.scr.hairline}
           strokeWidth={1}
         />
       </Svg>
@@ -56,6 +58,7 @@ export function StatsBack({
 }
 
 function Row({ label, value }: { label: string; value: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
@@ -66,30 +69,30 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-const styles = StyleSheet.create({
-  inner: { flex: 1, padding: theme.space.lg },
+const useStyles = themedStyles((t) => ({
+  inner: { flex: 1, padding: t.space.lg },
   title: {
-    fontFamily: theme.font.screenBold,
-    fontSize: theme.type.micro, // 9 (F-06 floor)
-    color: theme.scr.ink,
+    fontFamily: t.font.screenBold,
+    fontSize: t.type.micro, // 9 (F-06 floor)
+    color: t.scr.ink,
     letterSpacing: 1,
     textAlign: 'center',
-    paddingBottom: theme.space.md,
+    paddingBottom: t.space.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.scr.hairline,
+    borderBottomColor: t.scr.hairline,
   },
-  rows: { flex: 1, gap: theme.space.md, paddingVertical: theme.space.md },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: theme.space.sm },
-  rowLabel: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 0.5 },
+  rows: { flex: 1, gap: t.space.md, paddingVertical: t.space.md },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: t.space.sm },
+  rowLabel: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
   rowValue: {
-    fontFamily: theme.font.screenBold,
-    fontSize: theme.type.body, // 11
-    color: theme.scr.ink,
+    fontFamily: t.font.screenBold,
+    fontSize: t.type.body, // 11
+    color: t.scr.ink,
     letterSpacing: 0.5,
     flexShrink: 1,
     textAlign: 'right',
   },
-  prov: { borderTopWidth: 1, borderTopColor: theme.scr.hairline, paddingTop: theme.space.md, gap: 1 },
-  provLabel: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
-  provName: { fontFamily: theme.font.screenBold, fontSize: theme.type.body, color: theme.brand.gold, letterSpacing: 0.5 },
-});
+  prov: { borderTopWidth: 1, borderTopColor: t.scr.hairline, paddingTop: t.space.md, gap: 1 },
+  provLabel: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
+  provName: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.brand.gold, letterSpacing: 0.5 },
+}));

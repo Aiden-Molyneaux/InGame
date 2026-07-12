@@ -43,7 +43,9 @@ export function ShellNav({ bottomInset = 0 }: { bottomInset?: number }) {
     pathname.startsWith('/add-game') ||
     pathname.startsWith('/game') ||
     pathname.startsWith('/styler');
-  const onProfile = pathname.startsWith('/profile');
+  // The Device editor (`/device`, §3.5) is a FlowTakeover OF Profile (board: NavBand untouched, PROFILE
+  // keycap active) — the nav stays live, it is NOT locked.
+  const onProfile = pathname.startsWith('/profile') || pathname.startsWith('/device');
   const locked = !(onCollection || onProfile); // sign-in, index redirect, splash
   const activeKey = onProfile ? 'profile' : 'collection';
 

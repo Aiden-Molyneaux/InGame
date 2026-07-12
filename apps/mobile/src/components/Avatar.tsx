@@ -1,5 +1,5 @@
-import { View, Text, Image, StyleSheet } from 'react-native';
-import { theme } from '../theme';
+import { View, Text, Image } from 'react-native';
+import { themedStyles } from '../theme';
 
 // Avatar (component-map §5.4) — a square monogram guaranteed before any designed avatar exists
 // (PROF-08 default-monogram guarantee). F-07 square on screen; accent hairline.
@@ -12,6 +12,7 @@ export function Avatar({
   avatarUrl?: string | null;
   size?: number;
 }) {
+  const styles = useStyles();
   if (avatarUrl) {
     return (
       <Image
@@ -29,20 +30,20 @@ export function Avatar({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   box: {
-    borderRadius: theme.corner.screen,
+    borderRadius: t.corner.screen,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
+    borderColor: t.scr.hairline,
   },
   monogram: {
-    backgroundColor: theme.scr.panelHi,
+    backgroundColor: t.scr.panelHi,
     alignItems: 'center',
     justifyContent: 'center',
   },
   initials: {
-    fontFamily: theme.font.screenBold,
-    color: theme.scr.accent,
+    fontFamily: t.font.screenBold,
+    color: t.scr.accent,
     letterSpacing: 1,
   },
-});
+}));

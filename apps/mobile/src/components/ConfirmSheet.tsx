@@ -1,7 +1,7 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { PulledSheet } from './PulledSheet';
 import { ScreenButton } from './ScreenButton';
-import { theme } from '../theme';
+import { themedStyles } from '../theme';
 
 // ConfirmSheet (decision 0040 — the destructive-action confirm grammar) — the pre-confirm gate every
 // irreversible/hard-to-reverse action routes through (collection remove COL-01, card delete CARD-14,
@@ -25,6 +25,7 @@ export function ConfirmSheet({
   onClose: () => void;
   busy?: boolean;
 }) {
+  const styles = useStyles();
   return (
     <PulledSheet visible={visible} onClose={onClose} title={title}>
       <Text style={styles.message}>{message}</Text>
@@ -42,12 +43,12 @@ export function ConfirmSheet({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   message: {
-    fontFamily: theme.font.screen,
-    fontSize: theme.type.body, // 11 (F-06)
-    color: theme.scr.dim,
+    fontFamily: t.font.screen,
+    fontSize: t.type.body, // 11 (F-06)
+    color: t.scr.dim,
     lineHeight: 16,
   },
-  actions: { gap: theme.space.md },
-});
+  actions: { gap: t.space.md },
+}));

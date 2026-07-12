@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Pressable, Text, View, StyleSheet, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { theme } from '../theme';
+import { theme, useTheme } from '../theme';
 import { steppedRectPath } from '../theme/steppedPath';
 
 // ScreenButton (component-map §5.3 — was KeycapButton) — the on-screen action. F-03: FLAT (no raised
@@ -10,21 +10,6 @@ import { steppedRectPath } from '../theme/steppedPath';
 // (decision 0041 §2: the step is intrinsic to `.btn.add`, not a per-callsite gate). F-07: square on
 // screen (radius only on the shell) — the `add` step is the F-02 exception, not a radius.
 export type ScreenButtonVariant = 'primary' | 'action-alt' | 'secondary' | 'destructive' | 'add';
-
-const FILL: Record<ScreenButtonVariant, string> = {
-  primary: theme.scr.accent,
-  'action-alt': theme.scr.accent,
-  secondary: theme.brand.cream, // decision 0069 — the one cream secondary/keycap voice (was scr.panelHi grey)
-  destructive: theme.brand.alert,
-  add: theme.brand.gold, // F-02 acquisitive
-};
-const INK: Record<ScreenButtonVariant, string> = {
-  primary: theme.scr.accentInk,
-  'action-alt': theme.scr.accentInk,
-  secondary: theme.brand.navy, // decision 0069 — navy on cream
-  destructive: theme.brand.cream,
-  add: theme.brand.goldInk, // F-02
-};
 
 // F-02 `add` step: intent buttons borrow the GameCard step at half-scale (decision 0041); the gold
 // face is the shared `steppedRectPath` SVG polygon (RN has no clip-path). TR + BL stay square.
@@ -65,6 +50,25 @@ export function ScreenButton({
   /** Force the F-02 pixel-step face on a non-`add` variant (the Styler's orange ⤢ CANVAS, gate-5 D.20). */
   stepped?: boolean;
 }) {
+  const t = useTheme();
+  const FILL: Record<ScreenButtonVariant, string> = {
+    primary: t.scr.accent,
+    'action-alt': t.scr.accent,
+    secondary: t.scr.key, // decision 0069 cream voice, now THEMED (0070/OQ-144): cream on dark, white on light
+    destructive: t.brand.alert,
+    add: t.scr.value, // F-02 acquisitive — themed gold (bright on dark, deep on light; 0070)
+  };
+  const INK: Record<ScreenButtonVariant, string> = {
+    primary: t.scr.accentInk,
+    'action-alt': t.scr.accentInk,
+    secondary: t.brand.navy, // decision 0069 — navy reads on both cream + white
+    destructive: t.brand.cream,
+    add: t.scr.valueInk, // F-02 — dark ink on bright gold, cream ink on the deep light-theme gold (0070)
+  };
+  // A flat light key can't self-contrast on a light bg (0070/OQ-144) — the SECONDARY button takes a
+  // border on light themes so its edge reads; dark themes keep the borderless 0069 cream look.
+  const keyBorder =
+    variant === 'secondary' && t.scr.isLight ? { borderWidth: 1, borderColor: t.scr.dim } : null;
   const stepped = steppedProp ?? variant === 'add';
   const mini = size === 'mini';
   const [polySize, setPolySize] = useState<{ w: number; h: number } | null>(null);
@@ -92,6 +96,7 @@ export function ScreenButton({
         // onLayout delivers a size there is no polygon yet — fall back to a square gold fill for
         // that first frame rather than rendering goldInk text on the bare screen bg.
         stepped ? (polySize ? styles.steppedBase : { backgroundColor: FILL[variant] }) : { backgroundColor: FILL[variant] },
+        keyBorder, // 0070/OQ-144 — light-theme secondary edge
         active && styles.active, // decision 0069 — darkened-cream ON state (F-03, no travel)
         block && styles.block,
         pressed && styles.pressed, // F-03 scanline-energize (darken, no travel)

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Pressable, BackHandler, Keyboard, Platform } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, Pressable, BackHandler, Keyboard, Platform } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import type { CollectionItem, CollectionStatus, GenreView } from '@ingame/shared';
@@ -14,7 +14,7 @@ import { GenreTag } from '../../src/components/GenreTag';
 import { TertiaryLink } from '../../src/components/TertiaryLink';
 import { KeyboardLift } from '../../src/components/KeyboardLift';
 import { COLLECTION_STATUSES, STATUS_LABEL } from '../../src/constants/collection';
-import { theme } from '../../src/theme';
+import { theme, themedStyles, useTheme } from '../../src/theme';
 import { useAppDispatch, useAppSelector } from '../../src/store/hooks';
 import { setCollectionView, type CollectionView } from '../../src/store/prefsSlice';
 import { useGetCollectionQuery, useUpdateEntryMutation } from '../../src/store/api';
@@ -136,6 +136,7 @@ export default function Collection() {
   const dispatch = useAppDispatch();
   const view = useAppSelector((s) => s.prefs.collectionView);
   const { data, isLoading, isError, refetch } = useGetCollectionQuery();
+  const styles = useStyles();
 
   // ONE shared query state between the in-place search and the drawer (OQ-034).
   const [q, setQ] = useState('');
@@ -383,6 +384,8 @@ export default function Collection() {
 // "set your Now Playing" nudge (WTP-03; the per-game picker is M4, §0.5/0.8).
 function NowPlayingHero({ hero, onLogHours }: { hero: CollectionItem | null; onLogHours: () => void }) {
   const router = useRouter(); // CARD-23 NAVIGATE — the now-playing hero card → the Game page (mode 1)
+  const styles = useStyles();
+  const t = useTheme();
   if (!hero) {
     return (
       <View style={styles.nudge}>
@@ -414,7 +417,7 @@ function NowPlayingHero({ hero, onLogHours }: { hero: CollectionItem | null; onL
         <Text style={styles.heroCatalog}>{catalogLine(hero)}</Text>
         <ScreenButton
           label="Log hours"
-          icon={<PlusIcon color={theme.scr.accentInk} size={11} />}
+          icon={<PlusIcon color={t.scr.accentInk} size={11} />}
           onPress={onLogHours}
           style={styles.heroBtn}
         />
@@ -428,6 +431,7 @@ function NowPlayingHero({ hero, onLogHours }: { hero: CollectionItem | null; onL
 // (the NowPlayingHero above, rendered by the parent); ▶ NOW marks the pinned game in the stack.
 function ShelfView({ items }: { items: CollectionItem[] }) {
   const router = useRouter(); // CARD-23 NAVIGATE — every shelf entry is a Game-page tap-target (gate-5 A.3)
+  const styles = useStyles();
   return (
     <View style={styles.shelf}>
       <View style={styles.shelfStack}>
@@ -463,6 +467,7 @@ function ShelfView({ items }: { items: CollectionItem[] }) {
 // F-01), ▶ NOW in-flow on the pinned face; no per-row meta. The hero renders above (parent).
 function GridView({ items }: { items: CollectionItem[] }) {
   const router = useRouter(); // CARD-23 NAVIGATE — grid faces open the Game page too (gate-5 A.3)
+  const styles = useStyles();
   return (
     <View style={styles.shelf}>
       <View style={styles.gridWrap}>
@@ -492,6 +497,7 @@ function GridView({ items }: { items: CollectionItem[] }) {
 // → the Game page (the tap-target is M4). The always-visible per-row stats mode; hero above (parent).
 function ListView({ items }: { items: CollectionItem[] }) {
   const router = useRouter(); // CARD-23 NAVIGATE — the list row is the Game-page tap-target (M4 §3.1)
+  const styles = useStyles();
   return (
     <View style={styles.shelf}>
       <View style={styles.listStack}>
@@ -529,6 +535,7 @@ function ListView({ items }: { items: CollectionItem[] }) {
 // M4). The #1 rank marker is scr.accent ORANGE — never gold (C6/F-02).
 function TopView({ items }: { items: CollectionItem[] }) {
   const router = useRouter(); // CARD-23 NAVIGATE (gate-5 A.3 — every card face opens its game)
+  const styles = useStyles();
   const top = [...items].sort((a, b) => b.hours - a.hours).slice(0, 10);
   return (
     <View style={styles.list}>
@@ -559,6 +566,7 @@ function TopView({ items }: { items: CollectionItem[] }) {
 }
 
 function EmptyShelf({ onAdd }: { onAdd: () => void }) {
+  const styles = useStyles();
   return (
     <View style={styles.empty}>
       <Text style={styles.nudgeTitle}>YOUR SHELF IS EMPTY</Text>
@@ -572,6 +580,7 @@ function EmptyShelf({ onAdd }: { onAdd: () => void }) {
 // OQ-130 — the filtered-to-zero beat: the shelf HAS games, but the current search/filters match none.
 // A calm message + a Clear affordance (drops filters + exits search) so it's never a dead end.
 function NoResults({ onClear }: { onClear: () => void }) {
+  const styles = useStyles();
   return (
     <View style={styles.noResults}>
       <Text style={styles.noResultsTitle}>NO MATCHES</Text>
@@ -600,6 +609,7 @@ function SortFilterSheet(props: {
   setGenreFilter: (s: Set<string>) => void;
   genres: GenreView[];
 }) {
+  const styles = useStyles();
   const toggle = <T,>(set: Set<T>, value: T, put: (s: Set<T>) => void) => {
     const next = new Set(set);
     if (next.has(value)) next.delete(value);
@@ -746,6 +756,7 @@ function LogHoursSheet({ item, onClose }: { item: CollectionItem | null; onClose
 }
 
 function SheetSection({ title, children }: { title: string; children: React.ReactNode }) {
+  const styles = useStyles();
   return (
     <View style={styles.sheetSection}>
       <Text style={styles.sheetHead}>{title.toUpperCase()}</Text>
@@ -754,27 +765,27 @@ function SheetSection({ title, children }: { title: string; children: React.Reac
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: theme.scr.bg },
-  center: { alignItems: 'center', justifyContent: 'center', gap: theme.space.lg },
-  errTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.accent, letterSpacing: 1 },
-  errSub: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.dim },
-  pad: { paddingHorizontal: theme.space.lg, paddingTop: theme.space.lg, paddingBottom: theme.space.md, gap: theme.space.md },
+const useStyles = themedStyles((t) => ({
+  screen: { flex: 1, backgroundColor: t.scr.bg },
+  center: { alignItems: 'center', justifyContent: 'center', gap: t.space.lg },
+  errTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.accent, letterSpacing: 1 },
+  errSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim },
+  pad: { paddingHorizontal: t.space.lg, paddingTop: t.space.lg, paddingBottom: t.space.md, gap: t.space.md },
   scroll: { flex: 1 },
-  body: { padding: theme.space.lg, gap: theme.space.lg },
+  body: { padding: t.space.lg, gap: t.space.lg },
   // OQ-130 — filtered-to-zero "no results" beat.
-  noResults: { alignItems: 'center', gap: theme.space.md, paddingVertical: theme.space.xxl },
-  noResultsTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 1 },
-  noResultsSub: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.dim, textAlign: 'center' },
+  noResults: { alignItems: 'center', gap: t.space.md, paddingVertical: t.space.xxl },
+  noResultsTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
+  noResultsSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, textAlign: 'center' },
   tools: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.space.lg,
-    paddingHorizontal: theme.space.lg,
-    paddingVertical: theme.space.md,
+    gap: t.space.lg,
+    paddingHorizontal: t.space.lg,
+    paddingVertical: t.space.md,
     borderTopWidth: 1,
-    borderTopColor: theme.scr.hairline,
-    backgroundColor: theme.scr.bg,
+    borderTopColor: t.scr.hairline,
+    backgroundColor: t.scr.bg,
   },
   spacer: { flex: 1 },
   // S3-o — the gold ADD reads larger than the cream tool keycaps (the one loud object). Token-driven
@@ -784,103 +795,103 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.space.md,
-    paddingHorizontal: theme.space.lg,
-    paddingVertical: theme.space.md,
+    gap: t.space.md,
+    paddingHorizontal: t.space.lg,
+    paddingVertical: t.space.md,
     borderTopWidth: 1,
-    borderTopColor: theme.scr.hairline,
-    backgroundColor: theme.scr.bg,
+    borderTopColor: t.scr.hairline,
+    backgroundColor: t.scr.bg,
   },
   searchFieldWrap: { flex: 1 },
   searchClear: {
     width: 32,
     height: 30,
-    backgroundColor: theme.brand.cream,
+    backgroundColor: t.brand.cream,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  resultsHead: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },
-  shelf: { gap: theme.space.lg },
+  resultsHead: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
+  shelf: { gap: t.space.lg },
   hero: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    padding: theme.space.lg,
-    backgroundColor: theme.scr.panel,
+    padding: t.space.lg,
+    backgroundColor: t.scr.panel,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
+    borderColor: t.scr.hairline,
   },
   heroCard: { width: 138, height: 193 }, // mockup `.gcard.hero-size`
   heroMeta: { flex: 1, justifyContent: 'center', gap: 7 },
-  heroEyebrow: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.accent, letterSpacing: 2 },
-  heroStat: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 2 },
-  heroTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.display, color: theme.scr.ink, letterSpacing: 1 },
-  heroCatalog: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
-  heroBtn: { alignSelf: 'flex-start', marginTop: theme.space.sm },
+  heroEyebrow: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 2 },
+  heroStat: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 2 },
+  heroTitle: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, letterSpacing: 1 },
+  heroCatalog: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
+  heroBtn: { alignSelf: 'flex-start', marginTop: t.space.sm },
   nudge: {
-    padding: theme.space.xl,
-    backgroundColor: theme.scr.panel,
+    padding: t.space.xl,
+    backgroundColor: t.scr.panel,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    gap: theme.space.sm,
+    borderColor: t.scr.hairline,
+    gap: t.space.sm,
   },
-  nudgeTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 1 },
-  nudgeSub: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.dim, lineHeight: 16 },
-  empty: { alignItems: 'flex-start', gap: theme.space.lg, padding: theme.space.xl, backgroundColor: theme.scr.panel },
+  nudgeTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
+  nudgeSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, lineHeight: 16 },
+  empty: { alignItems: 'flex-start', gap: t.space.lg, padding: t.space.xl, backgroundColor: t.scr.panel },
   // SHELF stack (decision 0061) — each entry a hero-treatment row (card + meta beside), board `.shelf-stack`.
-  shelfStack: { gap: theme.space.lg },
+  shelfStack: { gap: t.space.lg },
   stackRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    padding: theme.space.lg,
-    backgroundColor: theme.scr.panel,
+    padding: t.space.lg,
+    backgroundColor: t.scr.panel,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
+    borderColor: t.scr.hairline,
   },
   // GRID (decision 0061) — two-per-row bare card faces (board `.grid` 1fr/1fr).
-  gridWrap: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: theme.space.lg },
+  gridWrap: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: t.space.lg },
   gridCol: { width: '48%' },
   fluidCard: { width: '100%', height: 'auto', aspectRatio: 63 / 88 }, // mockup `.grid-size`
   // LIST — dense strip rows (board `.list-stack` gap 9 / `.strip`).
-  listStack: { gap: theme.space.sm + 1 },
+  listStack: { gap: t.space.sm + 1 },
   strip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.space.lg,
-    backgroundColor: theme.scr.panel,
+    gap: t.space.lg,
+    backgroundColor: t.scr.panel,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    paddingHorizontal: theme.space.lg,
-    paddingVertical: theme.space.md,
+    borderColor: t.scr.hairline,
+    paddingHorizontal: t.space.lg,
+    paddingVertical: t.space.md,
   },
-  stripMeta: { flex: 1, gap: theme.space.xs, minWidth: 0 },
-  stripTitleRow: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md },
-  stripTitle: { flexShrink: 1, fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 1 },
+  stripMeta: { flex: 1, gap: t.space.xs, minWidth: 0 },
+  stripTitleRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
+  stripTitle: { flexShrink: 1, fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
   // ▶ NOW inline next to the title (board `.now-inline`) — the thumb is too small to wear a tag.
-  nowInline: { backgroundColor: theme.scr.accent, paddingHorizontal: 4, paddingVertical: 1 },
-  nowInlineText: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.accentInk, letterSpacing: 0.5 },
-  chev: { marginLeft: 'auto', fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.faint },
-  list: { gap: theme.space.md },
+  nowInline: { backgroundColor: t.scr.accent, paddingHorizontal: 4, paddingVertical: 1 },
+  nowInlineText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accentInk, letterSpacing: 0.5 },
+  chev: { marginLeft: 'auto', fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.faint },
+  list: { gap: t.space.md },
   rowMeta: { flex: 1, gap: 1 },
-  rowTitle: { fontFamily: theme.font.screenSemi, fontSize: theme.type.title, color: theme.scr.ink },
-  rowSub: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
+  rowTitle: { fontFamily: t.font.screenSemi, fontSize: t.type.title, color: t.scr.ink },
+  rowSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.space.lg,
-    backgroundColor: theme.scr.panel,
+    gap: t.space.lg,
+    backgroundColor: t.scr.panel,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    padding: theme.space.md,
+    borderColor: t.scr.hairline,
+    padding: t.space.md,
   },
-  topRowFirst: { borderColor: theme.scr.accent },
-  rank: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.dim, width: 30 },
+  topRowFirst: { borderColor: t.scr.accent },
+  rank: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.dim, width: 30 },
   // C6/F-02 — the TOP list #1 marker is the on-screen ACCENT (orange), never gold.
-  rankFirst: { color: theme.scr.accent, fontSize: theme.type.display },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.md },
-  sheetFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: theme.space.sm },
-  resetLink: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
-  sheetSection: { gap: theme.space.md },
-  sheetHead: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },
-});
+  rankFirst: { color: t.scr.accent, fontSize: t.type.display },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.md },
+  sheetFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: t.space.sm },
+  resetLink: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
+  sheetSection: { gap: t.space.md },
+  sheetHead: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
+}));

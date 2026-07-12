@@ -1,6 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { theme } from '../../theme';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { themedStyles } from '../../theme';
 import { PulledSheet } from '../PulledSheet';
 import { ScrollLockContext, useScrollLockHost } from '../ScrollLock';
 import { clamp, POS_MIN, POS_MAX, SIZE_MIN, SIZE_MAX, TEXT_SIZE_MIN, TEXT_SIZE_MAX } from '../../canvas/ops';
@@ -55,6 +55,7 @@ export function TransformDrawer({
   /** render inline in the CanvasSurface bottom panel (no PulledSheet/scrim/handle/title) */
   inline?: boolean;
 }) {
+  const styles = useStyles();
   // (kept as a host so any future held control in this panel locks its scroll; inert today)
   const { scrollEnabled, api: scrollLockApi } = useScrollLockHost();
 
@@ -212,6 +213,7 @@ export function TransformDrawer({
 }
 
 function ControlRow({ label, children }: { label: string; children: ReactNode }) {
+  const styles = useStyles();
   return (
     <View style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
@@ -242,6 +244,7 @@ function Stepper({
   release: (tok: number) => void;
   tap: Tap;
 }) {
+  const styles = useStyles();
   return (
     <View
       style={styles.row}
@@ -280,6 +283,7 @@ function Arrow({
   release: (tok: number) => void;
   tap: Tap;
 }) {
+  const styles = useStyles();
   const tokRef = useRef(0);
   return (
     <Pressable
@@ -299,31 +303,31 @@ function Arrow({
 }
 
 const ARROW = 28; // compact row-height arrows (the 40px d-pad cross retired — round 5)
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   inlineScroll: { flexGrow: 0 },
-  inlineBody: { gap: theme.space.md, paddingBottom: theme.space.md },
-  row: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md },
-  rowLabel: { width: 66, fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },
-  rowBody: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: theme.space.sm + 1 },
+  inlineBody: { gap: t.space.md, paddingBottom: t.space.md },
+  row: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
+  rowLabel: { width: 66, fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
+  rowBody: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: t.space.sm + 1 },
   arrow: {
     width: ARROW,
     height: ARROW,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.scr.panelHi,
+    backgroundColor: t.scr.panelHi,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
+    borderColor: t.scr.hairline,
   },
-  arrowGlyph: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.ink },
-  readout: { flex: 1, textAlign: 'right', fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
-  stepValue: { minWidth: 52, textAlign: 'center', fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.ink, letterSpacing: 0.5 },
+  arrowGlyph: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.ink },
+  readout: { flex: 1, textAlign: 'right', fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
+  stepValue: { minWidth: 52, textAlign: 'center', fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.ink, letterSpacing: 0.5 },
   boxTog: {
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    backgroundColor: theme.scr.panel,
-    paddingHorizontal: theme.space.md,
-    paddingVertical: theme.space.sm + 1,
+    borderColor: t.scr.hairline,
+    backgroundColor: t.scr.panel,
+    paddingHorizontal: t.space.md,
+    paddingVertical: t.space.sm + 1,
   },
-  boxTogOn: { borderWidth: 1.5, borderColor: theme.scr.accent, backgroundColor: 'rgba(255,159,67,0.08)' },
-  boxTogText: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.ink, letterSpacing: 0.5 },
-});
+  boxTogOn: { borderWidth: 1.5, borderColor: t.scr.accent, backgroundColor: 'rgba(255,159,67,0.08)' },
+  boxTogText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.ink, letterSpacing: 0.5 },
+}));

@@ -1,7 +1,7 @@
 import { useRef } from 'react';
-import { View, Text, Pressable, PanResponder, StyleSheet } from 'react-native';
+import { View, Text, Pressable, PanResponder } from 'react-native';
 import { GameCard } from './GameCard';
-import { theme } from '../theme';
+import { themedStyles } from '../theme';
 
 // CardFan (component-map §1.5 — the add-game / picker 3-up swipe fan; board add-game-states `.cfan`
 // / `.fan-nav`, :253–272). The centered FORE card + its two immediate neighbours rotated ±4°; below,
@@ -21,6 +21,7 @@ export function CardFan({
   foreIndex: number;
   onFocus: (index: number) => void;
 }) {
+  const styles = useStyles();
   const n = items.length;
   // step wraps; the guard below blocks it for n < 2 so a single-card fan can't rotate onto itself.
   const step = (dir: 1 | -1) => onFocus((foreIndex + dir + n) % n);
@@ -97,17 +98,17 @@ export function CardFan({
   );
 }
 
-const styles = StyleSheet.create({
-  fan: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', paddingTop: theme.space.sm },
+const useStyles = themedStyles((t) => ({
+  fan: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', paddingTop: t.space.sm },
   nb: { zIndex: 1 },
   nbL: { marginRight: 5 },
   nbR: { marginLeft: 5 },
   fore: { zIndex: 2 },
-  nav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingTop: theme.space.lg },
-  chev: { fontFamily: theme.font.screenBold, fontSize: theme.type.body, color: theme.scr.dim },
+  nav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingTop: t.space.lg },
+  chev: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.dim },
   chevOff: { opacity: 0.3 },
   // board `.fdot` — a 6px square (F-07; the board's corner-notch is a clip-path we don't replicate).
-  dot: { width: 6, height: 6, backgroundColor: theme.scr.faint },
-  dotOn: { backgroundColor: theme.scr.accent }, // F-09 selection = the on-screen accent
-  swipe: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5, marginLeft: 5 },
-});
+  dot: { width: 6, height: 6, backgroundColor: t.scr.faint },
+  dotOn: { backgroundColor: t.scr.accent }, // F-09 selection = the on-screen accent
+  swipe: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5, marginLeft: 5 },
+}));

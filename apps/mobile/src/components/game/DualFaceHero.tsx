@@ -1,7 +1,7 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { CardFace } from '../CardFace';
 import { StatsBack } from './StatsBack';
-import { theme } from '../../theme';
+import { themedStyles } from '../../theme';
 import type { CardComposition } from '../../render/composition';
 
 // DualFaceHero (component-map §9) — the Game-page hero: your card's FACE + the standardized stats
@@ -32,6 +32,7 @@ export function DualFaceHero({
   statsLabel?: string;
   onInspect: () => void;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.wrap}>
       <Pressable
@@ -53,15 +54,15 @@ export function DualFaceHero({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   wrap: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'flex-start',
-    gap: theme.space.lg,
-    paddingVertical: theme.space.sm, // tightened toward the title/facts block (gate-5 B.5)
+    gap: t.space.lg,
+    paddingVertical: t.space.sm, // tightened toward the title/facts block (gate-5 B.5)
   },
-  face: { alignItems: 'center', gap: theme.space.sm },
-  label: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },
-  labelAcc: { color: theme.scr.accent },
-});
+  face: { alignItems: 'center', gap: t.space.sm },
+  label: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
+  labelAcc: { color: t.scr.accent },
+}));

@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
-import { View, Text, Animated, AccessibilityInfo, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Animated, AccessibilityInfo, Pressable } from 'react-native';
 import { CardFace } from '../CardFace';
 import { ScreenButton } from '../ScreenButton';
-import { theme } from '../../theme';
+import { theme, themedStyles } from '../../theme';
 import type { CardComposition } from '../../render/composition';
 
 // KeepBeat (component-map §8a / board P7) — the LIGHT celebration tier (decision 0015): the finished
@@ -25,6 +25,7 @@ export function KeepBeat({
   onEditArt?: () => void;
 }) {
   const pulse = useRef(new Animated.Value(0)).current;
+  const styles = useStyles();
 
   useEffect(() => {
     let mounted = true;
@@ -85,25 +86,25 @@ export function KeepBeat({
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: { alignItems: 'center', gap: theme.space.lg, paddingVertical: theme.space.lg },
-  pulseFrame: { borderWidth: 2, borderColor: 'transparent', padding: theme.space.sm },
+const useStyles = themedStyles((t) => ({
+  wrap: { alignItems: 'center', gap: t.space.lg, paddingVertical: t.space.lg },
+  pulseFrame: { borderWidth: 2, borderColor: 'transparent', padding: t.space.sm },
   okStrip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.space.md,
-    paddingHorizontal: theme.space.lg,
-    paddingVertical: theme.space.md,
+    gap: t.space.md,
+    paddingHorizontal: t.space.lg,
+    paddingVertical: t.space.md,
     backgroundColor: 'rgba(255,210,63,0.10)',
     borderWidth: 1,
     borderColor: 'rgba(255,210,63,0.55)',
     alignSelf: 'stretch',
   },
-  okIc: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.brand.gold },
+  okIc: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.brand.gold },
   okTx: { gap: 2, flexShrink: 1 },
-  okTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.body, color: theme.scr.ink, letterSpacing: 0.8 },
-  okSub: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 0.5 },
-  clout: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
-  canvasDoor: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.faint, letterSpacing: 0.5 },
-  canvasDoorLive: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.accent, letterSpacing: 0.5 },
-});
+  okTitle: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 0.8 },
+  okSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
+  clout: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
+  canvasDoor: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5 },
+  canvasDoorLive: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 0.5 },
+}));

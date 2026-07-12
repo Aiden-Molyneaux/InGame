@@ -1,6 +1,6 @@
 import { Suspense, useMemo, useRef, useState } from 'react';
 import { PanResponder, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
-import { theme } from '../../theme';
+import { useTheme, themedStyles } from '../../theme';
 import { SkiaErrorBoundary } from '../SkiaErrorBoundary';
 import { LazyCardBed } from './lazySkia';
 import { PLATE_H_RATIO } from '../../render/buildCard';
@@ -78,6 +78,8 @@ export function CanvasStage({
   /** the RESIZE BOX toggle — when false the WHOLE sel-ring hides (border + handles + corner grab; round 3) */
   showHandles?: boolean;
 }) {
+  const styles = useStyles();
+  const t = useTheme();
   const [zone, setZone] = useState({ w: 0, h: 0 });
   const [guides, setGuides] = useState({ v: false, h: false });
 
@@ -287,8 +289,8 @@ export function CanvasStage({
           <View style={[styles.corner, styles.br]} />
           <View style={{ width: bed.w, height: bed.h }}>
             <View pointerEvents="none">
-              <SkiaErrorBoundary fallback={<View style={{ width: bed.w, height: bed.h, backgroundColor: theme.scr.panel }} />}>
-                <Suspense fallback={<View style={{ width: bed.w, height: bed.h, backgroundColor: theme.scr.panel }} />}>
+              <SkiaErrorBoundary fallback={<View style={{ width: bed.w, height: bed.h, backgroundColor: t.scr.panel }} />}>
+                <Suspense fallback={<View style={{ width: bed.w, height: bed.h, backgroundColor: t.scr.panel }} />}>
                   <LazyCardBed composition={composition} width={bed.w} height={bed.h} pulledIndex={isolationOn ? pulledIndex : null} />
                 </Suspense>
               </SkiaErrorBoundary>
@@ -365,17 +367,17 @@ export function CanvasStage({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   zone: { flex: 1, minHeight: 0, alignItems: 'center', justifyContent: 'center' },
   bed: {
     padding: 12,
     backgroundColor: 'rgba(0,0,0,0.35)', // the press-bed well over the workshop tone (scrim family)
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
+    borderColor: t.scr.hairline,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  corner: { position: 'absolute', width: 7, height: 7, borderColor: theme.scr.faint },
+  corner: { position: 'absolute', width: 7, height: 7, borderColor: t.scr.faint },
   tl: { left: 3, top: 3, borderLeftWidth: 1.5, borderTopWidth: 1.5 },
   tr: { right: 3, top: 3, borderRightWidth: 1.5, borderTopWidth: 1.5 },
   bl: { left: 3, bottom: 3, borderLeftWidth: 1.5, borderBottomWidth: 1.5 },
@@ -390,40 +392,40 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     borderColor: 'rgba(255,159,67,0.35)', // scr.accent at guide opacity
   },
-  guideV: { position: 'absolute', top: '-4%', bottom: '-4%', width: 1, backgroundColor: theme.scr.accent, opacity: 0.8 },
-  guideH: { position: 'absolute', left: '-4%', right: '-4%', height: 1, backgroundColor: theme.scr.accent, opacity: 0.8 },
-  selRing: { position: 'absolute', borderWidth: 1.5, borderColor: theme.scr.accent },
+  guideV: { position: 'absolute', top: '-4%', bottom: '-4%', width: 1, backgroundColor: t.scr.accent, opacity: 0.8 },
+  guideH: { position: 'absolute', left: '-4%', right: '-4%', height: 1, backgroundColor: t.scr.accent, opacity: 0.8 },
+  selRing: { position: 'absolute', borderWidth: 1.5, borderColor: t.scr.accent },
   handle: {
     position: 'absolute',
     width: 12,
     height: 12,
-    backgroundColor: theme.brand.cream,
+    backgroundColor: t.brand.cream,
     borderWidth: 1.5,
-    borderColor: theme.scr.accent,
+    borderColor: t.scr.accent,
   },
   // the rotation handle — a cream knob off the ring's top edge + a hairline stem (round 4; F-07 square)
   rotKnob: {
     position: 'absolute',
     width: 14,
     height: 14,
-    backgroundColor: theme.brand.cream,
+    backgroundColor: t.brand.cream,
     borderWidth: 1.5,
-    borderColor: theme.scr.accent,
+    borderColor: t.scr.accent,
   },
-  rotStem: { position: 'absolute', width: 1.5, backgroundColor: theme.scr.accent },
+  rotStem: { position: 'absolute', width: 1.5, backgroundColor: t.scr.accent },
   // round 4 — the chip rides the zone's top edge (clear of the card) + reads accent when ON
   isoChip: {
     position: 'absolute',
     right: 0,
     top: 0,
-    backgroundColor: theme.scr.bg,
+    backgroundColor: t.scr.bg,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    paddingHorizontal: theme.space.md,
-    paddingVertical: theme.space.sm,
+    borderColor: t.scr.hairline,
+    paddingHorizontal: t.space.md,
+    paddingVertical: t.space.sm,
   },
-  isoChipOn: { borderWidth: 1.5, borderColor: theme.scr.accent, backgroundColor: 'rgba(255,159,67,0.08)' },
-  isoText: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
-  isoOn: { color: theme.scr.accent },
-  isoOff: { color: theme.scr.faint },
-});
+  isoChipOn: { borderWidth: 1.5, borderColor: t.scr.accent, backgroundColor: 'rgba(255,159,67,0.08)' },
+  isoText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
+  isoOn: { color: t.scr.accent },
+  isoOff: { color: t.scr.faint },
+}));

@@ -4,7 +4,7 @@ import Svg, { Path } from 'react-native-svg';
 import { LazyCompositionStrip } from '../canvas/lazySkia';
 import { SkiaErrorBoundary } from '../SkiaErrorBoundary';
 import { StateMark } from '../StateMark';
-import { theme } from '../../theme';
+import { theme, themedStyles, useTheme } from '../../theme';
 import type { CardComposition } from '../../render/composition';
 
 // AttributeSection (component-map §8a / the board attr-rail) — one closed-attribute page: a
@@ -67,6 +67,7 @@ export function AttributeSection({
   /** Section extras under the rail (the EFFECT IntensitySlider, the TITLE ink row). */
   children?: ReactNode;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.page}>
       <Text style={styles.heading}>{heading}</Text>
@@ -112,6 +113,7 @@ function CardRail({
   selectedId: string;
   onSelect: (id: string) => void;
 }) {
+  const styles = useStyles();
   const comps = options.map((o) => o.preview);
   const stripW = options.length * TILE_STRIDE;
   const selIdx = options.findIndex((o) => o.id === selectedId);
@@ -152,6 +154,7 @@ function CardRail({
 // The plate as it draws on the card foot (buildCard's slab/ribbon/bevel geometry), title centred —
 // what a plate pick actually changes, shown legibly instead of a whole 64px card (gate-5 D.21).
 function PlatePreview({ comp }: { comp: CardComposition }) {
+  const t = useTheme();
   const np = comp.nameplate;
   const raw = np?.shape ?? 'slab';
   const shape = raw === 'none' ? 'slab' : raw;
@@ -185,7 +188,7 @@ function PlatePreview({ comp }: { comp: CardComposition }) {
   return (
     <View style={{ width: W, height: H, alignItems: 'center', justifyContent: 'center' }}>
       <Svg width={W} height={H} style={StyleSheet.absoluteFill}>
-        <Path d={d} fill={plateFill} stroke={theme.scr.hairline} strokeWidth={1} />
+        <Path d={d} fill={plateFill} stroke={t.scr.hairline} strokeWidth={1} />
       </Svg>
       <Text
         numberOfLines={1}
@@ -221,36 +224,36 @@ function FontPreview({ comp }: { comp: CardComposition }) {
   );
 }
 
-const styles = StyleSheet.create({
-  page: { gap: theme.space.md },
-  heading: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 2 },
-  rail: { gap: theme.space.md, paddingVertical: theme.space.sm, paddingHorizontal: 2 },
+const useStyles = themedStyles((t) => ({
+  page: { gap: t.space.md },
+  heading: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 2 },
+  rail: { gap: t.space.md, paddingVertical: t.space.sm, paddingHorizontal: 2 },
   tile: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: theme.space.sm,
-    padding: theme.space.md,
+    gap: t.space.sm,
+    padding: t.space.md,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    backgroundColor: theme.scr.panel,
-    borderRadius: theme.corner.screen, // F-07 square, flat tile (F-09)
+    borderColor: t.scr.hairline,
+    backgroundColor: t.scr.panel,
+    borderRadius: t.corner.screen, // F-07 square, flat tile (F-09)
   },
-  tileSel: { borderColor: theme.scr.accent, backgroundColor: 'rgba(255,159,67,0.08)' },
+  tileSel: { borderColor: t.scr.accent, backgroundColor: 'rgba(255,159,67,0.08)' },
   pip: { position: 'absolute', top: 4, right: 4, zIndex: 2 },
-  name: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 0.5, maxWidth: 110 },
-  nameSel: { color: theme.scr.ink },
-  cardRail: { paddingVertical: theme.space.sm, paddingHorizontal: 2 },
+  name: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5, maxWidth: 110 },
+  nameSel: { color: t.scr.ink },
+  cardRail: { paddingVertical: t.space.sm, paddingHorizontal: 2 },
   cardTile: {
     position: 'absolute',
     top: 0,
     alignItems: 'center',
     paddingTop: TILE_PAD,
     paddingHorizontal: TILE_PAD,
-    gap: theme.space.sm,
+    gap: t.space.sm,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    backgroundColor: theme.scr.panel,
-    borderRadius: theme.corner.screen, // F-07 square, flat tile (F-09)
+    borderColor: t.scr.hairline,
+    backgroundColor: t.scr.panel,
+    borderRadius: t.corner.screen, // F-07 square, flat tile (F-09)
   },
   stripLayer: { position: 'absolute' },
-});
+}));

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import Svg, { Path, Line } from 'react-native-svg';
-import { theme } from '../theme';
+import { theme, themedStyles, useTheme } from '../theme';
 import { steppedRectPath } from '../theme/steppedPath';
 
 // GameCard (component-map §5.2) — the universal game handle. F-01: NEVER cropped — the full face at
@@ -42,6 +42,8 @@ export function GameCard({
   foil?: boolean;
   style?: ViewStyle;
 }) {
+  const t = useTheme();
+  const styles = useStyles();
   const dims = SIZES[size];
   const { w, h, step: u } = dims;
   const hue = faceHue(title);
@@ -87,7 +89,7 @@ export function GameCard({
           d={steppedRectPath(bw - 1, bh - 1, u)}
           transform="translate(0.5 0.5)"
           fill={faceFill}
-          stroke={theme.scr.hairline}
+          stroke={t.scr.hairline}
           strokeWidth={1}
         />
         <Path
@@ -103,9 +105,9 @@ export function GameCard({
             <Path
               d={steppedRectPath(bw, plateH, u, { br: true })}
               transform={`translate(0 ${bh - plateH})`}
-              fill={theme.scr.bg}
+              fill={t.scr.bg}
             />
-            <Line x1={0} y1={bh - plateH} x2={bw} y2={bh - plateH} stroke={theme.scr.hairline} strokeWidth={1} />
+            <Line x1={0} y1={bh - plateH} x2={bw} y2={bh - plateH} stroke={t.scr.hairline} strokeWidth={1} />
           </>
         ) : null}
       </Svg>
@@ -129,27 +131,27 @@ export function GameCard({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   foil: {
     position: 'absolute',
     top: 4,
     right: 4,
     height: 3,
-    backgroundColor: theme.brand.gold,
+    backgroundColor: t.brand.gold,
     opacity: 0.85,
   },
   nowTag: {
     position: 'absolute',
     top: 4,
     right: 4,
-    backgroundColor: theme.scr.accent,
+    backgroundColor: t.scr.accent,
     paddingHorizontal: 4,
     paddingVertical: 1,
   },
   nowText: {
-    fontFamily: theme.font.screenBold,
-    fontSize: theme.type.micro,
-    color: theme.scr.accentInk,
+    fontFamily: t.font.screenBold,
+    fontSize: t.type.micro,
+    color: t.scr.accentInk,
     letterSpacing: 0.5,
   },
   plate: {
@@ -158,11 +160,11 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     justifyContent: 'center',
-    paddingHorizontal: theme.space.sm,
+    paddingHorizontal: t.space.sm,
   },
   plateText: {
-    fontFamily: theme.font.screenSemi,
-    color: theme.scr.ink,
+    fontFamily: t.font.screenSemi,
+    color: t.scr.ink,
     letterSpacing: 0.3,
   },
-});
+}));

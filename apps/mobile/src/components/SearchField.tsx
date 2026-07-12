@@ -1,5 +1,5 @@
 import { TextInput, StyleSheet } from 'react-native';
-import { theme } from '../theme';
+import { theme, useTheme } from '../theme';
 
 // SearchField (component-map §5.5) — the in-place filter / flow search input. Cream inset (a NAMED
 // F-09 exception, like TextField); system keyboard (OQ-035).
@@ -17,13 +17,14 @@ export function SearchField({
   /** The keyboard's SEARCH/return key (board OQ-034: dismisses and KEEPS the filter). */
   onSubmit?: () => void;
 }) {
+  const t = useTheme();
   return (
     <TextInput
       style={styles.input}
       value={value}
       onChangeText={onChangeText}
       placeholder={placeholder}
-      placeholderTextColor={theme.scr.faint}
+      placeholderTextColor={t.scr.faint}
       autoCapitalize="none"
       autoCorrect={false}
       autoFocus={autoFocus}

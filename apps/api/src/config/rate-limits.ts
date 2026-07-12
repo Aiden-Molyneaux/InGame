@@ -30,6 +30,10 @@ const DEFAULTS: Record<string, RateLimitRule> = {
   // M4 card-substrate writes (decision 0066). The autosave PATCH is debounced client-side (~1-2s),
   // so 120/min covers the hottest legitimate editing session; presets share the collection posture.
   'cards:write': { limit: 120, windowMs: 60_000 },
+  // M4 §3.5 Device-editor writes (decision 0030). The PATCH is debounced client-side per the ARCH-3
+  // one-write-pipeline (~1-2s), so 120/min covers the hottest live-edit session; SAVE CURRENT/delete
+  // share the bucket. Mirrors the cards:write posture.
+  'device:write': { limit: 120, windowMs: 60_000 },
 };
 
 const overrides = new Map<string, RateLimitRule>();

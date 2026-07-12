@@ -13,6 +13,7 @@ import {
   primaryKey,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
+import type { StickerComposition } from '@ingame/shared';
 
 // M2 data layer (product-spec §6 entity map). Every table here is USER-OWNED unless it is on the F32
 // global-table manifest (packages/shared) — the rule-2 scope-lint treats an unlisted table as
@@ -463,6 +464,56 @@ export const stylePresets = pgTable(
   }),
 );
 
+/**
+ * `device_configs` — the user's LIVE device (M4 §3.5, DEV-01/02/03/04 · decision 0030). USER-OWNED
+ * (owner key = `user_id`; one row per user — `user_id` is UNIQUE so the ARCH-3 write pipeline UPSERTs).
+ * A user with NO row reads the free DEFAULTS (teal · midnight · empty) — the service never creates a
+ * row on read (DEV-03: a free default device always renders). NOT on the F32 manifest — rule-2 fails
+ * closed. All roster ids are client constants at M4 (cosmetic entities later, 0063); everything free
+ * (0068), so `/me/device` only ever references owned items by construction.
+ *  - `stickerComposition` — the OQ-062 versioned shape (shared stickerCompositionSchema-validated at
+ *    the boundary + a rotated-bounds re-check in the service); stickers ride the PLASTIC zones only.
+ */
+export const deviceConfigs = pgTable('device_configs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  activeShellId: text('active_shell_id').notNull().default('teal'),
+  screenThemeId: text('screen_theme_id').notNull().default('midnight'),
+  stickerComposition: jsonb('sticker_composition')
+    .notNull()
+    .$type<StickerComposition>()
+    .default({ version: 1, stickers: [] }),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * `device_looks` — saved device "looks" (DEV-05/OQ-064 · decision 0030). USER-OWNED (owner key =
+ * `user_id`). Each row is a SNAPSHOT of the three device facets; NO name (identified by shell·theme,
+ * owner ruling). SAVE CURRENT snapshots the live config into a new row; apply = the client PATCHes the
+ * snapshot's facets onto `/me/device` (no dedicated apply endpoint); the ON NOW badge is computed
+ * client-side (facets == the live device), never stored. Capped ~12 (SERVICE-enforced → 422
+ * LOOK_CAP_REACHED; the F36 parallel-save race is serialized by a per-actor advisory lock).
+ */
+export const deviceLooks = pgTable(
+  'device_looks',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    activeShellId: text('active_shell_id').notNull(),
+    screenThemeId: text('screen_theme_id').notNull(),
+    stickerComposition: jsonb('sticker_composition').notNull().$type<StickerComposition>(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    userIdx: index('device_looks_user_idx').on(table.userId),
+  }),
+);
+
 export type UserRow = typeof users.$inferSelect;
 export type NewUserRow = typeof users.$inferInsert;
 export type AuthIdentityRow = typeof authIdentities.$inferSelect;
@@ -480,6 +531,8 @@ export type GameRow = typeof games.$inferSelect;
 export type NewGameRow = typeof games.$inferInsert;
 export type CardDesignRow = typeof cardDesigns.$inferSelect;
 export type StylePresetRow = typeof stylePresets.$inferSelect;
+export type DeviceConfigRow = typeof deviceConfigs.$inferSelect;
+export type DeviceLookRow = typeof deviceLooks.$inferSelect;
 export type GameGenreRow = typeof gameGenres.$inferSelect;
 export type CollectionEntryRow = typeof collectionEntries.$inferSelect;
 export type NewCollectionEntryRow = typeof collectionEntries.$inferInsert;

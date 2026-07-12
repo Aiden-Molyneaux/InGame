@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, PanResponder } from 'react-native';
+import { View, Text, Pressable, PanResponder } from 'react-native';
 import { CardFace } from '../CardFace';
 import { EquipReadout } from '../game/EquipReadout';
-import { theme } from '../../theme';
+import { themedStyles } from '../../theme';
 import type { CardComposition } from '../../render/composition';
 
 // BaseRail (component-map §8a / board P1) — the start-from fan: never blank, never community-
@@ -56,6 +56,8 @@ export function BaseRail({
       },
     }),
   ).current;
+
+  const styles = useStyles();
 
   if (!fore || n === 0) return null;
 
@@ -127,18 +129,18 @@ export function BaseRail({
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: { alignItems: 'center', gap: theme.space.md },
-  fan: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', gap: theme.space.md },
+const useStyles = themedStyles((t) => ({
+  wrap: { alignItems: 'center', gap: t.space.md },
+  fan: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', gap: t.space.md },
   fore: { zIndex: 2 },
   nb: { opacity: 0.8 },
-  dotsRow: { flexDirection: 'row', alignItems: 'center', gap: theme.space.sm },
-  chev: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.dim, paddingHorizontal: theme.space.sm },
-  chevPressed: { color: theme.scr.accent },
-  dot: { width: 6, height: 6, backgroundColor: theme.scr.panelHi },
-  dotOn: { backgroundColor: theme.scr.accent },
-  foreName: { fontFamily: theme.font.screenBold, fontSize: theme.type.body, color: theme.scr.ink, letterSpacing: 0.5 },
-  foreKind: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
-  chips: { alignItems: 'center', paddingHorizontal: theme.space.lg },
-  hint: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.faint, textAlign: 'center', lineHeight: 15, paddingHorizontal: theme.space.lg },
-});
+  dotsRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.sm },
+  chev: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.dim, paddingHorizontal: t.space.sm },
+  chevPressed: { color: t.scr.accent },
+  dot: { width: 6, height: 6, backgroundColor: t.scr.panelHi },
+  dotOn: { backgroundColor: t.scr.accent },
+  foreName: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 0.5 },
+  foreKind: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
+  chips: { alignItems: 'center', paddingHorizontal: t.space.lg },
+  hint: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, textAlign: 'center', lineHeight: 15, paddingHorizontal: t.space.lg },
+}));

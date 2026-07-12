@@ -1,8 +1,8 @@
 import { useRef } from 'react';
-import { AccessibilityInfo, Animated, StyleSheet, Text } from 'react-native';
+import { AccessibilityInfo, Animated, Text } from 'react-native';
 import { PulledSheet } from '../PulledSheet';
 import { SaveOption } from '../styler/SaveOption';
-import { theme } from '../../theme';
+import { themedStyles } from '../../theme';
 
 // PressSheet (component-map §8b / board P7) — the Canvas finish-up sheet: "where does it go?"
 // Canonical labels PUBLISH · SAVE PRIVATE · TO THE STYLER (the workshop flavors eyebrows only).
@@ -28,6 +28,7 @@ export function PressSheet({
   onSavePrivate: () => void;
   onToStyler: () => void;
 }) {
+  const styles = useStyles();
   const beat = useRef(new Animated.Value(1)).current;
 
   const pressPrivate = () => {
@@ -75,12 +76,12 @@ export function PressSheet({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   crossPostureNote: {
-    fontFamily: theme.font.screenSemi,
-    fontSize: theme.type.micro,
-    color: theme.scr.dim,
+    fontFamily: t.font.screenSemi,
+    fontSize: t.type.micro,
+    color: t.scr.dim,
     letterSpacing: 0.5,
-    paddingTop: theme.space.sm,
+    paddingTop: t.space.sm,
   },
-});
+}));

@@ -1,12 +1,12 @@
 import { useRef, useState, type ReactNode } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import type { CollectionItem, CollectionStatus, UpdateCollectionEntryRequest } from '@ingame/shared';
 import { GenreTag } from '../GenreTag';
 import { TextField } from '../TextField';
 import { ScreenButton } from '../ScreenButton';
 import { OWNED_STATUSES, STATUS_LABEL } from '../../constants/collection';
 import { useUpdateEntryMutation } from '../../store/api';
-import { theme } from '../../theme';
+import { themedStyles } from '../../theme';
 
 // PlayDossier (component-map §9 `PlayStats`) — the "YOUR PLAY" readout with PER-STAT INLINE editing
 // (owner gate-5 B.8: every stat displays here and edits individually IN PLACE — the whole-form flip
@@ -25,6 +25,7 @@ const FIELD_LABEL: Record<EditableField, string> = {
 };
 
 function PendingRating() {
+  const styles = useStyles();
   return (
     <View style={styles.ratingRow}>
       <Text style={styles.stars}>★★★★★</Text>
@@ -34,6 +35,7 @@ function PendingRating() {
 }
 
 export function PlayDossier({ entry }: { entry: CollectionItem }) {
+  const styles = useStyles();
   const [updateEntry, saveState] = useUpdateEntryMutation();
   const [open, setOpen] = useState<EditableField | null>(null);
   const [value, setValue] = useState('');
@@ -253,6 +255,7 @@ function Row({
   onEdit?: () => void;
   editor?: ReactNode;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.rowWrap}>
       <View style={styles.row}>
@@ -274,50 +277,50 @@ function Row({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   sectionHead: {
-    fontFamily: theme.font.screenBold,
-    fontSize: theme.type.micro,
-    color: theme.scr.dim,
+    fontFamily: t.font.screenBold,
+    fontSize: t.type.micro,
+    color: t.scr.dim,
     letterSpacing: 2,
-    marginBottom: theme.space.md,
+    marginBottom: t.space.md,
   },
-  dossier: { borderWidth: 1, borderColor: theme.scr.hairline, gap: 1, backgroundColor: theme.scr.hairline },
-  rowWrap: { backgroundColor: theme.scr.panel },
+  dossier: { borderWidth: 1, borderColor: t.scr.hairline, gap: 1, backgroundColor: t.scr.hairline },
+  rowWrap: { backgroundColor: t.scr.panel },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: theme.space.md,
-    paddingHorizontal: theme.space.lg,
-    paddingVertical: theme.space.md,
+    gap: t.space.md,
+    paddingHorizontal: t.space.lg,
+    paddingVertical: t.space.md,
   },
-  rowLabel: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
+  rowLabel: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
   rowValue: { flex: 1, alignItems: 'flex-end' },
-  val: { fontFamily: theme.font.screenBold, fontSize: theme.type.body, color: theme.scr.ink },
-  deferVal: { fontFamily: theme.font.screenBold, fontSize: theme.type.body, color: theme.scr.faint },
-  pencil: { fontFamily: theme.font.screenBold, fontSize: theme.type.body, color: theme.scr.dim },
-  pencilOn: { color: theme.scr.accent },
+  val: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink },
+  deferVal: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.faint },
+  pencil: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.dim },
+  pencilOn: { color: t.scr.accent },
   notesVal: {
-    fontFamily: theme.font.screen,
-    fontSize: theme.type.body, // 11 (F-06) — the board's notes row reads at body
-    color: theme.scr.dim,
+    fontFamily: t.font.screen,
+    fontSize: t.type.body, // 11 (F-06) — the board's notes row reads at body
+    color: t.scr.dim,
     lineHeight: 16,
     textAlign: 'right',
   },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md },
-  stars: { fontSize: theme.type.body, color: theme.scr.faint, letterSpacing: 1 },
-  pending: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.faint, letterSpacing: 0.5 },
+  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
+  stars: { fontSize: t.type.body, color: t.scr.faint, letterSpacing: 1 },
+  pending: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5 },
   caption: {
-    fontFamily: theme.font.screen,
-    fontSize: theme.type.micro,
-    color: theme.scr.faint,
+    fontFamily: t.font.screen,
+    fontSize: t.type.micro,
+    color: t.scr.faint,
     lineHeight: 15,
-    marginTop: theme.space.md,
+    marginTop: t.space.md,
   },
-  editor: { paddingHorizontal: theme.space.lg, paddingBottom: theme.space.md, gap: theme.space.md },
-  editorRow: { flexDirection: 'row', gap: theme.space.md },
-  editorBtn: { flex: 1, paddingVertical: theme.space.md },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.md },
-  err: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.brand.alert },
-});
+  editor: { paddingHorizontal: t.space.lg, paddingBottom: t.space.md, gap: t.space.md },
+  editorRow: { flexDirection: 'row', gap: t.space.md },
+  editorBtn: { flex: 1, paddingVertical: t.space.md },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.md },
+  err: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.brand.alert },
+}));

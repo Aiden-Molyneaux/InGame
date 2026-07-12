@@ -1,6 +1,6 @@
 import { Suspense, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { theme } from '../../theme';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { useTheme, themedStyles } from '../../theme';
 import { PulledSheet } from '../PulledSheet';
 import { SkiaErrorBoundary } from '../SkiaErrorBoundary';
 import { LazyGlyphStrip } from './lazySkia';
@@ -59,6 +59,8 @@ export function AssetShelf({
   /** render inline in the CanvasSurface bottom panel (no PulledSheet/scrim/handle/title) */
   inline?: boolean;
 }) {
+  const styles = useStyles();
+  const t = useTheme();
   const [cat, setCat] = useState<Category>('shapes');
   const [textDraft, setTextDraft] = useState('');
   const atCap = count >= MAX_ELEMENTS;
@@ -160,7 +162,7 @@ export function AssetShelf({
                 onChangeText={setTextDraft}
                 maxLength={24}
                 placeholder="Add text…"
-                placeholderTextColor={theme.scr.faint}
+                placeholderTextColor={t.scr.faint}
                 style={styles.textInput}
                 accessibilityLabel="Text to add"
               />
@@ -231,6 +233,8 @@ function GlyphGrid({
   /** the measured panel width — 0 until the first layout (falls back to the 44px cell) */
   width: number;
 }) {
+  const styles = useStyles();
+  const t = useTheme();
   const cell = shelfW > 0 ? (shelfW - (COLS - 1) * CELL_GAP) / COLS : CELL;
   const stride = cell + CELL_GAP;
   const glyph = cell - GLYPH_INSET;
@@ -243,7 +247,7 @@ function GlyphGrid({
         <SkiaErrorBoundary fallback={null}>
           <Suspense fallback={null}>
             <LazyGlyphStrip
-              cells={items.map((it) => ({ el: it.preview, bg: theme.scr.panel }))}
+              cells={items.map((it) => ({ el: it.preview, bg: t.scr.panel }))}
               cellW={glyph}
               cellH={glyph}
               strideX={stride}
@@ -274,66 +278,66 @@ function GlyphGrid({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   inlineScroll: { flexGrow: 0 },
-  inlineBody: { gap: theme.space.lg, paddingBottom: theme.space.md },
-  headRow: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md },
+  inlineBody: { gap: t.space.lg, paddingBottom: t.space.md },
+  headRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
   stretch: { alignSelf: 'stretch' },
   // round 3 — the SAME orange cap-meter chip as the rack (CR-03/F-02: the count is never gold)
   capChip: {
-    fontFamily: theme.font.screenBold,
-    fontSize: theme.type.micro,
-    color: theme.scr.accent,
+    fontFamily: t.font.screenBold,
+    fontSize: t.type.micro,
+    color: t.scr.accent,
     borderWidth: 1,
     borderColor: 'rgba(255,159,67,0.5)',
     backgroundColor: 'rgba(255,159,67,0.08)',
-    paddingHorizontal: theme.space.sm,
+    paddingHorizontal: t.space.sm,
     paddingVertical: 2,
   },
   capChipFull: {
-    color: theme.brand.alert,
+    color: t.brand.alert,
     borderColor: 'rgba(227,65,78,0.55)',
     backgroundColor: 'rgba(227,65,78,0.1)',
   },
-  capFullNote: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.brand.alert, letterSpacing: 1 },
-  catRow: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.sm + 2 },
-  cat: { backgroundColor: theme.brand.cream, paddingHorizontal: theme.space.md, paddingVertical: theme.space.sm + 1 },
-  catActive: { backgroundColor: theme.brand.creamPressed }, // scanline-energize base tone (pressed cream)
+  capFullNote: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.brand.alert, letterSpacing: 1 },
+  catRow: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.sm + 2 },
+  cat: { backgroundColor: t.brand.cream, paddingHorizontal: t.space.md, paddingVertical: t.space.sm + 1 },
+  catActive: { backgroundColor: t.brand.creamPressed }, // scanline-energize base tone (pressed cream)
   catDisabled: { opacity: 0.4 },
-  catText: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.brand.navy, letterSpacing: 1 },
-  catPip: { position: 'absolute', top: -2.5, right: -2.5, width: 7, height: 7, backgroundColor: theme.scr.accent },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.sm + 1 },
-  gap: { gap: theme.space.md },
+  catText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.brand.navy, letterSpacing: 1 },
+  catPip: { position: 'absolute', top: -2.5, right: -2.5, width: 7, height: 7, backgroundColor: t.scr.accent },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.sm + 1 },
+  gap: { gap: t.space.md },
   cell: {
     width: CELL,
     height: CELL,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.scr.panel,
+    backgroundColor: t.scr.panel,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
+    borderColor: t.scr.hairline,
   },
   cellOverlay: {
     // width/height ride inline (the cell scales to the measured panel width — round 3)
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
+    borderColor: t.scr.hairline,
     backgroundColor: 'transparent', // the strip canvas behind carries the glyph
   },
   cellDisabled: { opacity: 0.35 },
   gridStrip: { position: 'absolute', left: 4, top: 4 },
-  alpha: { fontFamily: theme.font.screenBold, fontSize: theme.type.body, color: theme.scr.ink },
-  textRow: { flexDirection: 'row', gap: theme.space.md, alignItems: 'center' },
+  alpha: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink },
+  textRow: { flexDirection: 'row', gap: t.space.md, alignItems: 'center' },
   textInput: {
     flex: 1,
-    fontFamily: theme.font.screen,
-    fontSize: theme.type.body,
-    color: theme.scr.ink,
-    backgroundColor: theme.scr.panel,
+    fontFamily: t.font.screen,
+    fontSize: t.type.body,
+    color: t.scr.ink,
+    backgroundColor: t.scr.panel,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    paddingHorizontal: theme.space.md,
-    paddingVertical: theme.space.sm + 2,
+    borderColor: t.scr.hairline,
+    paddingHorizontal: t.space.md,
+    paddingVertical: t.space.sm + 2,
   },
-  textGo: { backgroundColor: theme.scr.accent, paddingHorizontal: theme.space.lg, paddingVertical: theme.space.md },
-  textGoLabel: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.accentInk, letterSpacing: 1 },
-});
+  textGo: { backgroundColor: t.scr.accent, paddingHorizontal: t.space.lg, paddingVertical: t.space.md },
+  textGoLabel: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accentInk, letterSpacing: 1 },
+}));

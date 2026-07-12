@@ -1,6 +1,6 @@
 import { Suspense, useMemo, useRef, useState } from 'react';
-import { PanResponder, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { theme } from '../../theme';
+import { PanResponder, Pressable, ScrollView, Text, View } from 'react-native';
+import { useTheme, themedStyles } from '../../theme';
 import { SkiaErrorBoundary } from '../SkiaErrorBoundary';
 import { Slip, SLIP_GAP, SLIP_LIFT, SLIP_PANE_H, SLIP_PANE_W, SLIP_W } from './Slip';
 import { LazyBaseStrip, LazyGlyphStrip } from './lazySkia';
@@ -48,6 +48,7 @@ export function LayerRack({
   onEditBase?: () => void;
   baseEditing?: boolean;
 }) {
+  const styles = useStyles();
 
   // ── drag-Z (long-press arms, horizontal pan reorders one notch per stride) ────────────────────
   // CR-06 (gate-5): the HELD slip stays highlighted through the z-stack. `dragIndex` tracks the held
@@ -157,15 +158,16 @@ export function LayerRack({
 
 /** The rack's one glyph canvas — cells align 1:1 under the Slip chrome (stride/lift shared). */
 function StripView({ elements, pulledIndex }: { elements: CardElement[]; pulledIndex: number | null }) {
+  const t = useTheme();
   const cells = useMemo<StripCell[]>(
     () =>
       elements.map((e, i) => ({
         el: e,
         dim: e.hidden ? 0.42 : undefined,
         lift: i === pulledIndex ? 0 : SLIP_LIFT,
-        bg: theme.scr.panelHi,
+        bg: t.scr.panelHi,
       })),
-    [elements, pulledIndex],
+    [elements, pulledIndex, t],
   );
   const w = elements.length * SLIP_STRIDE;
   const h = SLIP_PANE_H + SLIP_LIFT;
@@ -212,6 +214,7 @@ function BaseRailSlip({
   pulled: boolean;
   onPress?: () => void;
 }) {
+  const baseStyles = useBaseStyles();
   const preview = base ?? BASE_OPTIONS[0]!;
   return (
     <View style={[baseStyles.slip, pulled && baseStyles.slipPulled]}>
@@ -240,7 +243,7 @@ function BaseRailSlip({
   );
 }
 
-const baseStyles = StyleSheet.create({
+const useBaseStyles = themedStyles((t) => ({
   // matches the Slip footprint so the base reads as an inline rail item (a trailing gap divides it
   // from the element slips — round 3: the base LEADS the z-ascending rail); never lifts/drags.
   slip: { width: SLIP_W, alignItems: 'center', marginRight: SLIP_GAP, paddingTop: SLIP_LIFT },
@@ -250,36 +253,36 @@ const baseStyles = StyleSheet.create({
     width: SLIP_PANE_W,
     height: SLIP_PANE_H,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    backgroundColor: theme.scr.panelHi,
+    borderColor: t.scr.hairline,
+    backgroundColor: t.scr.panelHi,
   },
-  panePulled: { borderWidth: 1.5, borderColor: theme.scr.accent },
+  panePulled: { borderWidth: 1.5, borderColor: t.scr.accent },
   paneStrip: { position: 'absolute', left: 0, top: 0 },
-  label: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 0.5, maxWidth: SLIP_W },
-});
+  label: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5, maxWidth: SLIP_W },
+}));
 
-const styles = StyleSheet.create({
-  rack: { borderTopWidth: 1, borderTopColor: theme.scr.hairline, paddingTop: theme.space.md, gap: theme.space.md },
-  head: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md },
-  headText: { flex: 1, fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },
+const useStyles = themedStyles((t) => ({
+  rack: { borderTopWidth: 1, borderTopColor: t.scr.hairline, paddingTop: t.space.md, gap: t.space.md },
+  head: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
+  headText: { flex: 1, fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
   capMeter: {
     // CR-03 (gate-5): orange (scr.accent), not gold — gold is currency/authorship only (F-02)
-    fontFamily: theme.font.screenBold,
-    fontSize: theme.type.micro,
-    color: theme.scr.accent,
+    fontFamily: t.font.screenBold,
+    fontSize: t.type.micro,
+    color: t.scr.accent,
     borderWidth: 1,
     borderColor: 'rgba(255,159,67,0.5)',
     backgroundColor: 'rgba(255,159,67,0.08)',
-    paddingHorizontal: theme.space.sm,
+    paddingHorizontal: t.space.sm,
     paddingVertical: 2,
   },
   capMeterFull: {
-    color: theme.brand.alert,
+    color: t.brand.alert,
     borderColor: 'rgba(227,65,78,0.55)',
     backgroundColor: 'rgba(227,65,78,0.1)',
   },
-  empty: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.faint, letterSpacing: 1, paddingVertical: theme.space.md, alignSelf: 'center' },
+  empty: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 1, paddingVertical: t.space.md, alignSelf: 'center' },
   railRow: { flexDirection: 'row', alignItems: 'flex-start' },
   stripWrap: { position: 'absolute', left: 3, top: 1 }, // pane inset (border 1 + centering 2)
   slips: { flexDirection: 'row', gap: SLIP_GAP },
-});
+}));

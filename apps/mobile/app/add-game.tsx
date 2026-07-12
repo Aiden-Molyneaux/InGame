@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import type { CatalogItem, CollectionItem, CollectionStatus, DedupSuggestion } from '@ingame/shared';
 import { GameCard } from '../src/components/GameCard';
@@ -12,7 +12,7 @@ import { GenreTag } from '../src/components/GenreTag';
 import { InlineBanner } from '../src/components/InlineBanner';
 import { TertiaryLink } from '../src/components/TertiaryLink';
 import { COLLECTION_STATUSES, STATUS_LABEL } from '../src/constants/collection';
-import { theme } from '../src/theme';
+import { theme, themedStyles } from '../src/theme';
 import {
   useGetGenresQuery,
   useGetPopularQuery,
@@ -46,6 +46,7 @@ function errOf(e: unknown): NonNullable<ApiErrorPayload['error']> {
 
 export default function AddGame() {
   const router = useRouter();
+  const styles = useStyles();
 
   const [mode, setMode] = useState<'search' | 'create'>('search');
   const [q, setQ] = useState('');
@@ -102,6 +103,7 @@ function SearchMode({
   onNoneOfThese: () => void;
   onAdded: (item: CollectionItem) => void;
 }) {
+  const styles = useStyles();
   const { data: popular } = useGetPopularQuery();
   const [search, searchState] = useLazySearchCatalogQuery();
   const [foreIndex, setForeIndex] = useState(0);
@@ -209,6 +211,7 @@ function SearchMode({
 }
 
 function FocusedMeta({ item }: { item: CatalogItem }) {
+  const styles = useStyles();
   const year = item.releaseDate ? item.releaseDate.slice(0, 4) : null;
   const sub = [year, item.studio].filter(Boolean).join(' · ').toUpperCase();
   return (
@@ -229,6 +232,7 @@ function FocusedMeta({ item }: { item: CatalogItem }) {
 
 // ── the COL-02 status beat (chips OFF-card — no stamps on art) ────────────────────────────────────
 function StatusBeat({ item, onDone }: { item: CollectionItem; onDone: () => void }) {
+  const styles = useStyles();
   const [updateEntry, state] = useUpdateEntryMutation();
   const [status, setStatus] = useState<CollectionStatus>(item.status);
 
@@ -270,6 +274,7 @@ function CreateForm({
   onAdded: (item: CollectionItem) => void;
   onPickExisting: (name: string) => void;
 }) {
+  const styles = useStyles();
   const { data: genres } = useGetGenresQuery();
   const [createGame, createState] = useCreateGameMutation();
   const [addToCollection] = useAddToCollectionMutation();
@@ -407,46 +412,46 @@ function CreateForm({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   flex: { flex: 1 },
-  screen: { flex: 1, backgroundColor: theme.scr.bg },
+  screen: { flex: 1, backgroundColor: t.scr.bg },
   // N3 — no divider between the header and the POPULAR FIRST ADDS section (owner, 2026-07-04).
   flowHead: {
     alignItems: 'flex-start',
-    gap: theme.space.xs,
-    paddingHorizontal: theme.space.lg,
-    paddingVertical: theme.space.lg,
+    gap: t.space.xs,
+    paddingHorizontal: t.space.lg,
+    paddingVertical: t.space.lg,
   },
   // N2 — same size as the Collection ScreenHead title (display 21, F-06).
-  flowTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.display, color: theme.scr.ink, letterSpacing: 1 },
+  flowTitle: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, letterSpacing: 1 },
   // N5 — the RETURN link is orange (the on-screen accent).
-  returnLink: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.accent, letterSpacing: 1 },
-  body: { padding: theme.space.lg, gap: theme.space.lg },
-  railHead: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },
+  returnLink: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 1 },
+  body: { padding: t.space.lg, gap: t.space.lg },
+  railHead: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
   // N4 — the focused game's details are centered (owner, 2026-07-04).
   meta: { gap: 3, alignItems: 'center' },
-  metaTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 0.5, textAlign: 'center' },
-  metaSub: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.dim, letterSpacing: 1 }, // R2 — inline year·studio (body/dim), baseline in the title line
-  metaPresence: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.accent, letterSpacing: 1, textAlign: 'center' },
-  hintLine: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.faint, letterSpacing: 1, textAlign: 'center' },
-  noneWrap: { gap: theme.space.sm, padding: theme.space.lg, backgroundColor: theme.scr.panel },
-  noneTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 1 },
-  noneSub: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.dim, lineHeight: 16 },
-  noneHook: { alignItems: 'center', paddingVertical: theme.space.md },
+  metaTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5, textAlign: 'center' },
+  metaSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, letterSpacing: 1 }, // R2 — inline year·studio (body/dim), baseline in the title line
+  metaPresence: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 1, textAlign: 'center' },
+  hintLine: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 1, textAlign: 'center' },
+  noneWrap: { gap: t.space.sm, padding: t.space.lg, backgroundColor: t.scr.panel },
+  noneTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
+  noneSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, lineHeight: 16 },
+  noneHook: { alignItems: 'center', paddingVertical: t.space.md },
   dock: {
-    padding: theme.space.lg,
+    padding: t.space.lg,
     borderTopWidth: 1,
-    borderTopColor: theme.scr.hairline,
-    backgroundColor: theme.scr.bg,
+    borderTopColor: t.scr.hairline,
+    backgroundColor: t.scr.bg,
   },
-  addedWrap: { alignItems: 'center', gap: theme.space.lg, paddingVertical: theme.space.lg },
-  addedTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.brand.success, letterSpacing: 2 },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.md },
-  field: { gap: theme.space.xs },
-  fieldLabel: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
-  errLine: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.brand.alert },
-  suggestionRow: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md },
+  addedWrap: { alignItems: 'center', gap: t.space.lg, paddingVertical: t.space.lg },
+  addedTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.brand.success, letterSpacing: 2 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.md },
+  field: { gap: t.space.xs },
+  fieldLabel: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
+  errLine: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.brand.alert },
+  suggestionRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
   suggestionMeta: { flex: 1, gap: 1 },
-  suggestionName: { fontFamily: theme.font.screenSemi, fontSize: theme.type.body, color: theme.scr.ink },
-  suggestionSub: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 0.5 },
-});
+  suggestionName: { fontFamily: t.font.screenSemi, fontSize: t.type.body, color: t.scr.ink },
+  suggestionSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
+}));

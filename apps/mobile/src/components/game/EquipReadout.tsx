@@ -1,6 +1,6 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import type { CollectionCard } from '@ingame/shared';
-import { theme } from '../../theme';
+import { themedStyles } from '../../theme';
 import { FRAMES } from '../../styler/roster';
 import type { CardComposition } from '../../render/composition';
 
@@ -81,6 +81,7 @@ export function EquipReadout({
           ['FINISH', 'NONE'],
           ['NAMEPLATE', 'STANDARD'],
         ];
+  const styles = useStyles();
   return (
     <View style={styles.wrap}>
       {chips.map(([k, v]) => (
@@ -94,16 +95,16 @@ export function EquipReadout({
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.sm },
+const useStyles = themedStyles((t) => ({
+  wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.sm },
   chip: {
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    backgroundColor: theme.scr.panelHi,
-    paddingHorizontal: theme.space.md,
+    borderColor: t.scr.hairline,
+    backgroundColor: t.scr.panelHi,
+    paddingHorizontal: t.space.md,
     paddingVertical: 3,
-    borderRadius: theme.corner.screen, // F-07 square
+    borderRadius: t.corner.screen, // F-07 square
   },
-  chipText: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 0.5 },
-  chipVal: { fontFamily: theme.font.screenBold, color: theme.scr.ink },
-});
+  chipText: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
+  chipVal: { fontFamily: t.font.screenBold, color: t.scr.ink },
+}));

@@ -1,6 +1,6 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Stack } from 'expo-router';
-import { Provider } from 'react-redux';
+import { Provider, useSelector, useDispatch } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -18,12 +18,19 @@ import { Bitter_700Bold } from '@expo-google-fonts/bitter';
 import { SpaceMono_700Bold } from '@expo-google-fonts/space-mono';
 import { Pacifico_400Regular } from '@expo-google-fonts/pacifico';
 import { AllertaStencil_400Regular } from '@expo-google-fonts/allerta-stencil';
-import { store, persistor } from '../src/store';
+import { store, persistor, type RootState } from '../src/store';
 import { setTokens } from '../src/store/authSlice';
 import { loadTokens } from '../src/auth/tokenStore';
+import { useGetDeviceQuery } from '../src/store/api';
+import { setShellId, setThemeId, setStickerComposition } from '../src/store/prefsSlice';
 import { DeviceShell } from '../src/components/DeviceShell';
 import { BreakoutProvider } from '../src/components/BreakoutContext';
-import { theme } from '../src/theme';
+import { DeviceStickerProvider } from '../src/components/device/DeviceStickerContext';
+import { theme, useTheme, SCREEN_THEMES, DEFAULT_THEME_ID, resolveShellId, resolveScreenThemeId } from '../src/theme';
+
+// Splash renders BEFORE the redux Provider (the fonts-loading early return) — so it can't read the
+// live theme; it uses the DEFAULT screen bg (pre-rehydration we don't know the user's theme anyway).
+const SPLASH_BG = SCREEN_THEMES[DEFAULT_THEME_ID].bg;
 
 function Splash() {
   return (
@@ -31,6 +38,48 @@ function Splash() {
       <ActivityIndicator color={theme.brand.accent} />
     </View>
   );
+}
+
+// The routed Stack lives INSIDE the Provider (below), so it CAN read the live theme — its `contentStyle`
+// backdrop re-renders on a theme switch (DEV-04). Kept a child component so the hook sits under the store.
+function ThemedStack() {
+  const t = useTheme();
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: t.scr.bg },
+        animation: 'none',
+      }}
+    />
+  );
+}
+
+// DEVICE HYDRATOR (Fable §3.5 walk find — DEV-01/ARCH 2): the wearable device state must follow the
+// ACCOUNT, not the browser. Logout purges the prefs slice (the per-user-namespace guarantee), and
+// before this existed nothing re-applied the server's device facets until the user happened to open
+// the /device editor — a fresh login (or a second device) wore the teal/midnight defaults while the
+// server held the user's real shell/theme/stickers. This hydrates prefs from GET /me/device ONCE per
+// auth session (re-arming when the token drops), at the root so every screen wears it immediately.
+// The editor's own hydrate-once + optimistic dispatches run later and are never fought (this fires at
+// login, before any editing).
+function DeviceHydrator() {
+  const authed = useSelector((s: RootState) => s.auth.accessToken != null);
+  const dispatch = useDispatch();
+  const { data } = useGetDeviceQuery(undefined, { skip: !authed });
+  const hydratedRef = useRef(false);
+  useEffect(() => {
+    if (!authed) {
+      hydratedRef.current = false; // next login re-hydrates (a different account may sign in)
+      return;
+    }
+    if (!data || hydratedRef.current) return;
+    hydratedRef.current = true;
+    dispatch(setShellId(resolveShellId(data.activeShellId)));
+    dispatch(setThemeId(resolveScreenThemeId(data.screenThemeId)));
+    dispatch(setStickerComposition(data.stickerComposition));
+  }, [authed, data, dispatch]);
+  return null;
 }
 
 // Rehydrate the access/refresh tokens from expo-secure-store (F14) into the in-memory auth slice on
@@ -72,15 +121,14 @@ export default function RootLayout() {
                 BreakoutProvider lets the Canvas posture (§2.5b) tell the shell to hide its chrome so
                 the workshop fills the whole device (decision 0014 stage-3). */}
             <BreakoutProvider>
-              <DeviceShell>
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                    contentStyle: { backgroundColor: theme.scr.bg },
-                    animation: 'none',
-                  }}
-                />
-              </DeviceShell>
+              {/* DeviceStickerProvider sits ABOVE DeviceShell so the /device editor (a descendant) can
+                  publish its edit session UP to the shell's plastic-band sticker layers (ARCH 2). */}
+              <DeviceStickerProvider>
+                <DeviceHydrator />
+                <DeviceShell>
+                  <ThemedStack />
+                </DeviceShell>
+              </DeviceStickerProvider>
             </BreakoutProvider>
           </AuthBootstrap>
         </PersistGate>
@@ -92,7 +140,7 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   splash: {
     flex: 1,
-    backgroundColor: theme.scr.bg,
+    backgroundColor: SPLASH_BG,
     alignItems: 'center',
     justifyContent: 'center',
   },

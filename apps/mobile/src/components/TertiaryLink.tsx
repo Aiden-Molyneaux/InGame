@@ -1,5 +1,5 @@
-import { Pressable, Text, StyleSheet } from 'react-native';
-import { theme } from '../theme';
+import { Pressable, Text } from 'react-native';
+import { themedStyles } from '../theme';
 
 // TertiaryLink (component-map §5.3) — the quiet text-link action (VIEW TOP 10 ›, return-links).
 // `chevron` picks the affix: 'trailing' (default — "LABEL ›", the VIEW-more grammar), 'leading-back'
@@ -16,6 +16,7 @@ export function TertiaryLink({
   dim?: boolean;
   chevron?: 'trailing' | 'leading-back' | 'none';
 }) {
+  const styles = useStyles();
   const text =
     chevron === 'leading-back'
       ? `‹ ${label.toUpperCase()}`
@@ -33,13 +34,13 @@ export function TertiaryLink({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   pressed: { opacity: 0.7 },
   label: {
-    fontFamily: theme.font.screenSemi,
-    fontSize: theme.type.micro, // 9
-    color: theme.scr.accent,
+    fontFamily: t.font.screenSemi,
+    fontSize: t.type.micro, // 9
+    color: t.scr.accent,
     letterSpacing: 1,
   },
-  dim: { color: theme.scr.dim },
-});
+  dim: { color: t.scr.dim },
+}));

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback, type ReactNode } from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import type { CardDesignView, StylePresetStyle } from '@ingame/shared';
 import { CardFace, parseComposition } from '../../src/components/CardFace';
@@ -15,7 +15,7 @@ import { KeepBeat } from '../../src/components/styler/KeepBeat';
 import { ScreenButton } from '../../src/components/ScreenButton';
 import { PulledSheet } from '../../src/components/PulledSheet';
 import { ConfirmSheet } from '../../src/components/ConfirmSheet';
-import { theme } from '../../src/theme';
+import { themedStyles, useTheme } from '../../src/theme';
 import type { CardComposition } from '../../src/render/composition';
 import {
   DEFAULT_INTENSITY,
@@ -102,6 +102,8 @@ export default function Styler() {
   const { gameId, cardId } = useLocalSearchParams<{ gameId: string; cardId?: string }>();
   const router = useRouter();
   const { setActive: setBreakout } = useBreakout();
+  const styles = useStyles();
+  const t = useTheme();
 
   const { data: shelf, isLoading: shelfLoading, isError: shelfError, refetch } = useGetCollectionQuery();
   const { data: presets } = useGetStylePresetsQuery();
@@ -822,7 +824,7 @@ export default function Styler() {
     return (
       <Frame onBack={() => router.back()} saveLine={null}>
         <View style={styles.center}>
-          <ActivityIndicator color={theme.scr.accent} accessibilityLabel="Loading" />
+          <ActivityIndicator color={t.scr.accent} accessibilityLabel="Loading" />
         </View>
       </Frame>
     );
@@ -923,7 +925,7 @@ export default function Styler() {
     return (
       <Frame onBack={requestExit} saveLine={null}>
         <View style={styles.center}>
-          <ActivityIndicator color={theme.scr.accent} accessibilityLabel="Loading the draft" />
+          <ActivityIndicator color={t.scr.accent} accessibilityLabel="Loading the draft" />
         </View>
       </Frame>
     );
@@ -1124,6 +1126,7 @@ function Frame({
   saveLine: string | null;
   closeGlyph?: string;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.screen}>
       <View style={styles.head}>
@@ -1144,47 +1147,47 @@ function Frame({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   flex: { flex: 1 },
   crossPostureNote: {
-    fontFamily: theme.font.screenSemi,
-    fontSize: theme.type.micro,
-    color: theme.scr.dim,
+    fontFamily: t.font.screenSemi,
+    fontSize: t.type.micro,
+    color: t.scr.dim,
     letterSpacing: 0.5,
-    paddingHorizontal: theme.space.xl,
-    paddingBottom: theme.space.sm,
+    paddingHorizontal: t.space.xl,
+    paddingBottom: t.space.sm,
   },
-  screen: { flex: 1, backgroundColor: theme.scr.bg, paddingHorizontal: theme.space.lg, gap: theme.space.md },
-  head: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md, paddingTop: theme.space.lg },
-  backKey: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.dim, paddingHorizontal: theme.space.sm },
-  title: { fontFamily: theme.font.screenBold, fontSize: theme.type.display, color: theme.scr.ink, letterSpacing: 1.5 },
-  saveLine: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 0.5 },
-  contextLine: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1, textAlign: 'center' },
-  contextBold: { color: theme.scr.accent, fontFamily: theme.font.screenBold },
-  secHead: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 2 },
-  heroWrap: { alignItems: 'center', paddingVertical: theme.space.sm },
-  dotsRow: { flexDirection: 'row', justifyContent: 'center', gap: theme.space.md },
-  dot: { width: 6, height: 6, backgroundColor: theme.scr.panelHi },
-  dotOn: { backgroundColor: theme.scr.accent },
-  sectionBody: { gap: theme.space.md, paddingBottom: theme.space.lg },
-  railHint: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.faint, lineHeight: 15 },
-  inkRow: { flexDirection: 'row', gap: theme.space.md, alignItems: 'center', paddingVertical: theme.space.sm },
-  inkSwatch: { width: 26, height: 26, borderWidth: 1, borderColor: theme.scr.hairline },
-  inkSel: { borderWidth: 2, borderColor: theme.scr.accent },
+  screen: { flex: 1, backgroundColor: t.scr.bg, paddingHorizontal: t.space.lg, gap: t.space.md },
+  head: { flexDirection: 'row', alignItems: 'center', gap: t.space.md, paddingTop: t.space.lg },
+  backKey: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.dim, paddingHorizontal: t.space.sm },
+  title: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, letterSpacing: 1.5 },
+  saveLine: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
+  contextLine: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1, textAlign: 'center' },
+  contextBold: { color: t.scr.accent, fontFamily: t.font.screenBold },
+  secHead: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 2 },
+  heroWrap: { alignItems: 'center', paddingVertical: t.space.sm },
+  dotsRow: { flexDirection: 'row', justifyContent: 'center', gap: t.space.md },
+  dot: { width: 6, height: 6, backgroundColor: t.scr.panelHi },
+  dotOn: { backgroundColor: t.scr.accent },
+  sectionBody: { gap: t.space.md, paddingBottom: t.space.lg },
+  railHint: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, lineHeight: 15 },
+  inkRow: { flexDirection: 'row', gap: t.space.md, alignItems: 'center', paddingVertical: t.space.sm },
+  inkSwatch: { width: 26, height: 26, borderWidth: 1, borderColor: t.scr.hairline },
+  inkSel: { borderWidth: 2, borderColor: t.scr.accent },
   tools: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.space.md,
-    paddingVertical: theme.space.md,
+    gap: t.space.md,
+    paddingVertical: t.space.md,
     borderTopWidth: 1,
-    borderTopColor: theme.scr.hairline,
+    borderTopColor: t.scr.hairline,
   },
-  toolBtn: { paddingVertical: theme.space.md, paddingHorizontal: theme.space.lg },
+  toolBtn: { paddingVertical: t.space.md, paddingHorizontal: t.space.lg },
   spacer: { flex: 1 },
-  pickCtas: { alignItems: 'center', gap: theme.space.md, paddingVertical: theme.space.md },
-  adoptHint: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.faint, textAlign: 'center' },
-  inlineErr: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.brand.alert, textAlign: 'center' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: theme.space.md, padding: theme.space.xl },
-  errTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 1.5 },
-  errSub: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.dim, textAlign: 'center', lineHeight: 16 },
-});
+  pickCtas: { alignItems: 'center', gap: t.space.md, paddingVertical: t.space.md },
+  adoptHint: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, textAlign: 'center' },
+  inlineErr: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.brand.alert, textAlign: 'center' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: t.space.md, padding: t.space.xl },
+  errTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1.5 },
+  errSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, textAlign: 'center', lineHeight: 16 },
+}));

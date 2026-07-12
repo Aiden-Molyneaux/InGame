@@ -36,6 +36,11 @@ import {
   type StylePresetsResponse,
   type CreateStylePresetRequest,
   type StylePresetView,
+  type DeviceResponse,
+  type LooksResponse,
+  type LookResponse,
+  type PatchDeviceRequest,
+  deviceResponseSchema,
 } from '@ingame/shared';
 import type { RootState } from './index';
 import { setTokens } from './authSlice';
@@ -141,7 +146,7 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
 export const api = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Me', 'Collection', 'Catalog', 'Cards', 'Presets'],
+  tagTypes: ['Me', 'Collection', 'Catalog', 'Cards', 'Presets', 'Device', 'DeviceLooks'],
   endpoints: (build) => ({
     // ── auth ──────────────────────────────────────────────────────────────────────────────────
     register: build.mutation<AuthSession, RegisterRequest>({
@@ -231,6 +236,38 @@ export const api = createApi({
       invalidatesTags: ['Presets'],
     }),
 
+    // ── device editor (M4 §3.5 — DEV-01..05 · decision 0030; ARCH 3 ONE write pipeline) ────────
+    // The whole editor funnels through updateDevice (shell · theme · sticker · look-apply). getDevice
+    // returns the live three facets (or the free DEFAULTS when the user has no row — DEV-03). The PATCH
+    // returns the authoritative device, so the client applies the response directly; it also invalidates
+    // ['Device'] so the Profile MY DEVICE strip refreshes on return (a couple of small GETs per editing
+    // PAUSE — the debounce means at most one PATCH per ~1.5s pause; the styler-autosave precedent).
+    getDevice: build.query<DeviceResponse, void>({
+      query: () => '/me/device',
+      providesTags: ['Device'],
+      transformResponse: (raw): DeviceResponse => deviceResponseSchema.parse(raw),
+    }),
+    updateDevice: build.mutation<DeviceResponse, PatchDeviceRequest>({
+      query: (body) => ({ url: '/me/device', method: 'PATCH', body }),
+      invalidatesTags: ['Device'],
+      transformResponse: (raw): DeviceResponse => deviceResponseSchema.parse(raw),
+    }),
+    // LOOKS (DEV-05) — the endpoints land here so api.ts is touched once; the LOOKS UI is a later packet.
+    getLooks: build.query<LooksResponse, void>({
+      query: () => '/me/device/looks',
+      providesTags: ['DeviceLooks'],
+    }),
+    saveLook: build.mutation<LookResponse, void>({
+      // SAVE CURRENT — the look is snapshotted SERVER-SIDE from the live device (empty body; cap ~12 →
+      // 409 LOOK_CAP_REACHED). Own device unchanged, so only the looks list invalidates.
+      query: () => ({ url: '/me/device/looks', method: 'POST', body: {} }),
+      invalidatesTags: ['DeviceLooks'],
+    }),
+    deleteLook: build.mutation<OkResponse, string>({
+      query: (lookId) => ({ url: `/me/device/looks/${lookId}`, method: 'DELETE' }),
+      invalidatesTags: ['DeviceLooks'],
+    }),
+
     // ── catalog (CAT-01..05/09) ───────────────────────────────────────────────────────────────
     getGenres: build.query<GenresResponse, void>({
       query: () => '/genres',
@@ -274,4 +311,9 @@ export const {
   useDeleteCardMutation,
   useGetStylePresetsQuery,
   useCreateStylePresetMutation,
+  useGetDeviceQuery,
+  useUpdateDeviceMutation,
+  useGetLooksQuery,
+  useSaveLookMutation,
+  useDeleteLookMutation,
 } = api;

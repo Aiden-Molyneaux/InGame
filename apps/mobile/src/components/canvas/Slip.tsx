@@ -1,5 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { theme } from '../../theme';
+import { Pressable, Text, View } from 'react-native';
+import { themedStyles } from '../../theme';
 import { elementLabel } from '../../canvas/ops';
 import type { CardElement } from '../../render/composition';
 
@@ -32,6 +32,7 @@ export function Slip({
   onPress: () => void;
   onLongPress: () => void;
 }) {
+  const styles = useStyles();
   const label = elementLabel(element, index);
   return (
     <View style={[styles.slip, pulled && styles.slipPulled]}>
@@ -69,6 +70,7 @@ export function Slip({
 
 /** A small drawn padlock badge (CR-13) — a shackle (bordered arch) over a body with a keyhole. */
 function LockGlyph() {
+  const styles = useStyles();
   return (
     <View style={styles.lock} accessibilityLabel="Locked">
       <View style={styles.lockShackle} />
@@ -79,7 +81,7 @@ function LockGlyph() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   slip: { width: SLIP_W, alignItems: 'center' },
   slipPulled: { transform: [{ translateY: -SLIP_LIFT }] },
   press: { alignItems: 'center', gap: 3 },
@@ -88,20 +90,20 @@ const styles = StyleSheet.create({
     width: SLIP_PANE_W,
     height: SLIP_PANE_H,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
+    borderColor: t.scr.hairline,
     backgroundColor: 'transparent', // the strip canvas behind carries the pane fill + glyph
   },
-  panePulled: { borderWidth: 1.5, borderColor: theme.scr.accent },
+  panePulled: { borderWidth: 1.5, borderColor: t.scr.accent },
   badge: {
     position: 'absolute',
     top: 2,
     right: 2,
-    fontFamily: theme.font.screenBold,
-    fontSize: theme.type.micro,
-    color: theme.scr.dim,
-    backgroundColor: theme.scr.bg,
+    fontFamily: t.font.screenBold,
+    fontSize: t.type.micro,
+    color: t.scr.dim,
+    backgroundColor: t.scr.bg,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
+    borderColor: t.scr.hairline,
     paddingHorizontal: 3,
     paddingVertical: 1,
   },
@@ -109,21 +111,21 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 18,
     right: 2,
-    backgroundColor: theme.scr.bg,
+    backgroundColor: t.scr.bg,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
+    borderColor: t.scr.hairline,
     paddingHorizontal: 4,
   },
-  opsBadgeText: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.ink },
+  opsBadgeText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.ink },
   // the drawn padlock badge (CR-13) — sits where the 🔒 emoji did (pane top-right), same badge box
   lock: {
     position: 'absolute',
     top: 2,
     right: 2,
     alignItems: 'center',
-    backgroundColor: theme.scr.bg,
+    backgroundColor: t.scr.bg,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
+    borderColor: t.scr.hairline,
     paddingHorizontal: 2,
     paddingTop: 2,
     paddingBottom: 1,
@@ -133,7 +135,7 @@ const styles = StyleSheet.create({
     height: 4,
     borderWidth: 1,
     borderBottomWidth: 0,
-    borderColor: theme.scr.dim,
+    borderColor: t.scr.dim,
     borderTopLeftRadius: 3,
     borderTopRightRadius: 3,
   },
@@ -142,14 +144,14 @@ const styles = StyleSheet.create({
     height: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.scr.dim,
+    backgroundColor: t.scr.dim,
   },
-  lockHole: { width: 1.5, height: 1.5, backgroundColor: theme.scr.bg },
+  lockHole: { width: 1.5, height: 1.5, backgroundColor: t.scr.bg },
   name: {
-    fontFamily: theme.font.screenBold,
-    fontSize: theme.type.micro,
-    color: theme.scr.dim,
+    fontFamily: t.font.screenBold,
+    fontSize: t.type.micro,
+    color: t.scr.dim,
     letterSpacing: 0.5,
     maxWidth: SLIP_W,
   },
-});
+}));

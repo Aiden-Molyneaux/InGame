@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Platform, View, Text, StyleSheet, type LayoutChangeEvent, PanResponder } from 'react-native';
-import { theme } from '../../theme';
+import { Platform, View, Text, type LayoutChangeEvent, PanResponder } from 'react-native';
+import { themedStyles } from '../../theme';
 import { useScrollLock } from '../ScrollLock';
 
 // IntensitySlider (component-map §8a — the catalog slider, named at the styler gate): flat track
@@ -84,6 +84,7 @@ export function IntensitySlider({
 
   const pct = Math.round(value * 100);
   const thumbX = trackW > 0 ? value * trackW : 0;
+  const styles = useStyles();
 
   return (
     <View style={[styles.row, WEB_NOSELECT]}>
@@ -118,20 +119,20 @@ export function IntensitySlider({
 const WEB_TOUCH = Platform.OS === 'web' ? ({ touchAction: 'none' } as object) : null;
 const WEB_NOSELECT = Platform.OS === 'web' ? ({ userSelect: 'none' } as object) : null;
 
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md, paddingVertical: theme.space.sm },
-  label: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },
+const useStyles = themedStyles((t) => ({
+  row: { flexDirection: 'row', alignItems: 'center', gap: t.space.md, paddingVertical: t.space.sm },
+  label: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
   trackWrap: { flex: 1, height: 28, justifyContent: 'center' },
-  track: { height: 4, backgroundColor: theme.scr.panelHi, borderRadius: theme.corner.screen },
-  fill: { position: 'absolute', height: 4, backgroundColor: theme.scr.accent },
+  track: { height: 4, backgroundColor: t.scr.panelHi, borderRadius: t.corner.screen },
+  fill: { position: 'absolute', height: 4, backgroundColor: t.scr.accent },
   thumb: {
     position: 'absolute',
     width: 14,
     height: 18,
-    backgroundColor: theme.brand.cream,
+    backgroundColor: t.brand.cream,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    borderRadius: theme.corner.screen, // F-07 square — a tiny cream keycap
+    borderColor: t.scr.hairline,
+    borderRadius: t.corner.screen, // F-07 square — a tiny cream keycap
   },
-  value: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.ink, width: 34, textAlign: 'right' },
-});
+  value: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.ink, width: 34, textAlign: 'right' },
+}));

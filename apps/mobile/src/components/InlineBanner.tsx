@@ -1,10 +1,11 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import type { ReactNode } from 'react';
-import { theme } from '../theme';
+import { themedStyles } from '../theme';
 
 // InlineBanner (component-map §6) — an in-flow notice strip (the CAT-03 dedup warning — NEVER a
 // toast). Accent-outlined, flat, square (F-07/F-09).
 export function InlineBanner({ title, children }: { title: string; children?: ReactNode }) {
+  const styles = useStyles();
   return (
     <View style={styles.banner} accessibilityRole="alert">
       <Text style={styles.title}>{title.toUpperCase()}</Text>
@@ -13,18 +14,18 @@ export function InlineBanner({ title, children }: { title: string; children?: Re
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   banner: {
     borderWidth: 1,
-    borderColor: theme.scr.accent,
-    backgroundColor: theme.scr.panel,
-    padding: theme.space.lg,
-    gap: theme.space.md,
+    borderColor: t.scr.accent,
+    backgroundColor: t.scr.panel,
+    padding: t.space.lg,
+    gap: t.space.md,
   },
   title: {
-    fontFamily: theme.font.screenBold,
-    fontSize: theme.type.micro, // 9
-    color: theme.scr.accent,
+    fontFamily: t.font.screenBold,
+    fontSize: t.type.micro, // 9
+    color: t.scr.accent,
     letterSpacing: 1.5,
   },
-});
+}));

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { PanResponder, Platform, StyleSheet, Text, TextInput, View, type LayoutChangeEvent } from 'react-native';
 import Svg, { Defs, Line, LinearGradient, Rect, Stop } from 'react-native-svg';
-import { theme } from '../theme';
+import { themedStyles, useTheme } from '../theme';
 import { useScrollLock } from './ScrollLock';
 
 // ColorPicker (component-map §5.3 · CR-11 / decision 0067) — the SHARED colour surface: a hue strip +
@@ -65,6 +65,7 @@ export function ColorField({
   recents?: string[];
   cardColors?: string[];
 }) {
+  const fieldStyles = useFieldStyles();
   const [mode, setMode] = useState<'closed' | 'picker' | 'card'>('closed');
   const commit = (hex: string) => {
     onChange(hex);
@@ -153,6 +154,7 @@ export function ColorField({
 }
 
 function Btn({ label, on, onPress, glyph }: { label: string; on: boolean; onPress: () => void; glyph?: React.ReactNode }) {
+  const fieldStyles = useFieldStyles();
   return (
     <View accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected: on }} onStartShouldSetResponder={() => true} onResponderRelease={onPress} style={[fieldStyles.btn, glyph ? fieldStyles.btnGlyphed : null, on && fieldStyles.btnOn]}>
       {glyph ?? null}
@@ -164,7 +166,8 @@ function Btn({ label, on, onPress, glyph }: { label: string; on: boolean; onPres
 // Eyedropper / pipette glyph (CR-11 gate-5) — a slanted stem + a tip, drawn as an SVG (no emoji).
 // The stem runs corner-to-corner; a short bulb caps the top-right, the tip points bottom-left.
 function EyedropperGlyph() {
-  const c = theme.scr.ink;
+  const t = useTheme();
+  const c = t.scr.ink;
   return (
     <Svg width={14} height={14} viewBox="0 0 14 14">
       {/* the bulb cap (top-right) */}
@@ -177,21 +180,21 @@ function EyedropperGlyph() {
   );
 }
 
-const fieldStyles = StyleSheet.create({
-  wrap: { gap: theme.space.sm },
-  header: { flexDirection: 'row', alignItems: 'center', gap: theme.space.sm },
-  current: { width: 26, height: 26, borderWidth: 1, borderColor: theme.scr.hairline },
-  recents: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.sm },
+const useFieldStyles = themedStyles((t) => ({
+  wrap: { gap: t.space.sm },
+  header: { flexDirection: 'row', alignItems: 'center', gap: t.space.sm },
+  current: { width: 26, height: 26, borderWidth: 1, borderColor: t.scr.hairline },
+  recents: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: t.space.sm },
   chip: { width: 22, height: 22, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
-  chipOn: { borderWidth: 1.5, borderColor: theme.scr.accent },
-  hint: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.faint, letterSpacing: 0.5 },
-  buttons: { flexDirection: 'row', gap: theme.space.sm },
-  btn: { borderWidth: 1, borderColor: theme.scr.hairline, backgroundColor: theme.scr.panel, paddingHorizontal: theme.space.md, paddingVertical: theme.space.sm },
-  btnGlyphed: { flexDirection: 'row', alignItems: 'center', gap: theme.space.sm },
-  btnOn: { borderWidth: 1.5, borderColor: theme.scr.accent, backgroundColor: 'rgba(255,159,67,0.08)' },
-  btnText: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.ink, letterSpacing: 0.5 },
-  cardRow: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.sm },
-});
+  chipOn: { borderWidth: 1.5, borderColor: t.scr.accent },
+  hint: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5 },
+  buttons: { flexDirection: 'row', gap: t.space.sm },
+  btn: { borderWidth: 1, borderColor: t.scr.hairline, backgroundColor: t.scr.panel, paddingHorizontal: t.space.md, paddingVertical: t.space.sm },
+  btnGlyphed: { flexDirection: 'row', alignItems: 'center', gap: t.space.sm },
+  btnOn: { borderWidth: 1.5, borderColor: t.scr.accent, backgroundColor: 'rgba(255,159,67,0.08)' },
+  btnText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.ink, letterSpacing: 0.5 },
+  cardRow: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.sm },
+}));
 
 export function ColorPicker({
   value,
@@ -208,6 +211,7 @@ export function ColorPicker({
   // (a swatch tap / a different element pulled) — never while dragging, and never off our own echo:
   // the value we just sent comes back through the parent, and re-parsing it through 8-bit hex loses
   // hue/sat on desaturated colours, teleporting the cursor (the round-3 "resets itself" bug).
+  const styles = useStyles();
   const [hsv, setHsv] = useState(() => hexToHsv(value) ?? { h: 0, s: 0, v: 0.9 });
   const [hexDraft, setHexDraft] = useState(value.toUpperCase());
   const draggingRef = useRef(false);
@@ -314,6 +318,7 @@ function SVArea({
   onRelease: () => void;
   draggingRef: React.MutableRefObject<boolean>;
 }) {
+  const styles = useStyles();
   const [size, setSize] = useState({ w: 0, h: 0 });
   const sizeRef = useRef({ w: 0, h: 0 });
   const onLayout = (e: LayoutChangeEvent) => {
@@ -404,6 +409,7 @@ function HueStrip({
   onRelease: () => void;
   draggingRef: React.MutableRefObject<boolean>;
 }) {
+  const styles = useStyles();
   const [w, setW] = useState(0);
   const wRef = useRef(0);
   const onLayout = (e: LayoutChangeEvent) => {
@@ -473,35 +479,35 @@ function HueStrip({
 const WEB_TOUCH = Platform.OS === 'web' ? ({ touchAction: 'none' } as object) : null;
 const WEB_NOSELECT = Platform.OS === 'web' ? ({ userSelect: 'none' } as object) : null;
 
-const styles = StyleSheet.create({
-  wrap: { gap: theme.space.sm },
-  sv: { height: 120, borderWidth: 1, borderColor: theme.scr.hairline, overflow: 'hidden' }, // 96→120 — finer S/V control (round 3)
+const useStyles = themedStyles((t) => ({
+  wrap: { gap: t.space.sm },
+  sv: { height: 120, borderWidth: 1, borderColor: t.scr.hairline, overflow: 'hidden' }, // 96→120 — finer S/V control (round 3)
   svThumb: {
     position: 'absolute',
     width: 14,
     height: 14,
     borderWidth: 2,
-    borderColor: theme.brand.cream,
+    borderColor: t.brand.cream,
     backgroundColor: 'transparent',
   },
-  hue: { height: 16, borderWidth: 1, borderColor: theme.scr.hairline, justifyContent: 'center' },
-  hueThumb: { position: 'absolute', top: -1, width: 8, height: 18, backgroundColor: theme.brand.cream, borderWidth: 1, borderColor: theme.scr.hairline },
-  hexRow: { flexDirection: 'row', alignItems: 'center', gap: theme.space.sm },
-  current: { width: 24, height: 24, borderWidth: 1, borderColor: theme.scr.hairline },
-  hexHash: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim },
+  hue: { height: 16, borderWidth: 1, borderColor: t.scr.hairline, justifyContent: 'center' },
+  hueThumb: { position: 'absolute', top: -1, width: 8, height: 18, backgroundColor: t.brand.cream, borderWidth: 1, borderColor: t.scr.hairline },
+  hexRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.sm },
+  current: { width: 24, height: 24, borderWidth: 1, borderColor: t.scr.hairline },
+  hexHash: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim },
   hexInput: {
     flex: 1,
-    fontFamily: theme.font.screenBold,
-    fontSize: theme.type.body,
-    color: theme.scr.ink,
+    fontFamily: t.font.screenBold,
+    fontSize: t.type.body,
+    color: t.scr.ink,
     letterSpacing: 2,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    backgroundColor: theme.scr.panel,
-    paddingHorizontal: theme.space.sm,
+    borderColor: t.scr.hairline,
+    backgroundColor: t.scr.panel,
+    paddingHorizontal: t.space.sm,
     paddingVertical: 4,
   },
-  swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.sm },
-  swatch: { width: 26, height: 26, borderWidth: 1, borderColor: theme.scr.hairline },
-  swatchOn: { borderWidth: 2, borderColor: theme.scr.accent },
-});
+  swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.sm },
+  swatch: { width: 26, height: 26, borderWidth: 1, borderColor: t.scr.hairline },
+  swatchOn: { borderWidth: 2, borderColor: t.scr.accent },
+}));

@@ -1,5 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { theme } from '../../theme';
+import { Pressable, Text, View } from 'react-native';
+import { themedStyles } from '../../theme';
 import { ScreenButton } from '../ScreenButton';
 import { ToolButton } from '../ToolButton';
 
@@ -33,6 +33,7 @@ export function EditBar({
   onReset: () => void;
   onTransform: () => void;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.bar}>
       <Pressable
@@ -64,10 +65,10 @@ export function EditBar({
   );
 }
 
-const styles = StyleSheet.create({
-  bar: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md, paddingVertical: theme.space.sm },
-  reset: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 0.5 },
+const useStyles = themedStyles((t) => ({
+  bar: { flexDirection: 'row', alignItems: 'center', gap: t.space.md, paddingVertical: t.space.sm },
+  reset: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
   spacer: { flex: 1 },
-  glyph: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.brand.navy }, // undo/redo cap glyph — navy on cream
+  glyph: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.brand.navy }, // undo/redo cap glyph — navy on cream
   dim: { opacity: 0.4 },
-});
+}));

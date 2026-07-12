@@ -1,6 +1,6 @@
-import { Platform, Pressable, Text, View, StyleSheet } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
-import { theme } from '../theme';
+import { theme, themedStyles, useTheme } from '../theme';
 import { PipLight } from './PipLight';
 
 // NavKeycap (component-map §5.1) — a SHELL keycap (3D — F-03: a hard drop edge that travels when
@@ -89,8 +89,10 @@ export function NavKeycap({
   showLabels?: boolean;
   onPress?: () => void;
 }) {
+  const t = useTheme();
+  const styles = useStyles();
   const keyTint =
-    accent === 'store' ? theme.brand.gold : accent === 'collection' ? theme.brand.accent : theme.shell.silk;
+    accent === 'store' ? t.brand.gold : accent === 'collection' ? t.brand.accent : t.shell.cap;
   return (
     <Pressable
       accessibilityRole="tab"
@@ -138,14 +140,14 @@ export function NavKeycap({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   item: { flex: 1, alignItems: 'center' },
   lblSlot: { height: 16, justifyContent: 'center' }, // mockup `.nav-lbl` slot — reserved even when empty
   lbl: {
-    fontFamily: theme.font.shell, // Paytone One on the plastic (F-08)
-    fontSize: theme.type.body, // 11 (mockup `.nav-lbl`)
+    fontFamily: t.font.shell, // Paytone One on the plastic (F-08)
+    fontSize: t.type.body, // 11 (mockup `.nav-lbl`)
     letterSpacing: 0.5,
-    color: theme.shell.lo, // mockup `--silk` label ink on the teal
+    color: t.shell.lo, // mockup `--silk` label ink on the teal
     width: 84, // wider than the key column so COLLECTION doesn't ellipsize (mockup labels overflow too)
     textAlign: 'center',
   },
@@ -155,15 +157,15 @@ const styles = StyleSheet.create({
     height: 54, // mockup `.nav-btn` 54×54
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: theme.corner.navKey, // 15
+    borderRadius: t.corner.navKey, // 15
     // The hard drop edge (F-03, mockup `box-shadow: 0 4px 0 ink`) — REAL RN shadow props on
     // native (S1-c: a borderBottom reads flat — it thickens the edge inside the radius instead of
     // dropping below the cap): hard offset shadow on iOS, elevation approximating on Android.
     // Web keeps the mockup's literal boxShadow (RN-web deprecated shadow* props).
     ...Platform.select({
-      web: { boxShadow: `0 4px 0 color-mix(in srgb, ${theme.shell.ink} 55%, transparent)` },
+      web: { boxShadow: `0 4px 0 color-mix(in srgb, ${t.shell.ink} 55%, transparent)` },
       default: {
-        shadowColor: theme.shell.ink,
+        shadowColor: t.shell.ink,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.55, // R2 (0a) — lighter drop edge (mockup `.nav-btn` ink @ 55%), was 1
         shadowRadius: 0,
@@ -174,10 +176,10 @@ const styles = StyleSheet.create({
   keyPressed: {
     // travels: the cap sinks 3px and the drop edge collapses to 1px (F-03)
     ...Platform.select({
-      web: { boxShadow: `0 1px 0 color-mix(in srgb, ${theme.shell.ink} 55%, transparent)` },
+      web: { boxShadow: `0 1px 0 color-mix(in srgb, ${t.shell.ink} 55%, transparent)` },
       default: { shadowOffset: { width: 0, height: 1 }, elevation: 1 }, // shadowOpacity 0.55 inherited from `key`
     }),
     transform: [{ translateY: 3 }],
   },
   pipRow: { height: 13, justifyContent: 'flex-end' }, // 6px gap + the 7px pip (mockup `.pip`)
-});
+}));

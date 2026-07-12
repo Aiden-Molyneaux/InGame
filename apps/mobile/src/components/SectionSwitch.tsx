@@ -1,5 +1,5 @@
-import { Pressable, Text, View, StyleSheet } from 'react-native';
-import { theme } from '../theme';
+import { Pressable, Text, View } from 'react-native';
+import { themedStyles } from '../theme';
 import { StateMark } from './StateMark';
 
 // SectionSwitch (component-map §5.3) — a flat in-screen switch. `variant`: pair · chips · rail. The
@@ -19,6 +19,7 @@ export function SectionSwitch<T extends string>({
   value: T;
   onChange: (v: T) => void;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.row} accessibilityRole="tablist">
       {options.map((opt) => {
@@ -40,23 +41,23 @@ export function SectionSwitch<T extends string>({
   );
 }
 
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: theme.space.sm },
+const useStyles = themedStyles((t) => ({
+  row: { flexDirection: 'row', gap: t.space.sm },
   seg: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: theme.space.md,
-    paddingVertical: theme.space.sm,
+    paddingHorizontal: t.space.md,
+    paddingVertical: t.space.sm,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    borderRadius: theme.corner.screen, // F-07 square
+    borderColor: t.scr.hairline,
+    borderRadius: t.corner.screen, // F-07 square
   },
-  segActive: { borderColor: theme.scr.accent, backgroundColor: 'rgba(255,159,67,0.10)' }, // accent-tint fill (F-09)
+  segActive: { borderColor: t.scr.accent, backgroundColor: 'rgba(255,159,67,0.10)' }, // accent-tint fill (F-09)
   label: {
-    fontFamily: theme.font.screenSemi,
-    fontSize: theme.type.micro, // 9
-    color: theme.scr.dim,
+    fontFamily: t.font.screenSemi,
+    fontSize: t.type.micro, // 9
+    color: t.scr.dim,
     letterSpacing: 1,
   },
-  labelActive: { color: theme.scr.accent },
-});
+  labelActive: { color: t.scr.accent },
+}));
