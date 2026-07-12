@@ -1040,3 +1040,32 @@ SIGNED OFF** — the `derived_from_card_id` copy-on-write data-model is approved
 migration 0006 ships. **All three §3.4 gates are clear → the §3.4 tree (Canvas rounds 1–5 + the 0069
 sweep) is commit-ready; §3.5 Device is UNBLOCKED.** Next: the m4 commit (owner-triggered), then Device —
 planned on Fable, built by Opus packet agents, reviewed on Fable (owner's model directive, 2026-07-10).
+
+---
+
+# Parvati — build vs design: Device editor (M4 §3.5, 2026-07-10, run inline by Fable per the owner's model directive)
+**Verdict:** 2 🚩 flag (BOTH fixed in-walk → 0 open) · 1 🚩 STOP-and-filed (OQ-144, owner ruling owed) · 1 known web-lane limitation (runbook'd; native owner-proven) · 3 🎨 polish · the rest MATCHES — measured vs the `device-manifest.md` (the enumeration), design-spec §2.15, and `GET/PATCH /me/device` + `/me/device/looks` (api 0.55).
+**Reviewed from:** a driven `:8082` walk (DOM/computed-style/network evidence — the CDP screenshot lane was wedged by the documented skia capture race; the JS-dispatch recipes are in the runbook). **Live collision noted:** the owner was simultaneously editing the same account from his phone mid-walk — his freeform carbon/paper/dragged-cat edits became *evidence* (see below), and the walk deliberately skipped destructive LOOKS/restore steps so as not to hijack his session.
+
+## 🚩 Flags (owed at M4) — both FIXED in-walk by the reviewer, re-verified live
+- **The device didn't follow the ACCOUNT** — ABSENT (app-level hydration) — logout purges prefs (correct, per-user-namespace), but nothing re-applied the server's device facets at login: a fresh login/second device wore teal/midnight defaults while the server held the user's real shell/theme/stickers; state only reconciled if the user happened to open /device. Breaks DEV-01 personal-device semantics + the manifest ARCH 2 proof. **FIXED:** `DeviceHydrator` in `_layout.tsx` — auth-gated `useGetDeviceQuery`, hydrates the three facets once per auth session (re-arms when the token drops). **Re-verified live:** a fresh login painted the owner's carbon/paper + composition app-wide with no editor visit.
+- **P3 exit-drop of a <1.5s pick** (pre-walk review find) — a facet picked inside the debounce window died with the timer on unmount (prefs showed it; the server didn't; a cold reload reverted it). **FIXED:** exit-flush in the unmount cleanup (fire the pending PATCH un-awaited). Cite: manifest walk 6.
+
+## 🚩 STOP-and-filed (amends an owner ratification — NOT built)
+- **Cream `/secondary` on the 3 LIGHT themes fails the DEV-04 floor** — measured: SIGN OUT's cream face `#f5f1e4` on PAPER bg `#ece5d1` ≈ **1.1:1** (the key face vanishes; the navy label floats). §1.1's `scr.chip` token (cream-on-dark / WHITE-on-light) is the designed answer the mapping folded away — **OQ-144**, owner ruling (it amends 0069 "secondary = cream").
+
+## Known web-lane limitation (runbook'd — does not gate the native ship)
+- **Band decals render 0-size on RN-web** — the sticker layer's `onLayout` never delivers AND the ref's `measureInWindow` returns zeros (a gBCR-first fallback was added; still unhealed in-session — the failure sits in the RN-web view/ref layer). Composition/pipeline/readout/TransformBox/server truth all correct. **Native is PROVEN by the owner's live walk** (freeform drag/scale coordinates on his cat sticker are producible only by a working native render+gesture surface). Same class as the rn-skia-web bed-paint quirk.
+
+## 🎨 Polish / iteration
+- **Require cycle** `theme/index ↔ useTheme` (console warn; P2's re-export) → break the cycle in a cleanup pass. Also P3's noted resolver duplication (useTheme private copies vs palettes exports) — collapse together.
+- **The theme PreviewStrip lives ~1.5s** under the free path (pick=apply+persist), so EXIT's try-on window is vestigial — the manifest anticipated this (owner may simplify to instant-apply-no-strip, or lengthen the beat). MutationObserver-verified the strip + SAVING do render in the window.
+- **Stepper a11y labels** read "Horizontal down/up" — friendlier: "Nudge left/right" (CARD-16 lane).
+
+## ✔ Matches (present · placed · behaving · on-aesthetic)
+C1 the Profile MY DEVICE strip — pressable ("Edit your device") + fully dynamic ("POCKET · CARBON · PAPER SCREEN · 2 STICKERS", live server truth) · C2 head/return-link, NO PIXELS (M5 posture) · C3 readout with live subs (EDITING/SWITCHED/PLACING) · C4 the 4-card rail (accent-border active, no pip) · C5 ONE pipeline (hydrate GET → debounced PATCH 200 → invalidation; observed per pick) · D1 five shells in palette order, no price chips, pick re-wraps the LIVE frame (computed-style-verified grape→carbon) · D2 the switch beat + "WAS · TEAL ➔ NOW · GRAPE" minis · D3 six themes, whole-app re-theme live (deepsea/mint/paper verified), PreviewStrip + SAVING in-window (observer-proven), floor-note with the LIVE shell name, light themes flip ink dark (#16302c on mint) · D4 the 8-glyph tray in board order, decal-zone outlines, tap-to-place ("PLACING — ROCKET (100% · 0°)"), the full stepper set + DELETE docked, steppers wired (a 600ms hold landed 1°; the readout binds live), F-04 nav keycaps present/visible above the band · D6 LOOKS chrome + readout + dashed SAVE CURRENT + the calm empty state · zero console errors at the final state (the require-cycle warn only) · server truth byte-exact (`GET /me/device` carried every walked edit).
+
+## Not exercised (rig limits / the owner's live session — stated honestly)
+Drag/refusal/re-zone gestures + the D5 preview toggle + LOOKS save/apply/delete/ON-NOW/cap (server-side covered by the 13 device integration tests + the `isOnNow` unit suite; the owner's phone session made client mutations off-limits mid-walk) · stepper tap/hold-ramp cadence (RN-web synthetic-event artifact; the same round-5 grammar passed the Canvas device walk) · decal VISUALS on web (the limitation above — **owed on device**, where the owner's live walk already exercises them) · cold-reload persistence end-to-end (proven via the hydrator + blob instead). **Seed/restore:** deliberately NOT restored — the owner was live-editing the account; his carbon/paper/cat state is his walk, not residue.
+
+**Suite after the in-walk fixes:** typecheck ✓ · lint ✓ (theme rule incl.) · jest ✓. **→ the §3.5 receipt + the owner's gate-5 device walk** (already underway on his phone, by the look of the cat).

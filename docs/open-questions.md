@@ -16,6 +16,19 @@
 
 ## Open
 
+- ~~OQ-144~~ **RESOLVED (2026-07-10, decision 0070 — owner ruling "adapt the hue").** The fixed-brand
+  on-screen colours become THEMED tokens that carry a light-theme-legible value: **`scr.key`** (secondary/
+  keycap face — cream on dark, WHITE + a `scr.dim` border on light), **`scr.value`** (F-02 gold — bright
+  on dark, deep goldenrod ~4:1 on light; F-02 signal preserved), **`scr.valueInk`** (cream ink on the deep
+  gold), **`scr.isLight`** (the border trigger) + a `withAlpha` helper (theme-following tints). Built on
+  the M4-live surfaces (ScreenButton secondary/add · DESIGN NEW · SectionDock tint); the M5 gold surfaces
+  (wallet/chips/published tags) inherit the tokens. Midnight/Teal byte-identical (identity test holds).
+  design-spec 0.59 · component-map 0.11. *Orig (the filed pass):* **cream `/secondary` ≈ 1.1:1 on PAPER,
+  fixed gold/yellow low-contrast on the light bgs (DEV-04 floor).** (owner, §3.5 device gate-5 2026-07-10)
+  [presentation · DEV-04 · 0069/0070]
+  - **Still owed** (rides the CARD-16 / light-theme parvati pass): confirm the ≥4.5:1 / ≥3:1 floors across
+    every signed surface on all 3 light themes; the shell **nav-label** ink (`shell.lo`) on Carbon's dark
+    plastic (a shell-contrast check, distinct from the screen-theme tokens).
 - OQ-143: **§1.1 screen-theme token names vs the code's live theme keys (doc-debt).** The design-spec
   §1.1 palette tables name `scr.well/tools/head/text/soft/grip/chip`; the code's consumed set is
   `scr.bg/panel/panelHi/hairline/ink/dim/faint/accent/accentInk` (60-file blast radius — renaming is

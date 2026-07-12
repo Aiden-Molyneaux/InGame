@@ -98,6 +98,23 @@ under Promoted.
 - **Fix:** one pattern per findstr — `netstat -ano | findstr ":4000" | findstr "LISTENING"`; for several ports run separate checks (or `findstr /R /C:"…"`).
 - **Verified:** 2026-07-08 · **Hits:** 1
 
+## Rapid successive edits to a LAZY module wedge Metro's transform cache (fresh reloads still serve the old code)
+- **Symptom:** an edit that adds a hook import crashes at runtime (`useEffect is not defined`); the import is then fixed, but the SAME error persists across HMR **and full page reloads**, even though `fetch`ing the module's `.bundle` URL shows the new code text. Error-boundary-wrapped components (e.g. a DeviceShell layer) silently vanish instead of crashing the app.
+- **Diagnosis:** two writes to the same file in quick succession (the second landing while Metro processed the first) left the **lazy-loaded** module's transform cache stale — the served import bindings predate the fix. `modulesOnly` lazy bundles don't self-heal on reload.
+- **Fix:** restart Metro — `node scripts/dev-stack.mjs down` then a **detached** `up` (PowerShell `Start-Process`, the console-cascade rule). Expect the re-bundle wait + the web session logout (below). Avoid the trigger: batch multi-part edits to one file into ONE write where possible.
+- **Verified:** 2026-07-10 · **Hits:** 1 *(the §3.5 Device walk)*
+
+## RN-WEB: the DeviceShell band decals render 0-size (onLayout AND measureInWindow both fail on the sticker band layers)
+- **Symptom:** placed device stickers are invisible on the `:8082` web preview — the decal `<svg>`s mount with `width="0"` — while the composition, pipeline, readout, TransformBox and server truth are all correct. **Native renders fine** (owner-verified live, 2026-07-10: freeform drag/scale coordinates only a working native surface could produce).
+- **Diagnosis:** `StickerBandLayer` sizes decals from a measured `rect`; on RN-web the layer's `onLayout` never delivers AND the ref's `measureInWindow` returns zeros through a 30-frame retry; even a `getBoundingClientRect`-first fallback didn't heal in-session (the DOM node itself measures correctly from the console — the failure is in the view/ref layer, unresolved). Same class as the rn-skia-web bed-paint quirk: a **web-lane limitation, not a ship blocker**.
+- **Fix:** none yet on web — verify decal rendering **on device**. The fallback code stays (harmless; may heal other cases). If this re-hits and matters, instrument which node the RN-web ref actually points at.
+- **Verified:** 2026-07-10 · **Hits:** 1 *(the §3.5 Device walk)*
+
+## RN-web automation: synthetic keyboard/`form_input` don't reach React state — dispatch native-setter + Pointer events
+- **Symptom:** `computer type` into RN-web TextInputs leaves them empty; `form_input` fills the DOM value but the submit button still no-ops (React's controlled state never updated, no POST fires). Synthetic single-tick taps on Pressables (steppers) land inconsistently.
+- **Fix (the recipe that works):** set values via the native setter + `input` event — `Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input, v); input.dispatchEvent(new Event('input',{bubbles:true}))` — and "click" RN-web Pressables by dispatching `PointerEvent('pointerdown')` → `('pointerup')` → `MouseEvent('click')` at the element's centre. For **hold-to-repeat** steppers, separate down/up by real time (`setTimeout` ≥300ms) — a zero-tick tap can register nothing; step-cadence checks belong on device.
+- **Verified:** 2026-07-10 · **Hits:** 1 *(the §3.5 Device walk — login + section taps + steppers)*
+
 ---
 
 ## Promoted (owned by `doctor` — run `node scripts/dev-stack.mjs doctor`)

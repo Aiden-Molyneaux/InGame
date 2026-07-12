@@ -4,7 +4,7 @@
 > be refined alongside the design-spec, because screens reveal exactly what each call must return.
 > Behavior lives in [`product-spec.md`](product-spec.md); shapes live here. Referenced by ID.
 
-**Version:** 0.54 (draft) · **Last updated:** 2026-07-08 · **Owner:** Claude Code
+**Version:** 0.55 (draft) · **Last updated:** 2026-07-10 · **Owner:** Claude Code
 
 ---
 
@@ -125,7 +125,7 @@
 |---|---|---|
 | GET | `/me/device` · PATCH `/me/device` | `{ activeShellId?, screenThemeId?, stickerComposition? }` (DEV-01/02/04; **shells replace models + skins** — one handheld body, decision 0017). **`stickerComposition`** = `{ version, stickers: [ { id, assetId, zone ∈ "forehead"\|"chin", x, y, scale, rotation } ] }` — `x,y` **normalized [0,1] within the named plastic zone**, `scale` clamped, `rotation` in degrees (decision 0030, OQ-062). **Server-validated:** `zone` in the allowed set + the transformed sticker bounds stay inside the zone rect (DEV-03/F-04 nav-no-go); all referenced ids must be **owned** (premium previews are client-side until acquired — see acquire-batch, OQ-065). |
 | GET | `/me/device/looks` | List the caller's saved **looks** (DEV-05): `[ { id, activeShellId, screenThemeId, stickerComposition, createdAt } ]` — a look is a snapshot of the three device facets; **no name** (identified by shell·theme); the **ON NOW** look is computed client-side (facets == current `/me/device`) (decision 0030, OQ-064) |
-| POST | `/me/device/looks` | **SAVE CURRENT** — snapshot the live combo into a new look; **cap-enforced** (~12, `LOOK_CAP_REACHED`-style if full) → the new look (DEV-05) |
+| POST | `/me/device/looks` | **SAVE CURRENT** — snapshot the live combo into a new look; **cap-enforced** (12, SYS-04-tunable) → **`409 LOOK_CAP_REACHED`** when full (the `409 PRESET_LIMIT` sibling) → the new look (DEV-05) |
 | DELETE | `/me/device/looks/:id` | Remove a saved look (DEV-05). *Applying* a look = the client `PATCH /me/device` with the snapshot's three facets — **no dedicated apply endpoint**; premium KEEP rides the existing `POST /cosmetics/acquire-batch` (ECON-07) |
 
 ## Cosmetics & store & economy (`COSM-`, `ECON-`)
@@ -285,3 +285,4 @@
 | 2026-07-05 | 0.52 | **`composition` payload schema** (decision 0064, render-spike GO; product-spec 0.51): `POST /cards`'s `composition` now validates against the shared **`compositionSchema`** — `schemaVersion` + typed **vector elements** (rect/ellipse/poly/text) + the **cap-30** array ceiling; `.passthrough()` carries the closed attributes until they formalize (Styler/COSM). No new paths. | CARD-15, CARD-02 |
 | 2026-07-05 | 0.53 | **M4 card substrate goes LIVE** (decision 0066, the Fable architecture read; product-spec 0.52): **`PATCH /me/collection/:entryId` accepts `activeCardDesignId`** (own · same-game · private\|published; null = default; `platformIds` stays 0058-deferred); `/me/collection` items add **`notes` + `rating`** (owner-only — the friend subset unchanged; **OQ-134 resolved**) and the equipped `card` adds owner-only **`composition`** (+`name`) for live render — **never on a cross-user shape** (CARD-15). **`save-private` M4 posture:** validate + hash + derive `isPremium`; **flatten-to-storage rides M5 publish** (no cross-user viewer under 0062; no storage substrate yet). Implemented this batch: `card_designs` + `style_presets` tables, `POST /cards` · `PATCH /cards/:id` · `DELETE /cards/:id` (409 CARD_EQUIPPED) · `save-private` · `GET /me/cards` · `GET /me/collection/:entryId/cards` · the `/me/style-presets` CRUD (cap-30 → 409 PRESET_LIMIT). **OQ-133 resolved.** | CARD-14/15/24, COL-06, OQ-133/134 |
 | 2026-07-08 | 0.54 | **Copy-on-write for committed-card edits** (decision 0067, §3.4 Canvas gate-5; product-spec 0.53): **`POST /cards` accepts `derivedFromCardId?`** (own · same-game → recorded on the copy's `card_designs.derived_from_card_id`, additive nullable FK `ON DELETE SET NULL`); **`GET /me/cards` items add `derivedFromCardId?`** (crash-recovered copies know their origin). No new endpoints — the KEEP/SAVE-AS-NEW/✕ lifecycle is client-orchestrated over the existing `PATCH`/`save-private`/`equip`/`DELETE` paths. **OQ-139 resolved.** | CARD-24, CARD-14, COL-06 |
+| 2026-07-10 | 0.55 | **`POST /me/device/looks` cap status pinned: `409 LOOK_CAP_REACHED`** (was "`LOOK_CAP_REACHED`-style", status unstated) — aligned with the sibling cap `409 PRESET_LIMIT` (:119); cap pinned at 12 (SYS-04-tunable). Ruled at the §3.5 P1 build review (the Fable reviewer's correction — the build directive had mis-specified 422). No new paths/shapes. | DEV-05, SYS-04 |
