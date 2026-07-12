@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, BackHandler, Keyboard, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { ReactNode } from 'react';
 import { themedStyles } from '../theme';
+import { useReducedMotion } from '../a11y/useReducedMotion';
 import { KeyboardLift } from './KeyboardLift';
 import { ScrollLockContext, useScrollLockHost } from './ScrollLock';
 
@@ -43,6 +44,11 @@ export function PulledSheet({
   children: ReactNode;
 }) {
   const styles = useStyles();
+  // CARD-16/0044 §104 — no slide-in under reduce-motion. Read via a ref (not an effect dep) so a
+  // mid-session toggle while a sheet is OPEN doesn't re-run the effect and replay the slide (murr m3).
+  const reduceMotion = useReducedMotion();
+  const reduceRef = useRef(reduceMotion);
+  reduceRef.current = reduceMotion;
   const slide = useRef(new Animated.Value(0)).current; // 0 = off-stage, 1 = docked
   const [wellTopY, setWellTopY] = useState<number | undefined>(undefined);
   const overlayRef = useRef<View>(null);
@@ -52,6 +58,10 @@ export function PulledSheet({
   useEffect(() => {
     if (visible) {
       Keyboard.dismiss(); // the trigger screen's focused field must not type behind the scrim
+      if (reduceRef.current) {
+        slide.setValue(1); // reduce-motion (0044 §104): dock instantly, no slide/fade
+        return;
+      }
       slide.setValue(0);
       Animated.timing(slide, { toValue: 1, duration: 200, useNativeDriver: true }).start();
     }

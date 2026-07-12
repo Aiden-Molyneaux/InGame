@@ -16,6 +16,7 @@ import { ScreenButton } from '../../src/components/ScreenButton';
 import { PulledSheet } from '../../src/components/PulledSheet';
 import { ConfirmSheet } from '../../src/components/ConfirmSheet';
 import { themedStyles, useTheme } from '../../src/theme';
+import { useAnnounceOnChange } from '../../src/a11y/announce';
 import type { CardComposition } from '../../src/render/composition';
 import {
   DEFAULT_INTENSITY,
@@ -151,6 +152,9 @@ export default function Styler() {
   const [saveState, setSaveState] = useState<SaveState>('fresh');
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [inlineError, setInlineError] = useState<string | null>(null);
+  // CARD-16 live-region (0044 §105): an inline error the user can't see arrive is spoken on appear
+  // (assertive Text handles TalkBack; this is the VoiceOver + explicit-transition half).
+  useAnnounceOnChange(inlineError);
   const [saveOpen, setSaveOpen] = useState(false); // the SAVE ▸ outcome sheet (door 2)
   const [confirmDiscard, setConfirmDiscard] = useState(false); // the ✕ leave-without-keeping gate (door 1)
   const [busyKeep, setBusyKeep] = useState(false);
@@ -885,7 +889,7 @@ export default function Styler() {
           onFocus={setForeIndex}
           title="Templates are single faces · kits arrive wearing a frame + effect bundle · your saved presets ride alongside"
         />
-        {inlineError ? <Text style={styles.inlineErr}>{inlineError}</Text> : null}
+        {inlineError ? <Text accessibilityLiveRegion="assertive" style={styles.inlineErr}>{inlineError}</Text> : null}
         <View style={styles.pickCtas}>
           {/* START above SURPRISE — the forward action leads (gate-5 D.18) */}
           <ScreenButton
@@ -978,7 +982,7 @@ export default function Styler() {
       <SectionChips value={section} onChange={setSection} />
       <View style={styles.dotsRow} accessibilityRole="tablist">
         {STYLER_SECTIONS.map((s) => (
-          <Pressable key={s.id} accessibilityRole="tab" accessibilityLabel={s.label} onPress={() => setSection(s.id)}>
+          <Pressable key={s.id} accessibilityRole="tab" accessibilityLabel={s.label} accessibilityState={{ selected: s.id === section }} onPress={() => setSection(s.id)}>
             <View style={[styles.dot, s.id === section && styles.dotOn]} />
           </Pressable>
         ))}
@@ -1024,7 +1028,7 @@ export default function Styler() {
             ) : null}
           </AttributeSection>
         ) : null}
-        {inlineError ? <Text style={styles.inlineErr}>{inlineError}</Text> : null}
+        {inlineError ? <Text accessibilityLiveRegion="assertive" style={styles.inlineErr}>{inlineError}</Text> : null}
       </ScrollView>
 
       {/* the pinned tools bar (gate-5 D.20/D.23): the Canvas door + the ONE forward door */}
@@ -1127,6 +1131,12 @@ function Frame({
   closeGlyph?: string;
 }) {
   const styles = useStyles();
+  // CARD-16 live-region (0044 §105): the save-state settling to "NOT SAVED — RETRYING" / "SAVED …"
+  // is an async result the user can't see — announce the transition (VoiceOver + explicit signal;
+  // the polite liveRegion below is the TalkBack half). Only ONE Frame (the editing one) carries a
+  // non-null saveLine. We STRIP the volatile "…30S AGO" counter (a 15s setTick re-renders it — see
+  // the styler body) so the announce fires on real save-state transitions, never the ticking clock.
+  useAnnounceOnChange(saveLine ? saveLine.replace(/\s*\d+S AGO/i, '') : saveLine);
   return (
     <View style={styles.screen}>
       <View style={styles.head}>
@@ -1141,7 +1151,7 @@ function Frame({
         <Text style={styles.title}>STYLER</Text>
         <View style={styles.spacer} />
       </View>
-      {saveLine ? <Text style={styles.saveLine}>{saveLine}</Text> : null}
+      {saveLine ? <Text accessibilityLiveRegion="polite" style={styles.saveLine}>{saveLine}</Text> : null}
       {children}
     </View>
   );

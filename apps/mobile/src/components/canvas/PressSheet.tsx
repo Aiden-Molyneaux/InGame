@@ -1,8 +1,9 @@
 import { useRef } from 'react';
-import { AccessibilityInfo, Animated, Text } from 'react-native';
+import { Animated, Text } from 'react-native';
 import { PulledSheet } from '../PulledSheet';
 import { SaveOption } from '../styler/SaveOption';
 import { themedStyles } from '../../theme';
+import { useReducedMotion } from '../../a11y/useReducedMotion';
 
 // PressSheet (component-map §8b / board P7) — the Canvas finish-up sheet: "where does it go?"
 // Canonical labels PUBLISH · SAVE PRIVATE · TO THE STYLER (the workshop flavors eyebrows only).
@@ -30,20 +31,19 @@ export function PressSheet({
 }) {
   const styles = useStyles();
   const beat = useRef(new Animated.Value(1)).current;
+  const reduceMotion = useReducedMotion(); // CARD-16/0044 §104 — the shared gate
 
   const pressPrivate = () => {
     if (busy) return;
-    AccessibilityInfo.isReduceMotionEnabled().then((reduce) => {
-      if (reduce) {
-        onSavePrivate();
-        return;
-      }
-      // a light press beat — dip + settle, then hand off to the save (no full-screen ritual)
-      Animated.sequence([
-        Animated.timing(beat, { toValue: 0.96, duration: BEAT_MS * 0.4, useNativeDriver: true }),
-        Animated.timing(beat, { toValue: 1, duration: BEAT_MS * 0.6, useNativeDriver: true }),
-      ]).start(() => onSavePrivate());
-    });
+    if (reduceMotion) {
+      onSavePrivate(); // reduce-motion: no press beat, straight to the save
+      return;
+    }
+    // a light press beat — dip + settle, then hand off to the save (no full-screen ritual)
+    Animated.sequence([
+      Animated.timing(beat, { toValue: 0.96, duration: BEAT_MS * 0.4, useNativeDriver: true }),
+      Animated.timing(beat, { toValue: 1, duration: BEAT_MS * 0.6, useNativeDriver: true }),
+    ]).start(() => onSavePrivate());
   };
 
   return (

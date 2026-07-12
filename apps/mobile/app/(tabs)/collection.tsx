@@ -5,6 +5,8 @@ import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import type { CollectionItem, CollectionStatus, GenreView } from '@ingame/shared';
 import { ScreenHead } from '../../src/components/ScreenHead';
 import { CardFace, parseComposition } from '../../src/components/CardFace';
+import { FlipCard } from '../../src/components/collection/FlipCard';
+import { Coachmark } from '../../src/components/Coachmark';
 import { ScreenButton } from '../../src/components/ScreenButton';
 import { ToolButton } from '../../src/components/ToolButton';
 import { SearchField } from '../../src/components/SearchField';
@@ -16,7 +18,7 @@ import { KeyboardLift } from '../../src/components/KeyboardLift';
 import { COLLECTION_STATUSES, STATUS_LABEL } from '../../src/constants/collection';
 import { theme, themedStyles, useTheme } from '../../src/theme';
 import { useAppDispatch, useAppSelector } from '../../src/store/hooks';
-import { setCollectionView, type CollectionView } from '../../src/store/prefsSlice';
+import { setCollectionView, setCol12CoachmarkSeen, type CollectionView } from '../../src/store/prefsSlice';
 import { useGetCollectionQuery, useUpdateEntryMutation } from '../../src/store/api';
 
 // The REAL Collection (COL-01..09 · WTP-03) — the M2 scratch-seed retired; everything renders from
@@ -135,6 +137,7 @@ export default function Collection() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const view = useAppSelector((s) => s.prefs.collectionView);
+  const col12CoachmarkSeen = useAppSelector((s) => s.prefs.col12CoachmarkSeen);
   const { data, isLoading, isError, refetch } = useGetCollectionQuery();
   const styles = useStyles();
 
@@ -149,6 +152,10 @@ export default function Collection() {
   // Keyed by entryId (not an item snapshot) so the sheet always derives the FRESHEST cached item —
   // a snapshot taken pre-refetch can pre-fill stale hours, and §0.4's Save-as-is would write them back.
   const [logHoursId, setLogHoursId] = useState<string | null>(null);
+  // COL-12 — the peek-flip is TRANSIENT screen state (never persisted). A Set of flipped entryIds
+  // (owner ruling 2026-07-12: many-flipped, not one-at-a-time); cleared on a view-switch (the effect
+  // below) and on blur (the useFocusEffect cleanup). Shelf + grid only — dense-list/top still NAVIGATE.
+  const [flippedIds, setFlippedIds] = useState<Set<string>>(new Set());
 
   const items = useMemo(() => data?.items ?? [], [data]);
   const hero = items.find((i) => i.nowPlaying) ?? null;
@@ -179,11 +186,21 @@ export default function Collection() {
 
   // Leaving the tab with the dock focused would strand the keyboard over the next screen (the Tabs
   // navigator keeps this screen mounted) — dismiss it on blur; the dock itself survives the round trip.
+  // COL-12: the peek-flip is transient — clear every flip on blur too (spec: resets on leaving the screen).
   useFocusEffect(
     useCallback(() => {
-      return () => Keyboard.dismiss();
+      return () => {
+        Keyboard.dismiss();
+        setFlippedIds((prev) => (prev.size === 0 ? prev : new Set()));
+      };
     }, []),
   );
+
+  // COL-12 — switching view mode resets the flips (spec). Catches both the tools View cycle and the
+  // drawer's set-view, since both dispatch setCollectionView → `view` changes.
+  useEffect(() => {
+    setFlippedIds((prev) => (prev.size === 0 ? prev : new Set()));
+  }, [view]);
 
   // COL-07/09 — client-side query execution over the loaded shelf (D2).
   const filtered = useMemo(() => {
@@ -246,6 +263,24 @@ export default function Collection() {
     closeSearch();
   };
 
+  // COL-12 — a card tap toggles its flip (owner: many-flipped); the first flip retires the coachmark.
+  const toggleFlip = (entryId: string) => {
+    setFlippedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(entryId)) next.delete(entryId);
+      else next.add(entryId);
+      return next;
+    });
+    if (!col12CoachmarkSeen) dispatch(setCol12CoachmarkSeen(true));
+  };
+  // COL-12 — long-press (either face) + the back's VIEW GAME → the Game page (CARD-23 NAVIGATE).
+  const openGame = (gameId: string) => router.push(`/game/${gameId}`);
+  // COL-12 discoverability — the one-time coachmark, gated on the persisted flag; only where cards flip
+  // (shelf/grid), when there's something to flip and no active query (search results replace the view).
+  const flippableView = view === 'shelf' || view === 'grid';
+  const showCoachmark =
+    !col12CoachmarkSeen && flippableView && q.trim() === '' && data.collectionTotal > 0 && filtered.length > 0;
+
   // S3-j / §0.3 — count copy: "N game(s)" unfiltered · "N of M games" filtered (singular-aware);
   // absent until the first add (the board shows no count keycap on the empty shelf, :491).
   const filterActive = q.trim() !== '' || statusFilter.size > 0 || genreFilter.size > 0;
@@ -277,6 +312,10 @@ export default function Collection() {
         {data.collectionTotal > 0 && view !== 'top' && q.trim() === '' && filtered.length > 0 ? (
           <NowPlayingHero hero={hero} onLogHours={onLogHours} />
         ) : null}
+        {/* COL-12/CARD-16 — the first-run peek-flip hint (no on-face indicator; owner directive). */}
+        {showCoachmark ? (
+          <Coachmark text="Tap a card to flip it for your stats." onDismiss={() => dispatch(setCol12CoachmarkSeen(true))} />
+        ) : null}
         {data.collectionTotal === 0 ? (
           <EmptyShelf onAdd={() => router.push('/add-game')} />
         ) : filtered.length === 0 ? (
@@ -287,9 +326,9 @@ export default function Collection() {
         ) : view === 'top' ? (
           <TopView items={filtered} />
         ) : view === 'grid' ? (
-          <GridView items={filtered} />
+          <GridView items={filtered} flippedIds={flippedIds} onToggle={toggleFlip} onNavigate={openGame} />
         ) : (
-          <ShelfView items={filtered} />
+          <ShelfView items={filtered} flippedIds={flippedIds} onToggle={toggleFlip} onNavigate={openGame} />
         )}
       </ScrollView>
 
@@ -426,37 +465,39 @@ function NowPlayingHero({ hero, onLogHours }: { hero: CollectionItem | null; onL
   );
 }
 
+// The COL-12 flip wiring shared by shelf + grid: which entries are flipped + the tap/navigate handlers.
+type FlipProps = {
+  flippedIds: Set<string>;
+  onToggle: (entryId: string) => void;
+  onNavigate: (gameId: string) => void;
+};
+
 // SHELF (decision 0061 — the showcase / "flip through your binder"): a stack where EVERY entry gets
 // the hero treatment (full face + stat-line · title · catalog line). LOG HOURS stays hero-exclusive
 // (the NowPlayingHero above, rendered by the parent); ▶ NOW marks the pinned game in the stack.
-function ShelfView({ items }: { items: CollectionItem[] }) {
-  const router = useRouter(); // CARD-23 NAVIGATE — every shelf entry is a Game-page tap-target (gate-5 A.3)
+// COL-12: the card is now a FlipCard (tap → flip · long-press / VIEW GAME → the Game page); the meta
+// beside it stays display-only labels (the quick scan lives beside the full peek, board :1377).
+function ShelfView({ items, flippedIds, onToggle, onNavigate }: { items: CollectionItem[] } & FlipProps) {
   const styles = useStyles();
   return (
     <View style={styles.shelf}>
       <View style={styles.shelfStack}>
         {items.map((i) => (
-          <Pressable
-            key={i.entryId}
-            style={styles.stackRow}
-            accessibilityRole="button"
-            accessibilityLabel={`Open ${i.title}`}
-            onPress={() => router.push(`/game/${i.gameId}`)}
-          >
-            <CardFace
-              title={i.title}
-              composition={parseComposition(i.card.composition)}
-              size="grid"
+          <View key={i.entryId} style={styles.stackRow}>
+            <FlipCard
+              item={i}
+              flipped={flippedIds.has(i.entryId)}
+              onToggle={() => onToggle(i.entryId)}
+              onNavigate={() => onNavigate(i.gameId)}
               width={138}
               height={193}
-              nowPlaying={i.nowPlaying}
             />
             <View style={styles.heroMeta}>
               <Text style={styles.heroStat}>{statLine(i)}</Text>
               <Text style={styles.heroTitle}>{i.title.toUpperCase()}</Text>
               <Text style={styles.heroCatalog}>{catalogLine(i)}</Text>
             </View>
-          </Pressable>
+          </View>
         ))}
       </View>
     </View>
@@ -465,28 +506,22 @@ function ShelfView({ items }: { items: CollectionItem[] }) {
 
 // GRID (decision 0061 — compact browsing): a two-per-row grid of bare card FACES (never cropped,
 // F-01), ▶ NOW in-flow on the pinned face; no per-row meta. The hero renders above (parent).
-function GridView({ items }: { items: CollectionItem[] }) {
-  const router = useRouter(); // CARD-23 NAVIGATE — grid faces open the Game page too (gate-5 A.3)
+// COL-12: each face is a FlipCard (tap → flip · long-press / VIEW GAME → the Game page).
+function GridView({ items, flippedIds, onToggle, onNavigate }: { items: CollectionItem[] } & FlipProps) {
   const styles = useStyles();
   return (
     <View style={styles.shelf}>
       <View style={styles.gridWrap}>
         {items.map((i) => (
-          <Pressable
-            key={i.entryId}
-            style={styles.gridCol}
-            accessibilityRole="button"
-            accessibilityLabel={`Open ${i.title}`}
-            onPress={() => router.push(`/game/${i.gameId}`)}
-          >
-            <CardFace
-              title={i.title}
-              composition={parseComposition(i.card.composition)}
-              size="grid"
-              nowPlaying={i.nowPlaying}
+          <View key={i.entryId} style={styles.gridCol}>
+            <FlipCard
+              item={i}
+              flipped={flippedIds.has(i.entryId)}
+              onToggle={() => onToggle(i.entryId)}
+              onNavigate={() => onNavigate(i.gameId)}
               style={styles.fluidCard}
             />
-          </Pressable>
+          </View>
         ))}
       </View>
     </View>

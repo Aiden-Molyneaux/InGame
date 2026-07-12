@@ -1069,3 +1069,60 @@ C1 the Profile MY DEVICE strip — pressable ("Edit your device") + fully dynami
 Drag/refusal/re-zone gestures + the D5 preview toggle + LOOKS save/apply/delete/ON-NOW/cap (server-side covered by the 13 device integration tests + the `isOnNow` unit suite; the owner's phone session made client mutations off-limits mid-walk) · stepper tap/hold-ramp cadence (RN-web synthetic-event artifact; the same round-5 grammar passed the Canvas device walk) · decal VISUALS on web (the limitation above — **owed on device**, where the owner's live walk already exercises them) · cold-reload persistence end-to-end (proven via the hydrator + blob instead). **Seed/restore:** deliberately NOT restored — the owner was live-editing the account; his carbon/paper/cat state is his walk, not residue.
 
 **Suite after the in-walk fixes:** typecheck ✓ · lint ✓ (theme rule incl.) · jest ✓. **→ the §3.5 receipt + the owner's gate-5 device walk** (already underway on his phone, by the look of the cat).
+
+---
+
+## §3.6 CARD-16 — a11y / reduce-motion pass · Fable-planned, Opus-built, murr-reviewed (M4, 2026-07-12, spec-driven audit route)
+
+**Route (owner ruling):** the spec-driven/audit hybrid — decision 0044's three contracts (104 reduce-motion · 105 a11y baseline · 106 resilience) translated to RN and turned into a binding punch-list ([`card16-checklist.md`](m4/card16-checklist.md)), backed by a custom-lint rule. NOT a visual board (the work is behavioural — labels/keyboard/motion — which Burt can't see). **Gate status:** the CARD-16 release-block now attaches to the **M6 beta** (decision 0071); the work lands here while the editors are fresh.
+
+**Two read-only audits first** (the app has only 11 animated sites; 3 already complied — so §A was smaller than feared; the biggest gap was live-region announcements, near-zero across the editors).
+
+**Built:** a shared **`useReducedMotion()`** hook (live-updates, unlike the old once-per-mount checks) gating the real gaps (DeviceShell boundary-zoom · PulledSheet slide — one fix covers ConfirmSheet + the styler sheet + the canvas panels · KeyboardLift); a shared **`announce`/`useAnnounceOnChange`** helper driving the live-region sweep (save-lines · caps [flip-to-full, not the count] · offline/preview strips · errors — transitions, never per-frame); ColorPicker's raw-`View`+responder controls → `Pressable` + `accessibilityState` + real `adjustable` actions; SavedLook nested→sibling Pressable; the **non-gesture sticker SELECTION** (transparent per-decal select-targets, sighted touch untouched) + a **re-zone** button; `accessible` on labelled gesture surfaces; and **`rule-a11y-responder`** (custom lint) banning the raw responder-as-button anti-pattern (fixture + F22 corpus green). The non-gesture PAIRS were confirmed already-covered by the CARD-16 built-alongside rail.
+
+**murr (fresh-context adversarial) → 2 major + 5 minor, ALL fixed/dispositioned:** M1 re-zone-past-cap wedges the pipeline → `canReZone` guard; M2 (regression) the async hook flashed-then-froze KeepBeat's one-shot pulse for reduce-motion users → reverted KeepBeat to the direct await (the hook serves user-triggered transitions); m1 double error-announce, m2 OfflineStrip triple-announce, m3 sheet-replay-on-toggle, m5 RNW `sub?.remove()` → all fixed; m4 (iOS VoiceOver overlapping-decal edge — Android exact) documented; m6 (per-edit save announce) accepted. murr confirmed clean: DeviceShell swap matrices · ColorPicker onStep · the announce first-mount/tick behaviour · the select-target z-order.
+
+**Suite:** typecheck ✓ · lint ✓ (rule-a11y-responder + rule-theme-tokens) · 69/69 jest · F22 corpus 20/20 · /health 🟢. **Owed on device (the M6 beta gate):** a manual reduce-motion pass + a VoiceOver/TalkBack spot-walk — the web lane inspects a11y attributes but can't drive VoiceOver or the OS reduce-motion toggle.
+
+**→ M4 build surfaces COMPLETE** (§3.1 Game page · §3.2 Styler · §3.4 Canvas · §3.5 Device · §3.6 CARD-16). Remaining to M4 close: the light-theme floor sweep (rides this a11y/CARD-16 lane on device) + gate-5 sign-offs; then M4 completes internally (no beta — decision 0071). ⛔ HARD STOP for the owner.
+
+---
+
+## COL-12 Collection card peek-flip · parvati (M4, 2026-07-12)
+
+**Verdict:** 0 🚩 flag · 2 ✅ expected · 0 🎨 polish · (all peek-flip elements ✔ match) — measured vs the
+`col12-manifest.md` enumeration, the `collection-states.html` peek-flip stage (`:1196–1440`), COL-12/CARD-23/CARD-16,
+and the `GET /me/collection` seam.
+**Reviewed from:** own real-Chrome `:8082` screenshots (Collection shelf + a flipped shelf back) + DOM/state
+inspection for the elements the automation renderer can't paint (see the tooling note). Login → Collection shelf →
+flip a shelf card → the CARD-01 back → view-cycle reset. **Tooling limitation (captured for doctor-nick):** the
+automation renderer (both the in-app Browser pane and a backgrounded Chrome tab) **throttles `requestAnimationFrame`
+to ~0 and doesn't paint the skia card FRONT faces** — so the rotateY flip *motion* and the *grid* faces can't be
+screenshotted. Those were verified via the DOM (aria-labels, computed geometry/opacity) + jest instead; the SVG
+`StatsBack` back paints fine, so the back face IS screenshot-verified. A manual on-device flip pass is owed (like
+the CARD-16 VoiceOver/reduce-motion spot-walk).
+
+### ✅ Matches (present · placed · on-aesthetic)
+- **Flipped back face** (screenshot) — the `.flipy` stepped silhouette + the board's section ORDER: YOUR STATS eyebrow
+  → ELDEN RING title → HOURS 142 · COMPLETE 55% · STATUS PLAYING · SINCE 2026 → CARD ARTIST **YOU** (gold `p-name`) →
+  **VIEW GAME ›** keycap — **all fitting the 138×193 shelf card, no overlap** (the compact-spacing fix; measured VIEW
+  GAME bottom 8px inside the card). Matches board `:1323–1335`.
+- **First-run coachmark** (screenshot) — "Tap a card to flip it for your stats." + GOT IT, panel-toned strip above the
+  shelf; no persistent on-face indicator (owner directive). Board caption `:1276–1277`.
+- **Now-Playing hero never flips** (screenshot) — the showcase stays a NAVIGATE target with LOG HOURS, separate from
+  the flippable stack cards. Board `:1379`.
+- **Shelf meta beside the flipped card** (screenshot) — 142 HRS · PLAYING / ELDEN RING / catalog line stay put beside
+  the turned card (the "quick scan + full peek together"). Board `:1337–1341`.
+- **Whole-card tap grammar + a11y** (DOM/jest) — the card is one SR button whose label reads the stats out
+  ("Elden Ring stats. 142 hours. 55 percent complete. PLAYING…") with a "View game" a11y action; both faces
+  `aria-hidden`; tap=flip, long-press/VIEW GAME=navigate. CARD-16 non-gesture path.
+- **Transient reset** (DOM) — cycling shelf→grid cleared the flip (spec: resets on view-switch).
+
+### ✅ Expected (deferred — proceed)
+- **Friend-view flip** — absent; own-collection only at M4, friend-view is M6/M7 (COL-10/11, PROF-03). Cite: manifest
+  "Later-milestone" table · COL-12 friend clause.
+- **TOP-view flip** — absent; deferred by owner ruling 2026-07-12 (TOP cards are mini/cell — a legible back won't fit;
+  TOP rows already print hours). Cite: manifest deferral row.
+
+*(GAP-D1 reconciled: the back's CARD ARTIST reads "YOU" not a designer name — the collection payload carries no
+`designer` rider; reuses the game page's shipped `isCustom ? YOU : null`. A declared divergence, not a flag.)*

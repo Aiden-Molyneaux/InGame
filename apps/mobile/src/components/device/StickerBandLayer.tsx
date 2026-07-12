@@ -3,7 +3,7 @@ import type { MutableRefObject } from 'react';
 import { PanResponder, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import { STICKER_BASE_HALF, type Sticker, type StickerZone } from '@ingame/shared';
 import { themedStyles } from '../../theme';
-import { PlacedSticker } from './deviceStickers';
+import { CHIN_ENABLED, PlacedSticker } from './deviceStickers';
 import type { StickerEditSession } from './DeviceStickerContext';
 
 // StickerBandLayer (device-manifest ARCH 2 · D4) — the sticker layer for ONE plastic band, mounted by
@@ -232,10 +232,11 @@ export function StickerBandLayer({
         onNavWarn(false);
         if (!sess) return;
         if (g.moved) {
-          if (g.mode === 'move' && sel) {
+          if (g.mode === 'move' && sel && CHIN_ENABLED) {
+            // cross-band re-zone on drop (walk 3) — only while chin is a valid target; with chin off
+            // the drag just clamps back into the forehead (no re-zone).
             const other = zoneGeom.current[otherZone];
             if (other && ptIn(gs.moveX, gs.moveY, other)) {
-              // dropped wholly inside the OTHER zone → re-zone at the pointer (walk 3)
               const nx = (gs.moveX - other.x) / other.w;
               const ny = (gs.moveY - other.y) / other.h;
               sess.mutate(sel.id, { zone: otherZone, x: nx, y: ny });
@@ -280,7 +281,9 @@ export function StickerBandLayer({
     });
   };
 
-  const editing = !!session;
+  // the chin band stays PASSIVE while chin is toggled off (owner 2026-07-12) — it still renders any
+  // existing chin decals, but shows no editor outline / gesture surface / drop-target.
+  const editing = !!session && (zone === 'forehead' || CHIN_ENABLED);
   const selBox =
     editing && selected && rect.h > 0
       ? {
@@ -309,6 +312,10 @@ export function StickerBandLayer({
       {stickers.map((s) => (
         <PlacedSticker key={s.id} sticker={s} rectW={rect.w} rectH={rect.h} ghost={refusingId === s.id} />
       ))}
+
+      {/* NB: the non-gesture SELECT path is the visible placed-sticker rail in the STICKERS panel
+          (owner 2026-07-12 — the "slips" rail), which is an accessible Pressable list; it replaced the
+          transparent per-decal select-targets that used to sit here (cleaner + no iOS overlap edge). */}
 
       {/* the TransformBox on the selected decal — rotates WITH it (Canvas sel-ring kin) */}
       {selBox ? (
@@ -364,6 +371,7 @@ export function StickerBandLayer({
 
 const useStyles = themedStyles((t) => ({
   layer: { ...StyleSheet.absoluteFillObject },
+  // transparent a11y-only hit target over a decal (sighted touches land on the gesture surface above)
   decalZone: {
     ...StyleSheet.absoluteFillObject,
     margin: 2,

@@ -257,9 +257,9 @@ function Stepper({
       <Text style={styles.rowLabel}>{label}</Text>
       <View style={styles.rowBody}>
         <Arrow glyph="◀" label={`${a11y} down`} tick={tickFor(-1)} arm={arm} release={release} tap={tap} />
-        <Text style={styles.stepValue} accessibilityLiveRegion="polite">
-          {value}
-        </Text>
+        {/* the parent row is `adjustable` with accessibilityValue — it announces the value on step;
+            a live-region here too would double-announce (CARD-16 a11y audit). */}
+        <Text style={styles.stepValue}>{value}</Text>
         <Arrow glyph="▶" label={`${a11y} up`} tick={tickFor(1)} arm={arm} release={release} tap={tap} />
       </View>
     </View>

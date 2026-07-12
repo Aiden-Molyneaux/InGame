@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import type { Sticker } from '@ingame/shared';
 import { themedStyles } from '../../theme';
 import { ScreenButton } from '../ScreenButton';
+import { CHIN_ENABLED } from './deviceStickers';
 import type { StickerTransform } from './stickerGeometry';
 
 // StickerSteppers (device-manifest D4 · CARD-16 pair) — the round-5 stepper-row grammar as the
@@ -29,13 +30,17 @@ export function StickerSteppers({
   mutate,
   commit,
   onDelete,
+  canReZone,
 }: {
   sticker: Sticker;
   mutate: (id: string, patch: Partial<StickerTransform>) => void;
   commit: () => void;
   onDelete: () => void;
+  /** the OTHER band has room — else the move 422s and wedges the pipeline (murr M1). */
+  canReZone: boolean;
 }) {
   const styles = useStyles();
+  const otherZone = sticker.zone === 'forehead' ? 'chin' : 'forehead';
 
   // latest-ref so a hold chain reads the CURRENT sticker across re-renders (the frozen-closure fix).
   const curRef = useRef(sticker);
@@ -76,13 +81,12 @@ export function StickerSteppers({
     tick(false);
   };
 
-  const stepX = (dir: -1 | 1): Tick => (fast) => {
+  // POSITION is a 4-arrow d-pad (owner gate-5 2026-07-12 — mirrors the Canvas TransformDrawer, not two
+  // ◀ value ▶ rows): each arrow nudges x AND/OR y in one combined step, hold-ramps like the others.
+  const stepPos = (dx: -1 | 0 | 1, dy: -1 | 0 | 1): Tick => (fast) => {
     const c = curRef.current;
-    mutate(c.id, { x: c.x + dir * X_STEP * (fast ? FAST.pos : 1) });
-  };
-  const stepY = (dir: -1 | 1): Tick => (fast) => {
-    const c = curRef.current;
-    mutate(c.id, { y: c.y + dir * Y_STEP * (fast ? FAST.pos : 1) });
+    const m = fast ? FAST.pos : 1;
+    mutate(c.id, { x: c.x + dx * X_STEP * m, y: c.y + dy * Y_STEP * m });
   };
   const stepSize = (dir: -1 | 1): Tick => (fast) => {
     const c = curRef.current;
@@ -97,10 +101,37 @@ export function StickerSteppers({
 
   return (
     <View style={styles.wrap}>
-      <Row label="X" a11y="Horizontal" value={`${Math.round(sticker.x * 100)}%`} tickFor={stepX} {...arm} />
-      <Row label="Y" a11y="Vertical" value={`${Math.round(sticker.y * 100)}%`} tickFor={stepY} {...arm} />
+      {/* POSITION — the 4 directional arrows inline + the X·Y read-out (mirrors the Canvas TransformDrawer) */}
+      <View style={styles.row}>
+        <Text style={styles.label}>POSITION</Text>
+        <View style={styles.body}>
+          <Arrow glyph="◀" label="Nudge left" tick={stepPos(-1, 0)} {...arm} />
+          <Arrow glyph="▶" label="Nudge right" tick={stepPos(1, 0)} {...arm} />
+          <Arrow glyph="▲" label="Nudge up" tick={stepPos(0, -1)} {...arm} />
+          <Arrow glyph="▼" label="Nudge down" tick={stepPos(0, 1)} {...arm} />
+          <Text style={styles.posValue} accessibilityLiveRegion="polite">
+            {Math.round(sticker.x * 100)} · {Math.round(sticker.y * 100)}%
+          </Text>
+        </View>
+      </View>
       <Row label="SIZE" a11y="Size" value={`${Math.round(sticker.scale * 100)}%`} tickFor={stepSize} {...arm} />
       <Row label="ROTATE" a11y="Rotation" value={`${Math.round(sticker.rotation)}°`} tickFor={stepRot} {...arm} />
+      {/* NON-GESTURE RE-ZONE — only meaningful while CHIN is enabled (the other band is a valid target);
+          chin is toggled off for now (owner 2026-07-12), so this stays out until it flips back on. */}
+      {CHIN_ENABLED ? (
+        <ScreenButton
+          label={canReZone ? `Move to ${otherZone}` : `${otherZone} is full`}
+          variant="secondary"
+          size="mini"
+          disabled={!canReZone}
+          onPress={() => {
+            if (!canReZone) return;
+            mutate(sticker.id, { zone: otherZone, x: 0.5, y: 0.5 });
+            commit();
+          }}
+          accessibilityLabel={canReZone ? `Move sticker to ${otherZone}` : `Cannot move — the ${otherZone} band is full`}
+        />
+      ) : null}
       <ScreenButton label="Delete" variant="destructive" size="mini" onPress={onDelete} accessibilityLabel="Delete sticker" />
     </View>
   );
@@ -136,9 +167,9 @@ function Row({
       <Text style={styles.label}>{label}</Text>
       <View style={styles.body}>
         <Arrow glyph="◀" label={`${a11y} down`} tick={tickFor(-1)} armHold={armHold} releaseHold={releaseHold} tapStep={tapStep} />
-        <Text style={styles.value} accessibilityLiveRegion="polite">
-          {value}
-        </Text>
+        {/* the parent row is `adjustable` with accessibilityValue — it announces the value on step; a
+            live-region here too would double-announce (CARD-16 a11y audit). */}
+        <Text style={styles.value}>{value}</Text>
         <Arrow glyph="▶" label={`${a11y} up`} tick={tickFor(1)} armHold={armHold} releaseHold={releaseHold} tapStep={tapStep} />
       </View>
     </View>
@@ -196,4 +227,5 @@ const useStyles = themedStyles((t) => ({
   },
   arrowGlyph: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.ink },
   value: { minWidth: 52, textAlign: 'center', fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.ink, letterSpacing: 0.5 },
+  posValue: { flex: 1, textAlign: 'right', fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
 }));

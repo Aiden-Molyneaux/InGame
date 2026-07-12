@@ -3,6 +3,7 @@ import { Animated, Easing, Platform, View, Text, StyleSheet } from 'react-native
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { StickerZone } from '@ingame/shared';
 import { themedStyles } from '../theme';
+import { useReducedMotion } from '../a11y/useReducedMotion';
 import { ShellNav } from './ShellNav';
 import { useBreakout } from './BreakoutContext';
 import { useAppSelector } from '../store/hooks';
@@ -73,6 +74,11 @@ export function DeviceShell({ children }: { children: React.ReactNode }) {
   const [showBreakout, setShowBreakout] = useState(breakout);
   const showBreakoutRef = useRef(breakout);
   showBreakoutRef.current = showBreakout;
+  // CARD-16/0044 §104 — read at trigger time (ref, not a dep, so a mid-session toggle doesn't re-fire
+  // a swap while the posture is stable): reduce-motion takes the same instant-swap path as web.
+  const reduceMotion = useReducedMotion();
+  const reduceMotionRef = useRef(reduceMotion);
+  reduceMotionRef.current = reduceMotion;
   // measured rects: the framed screen + the plastic root (window coords) — captured while framed
   // AND at rest only. measureInWindow is transform-aware, so a layout that fires MID-ZOOM (the exit
   // swap renders framed with the covering transform attached) would measure the full-bleed rect and
@@ -130,8 +136,9 @@ export function DeviceShell({ children }: { children: React.ReactNode }) {
       progress.setValue(0);
       return;
     }
-    if (Platform.OS === 'web') {
-      // web skips the transition (documented rn-skia-web compositing quirk) — instant swap.
+    if (Platform.OS === 'web' || reduceMotionRef.current) {
+      // web skips the transition (documented rn-skia-web compositing quirk); reduce-motion skips it by
+      // contract (0044 §104) — either way an instant swap, no zoom.
       setShowBreakout(breakout);
       progress.setValue(0);
       return;

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { PanResponder, Platform, StyleSheet, Text, TextInput, View, type LayoutChangeEvent } from 'react-native';
+import { PanResponder, Platform, Pressable, StyleSheet, Text, TextInput, View, type LayoutChangeEvent } from 'react-native';
 import Svg, { Defs, Line, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { themedStyles, useTheme } from '../theme';
 import { useScrollLock } from './ScrollLock';
@@ -98,16 +98,19 @@ export function ColorField({
     setMode('closed');
   };
   useEffect(() => clearSettle, []); // never leave a timer running past unmount
-  const swatch = (c: string, key: string, onPress: () => void) => (
-    <View
-      key={key}
-      accessibilityRole="button"
-      accessibilityLabel={`Use ${c}`}
-      onStartShouldSetResponder={() => true}
-      onResponderRelease={onPress}
-      style={[fieldStyles.chip, { backgroundColor: c }, c.toLowerCase() === value.toLowerCase() && fieldStyles.chipOn]}
-    />
-  );
+  const swatch = (c: string, key: string, onPress: () => void) => {
+    const selected = c.toLowerCase() === value.toLowerCase();
+    return (
+      <Pressable
+        key={key}
+        accessibilityRole="button"
+        accessibilityLabel={`Use ${c}`}
+        accessibilityState={{ selected }}
+        onPress={onPress}
+        style={[fieldStyles.chip, { backgroundColor: c }, selected && fieldStyles.chipOn]}
+      />
+    );
+  };
   const recentSet = [...new Set(recents)].slice(0, 10);
   // FROM CARD carries EVERY colour on the card — the base included (round 3: the old recents-filter
   // silently hid any card colour that had been used recently, which is exactly where the base went).
@@ -156,10 +159,10 @@ export function ColorField({
 function Btn({ label, on, onPress, glyph }: { label: string; on: boolean; onPress: () => void; glyph?: React.ReactNode }) {
   const fieldStyles = useFieldStyles();
   return (
-    <View accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected: on }} onStartShouldSetResponder={() => true} onResponderRelease={onPress} style={[fieldStyles.btn, glyph ? fieldStyles.btnGlyphed : null, on && fieldStyles.btnOn]}>
+    <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected: on }} onPress={onPress} style={[fieldStyles.btn, glyph ? fieldStyles.btnGlyphed : null, on && fieldStyles.btnOn]}>
       {glyph ?? null}
       <Text style={fieldStyles.btnText}>{label}</Text>
-    </View>
+    </Pressable>
   );
 }
 
@@ -245,6 +248,18 @@ export function ColorPicker({
     send(toHex(h, s, v));
   };
 
+  // Non-gesture nudge path (CARD-16 a11y) — a screen-reader increment/decrement can't ride the
+  // preview→release ref dance (applyCurrent reads hsvRef, which lags a same-tick setHsv). So these
+  // preview the new value AND apply it immediately from the passed-in numbers, not the stale ref.
+  const stepSV = (s: number, v: number) => {
+    preview(hsv.h, s, v);
+    send(toHex(hsv.h, s, v));
+  };
+  const stepHue = (h: number) => {
+    preview(h, hsv.s, hsv.v);
+    send(toHex(h, hsv.s, hsv.v));
+  };
+
   const commitHex = () => {
     const parsed = hexToHsv(hexDraft);
     if (parsed) {
@@ -260,9 +275,9 @@ export function ColorPicker({
   return (
     <View style={[styles.wrap, WEB_NOSELECT]} accessibilityLabel="Colour picker">
       {/* saturation × value area — white→hue across, transparent→black down */}
-      <SVArea hue={hsv.h} s={hsv.s} v={hsv.v} onChange={(s, v) => preview(hsv.h, s, v)} onRelease={applyCurrent} draggingRef={draggingRef} />
+      <SVArea hue={hsv.h} s={hsv.s} v={hsv.v} onChange={(s, v) => preview(hsv.h, s, v)} onRelease={applyCurrent} onStep={stepSV} draggingRef={draggingRef} />
       {/* hue strip */}
-      <HueStrip h={hsv.h} onChange={(h) => preview(h, hsv.s, hsv.v)} onRelease={applyCurrent} draggingRef={draggingRef} />
+      <HueStrip h={hsv.h} onChange={(h) => preview(h, hsv.s, hsv.v)} onRelease={applyCurrent} onStep={stepHue} draggingRef={draggingRef} />
       {/* hex field + the current swatch — the swatch previews the LIVE drag (value applies on release) */}
       <View style={styles.hexRow}>
         <View style={[styles.current, { backgroundColor: toHex(hsv.h, hsv.s, hsv.v) }]} />
@@ -281,16 +296,19 @@ export function ColorPicker({
       </View>
       {swatchSet.length ? (
         <View style={styles.swatches}>
-          {swatchSet.map((c) => (
-            <View
-              key={c}
-              accessibilityRole="button"
-              accessibilityLabel={`Use ${c}`}
-              onStartShouldSetResponder={() => true}
-              onResponderRelease={() => send(c)}
-              style={[styles.swatch, { backgroundColor: c }, c.toLowerCase() === value.toLowerCase() && styles.swatchOn]}
-            />
-          ))}
+          {swatchSet.map((c) => {
+            const selected = c.toLowerCase() === value.toLowerCase();
+            return (
+              <Pressable
+                key={c}
+                accessibilityRole="button"
+                accessibilityLabel={`Use ${c}`}
+                accessibilityState={{ selected }}
+                onPress={() => send(c)}
+                style={[styles.swatch, { backgroundColor: c }, selected && styles.swatchOn]}
+              />
+            );
+          })}
         </View>
       ) : null}
     </View>
@@ -302,12 +320,15 @@ function hueColorSafe(v: string): string {
 }
 
 // The 2D SV area: two stacked svg gradients (white→hue, transparent→black) + a draggable thumb.
+const A11Y_SV_STEP = 0.05; // 5% per screen-reader nudge on the SV area
+
 function SVArea({
   hue,
   s,
   v,
   onChange,
   onRelease,
+  onStep,
   draggingRef,
 }: {
   hue: number;
@@ -316,6 +337,8 @@ function SVArea({
   onChange: (s: number, v: number) => void;
   /** the finger lifted — APPLY the previewed colour (round 3: apply-on-release) */
   onRelease: () => void;
+  /** CARD-16 non-gesture path — preview+apply a nudged (s,v) in one call (VoiceOver/TalkBack). */
+  onStep: (s: number, v: number) => void;
   draggingRef: React.MutableRefObject<boolean>;
 }) {
   const styles = useStyles();
@@ -374,6 +397,26 @@ function SVArea({
       onLayout={onLayout}
       accessibilityRole="adjustable"
       accessibilityLabel="Saturation and brightness"
+      accessibilityValue={{ text: `Saturation ${Math.round(s * 100)} percent, brightness ${Math.round(v * 100)} percent` }}
+      accessibilityActions={[
+        { name: 'increment', label: 'Brighter' },
+        { name: 'decrement', label: 'Darker' },
+        { name: 'moreSaturation', label: 'More saturated' },
+        { name: 'lessSaturation', label: 'Less saturated' },
+      ]}
+      onAccessibilityAction={(ev) => {
+        // increment/decrement (swipe) drive BRIGHTNESS; the two custom actions drive SATURATION —
+        // the honest 2D non-gesture fix. Exact colours still come from the labelled HEX field.
+        const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
+        const name = ev.nativeEvent.actionName;
+        let ns = s;
+        let nv = v;
+        if (name === 'increment') nv = clamp01(v + A11Y_SV_STEP);
+        else if (name === 'decrement') nv = clamp01(v - A11Y_SV_STEP);
+        else if (name === 'moreSaturation') ns = clamp01(s + A11Y_SV_STEP);
+        else if (name === 'lessSaturation') ns = clamp01(s - A11Y_SV_STEP);
+        onStep(ns, nv);
+      }}
       {...pan.panHandlers}
     >
       {size.w > 0 ? (
@@ -397,16 +440,21 @@ function SVArea({
   );
 }
 
+const A11Y_HUE_STEP = 10; // 10° per screen-reader nudge on the hue strip
+
 function HueStrip({
   h,
   onChange,
   onRelease,
+  onStep,
   draggingRef,
 }: {
   h: number;
   onChange: (h: number) => void;
   /** the finger lifted — APPLY the previewed colour (round 3: apply-on-release) */
   onRelease: () => void;
+  /** CARD-16 non-gesture path — preview+apply a nudged hue in one call (VoiceOver/TalkBack). */
+  onStep: (h: number) => void;
   draggingRef: React.MutableRefObject<boolean>;
 }) {
   const styles = useStyles();
@@ -456,7 +504,19 @@ function HueStrip({
   ).current;
   const stops = [0, 60, 120, 180, 240, 300, 360];
   return (
-    <View style={[styles.hue, WEB_TOUCH]} onLayout={onLayout} accessibilityRole="adjustable" accessibilityLabel="Hue" {...pan.panHandlers}>
+    <View
+      style={[styles.hue, WEB_TOUCH]}
+      onLayout={onLayout}
+      accessibilityRole="adjustable"
+      accessibilityLabel="Hue"
+      accessibilityValue={{ text: `${Math.round(h)} degrees` }}
+      accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+      onAccessibilityAction={(ev) => {
+        const dir = ev.nativeEvent.actionName === 'increment' ? 1 : -1;
+        onStep(Math.min(359.9, Math.max(0, h + dir * A11Y_HUE_STEP)));
+      }}
+      {...pan.panHandlers}
+    >
       {w > 0 ? (
         <Svg width={w} height={16} style={StyleSheet.absoluteFill} pointerEvents="none">
           <Defs>

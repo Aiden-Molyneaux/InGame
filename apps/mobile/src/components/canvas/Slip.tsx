@@ -72,7 +72,7 @@ export function Slip({
 function LockGlyph() {
   const styles = useStyles();
   return (
-    <View style={styles.lock} accessibilityLabel="Locked">
+    <View style={styles.lock} accessible={true} accessibilityLabel="Locked">
       <View style={styles.lockShackle} />
       <View style={styles.lockBody}>
         <View style={styles.lockHole} />

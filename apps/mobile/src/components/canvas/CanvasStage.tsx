@@ -300,8 +300,16 @@ export function CanvasStage({
             {/* center snap-guides (CARD-09) */}
             {guides.v ? <View pointerEvents="none" style={[styles.guideV, { left: bed.w / 2 }]} /> : null}
             {guides.h ? <View pointerEvents="none" style={[styles.guideH, { top: fieldH / 2 }]} /> : null}
-            {/* the gesture surface — the skia bed never owns a touch */}
-            <View style={StyleSheet.absoluteFill} {...pan.panHandlers} accessibilityLabel="Press bed" />
+            {/* the gesture surface — the skia bed never owns a touch. `accessible` so VoiceOver/
+                TalkBack actually expose the label (a bare labelled View isn't guaranteed to); the bed
+                is driven by the layer rack + transform controls, so it reads as a static image. */}
+            <View
+              style={StyleSheet.absoluteFill}
+              {...pan.panHandlers}
+              accessible={true}
+              accessibilityRole="image"
+              accessibilityLabel="Card canvas — use the layer rack and transform controls to edit"
+            />
             {/* sel-ring + handles over the pulled element (larger cream handles — CR-10). RESIZE BOX
                 OFF hides the WHOLE ring — border AND handles (round 3). Round 4: the ring ROTATES
                 WITH the slip (same pivot as the renderer — the element anchor) and carries a

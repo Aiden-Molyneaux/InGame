@@ -27,17 +27,23 @@ export function KeepBeat({
   const pulse = useRef(new Animated.Value(0)).current;
   const styles = useStyles();
 
+  // A ONE-SHOT mount-fire celebration (CARD-16/0044 §104): the reduce-motion setting at KEEP time is
+  // what matters (live-update is irrelevant for a fire-once beat), so read it directly and AWAIT it
+  // before starting — the shared `useReducedMotion()` hook resolves async (false→true), which for a
+  // mount-and-animate control would flash then freeze the pulse mid-flight (murr M2). If reduced, the
+  // pulse never starts and the ✓ strip carries the beat.
   useEffect(() => {
     let mounted = true;
+    const anim = Animated.sequence([
+      Animated.timing(pulse, { toValue: 1, duration: 420, useNativeDriver: false }),
+      Animated.timing(pulse, { toValue: 0, duration: 700, useNativeDriver: false }),
+    ]);
     void AccessibilityInfo.isReduceMotionEnabled().then((reduce) => {
-      if (!mounted || reduce) return; // reduce-motion: no pulse, the strip carries the beat
-      Animated.sequence([
-        Animated.timing(pulse, { toValue: 1, duration: 420, useNativeDriver: false }),
-        Animated.timing(pulse, { toValue: 0, duration: 700, useNativeDriver: false }),
-      ]).start();
+      if (mounted && !reduce) anim.start();
     });
     return () => {
       mounted = false;
+      anim.stop();
     };
   }, [pulse]);
 

@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { Text, View } from 'react-native';
 import { themedStyles } from '../../theme';
+import { announce } from '../../a11y/announce';
 
 // OfflineStrip (D9 · C6 · SYS-10) — the CALM connectivity strip. Unlike the accent PreviewStrip, this
 // never alarms: a muted panel tone that auto-recovers. Shown while a device write is failing transiently
@@ -7,8 +9,13 @@ import { themedStyles } from '../../theme';
 // cache; SAVE CURRENT + the PATCH retry re-arm on reconnect.
 export function OfflineStrip() {
   const styles = useStyles();
+  // CARD-16 live-region (0044 §105): the strip only MOUNTS when the write goes offline — that
+  // appearance is an async result the user can't see, so announce it ONCE on mount. `announce`
+  // (announceForAccessibility) is the single cross-platform path — an `accessibilityRole="alert"` +
+  // `accessibilityLiveRegion` would ALSO auto-announce on Android (double/triple-speak, murr m2).
+  useEffect(() => announce("Offline — changes sync when you're back"), []);
   return (
-    <View style={styles.strip} accessibilityRole="alert">
+    <View style={styles.strip}>
       <Text style={styles.label}>OFFLINE — CHANGES SYNC WHEN YOU'RE BACK</Text>
       <Text style={styles.sync}>RETRYING…</Text>
     </View>

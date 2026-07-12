@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from 'react-native';
 import { themedStyles, useTheme } from '../../theme';
 import { STICKER_ASSETS, StickerGlyph, stickerColor } from './deviceStickers';
+import { useAnnounceOnChange } from '../../a11y/announce';
 
 // StickerTray (device-manifest D4) — the 8 glyph tiles (ROCKET · STAR · HEART · BOLT · CASSETTE ·
 // SATURN · NEON CAT · RAINBOW). Tap → place in the forehead zone (device.tsx). All FREE at M4 (0068) —
@@ -14,6 +15,8 @@ export function StickerTray({
 }) {
   const styles = useStyles();
   const t = useTheme();
+  // CARD-16 live-region (0044 §105): announce the band going full once, on the flip — not the count.
+  useAnnounceOnChange(atCap ? 'This band is full' : null);
   return (
     <View>
       <View style={styles.tray}>

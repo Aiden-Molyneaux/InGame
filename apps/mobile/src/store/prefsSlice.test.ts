@@ -3,6 +3,7 @@ import reducer, {
   setShellId,
   setThemeId,
   setStickerComposition,
+  setCol12CoachmarkSeen,
   type PrefsState,
 } from './prefsSlice';
 import { DEFAULT_SHELL_ID, DEFAULT_THEME_ID } from '../theme/palettes';
@@ -14,18 +15,20 @@ const state = (over: Partial<PrefsState> = {}): PrefsState => ({
   shellId: DEFAULT_SHELL_ID,
   themeId: DEFAULT_THEME_ID,
   stickerComposition: EMPTY,
+  col12CoachmarkSeen: false,
   ...over,
 });
 
 // The persisted prefs reducer (F20) — the Collection view-mode preference (COL-07/COL-13) + the
 // Device look (M4 §3.5, DEV-02/04: shell colourway + screen theme + sticker composition, ARCH 2).
 describe('prefsSlice', () => {
-  it('defaults to the shelf view + the default shell/theme + an empty sticker composition', () => {
+  it('defaults to the shelf view + the default shell/theme + an empty sticker composition + unseen coachmark', () => {
     expect(reducer(undefined, { type: '@@INIT' })).toEqual({
       collectionView: 'shelf',
       shellId: DEFAULT_SHELL_ID,
       themeId: DEFAULT_THEME_ID,
       stickerComposition: EMPTY,
+      col12CoachmarkSeen: false,
     });
   });
 
@@ -47,5 +50,9 @@ describe('prefsSlice', () => {
       stickers: [{ id: 'a', assetId: 'star', zone: 'forehead', x: 0.5, y: 0.5, scale: 1, rotation: 0 }],
     };
     expect(reducer(state(), setStickerComposition(comp)).stickerComposition).toEqual(comp);
+  });
+
+  it('latches the COL-12 coachmark as seen (CARD-16 first-run gate)', () => {
+    expect(reducer(state(), setCol12CoachmarkSeen(true)).col12CoachmarkSeen).toBe(true);
   });
 });

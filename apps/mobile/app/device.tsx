@@ -14,6 +14,7 @@ import { DevicePreviewStrip } from '../src/components/device/DevicePreviewStrip'
 import { OfflineStrip } from '../src/components/device/OfflineStrip';
 import { LooksGrid } from '../src/components/device/LooksGrid';
 import { StickerTray } from '../src/components/device/StickerTray';
+import { StickerRail } from '../src/components/device/StickerRail';
 import { StickerSteppers } from '../src/components/device/StickerSteppers';
 import { STICKER_ASSET_BY_ID } from '../src/components/device/deviceStickers';
 import { useStickerContext } from '../src/components/device/DeviceStickerContext';
@@ -28,6 +29,7 @@ import {
 } from '../src/components/device/stickerGeometry';
 import { editReadoutSub, switchReadout, placingReadout, previewSub } from '../src/components/device/deviceCopy';
 import { themedStyles, useTheme } from '../src/theme';
+import { useAnnounceOnChange } from '../src/a11y/announce';
 import {
   SHELL_IDS,
   SCREEN_THEME_IDS,
@@ -460,6 +462,24 @@ export default function DeviceEditor() {
             sub: editReadoutSub(SHELL_NAMES[liveShellId], SCREEN_THEME_NAMES[liveThemeId], stickerCount),
           };
 
+  // CARD-16 live-region (0044 §105): the save-state line (SAVING… / NOT SAVED — RETRYING / an
+  // inline error / SAVED LIVE — the inline error is folded in) is an async result the user can't see
+  // — announce that transition.
+  const saveLineText =
+    saveState === 'saving'
+      ? 'SAVING…'
+      : saveState === 'error'
+        ? inlineError
+          ? inlineError.toUpperCase()
+          : 'NOT SAVED — RETRYING'
+        : 'SAVED LIVE';
+  useAnnounceOnChange(saveLineText);
+  // Announce the readout TITLE on transition (the "SWITCHED — … WRAP" beat, the preview/editing
+  // lines) — but SUPPRESS the PLACING readout, whose title carries the live transform (scale/angle)
+  // and changes every drag frame; that would flood the SR queue (transitions, never per-frame).
+  const readoutAnnounce = selectedSticker ? null : readout.title;
+  useAnnounceOnChange(readoutAnnounce);
+
   return (
     <Frame onBack={goBack} section={section} onSection={changeSection}>
       {previewTheme && !previewing ? (
@@ -489,14 +509,8 @@ export default function DeviceEditor() {
         </View>
       </View>
 
-      <Text style={styles.saveLine}>
-        {saveState === 'saving'
-          ? 'SAVING…'
-          : saveState === 'error'
-            ? inlineError
-              ? inlineError.toUpperCase()
-              : 'NOT SAVED — RETRYING'
-            : 'SAVED LIVE'}
+      <Text accessibilityLiveRegion="polite" style={styles.saveLine}>
+        {saveLineText}
       </Text>
 
       <ScrollView
@@ -560,7 +574,7 @@ export default function DeviceEditor() {
           <>
             <Text style={styles.secTitle}>STICKERS</Text>
             {previewing ? (
-              <>
+              <View style={styles.stickerBody}>
                 <Text style={styles.floorNote}>
                   ☑ STICKERS RIDE THE REAL SHELL · NAV STAYS FULLY LEGIBLE
                 </Text>
@@ -573,25 +587,33 @@ export default function DeviceEditor() {
                   <ScreenButton label="◅ Keep editing" variant="primary" size="mini" onPress={() => setPreviewing(false)} />
                   <ScreenButton label="Done" variant="secondary" size="mini" onPress={goBack} />
                 </View>
-              </>
+              </View>
             ) : (
-              <>
+              <View style={styles.stickerBody}>
                 <Text style={styles.secSub}>
-                  Drag a decal onto the plastic — the forehead or chin. The screen &amp; the 5 keys stay clear.
+                  Tap a decal to place it on the forehead plastic. The screen &amp; the nav keys stay clear.
                 </Text>
                 <StickerTray onPick={placeSticker} atCap={!canPlace(liveComposition.stickers, 'forehead')} />
+                {/* the placed-decal rail (owner 2026-07-12) — select a sticker to transform it */}
+                <StickerRail
+                  stickers={liveComposition.stickers}
+                  selectedId={selectedStickerId}
+                  onSelect={setSelectedStickerId}
+                />
                 {selectedSticker ? (
                   <StickerSteppers
                     sticker={selectedSticker}
                     mutate={mutateSticker}
                     commit={commitNow}
                     onDelete={() => deleteSticker(selectedSticker.id)}
+                    // guard the re-zone against the target zone's cap — else a move to a full band
+                    // 422s and wedges the pipeline (murr M1). Only rendered while chin is enabled.
+                    canReZone={canPlace(
+                      liveComposition.stickers,
+                      selectedSticker.zone === 'forehead' ? 'chin' : 'forehead',
+                    )}
                   />
-                ) : (
-                  <Text style={styles.stickerHint}>
-                    Tap a placed decal to select it — drag to move, the corners to scale, the stem to rotate.
-                  </Text>
-                )}
+                ) : null}
                 {stickerCount > 0 ? (
                   <ScreenButton
                     label="◉ On-shell preview"
@@ -603,7 +625,7 @@ export default function DeviceEditor() {
                     }}
                   />
                 ) : null}
-              </>
+              </View>
             )}
           </>
         ) : (
@@ -758,14 +780,9 @@ const useStyles = themedStyles((t) => ({
     marginTop: t.space.sm,
   },
   // STICKERS (D4/D5)
-  stickerHint: {
-    fontFamily: t.font.screen,
-    fontSize: t.type.micro,
-    color: t.scr.faint,
-    letterSpacing: 0.5,
-    lineHeight: 13,
-    paddingTop: t.space.sm,
-  },
+  // breathing room between the STICKERS panel's stacked pieces (owner 2026-07-12 — the section read
+  // too crowded); the tray/rail/steppers/preview each get a clear gap.
+  stickerBody: { gap: t.space.lg, paddingTop: t.space.sm },
   onShellStrip: {
     flexDirection: 'row',
     alignItems: 'center',

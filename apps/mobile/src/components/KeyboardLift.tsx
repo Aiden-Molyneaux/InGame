@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Keyboard, Platform, View, type KeyboardEvent, type ViewStyle } from 'react-native';
+import { useReducedMotion } from '../a11y/useReducedMotion';
 
 // KeyboardLift (M3-R R0-2 · S3-l/S4-d) — lifts bottom-docked content above the soft keyboard,
 // FRAME-AWARE. RN's KeyboardAvoidingView measures against the OS window, but everything in this
@@ -31,9 +32,16 @@ export function KeyboardLift({
   const anchorRef = useRef<View>(null);
   const minTopRef = useRef(minTopY);
   minTopRef.current = minTopY;
+  // CARD-16/0044 §104 — a full-content translateY can trigger vestibular discomfort; reduce-motion
+  // snaps to the lifted position instantly (still fully usable). Read via a ref so the listener
+  // effect doesn't re-subscribe on the setting change.
+  const reduceMotion = useReducedMotion();
+  const reduceRef = useRef(reduceMotion);
+  reduceRef.current = reduceMotion;
 
   useEffect(() => {
-    const settleFor = (kbTop: number, duration: number) => {
+    const settleFor = (kbTop: number, rawDuration: number) => {
+      const duration = reduceRef.current ? 0 : rawDuration;
       const anchor = anchorRef.current;
       if (!anchor) return;
       anchor.measureInWindow((_x, y, _w, h) => {
@@ -51,7 +59,7 @@ export function KeyboardLift({
     const onHide = (e: KeyboardEvent | undefined) =>
       Animated.timing(lift, {
         toValue: 0,
-        duration: e?.duration && e.duration > 0 ? e.duration : 200,
+        duration: reduceRef.current ? 0 : e?.duration && e.duration > 0 ? e.duration : 200,
         useNativeDriver: true,
       }).start();
 

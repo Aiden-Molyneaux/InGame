@@ -7,6 +7,7 @@ import { LazyBaseStrip, LazyGlyphStrip } from './lazySkia';
 import { BASE_GRADIENTS } from '../../styler/roster';
 import type { StripCell } from '../../render/buildCard';
 import { MAX_ELEMENTS, type CardComposition, type CardElement } from '../../render/composition';
+import { useAnnounceOnChange } from '../../a11y/announce';
 
 // LayerRack (component-map §8b / board P1/P2/P5) — the rail at the foot: each layer a physical
 // Slip; TAP pulls to isolate (CARD-08 solved spatially); Z-ORDER IS THE RACK ORDER — long-press-
@@ -93,6 +94,9 @@ export function LayerRack({
   ).current;
 
   const atCap = elements.length >= MAX_ELEMENTS;
+  // CARD-16 live-region (0044 §105): announce the RACK reaching cap once, on the flip to full — not
+  // the running count (that would speak on every add).
+  useAnnounceOnChange(atCap ? `The rack is full — ${MAX_ELEMENTS} layers` : null);
 
   const armOps = (i: number) => {
     onPull(i);

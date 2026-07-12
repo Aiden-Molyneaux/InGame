@@ -11,6 +11,12 @@ import { ICON_PATHS, ICON_VIEWBOX } from '../../render/icons';
 // CASSETTE · SATURN · NEON CAT · RAINBOW) are drawn here — simple, bold, SINGLE-TONE with the board's
 // colour hints. Everything ships `tier:'basic'` (0068 all-basic posture) — no price chips anywhere.
 
+// CHIN placement is TOGGLED OFF for now (owner gate-5, 2026-07-12): decals on the chin (the nav-band
+// margins) crowd the 5 nav keycaps. The chin CODE is retained — the schema, server validation, the
+// band layer, and the re-zone all still support it — but the editor offers FOREHEAD only until this
+// flips back on. Consumers gate the chin drop-target / re-zone / band-editor affordances on this.
+export const CHIN_ENABLED = false;
+
 export type StickerTone = 'cream' | 'gold' | 'accent';
 
 export interface StickerAsset {

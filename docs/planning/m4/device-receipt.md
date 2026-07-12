@@ -129,6 +129,20 @@ surfaces that don't exist yet — wallet · PIXELS CountTag · price chips · pu
 ReconcileSheet. **Owed (CARD-16 / light-theme parvati pass):** the full ≥4.5:1/≥3:1 floor sweep across
 every signed surface on all 3 light themes + the Carbon nav-label check.
 
+## Gate-5 iteration round 2 — sticker editor (owner device walk, 2026-07-12)
+Four sticker notes, all presentation/flow (design-spec 0.60 · §2.15):
+1. **Placed-decal rail** (`StickerRail`) — the "slips" manager: a tile per on-shell decal, tap to
+   select. It's the visible + screen-reader-reachable selection path, and **replaced the transparent
+   a11y select-targets** from the CARD-16 pass (cleaner + kills murr m4's iOS overlap edge).
+2. **Chin OFF** — `CHIN_ENABLED=false` (decals crowded the nav keycaps). The chin code/schema/server
+   support is retained; the editor is **forehead-only** for now (no re-zone button, no chin drop-target,
+   the chin band stays passive). One flag flips it back.
+3. **POSITION → 4 directional arrows** (◀▶▲▼ inline + X·Y read-out) — mirrors the Canvas TransformDrawer,
+   not two ◀ value ▶ rows.
+4. **Spacing** — the panel read too crowded; `stickerBody` gives the tray/rail/steppers/preview clear gaps.
+Suite: typecheck ✓ · lint ✓ (both a11y + theme rules) · 69/69 jest ✓ · /health 🟢. **Owed on device:**
+the sticker place/select/transform feel + the D5 preview — the RN-web decal lane can't render decals.
+
 ## ⛔ The stop
 **Owner:** gate-5 taste on the Device editor **on device** (the decal visuals + drag/refusal/re-zone +
 stepper cadence + the D5 preview + LOOKS apply/delete — the lanes web can't drive), the **OQ-144

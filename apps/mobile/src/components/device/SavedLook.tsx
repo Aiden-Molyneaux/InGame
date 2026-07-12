@@ -31,16 +31,32 @@ export function SavedLook({
   const themeId = resolveScreenThemeId(look.screenThemeId);
   const hasStickers = look.stickerComposition.stickers.length > 0;
 
+  // The remove-✕ is a SIBLING of the apply-tile, never nested inside it (Slip.tsx:12 rule — a
+  // button-in-button is invalid on web and gives the screen reader an ambiguous activation target).
+  // A wrapping non-pressable View holds both; the ✕ / ON NOW tag sit absolutely in the tile corner.
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`${SHELL_NAMES[shell]} ${SCREEN_THEME_NAMES[themeId]} look${onNow ? ', on now' : ''}`}
-      accessibilityState={{ selected: onNow }}
-      onPress={onApply}
-      style={({ pressed }) => [styles.tile, onNow && styles.tileOn, pressed && styles.pressed]}
-    >
+    <View style={styles.wrap}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${SHELL_NAMES[shell]} ${SCREEN_THEME_NAMES[themeId]} look${onNow ? ', on now' : ''}`}
+        accessibilityState={{ selected: onNow }}
+        onPress={onApply}
+        style={({ pressed }) => [styles.tile, onNow && styles.tileOn, pressed && styles.pressed]}
+      >
+        <View style={styles.mini}>
+          <MiniDevice shellId={shell} themeId={themeId} />
+          {hasStickers ? <View style={styles.stickerHint} accessibilityLabel="has stickers" /> : null}
+        </View>
+
+        <Text style={[styles.id, onNow && { color: t.scr.accent }]}>
+          {SHELL_NAMES[shell]}
+          {'\n'}
+          {SCREEN_THEME_NAMES[themeId]}
+        </Text>
+      </Pressable>
+
       {onNow ? (
-        <View style={styles.onTag}>
+        <View style={styles.onTag} pointerEvents="none">
           <Text style={styles.onTagText}>ON NOW</Text>
         </View>
       ) : (
@@ -54,22 +70,13 @@ export function SavedLook({
           <Text style={styles.delText}>×</Text>
         </Pressable>
       )}
-
-      <View style={styles.mini}>
-        <MiniDevice shellId={shell} themeId={themeId} />
-        {hasStickers ? <View style={styles.stickerHint} accessibilityLabel="has stickers" /> : null}
-      </View>
-
-      <Text style={[styles.id, onNow && { color: t.scr.accent }]}>
-        {SHELL_NAMES[shell]}
-        {'\n'}
-        {SCREEN_THEME_NAMES[themeId]}
-      </Text>
-    </Pressable>
+    </View>
   );
 }
 
 const useStyles = themedStyles((t) => ({
+  // the positioning root — the tile fills it, the ✕ / ON NOW tag anchor to its corners as siblings
+  wrap: { position: 'relative' },
   tile: {
     alignItems: 'center',
     gap: t.space.sm,

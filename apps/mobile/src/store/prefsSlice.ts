@@ -25,6 +25,10 @@ export interface PrefsState {
   shellId: ShellId;
   themeId: ScreenThemeId;
   stickerComposition: StickerComposition;
+  // COL-12/CARD-16 — the first-run peek-flip coachmark's one-time "seen" flag. Persisted (redux-persist
+  // autoMergeLevel1 gives an older/first-time blob the `false` default → the hint shows once). No on-face
+  // indicator (owner directive) — this coachmark is the only discoverability affordance.
+  col12CoachmarkSeen: boolean;
 }
 
 const initialState: PrefsState = {
@@ -32,6 +36,7 @@ const initialState: PrefsState = {
   shellId: DEFAULT_SHELL_ID,
   themeId: DEFAULT_THEME_ID,
   stickerComposition: { version: STICKER_COMPOSITION_VERSION, stickers: [] },
+  col12CoachmarkSeen: false,
 };
 
 const prefsSlice = createSlice({
@@ -50,8 +55,18 @@ const prefsSlice = createSlice({
     setStickerComposition(state, action: PayloadAction<StickerComposition>) {
       state.stickerComposition = action.payload;
     },
+    // COL-12 — latch the coachmark as seen (fired on the first flip or an explicit dismiss); never unset.
+    setCol12CoachmarkSeen(state, action: PayloadAction<boolean>) {
+      state.col12CoachmarkSeen = action.payload;
+    },
   },
 });
 
-export const { setCollectionView, setShellId, setThemeId, setStickerComposition } = prefsSlice.actions;
+export const {
+  setCollectionView,
+  setShellId,
+  setThemeId,
+  setStickerComposition,
+  setCol12CoachmarkSeen,
+} = prefsSlice.actions;
 export default prefsSlice.reducer;

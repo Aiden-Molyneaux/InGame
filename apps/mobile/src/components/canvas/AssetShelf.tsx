@@ -6,6 +6,7 @@ import { SkiaErrorBoundary } from '../SkiaErrorBoundary';
 import { LazyGlyphStrip } from './lazySkia';
 import { ESSENTIAL_ICONS } from '../../render/icons';
 import { MAX_ELEMENTS, type CardComposition, type CardElement } from '../../render/composition';
+import { useAnnounceOnChange } from '../../a11y/announce';
 
 // AssetShelf / ElementTray (component-map §8b / board P3) — the ADD drawer: the app's ONE
 // summoned-sheet grammar (PulledSheet — never a second summons). Categories SHAPES · LETTERS ·
@@ -65,6 +66,8 @@ export function AssetShelf({
   const [textDraft, setTextDraft] = useState('');
   const atCap = count >= MAX_ELEMENTS;
   const nextFill = FILLS[count % FILLS.length]!;
+  // CARD-16 live-region (0044 §105): announce the rack going full once, on the flip — not the count.
+  useAnnounceOnChange(atCap ? 'The rack is full' : null);
 
   // round 3 — the grids span the PANEL width (they used to sit at a fixed 6×44 block narrower than
   // the category row); cells scale to an even fill of the measured width.

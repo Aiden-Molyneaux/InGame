@@ -25,6 +25,7 @@ import {
   rotateElement,
 } from '../../canvas/ops';
 import { MAX_ELEMENTS, type CardComposition, type CardElement } from '../../render/composition';
+import { useAnnounceOnChange } from '../../a11y/announce';
 
 // CanvasSurface — the Canvas POSTURE of the one card-editor session (decision 0014 stage 3;
 // CARD-24a/0066 §6: the posture switch edits the SAME draft row; the Styler route owns the
@@ -341,6 +342,18 @@ export function CanvasSurface({
   const [benchH, setBenchH] = useState(0);
   const panelWRef = useRef(0);
 
+  // CARD-16 live-region (0044 §105): the save-state sub-line (SAVING… / NOT SAVED — RETRYING /
+  // AUTOSAVED) and the PROOFING flip are async results the user can't see — announce those
+  // transitions. This is the save-state string ONLY; the per-frame PLACING/transform readout is a
+  // separate control and is never routed here.
+  const subLineText = proofing ? `${title.toUpperCase()} · PROOFING` : subLine;
+  // Strip the volatile "…30S AGO" counter (a 15s setTick in the styler re-renders it) so the
+  // announce fires on the real save-state / PROOFING transitions, not the ticking clock.
+  useAnnounceOnChange(subLineText.replace(/\s*\d+S AGO/i, ''));
+  // NB: `inlineError` is announced by the always-mounted styler component (one `useAnnounceOnChange`
+  // covers both postures) — announcing it here too would double-speak in the Canvas posture (murr m1).
+  // The visible error still carries `accessibilityLiveRegion="polite"` below.
+
   return (
     // full-bleed breakout: the workshop owns the whole screen + the safe-area (no shell chrome here)
     <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
@@ -353,7 +366,7 @@ export function CanvasSurface({
         <View style={styles.spacer} />
       </View>
       {/* the sub-line flips to the PROOFING state while the print is stamped (board :743, parvati 🚩1) */}
-      <Text style={styles.subLine}>{proofing ? `${title.toUpperCase()} · PROOFING` : subLine}</Text>
+      <Text accessibilityLiveRegion="polite" style={styles.subLine}>{subLineText}</Text>
 
       {proofing ? (
         <ProofView composition={composition} title={title} />
@@ -618,7 +631,7 @@ export function CanvasSurface({
         </View>
       ) : null}
       {/* CR-16 — the bench coaching hint is removed */}
-      {inlineError ? <Text style={styles.inlineErr}>{inlineError}</Text> : null}
+      {inlineError ? <Text accessibilityLiveRegion="polite" style={styles.inlineErr}>{inlineError}</Text> : null}
 
       <PressSheet
         visible={pressOpen}
