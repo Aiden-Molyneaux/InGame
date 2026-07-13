@@ -249,7 +249,7 @@ describe('ECON-03/04: adopt = component acquisition + free grant (decision 0072)
     const adopt = await request(app).post(`/api/cards/${id}/adopt`).set(authed(b.token));
     expect(adopt.status).toBe(200);
     expect(adopt.body.totalPaid).toBe(5);
-    expect(adopt.body.balance).toBe(STARTING_GRANT - 5); // 0
+    expect(adopt.body.balance).toBe(STARTING_GRANT - 5); // 5
     expect(adopt.body.granted.map((g: { cosmeticId: string }) => g.cosmeticId).sort()).toEqual([
       'adopt-font-a',
       'adopt-font-b',
@@ -278,13 +278,13 @@ describe('ECON-03/04: adopt = component acquisition + free grant (decision 0072)
       fontIds: ['own-shared', 'own-extra'],
       seed: 10,
     });
-    await acquire(b.token, 'own-shared'); // B already owns the shared one (balance 5-2=3)
+    await acquire(b.token, 'own-shared'); // B already owns the shared one (balance 10-2=8)
 
     const adopt = await request(app).post(`/api/cards/${id}/adopt`).set(authed(b.token));
     expect(adopt.status).toBe(200);
     expect(adopt.body.granted).toEqual([{ cosmeticId: 'own-extra', paid: 3 }]); // only the missing one
     expect(adopt.body.totalPaid).toBe(3);
-    expect(adopt.body.balance).toBe(STARTING_GRANT - 2 - 3); // 0
+    expect(adopt.body.balance).toBe(STARTING_GRANT - 2 - 3); // 5
   });
 
   it('INSUFFICIENT_BALANCE {shortBy} when the acquire cannot cover the missing sum — no grant lands', async () => {
@@ -292,9 +292,9 @@ describe('ECON-03/04: adopt = component acquisition + free grant (decision 0072)
     const b = await registerUser();
     const game = await seedGame(a.token, 'Cant Afford RPG');
     registerCosmeticForTest('exp-a', 'ultimate'); // 10
-    registerCosmeticForTest('exp-b', 'ultimate'); // 10 → total 20, B has 5
-    await acquire(a.token, 'exp-a').catch(() => {}); // A has 5 — can't own both, so grant directly
-    // A can't afford both either; grant A ownership out-of-band so the card can publish.
+    registerCosmeticForTest('exp-b', 'ultimate'); // 10 → total 20, B has 10
+    await acquire(a.token, 'exp-a').catch(() => {}); // A has 10 — can't own both, so grant directly
+    // A can't afford both (20 > 10); grant A ownership out-of-band so the card can publish.
     const { grantEntitlement } = await import('../../src/services/cosmetics/cosmetic-service');
     await grantEntitlement(a.id, a.id, 'exp-a', 'seed');
     await grantEntitlement(a.id, a.id, 'exp-b', 'seed');
@@ -306,7 +306,7 @@ describe('ECON-03/04: adopt = component acquisition + free grant (decision 0072)
     const adopt = await request(app).post(`/api/cards/${id}/adopt`).set(authed(b.token));
     expect(adopt.status).toBe(409);
     expect(adopt.body.error.code).toBe('INSUFFICIENT_BALANCE');
-    expect(adopt.body.error.shortBy).toBe(15); // 20 - 5
+    expect(adopt.body.error.shortBy).toBe(10); // 20 - 10
     // no adoption grant landed — B can still adopt after funding (not tested here); count stays 0.
     const gallery = await request(app).get(`/api/games/${game.id}/cards`).set(authed(a.token));
     expect(gallery.body.items[0].adoptionCount).toBe(0);

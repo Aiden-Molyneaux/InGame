@@ -10,8 +10,14 @@ import { WALLET_LEDGER_PAGE_DEFAULT } from '@ingame/shared';
 import { mutation } from '../../db/mutation';
 import type { Executor } from '../../db/client';
 import * as economyRepo from '../../repositories/economy-repo';
+import * as entitlementRepo from '../../repositories/entitlement-repo';
 import { InsufficientBalanceError } from '../../errors/AppError';
-import { DAILY_BONUS, SPEND_FLOOR, STARTING_GRANT } from '../../config/economy';
+import {
+  DAILY_BONUS,
+  SPEND_FLOOR,
+  STARTING_GRANT,
+  ladderRewardForCount,
+} from '../../config/economy';
 import type { CurrencyLedgerRow } from '../../db/schema';
 
 // The ECON-07 ledger service — the ONE seam through which the currency balance ever changes (decision
@@ -120,19 +126,30 @@ export function debit(
 /**
  * GET /me/wallet (ECON-02/07) — a PURE READ (never materializes; the wallet + starting grant land on
  * the first economic MUTATION). An un-touched wallet reports the STARTING_GRANT effective balance and
- * an available bonus; a touched wallet reports its real row. `dailyBonus.available` = no `daily_claim`
- * ledger row for today's UTC-day.
+ * an available bonus; a touched wallet reports its real row. `dailyBonus.available` = no CLAIM (standing
+ * `daily_claim` OR a ladder `milestone` step) for today's UTC-day — the one-claim-a-day ceiling spans
+ * both phases. While the Newcomer Ladder is in progress (decision 0074), `ladderStep` (the NEXT step,
+ * 1..7) and `ladderReward` (its PX + any filled cosmetic slot) are present so the client renders the
+ * escalation; both are ABSENT once the ladder is complete (the veteran +1/day view is unchanged).
  */
 export async function getWallet(actorId: string): Promise<WalletResponse> {
   const wallet = await economyRepo.findWallet(actorId);
   const now = new Date();
-  const claimed = await economyRepo.findLedgerByPeriod(actorId, 'daily_claim', utcDayKey(now));
+  const claimed = await economyRepo.findClaimForDay(actorId, utcDayKey(now));
+  const ladder = ladderRewardForCount(await economyRepo.countLadderClaims(actorId));
   return {
     balance: wallet?.balance ?? STARTING_GRANT,
     dailyBonus: {
       available: claimed === null,
       amount: DAILY_BONUS,
       nextResetAt: nextUtcResetAt(now).toISOString(),
+      ...(ladder && {
+        ladderStep: ladder.step,
+        ladderReward: {
+          pixels: ladder.pixels,
+          ...(ladder.cosmeticId ? { cosmeticId: ladder.cosmeticId } : {}),
+        },
+      }),
     },
   };
 }
@@ -172,33 +189,78 @@ export async function listLedger(
 }
 
 /**
- * @mutation — POST /me/daily-bonus (ECON-02): claim the +1-PX Store daily bonus, idempotent per
- * UTC-day. The wallet-row FOR UPDATE lock serializes concurrent claims; the pre-check + the
- * `(user, reason, period)` partial-unique index together make a second same-day grant impossible
- * (F36). Unclaimed days lapse — no banking, no streaks (v2).
+ * @mutation — POST /me/daily-bonus (ECON-02, decision 0074): claim the Store daily bonus, idempotent
+ * per UTC-day. ONE claim button throughout, but the reward escalates:
+ *   • claims 1–7 = the Newcomer Ladder — grant `NEWCOMER_LADDER_STEPS[n]` PX as ONE `milestone` ledger
+ *     row (`refType='newcomer_ladder'`, `refId=String(step)`, `periodKey=UTC-day`) + the earned-only
+ *     cosmetic entitlement when the step's slot is filled (empty slot → PX only). The ladder NEVER
+ *     lapses — a missed day just delays the next step (progress = the lifetime `countLadderClaims`).
+ *   • claim 8+ = the standing +1-PX `daily_claim` (unclaimed days LAPSE — no banking, no streaks, v2).
+ * The wallet-row FOR UPDATE lock serializes concurrent claims; the same-day pre-check (`findClaimForDay`
+ * spans BOTH reasons) + the `(user, reason, period)` partial-unique index make a second same-day grant
+ * impossible under either phase (F36). The ladder count is probed UNDER the lock so two parallel ladder
+ * claims can't each advance a step — the loser re-reads the just-written row and no-ops.
  */
 export const claimDailyBonus = mutation(
-  { name: 'wallet.claimDailyBonus', specIds: ['ECON-02', 'ECON-07', 'SYS-01'] },
+  { name: 'wallet.claimDailyBonus', specIds: ['ECON-02', 'ECON-07', 'COSM-03', 'SYS-01'] },
   async (ctx, actorId): Promise<DailyBonusResponse> => {
     const now = new Date();
     const periodKey = utcDayKey(now);
     const nextResetAt = nextUtcResetAt(now).toISOString();
     const wallet = await economyRepo.ensureWalletForUpdate(ctx.tx, actorId); // lock + first-touch grant
-    const already = await economyRepo.findLedgerByPeriod(
-      actorId,
-      'daily_claim',
-      periodKey,
-      ctx.tx,
-    );
+    const already = await economyRepo.findClaimForDay(actorId, periodKey, ctx.tx);
     if (already) {
-      // Already claimed today — idempotent no-op (still emit so the mutation seam stays honest).
+      // Already claimed today (either phase) — idempotent no-op (still emit so the seam stays honest).
       await ctx.emit({
         eventType: 'wallet.daily_claimed',
         entityRef: { type: 'wallet', id: wallet.id },
         payload: { granted: false },
       });
-      return { granted: false, balance: wallet.balance, nextResetAt };
+      return { granted: false, pixels: 0, balance: wallet.balance, nextResetAt };
     }
+
+    // Which phase? The lifetime ladder count (probed under the lock) picks the next step, or null once
+    // the ladder is complete — then the standing +1/day takes over.
+    const ladder = ladderRewardForCount(await economyRepo.countLadderClaims(actorId, ctx.tx));
+
+    if (ladder) {
+      const newBalance = wallet.balance + ladder.pixels;
+      await economyRepo.updateBalance(ctx.tx, actorId, newBalance);
+      await economyRepo.insertLedgerRow(ctx.tx, actorId, {
+        delta: ladder.pixels,
+        reason: 'milestone',
+        refType: 'newcomer_ladder',
+        refId: String(ladder.step),
+        periodKey, // the same-UTC-day idempotency key covers ladder claims too (period-unique index)
+      });
+      // The free earned-only cosmetic — only when the roster pass has filled this step's slot. An empty
+      // slot no-ops gracefully (the grant is PX-only). Idempotent insert (defence-in-depth under lock).
+      if (ladder.cosmeticId) {
+        await entitlementRepo.insertEntitlement(ctx.tx, actorId, {
+          cosmeticId: ladder.cosmeticId,
+          source: 'earned',
+        });
+      }
+      await ctx.emit({
+        eventType: 'wallet.daily_claimed',
+        entityRef: { type: 'wallet', id: wallet.id },
+        payload: {
+          granted: true,
+          amount: ladder.pixels,
+          ladderStep: ladder.step,
+          ...(ladder.cosmeticId ? { cosmeticId: ladder.cosmeticId } : {}),
+        },
+      });
+      return {
+        granted: true,
+        pixels: ladder.pixels,
+        ...(ladder.cosmeticId ? { cosmeticId: ladder.cosmeticId } : {}),
+        balance: newBalance,
+        nextResetAt,
+      };
+    }
+
+    // The standing daily (claim 8+) — exactly the pre-0074 behaviour.
     const newBalance = wallet.balance + DAILY_BONUS;
     await economyRepo.updateBalance(ctx.tx, actorId, newBalance);
     await economyRepo.insertLedgerRow(ctx.tx, actorId, {
@@ -211,7 +273,7 @@ export const claimDailyBonus = mutation(
       entityRef: { type: 'wallet', id: wallet.id },
       payload: { granted: true, amount: DAILY_BONUS },
     });
-    return { granted: true, balance: newBalance, nextResetAt };
+    return { granted: true, pixels: DAILY_BONUS, balance: newBalance, nextResetAt };
   },
 );
 

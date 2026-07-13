@@ -202,14 +202,14 @@ describe('CARD-13/COSM-03: POST /cosmetics/acquire-batch — atomicity', () => {
   it('one unaffordable item in the set → 409 with the TOTAL shortBy, ZERO rows written', async () => {
     const a = await registerUser();
     registerCosmeticForTest('fix-ultimate-1', 'ultimate'); // 10
-    registerCosmeticForTest('fix-ultimate-2', 'ultimate'); // 10 → total 20, balance 5, shortBy 15
+    registerCosmeticForTest('fix-ultimate-2', 'ultimate'); // 10 → total 20, balance 10, shortBy 10
     const res = await request(app)
       .post('/api/cosmetics/acquire-batch')
       .set(authed(a.token))
       .send({ cosmeticIds: ['fix-ultimate-1', 'fix-ultimate-2'] });
     expect(res.status).toBe(409);
     expect(res.body.error.code).toBe('INSUFFICIENT_BALANCE');
-    expect(res.body.error.shortBy).toBe(15);
+    expect(res.body.error.shortBy).toBe(10); // 20 − 10
     // The whole transaction rolled back — even the wallet's own first-touch materialize never landed.
     expect(await countRows('wallets', a.id)).toBe(0);
     expect(await countRows('currencyLedger', a.id)).toBe(0);
@@ -231,7 +231,7 @@ describe('CARD-13/COSM-03: POST /cosmetics/acquire-batch — atomicity', () => {
     expect(batch.status).toBe(200);
     expect(batch.body.granted).toEqual([{ cosmeticId: 'fix-missing', paid: 2 }]); // fix-owned skipped
     expect(batch.body.totalPaid).toBe(2);
-    expect(batch.body.balance).toBe(STARTING_GRANT - 1 - 2); // 2
+    expect(batch.body.balance).toBe(STARTING_GRANT - 1 - 2); // 7
 
     expect(await countRows('entitlements', a.id)).toBe(2); // fix-owned + fix-missing, no duplicate
     expect(await countRows('currencyLedger', a.id, { reason: 'acquire' })).toBe(2); // one per charge
@@ -261,10 +261,11 @@ describe('F36: concurrent acquire — the wallet lock is the serialization point
   it('two parallel batches sharing an item, against a balance that covers only one → exactly one succeeds', async () => {
     const a = await registerUser();
     registerCosmeticForTest('fix-shared', 'trim'); // 2
-    registerCosmeticForTest('fix-extra-1', 'trim'); // 2
-    registerCosmeticForTest('fix-extra-2', 'trim'); // 2
-    // Each batch totals 4 (shared + its own extra); balance 5 covers exactly one batch, not both —
-    // and whichever loses must re-check ownership of the SHARED item under its own fresh lock.
+    registerCosmeticForTest('fix-extra-1', 'big'); // 6
+    registerCosmeticForTest('fix-extra-2', 'big'); // 6
+    // Each batch totals 8 (shared 2 + its own big 6); balance 10 covers exactly one batch, not both (the
+    // loser's 6-PX extra exceeds the 2 PX left) — and whichever loses must re-check ownership of the
+    // SHARED item under its own fresh lock.
     const [r1, r2] = await Promise.all([
       request(app)
         .post('/api/cosmetics/acquire-batch')
@@ -278,7 +279,7 @@ describe('F36: concurrent acquire — the wallet lock is the serialization point
     const statuses = [r1.status, r2.status].sort();
     expect(statuses).toEqual([200, 409]); // exactly one succeeds
     const winner = r1.status === 200 ? r1 : r2;
-    expect(winner.body.totalPaid).toBe(4);
+    expect(winner.body.totalPaid).toBe(8); // shared 2 + its big 6
     // The shared item lands exactly once regardless of which batch won it.
     expect(await countRows('entitlements', a.id, { cosmeticId: 'fix-shared' })).toBe(1);
     const rec = await ledger.reconcile(a.id);

@@ -82,7 +82,9 @@ export default function Store() {
     claimBonus()
       .unwrap()
       .then((res) => {
-        if (res.granted) flashTick(wallet?.dailyBonus.amount ?? 1);
+        // Tick the counter by the PX the claim ACTUALLY landed (a ladder step's escalating amount for
+        // the first 7 claims, else the standing +1) — not the standing `dailyBonus.amount`.
+        if (res.granted) flashTick(res.pixels || wallet?.dailyBonus.amount || 1);
       })
       .catch((e) => {
         if (isNetworkError(e)) setOffline(true);
@@ -188,6 +190,8 @@ export default function Store() {
         <BrowseView
           available={wallet?.dailyBonus.available ?? false}
           amount={wallet?.dailyBonus.amount ?? 1}
+          ladderStep={wallet?.dailyBonus.ladderStep}
+          ladderReward={wallet?.dailyBonus.ladderReward}
           onClaim={onClaim}
           claiming={claiming}
           hasPremium={(store?.premiumCosmetics.length ?? 0) > 0}
@@ -276,6 +280,8 @@ function Header({
 function BrowseView({
   available,
   amount,
+  ladderStep,
+  ladderReward,
   onClaim,
   claiming,
   hasPremium,
@@ -284,6 +290,8 @@ function BrowseView({
 }: {
   available: boolean;
   amount: number;
+  ladderStep?: number;
+  ladderReward?: { pixels: number; cosmeticId?: string };
   onClaim: () => void;
   claiming: boolean;
   hasPremium: boolean;
@@ -293,7 +301,14 @@ function BrowseView({
   const styles = useStyles();
   return (
     <View style={styles.body}>
-      <DailyBonusBar available={available} amount={amount} onClaim={onClaim} claiming={claiming} />
+      <DailyBonusBar
+        available={available}
+        amount={amount}
+        ladderStep={ladderStep}
+        ladderReward={ladderReward}
+        onClaim={onClaim}
+        claiming={claiming}
+      />
       {/* the seasonal drop cover (ECON-08) is EXPECTED(P10) — /store.drops is [] at M5, no cover drawn. */}
 
       <Text style={styles.secTitle}>THE INDEX — ALL AISLES</Text>

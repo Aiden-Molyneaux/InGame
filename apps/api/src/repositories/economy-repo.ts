@@ -1,4 +1,4 @@
-import { and, desc, eq, sum } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, sum } from 'drizzle-orm';
 import type { LedgerReason } from '@ingame/shared';
 import { getDb, type Executor } from '../db/client';
 import { asActor, ownedBy } from '../db/scoped';
@@ -26,7 +26,7 @@ export interface LedgerInsert {
 
 /**
  * Materialize-and-lock the caller's wallet, returning the row locked FOR UPDATE (ECON-02/07). On the
- * FIRST touch the row is created with the 5-PX starting balance AND its `starting_grant` ledger row —
+ * FIRST touch the row is created with the STARTING_GRANT (10-PX) balance AND its `starting_grant` row —
  * both in the caller's transaction, so the grant lands exactly once even under the F36 concurrent
  * first-touch race (INSERT … ON CONFLICT DO NOTHING; the loser sees no inserted row and re-selects).
  * The subsequent SELECT … FOR UPDATE serializes concurrent balance changes on the row.
@@ -127,6 +127,63 @@ export async function findLedgerByPeriod(
     )
     .limit(1);
   return rows[0] ?? null;
+}
+
+/**
+ * Whether the caller has ALREADY made a period-stamped CLAIM for `periodKey` — a `daily_claim`
+ * (standing) OR a `milestone` newcomer-ladder step (ECON-02, decision 0074). This is the same-UTC-day
+ * one-claim ceiling that spans BOTH phases of the daily bonus: while on the ladder a claim is a
+ * `milestone` row, after it a `daily_claim` row, and either one closes the day. Only claims stamp a
+ * `periodKey` (M7 achievement milestones carry `periodKey = null`), so the period filter alone excludes
+ * them; the reason set is kept explicit as defence-in-depth. Read under the wallet FOR UPDATE lock.
+ */
+export async function findClaimForDay(
+  actorId: string,
+  periodKey: string,
+  exec: Executor = getDb(),
+): Promise<CurrencyLedgerRow | null> {
+  const actor = asActor(actorId);
+  const rows = await exec
+    .select()
+    .from(currencyLedger)
+    .where(
+      ownedBy(
+        actor,
+        currencyLedger.userId,
+        and(
+          eq(currencyLedger.periodKey, periodKey),
+          inArray(currencyLedger.reason, ['daily_claim', 'milestone']),
+        ),
+      ),
+    )
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+/**
+ * The caller's LIFETIME Newcomer-Ladder progress — the count of `milestone` ledger rows tagged
+ * `refType = 'newcomer_ladder'` (ECON-02, decision 0074). 0..7; the value picks the NEXT step (and
+ * decides ladder-vs-standing). Probed UNDER the wallet lock in the claim path so two concurrent claims
+ * can't both read the same pre-step count and each advance a step (the period-unique index on
+ * `(user, 'milestone', periodKey)` is the further backstop). Generic M7 milestones (no `newcomer_ladder`
+ * refType) are excluded, so an achievement reward never inflates the ladder.
+ */
+export async function countLadderClaims(
+  actorId: string,
+  exec: Executor = getDb(),
+): Promise<number> {
+  const actor = asActor(actorId);
+  const rows = await exec
+    .select({ n: count() })
+    .from(currencyLedger)
+    .where(
+      ownedBy(
+        actor,
+        currencyLedger.userId,
+        and(eq(currencyLedger.reason, 'milestone'), eq(currencyLedger.refType, 'newcomer_ladder')),
+      ),
+    );
+  return Number(rows[0]?.n ?? 0);
 }
 
 /** A page of ledger rows, newest-first (ECON-07). Offset-based (`limit`+`offset`); +1 probes for more. */

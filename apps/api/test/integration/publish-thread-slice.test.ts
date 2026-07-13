@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import type { Express } from 'express';
 import { COMPOSITION_SCHEMA_VERSION } from '@ingame/shared';
+import { STARTING_GRANT } from '../../src/config/economy';
 
 // M5 §1 — the PUBLISH-THREAD SPIKE at the HTTP boundary (decision 0073 §1; supertest + REAL Postgres +
 // the real server-side skia flatten + the local-disk StorageProvider). Proves the whole thread
@@ -153,7 +154,7 @@ describe('CARD-15/CARD-04 spike: publish→gallery→adopt (the full thread, cro
     // ── 3. B adopts free → grant + count=1 (decision 0072 shape: granted/totalPaid/balance) ──────────
     const adopt = await request(app).post(`/api/cards/${card.id}/adopt`).set(authed(b.token));
     expect(adopt.status).toBe(200);
-    expect(adopt.body).toEqual({ granted: [], totalPaid: 0, balance: 5 }); // free path, wallet untouched
+    expect(adopt.body).toEqual({ granted: [], totalPaid: 0, balance: STARTING_GRANT }); // free path, wallet untouched
 
     const afterAdopt = await request(app).get(`/api/games/${game.id}/cards`).set(authed(b.token));
     expect(afterAdopt.body.items[0].adoptionCount).toBe(1); // the derived public count moved

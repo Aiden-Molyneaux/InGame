@@ -6,8 +6,9 @@ import { z } from 'zod';
 // client-supplied, so a smuggled field is refused (mirrors the DEV-05 SAVE CURRENT posture).
 
 /**
- * POST /me/daily-bonus — claim the Store daily bonus (ECON-02). No body: the +1-PX grant is
- * server-side, idempotent per UTC-day (a second claim same day is a no-op, `granted:false`).
+ * POST /me/daily-bonus — claim the Store daily bonus (ECON-02, decision 0074). No body: the grant is
+ * fully server-derived (a Newcomer-Ladder step for the first 7 claims, else the standing +1), idempotent
+ * per UTC-day (a second claim same day is a no-op, `granted:false`).
  */
 export const dailyBonusRequestSchema = z.object({}).strict();
 export type DailyBonusRequest = z.infer<typeof dailyBonusRequestSchema>;

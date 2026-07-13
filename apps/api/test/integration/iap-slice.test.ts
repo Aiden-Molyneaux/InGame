@@ -174,7 +174,7 @@ describe('ECON-06: a valid receipt grants once; the SAME receipt replayed never 
     expect(first.status).toBe(200);
     expect(first.body.granted).toBe(true);
     expect(first.body.pixels).toBe(10);
-    expect(first.body.balance).toBe(STARTING_GRANT + 10); // 15
+    expect(first.body.balance).toBe(STARTING_GRANT + 10); // 20
 
     const replay = await request(app)
       .post('/api/iap/validate')
@@ -206,7 +206,7 @@ describe('ECON-06: a valid receipt grants once; the SAME receipt replayed never 
     expect(await ledgerCount(a.id, 'pack_purchase')).toBe(1);
     expect(await receiptCount(a.id)).toBe(1);
     const rec = await ledger.reconcile(a.id);
-    expect(rec.balance).toBe(STARTING_GRANT + 30); // 35 — one grant only
+    expect(rec.balance).toBe(STARTING_GRANT + 30); // 40 — one grant only
     expect(rec.ok).toBe(true);
   });
 });
@@ -220,7 +220,7 @@ describe('ECON-06 restore (rcUserId): re-sync grants nothing for recorded receip
       .post('/api/iap/validate')
       .set(authed(a.token))
       .send({ platform: 'ios', receipt: token });
-    expect(buy.body.balance).toBe(STARTING_GRANT + 65); // 70
+    expect(buy.body.balance).toBe(STARTING_GRANT + 65); // 75
 
     // The subscriber token carries the SAME (recorded) receipt — restore re-validates + re-syncs.
     const rcUserId = encodeMockSubscriber([receipt]);
@@ -256,7 +256,7 @@ describe('ECON-10: a second Starter Pack (different receipt) → 409 STARTER_PAC
       .set(authed(a.token))
       .send({ platform: 'ios', receipt: first.token });
     expect(buy.body.granted).toBe(true);
-    expect(buy.body.balance).toBe(STARTING_GRANT + 12); // 17
+    expect(buy.body.balance).toBe(STARTING_GRANT + 12); // 22
 
     // A DIFFERENT receipt for the one-time product → 409 (already consumed).
     const second = receiptFor('px_pack_starter');
@@ -289,7 +289,7 @@ describe('ECON-09: a refund webhook reverses EXACTLY pixelsGranted; the balance 
     const a = await registerUser();
     const { token, receipt } = receiptFor('px_pack_030');
 
-    // Buy 30 (balance 35), then spend it down to 0 via a real ledger op (a spent-down wallet).
+    // Buy 30 (balance 40), then spend it down to 0 via a real ledger op (a spent-down wallet).
     await request(app).post('/api/iap/validate').set(authed(a.token)).send({ platform: 'ios', receipt: token });
     await getDb().transaction((tx) =>
       ledger.debit(tx, a.id, { amount: STARTING_GRANT + 30, reason: 'acquire' }),

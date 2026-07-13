@@ -7,10 +7,23 @@ import { ledgerReasonSchema } from '../common';
 // `currency_ledger.reason` (decision 0073); the operator's audit reason (ECON-11) is NOT exposed here
 // — an `admin_adjustment` shows to the user as a plain credit/debit (api-contract 0.31).
 
+/** The reward a Newcomer-Ladder claim lands (decision 0074) — the escalating PX + the free earned-only
+ *  cosmetic when its roster slot is filled (`cosmeticId` absent until the roster pass). */
+export const ladderRewardSchema = z
+  .object({
+    pixels: z.number().int().nonnegative(),
+    cosmeticId: z.string().optional(),
+  })
+  .strict();
+export type LadderReward = z.infer<typeof ladderRewardSchema>;
+
 /**
- * GET /me/wallet — `{ balance, dailyBonus: { available, amount, nextResetAt } }` (ECON-02/07). The
- * Store's claim bar reads this. `available` = the caller has not claimed today's bonus (UTC-day);
- * `amount` = the per-claim grant (+1 PX default, SYS-04); `nextResetAt` = the next UTC-midnight ISO.
+ * GET /me/wallet — `{ balance, dailyBonus: { available, amount, nextResetAt, ladderStep?, ladderReward? } }`
+ * (ECON-02/07, decision 0074). The Store's claim bar reads this. `available` = the caller has not claimed
+ * today (UTC-day, either phase); `amount` = the STANDING per-claim grant (+1 PX default, SYS-04);
+ * `nextResetAt` = the next UTC-midnight ISO. While the Newcomer Ladder is in progress, `ladderStep` (the
+ * NEXT step, 1..7) and `ladderReward` (its PX + any filled cosmetic) are present so the client renders
+ * the escalation; both are ABSENT once the ladder completes (the standing +1/day view is unchanged).
  */
 export const walletResponseSchema = z
   .object({
@@ -20,6 +33,8 @@ export const walletResponseSchema = z
         available: z.boolean(),
         amount: z.number().int().nonnegative(),
         nextResetAt: z.string(), // ISO-8601 UTC (next UTC-day boundary)
+        ladderStep: z.number().int().min(1).max(7).optional(), // the NEXT ladder step; absent post-ladder
+        ladderReward: ladderRewardSchema.optional(),
       })
       .strict(),
   })
@@ -52,13 +67,17 @@ export const ledgerResponseSchema = z
 export type LedgerResponse = z.infer<typeof ledgerResponseSchema>;
 
 /**
- * POST /me/daily-bonus — `{ granted, balance, nextResetAt }` (ECON-02). `granted:false` when today's
- * bonus was already claimed (idempotent, unclaimed days lapse — no banking); `balance` is the wallet
- * balance after the claim (or the current balance when not granted).
+ * POST /me/daily-bonus — `{ granted, pixels, cosmeticId?, balance, nextResetAt }` (ECON-02, decision
+ * 0074). `granted:false` when today's bonus was already claimed (idempotent, unclaimed days lapse — no
+ * banking); `pixels` = the PX this claim landed (a Newcomer-Ladder step's escalating amount for claims
+ * 1–7, else the standing +1; 0 on the not-granted no-op); `cosmeticId` = the free earned-only cosmetic
+ * when the landed ladder step's slot is filled (absent otherwise); `balance` = the wallet balance after.
  */
 export const dailyBonusResponseSchema = z
   .object({
     granted: z.boolean(),
+    pixels: z.number().int().nonnegative(),
+    cosmeticId: z.string().optional(),
     balance: z.number().int(),
     nextResetAt: z.string(), // ISO-8601 UTC
   })

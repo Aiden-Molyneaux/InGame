@@ -45,6 +45,58 @@ describe('DailyBonusBar (§7)', () => {
     expect(screen.getByText('✓ CLAIMED — BACK TOMORROW')).toBeTruthy();
     expect(screen.queryByText('CLAIM +1')).toBeNull();
   });
+  it('on the Newcomer Ladder, an available day shows DAY N OF 7 and claims the step amount', () => {
+    const onClaim = jest.fn();
+    render(
+      wrap(
+        <DailyBonusBar
+          available
+          amount={1}
+          ladderStep={3}
+          ladderReward={{ pixels: 3 }}
+          onClaim={onClaim}
+        />,
+      ),
+    );
+    expect(screen.getByText('DAY 3 OF 7 · CLAIM +3 PX')).toBeTruthy();
+    fireEvent.press(screen.getByText('CLAIM +3'));
+    expect(onClaim).toHaveBeenCalledTimes(1);
+  });
+  it('teases a free item when the ladder step carries a cosmetic slot', () => {
+    render(
+      wrap(
+        <DailyBonusBar
+          available
+          amount={1}
+          ladderStep={1}
+          ladderReward={{ pixels: 2, cosmeticId: 'newcomer-1' }}
+          onClaim={jest.fn()}
+        />,
+      ),
+    );
+    expect(screen.getByText('DAY 1 OF 7 · CLAIM +2 PX')).toBeTruthy();
+    expect(screen.getByText('+ a free newcomer item')).toBeTruthy();
+  });
+  it("a claimed ladder day teases tomorrow's step (the API already advanced the tease)", () => {
+    render(
+      wrap(
+        <DailyBonusBar
+          available={false}
+          amount={1}
+          ladderStep={4}
+          ladderReward={{ pixels: 3 }}
+          onClaim={jest.fn()}
+        />,
+      ),
+    );
+    expect(screen.getByText('✓ CLAIMED — BACK TOMORROW')).toBeTruthy();
+    expect(screen.getByText('Day 4 of 7 tomorrow · +3 PX')).toBeTruthy();
+  });
+  it('post-ladder (no ladder props) renders exactly the veteran +1 view', () => {
+    render(wrap(<DailyBonusBar available amount={1} onClaim={jest.fn()} />));
+    expect(screen.getByText('DAILY BONUS READY — +1 PX')).toBeTruthy();
+    expect(screen.queryByText(/DAY .* OF 7/)).toBeNull();
+  });
 });
 
 describe('PriceChip + entitlement tags (§7)', () => {
