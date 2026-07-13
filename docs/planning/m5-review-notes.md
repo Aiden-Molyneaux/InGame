@@ -165,3 +165,15 @@ escalation, abuse watch-lever) · **generosity amendment signed** → ECON-02 re
 7-claim Newcomer Ladder +2/2/3/3/4/5/6 · a free earned-only cosmetic EACH ladder day · newcomer set
 owner-picked at the roster pass) → **packet P11 cut + launched.** Remaining owner gates: the
 first-article Store walk (P7/P8) · the roster re-tag + newcomer set (P10) · G-J (rides §6).
+
+---
+
+## Owner first-article walk — Store, round 1 (2026-07-13)
+Nine notes. Triage: **7 fixes → fix-round F-1** (Top-Up gold (F-02-conformant) · aisle rows taller ·
+wallet hero↔BUY spacing · pack borders quieted to Starter+BEST-RATE only · mock-purchase confirm
+sheet standing in for the native IAP sheet (absorbs the 🎨 destructive-red confirm — purchase-toned
+variant) · LandedMoment pause→celebration (reduce-motion-aware) · CurrencyCounter on
+Collection/Profile headers + X-GAMES chip height harmonized (ECON-07's "entry point elsewhere")) ·
+**2 answered** (no hold-to-buy visible = premium aisles empty until the roster re-tag, by design ·
+Restore = Apple re-sync, consumables never re-granted (0017), App-Store-required). Hold-to-buy
+remains OWED-to-test at the roster sitting. P7/P8 stay held until F-1 lands + the owner's re-look.
