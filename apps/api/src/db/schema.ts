@@ -653,6 +653,43 @@ export const cardAdoptions = pgTable(
   }),
 );
 
+/**
+ * `user_entitlements` — the COSM-03 account-wide cosmetic ownership grant (M5 P4, decision 0072/0073).
+ * USER-OWNED (owner key = `user_id`; NOT on the F32 manifest — rule-2 fails closed; `cosmetic_items` IS
+ * on that manifest — the GLOBAL catalog definition table P10 seeds — this table is the per-user grant,
+ * a different concern). One row per (user, cosmeticId) — the unique pair backs idempotent acquire
+ * (a re-acquire of an owned item is a no-op) and decides the F36 parallel-acquire race under the
+ * wallet-row lock (P1's single serialization point — acquireComponents locks the wallet FIRST, so a
+ * second concurrent acquire for the same actor/item queues behind it and re-reads "already owned").
+ *  - `cosmeticId` — TEXT (not a FK — the `cosmetic_items` catalog table doesn't exist yet; P10 seeds
+ *    the real roster). Matches the roster item id (COSM-01) once P10 formalizes it.
+ *  - `source` — `purchase` (Store BUY / adopt's component acquire) · `earned` (ACH-04, M7) ·
+ *    `operator_grant` (ECON-11 service-layer op). Never updated in place — a clawback DELETEs the row
+ *    (the v2 exception to ECON-09's "not clawed back").
+ */
+export const userEntitlements = pgTable(
+  'user_entitlements',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    cosmeticId: text('cosmetic_id').notNull(),
+    source: text('source').notNull(), // 'purchase' | 'earned' | 'operator_grant'
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    userCosmeticIdx: uniqueIndex('user_entitlements_user_cosmetic_idx').on(
+      table.userId,
+      table.cosmeticId,
+    ),
+    userIdx: index('user_entitlements_user_idx').on(table.userId),
+  }),
+);
+
+export type UserEntitlementRow = typeof userEntitlements.$inferSelect;
+export type NewUserEntitlementRow = typeof userEntitlements.$inferInsert;
+
 export type WalletRow = typeof wallets.$inferSelect;
 export type CurrencyLedgerRow = typeof currencyLedger.$inferSelect;
 export type NewCurrencyLedgerRow = typeof currencyLedger.$inferInsert;

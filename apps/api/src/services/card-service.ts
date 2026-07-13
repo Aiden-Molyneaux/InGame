@@ -24,6 +24,7 @@ import {
 } from '../errors/AppError';
 import { flattenComposition } from '../render/flatten';
 import { getStorage } from '../storage';
+import { isPremiumComposition } from '../config/cosmetics';
 import type { CardDesignRow } from '../db/schema';
 import type { PublishedDesignRow } from '../repositories/card-repo';
 
@@ -35,12 +36,17 @@ import type { PublishedDesignRow } from '../repositories/card-repo';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * CARD-06 — a design is premium iff its composition includes any premium asset/effect/finish. The M4
- * roster is the FREE baseline only (COSM-02/0063), so this is constantly false; the real derivation
- * (closed attributes vs the premium roster) lands with the M5 economy.
+ * CARD-06 — a design is premium iff its composition references any REGISTERED PREMIUM cosmetic id
+ * (M5 P4, decision 0072/0073; `config/cosmetics.ts` owns the tier registry). The real per-item roster
+ * re-tag is a P10 focused pass — the registry stays empty in production until then, so this is
+ * constantly false against real data today; it flips the moment a composition references a registered
+ * premium id (fixture-tested at P4; live-tested once P10 seeds the real roster).
+ * Coverage note: only `fontId`/`iconId` references are checked — frame/effect/finish/nameplate-shape
+ * are `kind`-keyed in the composition schema with no cosmeticId reference yet (see `config/cosmetics.ts`
+ * banner); extending coverage to them needs a composition-schema change, not a P4 mechanism change.
  */
-function deriveIsPremium(_composition: Composition): boolean {
-  return false;
+function deriveIsPremium(composition: Composition): boolean {
+  return isPremiumComposition(composition);
 }
 
 /**

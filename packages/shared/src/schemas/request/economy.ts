@@ -78,3 +78,24 @@ export const iapWebhookEventSchema = z
   })
   .passthrough();
 export type IapWebhookEvent = z.infer<typeof iapWebhookEventSchema>;
+
+// ── M5 P4 acquire + entitlements (COSM-03/ECON-01 — decision 0072/0073; api-contract 0.57) ─────────────
+
+/**
+ * POST /cosmetics/:id/acquire — no body: the target cosmetic id rides the path (COSM-03). Idempotent
+ * (an already-owned/free item is a success no-op) — mirrors the daily-bonus empty-closed-body posture.
+ */
+export const acquireRequestSchema = z.object({}).strict();
+export type AcquireRequest = z.infer<typeof acquireRequestSchema>;
+
+/**
+ * POST /cosmetics/acquire-batch — `{ cosmeticIds }` (CARD-13's ReconcileSheet ACQUIRE ALL). Capped
+ * defensively (a client cannot request an unbounded spend batch in one call); de-duplication + the
+ * already-owned no-op happen server-side (ECON-03/07).
+ */
+export const acquireBatchRequestSchema = z
+  .object({
+    cosmeticIds: z.array(z.string().min(1).max(64)).min(1).max(50),
+  })
+  .strict();
+export type AcquireBatchRequest = z.infer<typeof acquireBatchRequestSchema>;

@@ -113,3 +113,68 @@ export const storeResponseSchema = z
   })
   .strict();
 export type StoreResponse = z.infer<typeof storeResponseSchema>;
+
+// ── M5 P4 acquire + entitlements (COSM-03/ECON-01 — decision 0072/0073; api-contract 0.57) ─────────────
+
+/** The entitlement source vocabulary (0072/0073) — purchase (Store/acquire) · earned (ACH-04, M7) ·
+ *  operator_grant (ECON-11 service-op). */
+export const entitlementSourceSchema = z.enum(['purchase', 'earned', 'operator_grant']);
+export type EntitlementSource = z.infer<typeof entitlementSourceSchema>;
+
+/** One owned cosmetic (GET /me/entitlements, COSM-03) — the caller's own, account-wide. */
+export const entitlementSchema = z
+  .object({
+    cosmeticId: z.string(),
+    source: entitlementSourceSchema,
+    createdAt: z.string(), // ISO-8601 UTC
+  })
+  .strict();
+export type Entitlement = z.infer<typeof entitlementSchema>;
+
+/** GET /me/entitlements — `{ items }` (COSM-03). What the caller owns, account-wide. */
+export const entitlementsResponseSchema = z
+  .object({
+    items: z.array(entitlementSchema),
+  })
+  .strict();
+export type EntitlementsResponse = z.infer<typeof entitlementsResponseSchema>;
+
+/**
+ * POST /cosmetics/:id/acquire — `{ cosmeticId, paid, balance }` (COSM-03/ECON-01). `paid` is 0 on the
+ * idempotent no-op (already-owned or free/basic) and the tier price on a fresh charge; `balance` is the
+ * caller's wallet balance after the call (unchanged on a no-op). Errors: `INSUFFICIENT_BALANCE
+ * {shortBy}` (409) · `NOT_FOUND` (404, an unregistered cosmetic id).
+ */
+export const acquireResponseSchema = z
+  .object({
+    cosmeticId: z.string(),
+    paid: z.number().int().nonnegative(),
+    balance: z.number().int(),
+  })
+  .strict();
+export type AcquireResponse = z.infer<typeof acquireResponseSchema>;
+
+/** One item granted by an acquire-batch call (CARD-13 ReconcileSheet). */
+export const acquireGrantSchema = z
+  .object({
+    cosmeticId: z.string(),
+    paid: z.number().int().nonnegative(),
+  })
+  .strict();
+export type AcquireGrant = z.infer<typeof acquireGrantSchema>;
+
+/**
+ * POST /cosmetics/acquire-batch — `{ granted, totalPaid, balance }` (CARD-13's ACQUIRE ALL). `granted`
+ * lists only the items that were newly charged this call (already-owned/free ids are silent no-ops, NOT
+ * listed here); mirrors `POST /cards/:id/adopt`'s response shape (decision 0072). Errors:
+ * `INSUFFICIENT_BALANCE {shortBy}` against the TOTAL (409, nothing written) · `NOT_FOUND` (404, any
+ * unregistered cosmetic id — the whole batch refuses before any write).
+ */
+export const acquireBatchResponseSchema = z
+  .object({
+    granted: z.array(acquireGrantSchema),
+    totalPaid: z.number().int().nonnegative(),
+    balance: z.number().int(),
+  })
+  .strict();
+export type AcquireBatchResponse = z.infer<typeof acquireBatchResponseSchema>;

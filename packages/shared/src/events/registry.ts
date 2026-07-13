@@ -53,6 +53,11 @@ export const DOMAIN_EVENT_TYPES = [
   // M5 P2 IAP seam (decision 0072/0073: receipt validation + refund reversal). Append at the END.
   'iap.validated', // ECON-06 — a receipt validated → currency granted (pack_purchase), idempotent on receiptId.
   'iap.refunded', // ECON-09 — a platform refund reversed granted currency (refund_reversal), idempotent per receipt.
+  // M5 P4 acquire + entitlements (decision 0072/0073: user_entitlements + the acquire endpoints). Append at the END.
+  'cosmetic.acquired', // COSM-03/ECON-01 — POST /cosmetics/:id/acquire; payload notes whether it charged.
+  'cosmetic.batch_acquired', // CARD-13 — POST /cosmetics/acquire-batch; payload = the granted id set + totalPaid.
+  'cosmetic.entitlement_granted', // ECON-11 — an operator grant (service-op, no route); also writes the MOD-10 audit row.
+  'cosmetic.entitlement_clawed_back', // ECON-11 — an operator clawback (service-op, no route); also writes the MOD-10 audit row.
 ] as const;
 
 export type DomainEventType = (typeof DOMAIN_EVENT_TYPES)[number];

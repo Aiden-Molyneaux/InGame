@@ -12,6 +12,7 @@ import { cardRoutes } from './routes/card-routes';
 import { deviceRoutes } from './routes/device-routes';
 import { walletRoutes } from './routes/wallet-routes';
 import { iapRoutes } from './routes/iap-routes';
+import { cosmeticRoutes } from './routes/cosmetic-routes';
 import { mediaRoot, MEDIA_URL_PREFIX } from './storage';
 
 // The Express app factory. All paths mount under `/api` (api-contract base). The error middleware is
@@ -52,6 +53,7 @@ export function createApp(): Express {
       ...deviceRoutes,
       ...walletRoutes,
       ...iapRoutes,
+      ...cosmeticRoutes,
     ]),
   );
 

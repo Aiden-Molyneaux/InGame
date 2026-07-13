@@ -71,6 +71,13 @@
       "when": 1783906370367,
       "tag": "0009_brainy_vampiro",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1783909690537,
+      "tag": "0010_crazy_blink",
+      "breakpoints": true
     }
   ]
 }
