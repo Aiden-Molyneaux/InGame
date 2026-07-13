@@ -172,6 +172,20 @@ export class NotPublishedError extends AppError {
   }
 }
 
+/**
+ * ECON-10 (decision 0072/0073 §0.4) — POST /iap/validate refused: the once-per-account Starter Pack is
+ * already owned (a DIFFERENT receipt for the one-time product). 409 (the CONFLICT family, aligned with
+ * the sibling economy refusals): the receipt is valid but the account state (already consumed) forbids a
+ * second grant. A REPLAY of the SAME receipt is an idempotent no-op success (ECON-06), NOT this refusal.
+ */
+export class StarterPackConsumedError extends AppError {
+  readonly code = 'STARTER_PACK_CONSUMED';
+  readonly httpStatus = 409;
+  constructor(message = 'The Starter Pack can only be purchased once per account.') {
+    super(message);
+  }
+}
+
 /** SERVER_ERROR carries a GENERIC body downstream — the middleware never serializes this message. */
 export class ServerError extends AppError {
   readonly code = 'SERVER_ERROR';

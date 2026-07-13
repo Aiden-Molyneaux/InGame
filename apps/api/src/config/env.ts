@@ -26,6 +26,19 @@ export interface ApiEnv {
    * ports). Empty ⇒ OFF — the production posture sends no CORS headers at all.
    */
   devCorsOrigins: string[];
+  /**
+   * M5 P2 — the IAP provider selection ('mock' default; 'revenuecat' wired at P2b). The mock is
+   * deterministic (testing-strategy §5); the real RevenueCatProvider swaps in behind the same
+   * `IapProvider` seam when §6 provisioning completes. Chosen via `IAP_PROVIDER`.
+   */
+  iapProvider: string;
+  /**
+   * M5 P2 (ECON-06/09) — the RevenueCat webhook Authorization shared secret verified on
+   * POST /iap/webhook (the signature IS the webhook's auth). Server-only (SYS-03). Empty ⇒ the webhook
+   * rejects every call (fail-closed) until the secret is set. The RC REST secret
+   * (REVENUECAT_SECRET_API_KEY, real entitlement re-sync) stays a P2b concern, unread here.
+   */
+  revenueCatWebhookAuth: string;
 }
 
 function num(value: string | undefined, fallback: number): number {
@@ -51,5 +64,7 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): ApiEnv {
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean),
+    iapProvider: source.IAP_PROVIDER ?? 'mock',
+    revenueCatWebhookAuth: source.REVENUECAT_WEBHOOK_AUTH ?? '',
   };
 }

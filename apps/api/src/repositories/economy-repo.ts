@@ -146,6 +146,37 @@ export async function listLedger(
     .offset(offset);
 }
 
+/**
+ * The caller's ledger row matching (reason, refType, refId), or null — the ECON-09 refund-reversal
+ * idempotency probe (has this receipt already been reversed?). Read under the wallet FOR UPDATE lock so
+ * the check + the reversal are serialized (a replayed refund reverses exactly once, F36).
+ */
+export async function findLedgerByRef(
+  actorId: string,
+  reason: LedgerReason,
+  refType: string,
+  refId: string,
+  exec: Executor = getDb(),
+): Promise<CurrencyLedgerRow | null> {
+  const actor = asActor(actorId);
+  const rows = await exec
+    .select()
+    .from(currencyLedger)
+    .where(
+      ownedBy(
+        actor,
+        currencyLedger.userId,
+        and(
+          eq(currencyLedger.reason, reason),
+          eq(currencyLedger.refType, refType),
+          eq(currencyLedger.refId, refId),
+        ),
+      ),
+    )
+    .limit(1);
+  return rows[0] ?? null;
+}
+
 /** ECON-07 reconcile substrate — the summed ledger delta for the actor (== the wallet balance). */
 export async function sumLedgerDelta(
   actorId: string,

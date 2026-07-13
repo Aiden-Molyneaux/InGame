@@ -29,6 +29,9 @@ export const ERROR_CODES = [
   // DUPLICATE_COMPOSITION · STARTER_PACK_CONSUMED) append as P2/P3 build their gates.
   'ALREADY_ADOPTED', // 409 — POST /cards/:id/adopt refused: the caller already adopted this card (OQ-101)
   'NOT_PUBLISHED', // 409 — adopt/share against a card that is not published (CARD-04/20)
+  // M5 P2 IAP seam (decision 0072/0073 §0.4 / api-contract 0.57) — the F-17 additive path (the code
+  // lands as its endpoint builds). A second one-time Starter Pack purchase is refused per account (ECON-10).
+  'STARTER_PACK_CONSUMED', // 409 — POST /iap/validate refused: the once-per-account Starter Pack is already owned
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];

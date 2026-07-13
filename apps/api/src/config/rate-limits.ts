@@ -37,6 +37,10 @@ const DEFAULTS: Record<string, RateLimitRule> = {
   // M5 economy spend paths (decision 0073 §0.7 — the P3/P4 adopt/acquire spend buckets; SYS-05/G-K
   // async). 30/min is ample for real editing/adopt bursts; the daily-bonus claim rides the fallback.
   'wallet:spend': { limit: 30, windowMs: 60_000 },
+  // M5 P2 IAP receipt validation (decision 0073 §0.7 — `iap:validate` 10/min; SYS-05/G-K async). A real
+  // purchase/restore is infrequent; 10/min covers a restore-all burst. The webhook is server-to-server
+  // (signature-gated, not IP-keyed) and is NOT rate-limited here.
+  'iap:validate': { limit: 10, windowMs: 60_000 },
 };
 
 const overrides = new Map<string, RateLimitRule>();

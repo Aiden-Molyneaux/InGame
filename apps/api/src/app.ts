@@ -11,13 +11,23 @@ import { collectionRoutes } from './routes/collection-routes';
 import { cardRoutes } from './routes/card-routes';
 import { deviceRoutes } from './routes/device-routes';
 import { walletRoutes } from './routes/wallet-routes';
+import { iapRoutes } from './routes/iap-routes';
 import { mediaRoot, MEDIA_URL_PREFIX } from './storage';
 
 // The Express app factory. All paths mount under `/api` (api-contract base). The error middleware is
 // registered LAST so every thrown AppError / ZodError is mapped to the fixed envelope.
 export function createApp(): Express {
   const app = express();
-  app.use(express.json());
+  // The raw request bytes are captured on parse so the M5 P2 IAP webhook can verify the RevenueCat
+  // signature over them BEFORE trusting the parsed JSON (the RC/HMAC seam; the mock verifies the static
+  // Authorization header). Harmless for every other route — a small buffer reference, no behavior change.
+  app.use(
+    express.json({
+      verify: (req, _res, buf) => {
+        (req as express.Request).rawBody = buf;
+      },
+    }),
+  );
   app.use(requestId);
   app.use(devCors()); // OQ-120 — dev-only; a no-op unless DEV_CORS_ORIGINS is set
 
@@ -41,6 +51,7 @@ export function createApp(): Express {
       ...cardRoutes,
       ...deviceRoutes,
       ...walletRoutes,
+      ...iapRoutes,
     ]),
   );
 

@@ -64,3 +64,52 @@ export const dailyBonusResponseSchema = z
   })
   .strict();
 export type DailyBonusResponse = z.infer<typeof dailyBonusResponseSchema>;
+
+// ── M5 P2 IAP seam responses (ECON-06/09/10 — decision 0072/0073; api-contract 0.57) ──────────────────
+
+/**
+ * POST /iap/validate — `{ granted, pixels?, balance }` (ECON-06). `granted:true` on a first-time
+ * receipt grant (`pixels` = the pack's PX credited); `granted:false` on an idempotent replay, a
+ * cross-user receipt-id conflict, or a restore (consumables are never re-granted — `pixels` omitted).
+ * `balance` is the wallet balance after the call. A refused second Starter Pack is `STARTER_PACK_CONSUMED`
+ * (409, not this shape); an unvalidatable receipt is `VALIDATION_ERROR` (422).
+ */
+export const iapValidateResponseSchema = z
+  .object({
+    granted: z.boolean(),
+    pixels: z.number().int().nonnegative().optional(),
+    balance: z.number().int(), // may be negative post-refund (ECON-09)
+  })
+  .strict();
+export type IapValidateResponse = z.infer<typeof iapValidateResponseSchema>;
+
+/**
+ * One Store currency pack (ECON-10). `oneTime` = the once-per-account Starter Pack; `purchased` = the
+ * caller already owns a receipt for it (the consumed Starter is marked purchased per ECON-10). Priced in
+ * real money by the store (App Store / Play), so no currency price rides the wire — only the PX value.
+ */
+export const storePackSchema = z
+  .object({
+    productId: z.string(),
+    pixels: z.number().int().nonnegative(),
+    oneTime: z.boolean(),
+    purchased: z.boolean(),
+  })
+  .strict();
+export type StorePack = z.infer<typeof storePackSchema>;
+
+/**
+ * GET /store — `{ packs, premiumCosmetics, drops }` (ECON-01/07/08/10). `packs` is the real-money
+ * currency ladder (decision 0072). `premiumCosmetics` (COSM-03 PX-priced store items) and `drops`
+ * (ECON-08 seasonal) are HONEST EMPTIES at P2 — the surfaces render, the content is authored later
+ * (premium cosmetics → P4 acquire + P10 roster re-tag; drops → P10/ECON-08). No cosmetic data is
+ * invented here; the arrays gain typed items when those packets land.
+ */
+export const storeResponseSchema = z
+  .object({
+    packs: z.array(storePackSchema),
+    premiumCosmetics: z.array(z.unknown()), // TODO(P4/P10): COSM-03 premium store items — empty until authored
+    drops: z.array(z.unknown()), // TODO(P10/ECON-08): seasonal drops — the drawer renders, authoring is later
+  })
+  .strict();
+export type StoreResponse = z.infer<typeof storeResponseSchema>;
