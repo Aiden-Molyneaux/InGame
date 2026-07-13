@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, ScrollView, View, Text } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import type { LedgerEntry, StorePack } from '@ingame/shared';
@@ -27,6 +27,7 @@ import { mintMockReceipt } from '../src/store/mockReceipt';
 import {
   useGetWalletQuery,
   useGetStoreQuery,
+  useGetCosmeticsQuery,
   useClaimDailyBonusMutation,
   useValidateIapMutation,
   useLazyGetLedgerQuery,
@@ -333,6 +334,15 @@ function BrowseView({
   onTopUp: () => void;
 }) {
   const styles = useStyles();
+  // THE INDEX aisle counts (owner-walk polish 2026-07-13) — the full library from GET /cosmetics,
+  // tallied by `type`. Absent (loading/error) → AisleIndex falls back to plain chevrons.
+  const { data: library } = useGetCosmeticsQuery();
+  const aisleCounts = useMemo(() => {
+    if (!library) return undefined;
+    const counts: Record<string, number> = {};
+    for (const item of library.items) counts[item.type] = (counts[item.type] ?? 0) + 1;
+    return counts;
+  }, [library]);
   return (
     <View style={styles.body}>
       <DailyBonusBar
@@ -351,7 +361,7 @@ function BrowseView({
       {hasPremium ? null : (
         <Text style={styles.emptyNote}>New premium items arrive as the catalog fills — browse the aisles below.</Text>
       )}
-      <AisleIndex onAisle={onAisle} onTopUp={onTopUp} />
+      <AisleIndex onAisle={onAisle} onTopUp={onTopUp} counts={aisleCounts} />
       <Text style={styles.baseHint}>The free baseline isn&apos;t sold here — it lives in the editors.</Text>
     </View>
   );

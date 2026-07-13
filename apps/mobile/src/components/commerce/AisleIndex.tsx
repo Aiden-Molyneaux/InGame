@@ -3,9 +3,10 @@ import { themedStyles } from '../../theme';
 import { PixelsMark } from './PixelsMark';
 
 // AisleIndex (component-map §7) — THE INDEX: the COSM-01 aisle taxonomy that closes the browse page.
-// Each row taps into its category page; the final PIXELS row is the TOP-UP door. Per the manifest, the
-// per-aisle COUNTS have no source at M5 (no `GET /cosmetics`), so rows show a plain chevron — the count
-// slot is EXPECTED(P10 store-front listing). The free baseline is not stocked here (COSM-02).
+// Each row taps into its category page; the final PIXELS row is the TOP-UP door. Per-aisle COUNTS
+// render when the caller supplies them from `GET /cosmetics` (P10 store-front listing; owner-walk
+// polish 2026-07-13) — absent counts fall back to the plain chevron, so the row never blocks on the
+// library query. The free baseline is not stocked here (COSM-02).
 
 // The COSM-01 taxonomy (product-spec) — key = the cosmetic `type`, label = the aisle name.
 export const AISLES: { key: string; label: string; glyph: string }[] = [
@@ -22,28 +23,34 @@ export const AISLES: { key: string; label: string; glyph: string }[] = [
 export function AisleIndex({
   onAisle,
   onTopUp,
+  counts,
 }: {
   onAisle: (aisle: { key: string; label: string }) => void;
   onTopUp: () => void;
+  /** Per-aisle item counts keyed by cosmetic `type` (from GET /cosmetics). Absent → plain chevron. */
+  counts?: Record<string, number>;
 }) {
   const styles = useStyles();
   return (
     <View style={styles.grid}>
-      {AISLES.map((a) => (
-        <Pressable
-          key={a.key}
-          style={styles.row}
-          accessibilityRole="button"
-          accessibilityLabel={a.label}
-          onPress={() => onAisle({ key: a.key, label: a.label })}
-        >
-          <Text style={styles.glyph}>{a.glyph}</Text>
-          <Text style={styles.label} numberOfLines={1}>
-            {a.label}
-          </Text>
-          <Text style={styles.chev}>›</Text>
-        </Pressable>
-      ))}
+      {AISLES.map((a) => {
+        const n = counts?.[a.key];
+        return (
+          <Pressable
+            key={a.key}
+            style={styles.row}
+            accessibilityRole="button"
+            accessibilityLabel={n != null ? `${a.label}, ${n} items` : a.label}
+            onPress={() => onAisle({ key: a.key, label: a.label })}
+          >
+            <Text style={styles.glyph}>{a.glyph}</Text>
+            <Text style={styles.label} numberOfLines={1}>
+              {a.label}
+            </Text>
+            <Text style={styles.chev}>{n != null ? `${n} ›` : '›'}</Text>
+          </Pressable>
+        );
+      })}
       <Pressable
         style={styles.row}
         accessibilityRole="button"
