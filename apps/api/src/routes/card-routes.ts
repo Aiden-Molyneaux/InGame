@@ -24,12 +24,13 @@ import {
   unpublishCard,
   getGameGallery,
   adoptCard,
+  getShareImage,
 } from '../controllers/card-controller';
 
 // The M4 card-substrate route inventory (CARD-14/15/24 + COL-06 — decision 0066; F30 — DATA, not
 // regex-scraped). card_designs + style_presets are USER-OWNED — every write declares its standing
-// SYS-07 actor-B 4xx test. The M5 routes (publish/unpublish/adopt/share-image, the gallery,
-// card-bases) are NOT registered yet — they land with their milestones, not as stubs.
+// SYS-07 actor-B 4xx test. The M5 routes (publish/unpublish/adopt/share-image, the gallery) are P3/P9
+// (decision 0072/0073) — card-bases is not registered yet; it lands with its own milestone, not as a stub.
 
 export const cardRoutes: RouteDef[] = [
   defineRoute({
@@ -127,6 +128,15 @@ export const cardRoutes: RouteDef[] = [
       rateLimit('cards:adopt:daily'),
       asyncHandler(adoptCard),
     ],
+  }),
+  defineRoute({
+    method: 'get',
+    path: '/cards/:cardId/share-image',
+    mutates: false,
+    crossPrincipal: true, // CARD-21 — a published/adopted card's share image can read another principal's card
+    authzTest: 'authz:card_share_image',
+    specIds: ['CARD-21', 'SYS-01', 'SYS-07'],
+    handler: [resolvePrincipal, asyncHandler(getShareImage)],
   }),
   defineRoute({
     method: 'get',

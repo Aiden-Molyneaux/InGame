@@ -1,6 +1,6 @@
 import { getDb, type Executor } from '../db/client';
 import { asActor, ownedBy } from '../db/scoped';
-import { cardAdoptions, type CardAdoptionRow } from '../db/schema';
+import { cardAdoptions, cardDesigns, users, type CardAdoptionRow } from '../db/schema';
 import { eq } from 'drizzle-orm';
 
 // Adoption repository — `card_adoptions` is USER-OWNED (owner key = adopter_id; NOT on the F32 manifest
@@ -47,6 +47,44 @@ export async function findMyAdoption(
   const rows = await exec
     .select()
     .from(cardAdoptions)
+    .where(ownedBy(actor, cardAdoptions.adopterId, eq(cardAdoptions.cardDesignId, cardDesignId)))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+/** One card behind an adoption grant — the CARD-21 share-image columns only (never `composition`). */
+export interface AdoptedDesignRow {
+  id: string;
+  imageUrl: string | null;
+  name: string;
+  designerId: string;
+  designerUsername: string;
+}
+
+/**
+ * CARD-21 (P9) — the design behind MY OWN adoption grant, regardless of its CURRENT publish status. An
+ * adopter keeps their share access after the designer unpublishes (the MOD-08 "flattened card
+ * persists" pattern — the grant, not the gallery listing, is what CARD-21 gates on). Scoped through
+ * the adoption row I own (`cardAdoptions.adopterId` — SYS-01); the join to `card_designs` reads only
+ * the flattened-image + attribution columns, never the private `composition`.
+ */
+export async function findAdoptedDesign(
+  actorId: string,
+  cardDesignId: string,
+  exec: Executor = getDb(),
+): Promise<AdoptedDesignRow | null> {
+  const actor = asActor(actorId);
+  const rows = await exec
+    .select({
+      id: cardDesigns.id,
+      imageUrl: cardDesigns.imageUrl,
+      name: cardDesigns.name,
+      designerId: cardDesigns.ownerId,
+      designerUsername: users.username,
+    })
+    .from(cardAdoptions)
+    .innerJoin(cardDesigns, eq(cardDesigns.id, cardAdoptions.cardDesignId))
+    .innerJoin(users, eq(users.id, cardDesigns.ownerId))
     .where(ownedBy(actor, cardAdoptions.adopterId, eq(cardAdoptions.cardDesignId, cardDesignId)))
     .limit(1);
   return rows[0] ?? null;

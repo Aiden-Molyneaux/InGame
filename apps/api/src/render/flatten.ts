@@ -1,4 +1,5 @@
 import { createRequire } from 'node:module';
+import { createElement } from 'react';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { buildCardElements } from './buildCard';
@@ -51,6 +52,7 @@ async function getSkiaCtx(): Promise<any> {
       Oval,
       Path,
       Text,
+      Image, // CARD-21 share composite — draws the flattened base PNG under the attribution footer
       LinearGradient,
       RadialGradient,
     } = hs;
@@ -81,6 +83,7 @@ async function getSkiaCtx(): Promise<any> {
         Oval,
         Path,
         Text,
+        Image,
         LinearGradient,
         RadialGradient,
         Skia,
@@ -115,4 +118,61 @@ export async function flattenComposition(
     renderOne(RENDER_SIZES.thumb.w, RENDER_SIZES.thumb.h, comp),
   ]);
   return { full, thumb };
+}
+
+// ── M5 P9 — CARD-21 share-image composite ───────────────────────────────────────────────────────────
+// FIRST PASS, not a converged design-board surface (flagged for the owner's eye per the P9 brief): a
+// plain footer band under the flattened card, in the render module's existing gold/cream palette (the
+// ornate-frame gold `#e8c14a` + the dust-overlay cream `#f3ecd9`, buildCard.ts) — carrying the "made in
+// InGame" mark + designer attribution. No new asset/font: reuses the same typeface `getSkiaCtx` already
+// loads for the nameplate.
+
+const SHARE_FOOTER_H = 40;
+const SHARE_BG = '#100c1c';
+const SHARE_RULE = '#e8c14a';
+const SHARE_MARK_COLOR = '#e8c14a';
+const SHARE_ATTRIBUTION_COLOR = '#c9c2d9';
+
+/**
+ * CARD-21 — composite a share variant: the flattened card PNG (`basePng`, full-size) topped by a footer
+ * band carrying "MADE IN INGAME" + "CARD ARTIST <username>". Draws the decoded base image via the skia
+ * `Image` component (same react-element/`drawOffscreen` path `renderOne` uses) so the whole render
+ * surface — live editor, gallery flatten, and the share composite — goes through one mechanism.
+ */
+export async function compositeShareImage(
+  basePng: Buffer,
+  attribution: { designerUsername: string },
+): Promise<Buffer> {
+  const h = createElement;
+  const skia = await getSkiaCtx();
+  const { Skia, Group, Rect, Text, Image, typeface } = skia.builderCtx;
+  const baseImage = Skia.Image.MakeImageFromEncoded(Skia.Data.fromBytes(new Uint8Array(basePng)));
+  if (!baseImage) throw new Error('CARD-21: could not decode the base render for the share composite.');
+  const w = baseImage.width();
+  const cardH = baseImage.height();
+  const surface = skia.makeOffscreenSurface(w, cardH + SHARE_FOOTER_H);
+
+  const children: any[] = [
+    h(Image, { key: 'base', x: 0, y: 0, width: w, height: cardH, image: baseImage, fit: 'fill' }),
+    h(Rect, { key: 'band', x: 0, y: cardH, width: w, height: SHARE_FOOTER_H, color: SHARE_BG }),
+    h(Rect, { key: 'rule', x: 0, y: cardH, width: w, height: 1, color: SHARE_RULE }),
+  ];
+  if (typeface) {
+    const markFont = Skia.Font(typeface, 12);
+    const attrFont = Skia.Font(typeface, 9);
+    children.push(
+      h(Text, { key: 'mark', x: 10, y: cardH + 17, text: 'MADE IN INGAME', font: markFont, color: SHARE_MARK_COLOR }),
+      h(Text, {
+        key: 'attr',
+        x: 10,
+        y: cardH + 31,
+        text: `CARD ARTIST ${attribution.designerUsername.toUpperCase()}`,
+        font: attrFont,
+        color: SHARE_ATTRIBUTION_COLOR,
+      }),
+    );
+  }
+  const tree = h(Group, {}, ...children);
+  const image = await skia.drawOffscreen(surface, tree);
+  return Buffer.from(image.encodeToBytes());
 }

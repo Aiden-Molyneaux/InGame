@@ -1,4 +1,4 @@
-import { mkdir, writeFile, rm } from 'node:fs/promises';
+import { mkdir, writeFile, rm, readFile } from 'node:fs/promises';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { StorageProvider } from './StorageProvider';
@@ -17,6 +17,16 @@ export function mediaRoot(): string {
 
 /** The URL prefix the API serves the media root at. */
 export const MEDIA_URL_PREFIX = '/media';
+
+/**
+ * The storage prefixes the unauthenticated static mount serves — PUBLIC-BY-DESIGN artifacts only
+ * (decision 0073 §0.5: the flattened PUBLISHED full/thumb renders under `cards/`). Anything outside
+ * this list — the CARD-21 `share/` composites (P9 review ruling: share images stay route-only, for
+ * private AND published cards) — is reachable ONLY through an API route that resolves authz first and
+ * proxies the bytes via `StorageProvider.get()`. Extending the public posture to a new prefix is a
+ * guard-surface change, not a mount tweak.
+ */
+export const PUBLIC_MEDIA_PREFIXES = ['cards'] as const;
 
 /** Reject keys that could escape the media root (absolute, `..`, or backslash segments). */
 function safeKey(key: string): string {
@@ -44,6 +54,15 @@ export class LocalDiskStorage implements StorageProvider {
     await mkdir(dirname(filePath), { recursive: true });
     await writeFile(filePath, buffer);
     return this.getUrl(key);
+  }
+
+  async get(key: string): Promise<Buffer | null> {
+    try {
+      return await readFile(this.pathFor(key));
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null;
+      throw err;
+    }
   }
 
   getUrl(key: string): string {

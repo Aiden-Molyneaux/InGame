@@ -70,6 +70,13 @@ export async function adoptCard(req: Request, res: Response): Promise<void> {
   res.json(await cardService.adoptCard(actorOf(req), req.params.cardId!));
 }
 
+// M5 P9 — CARD-21 external share-image: a raw PNG response (not a JSON envelope).
+export async function getShareImage(req: Request, res: Response): Promise<void> {
+  const png = await cardService.getShareImage(actorOf(req), req.params.cardId!);
+  res.set('Content-Type', 'image/png');
+  res.send(png);
+}
+
 export async function getEntryCards(req: Request, res: Response): Promise<void> {
   res.json(await cardService.listCardsForEntry(actorOf(req), req.params.entryId!));
 }

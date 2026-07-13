@@ -17,4 +17,9 @@ export function setStorage(next: StorageProvider): void {
 }
 
 export type { StorageProvider } from './StorageProvider';
-export { LocalDiskStorage, mediaRoot, MEDIA_URL_PREFIX } from './LocalDiskStorage';
+export {
+  LocalDiskStorage,
+  mediaRoot,
+  MEDIA_URL_PREFIX,
+  PUBLIC_MEDIA_PREFIXES,
+} from './LocalDiskStorage';

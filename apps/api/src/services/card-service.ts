@@ -22,6 +22,7 @@ import * as collectionRepo from '../repositories/collection-repo';
 import * as adoptionRepo from '../repositories/adoption-repo';
 import * as entitlementRepo from '../repositories/entitlement-repo';
 import * as relationshipRepo from '../repositories/relationship-repo';
+import * as profileRepo from '../repositories/profile-repo';
 import { acquireComponents } from './cosmetics/cosmetic-service';
 import {
   AlreadyAdoptedError,
@@ -32,10 +33,11 @@ import {
   NotFoundError,
   NotPublishedError,
   PremiumUnreconciledError,
+  ServerError,
   ValidationError,
 } from '../errors/AppError';
-import { flattenComposition } from '../render/flatten';
-import { getStorage } from '../storage';
+import { compositeShareImage, flattenComposition } from '../render/flatten';
+import { getStorage, type StorageProvider } from '../storage';
 import {
   collectCosmeticRefs,
   isPremiumComposition,
@@ -109,6 +111,15 @@ export function toCardView(row: CardDesignRow): CardDesignView {
 
 function designNotFound(): NotFoundError {
   return new NotFoundError('Card design not found.');
+}
+
+// The render-storage key formats shared by publish (full/thumb) and P9's CARD-21 share composite — one
+// source of truth so the two writers can never drift on where a card's render lives.
+function fullImageKey(cardId: string): string {
+  return `cards/${cardId}/full.png`;
+}
+function shareImageKey(cardId: string): string {
+  return `share/${cardId}.png`;
 }
 
 /** The create-draft result — `reused` drives the controller's 200 (idempotent) vs 201 (created) status. */
@@ -268,7 +279,7 @@ export const savePrivate = mutation(
 
 /** @mutation — DELETE /cards/:id (CARD-14/20 · decision 0040): 409 CARD_EQUIPPED while equipped;
  *  409 HAS_ADOPTERS on a published-with-adopters design (unpublish instead). */
-export const deleteCard = mutation(
+const deleteCardWrite = mutation(
   { name: 'card.delete', specIds: ['CARD-14', 'CARD-20', 'COL-06', 'SYS-01'] },
   async (ctx, actorId, cardId: string): Promise<void> => {
     if (!UUID_RE.test(cardId)) throw designNotFound();
@@ -296,6 +307,18 @@ export const deleteCard = mutation(
     });
   },
 );
+
+/**
+ * DELETE /cards/:id — delete, then CARD-21 (P9) best-effort clear the cached share image (storage
+ * hygiene: no orphaned public artifact for a card that no longer exists). `deleteCardWrite` throwing
+ * short-circuits before this line runs — nothing to invalidate on a refused delete.
+ */
+export async function deleteCard(actorId: string, cardId: string): Promise<void> {
+  await deleteCardWrite(actorId, cardId);
+  await getStorage()
+    .delete(shareImageKey(cardId))
+    .catch(() => {}); // best-effort — a cache-invalidation failure must not fail the delete
+}
 
 /** GET /me/cards — the CARD-14 My Designs shelf (all games, all statuses, newest first). */
 export async function listMyCards(actorId: string): Promise<MyCardsResponse> {
@@ -422,7 +445,7 @@ export async function publishCard(actorId: string, cardId: string): Promise<Card
   // ── Flatten OUTSIDE the tx (the spike's flag), then store the full + thumb PNGs ───────────────────
   const { full, thumb } = await flattenComposition(current.composition);
   const storage = getStorage();
-  const fullKey = `cards/${cardId}/full.png`;
+  const fullKey = fullImageKey(cardId);
   const thumbKey = `cards/${cardId}/thumb.png`;
   const imageUrl = await storage.put(fullKey, full, 'image/png');
   const thumbUrl = await storage.put(thumbKey, thumb, 'image/png');
@@ -488,7 +511,7 @@ const publishWrite = mutation(
  * derived adoption count freezes (no new adoptions are possible once it leaves the gallery). Not the
  * actor's published card → the same 404 (no existence oracle).
  */
-export const unpublishCard = mutation(
+const unpublishCardWrite = mutation(
   { name: 'card.unpublish', specIds: ['CARD-20', 'SYS-01'] },
   async (ctx, actorId, cardId: string): Promise<CardDesignView> => {
     if (!UUID_RE.test(cardId)) throw designNotFound();
@@ -502,6 +525,20 @@ export const unpublishCard = mutation(
     return toCardView(row);
   },
 );
+
+/**
+ * POST /cards/:id/unpublish — delist, then CARD-21 (P9) best-effort clear the cached share image: a
+ * delisted card shouldn't keep serving its old public share artifact at the standing `share/<id>.png`
+ * key (the owner can still reshare — GET /cards/:id/share-image regenerates on next request, the owner
+ * path always resolves). `unpublishCardWrite` throwing short-circuits before this line runs.
+ */
+export async function unpublishCard(actorId: string, cardId: string): Promise<CardDesignView> {
+  const row = await unpublishCardWrite(actorId, cardId);
+  await getStorage()
+    .delete(shareImageKey(cardId))
+    .catch(() => {});
+  return row;
+}
 
 /**
  * GET /games/:gameId/cards — the community gallery: PUBLISHED cards only, flattened + attributed +
@@ -622,3 +659,86 @@ export const adoptCard = mutation(
     };
   },
 );
+
+// ── M5 P9 — CARD-21 external share-image ────────────────────────────────────────────────────────────
+// GET /cards/:id/share-image: a server-composited share variant (§1 render + storage modules), cached
+// under `share/<cardId>.png`. WHO may share (product-spec CARD-21 "any card in your collection or that
+// you designed"): the owner/designer (any status — drafts/private are shareable by their owner only) ·
+// an adopter of the card (the grant survives the designer unpublishing — MOD-08's "flattened card
+// persists" pattern) · any authenticated user for a PUBLISHED card (it's public by design, CARD-15).
+// Unknown / not-yours-to-share → the same 404 (no existence oracle).
+//
+// MODERATION GATE — FLAGGED: CARD-21/MOD-02/08 call for refusing moderation-hidden cards
+// indistinguishably. `card_designs` carries NO `moderation_status` column yet (MOD-08 takedown is
+// unbuilt — grep confirms no takedown/admin-hide code path exists anywhere in apps/api today; the
+// product-spec data-model line is aspirational, not yet migrated). This endpoint therefore gates ONLY
+// on what the schema actually has (`status` + ownership + adoption). When MOD-08 lands its column +
+// takedown path, this is the seam to extend: a hidden card must refuse here the same way it already
+// would need to refuse in the gallery/adopt paths (open-questions.md candidate — surfaced in the P9
+// receipt, not silently assumed).
+
+/**
+ * GET /cards/:id/share-image (CARD-21). Resolves WHO may share first (authz before any cache read —
+ * a cache hit must never leak a stranger's private card just because the key matches), then serves the
+ * cached composite or renders + caches one. The base render is read back from the SAME storage key
+ * `publishCard` writes (`fullImageKey`) when the card has one; a never-published owner draft/private
+ * card has no stored render yet, so its OWN composition is flattened on demand (cheap — the render
+ * module's whole design point, §1 receipt) — the only branch that ever touches `composition`, and only
+ * for the owner's own row (never a cross-user composition read, preserving the OQ-122 guarantee).
+ */
+export async function getShareImage(actorId: string, cardId: string): Promise<Buffer> {
+  if (!UUID_RE.test(cardId)) throw designNotFound();
+  const storage = getStorage();
+
+  let designerUsername: string;
+  let imageUrl: string | null;
+  let composition: Record<string, unknown> | null = null;
+
+  const owned = await cardRepo.findOwnedDesign(actorId, cardId);
+  if (owned) {
+    const me = await profileRepo.getOwnProfile(actorId);
+    designerUsername = me?.username ?? '';
+    imageUrl = owned.imageUrl;
+    composition = owned.composition;
+  } else {
+    const published = await cardRepo.findPublishedDesignById(cardId);
+    if (published) {
+      designerUsername = published.designerUsername;
+      imageUrl = published.imageUrl;
+    } else {
+      const adopted = await adoptionRepo.findAdoptedDesign(actorId, cardId);
+      if (!adopted) throw designNotFound(); // unknown / not owned / not published / not adopted → the same 404
+      designerUsername = adopted.designerUsername;
+      imageUrl = adopted.imageUrl;
+    }
+  }
+
+  const shareKey = shareImageKey(cardId);
+  const cached = await storage.get(shareKey);
+  if (cached) return cached; // regenerated only when absent — the standing cache-first contract
+
+  const base = await resolveBaseRender(cardId, imageUrl, composition, storage);
+  const composite = await compositeShareImage(base, { designerUsername });
+  await storage.put(shareKey, composite, 'image/png');
+  return composite;
+}
+
+/** The full-size render CARD-21 composites onto: the stored publish artifact, or a fresh on-demand
+ *  flatten of the OWNER's own never-published composition. Never both null in a healthy row — a
+ *  defensive ServerError guards the data-integrity gap rather than silently serving a blank image. */
+async function resolveBaseRender(
+  cardId: string,
+  imageUrl: string | null,
+  composition: Record<string, unknown> | null,
+  storage: StorageProvider,
+): Promise<Buffer> {
+  if (imageUrl) {
+    const stored = await storage.get(fullImageKey(cardId));
+    if (stored) return stored;
+  }
+  if (composition) {
+    const { full } = await flattenComposition(composition);
+    return full;
+  }
+  throw new ServerError('This card has no flattened render to share.');
+}
