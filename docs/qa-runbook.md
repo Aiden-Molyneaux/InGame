@@ -134,3 +134,11 @@ under Promoted.
 - **Never create `apps/mobile/.env.local`** (also doctor-checked).
 - Behavior checks → **supertest integration tests first**; the :8082 browser lane is for visual/UI verification.
 - Destructive DB testing → parallel API on :4001 + disposable DB, killed after.
+
+## Economy dev-data rule (M5, 2026-07-12)
+**Never hand-delete or hand-edit `currency_ledger` rows on the shared dev DB** — the ledger is
+append-only and `sum(delta) == wallets.balance` is a standing invariant (ECON-07); a deleted row
+silently breaks wallet↔ledger reconciliation for every later walk (found by parvati as a P6 🚩:
+balance 77 vs ledger 76). To reset economy state: use the service ops (`adjustPixels` — writes an
+honest `admin_adjustment` row) or a disposable `PORT=4001` DB. If you must hand-fix, re-derive the
+balance from the ledger afterward.
