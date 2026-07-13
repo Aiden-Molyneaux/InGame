@@ -155,3 +155,13 @@ re-derived from its ledger (76 == 76, verified). Lesson filed to qa-runbook: **n
 ledger rows on the shared dev DB** — the ledger is append-only by design; use the service ops
 (`adjustPixels`) or a disposable DB. 🚩 CLOSED. The 🎨 items (aisle double-print · ConfirmSheet
 destructive-red on the a11y buy path) ride to the owner's first-article walk.
+
+---
+
+## Gate-1 sitting — 2026-07-13 (decision 0074)
+Owner sat; watched the F36/reconcile/refund demos live (23/23, real PG). **G-I PASSED · §1-GO
+ratified · refund posture signed** (full reversal, tripwire floor, no auto-clawback, operator
+escalation, abuse watch-lever) · **generosity amendment signed** → ECON-02 rewritten (start 10 PX ·
+7-claim Newcomer Ladder +2/2/3/3/4/5/6 · a free earned-only cosmetic EACH ladder day · newcomer set
+owner-picked at the roster pass) → **packet P11 cut + launched.** Remaining owner gates: the
+first-article Store walk (P7/P8) · the roster re-tag + newcomer set (P10) · G-J (rides §6).

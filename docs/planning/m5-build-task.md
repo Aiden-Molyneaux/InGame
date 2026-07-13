@@ -272,6 +272,19 @@ Parallel lanes at any moment: {P1→P2 server} ∥ {§1 spike→P3 server} ∥ {
   moderation-hidden. Client: native share sheet from Game page PLAY SHARE + CardDetail. Image-only
   (deep links stay parked §10).
 
+### P11 — The Newcomer Ladder (cross-stack · Opus · **added at the gate-1 sitting, decision 0074**)
+- **Server:** starting grant 5 → **10 PX** (config + tests) · the ladder service on the existing
+  daily-claim seam: claims 1–7 (lifetime count = `milestone`-reason ledger rows with
+  refType `newcomer_ladder`, refId = step) grant **+2/+2/+3/+3/+4/+5/+6** + an earned-cosmetic
+  entitlement slot per step (`source:'earned'`; cosmetic ids from a SYS-04 config seed — **empty
+  until the roster pass picks the newcomer set**, the grant no-ops gracefully on an empty slot) ·
+  claim 8+ = the standing +1 (lapses; the ladder never lapses) · `GET /me/wallet.dailyBonus` gains
+  `{ladderStep?, ladderReward?}` so the client renders the escalation · same UTC-day idempotency +
+  wallet-lock discipline (F36 tests on the ladder step race).
+- **Client:** `DailyBonusBar` goes ladder-aware (step N of 7 · tomorrow's tease · the cosmetic-drop
+  moment when the slot is filled) — an additive slip into the signed P6 surface (murr diff-guard).
+- Contract bump (mine, at close): the wallet response extension.
+
 ### P10 — Seeds + demo content (Sonnet · `effort: low` · after §0.2)
 - `store_products` seed from the pricing sheet · roster re-tag data (premium flags + PX prices) ·
   dev-seed: second demo user with published cards (adoptable both price paths), wallet states

@@ -16,7 +16,7 @@ truth** for its concern. Other documents *reference* that truth by ID — they n
 | Document | Owns the truth for | Authored / edited by | Consumed by | Status |
 |---|---|---|---|---|
 | `00-INDEX.md` (this file) | Process, ID scheme, change protocol | Claude Code | Everyone | **Active** |
-| `spec/product-spec.md` | Behavior, data model, rules, economy — *what the app does* | Claude Code | Design, Planning | **v0.56 — draft** |
+| `spec/product-spec.md` | Behavior, data model, rules, economy — *what the app does* | Claude Code | Design, Planning | **v0.57 — draft** |
 | `spec/api-contract.md` | Endpoint + payload shapes — the **frontend↔backend seam** | Claude Code | Design, Planning | **v0.60 — draft** |
 | `spec/testing-strategy.md` | How we test — layers, tooling, rigor, CI | Claude Code | Planning, Implementation | **v0.2** |
 | `design/design-process.md` | How Claude Design works the brief — phases + reuse mandate | Claude Code → read by Claude Design | Claude Design | **Active** |
