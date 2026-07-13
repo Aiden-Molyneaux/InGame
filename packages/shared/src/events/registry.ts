@@ -47,6 +47,9 @@ export const DOMAIN_EVENT_TYPES = [
   // M5 economy substrate (P1 — decision 0072/0073: wallets + currency_ledger). Append at the END.
   'wallet.daily_claimed', // ECON-02 — the +1-PX Store daily bonus claimed (idempotent per UTC-day).
   'wallet.adjusted', // ECON-11 — an out-of-band operator credit/debit (also writes a MOD-10 audit row).
+  // M5 §1 publish-thread (decision 0073: publish → gallery → adopt). Append at the END.
+  'card.published', // CARD-15 — draft/private → published (flatten to storage; imageUrl/thumbUrl set).
+  'card.adopted', // CARD-04 — a DIFFERENT user adopted a published card (the free-path grant, §1 spike).
 ] as const;
 
 export type DomainEventType = (typeof DOMAIN_EVENT_TYPES)[number];

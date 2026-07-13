@@ -39,6 +39,17 @@ const AUTH_LOOKUP_RE = /\/\/\s*SYS-01-AUTH-LOOKUP\b/;
 // misuse fixture proves both guards. Guard-surface marker → auditable at the gate-3 seam review.
 const COMMUNITY_AGGREGATE_RE = /\/\/\s*SYS-01-COMMUNITY-AGGREGATE\b/;
 const AGGREGATE_CALL_RE = /\bcount\s*\(/;
+// SYS-01-PUBLIC-READ (OQ-122, decision 0073 §0.1 — the third read class): exempts a cross-user READ
+// of a user-owned table ONLY when the window carries an explicit VISIBILITY PREDICATE (a `'published'`
+// status literal, the M5 spike surface). Reads-only + predicate-required — a marked write/upsert or a
+// predicate-less read still fails closed. The composition-exclusion guarantee is enforced at the
+// serializer (explicit-column selects + toPublicShape), not this lint (P3 finishes the lint work —
+// widen the predicate set / add a misuse fixture). Guard-surface marker → auditable at the seam review.
+const PUBLIC_READ_RE = /\/\/\s*SYS-01-PUBLIC-READ\b/;
+// The visibility predicate signal: a literal `'published'` status filter, OR a call to the
+// `publishedOnly(...)` helper — whose whole contract is to INJECT that predicate (decision 0073 §0.1
+// names the helper as the mechanism). Either present in-window means the read is visibility-scoped.
+const PUBLISHED_PREDICATE_RE = /['"]published['"]|\bpublishedOnly\s*\(/;
 const WINDOW = 12;
 /** How far ahead an insert chain is scanned for `.onConflictDoUpdate(` (bounded by the next `;`). */
 const CHAIN_LOOKAHEAD = 2000;
@@ -83,6 +94,8 @@ export default {
           hasAuthLookupComment: AUTH_LOOKUP_RE.test(origWindow),
           hasAggregateComment: COMMUNITY_AGGREGATE_RE.test(origWindow),
           hasAggregateCall: AGGREGATE_CALL_RE.test(codeWindow),
+          hasPublicReadComment: PUBLIC_READ_RE.test(origWindow),
+          hasPublishedPredicate: PUBLISHED_PREDICATE_RE.test(codeWindow),
         };
       };
 
@@ -123,7 +136,10 @@ export default {
         // An anonymous cross-user AGGREGATE read (CAT-09/OQ-126): reads-only + count() required.
         const hasCommunityAggregate =
           READ_VERBS.has(verb) && w.hasAggregateComment && w.hasAggregateCall;
-        if (!w.hasScope && !hasExempt && !hasAuthLookup && !hasCommunityAggregate) {
+        // A cross-user PUBLIC read (OQ-122): reads-only + an explicit `'published'` visibility predicate.
+        const hasPublicRead =
+          READ_VERBS.has(verb) && w.hasPublicReadComment && w.hasPublishedPredicate;
+        if (!w.hasScope && !hasExempt && !hasAuthLookup && !hasCommunityAggregate && !hasPublicRead) {
           const kind = READ_VERBS.has(verb) ? 'read' : verb === 'insert' || verb === 'into' ? 'upserted' : 'modified';
           violations.push({
             file: file.path,

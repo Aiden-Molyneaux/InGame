@@ -1,0 +1,53 @@
+import { getDb, type Executor } from '../db/client';
+import { asActor, ownedBy } from '../db/scoped';
+import { cardAdoptions, type CardAdoptionRow } from '../db/schema';
+import { eq } from 'drizzle-orm';
+
+// Adoption repository — `card_adoptions` is USER-OWNED (owner key = adopter_id; NOT on the F32 manifest
+// — rule-2 fails closed). A grant is an ACTOR-STAMPED insert (the adopter owns the row), so the create
+// is a bare insert (rule-2: a brand-new actor-owned row is not an IDOR vector). The unique
+// (adopter, card) index backs `ALREADY_ADOPTED` idempotency (OQ-101) and the F36 parallel-adopt race:
+// `onConflictDoNothing` returns the row ONLY when THIS call created it — a null return means already
+// adopted, atomically, even under concurrency. The card's public count is derived elsewhere (an
+// anonymous cross-user aggregate in card-repo), so the adopter never writes the owner's row.
+
+export interface AdoptionInsert {
+  cardDesignId: string;
+  gameId: string;
+  /** PX paid for the card's premium components (decision 0072); 0 on the free path (§1 spike). */
+  currencyPaid: number;
+}
+
+/**
+ * Insert the adoption grant for the caller. Returns the created row, or `null` when the caller already
+ * adopted this card (the unique-pair conflict — the ALREADY_ADOPTED backstop). Actor-stamped bare
+ * insert (SYS-01: adopter_id is the actor, never body-supplied).
+ */
+export async function insertAdoption(
+  actorId: string,
+  fields: AdoptionInsert,
+  exec: Executor = getDb(),
+): Promise<CardAdoptionRow | null> {
+  const actor = asActor(actorId);
+  const rows = await exec
+    .insert(cardAdoptions)
+    .values({ adopterId: actor.actorId, ...fields })
+    .onConflictDoNothing({ target: [cardAdoptions.adopterId, cardAdoptions.cardDesignId] })
+    .returning();
+  return rows[0] ?? null;
+}
+
+/** Whether the caller already adopted a card (actor-scoped — SYS-01). */
+export async function findMyAdoption(
+  actorId: string,
+  cardDesignId: string,
+  exec: Executor = getDb(),
+): Promise<CardAdoptionRow | null> {
+  const actor = asActor(actorId);
+  const rows = await exec
+    .select()
+    .from(cardAdoptions)
+    .where(ownedBy(actor, cardAdoptions.adopterId, eq(cardAdoptions.cardDesignId, cardDesignId)))
+    .limit(1);
+  return rows[0] ?? null;
+}

@@ -20,6 +20,9 @@ import {
   createStylePreset,
   patchStylePreset,
   deleteStylePreset,
+  publishCard,
+  getGameGallery,
+  adoptCard,
 } from '../controllers/card-controller';
 
 // The M4 card-substrate route inventory (CARD-14/15/24 + COL-06 — decision 0066; F30 — DATA, not
@@ -77,6 +80,32 @@ export const cardRoutes: RouteDef[] = [
     crossPrincipal: false, // own designs only
     specIds: ['CARD-14', 'SYS-01'],
     handler: [resolvePrincipal, asyncHandler(getMyCards)],
+  }),
+  // M5 §1 publish thread (decision 0073 §1 spike) — publish · gallery · adopt.
+  defineRoute({
+    method: 'post',
+    path: '/cards/:cardId/publish',
+    mutates: true,
+    authzTest: 'authz:card_publish',
+    specIds: ['CARD-15', 'CARD-20', 'SYS-01', 'SYS-07'],
+    handler: [resolvePrincipal, rateLimit('cards:write'), asyncHandler(publishCard)],
+  }),
+  defineRoute({
+    method: 'get',
+    path: '/games/:gameId/cards',
+    mutates: false,
+    crossPrincipal: true, // OQ-122 — the community gallery returns OTHER principals' published cards
+    authzTest: 'authz:game_gallery_read',
+    specIds: ['CARD-15', 'OQ-122', 'SYS-01', 'F06'],
+    handler: [resolvePrincipal, asyncHandler(getGameGallery)],
+  }),
+  defineRoute({
+    method: 'post',
+    path: '/cards/:cardId/adopt',
+    mutates: true,
+    authzTest: 'authz:card_adopt',
+    specIds: ['CARD-04', 'ECON-03', 'SYS-01', 'SYS-07'],
+    handler: [resolvePrincipal, rateLimit('cards:write'), asyncHandler(adoptCard)],
   }),
   defineRoute({
     method: 'get',

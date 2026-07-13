@@ -295,3 +295,59 @@ export async function abuse(exec, entryId) {
     expect(run(offending).length).toBeGreaterThan(0);
   });
 });
+
+// OQ-122 / decision 0073 §0.1 — the third read class. `// SYS-01-PUBLIC-READ` exempts a cross-user
+// READ of a user-owned table ONLY when the window carries an explicit `'published'` visibility
+// predicate, and NEVER a write. (M5 §1 spike shape; P3 finishes the lint work — widen the predicate
+// set + add an on-disk misuse fixture.)
+describe('rule-02 SYS-01-PUBLIC-READ marker (published reads only — OQ-122)', () => {
+  const repo = (text) => file('apps/api/src/repositories/card-repo.ts', text);
+
+  it('EXEMPTS a marked read of a user-owned table WITH a published predicate (the gallery read)', () => {
+    const v = run([
+      repo(`
+import { eq, and } from 'drizzle-orm';
+import { cardDesigns, users } from '../db/schema';
+export async function gallery(exec, gameId) {
+  // SYS-01-PUBLIC-READ: cross-user gallery — published cards only, flattened images never composition
+  return exec
+    .select({ id: cardDesigns.id, imageUrl: cardDesigns.imageUrl, designer: users.username })
+    .from(cardDesigns)
+    .innerJoin(users, eq(users.id, cardDesigns.ownerId))
+    .where(and(eq(cardDesigns.gameId, gameId), eq(cardDesigns.status, 'published')));
+}
+`),
+    ]);
+    expect(v).toHaveLength(0);
+  });
+
+  it('does NOT exempt a marked read with NO published predicate in the window (fails closed)', () => {
+    const v = run([
+      repo(`
+import { cardDesigns } from '../db/schema';
+export async function leakAll(exec) {
+  // SYS-01-PUBLIC-READ: (ABUSED) claims a public read but carries no visibility predicate
+  return exec.select().from(cardDesigns);
+}
+`),
+    ]);
+    expect(v.length).toBeGreaterThan(0);
+  });
+
+  it('does NOT exempt a marked WRITE even with a published predicate nearby (reads-only contract)', () => {
+    const v = run([
+      repo(`
+import { eq, and } from 'drizzle-orm';
+import { cardDesigns } from '../db/schema';
+export async function abuse(exec, id) {
+  // SYS-01-PUBLIC-READ: (ABUSED) claims a public read but mutates a row
+  return exec
+    .update(cardDesigns)
+    .set({ status: 'published' })
+    .where(and(eq(cardDesigns.id, id), eq(cardDesigns.status, 'published')));
+}
+`),
+    ]);
+    expect(v.length).toBeGreaterThan(0);
+  });
+});

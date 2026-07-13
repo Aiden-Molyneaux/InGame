@@ -146,6 +146,32 @@ export class InsufficientBalanceError extends AppError {
   }
 }
 
+/**
+ * CARD-04 (OQ-101, decision 0073 §0.4) — POST /cards/:id/adopt refused: the caller already adopted
+ * this card. 409 (the CONFLICT family, aligned with the sibling economy refusals); the client treats
+ * it as an idempotent no-op (adopt is online-only; the unique (adopter, card) row is the backstop).
+ */
+export class AlreadyAdoptedError extends AppError {
+  readonly code = 'ALREADY_ADOPTED';
+  readonly httpStatus = 409;
+  constructor(message = 'You already adopted this card.') {
+    super(message);
+  }
+}
+
+/**
+ * CARD-04/20 (decision 0073 §0.4) — adopt/share refused against a card that is not published. 409 (the
+ * CONFLICT family): the request is well-formed but the target's state (draft/private, or delisted)
+ * forbids it. Same shape as an unknown published id (no draft/private existence oracle to a stranger).
+ */
+export class NotPublishedError extends AppError {
+  readonly code = 'NOT_PUBLISHED';
+  readonly httpStatus = 409;
+  constructor(message = 'That card is not available to adopt.') {
+    super(message);
+  }
+}
+
 /** SERVER_ERROR carries a GENERIC body downstream — the middleware never serializes this message. */
 export class ServerError extends AppError {
   readonly code = 'SERVER_ERROR';

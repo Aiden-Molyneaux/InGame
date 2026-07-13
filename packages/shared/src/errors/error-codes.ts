@@ -24,6 +24,11 @@ export const ERROR_CODES = [
   // rest of the M5 refusal family (ALREADY_ADOPTED · NOT_PUBLISHED · MIN_COMPLEXITY ·
   // DUPLICATE_COMPOSITION · STARTER_PACK_CONSUMED) append as P2/P3 build them.
   'INSUFFICIENT_BALANCE', // 409 — a spend refused below the floor; carries { shortBy } (ECON-01/03/07)
+  // M5 §1 publish-thread spike (decision 0073 §0.4) — the adopt-path refusals land as the adopt
+  // endpoint builds (F-17 additive path). The rest of the family (MIN_COMPLEXITY ·
+  // DUPLICATE_COMPOSITION · STARTER_PACK_CONSUMED) append as P2/P3 build their gates.
+  'ALREADY_ADOPTED', // 409 — POST /cards/:id/adopt refused: the caller already adopted this card (OQ-101)
+  'NOT_PUBLISHED', // 409 — adopt/share against a card that is not published (CARD-04/20)
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];

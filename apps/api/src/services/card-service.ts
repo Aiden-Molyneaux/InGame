@@ -14,8 +14,18 @@ import { mutation } from '../db/mutation';
 import * as cardRepo from '../repositories/card-repo';
 import * as catalogRepo from '../repositories/catalog-repo';
 import * as collectionRepo from '../repositories/collection-repo';
-import { CardEquippedError, NotFoundError, ValidationError } from '../errors/AppError';
+import * as adoptionRepo from '../repositories/adoption-repo';
+import {
+  AlreadyAdoptedError,
+  CardEquippedError,
+  NotFoundError,
+  NotPublishedError,
+  ValidationError,
+} from '../errors/AppError';
+import { flattenComposition } from '../render/flatten';
+import { getStorage } from '../storage';
 import type { CardDesignRow } from '../db/schema';
+import type { PublishedDesignRow } from '../repositories/card-repo';
 
 // Card-design service (CARD-14/15/24 · decision 0066). card_designs is USER-OWNED — every path is
 // actor-scoped (SYS-01); actor-B reaching for actor-A's design gets the same 404 an unknown id gets.
@@ -237,3 +247,108 @@ export async function listCardsForEntry(
   const rows = await cardRepo.listOwnedDesignsForGame(actorId, entry.gameId);
   return { items: rows.map(toCardView) };
 }
+
+// ── M5 §1 publish thread (publish → gallery → adopt) ─────────────────────────────────────────────────
+// The de-risk spike (decision 0073): prove the full thread in the API runtime. HAPPY-PATH ONLY — the
+// CARD-19 gates (min-complexity, hash-dedup), rate limits, unpublish, and the premium debit path are
+// P3's. The two reusable yields are the render + storage modules; the OQ-122 guard mechanics are P3's
+// foundation.
+
+/**
+ * The cross-user PUBLIC card shape (OQ-122 `toPublicShape` allowlist): id · name · flattened image
+ * urls · designer attribution · public adoption count · premium flag. NEVER carries `composition`
+ * (the private layers stay in the owner shape; viewers get the flattened image — CARD-15 / 0066 §2).
+ */
+export interface PublicCardView {
+  id: string;
+  name: string;
+  imageUrl: string | null;
+  thumbUrl: string | null;
+  isPremium: boolean;
+  adoptionCount: number;
+  designer: { userId: string; username: string };
+}
+
+function toPublicShape(row: PublishedDesignRow, adoptionCount: number): PublicCardView {
+  return {
+    id: row.id,
+    name: row.name,
+    imageUrl: row.imageUrl,
+    thumbUrl: row.thumbUrl,
+    isPremium: row.isPremium,
+    adoptionCount,
+    designer: { userId: row.designerId, username: row.designerUsername },
+  };
+}
+
+/**
+ * @mutation — POST /cards/:id/publish (CARD-15/20 · §1 spike, happy path only): the owner's own
+ * draft/private card → flatten (server-side skia, the ported render module) → store the full + thumb
+ * PNGs (StorageProvider) → `status='published'` + `imageUrl`/`thumbUrl` set. Already-published is an
+ * idempotent no-op. No min-complexity / dedup / rate-limit / premium-reconcile gate — those are P3.
+ */
+export const publishCard = mutation(
+  { name: 'card.publish', specIds: ['CARD-15', 'CARD-20', 'SYS-01'] },
+  async (ctx, actorId, cardId: string): Promise<CardDesignView> => {
+    if (!UUID_RE.test(cardId)) throw designNotFound();
+    const current = await cardRepo.findOwnedDesign(actorId, cardId, ctx.tx);
+    if (!current) throw designNotFound(); // actor-B → the same 404 (no existence oracle)
+    if (current.status === 'published') return toCardView(current); // idempotent
+
+    // Flatten the stored composition to the full + thumbnail PNG buffers, then store them under a
+    // per-card key. (P3: move the flatten OUTSIDE the tx — it holds the row lock during the render.)
+    const { full, thumb } = await flattenComposition(current.composition);
+    const storage = getStorage();
+    const imageUrl = await storage.put(`cards/${cardId}/full.png`, full, 'image/png');
+    const thumbUrl = await storage.put(`cards/${cardId}/thumb.png`, thumb, 'image/png');
+
+    const row =
+      (await cardRepo.markPublished(actorId, cardId, { imageUrl, thumbUrl }, ctx.tx)) ?? current;
+    await ctx.emit({
+      eventType: 'card.published',
+      entityRef: { type: 'card_design', id: cardId },
+      payload: { gameId: row.gameId },
+    });
+    return toCardView(row);
+  },
+);
+
+/** GET /games/:gameId/cards — the community gallery: PUBLISHED cards only, flattened + attributed. */
+export async function listGameGallery(gameId: string): Promise<{ items: PublicCardView[] }> {
+  if (!UUID_RE.test(gameId)) throw new NotFoundError('Game not found.');
+  const rows = await cardRepo.listPublishedDesignsForGame(gameId);
+  const counts = await cardRepo.adoptionCountsByCard(rows.map((r) => r.id));
+  return { items: rows.map((r) => toPublicShape(r, counts.get(r.id) ?? 0)) };
+}
+
+/**
+ * @mutation — POST /cards/:id/adopt (CARD-04 · decision 0072 FREE path only): a DIFFERENT user adopts
+ * a published card. One transaction = the `card_adoptions` grant + (P3: the premium-component debit,
+ * not built — every §1-spike card is free). `NOT_PUBLISHED` if the target is not a published card;
+ * `ALREADY_ADOPTED` on a repeat (the unique-pair backstop, idempotent under the F36 race).
+ */
+export const adoptCard = mutation(
+  { name: 'card.adopt', specIds: ['CARD-04', 'ECON-03', 'SYS-01'] },
+  async (ctx, actorId, cardId: string): Promise<{ adopted: true; card: PublicCardView }> => {
+    if (!UUID_RE.test(cardId)) throw new NotPublishedError();
+    const published = await cardRepo.findPublishedDesignById(cardId, ctx.tx);
+    if (!published) throw new NotPublishedError(); // unknown OR not-published → the same 409
+
+    // FREE path (§1 spike): currencyPaid = 0. The premium-component acquire (debit via P1's ledger +
+    // per-component entitlements via P4) is P3 — no premium roster exists yet, so every card is free.
+    const adoption = await adoptionRepo.insertAdoption(
+      actorId,
+      { cardDesignId: cardId, gameId: published.gameId, currencyPaid: 0 },
+      ctx.tx,
+    );
+    if (!adoption) throw new AlreadyAdoptedError(); // the unique-pair conflict (idempotent no-op)
+
+    const counts = await cardRepo.adoptionCountsByCard([cardId], ctx.tx);
+    await ctx.emit({
+      eventType: 'card.adopted',
+      entityRef: { type: 'card_design', id: cardId },
+      payload: { gameId: published.gameId, currencyPaid: 0 },
+    });
+    return { adopted: true, card: toPublicShape(published, counts.get(cardId) ?? 0) };
+  },
+);

@@ -44,6 +44,20 @@ export async function getMyCards(req: Request, res: Response): Promise<void> {
   res.json(await cardService.listMyCards(actorOf(req)));
 }
 
+// M5 §1 publish thread — publish (own card → flatten+store), the community gallery, adopt (free path).
+
+export async function publishCard(req: Request, res: Response): Promise<void> {
+  res.json(await cardService.publishCard(actorOf(req), req.params.cardId!));
+}
+
+export async function getGameGallery(req: Request, res: Response): Promise<void> {
+  res.json(await cardService.listGameGallery(req.params.gameId!));
+}
+
+export async function adoptCard(req: Request, res: Response): Promise<void> {
+  res.json(await cardService.adoptCard(actorOf(req), req.params.cardId!));
+}
+
 export async function getEntryCards(req: Request, res: Response): Promise<void> {
   res.json(await cardService.listCardsForEntry(actorOf(req), req.params.entryId!));
 }

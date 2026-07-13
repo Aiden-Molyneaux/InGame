@@ -616,11 +616,50 @@ export const iapReceipts = pgTable(
   }),
 );
 
+/**
+ * `card_adoptions` — the CARD-04 adoption grant (M5 P3 / the §1 spike substrate; the separate grants
+ * table 0066 §3 promised — grants deliberately do NOT live on `card_designs`). USER-OWNED (owner key =
+ * `adopter_id`; NOT on the F32 manifest — rule-2 fails closed). One row per (adopter, cardDesign) — the
+ * unique pair backs `ALREADY_ADOPTED` idempotency (OQ-101) and decides the F36 parallel-adopt race.
+ *  - `currencyPaid` — the PX the adopter paid for the card's premium components (decision 0072); 0 on
+ *    the free path (no premium / all owned) — the whole M5 §1 spike surface.
+ *  - The card's public adoption count is DERIVED (`count(card_adoptions)` per card, an anonymous
+ *    cross-user aggregate — SYS-01-COMMUNITY-AGGREGATE), never a denormalized counter, so the adopter
+ *    never writes the card owner's row (a cross-owner write the SYS-01 scope-lint would rightly refuse).
+ */
+export const cardAdoptions = pgTable(
+  'card_adoptions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    adopterId: uuid('adopter_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    cardDesignId: uuid('card_design_id')
+      .notNull()
+      .references(() => cardDesigns.id, { onDelete: 'cascade' }),
+    gameId: uuid('game_id')
+      .notNull()
+      .references(() => games.id),
+    currencyPaid: integer('currency_paid').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    adopterCardIdx: uniqueIndex('card_adoptions_adopter_card_idx').on(
+      table.adopterId,
+      table.cardDesignId,
+    ),
+    cardIdx: index('card_adoptions_card_idx').on(table.cardDesignId),
+    adopterIdx: index('card_adoptions_adopter_idx').on(table.adopterId),
+  }),
+);
+
 export type WalletRow = typeof wallets.$inferSelect;
 export type CurrencyLedgerRow = typeof currencyLedger.$inferSelect;
 export type NewCurrencyLedgerRow = typeof currencyLedger.$inferInsert;
 export type StoreProductRow = typeof storeProducts.$inferSelect;
 export type IapReceiptRow = typeof iapReceipts.$inferSelect;
+export type CardAdoptionRow = typeof cardAdoptions.$inferSelect;
+export type NewCardAdoptionRow = typeof cardAdoptions.$inferInsert;
 
 export type UserRow = typeof users.$inferSelect;
 export type NewUserRow = typeof users.$inferInsert;

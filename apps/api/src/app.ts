@@ -11,6 +11,7 @@ import { collectionRoutes } from './routes/collection-routes';
 import { cardRoutes } from './routes/card-routes';
 import { deviceRoutes } from './routes/device-routes';
 import { walletRoutes } from './routes/wallet-routes';
+import { mediaRoot, MEDIA_URL_PREFIX } from './storage';
 
 // The Express app factory. All paths mount under `/api` (api-contract base). The error middleware is
 // registered LAST so every thrown AppError / ZodError is mapped to the fixed envelope.
@@ -23,6 +24,11 @@ export function createApp(): Express {
   app.get('/api/health', (_req, res) => {
     res.json({ ok: true });
   });
+
+  // Flattened published renders are served statically (no auth — the flattened image is the public
+  // artifact by design; the private `composition` never leaves the owner shape). Local-disk impl now,
+  // R2 + CDN before the M6 beta (decision 0073 §0.5). Under `/media`, outside the `/api` mount.
+  app.use(MEDIA_URL_PREFIX, express.static(mediaRoot()));
 
   app.use(
     '/api',
