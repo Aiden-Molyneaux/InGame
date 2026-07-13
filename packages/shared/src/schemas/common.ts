@@ -53,6 +53,36 @@ export const ledgerReasonSchema = z.enum(LEDGER_REASONS);
 export type LedgerReason = z.infer<typeof ledgerReasonSchema>;
 
 /**
+ * COSM-03/ECON-01 — the 7-tier cosmetic-pricing ladder (decision 0072 ruling 2), mirrored from
+ * `apps/api/src/config/cosmetics.ts` (the server owns the tier→PX mapping; this is the wire vocabulary
+ * only). A registered-free item carries no tier (`null` on the wire, never one of these strings).
+ */
+export const COSMETIC_TIERS = [
+  'accent',
+  'trim',
+  'standard',
+  'deluxe',
+  'big',
+  'showpiece',
+  'ultimate',
+] as const;
+export const cosmeticTierSchema = z.enum(COSMETIC_TIERS);
+export type CosmeticTier = z.infer<typeof cosmeticTierSchema>;
+
+/** COSM-01 — the cosmetic type taxonomy (decision 0017/0018, api-contract GET /cosmetics). */
+export const cosmeticTypeSchema = z.enum([
+  'shell_sticker_pack',
+  'effect',
+  'finish',
+  'frame',
+  'nameplate',
+  'font',
+  'device_shell',
+  'screen_theme',
+]);
+export type CosmeticType = z.infer<typeof cosmeticTypeSchema>;
+
+/**
  * COL-02 — the six per-game statuses. Wire spelling pinned api-contract 0.47
  * (`completed` = the display name "Completed 100%"; display casing is the client's).
  */

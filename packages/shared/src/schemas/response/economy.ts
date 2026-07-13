@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ledgerReasonSchema } from '../common';
+import { cosmeticTierSchema, cosmeticTypeSchema, ledgerReasonSchema } from '../common';
 
 // RESPONSE/VIEW schemas for the M5 economy substrate (P1 — api-contract 0.56/0.57; ECON-02/07).
 // Personal-only surface — a wallet + its ledger are the caller's own (never cross-user), so these are
@@ -197,3 +197,31 @@ export const acquireBatchResponseSchema = z
   })
   .strict();
 export type AcquireBatchResponse = z.infer<typeof acquireBatchResponseSchema>;
+
+// ── M5 P10 roster tiering (COSM-01 — decision 0075; api-contract GET /cosmetics) ───────────────────────
+
+/**
+ * One library item (GET /cosmetics, decision 0075). `tier` is absent for a free item (never priced,
+ * always `owned:true`); `price` is 0 for a free item, the tier's PX otherwise. `owned` is caller-scoped
+ * (the caller's own `user_entitlements` — never another principal's).
+ */
+export const cosmeticListItemSchema = z
+  .object({
+    id: z.string(),
+    type: cosmeticTypeSchema,
+    name: z.string(),
+    tier: cosmeticTierSchema.optional(),
+    price: z.number().int().nonnegative(),
+    owned: z.boolean(),
+  })
+  .strict();
+export type CosmeticListItem = z.infer<typeof cosmeticListItemSchema>;
+
+/** GET /cosmetics — `{ items }` (COSM-01, decision 0075). The full free+premium library, optionally
+ *  filtered to one type; feeds the Store aisle listings + the editors' asset pickers. */
+export const cosmeticsResponseSchema = z
+  .object({
+    items: z.array(cosmeticListItemSchema),
+  })
+  .strict();
+export type CosmeticsResponse = z.infer<typeof cosmeticsResponseSchema>;

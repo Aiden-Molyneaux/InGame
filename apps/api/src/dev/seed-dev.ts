@@ -1,12 +1,14 @@
 import { assertDisposableDb } from '../db/destructive-guard';
 import { closeDb } from '../db/client';
 import * as authRepo from '../repositories/auth-repo';
+import * as storeRepo from '../repositories/store-repo';
 import * as authService from '../services/auth-service';
 import * as catalogService from '../services/catalog-service';
 import * as collectionService from '../services/collection-service';
 import * as profileService from '../services/profile-service';
 import * as cardService from '../services/card-service';
 import * as presetService from '../services/style-preset-service';
+import * as cosmeticService from '../services/cosmetics/cosmetic-service';
 import { DuplicateSuspectedError, ValidationError } from '../errors/AppError';
 import { COMPOSITION_SCHEMA_VERSION, type CollectionStatus, type Composition } from '@ingame/shared';
 
@@ -20,6 +22,10 @@ import { COMPOSITION_SCHEMA_VERSION, type CollectionStatus, type Composition } f
 const DEMO_EMAIL = 'demo@ingame.app';
 const DEMO_USERNAME = 'demo_curator';
 const DEMO_PASSWORD = 'InGameDemo1!'; // dev-only scratch credential — never a real secret
+
+const RIVAL_EMAIL = 'rival@ingame.app';
+const RIVAL_USERNAME = 'rival_curator';
+const RIVAL_PASSWORD = 'InGameDemo1!'; // dev-only scratch credential — never a real secret
 
 interface SeedGame {
   name: string;
@@ -123,6 +129,8 @@ async function ensureEntry(userId: string, gameId: string, seed: SeedGame): Prom
 async function main(): Promise<void> {
   assertDisposableDb(); // F03 — scratch DBs only, fail closed
 
+  await ensureStoreProducts(); // M5 P10 (decision 0072) — the permanent pack ladder, GLOBAL content
+
   const { userId } = await ensureDemoSession();
   console.log(`seed-dev: demo user ready — ${DEMO_EMAIL} / ${DEMO_PASSWORD} (${userId})`);
 
@@ -137,6 +145,9 @@ async function main(): Promise<void> {
   await profileService.updateProfile(userId, { favouriteGameId: gameIds.get('Hades') ?? null });
 
   await ensureCardSubstrate(userId, gameIds.get('Elden Ring'));
+  await ensureDemoPremiumEntitlements(userId); // M5 P10 (decision 0075) — so OwnedTags render
+
+  await ensureRivalWorld(gameIds.get('Hollow Knight')); // M5 P10 — a second designer, a real published card
 
   const shelf = await collectionService.listCollection(userId);
   console.log(
@@ -194,6 +205,100 @@ async function ensureCardSubstrate(userId: string, eldenRingId: string | undefin
     }
   }
   console.log(`seed-dev: card substrate ready — "${SEED_CARD_NAME}" (private, equipped) + ${wanted.length} presets`);
+}
+
+// ── M5 P10 (decision 0072/0075) — the economy demo world ───────────────────────────────────────────
+
+/** The decision-0072 5-SKU pack ladder (ECON-10) — a GLOBAL catalog table, not user-owned content, so
+ *  a direct idempotent insert (mirroring the `iap-slice.test.ts` fixture) is the right shape here,
+ *  same as the controlled genre list — no service/route exists to author `store_products` (there is
+ *  no consumer-facing "create a pack" action). Re-running the seed is a no-op (`onConflictDoNothing`). */
+const STORE_PRODUCTS_SEED: Array<{ productId: string; pixels: number; oneTime: boolean }> = [
+  { productId: 'px_pack_starter', pixels: 12, oneTime: true },
+  { productId: 'px_pack_010', pixels: 10, oneTime: false },
+  { productId: 'px_pack_030', pixels: 30, oneTime: false },
+  { productId: 'px_pack_065', pixels: 65, oneTime: false },
+  { productId: 'px_pack_140', pixels: 140, oneTime: false },
+];
+
+async function ensureStoreProducts(): Promise<void> {
+  await storeRepo.seedProducts(STORE_PRODUCTS_SEED);
+  console.log(`seed-dev: store products ready — ${STORE_PRODUCTS_SEED.length} packs (idempotent)`);
+}
+
+/** A few premium entitlements on the demo user (decision 0075) — the Device/Styler OwnedTags need SOME
+ *  owned premium items to render meaningfully; `acquireCosmetic` is itself idempotent (a re-run is a
+ *  no-op once owned), so this is safe to call on every seed pass. Costs 3+6=9 of the 10-PX starting
+ *  grant — comfortably affordable, still leaves the daily-bonus/ladder flows something to grant into. */
+const DEMO_PREMIUM_ENTITLEMENTS = ['chrome', 'deepsea']; // CHROME frame (3 PX) + DEEP SEA theme (6 PX)
+
+async function ensureDemoPremiumEntitlements(userId: string): Promise<void> {
+  for (const cosmeticId of DEMO_PREMIUM_ENTITLEMENTS) {
+    await cosmeticService.acquireCosmetic(userId, cosmeticId);
+  }
+  console.log(`seed-dev: demo premium entitlements ready — ${DEMO_PREMIUM_ENTITLEMENTS.join(', ')}`);
+}
+
+/** A second designer ('rival@ingame.app') with a PUBLISHED card carrying a premium component — so the
+ *  gallery/adopt paths (P8) and the owner's device-walks have real cross-user content, not just the
+ *  demo user's own private card. Goes through the REAL service path (acquire → createDraft →
+ *  savePrivate → publishCard) so the flatten runs and CARD-13 reconcile is genuinely satisfied — never
+ *  a raw insert. Idempotent by (name, gameId); publishCard itself is idempotent on an already-published
+ *  card. */
+const RIVAL_CARD_NAME = 'Hollow Knight — Rival Cut';
+const RIVAL_PREMIUM_FONT = 'bitter'; // SLAB, 3 PX — the composition's one cosmeticId-bearing premium ref
+const RIVAL_COMPOSITION: Composition = {
+  schemaVersion: COMPOSITION_SCHEMA_VERSION,
+  base: { gradient: ['#3a1430', '#150713'] },
+  elements: [
+    { type: 'poly', shape: 'triangle', x: 0.5, y: 0.36, w: 0.42, h: 0.38, fill: '#e85ad0' },
+    { type: 'rect', x: 0.5, y: 0.62, w: 0.56, h: 0.02, fill: '#7ad0e8' },
+    { type: 'text', x: 0.5, y: 0.5, text: 'RIVAL', size: 0.08, fill: '#f3ecd9', fontId: RIVAL_PREMIUM_FONT },
+  ],
+  frame: { color: '#e8c14a', width: 0.012 },
+  nameplate: { title: 'RIVAL CUT', plate: '#141026', ink: '#f3ecd9', size: 0.05 },
+  effect: { kind: 'vignette', intensity: 0.5 },
+} as Composition;
+
+async function ensureRivalSession(): Promise<{ userId: string }> {
+  const existing = await authRepo.findByEmail(RIVAL_EMAIL);
+  if (existing) return { userId: existing.id };
+  const session = await authService.register({
+    email: RIVAL_EMAIL,
+    username: RIVAL_USERNAME,
+    password: RIVAL_PASSWORD,
+    acceptedTerms: true,
+  });
+  return { userId: session.user.id };
+}
+
+async function ensureRivalWorld(gameId: string | undefined): Promise<void> {
+  if (!gameId) return;
+  const { userId: rivalId } = await ensureRivalSession();
+
+  // Own the premium component BEFORE draft/save/publish — CARD-13 reconciles at every transition.
+  await cosmeticService.acquireCosmetic(rivalId, RIVAL_PREMIUM_FONT);
+
+  const mine = await cardService.listMyCards(rivalId);
+  let design = mine.items.find((c) => c.name === RIVAL_CARD_NAME && c.gameId === gameId);
+  if (!design) {
+    const created = await cardService.createDraft(rivalId, {
+      gameId,
+      composition: RIVAL_COMPOSITION,
+      name: RIVAL_CARD_NAME,
+    });
+    design = created.card;
+  }
+  if (design.status === 'draft') {
+    design = await cardService.savePrivate(rivalId, design.id);
+  }
+  if (design.status === 'private') {
+    design = await cardService.publishCard(rivalId, design.id);
+  }
+  console.log(
+    `seed-dev: rival world ready — ${RIVAL_EMAIL} / ${RIVAL_PASSWORD} · "${RIVAL_CARD_NAME}" ${design.status}` +
+      (design.imageUrl ? ` (imageUrl set)` : ' (imageUrl MISSING — publish did not flatten)'),
+  );
 }
 
 main()

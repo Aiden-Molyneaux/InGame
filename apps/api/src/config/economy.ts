@@ -23,24 +23,38 @@ export const NEWCOMER_LADDER_STEPS = [2, 2, 3, 3, 4, 5, 6] as const;
 /** The number of ladder steps (7) — a claim count ≥ this means the ladder is complete (standing daily). */
 export const NEWCOMER_LADDER_LENGTH = NEWCOMER_LADDER_STEPS.length;
 
-// The parallel cosmetic-id slot array (one per step) — EMPTY (all null) until the roster pass picks the
-// newcomer set. Held mutable + behind a getter so it's SYS-04-tunable and test-fillable (mirroring the
-// cosmetic registry's `registerCosmeticForTest` hook) WITHOUT a schema change. A null slot no-ops.
-const ladderCosmetics: (string | null)[] = [null, null, null, null, null, null, null];
+// The parallel cosmetic-id slot array (one per step) — the decision-0075 roster pass (P10) picked the
+// 7-item newcomer set: D1 LINEN (finish) · D2 STENCIL (font) · D3 CHROME (frame) · D4 BRASS
+// (nameplate) · D5 MINT (screen theme) · D6 HALFTONE (effect) · D7 reserved EMPTY (the one true
+// exclusive — unbuilt, pre-launch content pass). Ids match the SAME cosmeticId space the server
+// registry (`config/cosmetics.ts`) + the client rosters use (bare ids, e.g. `'linen'`, `'stencil'` —
+// no synthetic namespacing). Held mutable + test-fillable (`setLadderCosmeticForTest`) WITHOUT a
+// schema change, mirroring the cosmetic registry's `registerCosmeticForTest` hook. A null slot no-ops.
+const REAL_LADDER_COSMETICS: readonly (string | null)[] = [
+  'linen', // D1
+  'stencil', // D2
+  'chrome', // D3
+  'brass', // D4
+  'mint', // D5
+  'halftone', // D6
+  null, // D7 — the one true exclusive, reserved for the pre-launch content pass
+];
+let ladderCosmetics: (string | null)[] = [...REAL_LADDER_COSMETICS];
 
 /** The cosmetic id granted at ladder step `index` (0-based), or null when the slot is unfilled. */
 export function newcomerLadderCosmetic(index: number): string | null {
   return ladderCosmetics[index] ?? null;
 }
 
-/** Test-only: fill a ladder cosmetic slot (never a real roster id until the roster pass rules it). */
+/** Test-only: override a ladder cosmetic slot (e.g. a synthetic fixture id, or `null` to blank one). */
 export function setLadderCosmeticForTest(index: number, id: string | null): void {
   ladderCosmetics[index] = id;
 }
 
-/** Test-only: clear all ladder cosmetic slots between test cases. */
+/** Test-only: restore all ladder cosmetic slots to the REAL (decision 0075) seed between test cases —
+ *  never blanks them; a test that needs an empty slot overrides one explicitly via the setter above. */
 export function resetLadderCosmeticsForTest(): void {
-  ladderCosmetics.fill(null);
+  ladderCosmetics = [...REAL_LADDER_COSMETICS];
 }
 
 /** The reward the user's NEXT claim will land, given how many ladder claims they've ALREADY made

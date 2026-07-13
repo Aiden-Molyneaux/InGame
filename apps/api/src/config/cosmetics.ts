@@ -1,17 +1,33 @@
-// COSM-03/ECON-01 cosmetic pricing config (M5 P4 — decision 0072/0073). SYS-04-tunable, config-not-
-// schema, mirroring `config/economy.ts` (the floor/grant anchors) and `config/rate-limits.ts` (the
-// override/clear test-escape-hatch pattern). Two concerns live here:
+// COSM-03/ECON-01 cosmetic pricing config (M5 P4 — decision 0072/0073; the roster tiering, decision
+// 0075, P10). SYS-04-tunable, config-not-schema, mirroring `config/economy.ts` (the floor/grant
+// anchors) and `config/rate-limits.ts` (the override/clear test-escape-hatch pattern). Three concerns
+// live here:
 //
 //  1. THE 7-TIER LADDER (decision 0072 ruling 2) — tier name → PX price. Fixed, product-ruled.
-//  2. THE COSMETIC REGISTRY — cosmeticId → tier (or `null` for a REGISTERED FREE/basic item). This is
-//     the per-item roster re-tag (0072/0073 §0.2 residue) — a **focused P10 pass, NOT ruled yet**. The
-//     registry is INTENTIONALLY EMPTY in real data (the roster stays all-basic/free per decision 0073
-//     §0.2 until that pass lands) — every real cosmeticId reads as UNKNOWN (404) until P10 seeds it.
-//     Tests register FIXTURE cosmetics via `registerCosmeticForTest` (never real roster ids — that
-//     would invent the untaken ruling). P10's natural home for this is the `cosmetic_items` GLOBAL
-//     table already reserved on the F32 manifest (packages/shared) — this in-memory registry is the
-//     provisional mechanism P4 was scoped to build; swapping it for a DB-backed catalog is a same-
-//     shaped follow-up (the function signatures below are the seam), not a P4 concern.
+//  2. THE REAL ROSTER CATALOG (decision 0075, P10) — every real cosmetic item (free + premium) across
+//     frames/effects/finishes/nameplates/fonts + device shells/screen themes, id-matched to the client
+//     rosters (`apps/mobile/src/styler/roster.ts` + `theme/palettes.ts`) — one id space, no synthetic
+//     namespacing (ids are the SAME bare strings the client roster uses: `'thin-gold'`, `'bitter'`,
+//     `'deepsea'`, …), matching what `collectCosmeticRefs` below already extracts from a composition's
+//     `fontId`/`iconId` fields. **26 premium items** at the 0075-amended launch price points (3/6/8 PX
+//     only — tiers 1/2/4/10 launch empty, the pre-launch content pass fills them). Free items are NOT
+//     registered in the tier lookup (`REAL_ROSTER`, premium-only — see `lookupCosmeticTier`) but DO
+//     appear in `COSMETIC_CATALOG` (the GET /cosmetics library needs the full free+premium listing).
+//     **Two 0075 removals** — BRACKETS frame (`bracket-corners`) + SUBTLE GLOSS finish
+//     (`subtle-gloss`) — are absent from `COSMETIC_CATALOG` entirely (never offered again); the
+//     renderer (`render/buildCard.ts`) and the composition schema's `kind` unions keep them for
+//     legacy-document rendering (the retired `pixel-border`/`grain` precedent) — only the roster
+//     listing drops them.
+//  3. THE TEST-FIXTURE REGISTRY — a separate, mutable map for integration-test fixture ids
+//     (`registerCosmeticForTest`), cleared between test cases via `clearCosmeticRegistryForTest`. Kept
+//     SEPARATE from the real roster (`REAL_ROSTER`, below) so clearing fixtures between tests can never
+//     wipe the real seed — `lookupCosmeticTier` checks the real roster FIRST, the fixture registry
+//     second. Fixture ids are always synthetic (`fix-*`, `p3-*`, …), never real roster ids.
+//
+// The DB-backed `cosmetic_items` GLOBAL table reserved on the F32 manifest (packages/shared) remains a
+// FUTURE follow-up, not this pass's concern (per the file's prior banner) — this static config is the
+// provisional mechanism both P4 and P10 were scoped to build against; swapping it for a DB-backed
+// catalog is a same-shaped follow-up (the function signatures here are the seam).
 
 export const COSMETIC_TIERS = [
   'accent',
@@ -40,16 +56,118 @@ export function priceForTier(tier: CosmeticTier | null | undefined): number {
   return tier ? TIER_PRICES[tier] : 0;
 }
 
-// ── The registry (empty in real data — see the file banner) ────────────────────────────────────────────
+// ── The real roster catalog (decision 0075 — P10) ───────────────────────────────────────────────────
+// `null` tier = free (registered-and-owned-by-everyone, zero price); a `CosmeticTier` = premium at that
+// tier's PX price. The 0075-amended launch prices land only on `standard` (3) · `big` (6) ·
+// `showpiece` (8) — tiers 1/2/4/10 stay real-but-empty seed vocabulary (SYS-08) until the pre-launch
+// content pass. Order mirrors the 0075 tiering block (frames → effects → finishes → nameplates → fonts
+// → device shells → screen themes).
+export type CosmeticType =
+  | 'frame'
+  | 'effect'
+  | 'finish'
+  | 'nameplate'
+  | 'font'
+  | 'device_shell'
+  | 'screen_theme'
+  | 'shell_sticker_pack';
+
+export interface CosmeticCatalogEntry {
+  id: string;
+  type: CosmeticType;
+  name: string;
+  tier: CosmeticTier | null; // null = free
+}
+
+export const COSMETIC_CATALOG: CosmeticCatalogEntry[] = [
+  // ── Frames (0075 — free 7 · premium 6@standard · premium 1@showpiece; BRACKETS removed) ───────────
+  { id: 'clean', type: 'frame', name: 'CLEAN', tier: null },
+  { id: 'thin-line', type: 'frame', name: 'LINE', tier: null },
+  { id: 'double-line', type: 'frame', name: 'DOUBLE LINE', tier: null },
+  { id: 'ticket-notch', type: 'frame', name: 'TICKET', tier: null },
+  { id: 'stub', type: 'frame', name: 'STUB', tier: null },
+  { id: 'lime', type: 'frame', name: 'LIME', tier: null },
+  { id: 'bubblegum', type: 'frame', name: 'BUBBLEGUM', tier: null },
+  { id: 'thin-gold', type: 'frame', name: 'GOLD', tier: 'standard' },
+  { id: 'chrome', type: 'frame', name: 'CHROME', tier: 'standard' },
+  { id: 'ember-glow', type: 'frame', name: 'EMBER GLOW', tier: 'standard' },
+  { id: 'plasma', type: 'frame', name: 'PLASMA', tier: 'standard' },
+  { id: 'ornate-gold', type: 'frame', name: 'ORNATE GOLD', tier: 'standard' },
+  { id: 'holo-foil', type: 'frame', name: 'HOLO FOIL', tier: 'standard' },
+  { id: 'marquee', type: 'frame', name: 'MARQUEE', tier: 'showpiece' },
+  // ── Effects (0075 — free 5 · premium 2@standard · premium 2@showpiece; SCANLINE moved from free) ──
+  { id: 'none', type: 'effect', name: 'NONE', tier: null },
+  { id: 'soft-glow', type: 'effect', name: 'SOFT GLOW', tier: null },
+  { id: 'gradient-sheen', type: 'effect', name: 'SHEEN', tier: null },
+  { id: 'dust', type: 'effect', name: 'DUST', tier: null },
+  { id: 'vignette', type: 'effect', name: 'VIGNETTE', tier: null },
+  { id: 'halftone', type: 'effect', name: 'HALFTONE', tier: 'standard' },
+  { id: 'scanline', type: 'effect', name: 'SCANLINE', tier: 'standard' },
+  { id: 'frost', type: 'effect', name: 'FROST', tier: 'showpiece' },
+  { id: 'embers', type: 'effect', name: 'EMBERS', tier: 'showpiece' },
+  // ── Finishes (0075 — free 2 · premium 1@standard · premium 2@showpiece; SUBTLE GLOSS removed) ─────
+  // `id:'none'` intentionally repeats the effect NONE's id (each client roster array — EFFECTS vs
+  // FINISHES — is independently id-scoped, mirroring `apps/mobile/src/styler/roster.ts`); harmless
+  // here too (both free, so neither ever enters `REAL_ROSTER`, and `COSMETIC_CATALOG` disambiguates
+  // by `type`).
+  { id: 'none', type: 'finish', name: 'STANDARD', tier: null },
+  { id: 'matte', type: 'finish', name: 'MATTE', tier: null },
+  { id: 'linen', type: 'finish', name: 'LINEN', tier: 'standard' },
+  { id: 'holographic', type: 'finish', name: 'HOLOGRAPHIC', tier: 'showpiece' },
+  { id: 'metallic', type: 'finish', name: 'METALLIC', tier: 'showpiece' },
+  // ── Nameplates (0075 — free 7 · premium 1@standard; BRASS the only premium nameplate) ─────────────
+  { id: 'slab', type: 'nameplate', name: 'SLAB', tier: null },
+  { id: 'ribbon', type: 'nameplate', name: 'RIBBON', tier: null },
+  { id: 'bevel', type: 'nameplate', name: 'BEVEL', tier: null },
+  { id: 'capsule', type: 'nameplate', name: 'CAPSULE', tier: null },
+  { id: 'tab', type: 'nameplate', name: 'TAB', tier: null },
+  { id: 'arch', type: 'nameplate', name: 'ARCH', tier: null },
+  { id: 'dogtag', type: 'nameplate', name: 'DOGTAG', tier: null },
+  { id: 'brass', type: 'nameplate', name: 'BRASS', tier: 'standard' },
+  // ── Fonts (0075 amended — free 3 · premium 4@standard) ─────────────────────────────────────────────
+  { id: 'clean-sans', type: 'font', name: 'CHAKRA', tier: null },
+  { id: 'bold-display', type: 'font', name: 'PAYTONE', tier: null },
+  { id: 'press-start', type: 'font', name: 'PIXEL', tier: null },
+  { id: 'bitter', type: 'font', name: 'SLAB', tier: 'standard' },
+  { id: 'space-mono', type: 'font', name: 'MONO', tier: 'standard' },
+  { id: 'pacifico', type: 'font', name: 'SCRIPT', tier: 'standard' },
+  { id: 'stencil', type: 'font', name: 'STENCIL', tier: 'standard' },
+  // ── Device shells (0075 — free 2 · premium 2@big · premium 1@showpiece; GRAPE→free, SUNSET→premium) ─
+  { id: 'teal', type: 'device_shell', name: 'TEAL', tier: null },
+  { id: 'grape', type: 'device_shell', name: 'GRAPE', tier: null },
+  { id: 'sunset', type: 'device_shell', name: 'SUNSET', tier: 'big' },
+  { id: 'pink', type: 'device_shell', name: 'PINK', tier: 'big' },
+  { id: 'carbon', type: 'device_shell', name: 'CARBON', tier: 'showpiece' },
+  // ── Screen themes (0075 amended — free 2 · premium 4@big) ──────────────────────────────────────────
+  { id: 'midnight', type: 'screen_theme', name: 'MIDNIGHT', tier: null },
+  { id: 'paper', type: 'screen_theme', name: 'PAPER', tier: null },
+  { id: 'deepsea', type: 'screen_theme', name: 'DEEP SEA', tier: 'big' },
+  { id: 'berry', type: 'screen_theme', name: 'BERRY', tier: 'big' },
+  { id: 'mint', type: 'screen_theme', name: 'MINT', tier: 'big' },
+  { id: 'lilac', type: 'screen_theme', name: 'LILAC', tier: 'big' },
+];
+
+/** REAL_ROSTER — the premium-only id→tier map, seeded once at module load from `COSMETIC_CATALOG`.
+ *  Always consulted before the mutable test-fixture registry (below) — clearing fixtures between test
+ *  cases never wipes the real seed. Free catalog ids are intentionally NOT in this map (they read as
+ *  UNREGISTERED/`undefined` via `lookupCosmeticTier`, per the file banner's free/premium contract). */
+const REAL_ROSTER = new Map<string, CosmeticTier>(
+  COSMETIC_CATALOG.filter((e): e is CosmeticCatalogEntry & { tier: CosmeticTier } => e.tier !== null).map(
+    (e) => [e.id, e.tier],
+  ),
+);
+
+// ── The test-fixture registry (mutable, cleared between test cases) ────────────────────────────────
 const REGISTRY = new Map<string, CosmeticTier | null>();
 
 /**
  * Look up a cosmetic's tier. Returns `undefined` when the id is NOT REGISTERED AT ALL (the
  * `NotFoundError` case every acquire path 404s on) — distinct from a registered-but-FREE item, which
  * returns `null` (a known, always-owned, zero-price item; COSM-03 gates only premium items, so a free
- * id never needs an entitlement row).
+ * id never needs an entitlement row). Checks the real roster first, then the test-fixture registry.
  */
 export function lookupCosmeticTier(cosmeticId: string): CosmeticTier | null | undefined {
+  if (REAL_ROSTER.has(cosmeticId)) return REAL_ROSTER.get(cosmeticId)!;
   return REGISTRY.has(cosmeticId) ? REGISTRY.get(cosmeticId)! : undefined;
 }
 
@@ -58,20 +176,30 @@ export function registerCosmeticForTest(cosmeticId: string, tier: CosmeticTier |
   REGISTRY.set(cosmeticId, tier);
 }
 
-/** Test-only: clear all fixture registrations between test cases. */
+/** Test-only: clear all fixture registrations between test cases. Never touches the real roster. */
 export function clearCosmeticRegistryForTest(): void {
   REGISTRY.clear();
+}
+
+// ── GET /cosmetics — the COSM-01 library listing (decision 0075 — P10) ─────────────────────────────
+/** The full catalog (free + premium), optionally filtered by type — the GET /cosmetics data source.
+ *  Ownership is caller-scoped and NOT computed here (the service layer joins `user_entitlements`). */
+export function listCatalog(type?: CosmeticType): CosmeticCatalogEntry[] {
+  return type ? COSMETIC_CATALOG.filter((e) => e.type === type) : COSMETIC_CATALOG;
 }
 
 // ── CARD-06 derivation support ──────────────────────────────────────────────────────────────────────
 // A composition's CLOSED attributes stay `kind`/`color`-keyed in the schema (render/composition.ts:
 // "they reference cosmetic ids once the Styler + COSM roster formalize them") — frame/effect/finish/
 // nameplate-SHAPE carry no cosmeticId today, so they are NOT coverable here without either a
-// composition-schema change or a kind+color→id resolver (out of P4's scope; flagged in the P4 receipt).
-// The two fields that DO carry a real id already are `fontId` (text elements + the nameplate) and
-// `iconId` (icon elements) — CARD-06 checks those against the SAME registry acquire prices against, so
-// a fixture id used in a test composition is also a valid acquire target (one id space, no synthetic
-// namespacing).
+// composition-schema change or a kind+color→id resolver (out of P4's scope; flagged in the P4 receipt;
+// still true after P10 — the registry/catalog now HAS real ids for those categories, but nothing in the
+// composition schema references them yet, so CARD-06 derivation only ever sees `fontId`/`iconId` refs
+// live — a real premium FRAME/EFFECT/FINISH/NAMEPLATE never flips `isPremium` until that schema work
+// lands). The two fields that DO carry a real id already are `fontId` (text elements + the nameplate)
+// and `iconId` (icon elements) — CARD-06 checks those against the SAME registry acquire prices against,
+// so a fixture id (or, since P10, a real premium font id like `'bitter'`) used in a test composition is
+// also a valid acquire target (one id space, no synthetic namespacing).
 
 interface ComposedRefShape {
   elements?: Array<Record<string, unknown>>;

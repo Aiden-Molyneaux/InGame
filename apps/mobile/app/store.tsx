@@ -192,7 +192,6 @@ export default function Store() {
   return (
     <Header
       view={view}
-      aisleLabel={aisle?.label}
       balance={balance}
       tick={tick}
       onWallet={() => setView('wallet')}
@@ -279,22 +278,23 @@ export default function Store() {
 // hero IS the number there) ──────────────────────────────────────────────────────────────────────────
 function Header({
   view,
-  aisleLabel,
   balance,
   tick,
   onWallet,
   children,
 }: {
   view: StoreView;
-  aisleLabel?: string;
   balance: number;
   tick: number | null;
   onWallet: () => void;
   children: React.ReactNode;
 }) {
   const styles = useStyles();
+  // decision 0075 (parvati 🎨 — the aisle-header double-print fix): H1 is the generic "STORE AISLE";
+  // AisleView's body secTitle (right below it) carries the specific aisle name — was the same string
+  // twice (H1 + body), now the H1 is generic and the specific name reads once, as an eyebrow.
   const title =
-    view === 'topup' ? 'TOP UP' : view === 'wallet' ? 'WALLET' : view === 'aisle' ? aisleLabel ?? 'STORE' : 'STORE';
+    view === 'topup' ? 'TOP UP' : view === 'wallet' ? 'WALLET' : view === 'aisle' ? 'STORE AISLE' : 'STORE';
   return (
     <View style={styles.screen}>
       <View style={styles.head}>

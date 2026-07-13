@@ -246,6 +246,33 @@ export const DEFAULT_SHELL_ID: ShellId = 'teal';
 export const SCREEN_THEME_IDS: ScreenThemeId[] = ['midnight', 'deepsea', 'berry', 'paper', 'mint', 'lilac'];
 export const SHELL_IDS: ShellId[] = ['teal', 'grape', 'sunset', 'pink', 'carbon'];
 
+// ── COSM-03 tiering (decision 0075 — P10) ───────────────────────────────────────────────────────────
+// Kept as separate lookup tables (mirroring SHELL_NAMES/SCREEN_THEME_NAMES, not baked into the pure
+// color-token records above — `ShellPalette`/`ScreenTheme` stay render-only, spread wholesale onto
+// `t.shell`/`t.scr` by `useTheme()`; a `tier` field there would ride along unintentionally). Mirrors the
+// server registry's cosmeticId space one-for-one (`apps/api/src/config/cosmetics.ts` — no synthetic
+// namespacing) and the `RosterItem['tier']` shape the Styler roster uses (`styler/roster.ts`).
+export type DeviceCosmeticTier = 'basic' | 'premium';
+
+/** GRAPE moved to free; SUNSET moved to premium (0075 — a straight swap keeps the free count at 2). */
+export const SHELL_TIERS: Record<ShellId, DeviceCosmeticTier> = {
+  teal: 'basic',
+  grape: 'basic',
+  sunset: 'premium',
+  pink: 'premium',
+  carbon: 'premium',
+};
+
+/** MIDNIGHT + PAPER (the light default) stay free; the other four are premium (0075 amended: 4). */
+export const SCREEN_THEME_TIERS: Record<ScreenThemeId, DeviceCosmeticTier> = {
+  midnight: 'basic',
+  paper: 'basic',
+  deepsea: 'premium',
+  berry: 'premium',
+  mint: 'premium',
+  lilac: 'premium',
+};
+
 // Display names (board copy) — the ONE roster-identity source the Device editor + the Profile MY DEVICE
 // strip read (a shell·theme has no user-given name; DEV-05/OQ-064). All-caps on-screen per F-06.
 export const SHELL_NAMES: Record<ShellId, string> = {

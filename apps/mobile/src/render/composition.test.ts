@@ -1,6 +1,6 @@
 import { buildCardElements } from './buildCard';
 import { SAMPLE_COMPOSITION, MAX_ELEMENTS, type CardComposition } from './composition';
-import { FRAMES, EFFECTS, FINISHES, NAMEPLATES, FONTS } from '../styler/roster';
+import { FRAMES, EFFECTS, FINISHES, NAMEPLATES, FONTS, surpriseDeal } from '../styler/roster';
 
 // buildCardElements is source-agnostic (the skia bits are passed in), so we can assert its STRUCTURE
 // with a stub skia context — the real skia flatten is proven by flatten.spike.ts (node/canvaskit).
@@ -53,14 +53,11 @@ const kidsOf = (tree: any) => tree.props.children.filter(Boolean) as any[];
 const hasKey = (tree: any, key: string) => kidsOf(tree).some((k) => k?.key === key);
 
 describe('decision 0068 — roster expansion', () => {
-  it('lands the 10 frames, all basic tier', () => {
+  it('lands the 10 frames', () => {
     const ids = FRAMES.map((f) => f.id);
     for (const id of ['thin-gold', 'lime', 'bubblegum', 'chrome', 'stub', 'ornate-gold', 'ember-glow', 'plasma', 'holo-foil', 'marquee']) {
       expect(ids).toContain(id);
     }
-    // everything ships basic-now (the entitlement gate is a no-op until COSM-03) — nothing premium yet
-    expect(FRAMES.some((f) => f.tier === 'premium')).toBe(false);
-    expect([...EFFECTS, ...FINISHES, ...NAMEPLATES, ...FONTS].some((x) => x.tier === 'premium')).toBe(false);
   });
 
   it('lands the effects, finishes, nameplates, and fonts', () => {
@@ -71,6 +68,49 @@ describe('decision 0068 — roster expansion', () => {
     expect(FINISHES.map((f) => f.kind)).toEqual(expect.arrayContaining(['linen', 'holographic', 'metallic']));
     expect(NAMEPLATES.map((n) => n.shape)).toEqual(expect.arrayContaining(['capsule', 'tab', 'arch', 'dogtag', 'brass']));
     expect(FONTS.map((f) => f.id)).toEqual(expect.arrayContaining(['press-start', 'bitter', 'space-mono', 'pacifico', 'stencil']));
+  });
+});
+
+// ── decision 0075 (P10) — the roster tiering re-tag ─────────────────────────────────────────────────
+describe('decision 0075 — roster tiering (P10)', () => {
+  it('the two removals are gone from the offered roster, but their kinds still render (legacy docs)', () => {
+    expect(FRAMES.some((f) => f.id === 'bracket-corners')).toBe(false);
+    expect(FINISHES.some((f) => f.id === 'subtle-gloss')).toBe(false);
+    // the render module (buildCardElements) still supports both kinds — proven by the buildCard tests
+    // above (bracket-corners is exercised via composition.ts's FrameKind union / EquipReadout labels).
+  });
+
+  it('the 26-premium-item split lands exactly where 0075 pins it', () => {
+    const premiumIds = (arr: { id: string; tier?: 'basic' | 'premium' }[]) =>
+      arr.filter((x) => x.tier === 'premium').map((x) => x.id);
+    expect(premiumIds(FRAMES).sort()).toEqual(
+      ['thin-gold', 'chrome', 'ember-glow', 'plasma', 'ornate-gold', 'holo-foil', 'marquee'].sort(),
+    );
+    expect(premiumIds(EFFECTS).sort()).toEqual(['halftone', 'scanline', 'frost', 'embers'].sort());
+    expect(premiumIds(FINISHES).sort()).toEqual(['linen', 'holographic', 'metallic'].sort());
+    expect(premiumIds(NAMEPLATES).sort()).toEqual(['brass']);
+    expect(premiumIds(FONTS).sort()).toEqual(['bitter', 'space-mono', 'pacifico', 'stencil'].sort());
+    const totalPremium =
+      premiumIds(FRAMES).length +
+      premiumIds(EFFECTS).length +
+      premiumIds(FINISHES).length +
+      premiumIds(NAMEPLATES).length +
+      premiumIds(FONTS).length;
+    expect(totalPremium).toBe(19); // 26 total minus the 7 device shells/themes (theme/palettes.test.ts)
+  });
+
+  it("surpriseDeal (CARD-16's free baseline) never hands out a premium frame/effect/font", () => {
+    for (let i = 0; i < 40; i++) {
+      const deal = surpriseDeal('Test Game');
+      if (deal.frame?.kind) {
+        const frame = FRAMES.find((f) => f.kind === deal.frame!.kind && f.color === deal.frame!.color);
+        expect(frame?.tier).not.toBe('premium');
+      }
+      const effect = EFFECTS.find((e) => e.kind === deal.effect?.kind);
+      expect(effect?.tier).not.toBe('premium');
+      const font = FONTS.find((f) => f.id === deal.nameplate?.fontId);
+      expect(font?.tier).not.toBe('premium');
+    }
   });
 });
 

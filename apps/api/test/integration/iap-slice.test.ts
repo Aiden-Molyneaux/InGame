@@ -7,6 +7,7 @@ import type { Express } from 'express';
 import { STARTING_GRANT, REFUND_FLOOR } from '../../src/config/economy';
 import { getDb } from '../../src/db/client';
 import * as ledger from '../../src/services/economy/ledger-service';
+import * as storeRepo from '../../src/repositories/store-repo';
 import { currencyLedger, iapReceipts, storeProducts } from '../../src/db/schema';
 import {
   MockRevenueCat,
@@ -84,13 +85,14 @@ async function receiptCount(userId: string) {
   return Number(rows[0]!.n);
 }
 
+/** M5 P10 — the same `storeRepo.seedProducts` idempotent-insert path `seed-dev.ts` runs (decision 0072). */
 async function seedProducts() {
-  for (const p of PACKS) {
-    await getDb()
-      .insert(storeProducts)
-      .values({ productId: p.productId, pixels: p.pixels, oneTime: p.oneTime, active: true })
-      .onConflictDoNothing({ target: storeProducts.productId });
-  }
+  await storeRepo.seedProducts([...PACKS]);
+}
+
+async function productCount() {
+  const rows = await getDb().select({ n: count() }).from(storeProducts);
+  return Number(rows[0]!.n);
 }
 
 beforeAll(async () => {
@@ -123,6 +125,17 @@ beforeEach(async () => {
   clearRuleOverrides();
   // A mock with a KNOWN webhook secret — the swap-in seam exercised deterministically.
   setIapProvider(new MockRevenueCat({ webhookAuthSecret: WEBHOOK_SECRET }));
+});
+
+// ── M5 P10 (decision 0072): the pack ladder seed is idempotent ──────────────────────────────────────
+describe('ECON-10: store_products seeding is idempotent (storeRepo.seedProducts, decision 0072)', () => {
+  it('seeding twice more (on top of the beforeAll/beforeEach seeds already run) never duplicates a row', async () => {
+    const before = await productCount();
+    await seedProducts();
+    await seedProducts();
+    expect(await productCount()).toBe(before);
+    expect(before).toBe(PACKS.length); // exactly the 5-SKU ladder, no dupes across the whole suite's re-seeds
+  });
 });
 
 // ── SYS-07 authz (the actor-B / bad-signature 4xx tests the route inventory demands) ────────────────────

@@ -28,3 +28,13 @@ export async function listActiveProducts(exec: Executor = getDb()): Promise<Stor
     .where(eq(storeProducts.active, true))
     .orderBy(asc(storeProducts.pixels));
 }
+
+/** M5 P10 (decision 0072) — idempotent-insert the pack ladder (dev-seed's `ensureStoreProducts`; the
+ *  eventual production content-seed path too). GLOBAL content, not per-user — no actor scoping. */
+export async function seedProducts(
+  products: Array<{ productId: string; pixels: number; oneTime: boolean }>,
+  exec: Executor = getDb(),
+): Promise<void> {
+  if (products.length === 0) return;
+  await exec.insert(storeProducts).values(products).onConflictDoNothing({ target: storeProducts.productId });
+}

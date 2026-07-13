@@ -11,11 +11,16 @@ import type {
 
 // The COSM-02 roster (decision 0063, EXPANDED by decision 0068 — the Styler consumes it as client
 // constants at M4; cosmetic entities + the `/card-bases` routes ride the curated roster later,
-// 0066/styler-manifest). Ids are stable strings (the CARD-24b preset recipes reference them).
+// 0066/styler-manifest). Ids are stable strings (the CARD-24b preset recipes reference them) and MATCH
+// the server registry's cosmeticId space one-for-one (`apps/api/src/config/cosmetics.ts` — no
+// synthetic namespacing).
 // 2026-07-09: the once-deferred premium kinds (ornate/glow/foil/marquee frames · grain/halftone/
-// frost/embers effects · linen/holographic/metallic finishes · 5 fonts) land NOW, ALL as `tier:
-// 'basic'` — the owner uses the whole set pre-store, and re-tags individual items 'premium' later
-// (0068 §3). The entitlement gate is a no-op until COSM-03/M5, so tier is declarative metadata only.
+// frost/embers effects · linen/holographic/metallic finishes · 5 fonts) landed ALL as `tier: 'basic'`
+// (0068 §3) — a placeholder posture pending the re-tag.
+// 2026-07-13 (decision 0075, P10): the re-tag lands — `tier: 'premium'` below is now a REAL entitlement
+// gate (COSM-03/M5), not declarative-only. Two items retired from the roster (still render on legacy
+// documents via `render/buildCard.ts`'s kind support — the retired `pixel-border`/`grain` precedent):
+// BRACKETS (`bracket-corners`) frame · SUBTLE GLOSS (`subtle-gloss`) finish.
 // NO spec-ID strings in the display names (OQ-110).
 
 export type CosmeticTier = 'basic' | 'premium';
@@ -39,24 +44,25 @@ export interface FrameDef extends RosterItem {
 // legacy documents (F21). Same-KIND frames are disambiguated by `color` downstream (styler selection,
 // preset derive, EquipReadout — kind+color, never kind alone).
 const BAND = 0.045; // the Double-Line-footprint band thickness
+// BRACKETS (`bracket-corners`) retired from the roster (decision 0075) — `FrameKind` keeps the kind for
+// legacy-document rendering (`render/buildCard.ts`), the picker just no longer offers it.
 export const FRAMES: FrameDef[] = [
   { id: 'clean', name: 'CLEAN', kind: null, color: '', width: 0, tier: 'basic' },
   { id: 'thin-line', name: 'LINE', kind: 'thin-line', color: '#c9c5e6', width: BAND, tier: 'basic' },
   { id: 'double-line', name: 'DOUBLE LINE', kind: 'double-line', color: '#9b97c0', width: 0.017, tier: 'basic' },
   { id: 'ticket-notch', name: 'TICKET', kind: 'ticket-notch', color: '#f3ecd9', width: BAND, tier: 'basic' },
-  { id: 'bracket-corners', name: 'BRACKETS', kind: 'bracket-corners', color: '#f3ecd9', width: 0.028, tier: 'basic' },
-  // ── decision 0068 additions (all basic-now) ──────────────────────────────────────────────────
-  { id: 'thin-gold', name: 'GOLD', kind: 'thin-line', color: '#e8c14a', width: BAND, tier: 'basic' },
+  // ── decision 0068 additions, RE-TAGGED by decision 0075 (P10) ────────────────────────────────
+  { id: 'thin-gold', name: 'GOLD', kind: 'thin-line', color: '#e8c14a', width: BAND, tier: 'premium' },
   { id: 'lime', name: 'LIME', kind: 'thin-line', color: '#a9e34b', width: BAND, tier: 'basic' },
   { id: 'bubblegum', name: 'BUBBLEGUM', kind: 'thin-line', color: '#e85ad0', width: BAND, tier: 'basic' },
-  { id: 'chrome', name: 'CHROME', kind: 'double-line', color: '#d8d5ec', width: 0.017, tier: 'basic' },
+  { id: 'chrome', name: 'CHROME', kind: 'double-line', color: '#d8d5ec', width: 0.017, tier: 'premium' },
   // STUB rides the ticket-notch kind in the app accent-orange so it stays distinct from cream TICKET.
   { id: 'stub', name: 'STUB', kind: 'ticket-notch', color: '#ff9f43', width: BAND, tier: 'basic' },
-  { id: 'ornate-gold', name: 'ORNATE GOLD', kind: 'ornate', color: '#e8c14a', width: BAND, tier: 'basic' },
-  { id: 'ember-glow', name: 'EMBER GLOW', kind: 'glow', color: '#ff5a5a', width: 0.04, tier: 'basic' },
-  { id: 'plasma', name: 'PLASMA', kind: 'glow', color: '#5ad0ff', width: 0.04, tier: 'basic' },
-  { id: 'holo-foil', name: 'HOLO FOIL', kind: 'foil', color: '#e85ad0', width: BAND, tier: 'basic' },
-  { id: 'marquee', name: 'MARQUEE', kind: 'marquee', color: '#e8c14a', width: BAND, tier: 'basic' },
+  { id: 'ornate-gold', name: 'ORNATE GOLD', kind: 'ornate', color: '#e8c14a', width: BAND, tier: 'premium' },
+  { id: 'ember-glow', name: 'EMBER GLOW', kind: 'glow', color: '#ff5a5a', width: 0.04, tier: 'premium' },
+  { id: 'plasma', name: 'PLASMA', kind: 'glow', color: '#5ad0ff', width: 0.04, tier: 'premium' },
+  { id: 'holo-foil', name: 'HOLO FOIL', kind: 'foil', color: '#e85ad0', width: BAND, tier: 'premium' },
+  { id: 'marquee', name: 'MARQUEE', kind: 'marquee', color: '#e8c14a', width: BAND, tier: 'premium' },
 ];
 
 // ── Effects (0063 §2 — ONE at a time + intensity, CARD-12) ─────────────────────────────────────
@@ -66,15 +72,17 @@ export interface EffectDef extends RosterItem {
 export const EFFECTS: EffectDef[] = [
   { id: 'none', name: 'NONE', kind: 'none' },
   { id: 'soft-glow', name: 'SOFT GLOW', kind: 'soft-glow' },
-  { id: 'scanline', name: 'SCANLINE', kind: 'scanline' },
+  // SCANLINE re-tagged premium by decision 0075 (P10) — moved out of the free set.
+  { id: 'scanline', name: 'SCANLINE', kind: 'scanline', tier: 'premium' },
   { id: 'gradient-sheen', name: 'SHEEN', kind: 'gradient-sheen' },
   { id: 'dust', name: 'DUST', kind: 'dust' },
   { id: 'vignette', name: 'VIGNETTE', kind: 'vignette' },
-  // ── decision 0068 additions (all basic-now; FROST + EMBERS animate live). GRAIN retired to the
-  // ledger (owner iteration 2026-07-09); the renderer keeps the kind for legacy documents (F21). ──
-  { id: 'halftone', name: 'HALFTONE', kind: 'halftone', tier: 'basic' },
-  { id: 'frost', name: 'FROST', kind: 'frost', tier: 'basic' },
-  { id: 'embers', name: 'EMBERS', kind: 'embers', tier: 'basic' },
+  // ── decision 0068 additions, RE-TAGGED by decision 0075 (P10; FROST + EMBERS animate live). GRAIN
+  // retired to the ledger (owner iteration 2026-07-09); the renderer keeps the kind for legacy
+  // documents (F21). ──
+  { id: 'halftone', name: 'HALFTONE', kind: 'halftone', tier: 'premium' },
+  { id: 'frost', name: 'FROST', kind: 'frost', tier: 'premium' },
+  { id: 'embers', name: 'EMBERS', kind: 'embers', tier: 'premium' },
 ];
 export const DEFAULT_INTENSITY = 0.6;
 
@@ -82,14 +90,16 @@ export const DEFAULT_INTENSITY = 0.6;
 export interface FinishDef extends RosterItem {
   kind: FinishKind;
 }
+// SUBTLE GLOSS (`subtle-gloss`) retired from the roster (decision 0075) — `FinishKind` keeps the kind
+// for legacy-document rendering (`render/buildCard.ts`), the picker just no longer offers it.
 export const FINISHES: FinishDef[] = [
   { id: 'none', name: 'STANDARD', kind: 'none' },
   { id: 'matte', name: 'MATTE', kind: 'matte' },
-  { id: 'subtle-gloss', name: 'SUBTLE GLOSS', kind: 'subtle-gloss' },
-  // ── decision 0068 additions (all basic-now; HOLOGRAPHIC + METALLIC sweep a sheen live) ────────
-  { id: 'linen', name: 'LINEN', kind: 'linen', tier: 'basic' },
-  { id: 'holographic', name: 'HOLOGRAPHIC', kind: 'holographic', tier: 'basic' },
-  { id: 'metallic', name: 'METALLIC', kind: 'metallic', tier: 'basic' },
+  // ── decision 0068 additions, RE-TAGGED by decision 0075 (P10; HOLOGRAPHIC + METALLIC sweep a
+  // sheen live) ────────────────────────────────────────────────────────────────────────────────
+  { id: 'linen', name: 'LINEN', kind: 'linen', tier: 'premium' },
+  { id: 'holographic', name: 'HOLOGRAPHIC', kind: 'holographic', tier: 'premium' },
+  { id: 'metallic', name: 'METALLIC', kind: 'metallic', tier: 'premium' },
 ];
 
 // ── Nameplates (0063 §4 / decision 0018 — the plate OBJECT; shapes keep the name legible) ──────
@@ -107,7 +117,8 @@ export const NAMEPLATES: NameplateDef[] = [
   { id: 'tab', name: 'TAB', shape: 'tab', tier: 'basic' },
   { id: 'arch', name: 'ARCH', shape: 'arch', tier: 'basic' },
   { id: 'dogtag', name: 'DOGTAG', shape: 'dogtag', tier: 'basic' },
-  { id: 'brass', name: 'BRASS', shape: 'brass', tier: 'basic' },
+  // BRASS re-tagged premium by decision 0075 (P10) — the only premium nameplate.
+  { id: 'brass', name: 'BRASS', shape: 'brass', tier: 'premium' },
 ];
 
 // ── Title styling (CARD-11 — font + ink). CHAKRA + PAYTONE were the M4 pair; decision 0068 adds
@@ -116,12 +127,12 @@ export const NAMEPLATES: NameplateDef[] = [
 export const FONTS: RosterItem[] = [
   { id: 'clean-sans', name: 'CHAKRA' },
   { id: 'bold-display', name: 'PAYTONE' },
-  // ── decision 0068 additions (all basic-now) ──────────────────────────────────────────────────
+  // ── decision 0068 additions, RE-TAGGED by decision 0075 (P10; amended — 3 premium fonts → 4) ───
   { id: 'press-start', name: 'PIXEL', tier: 'basic' },
-  { id: 'bitter', name: 'SLAB', tier: 'basic' },
-  { id: 'space-mono', name: 'MONO', tier: 'basic' },
-  { id: 'pacifico', name: 'SCRIPT', tier: 'basic' },
-  { id: 'stencil', name: 'STENCIL', tier: 'basic' },
+  { id: 'bitter', name: 'SLAB', tier: 'premium' },
+  { id: 'space-mono', name: 'MONO', tier: 'premium' },
+  { id: 'pacifico', name: 'SCRIPT', tier: 'premium' },
+  { id: 'stencil', name: 'STENCIL', tier: 'premium' },
 ];
 export const INKS: Array<RosterItem & { color: string }> = [
   { id: 'cream', name: 'CREAM', color: '#f3ecd9' },
@@ -250,14 +261,20 @@ export function surpriseDeal(gameTitle: string): CardComposition {
       fill: pick(colors),
     });
   }
-  const frame = pick(FRAMES);
-  const effect = pick(EFFECTS.filter((e) => e.kind !== 'none'));
+  // decision 0075 (P10): FRAMES/EFFECTS/FONTS now carry real premium entries — a "free baseline" deal
+  // must never hand out one (CARD-16's guarantee is economic, not just visual: a premium pick here
+  // would trip the CARD-13 reconcile gate on the very first save of an unowned card).
+  const freeFrames = FRAMES.filter((f) => f.tier !== 'premium');
+  const freeEffects = EFFECTS.filter((e) => e.kind !== 'none' && e.tier !== 'premium');
+  const freeFonts = FONTS.filter((f) => f.tier !== 'premium');
+  const frame = pick(freeFrames);
+  const effect = pick(freeEffects);
   return {
     schemaVersion: COMPOSITION_SCHEMA_VERSION,
     base: { gradient: pick(BASE_GRADIENTS) },
     elements,
     ...(frame.kind ? { frame: { kind: frame.kind, color: frame.color, width: frame.width } } : {}),
     effect: { kind: effect.kind, intensity: 0.4 + Math.random() * 0.4 },
-    nameplate: plate(gameTitle, pick(INKS).color, pick(['slab', 'ribbon', 'bevel'] as NameplateShape[]), pick(FONTS).id),
+    nameplate: plate(gameTitle, pick(INKS).color, pick(['slab', 'ribbon', 'bevel'] as NameplateShape[]), pick(freeFonts).id),
   };
 }

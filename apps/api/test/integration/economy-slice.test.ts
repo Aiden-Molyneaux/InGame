@@ -121,7 +121,8 @@ describe('ECON-02: GET /me/wallet reports the 10-PX starting balance WITHOUT mat
     expect(typeof res.body.dailyBonus.nextResetAt).toBe('string');
     // A fresh user is at the top of the Newcomer Ladder: next claim = step 1 (+2 PX), no cosmetic slot.
     expect(res.body.dailyBonus.ladderStep).toBe(1);
-    expect(res.body.dailyBonus.ladderReward).toEqual({ pixels: NEWCOMER_LADDER_STEPS[0] }); // +2
+    // decision 0075 (P10): D1's roster slot carries the real LINEN finish.
+    expect(res.body.dailyBonus.ladderReward).toEqual({ pixels: NEWCOMER_LADDER_STEPS[0], cosmeticId: 'linen' }); // +2
     // The pure read persisted nothing (the grant materializes on the first economic MUTATION).
     expect(await countRows('wallets', a.id)).toBe(0);
     expect(await countRows('currencyLedger', a.id)).toBe(0);
@@ -151,7 +152,7 @@ describe('ECON-02: daily bonus — idempotent per UTC-day, unclaimed days lapse 
     expect(first.status).toBe(200);
     expect(first.body.granted).toBe(true);
     expect(first.body.pixels).toBe(NEWCOMER_LADDER_STEPS[0]); // +2 (step 1, not the standing +1)
-    expect(first.body.cosmeticId).toBeUndefined(); // the roster slot is empty until the roster pass
+    expect(first.body.cosmeticId).toBe('linen'); // decision 0075 (P10): D1's roster slot is filled
     expect(first.body.balance).toBe(STARTING_GRANT + NEWCOMER_LADDER_STEPS[0]); // 12
 
     const second = await request(app).post('/api/me/daily-bonus').set(authed(a.token));

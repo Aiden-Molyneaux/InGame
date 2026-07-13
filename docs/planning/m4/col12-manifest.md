@@ -150,6 +150,69 @@
       and the flip is now a **flat rotateY** (perspective dropped — the face narrows to an edge and
       unfurls; the 3D skew can return once the flicker is confirmed dead). Verified: jest 144/144 ·
       typecheck · lint · web round-trip (flip → stats-tap → back). **Owner device re-test owed.**
+- [x] **Owner feedback round 5 (2026-07-13): still not smooth on shelf — "the card doesn't flip in one
+      smooth animation, half disappears then reappears as the flip-side," + text flicker (shelf only).**
+      Round-4's two changes were half-wrong: the memo/perf fix was fine to KEEP, but **removing `perspective`
+      made it worse** — a flat rotateY squishes the card to a vertical line at 90°, and the **hard opacity
+      swap** cut front→back at that point = the "disappear/reappear." And the flicker is shelf-only because
+      shelf is the ONLY view with text beside the card. **Round-5 fix — the canonical RN card flip:** faces
+      get `backfaceVisibility: 'hidden'` and **`perspective` is restored** — the away-facing side hides
+      itself crossing 90°, so it's one continuous 3D turn with **NO opacity animation at all**. Removing the
+      opacity animation is also the flicker cure: animating opacity on a Metal-backed react-native-skia
+      `<Canvas>` is a known iOS flash source, and it was the only thing changing on the card's skia layer
+      each frame. `settled`-gated hit-testing + the round-3 pass-through chain are unchanged. Verified:
+      typecheck · lint · jest 144/144. The smoothness + flicker are inherently native-render properties the
+      automation lane (RAF-throttled) cannot show → **owner device re-test owed** (hard reload first).
+- [x] **Owner feedback round 6 (2026-07-13): round-5 still broken.** The decisive read across rounds 3–5:
+      every variant animated a TRANSFORM on faces hosting skia/svg content (perspective turn · flat rotateY ·
+      backface-hidden turn) and every one tore on Fabric-iOS/Expo Go — the transform animation itself is the
+      unreliable mechanism there (none of it reproduces on web). **The 3D turn is RETIRED on this surface:
+      the flip is now a pure opacity CROSSFADE** (front 1→0 · back 0→1, no transforms anywhere) — the form
+      decision 0026 already names (its reduce-motion variant). Both faces reach opacity 0 when inactive
+      (the F-02 silhouettes are notched on different corners, so a stacked opaque face would peek through
+      the other's notches). `settled` hit-gating, memoization, a11y unchanged. Verified: typecheck · lint ·
+      jest 144/144 · web faces confirmed transform-free + flip toggling. **Follow-ups:** (a) if even the
+      dissolve flickers on device → instant swap + file the Expo Go/Fabric repaint bug; (b) the 3D turn can
+      be revisited as a polish experiment via reanimated UI-thread transforms (the stack already ships
+      reanimated) once the Fabric behaviour is understood. **Owner device re-test owed.**
+- [x] **Owner feedback round 7 (2026-07-13): "I liked the Flip more."** (The crossfade read as confirmation
+      that the RN-`Animated` transform path was the artifact — the dissolve drew no flicker complaint.)
+      **The 3D turn is BACK, rebuilt on REANIMATED** (~4.1.1, already in the stack driving the skia motion
+      layer, decision 0068): `useSharedValue` + `withTiming` + `useAnimatedStyle`, each face's perspective
+      rotateY AND its 90°-step opacity computed in ONE worklet — frame-synchronized on the UI thread via
+      reanimated's own ShadowTree path, completely bypassing the `Animated` native driver that tore on
+      Fabric-iOS in rounds 3–5. No `backfaceVisibility` (broken there, round 5). `settled` now latches via
+      `runOnJS` from the withTiming completion; reduce-motion keeps the instant swap. Verified: typecheck ·
+      lint · jest 144/144 (reanimated renders under jest-expo out of the box) · headless smoke on the real
+      app (mounts, 17 cards, tap→stats state, no redbox). **Owner device re-test owed — the deciding one.**
+- [x] **Round 8 (2026-07-13): the owner sent a SCREEN RECORDING — frame forensics finally pinned the real
+      mechanism.** (ffmpeg-static → 334 frames @59fps of the reanimated flip on device, owner's 1-game dev
+      shelf, DEFAULT Destiny 2 face — **no skia involved**.) The frames show, cleanly: (1) first half of
+      the turn — the sibling meta text VANISHES entirely (present f0070, gone f0073, back f0080); (2)
+      second half — the back renders as floating text + keycap with NO panel silhouette; (3) settled —
+      everything perfect. One mechanism from both sides: **react-native-svg MIS-DRAWS under an animated 3D
+      transform on Fabric-iOS** — the front's panel-coloured silhouette Svg sweeps its fill over the
+      same-coloured row (erasing the text visually), the back's projects away (no silhouette). Rounds 3–5
+      failed because RN-`Animated` vs reanimated was never the variable — the svg-under-animated-transform
+      was. **Fix: rasterize the faces while turning** — `shouldRasterizeIOS`/`renderToHardwareTextureAndroid`
+      bound to `!settled` (the RN-documented practice for transform animations): the subtree draws ONCE
+      into a face-bounded offscreen bitmap and the transform composites the bitmap; the svg never sees the
+      transform. Off at rest (no memory/blur cost); reduce-motion never rasterizes. Verified: typecheck ·
+      jest 150/150 · headless smoke (mounts + flips). *(Full lint blocked by the PARALLEL session's
+      `apps/api/src/dev/seed-dev.ts:225` rule-01 violation — their in-flight commerce work, not this lane;
+      surfaced to the owner, not touched.)* **Owner device re-test owed.**
+- [x] **Round 9 (2026-07-13, owner: "still broken — works PERFECTLY in Grid; start back at the basics").**
+      The Grid-vs-Shelf datum re-framed everything: the identical FlipCard renders the turn perfectly in
+      the grid (whose cell is a card-tight box holding nothing else) and breaks only in the wide shelf ROW
+      where the mid-turn mis-drawn svg can sweep across the sibling meta text. The flip code was never the
+      remaining bug — the CONTEXT was. **Fix (structural, grid-parity): the shelf card now sits in a
+      `cardSlot` — a real (overflow:'hidden' → never flattened, `collapsable={false}`), exactly card-sized
+      (138×193), CLIPPING wrapper.** masksToBounds makes the text artifact impossible by construction —
+      paint from the turning card's subtree cannot cross the boundary onto the row — and the card-tight
+      real ancestor replicates the structure the grid empirically proves correct. Rest states unclipped
+      (the back is exactly slot-sized); only the mid-turn ~8px projected overhang meets the boundary.
+      Everything else untouched (grid untouched — it works). Verified: typecheck · jest 150/150 · headless
+      smoke. **Owner device re-test = the gate.**
 - [x] **parvati** on the running `:8082` → **0 flags** (`m4-review-notes.md`, 2026-07-12): the back face + coachmark +
       hero-never-flips + meta-beside are screenshot-verified; the flip *motion* + grid faces are DOM/jest-verified
       (the automation renderer throttles `requestAnimationFrame` and won't paint skia FRONT faces — a manual

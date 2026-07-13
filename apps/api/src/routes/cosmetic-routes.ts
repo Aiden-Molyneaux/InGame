@@ -8,17 +8,26 @@ import {
   getEntitlements,
   acquireCosmetic,
   acquireCosmeticBatch,
+  listCosmetics,
 } from '../controllers/cosmetic-controller';
 
 // The M5 P4 cosmetics/entitlements route inventory (COSM-03/ECON-01 — decision 0072/0073; F30 — DATA,
 // not regex-scraped). `user_entitlements` is USER-OWNED — every write declares its standing SYS-07
-// actor-B 4xx test. GET /me/entitlements is an own-only read (never another principal's data), so it
-// carries no authzTest. Both acquire endpoints ride `wallet:spend` (30/60s, decision 0073 §0.7) — the
-// same bucket P3's adopt rides, so a caller cannot bypass the spend cap by mixing acquire/adopt calls.
-// `GET /cosmetics` (the COSM-01 library listing) and `GET /store` premium-cosmetics content are
-// P10/store-front concerns, NOT registered here.
+// actor-B 4xx test. GET /me/entitlements and GET /cosmetics are own-only reads (never another
+// principal's data), so neither carries an authzTest. Both acquire endpoints ride `wallet:spend`
+// (30/60s, decision 0073 §0.7) — the same bucket P3's adopt rides, so a caller cannot bypass the spend
+// cap by mixing acquire/adopt calls. `GET /store` premium-cosmetics content stays a P6 store-front
+// concern, NOT registered here.
 
 export const cosmeticRoutes: RouteDef[] = [
+  defineRoute({
+    method: 'get',
+    path: '/cosmetics',
+    mutates: false,
+    crossPrincipal: false, // caller's own `owned` flags only; the catalog itself is public content
+    specIds: ['COSM-01', 'COSM-03'],
+    handler: [resolvePrincipal, asyncHandler(listCosmetics)],
+  }),
   defineRoute({
     method: 'get',
     path: '/me/entitlements',

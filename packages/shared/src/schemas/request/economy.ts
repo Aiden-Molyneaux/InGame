@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { cosmeticTypeSchema } from '../common';
 
 // REQUEST/INPUT schemas for the M5 economy substrate (P1 — decision 0072/0073; api-contract 0.57).
 // wallets + currency_ledger are USER-OWNED: the actor is the authenticated principal ONLY. The
@@ -100,3 +101,14 @@ export const acquireBatchRequestSchema = z
   })
   .strict();
 export type AcquireBatchRequest = z.infer<typeof acquireBatchRequestSchema>;
+
+// ── M5 P10 roster tiering (COSM-01 — decision 0075) ─────────────────────────────────────────────────
+
+/**
+ * GET /cosmetics?type= — the library listing, optionally filtered to one COSM-01 type (decision 0075).
+ * Non-strict (stray params are stripped, mirroring the ledger query's posture).
+ */
+export const cosmeticsQuerySchema = z.object({
+  type: cosmeticTypeSchema.optional(),
+});
+export type CosmeticsQuery = z.infer<typeof cosmeticsQuerySchema>;

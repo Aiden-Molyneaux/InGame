@@ -309,6 +309,31 @@ describe('CARD-06: premium derivation flips against a fixture-registered premium
   });
 });
 
+describe('CARD-06: premium derivation flips against a REAL roster premium id (decision 0075/P10)', () => {
+  // NOTE: the task brief's illustrative id was `frost` (an effect) — but `collectCosmeticRefs` only
+  // reads `fontId`/`iconId` off a composition (see `config/cosmetics.ts`'s banner: frame/effect/
+  // finish/nameplate-shape carry no cosmeticId yet, a documented P4-scope limit unchanged by P10). A
+  // real derivation flip is only reachable today via a premium FONT id — `bitter` (SLAB, 3 PX).
+  it("a composition referencing the real 'bitter' (SLAB) premium font → isPremium true, no fixture needed", async () => {
+    const a = await registerUser();
+    const game = await seedGame(a.token, 'CARD-06 real-roster RPG');
+
+    const premium = await request(app)
+      .post('/api/cards')
+      .set(authed(a.token))
+      .send({ gameId: game.id, composition: compositionWithFont('bitter') });
+    expect(premium.status).toBe(201);
+    expect(premium.body.isPremium).toBe(true);
+
+    const free = await request(app)
+      .post('/api/cards')
+      .set(authed(a.token))
+      .send({ gameId: game.id, composition: compositionWithFont('clean-sans') }); // real FREE font (CHAKRA)
+    expect(free.status).toBe(201);
+    expect(free.body.isPremium).toBe(false);
+  });
+});
+
 describe('ECON-11: grantEntitlement/clawbackEntitlement write the entitlement + the MOD-10 audit row atomically', () => {
   it('a grant lands an entitlement + an audit row; a clawback removes it + audits again (service-op, no route)', async () => {
     const target = await registerUser();
@@ -369,5 +394,76 @@ describe('COSM-03: GET /me/entitlements reads the real table', () => {
     expect(mine.status).toBe(200);
     expect(mine.body.items).toHaveLength(1);
     expect(mine.body.items[0]).toMatchObject({ cosmeticId: 'fix-mine', source: 'purchase' });
+  });
+});
+
+// ── M5 P10 (decision 0075) — GET /cosmetics, the COSM-01 library listing ───────────────────────────
+describe('COSM-01: GET /cosmetics — the full free+premium library, decision 0075', () => {
+  it('requires auth (own-only owned flags)', async () => {
+    const res = await request(app).get('/api/cosmetics');
+    expect(res.status).toBe(401);
+  });
+
+  it('lists 26 premium items total (14@3 + 6@6 + 6@8) alongside the free baseline, unfiltered', async () => {
+    const a = await registerUser();
+    const res = await request(app).get('/api/cosmetics').set(authed(a.token));
+    expect(res.status).toBe(200);
+    const premium = res.body.items.filter((i: { tier?: string }) => i.tier);
+    expect(premium).toHaveLength(26);
+    const byPrice = (price: number) => premium.filter((i: { price: number }) => i.price === price).length;
+    expect(byPrice(3)).toBe(14);
+    expect(byPrice(6)).toBe(6);
+    expect(byPrice(8)).toBe(6);
+    const free = res.body.items.filter((i: { tier?: string }) => !i.tier);
+    expect(free.length).toBeGreaterThan(0);
+    for (const item of free) expect(item.price).toBe(0);
+  });
+
+  it('the two 0075 removals never appear in the listing', async () => {
+    const a = await registerUser();
+    const res = await request(app).get('/api/cosmetics').set(authed(a.token));
+    const ids = res.body.items.map((i: { id: string }) => i.id);
+    expect(ids).not.toContain('bracket-corners');
+    expect(ids).not.toContain('subtle-gloss');
+  });
+
+  it('?type=frame filters to the frame category only', async () => {
+    const a = await registerUser();
+    const res = await request(app).get('/api/cosmetics?type=frame').set(authed(a.token));
+    expect(res.status).toBe(200);
+    expect(res.body.items.length).toBeGreaterThan(0);
+    for (const item of res.body.items) expect(item.type).toBe('frame');
+  });
+
+  it('a bad type filter → 422 (zod)', async () => {
+    const a = await registerUser();
+    const res = await request(app).get('/api/cosmetics?type=not-a-real-type').set(authed(a.token));
+    expect(res.status).toBe(422);
+  });
+
+  it("`owned` reflects the caller's own entitlements — free items always owned, premium items only once acquired", async () => {
+    const a = await registerUser();
+    const before = await request(app).get('/api/cosmetics').set(authed(a.token));
+    const chromeBefore = before.body.items.find((i: { id: string }) => i.id === 'chrome');
+    expect(chromeBefore.owned).toBe(false);
+    const cleanBefore = before.body.items.find((i: { id: string }) => i.id === 'clean'); // free frame
+    expect(cleanBefore.owned).toBe(true);
+
+    await request(app).post('/api/cosmetics/chrome/acquire').set(authed(a.token));
+
+    const after = await request(app).get('/api/cosmetics').set(authed(a.token));
+    const chromeAfter = after.body.items.find((i: { id: string }) => i.id === 'chrome');
+    expect(chromeAfter.owned).toBe(true);
+    expect(chromeAfter.price).toBe(3);
+  });
+
+  it("never leaks another caller's ownership — B's acquire does not flip A's `owned`", async () => {
+    const a = await registerUser();
+    const b = await registerUser();
+    await request(app).post('/api/cosmetics/marquee/acquire').set(authed(b.token));
+
+    const asA = await request(app).get('/api/cosmetics').set(authed(a.token));
+    const marqueeForA = asA.body.items.find((i: { id: string }) => i.id === 'marquee');
+    expect(marqueeForA.owned).toBe(false);
   });
 });

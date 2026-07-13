@@ -508,16 +508,23 @@ function ShelfView({ items, flippedIds, onToggle, onNavigate }: { items: Collect
       <View style={styles.shelfStack}>
         {items.map((i) => (
           <View key={i.entryId} style={styles.stackRow}>
-            {/* handlers passed RAW (FlipCard calls them with its ids) — an inline closure here would
-                defeat FlipCard's memo and redraw every row's canvas on each tap (the round-4 flicker). */}
-            <FlipCard
-              item={i}
-              flipped={flippedIds.has(i.entryId)}
-              onToggle={onToggle}
-              onNavigate={onNavigate}
-              width={138}
-              height={193}
-            />
+            {/* cardSlot — GRID PARITY (the round-9 fix): the identical FlipCard renders the turn
+                perfectly in the grid, whose cell is a card-tight box, and broke ONLY here in the wide
+                shelf row where the mis-drawn mid-turn svg (owner's recording) could sweep across the
+                sibling meta text. The slot recreates the grid's structure: a REAL (overflow:'hidden' →
+                never flattened), card-sized, CLIPPING native ancestor — nothing the turning card paints
+                can cross a masksToBounds boundary onto the row, by construction. Handlers passed RAW
+                (an inline closure would defeat FlipCard's memo — the round-4 all-rows redraw). */}
+            <View style={styles.cardSlot} collapsable={false}>
+              <FlipCard
+                item={i}
+                flipped={flippedIds.has(i.entryId)}
+                onToggle={onToggle}
+                onNavigate={onNavigate}
+                width={138}
+                height={193}
+              />
+            </View>
             <View style={styles.heroMeta}>
               <Text style={styles.heroStat}>{statLine(i)}</Text>
               <Text style={styles.heroTitle}>{i.title.toUpperCase()}</Text>
@@ -902,6 +909,9 @@ const useStyles = themedStyles((t) => ({
   empty: { alignItems: 'flex-start', gap: t.space.lg, padding: t.space.xl, backgroundColor: t.scr.panel },
   // SHELF stack (decision 0061) — each entry a hero-treatment row (card + meta beside), board `.shelf-stack`.
   shelfStack: { gap: t.space.lg },
+  // COL-12 round-9 — the card's grid-parity slot: real (overflow prevents flattening), card-tight,
+  // clipping. The masksToBounds boundary is what keeps the turning card's paint off the row's meta text.
+  cardSlot: { width: 138, height: 193, overflow: 'hidden' },
   stackRow: {
     flexDirection: 'row',
     alignItems: 'center',

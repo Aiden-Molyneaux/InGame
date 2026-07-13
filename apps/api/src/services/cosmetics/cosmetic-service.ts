@@ -1,6 +1,8 @@
 import type {
   AcquireBatchResponse,
   AcquireResponse,
+  CosmeticsResponse,
+  CosmeticType,
   Entitlement,
   EntitlementsResponse,
 } from '@ingame/shared';
@@ -9,7 +11,7 @@ import type { Executor } from '../../db/client';
 import * as entitlementRepo from '../../repositories/entitlement-repo';
 import * as economyRepo from '../../repositories/economy-repo';
 import * as ledger from '../economy/ledger-service';
-import { lookupCosmeticTier, priceForTier, type CosmeticTier } from '../../config/cosmetics';
+import { listCatalog, lookupCosmeticTier, priceForTier, type CosmeticTier } from '../../config/cosmetics';
 import { SPEND_FLOOR, STARTING_GRANT } from '../../config/economy';
 import { InsufficientBalanceError, NotFoundError } from '../../errors/AppError';
 import type { UserEntitlementRow } from '../../db/schema';
@@ -118,6 +120,28 @@ export async function acquireComponents(
 export async function listMyEntitlements(actorId: string): Promise<EntitlementsResponse> {
   const rows = await entitlementRepo.listMyEntitlements(actorId);
   return { items: rows.map(toEntitlementView) };
+}
+
+/**
+ * GET /cosmetics — the COSM-01 library listing (decision 0075, P10): every catalog item, free +
+ * premium, optionally filtered to one type. `owned` is caller-scoped (free items are always `true`;
+ * premium items check the caller's own `user_entitlements` — one batched read, never per-item). A pure
+ * read, own-only (the `owned` flags never expose another principal's ownership).
+ */
+export async function listCosmeticLibrary(actorId: string, type?: CosmeticType): Promise<CosmeticsResponse> {
+  const catalog = listCatalog(type);
+  const premiumIds = catalog.filter((e) => e.tier !== null).map((e) => e.id);
+  const owned = await entitlementRepo.findOwnedCosmeticIds(actorId, premiumIds);
+  return {
+    items: catalog.map((e) => ({
+      id: e.id,
+      type: e.type,
+      name: e.name,
+      ...(e.tier ? { tier: e.tier } : {}),
+      price: priceForTier(e.tier),
+      owned: e.tier === null ? true : owned.has(e.id),
+    })),
+  };
 }
 
 function toEntitlementView(row: UserEntitlementRow): Entitlement {

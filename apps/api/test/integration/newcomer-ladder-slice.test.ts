@@ -121,7 +121,9 @@ describe('ECON-02 (decision 0074): the 7 ladder steps grant in sequence across d
       expect(res.status).toBe(200);
       expect(res.body.granted).toBe(true);
       expect(res.body.pixels).toBe(expectedPx);
-      expect(res.body.cosmeticId).toBeUndefined(); // roster slots empty by default
+      // decision 0075 (P10): D1-D6 carry a REAL earned-only cosmetic; only D7 (step 7) is reserved empty.
+      const REAL_LADDER_IDS = ['linen', 'stencil', 'chrome', 'brass', 'mint', 'halftone', undefined];
+      expect(res.body.cosmeticId).toBe(REAL_LADDER_IDS[expectedStep - 1]);
       // balance = grant + all prior steps + this step; the ledger reconciles at every rung.
       const priorSum = NEWCOMER_LADDER_STEPS.slice(0, priorClaims).reduce((s, x) => s + x, 0);
       expect(res.body.balance).toBe(STARTING_GRANT + priorSum + expectedPx);
@@ -192,11 +194,12 @@ describe('F36 (decision 0074): two parallel claims on a ladder day → exactly o
 
 describe('COSM-03 (decision 0074): the earned-only cosmetic slot', () => {
   it('an EMPTY slot no-ops gracefully — the PX lands, no entitlement is written', async () => {
+    setLadderCosmeticForTest(0, null); // simulate an unfilled slot (D1-D6 carry a REAL id since 0075/P10 — D7 is the genuinely-empty one)
     const a = await registerUser();
     const res = await request(app).post('/api/me/daily-bonus').set(authed(a.token));
     expect(res.body.granted).toBe(true);
     expect(res.body.cosmeticId).toBeUndefined();
-    expect(await entitlementCount(a.id)).toBe(0); // slot 0 is empty by default
+    expect(await entitlementCount(a.id)).toBe(0);
   });
 
   it('a FILLED slot grants the earned entitlement exactly once (idempotent under a same-day replay)', async () => {
