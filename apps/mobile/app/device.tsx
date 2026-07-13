@@ -16,8 +16,12 @@ import { LooksGrid } from '../src/components/device/LooksGrid';
 import { StickerTray } from '../src/components/device/StickerTray';
 import { StickerRail } from '../src/components/device/StickerRail';
 import { StickerSteppers } from '../src/components/device/StickerSteppers';
+import { KeepBar, type KeepBarItem } from '../src/components/device/KeepBar';
 import { STICKER_ASSET_BY_ID } from '../src/components/device/deviceStickers';
 import { useStickerContext } from '../src/components/device/DeviceStickerContext';
+import { CurrencyCounter } from '../src/components/commerce/CurrencyCounter';
+import { PriceChip } from '../src/components/commerce/PriceChip';
+import { OwnedTag, LockedTag } from '../src/components/commerce/Tags';
 import {
   addSticker,
   canPlace,
@@ -48,6 +52,9 @@ import {
   useGetLooksQuery,
   useSaveLookMutation,
   useDeleteLookMutation,
+  useGetCosmeticsQuery,
+  useGetWalletQuery,
+  useAcquireCosmeticBatchMutation,
 } from '../src/store/api';
 
 // DEV-05 saved-looks cap (server-authoritative; mirrored here only to pre-dim the save-tile at the cap).
@@ -93,6 +100,17 @@ export default function DeviceEditor() {
 
   const { data: device, isLoading, isError, refetch } = useGetDeviceQuery();
   const [updateDevice] = useUpdateDeviceMutation();
+  // CARD-13 premium (M5 P7): the library prices + own-flags each shell/theme; the wallet feeds the
+  // header counter + the KeepBar funded/short branch.
+  const { data: cosmetics } = useGetCosmeticsQuery();
+  const { data: wallet } = useGetWalletQuery();
+  const [acquireBatch] = useAcquireCosmeticBatchMutation();
+  // the Device premium CART (D7): unowned premium facets previewed live but not yet acquired/persisted.
+  const [pendingPremium, setPendingPremium] = useState<{ shell: ShellId | null; theme: ScreenThemeId | null }>({
+    shell: null,
+    theme: null,
+  });
+  const [keepBusy, setKeepBusy] = useState(false);
 
   // LOOKS (D6) — the list + the three write triggers. The list drives the ON NOW computation + the cap.
   const { data: looks } = useGetLooksQuery();
@@ -238,25 +256,82 @@ export default function DeviceEditor() {
     setSection(s);
   }, []);
 
-  // ── SHELL pick (D1/D2) ─────────────────────────────────────────────────────────────────────────
+  // CARD-13 premium (M5 P7) — the library entry for a shell/theme id (tier present = premium).
+  const balance = wallet?.balance ?? 0;
+  const cosmeticFor = useCallback(
+    (id: string, type: 'device_shell' | 'screen_theme') => cosmetics?.items.find((i) => i.id === id && i.type === type),
+    [cosmetics],
+  );
+
+  // ── SHELL pick (D1/D2 · D7 premium) ──────────────────────────────────────────────────────────────
   const pickShell = useCallback(
     (id: ShellId) => {
       const from = liveShellId; // the shell the frame wears BEFORE this pick
+      const c = cosmeticFor(id, 'device_shell');
+      const isOffline = saveState === 'error' && inlineError === null;
+      if (c?.tier && !c.owned) {
+        if (isOffline) return; // D9 — acquiring premium is a write; gated offline
+        setSwitchBeat(id !== from ? { from, to: id } : null);
+        dispatch(setShellId(id)); // preview live only (no server write until KEEP)
+        setPendingPremium((p) => ({ ...p, shell: id }));
+        return;
+      }
+      setPendingPremium((p) => ({ ...p, shell: null })); // a free/owned shell clears the premium preview
       setSwitchBeat(id !== from ? { from, to: id } : null);
       patchDevice({ activeShellId: id });
     },
-    [liveShellId, patchDevice],
+    [liveShellId, patchDevice, cosmeticFor, dispatch, saveState, inlineError],
   );
 
-  // ── THEME pick (D3) ────────────────────────────────────────────────────────────────────────────
+  // ── THEME pick (D3 · D7 premium) ─────────────────────────────────────────────────────────────────
   const pickTheme = useCallback(
     (id: ScreenThemeId) => {
+      const c = cosmeticFor(id, 'screen_theme');
+      const isOffline = saveState === 'error' && inlineError === null;
+      if (c?.tier && !c.owned) {
+        if (isOffline) return;
+        dispatch(setThemeId(id)); // preview live only
+        setPreviewTheme(null); // the KeepBar is the reconcile affordance, not the try-on strip
+        setPendingPremium((p) => ({ ...p, theme: id }));
+        return;
+      }
       const savedTheme = resolveScreenThemeId(savedRef.current?.screenThemeId);
+      setPendingPremium((p) => ({ ...p, theme: null }));
       setPreviewTheme(id === savedTheme ? null : id);
       patchDevice({ screenThemeId: id });
     },
-    [patchDevice],
+    [patchDevice, cosmeticFor, dispatch, saveState, inlineError],
   );
+
+  // ── D7 premium cart — KEEP acquires the previewed premium then commits the facets; CANCEL reverts ──
+  const keepPremium = useCallback(async () => {
+    if (keepBusy) return;
+    const ids: string[] = [pendingPremium.shell, pendingPremium.theme].filter((x): x is ShellId | ScreenThemeId => !!x);
+    if (ids.length === 0) return;
+    setKeepBusy(true);
+    setInlineError(null);
+    try {
+      await acquireBatch({ cosmeticIds: ids }).unwrap();
+      patchDevice({
+        ...(pendingPremium.shell ? { activeShellId: pendingPremium.shell } : {}),
+        ...(pendingPremium.theme ? { screenThemeId: pendingPremium.theme } : {}),
+      });
+      setPendingPremium({ shell: null, theme: null });
+    } catch (e) {
+      setInlineError(errMsg(e, 'Could not acquire — your pixels are unchanged.'));
+    } finally {
+      setKeepBusy(false);
+    }
+  }, [keepBusy, pendingPremium, acquireBatch, patchDevice]);
+
+  const cancelPremium = useCallback(() => {
+    const savedShell = resolveShellId(savedRef.current?.activeShellId);
+    const savedTheme = resolveScreenThemeId(savedRef.current?.screenThemeId);
+    if (pendingPremium.shell) dispatch(setShellId(savedShell));
+    if (pendingPremium.theme) dispatch(setThemeId(savedTheme));
+    setPendingPremium({ shell: null, theme: null });
+    setSwitchBeat(null);
+  }, [dispatch, pendingPremium]);
 
   // ── THEME EXIT — revert the pick to the saved theme (the one un-commit door, walk 4) ───────────────
   const exitPreview = useCallback(() => {
@@ -480,8 +555,43 @@ export default function DeviceEditor() {
   const readoutAnnounce = selectedSticker ? null : readout.title;
   useAnnounceOnChange(readoutAnnounce);
 
+  // ── D7 premium badging + the KeepBar cart ─────────────────────────────────────────────────────────
+  // A tile's badge (top-left): owned → ✓; unowned online → PriceChip; unowned offline → 🔒 LOCKED (D9).
+  const premiumBadge = (id: string, type: 'device_shell' | 'screen_theme') => {
+    const c = cosmeticFor(id, type);
+    if (!c?.tier) return undefined; // free — no badge
+    if (c.owned) return <OwnedTag label="✓" />;
+    if (offline) return <LockedTag label="LOCKED" />;
+    return <PriceChip pixels={c.price} />;
+  };
+  const premiumLocked = (id: string, type: 'device_shell' | 'screen_theme') => {
+    const c = cosmeticFor(id, type);
+    return offline && !!c?.tier && !c.owned; // D9 — dim + writes gated
+  };
+  const cartItems: KeepBarItem[] = [];
+  if (pendingPremium.shell) {
+    cartItems.push({
+      cosmeticId: pendingPremium.shell,
+      name: SHELL_NAMES[pendingPremium.shell],
+      price: cosmeticFor(pendingPremium.shell, 'device_shell')?.price ?? 0,
+    });
+  }
+  if (pendingPremium.theme) {
+    cartItems.push({
+      cosmeticId: pendingPremium.theme,
+      name: SCREEN_THEME_NAMES[pendingPremium.theme],
+      price: cosmeticFor(pendingPremium.theme, 'screen_theme')?.price ?? 0,
+    });
+  }
+  const cartTotal = cartItems.reduce((s, i) => s + i.price, 0);
+
   return (
-    <Frame onBack={goBack} section={section} onSection={changeSection}>
+    <Frame
+      onBack={goBack}
+      section={section}
+      onSection={changeSection}
+      headRight={<CurrencyCounter balance={balance} onPress={() => router.push('/store')} />}
+    >
       {previewTheme && !previewing ? (
         <DevicePreviewStrip name={SCREEN_THEME_NAMES[previewTheme]} onExit={exitPreview} />
       ) : null}
@@ -544,6 +654,8 @@ export default function DeviceEditor() {
                   name={SHELL_NAMES[id]}
                   selected={liveShellId === id}
                   onPress={() => pickShell(id)}
+                  badge={premiumBadge(id, 'device_shell')}
+                  dimmed={premiumLocked(id, 'device_shell')}
                 >
                   <MiniDevice shellId={id} themeId={liveThemeId} />
                 </DeviceItemTile>
@@ -561,6 +673,8 @@ export default function DeviceEditor() {
                   name={SCREEN_THEME_NAMES[id]}
                   selected={liveThemeId === id}
                   onPress={() => pickTheme(id)}
+                  badge={premiumBadge(id, 'screen_theme')}
+                  dimmed={premiumLocked(id, 'screen_theme')}
                 >
                   <ThemeSwatch themeId={id} />
                 </DeviceItemTile>
@@ -661,6 +775,17 @@ export default function DeviceEditor() {
         )}
       </ScrollView>
 
+      {/* D7 — the premium cart: preview live, KEEP acquires-all + applies, CANCEL reverts to saved */}
+      <KeepBar
+        items={cartItems}
+        total={cartTotal}
+        balance={balance}
+        busy={keepBusy}
+        onKeep={() => void keepPremium()}
+        onCancel={cancelPremium}
+        onTopUp={() => router.push('/store')}
+      />
+
       {/* D6·4 — a saved look is not re-derivable, so removal confirms (ConfirmSheet §1.8). */}
       <ConfirmSheet
         visible={pendingDelete !== null}
@@ -686,12 +811,15 @@ function Frame({
   section,
   onSection,
   railDim = false,
+  headRight,
 }: {
   children: React.ReactNode;
   onBack: () => void;
   section: DeviceSection;
   onSection: (s: DeviceSection) => void;
   railDim?: boolean;
+  /** the trailing head slot — the PX CurrencyCounter (ECON-07 entry point, M5 P7). */
+  headRight?: React.ReactNode;
 }) {
   const styles = useStyles();
   return (
@@ -700,7 +828,11 @@ function Frame({
           the screen top, jammed against the return-link. `headPad` gives it the game-page's breathing
           room (paddingTop + a gap before the link). */}
       <View style={styles.headPad}>
-        <ScreenHead title="DEVICE" />
+        <View style={styles.headRow}>
+          <ScreenHead title="DEVICE" />
+          <View style={styles.headSpacer} />
+          {headRight}
+        </View>
         <TertiaryLink label="Return to profile" chevron="leading-back" onPress={onBack} />
       </View>
       {children}
@@ -738,6 +870,8 @@ const useStyles = themedStyles((t) => ({
   flex: { flex: 1 },
   screen: { flex: 1, backgroundColor: t.scr.bg },
   headPad: { paddingHorizontal: t.space.lg, paddingTop: t.space.lg, gap: t.space.xs },
+  headRow: { flexDirection: 'row', alignItems: 'center' },
+  headSpacer: { flex: 1 },
   dim: { opacity: 0.4 },
   body: { paddingHorizontal: t.space.lg, paddingVertical: t.space.md, gap: t.space.md },
   // readout

@@ -14,12 +14,15 @@ export function KeepBeat({
   title,
   composition,
   cardsDesigned,
+  pxSpent = 0,
   onDone,
   onEditArt,
 }: {
   title: string;
   composition: CardComposition;
   cardsDesigned: number | null;
+  /** CARD-13 — PX spent acquiring premium components as part of this KEEP (0 = none rode along). */
+  pxSpent?: number;
   onDone: () => void;
   /** The Canvas door (§3.4) — absent, the door renders as the disabled "arrives later" line. */
   onEditArt?: () => void;
@@ -71,6 +74,9 @@ export function KeepBeat({
         <View style={styles.okTx}>
           <Text style={styles.okTitle}>EQUIPPED FOR {title.toUpperCase()}</Text>
           <Text style={styles.okSub}>Your shelf wears it now.</Text>
+          {pxSpent > 0 ? (
+            <Text style={styles.spent}>− {pxSpent} PX · premium components acquired — yours to keep.</Text>
+          ) : null}
         </View>
       </View>
 
@@ -110,6 +116,7 @@ const useStyles = themedStyles((t) => ({
   okTx: { gap: 2, flexShrink: 1 },
   okTitle: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 0.8 },
   okSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
+  spent: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.brand.gold, letterSpacing: 0.5, marginTop: 2 },
   clout: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
   canvasDoor: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5 },
   canvasDoorLive: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 0.5 },

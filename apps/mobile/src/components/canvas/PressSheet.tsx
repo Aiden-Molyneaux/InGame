@@ -1,20 +1,30 @@
 import { useRef } from 'react';
-import { Animated, Text } from 'react-native';
+import { Animated, Text, View } from 'react-native';
 import { PulledSheet } from '../PulledSheet';
 import { SaveOption } from '../styler/SaveOption';
+import { PixelsMark } from '../commerce/PixelsMark';
 import { themedStyles } from '../../theme';
 import { useReducedMotion } from '../../a11y/useReducedMotion';
 
 // PressSheet (component-map §8b / board P7) — the Canvas finish-up sheet: "where does it go?"
 // Canonical labels PUBLISH · SAVE PRIVATE · TO THE STYLER (the workshop flavors eyebrows only).
-// ◆ PUBLISH + the CARD-19 checklist + CARD-20 immutability + the P8 PrintRitual are
-// EXPECTED(M5 · decision 0062 §2) — PUBLISH renders present-but-disabled (the surface's standing
-// posture for deferred doors). SAVE PRIVATE runs the Styler's ONE quiet-exit implementation
-// (two-door model extended, never forked); TO THE STYLER is the posture switch back.
-// CR-17 (gate-5): SAVE PRIVATE carries GOLD weight + a LIGHT press beat — a quick scale flash before
-// the save fires (distinct from the full M5 publish PrintRitual; reduce-motion skips it).
+// M5 P7: ◆ PUBLISH goes LIVE with the CARD-19 checklist (complexity · dedup · premium-reconcile). The
+// checklist rows mirror the server's 409 grammar (MIN_COMPLEXITY · DUPLICATE_COMPOSITION ·
+// PREMIUM_UNRECONCILED); PUBLISH disables only on the client-checkable complexity floor, and the
+// premium row routes into the ReconcileSheet (rendered by CanvasSurface). The full P8 PrintRitual fires
+// on success (owned by the Styler). SAVE PRIVATE runs the Styler's ONE quiet-exit implementation.
+// CR-17 (gate-5): SAVE PRIVATE carries GOLD weight + a LIGHT press beat (distinct from the ritual).
 
 const BEAT_MS = 250;
+
+/** The CARD-19 checklist state (M5 P7) — complexity is live-checkable; unique is server-only (surfaced
+ *  on a DUPLICATE_COMPOSITION 409); premium is the reconcile debt (0 = owned/none). */
+export interface PublishChecklist {
+  complexity: 'ok' | 'fail';
+  unique: 'unknown' | 'ok' | 'fail';
+  premium: 'ok' | 'debt';
+  premiumCost: number;
+}
 
 export function PressSheet({
   visible,
@@ -22,12 +32,18 @@ export function PressSheet({
   busy,
   onSavePrivate,
   onToStyler,
+  checklist,
+  onPublish,
+  publishBusy,
 }: {
   visible: boolean;
   onClose: () => void;
   busy: boolean;
   onSavePrivate: () => void;
   onToStyler: () => void;
+  checklist: PublishChecklist;
+  onPublish: () => void;
+  publishBusy: boolean;
 }) {
   const styles = useStyles();
   const beat = useRef(new Animated.Value(1)).current;
@@ -46,15 +62,47 @@ export function PressSheet({
     ]).start(() => onSavePrivate());
   };
 
+  const complexityFails = checklist.complexity === 'fail';
+  const publishSub = complexityFails
+    ? 'Add a little more first — 3 elements or 2 kinds.'
+    : checklist.premium === 'debt'
+      ? `Adoptable by everyone — acquires ${checklist.premiumCost} PX of premium first.`
+      : 'Adoptable by everyone — it joins the community gallery.';
+
   return (
     <PulledSheet visible={visible} onClose={onClose} title="The press — where does it go?">
       <SaveOption
-        label="◆ Publish"
-        sub="Adoptable by everyone — arrives with the community release."
+        label={publishBusy ? '…' : '◆ Publish'}
+        sub={publishSub}
         gold
-        disabled
-        onPress={() => {}}
+        disabled={busy || publishBusy || complexityFails}
+        onPress={onPublish}
       />
+      {/* the CARD-19 checklist — what publishing requires (board P7) */}
+      <View style={styles.checklist}>
+        <CheckRow
+          state={checklist.complexity === 'ok' ? 'ok' : 'fail'}
+          okText="Enough to stand on its own"
+          failText="Needs 3 elements or 2 kinds"
+        />
+        <CheckRow
+          state={checklist.unique === 'fail' ? 'fail' : 'pending'}
+          okText="One of a kind"
+          failText="This exact card already exists"
+          pendingText="Checked against the gallery on publish"
+        />
+        {checklist.premium === 'debt' ? (
+          <View style={styles.premRow}>
+            <Text style={styles.checkPending}>◇</Text>
+            <Text style={styles.premText}>Premium components — </Text>
+            <Text style={styles.premCost}>{checklist.premiumCost}</Text>
+            <PixelsMark size={9} />
+            <Text style={styles.premTail}> to reconcile</Text>
+          </View>
+        ) : (
+          <CheckRow state="ok" okText="Premium components owned" failText="" />
+        )}
+      </View>
       <Animated.View style={{ transform: [{ scale: beat }] }}>
         <SaveOption
           label={busy ? '…' : 'Save private'}
@@ -76,6 +124,28 @@ export function PressSheet({
   );
 }
 
+function CheckRow({
+  state,
+  okText,
+  failText,
+  pendingText,
+}: {
+  state: 'ok' | 'fail' | 'pending';
+  okText: string;
+  failText: string;
+  pendingText?: string;
+}) {
+  const styles = useStyles();
+  const glyph = state === 'ok' ? '✓' : state === 'fail' ? '✕' : '◇';
+  const text = state === 'ok' ? okText : state === 'fail' ? failText : (pendingText ?? '');
+  return (
+    <View style={styles.checkRow}>
+      <Text style={[styles.checkGlyph, state === 'ok' && styles.checkOk, state === 'fail' && styles.checkFail]}>{glyph}</Text>
+      <Text style={[styles.checkText, state === 'fail' && styles.checkFailText]}>{text}</Text>
+    </View>
+  );
+}
+
 const useStyles = themedStyles((t) => ({
   crossPostureNote: {
     fontFamily: t.font.screenSemi,
@@ -84,4 +154,24 @@ const useStyles = themedStyles((t) => ({
     letterSpacing: 0.5,
     paddingTop: t.space.sm,
   },
+  checklist: {
+    gap: t.space.sm,
+    paddingVertical: t.space.sm,
+    paddingHorizontal: t.space.sm,
+    borderLeftWidth: 2,
+    borderLeftColor: t.scr.hairline,
+    marginLeft: t.space.sm,
+    marginBottom: t.space.sm,
+  },
+  checkRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.sm },
+  checkGlyph: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.faint, width: 14 },
+  checkOk: { color: t.brand.gold },
+  checkFail: { color: t.brand.alert },
+  checkText: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5, flexShrink: 1 },
+  checkFailText: { color: t.scr.ink },
+  checkPending: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.brand.gold, width: 14 },
+  premRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  premText: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
+  premCost: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.brand.gold, marginLeft: 2 },
+  premTail: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5 },
 }));

@@ -51,9 +51,11 @@ import {
   type AcquireResponse,
   type AcquireBatchResponse,
   type AcquireBatchRequest,
+  type CosmeticsResponse,
   storeResponseSchema,
   walletResponseSchema,
   ledgerResponseSchema,
+  cosmeticsResponseSchema,
 } from '@ingame/shared';
 import type { RootState } from './index';
 import { setTokens } from './authSlice';
@@ -171,6 +173,7 @@ export const api = createApi({
     'Wallet',
     'Ledger',
     'Entitlements',
+    'Cosmetics',
   ],
   endpoints: (build) => ({
     // ── auth ──────────────────────────────────────────────────────────────────────────────────
@@ -332,15 +335,33 @@ export const api = createApi({
       query: () => '/me/entitlements',
       providesTags: ['Entitlements'],
     }),
+    // GET /cosmetics (COSM-01, decision 0075) — the full free+premium library with per-item `price` +
+    // caller-scoped `owned` flags. The CARD-13 premium-in-editor surfaces (Styler rails / Device rows /
+    // reconcile cost-stack) read this to price + own-flag every premium cosmetic (parsed at the seam).
+    getCosmetics: build.query<CosmeticsResponse, void>({
+      query: () => '/cosmetics',
+      providesTags: ['Cosmetics'],
+      transformResponse: (raw): CosmeticsResponse => cosmeticsResponseSchema.parse(raw),
+    }),
     // POST /cosmetics/:id/acquire — the Store BUY (COSM-03/ECON-01). 409 INSUFFICIENT_BALANCE {shortBy}
-    // drives the in-sheet bridge; success → an entitlement + a spend ledger row.
+    // drives the in-sheet bridge; success → an entitlement + a spend ledger row. Cosmetics — the /cosmetics
+    // `owned` flags flip, so the editor rails re-read.
     acquireCosmetic: build.mutation<AcquireResponse, string>({
       query: (cosmeticId) => ({ url: `/cosmetics/${cosmeticId}/acquire`, method: 'POST', body: {} }),
-      invalidatesTags: ['Wallet', 'Ledger', 'Entitlements'],
+      invalidatesTags: ['Wallet', 'Ledger', 'Entitlements', 'Cosmetics'],
     }),
+    // POST /cosmetics/acquire-batch — CARD-13 ACQUIRE ALL (the ReconcileSheet / KeepBar). Atomic against
+    // the total; already-owned ids are silent no-ops. Ticks the wallet + flips ownership everywhere.
     acquireCosmeticBatch: build.mutation<AcquireBatchResponse, AcquireBatchRequest>({
       query: (body) => ({ url: '/cosmetics/acquire-batch', method: 'POST', body }),
-      invalidatesTags: ['Wallet', 'Ledger', 'Entitlements'],
+      invalidatesTags: ['Wallet', 'Ledger', 'Entitlements', 'Cosmetics'],
+    }),
+    // POST /cards/:id/publish (CARD-13/15/19/20) — the Canvas ◆ PUBLISH. Gates return 409s the client
+    // renders as the CARD-19 checklist / ReconcileSheet: MIN_COMPLEXITY · DUPLICATE_COMPOSITION ·
+    // PREMIUM_UNRECONCILED {unowned,total}. Success flattens + sets status=published (immutable after).
+    publishCard: build.mutation<CardDesignView, string>({
+      query: (cardId) => ({ url: `/cards/${cardId}/publish`, method: 'POST', body: {} }),
+      invalidatesTags: ['Cards', 'Me', 'Collection'],
     }),
 
     // ── catalog (CAT-01..05/09) ───────────────────────────────────────────────────────────────
@@ -397,6 +418,8 @@ export const {
   useClaimDailyBonusMutation,
   useValidateIapMutation,
   useGetEntitlementsQuery,
+  useGetCosmeticsQuery,
   useAcquireCosmeticMutation,
   useAcquireCosmeticBatchMutation,
+  usePublishCardMutation,
 } = api;

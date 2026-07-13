@@ -188,34 +188,98 @@ export function listCatalog(type?: CosmeticType): CosmeticCatalogEntry[] {
   return type ? COSMETIC_CATALOG.filter((e) => e.type === type) : COSMETIC_CATALOG;
 }
 
-// ── CARD-06 derivation support ──────────────────────────────────────────────────────────────────────
-// A composition's CLOSED attributes stay `kind`/`color`-keyed in the schema (render/composition.ts:
-// "they reference cosmetic ids once the Styler + COSM roster formalize them") — frame/effect/finish/
-// nameplate-SHAPE carry no cosmeticId today, so they are NOT coverable here without either a
-// composition-schema change or a kind+color→id resolver (out of P4's scope; flagged in the P4 receipt;
-// still true after P10 — the registry/catalog now HAS real ids for those categories, but nothing in the
-// composition schema references them yet, so CARD-06 derivation only ever sees `fontId`/`iconId` refs
-// live — a real premium FRAME/EFFECT/FINISH/NAMEPLATE never flips `isPremium` until that schema work
-// lands). The two fields that DO carry a real id already are `fontId` (text elements + the nameplate)
-// and `iconId` (icon elements) — CARD-06 checks those against the SAME registry acquire prices against,
-// so a fixture id (or, since P10, a real premium font id like `'bitter'`) used in a test composition is
-// also a valid acquire target (one id space, no synthetic namespacing).
+// ── CARD-06 derivation support (M5 P7 — the CLOSED-ATTRIBUTE extension) ──────────────────────────────
+// A composition's CLOSED attributes are `kind`/`shape`-keyed (render/composition.ts). For EFFECT,
+// FINISH and NAMEPLATE the kind/shape string IS the roster id one-for-one (`'frost'`, `'linen'`,
+// `'brass'` — the client roster.ts EFFECTS/FINISHES/NAMEPLATES arrays use the same bare strings), so
+// the kind can be pushed straight into the ref list: a free kind is simply UNREGISTERED (→ `undefined`,
+// harmless) and a premium kind resolves to its tier. FRAMES are the one exception — the composition
+// `frame.kind` is NOT the id (multiple roster ids share a kind, disambiguated by `color`: e.g. the free
+// `thin-line` and the premium `thin-gold` both render kind `'thin-line'`), so a frame is resolved via a
+// small kind+color index mirroring roster.ts's premium FRAMES (kind+color, never kind alone). A frame
+// with NO explicit `kind` is a legacy/pre-roster document (the AURORA sample, the CARD-18 default) and
+// stays free. The `style_presets` `.style` shape carries the ids DIRECTLY (`frameId`/`effect.id`/
+// `finishId`/`nameplateId`/`title.fontId`) — those are read verbatim. `fontId` (text elements + the
+// nameplate) and `iconId` (icon elements) carry real ids in both shapes. One id space throughout — a
+// derived id is also a valid acquire target (no synthetic namespacing).
 
-interface ComposedRefShape {
-  elements?: Array<Record<string, unknown>>;
-  nameplate?: Record<string, unknown>;
+// Premium FRAMES, keyed by (composition kind, color) — mirrors apps/mobile/src/styler/roster.ts FRAMES
+// premium rows. The one closed attribute whose composition `kind` is not the roster id.
+const PREMIUM_FRAMES: ReadonlyArray<{ id: string; kind: string; color: string }> = [
+  { id: 'thin-gold', kind: 'thin-line', color: '#e8c14a' },
+  { id: 'chrome', kind: 'double-line', color: '#d8d5ec' },
+  { id: 'ornate-gold', kind: 'ornate', color: '#e8c14a' },
+  { id: 'ember-glow', kind: 'glow', color: '#ff5a5a' },
+  { id: 'plasma', kind: 'glow', color: '#5ad0ff' },
+  { id: 'holo-foil', kind: 'foil', color: '#e85ad0' },
+  { id: 'marquee', kind: 'marquee', color: '#e8c14a' },
+];
+// Kinds that ALSO have a free roster variant — for these, only an EXACT color match reads premium (a
+// plain `thin-line`/`double-line` in any other tone is the free frame). The all-premium kinds
+// (`ornate`/`glow`/`foil`/`marquee`) read premium regardless of a recolor, resolving to their first id.
+const FREE_VARIANT_FRAME_KINDS = new Set(['thin-line', 'double-line', 'ticket-notch']);
+
+/** Resolve a composition `frame` closed attribute to its premium roster id, or `undefined` if free. */
+function resolveFrameCosmeticId(frame: Record<string, unknown>): string | undefined {
+  if (typeof frame.kind !== 'string') return undefined; // kindless = legacy/pre-roster document → free
+  const kind = frame.kind;
+  const color = typeof frame.color === 'string' ? frame.color.toLowerCase() : '';
+  const ofKind = PREMIUM_FRAMES.filter((f) => f.kind === kind);
+  if (ofKind.length === 0) return undefined; // no premium frame of this kind → free
+  const exact = ofKind.find((f) => f.color.toLowerCase() === color);
+  if (exact) return exact.id;
+  return FREE_VARIANT_FRAME_KINDS.has(kind) ? undefined : ofKind[0]!.id;
 }
 
-/** The cosmeticIds a composition references, from its id-bearing fields only (see the banner above). */
+interface ComposedRefShape {
+  // composition shape
+  elements?: Array<Record<string, unknown>>;
+  frame?: Record<string, unknown>;
+  effect?: Record<string, unknown>;
+  finish?: Record<string, unknown>;
+  nameplate?: Record<string, unknown>;
+  // style_presets `.style` shape (ids carried directly)
+  frameId?: unknown;
+  finishId?: unknown;
+  nameplateId?: unknown;
+  title?: Record<string, unknown>;
+}
+
+/** The cosmeticIds a composition (or a style_presets `.style`) references — id-bearing + closed. */
 export function collectCosmeticRefs(composition: unknown): string[] {
   const c = (composition ?? {}) as ComposedRefShape;
   const refs: string[] = [];
+  // — vector elements (id-bearing since M4) —
   for (const el of c.elements ?? []) {
     if (!el || typeof el !== 'object') continue;
     if (el.type === 'icon' && typeof el.iconId === 'string') refs.push(el.iconId);
     if (el.type === 'text' && typeof el.fontId === 'string') refs.push(el.fontId);
   }
-  if (c.nameplate && typeof c.nameplate.fontId === 'string') refs.push(c.nameplate.fontId);
+  // — composition CLOSED attributes (kind/shape = id, except frame = kind+color) —
+  if (c.frame && typeof c.frame === 'object') {
+    const id = resolveFrameCosmeticId(c.frame);
+    if (id) refs.push(id);
+  }
+  if (c.effect && typeof c.effect === 'object') {
+    const e = c.effect as Record<string, unknown>;
+    if (typeof e.kind === 'string') refs.push(e.kind); // composition effect
+    if (typeof e.id === 'string') refs.push(e.id); // style_presets effect
+  }
+  if (c.finish && typeof c.finish === 'object') {
+    const f = c.finish as Record<string, unknown>;
+    if (typeof f.kind === 'string') refs.push(f.kind);
+  }
+  if (c.nameplate && typeof c.nameplate === 'object') {
+    if (typeof c.nameplate.shape === 'string') refs.push(c.nameplate.shape); // composition plate shape
+    if (typeof c.nameplate.fontId === 'string') refs.push(c.nameplate.fontId);
+  }
+  // — style_presets `.style` ids (carried directly) —
+  if (typeof c.frameId === 'string') refs.push(c.frameId);
+  if (typeof c.finishId === 'string') refs.push(c.finishId);
+  if (typeof c.nameplateId === 'string') refs.push(c.nameplateId);
+  if (c.title && typeof c.title === 'object' && typeof c.title.fontId === 'string') {
+    refs.push(c.title.fontId);
+  }
   return refs;
 }
 

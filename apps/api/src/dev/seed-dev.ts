@@ -171,7 +171,9 @@ const SEED_COMPOSITION: Composition = {
   ],
   frame: { color: '#e8c14a', width: 0.012 },
   nameplate: { title: 'AURORA', plate: '#141026', ink: '#f3ecd9', size: 0.05 },
-  effect: { kind: 'scanline', intensity: 0.55 },
+  // SOFT GLOW is free — the demo's default showcase card must save/publish without a premium debt now
+  // that P7's derivation covers closed attributes (SCANLINE re-tagged premium by decision 0075).
+  effect: { kind: 'soft-glow', intensity: 0.55 },
 } as Composition;
 
 async function ensureCardSubstrate(userId: string, eldenRingId: string | undefined): Promise<void> {
@@ -185,8 +187,18 @@ async function ensureCardSubstrate(userId: string, eldenRingId: string | undefin
       name: SEED_CARD_NAME,
     });
     design = await cardService.savePrivate(userId, created.card.id);
-  } else if (design.status === 'draft') {
-    design = await cardService.savePrivate(userId, design.id);
+  } else {
+    // REPAIR (M5 P7): a dev DB seeded before the 0075 re-tag carries SCANLINE (premium now) on this
+    // card — derivation covers closed attributes since P7, so its next save-private would 409
+    // PREMIUM_UNRECONCILED. Re-point at the free composition (idempotent — a no-op once clean).
+    const effectKind = (design.composition as { effect?: { kind?: string } } | null)?.effect?.kind;
+    if (design.status !== 'published' && effectKind === 'scanline') {
+      design = await cardService.updateCard(userId, design.id, { composition: SEED_COMPOSITION });
+      console.log('seed-dev: repaired the demo card — SCANLINE (premium since 0075) → SOFT GLOW');
+    }
+    if (design.status === 'draft') {
+      design = await cardService.savePrivate(userId, design.id);
+    }
   }
   const shelf = await collectionService.listCollection(userId);
   const entry = shelf.items.find((i) => i.gameId === eldenRingId);

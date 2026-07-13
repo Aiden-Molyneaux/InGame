@@ -310,10 +310,10 @@ describe('CARD-06: premium derivation flips against a fixture-registered premium
 });
 
 describe('CARD-06: premium derivation flips against a REAL roster premium id (decision 0075/P10)', () => {
-  // NOTE: the task brief's illustrative id was `frost` (an effect) — but `collectCosmeticRefs` only
-  // reads `fontId`/`iconId` off a composition (see `config/cosmetics.ts`'s banner: frame/effect/
-  // finish/nameplate-shape carry no cosmeticId yet, a documented P4-scope limit unchanged by P10). A
-  // real derivation flip is only reachable today via a premium FONT id — `bitter` (SLAB, 3 PX).
+  // Since M5 P7, `collectCosmeticRefs` reads the CLOSED attributes too (frame kind+color / effect kind /
+  // finish kind / nameplate shape) — so a real premium FRAME/EFFECT/FINISH/NAMEPLATE flips isPremium,
+  // not just a premium FONT id. `bitter` (SLAB font, 3 PX) remains the fontId path; `frost` (effect,
+  // 8 PX) and `thin-gold` (frame, kind+color, 3 PX) exercise the new closed-attribute paths.
   it("a composition referencing the real 'bitter' (SLAB) premium font → isPremium true, no fixture needed", async () => {
     const a = await registerUser();
     const game = await seedGame(a.token, 'CARD-06 real-roster RPG');
@@ -331,6 +331,41 @@ describe('CARD-06: premium derivation flips against a REAL roster premium id (de
       .send({ gameId: game.id, composition: compositionWithFont('clean-sans') }); // real FREE font (CHAKRA)
     expect(free.status).toBe(201);
     expect(free.body.isPremium).toBe(false);
+  });
+
+  it("a premium closed attribute — FROST effect / THIN-GOLD frame — flips isPremium true (P7 derivation)", async () => {
+    const a = await registerUser();
+    const game = await seedGame(a.token, 'CARD-06 closed-attr RPG');
+
+    const frost = await request(app)
+      .post('/api/cards')
+      .set(authed(a.token))
+      .send({
+        gameId: game.id,
+        composition: { ...compositionWithFont(), effect: { kind: 'frost', intensity: 0.5 } },
+      });
+    expect(frost.status).toBe(201);
+    expect(frost.body.isPremium).toBe(true);
+
+    const goldFrame = await request(app)
+      .post('/api/cards')
+      .set(authed(a.token))
+      .send({
+        gameId: game.id,
+        composition: { ...compositionWithFont(), frame: { kind: 'thin-line', color: '#e8c14a', width: 0.045 } },
+      });
+    expect(goldFrame.status).toBe(201);
+    expect(goldFrame.body.isPremium).toBe(true);
+
+    const plainFrame = await request(app)
+      .post('/api/cards')
+      .set(authed(a.token))
+      .send({
+        gameId: game.id,
+        composition: { ...compositionWithFont(), frame: { kind: 'thin-line', color: '#c9c5e6', width: 0.045 } },
+      });
+    expect(plainFrame.status).toBe(201);
+    expect(plainFrame.body.isPremium).toBe(false);
   });
 });
 

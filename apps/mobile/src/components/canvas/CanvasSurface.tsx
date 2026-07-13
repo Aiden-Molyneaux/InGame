@@ -9,9 +9,10 @@ import { EditBar } from './EditBar';
 import { AssetShelf } from './AssetShelf';
 import { EditSlipSheet } from './EditSlipSheet';
 import { TransformDrawer } from './TransformDrawer';
-import { PressSheet } from './PressSheet';
+import { PressSheet, type PublishChecklist } from './PressSheet';
 import { ProofView } from './ProofView';
 import { ScreenButton } from '../ScreenButton';
+import { ReconcileSheet, type ReconcileItem } from '../commerce/ReconcileSheet';
 import {
   addElement,
   duplicateElement,
@@ -36,6 +37,23 @@ import { useAnnounceOnChange } from '../../a11y/announce';
 
 export type CanvasPatch = (fn: (d: CardComposition) => CardComposition, opts?: { history?: boolean }) => void;
 
+/** The CARD-13/19 publish bundle threaded from the Styler (which owns the row + the mutations). */
+export interface CanvasPublish {
+  checklist: PublishChecklist;
+  onPublish: () => void;
+  busy: boolean;
+  reconcile: {
+    open: boolean;
+    items: ReconcileItem[];
+    total: number;
+    balance: number;
+    busy: boolean;
+    onAcquireAll: () => void;
+    onClose: () => void;
+    onTopUp: () => void;
+  };
+}
+
 export function CanvasSurface({
   title,
   composition,
@@ -50,6 +68,7 @@ export function CanvasSurface({
   busyExit,
   onBackToStyler,
   onSavePrivate,
+  publish,
 }: {
   title: string;
   composition: CardComposition;
@@ -65,6 +84,8 @@ export function CanvasSurface({
   busyExit: boolean;
   onBackToStyler: () => void;
   onSavePrivate: () => void;
+  /** CARD-13/19 publish (M5 P7) — the checklist + reconcile the ◆ PUBLISH path drives. */
+  publish: CanvasPublish;
 }) {
   const styles = useStyles();
   const t = useTheme();
@@ -645,6 +666,24 @@ export function CanvasSurface({
           setPressOpen(false);
           onBackToStyler();
         }}
+        checklist={publish.checklist}
+        publishBusy={publish.busy}
+        onPublish={() => {
+          setPressOpen(false);
+          publish.onPublish();
+        }}
+      />
+      {/* CARD-13 reconcile inside the press — a PUBLISH carrying unowned premium opens ACQUIRE ALL here */}
+      <ReconcileSheet
+        visible={publish.reconcile.open}
+        onClose={publish.reconcile.onClose}
+        items={publish.reconcile.items}
+        total={publish.reconcile.total}
+        balance={publish.reconcile.balance}
+        busy={publish.reconcile.busy}
+        context="publish"
+        onAcquireAll={publish.reconcile.onAcquireAll}
+        onTopUp={publish.reconcile.onTopUp}
       />
     </View>
   );

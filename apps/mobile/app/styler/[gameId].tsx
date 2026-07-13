@@ -15,6 +15,13 @@ import { KeepBeat } from '../../src/components/styler/KeepBeat';
 import { ScreenButton } from '../../src/components/ScreenButton';
 import { PulledSheet } from '../../src/components/PulledSheet';
 import { ConfirmSheet } from '../../src/components/ConfirmSheet';
+import { CurrencyCounter } from '../../src/components/commerce/CurrencyCounter';
+import { PixelsMark } from '../../src/components/commerce/PixelsMark';
+import { ReconcileSheet } from '../../src/components/commerce/ReconcileSheet';
+import { PrintRitual } from '../../src/components/canvas/PrintRitual';
+import type { TileBadge } from '../../src/components/styler/AttributeSection';
+import type { PublishChecklist } from '../../src/components/canvas/PressSheet';
+import { premiumStatusOf } from '../../src/styler/premium';
 import { themedStyles, useTheme } from '../../src/theme';
 import { useAnnounceOnChange } from '../../src/a11y/announce';
 import type { CardComposition } from '../../src/render/composition';
@@ -40,6 +47,10 @@ import {
   useDeleteCardMutation,
   useUpdateEntryMutation,
   useCreateStylePresetMutation,
+  useGetCosmeticsQuery,
+  useGetWalletQuery,
+  useAcquireCosmeticBatchMutation,
+  usePublishCardMutation,
 } from '../../src/store/api';
 
 // The Styler (§3.2 · design-spec §2.5 · decision 0014 stage 2) — the in-frame card editor over the
@@ -52,7 +63,7 @@ import {
 // — the snapshot is what makes "without keeping" true. M4 = the 0063 FREE roster; premium surfaces
 // are EXPECTED(M5). Route: /styler/:gameId (+?cardId= resume from the switcher / My Designs).
 
-type Mode = 'pick' | 'edit' | 'kept';
+type Mode = 'pick' | 'edit' | 'kept' | 'published';
 type Posture = 'styler' | 'canvas'; // ONE session, two postures (CARD-24a/0066 §6 — same row, same exits)
 type SaveState = 'saved' | 'saving' | 'error' | 'fresh';
 
@@ -114,6 +125,10 @@ export default function Styler() {
     isSuccess: cardsSuccess,
   } = useGetMyCardsQuery(undefined, { skip: !cardId });
   const { data: me } = useGetMeQuery();
+  // CARD-13 premium (M5 P7): the library gives every roster id its PX price + caller-scoped `owned`;
+  // the wallet gives the balance the header counter + the reconcile funded/short branch read.
+  const { data: cosmetics } = useGetCosmeticsQuery();
+  const { data: wallet } = useGetWalletQuery();
 
   const [createCard] = useCreateCardMutation();
   const [updateCard] = useUpdateCardMutation();
@@ -121,6 +136,8 @@ export default function Styler() {
   const [deleteCard] = useDeleteCardMutation();
   const [updateEntry] = useUpdateEntryMutation();
   const [createStylePreset] = useCreateStylePresetMutation();
+  const [acquireBatch] = useAcquireCosmeticBatchMutation();
+  const [publishCardMut] = usePublishCardMutation();
 
   const entry = useMemo(() => shelf?.items.find((i) => i.gameId === gameId), [shelf, gameId]);
   const title = entry?.title ?? 'GAME';
@@ -161,6 +178,30 @@ export default function Styler() {
   // one in-flight guard across the exit writes — a double-tap on DISCARD/SAVE PRIVATE/KEEP AS
   // DRAFT ran the write twice and popped the router twice (murr round-2)
   const [busyExit, setBusyExit] = useState(false);
+
+  // ── CARD-13 premium reconcile (M5 P7) ────────────────────────────────────────────────────────
+  const balance = wallet?.balance ?? 0;
+  // the premium components in the live draft (owned + unowned) + the running cost-stack (unowned PX).
+  const premium = useMemo(() => premiumStatusOf(draft, cosmetics?.items), [draft, cosmetics]);
+  const [reconcileOpen, setReconcileOpen] = useState(false);
+  const [reconcileBusy, setReconcileBusy] = useState(false);
+  const [pxSpent, setPxSpent] = useState(0); // rode a KEEP → the KeepBeat PX-spent line
+  // which commit to run once the components are acquired (KEEP equips · SAVE PRIVATE files · PUBLISH ships).
+  const pendingCommitRef = useRef<null | 'keep' | 'savePrivate' | 'publish'>(null);
+  const [busyPublish, setBusyPublish] = useState(false);
+  const [dupFailed, setDupFailed] = useState(false); // a DUPLICATE_COMPOSITION 409 flips the checklist
+  // per-roster-id premium badge lookup (price + owned) — only PREMIUM ids get an entry.
+  const badgeFor = useCallback(
+    (ids: string[]): Record<string, TileBadge> => {
+      const out: Record<string, TileBadge> = {};
+      for (const id of ids) {
+        const item = cosmetics?.items.find((i) => i.id === id);
+        if (item && item.tier) out[id] = { owned: item.owned, price: item.price };
+      }
+      return out;
+    },
+    [cosmetics],
+  );
 
   // The composition as it was when this session OPENED the card (resumed DRAFT rows only). Editing a
   // draft autosaves in-place, so "discard" on a resumed draft PATCHes this back (owner D.23). A
@@ -553,6 +594,127 @@ export default function Styler() {
     }
   }
 
+  // ── CARD-13 reconcile bridge (M5 P7) — a KEEP / SAVE PRIVATE that carries unowned premium opens the
+  // ReconcileSheet FIRST (ACQUIRE ALL), then proceeds. The server gates identically (PREMIUM_UNRECONCILED
+  // on save-private); pre-checking here avoids a failed round-trip and drives the funded/short UI. ──
+  function requestKeep() {
+    if (premium.unowned.length > 0) {
+      pendingCommitRef.current = 'keep';
+      setSaveOpen(false);
+      setReconcileOpen(true);
+      return;
+    }
+    void keep();
+  }
+
+  function requestSavePrivate() {
+    if (premium.unowned.length > 0) {
+      pendingCommitRef.current = 'savePrivate';
+      setSaveOpen(false);
+      setReconcileOpen(true);
+      return;
+    }
+    void savePrivateQuiet();
+  }
+
+  async function onAcquireAll() {
+    if (reconcileBusy || premium.unowned.length === 0) return;
+    setReconcileBusy(true);
+    setInlineError(null);
+    const ids = premium.unowned.map((u) => u.cosmeticId);
+    try {
+      const res = await acquireBatch({ cosmeticIds: ids }).unwrap();
+      setReconcileOpen(false);
+      const action = pendingCommitRef.current;
+      pendingCommitRef.current = null;
+      if (action === 'keep') {
+        setPxSpent(res.totalPaid); // surfaced on the KeepBeat
+        await keep();
+      } else if (action === 'savePrivate') {
+        await savePrivateQuiet();
+      } else if (action === 'publish') {
+        await publish();
+      }
+    } catch (e) {
+      setInlineError(errMsg(e, 'Could not acquire the components. Your pixels are unchanged.'));
+    } finally {
+      setReconcileBusy(false);
+    }
+  }
+
+  // ── CARD-19 publish (M5 P7 · canvas ◆ PUBLISH) ────────────────────────────────────────────────
+  // The min-complexity gate is checkable live (≥3 elements OR ≥2 distinct kinds); dedup is a global
+  // server check (surfaced as the checklist's UNIQUE row only if a DUPLICATE_COMPOSITION 409 fires);
+  // premium-reconcile reuses the ReconcileSheet (context 'publish'). Any edit clears a stale dedup fail.
+  const complexityOk = useMemo(() => {
+    const els = draft?.elements ?? [];
+    return els.length >= 3 || new Set(els.map((e) => e.type)).size >= 2;
+  }, [draft]);
+  useEffect(() => {
+    setDupFailed(false);
+  }, [userEdits]);
+  const publishChecklist: PublishChecklist = {
+    complexity: complexityOk ? 'ok' : 'fail',
+    unique: dupFailed ? 'fail' : 'unknown',
+    premium: premium.unowned.length === 0 ? 'ok' : 'debt',
+    premiumCost: premium.costStack,
+  };
+
+  function requestPublish() {
+    if (!cardRow || !complexityOk || busyPublish) return;
+    if (premium.unowned.length > 0) {
+      pendingCommitRef.current = 'publish';
+      setReconcileOpen(true);
+      return;
+    }
+    void publish();
+  }
+
+  async function publish() {
+    if (!cardRow || busyPublish) return;
+    setBusyPublish(true);
+    setInlineError(null);
+    try {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      if (copyInflightRef.current) await copyInflightRef.current.catch(() => {});
+      // COPY-ON-WRITE (0067): publish commits onto the ORIGIN (like KEEP), discarding the throwaway copy.
+      const curRow = cardRef.current ?? cardRow;
+      const commitTarget = originRef.current?.id ?? curRow.id;
+      const copyToDiscard = originRef.current && curRow.id !== commitTarget ? curRow.id : null;
+      const d = draftRef.current;
+      if (d) await updateCard({ cardId: commitTarget, composition: d }).unwrap(); // flatten reads the saved doc
+      await publishCardMut(commitTarget).unwrap();
+      const publishedRow = { id: commitTarget, name: curRow.name, status: 'published' };
+      cardRef.current = publishedRow;
+      setCardRow(publishedRow);
+      originRef.current = null;
+      resumeSnapshotRef.current = draftRef.current ?? resumeSnapshotRef.current;
+      setCreatedHere(false);
+      setExplicitSave(true);
+      if (copyToDiscard) void deleteCard(copyToDiscard);
+      setPosture('styler'); // leave the workshop; the ritual is a full-screen moment
+      setMode('published');
+    } catch (e) {
+      const code = (e as { data?: { error?: { code?: string } } })?.data?.error?.code;
+      if (code === 'DUPLICATE_COMPOSITION') {
+        setDupFailed(true);
+        setInlineError('This exact card already exists — tweak it to make it your own before publishing.');
+      } else if (code === 'PREMIUM_UNRECONCILED') {
+        pendingCommitRef.current = 'publish';
+        setReconcileOpen(true);
+      } else if (code === 'MIN_COMPLEXITY') {
+        setInlineError('Add a little more — 3 elements or 2 kinds — before publishing.');
+      } else {
+        setInlineError(errMsg(e, 'Could not publish. Your card is safe — try again.'));
+      }
+    } finally {
+      setBusyPublish(false);
+    }
+  }
+
   // ── door 1: ✕ — leave WITHOUT keeping (gate-5 D.23/24) ────────────────────────────────────────
   function requestExit() {
     if (mode !== 'edit' || !cardRow) {
@@ -863,6 +1025,7 @@ export default function Styler() {
           title={title}
           composition={draft}
           cardsDesigned={me?.stats.cardsDesigned ?? null}
+          pxSpent={pxSpent}
           onDone={() => router.replace(`/game/${gameId}`)}
           onEditArt={() => {
             // the Canvas door goes live (§3.4): back onto the SAME document, canvas posture
@@ -874,11 +1037,29 @@ export default function Styler() {
     );
   }
 
+  // ── published (P8 PrintRitual — the Canvas publish celebration) ───────────────────────────────
+  if (mode === 'published' && draft) {
+    return (
+      <Frame onBack={() => router.replace(`/game/${gameId}`)} closeGlyph="✕" saveLine={null}>
+        <PrintRitual
+          title={title}
+          composition={draft}
+          cardsDesigned={me?.stats.cardsDesigned ?? null}
+          onDone={() => router.replace(`/game/${gameId}`)}
+        />
+      </Frame>
+    );
+  }
+
   // ── pick (P1 BaseRail) ────────────────────────────────────────────────────────────────────────
   if (mode === 'pick') {
     const fore = railEntries[Math.min(foreIndex, railEntries.length - 1)];
     return (
-      <Frame onBack={() => router.back()} saveLine={null}>
+      <Frame
+        onBack={() => router.back()}
+        saveLine={null}
+        headRight={<CurrencyCounter balance={balance} onPress={() => router.push('/store')} />}
+      >
         <Text style={styles.contextLine}>
           {title.toUpperCase()} · NEW CARD — <Text style={styles.contextBold}>PICK A START</Text>
         </Text>
@@ -968,13 +1149,36 @@ export default function Styler() {
         onRedo={redo}
         busyExit={busyExit || busyKeep}
         onBackToStyler={() => setPosture('styler')}
-        onSavePrivate={() => void savePrivateQuiet()}
+        onSavePrivate={() => void requestSavePrivate()}
+        publish={{
+          checklist: publishChecklist,
+          onPublish: requestPublish,
+          busy: busyPublish,
+          reconcile: {
+            open: reconcileOpen,
+            items: premium.unowned.map((u) => ({ cosmeticId: u.cosmeticId, name: u.name, price: u.price })),
+            total: premium.costStack,
+            balance,
+            busy: reconcileBusy || busyPublish,
+            onAcquireAll: () => void onAcquireAll(),
+            onClose: () => {
+              setReconcileOpen(false);
+              pendingCommitRef.current = null;
+            },
+            onTopUp: () => router.push('/store'),
+          },
+        }}
       />
     );
   }
 
   return (
-    <Frame onBack={requestExit} closeGlyph="✕" saveLine={saveLine}>
+    <Frame
+      onBack={requestExit}
+      closeGlyph="✕"
+      saveLine={saveLine}
+      headRight={<CurrencyCounter balance={balance} onPress={() => router.push('/store')} />}
+    >
       <View style={styles.heroWrap}>
         <CardFace title={title} composition={draft} width={189} height={264} animate />
       </View>
@@ -997,6 +1201,7 @@ export default function Styler() {
             onSelect={sectionUi.onSelect}
             // PLATE previews the plate itself, TITLE previews the title in the font (gate-5 D.21)
             previewKind={section === 'plate' ? 'plate' : section === 'title' ? 'font' : 'card'}
+            badges={badgeFor(sectionUi.list.map((o) => o.id))}
           >
             {section === 'effect' && draft.effect && draft.effect.kind !== 'none' ? (
               <ScrollLockContext.Provider value={editScrollLock}>
@@ -1031,6 +1236,22 @@ export default function Styler() {
         {inlineError ? <Text accessibilityLiveRegion="assertive" style={styles.inlineErr}>{inlineError}</Text> : null}
       </ScrollView>
 
+      {/* CARD-13 cost-stack (M5 P7) — the running PX to keep the premium in the current design; owned
+          premium reads clean (no debt). Absent when the card is all-free. */}
+      {premium.costStack > 0 ? (
+        <View style={styles.costStack}>
+          <Text style={styles.costLabel}>PREMIUM IN THIS CARD</Text>
+          <View style={styles.spacer} />
+          <Text style={styles.costValue}>{premium.costStack}</Text>
+          <PixelsMark size={11} />
+          <Text style={styles.costTail}>TO KEEP</Text>
+        </View>
+      ) : premium.refs.length > 0 ? (
+        <View style={styles.costStack}>
+          <Text style={styles.costOwned}>✓ PREMIUM COMPONENTS OWNED</Text>
+        </View>
+      ) : null}
+
       {/* the pinned tools bar (gate-5 D.20/D.23): the Canvas door + the ONE forward door */}
       <View style={styles.tools}>
         <ScreenButton
@@ -1052,14 +1273,14 @@ export default function Styler() {
         ) : null}
         <SaveOption
           label="Keep — equip it ◆"
-          sub="Your shelf wears it now."
+          sub={premium.costStack > 0 ? `Your shelf wears it now — acquires ${premium.costStack} PX of premium first.` : 'Your shelf wears it now.'}
           gold
-          onPress={() => void keep()}
+          onPress={requestKeep}
         />
         <SaveOption
           label="Save private"
-          sub="Kept on your shelf — not worn."
-          onPress={() => void savePrivateQuiet()}
+          sub={premium.costStack > 0 ? `Kept on your shelf — acquires ${premium.costStack} PX of premium first.` : 'Kept on your shelf — not worn.'}
+          onPress={requestSavePrivate}
         />
         {cardRow?.status === 'draft' ? (
           <SaveOption
@@ -1095,6 +1316,22 @@ export default function Styler() {
         onClose={() => setConfirmDiscard(false)}
       />
 
+      {/* CARD-13 ACQUIRE ALL — KEEP / SAVE PRIVATE with unowned premium reconciles here (P6 ReconcileSheet) */}
+      <ReconcileSheet
+        visible={reconcileOpen}
+        onClose={() => {
+          setReconcileOpen(false);
+          pendingCommitRef.current = null;
+        }}
+        items={premium.unowned.map((u) => ({ cosmeticId: u.cosmeticId, name: u.name, price: u.price }))}
+        total={premium.costStack}
+        balance={balance}
+        busy={reconcileBusy || busyKeep}
+        context="keep"
+        onAcquireAll={() => void onAcquireAll()}
+        onTopUp={() => router.push('/store')}
+      />
+
     </Frame>
   );
 }
@@ -1124,11 +1361,14 @@ function Frame({
   onBack,
   saveLine,
   closeGlyph = '◂',
+  headRight,
 }: {
   children: ReactNode;
   onBack: () => void;
   saveLine: string | null;
   closeGlyph?: string;
+  /** the trailing head slot — the PX CurrencyCounter (ECON-07's entry point, M5 P7). */
+  headRight?: ReactNode;
 }) {
   const styles = useStyles();
   // CARD-16 live-region (0044 §105): the save-state settling to "NOT SAVED — RETRYING" / "SAVED …"
@@ -1150,6 +1390,7 @@ function Frame({
         </Pressable>
         <Text style={styles.title}>STYLER</Text>
         <View style={styles.spacer} />
+        {headRight}
       </View>
       {saveLine ? <Text accessibilityLiveRegion="polite" style={styles.saveLine}>{saveLine}</Text> : null}
       {children}
@@ -1194,6 +1435,20 @@ const useStyles = themedStyles((t) => ({
   },
   toolBtn: { paddingVertical: t.space.md, paddingHorizontal: t.space.lg },
   spacer: { flex: 1 },
+  costStack: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: t.space.md,
+    paddingVertical: t.space.sm,
+    borderWidth: 1,
+    borderColor: t.scr.hairline,
+    backgroundColor: t.scr.panel,
+  },
+  costLabel: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
+  costValue: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.brand.gold, letterSpacing: 0.5 },
+  costTail: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 1, marginLeft: 2 },
+  costOwned: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.brand.gold, letterSpacing: 1 },
   pickCtas: { alignItems: 'center', gap: t.space.md, paddingVertical: t.space.md },
   adoptHint: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, textAlign: 'center' },
   inlineErr: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.brand.alert, textAlign: 'center' },

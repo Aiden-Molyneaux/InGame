@@ -4,8 +4,18 @@ import Svg, { Path } from 'react-native-svg';
 import { LazyCompositionStrip } from '../canvas/lazySkia';
 import { SkiaErrorBoundary } from '../SkiaErrorBoundary';
 import { StateMark } from '../StateMark';
+import { PriceChip } from '../commerce/PriceChip';
 import { theme, themedStyles, useTheme } from '../../theme';
 import type { CardComposition } from '../../render/composition';
+
+// CARD-13 (M5 P7) — per-tile premium badging. A key present in `badges` marks that roster id premium:
+//   • owned      → a compact ✓ (the price is gone — COSM-03)
+//   • selected + unowned → a PREVIEW flag (applied-but-unowned; the card wears it as a preview)
+//   • unowned    → a PriceChip (the PX to make it yours)
+export interface TileBadge {
+  owned: boolean;
+  price: number;
+}
 
 // AttributeSection (component-map §8a / the board attr-rail) — one closed-attribute page: a
 // horizontal rail of tiles. FRAME/EFFECT/FINISH preview as SMALL LIVE CARDS (browsing IS editing);
@@ -57,6 +67,7 @@ export function AttributeSection({
   selectedId,
   onSelect,
   previewKind = 'card',
+  badges,
   children,
 }: {
   heading: string;
@@ -64,6 +75,8 @@ export function AttributeSection({
   selectedId: string;
   onSelect: (id: string) => void;
   previewKind?: PreviewKind;
+  /** CARD-13 premium badging by roster id (present = premium; see TileBadge). */
+  badges?: Record<string, TileBadge>;
   /** Section extras under the rail (the EFFECT IntensitySlider, the TITLE ink row). */
   children?: ReactNode;
 }) {
@@ -72,7 +85,7 @@ export function AttributeSection({
     <View style={styles.page}>
       <Text style={styles.heading}>{heading}</Text>
       {previewKind === 'card' ? (
-        <CardRail options={options} selectedId={selectedId} onSelect={onSelect} />
+        <CardRail options={options} selectedId={selectedId} onSelect={onSelect} badges={badges} />
       ) : (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rail}>
           {options.map((o) => {
@@ -81,12 +94,13 @@ export function AttributeSection({
               <Pressable
                 key={o.id}
                 accessibilityRole="button"
-                accessibilityLabel={o.name}
+                accessibilityLabel={badgeLabel(o.name, badges?.[o.id], sel)}
                 accessibilityState={{ selected: sel }}
                 onPress={() => onSelect(o.id)}
                 style={[styles.tile, sel && styles.tileSel]}
               >
                 {sel ? <StateMark size={8} style={styles.pip} /> : null}
+                <Badge badge={badges?.[o.id]} selected={sel} />
                 {previewKind === 'plate' ? <PlatePreview comp={o.preview} /> : <FontPreview comp={o.preview} />}
                 <Text style={[styles.name, sel && styles.nameSel]} numberOfLines={1}>
                   {o.name}
@@ -101,6 +115,34 @@ export function AttributeSection({
   );
 }
 
+/** The premium tile badge (CARD-13) — placed top-left so it never collides with the selection pip. */
+function Badge({ badge, selected }: { badge?: TileBadge; selected: boolean }) {
+  const styles = useStyles();
+  if (!badge) return null;
+  return (
+    <View style={styles.badge} pointerEvents="none">
+      {badge.owned ? (
+        <View style={styles.ownedMini}>
+          <Text style={styles.ownedMiniText}>✓</Text>
+        </View>
+      ) : selected ? (
+        <View style={styles.previewTag}>
+          <Text style={styles.previewText}>PREVIEW</Text>
+        </View>
+      ) : (
+        <PriceChip pixels={badge.price} />
+      )}
+    </View>
+  );
+}
+
+function badgeLabel(name: string, badge: TileBadge | undefined, selected: boolean): string {
+  if (!badge) return name;
+  if (badge.owned) return `${name}, owned`;
+  if (selected) return `${name}, premium preview — ${badge.price} pixels`;
+  return `${name}, premium — ${badge.price} pixels`;
+}
+
 // The FRAME/EFFECT/FINISH rail — one strip canvas (display-only) behind transparent Pressable tiles.
 // The card renders into each tile's card zone; the Pressable carries the panel/border/name/tap; the
 // selection pip rides over the strip so a card never occludes it (decision 0068 — the WebGL-ceiling fix).
@@ -108,10 +150,12 @@ function CardRail({
   options,
   selectedId,
   onSelect,
+  badges,
 }: {
   options: AttributeOption[];
   selectedId: string;
   onSelect: (id: string) => void;
+  badges?: Record<string, TileBadge>;
 }) {
   const styles = useStyles();
   const comps = options.map((o) => o.preview);
@@ -126,11 +170,12 @@ function CardRail({
             <Pressable
               key={o.id}
               accessibilityRole="button"
-              accessibilityLabel={o.name}
+              accessibilityLabel={badgeLabel(o.name, badges?.[o.id], sel)}
               accessibilityState={{ selected: sel }}
               onPress={() => onSelect(o.id)}
               style={[styles.cardTile, { left: i * TILE_STRIDE, width: TILE_W, height: TILE_H }, sel && styles.tileSel]}
             >
+              <Badge badge={badges?.[o.id]} selected={sel} />
               <View style={{ height: CARD_H, width: CARD_W }} />
               <Text style={[styles.name, sel && styles.nameSel]} numberOfLines={1}>
                 {o.name}
@@ -240,6 +285,23 @@ const useStyles = themedStyles((t) => ({
   },
   tileSel: { borderColor: t.scr.accent, backgroundColor: 'rgba(255,159,67,0.08)' },
   pip: { position: 'absolute', top: 4, right: 4, zIndex: 2 },
+  badge: { position: 'absolute', top: 3, left: 3, zIndex: 3 },
+  ownedMini: {
+    backgroundColor: t.brand.cream,
+    width: 16,
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ownedMiniText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.brand.navy },
+  previewTag: {
+    borderWidth: 1,
+    borderColor: t.scr.accent,
+    backgroundColor: t.scr.bg,
+    paddingHorizontal: 3,
+    paddingVertical: 1,
+  },
+  previewText: { fontFamily: t.font.screenBold, fontSize: 8, color: t.scr.accent, letterSpacing: 0.5 },
   name: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5, maxWidth: 110 },
   nameSel: { color: t.scr.ink },
   cardRail: { paddingVertical: t.space.sm, paddingHorizontal: 2 },
