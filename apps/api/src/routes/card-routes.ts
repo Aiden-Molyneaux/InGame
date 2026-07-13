@@ -21,6 +21,7 @@ import {
   patchStylePreset,
   deleteStylePreset,
   publishCard,
+  unpublishCard,
   getGameGallery,
   adoptCard,
 } from '../controllers/card-controller';
@@ -81,14 +82,28 @@ export const cardRoutes: RouteDef[] = [
     specIds: ['CARD-14', 'SYS-01'],
     handler: [resolvePrincipal, asyncHandler(getMyCards)],
   }),
-  // M5 §1 publish thread (decision 0073 §1 spike) — publish · gallery · adopt.
+  // M5 P3 publish/adopt/gallery (decision 0072/0073) — CARD-13/15/19/20, personalized pricing, SOC-09.
   defineRoute({
     method: 'post',
     path: '/cards/:cardId/publish',
     mutates: true,
     authzTest: 'authz:card_publish',
-    specIds: ['CARD-15', 'CARD-20', 'SYS-01', 'SYS-07'],
-    handler: [resolvePrincipal, rateLimit('cards:write'), asyncHandler(publishCard)],
+    specIds: ['CARD-13', 'CARD-15', 'CARD-19', 'CARD-20', 'SYS-01', 'SYS-05', 'SYS-07'],
+    // Stacked publish rate caps (CARD-19; the `catalog:create` two-tier precedent — both must pass).
+    handler: [
+      resolvePrincipal,
+      rateLimit('cards:publish'),
+      rateLimit('cards:publish:daily'),
+      asyncHandler(publishCard),
+    ],
+  }),
+  defineRoute({
+    method: 'post',
+    path: '/cards/:cardId/unpublish',
+    mutates: true,
+    authzTest: 'authz:card_unpublish',
+    specIds: ['CARD-20', 'SYS-01', 'SYS-07'],
+    handler: [resolvePrincipal, rateLimit('cards:write'), asyncHandler(unpublishCard)],
   }),
   defineRoute({
     method: 'get',
@@ -96,7 +111,7 @@ export const cardRoutes: RouteDef[] = [
     mutates: false,
     crossPrincipal: true, // OQ-122 — the community gallery returns OTHER principals' published cards
     authzTest: 'authz:game_gallery_read',
-    specIds: ['CARD-15', 'OQ-122', 'SYS-01', 'F06'],
+    specIds: ['CARD-05', 'CARD-15', 'ECON-03', 'OQ-122', 'SOC-09', 'SYS-01', 'F06'],
     handler: [resolvePrincipal, asyncHandler(getGameGallery)],
   }),
   defineRoute({
@@ -104,8 +119,14 @@ export const cardRoutes: RouteDef[] = [
     path: '/cards/:cardId/adopt',
     mutates: true,
     authzTest: 'authz:card_adopt',
-    specIds: ['CARD-04', 'ECON-03', 'SYS-01', 'SYS-07'],
-    handler: [resolvePrincipal, rateLimit('cards:write'), asyncHandler(adoptCard)],
+    specIds: ['CARD-04', 'CARD-05', 'ECON-03', 'ECON-04', 'SYS-01', 'SYS-05', 'SYS-07'],
+    // Stacked adopt rate caps (decision 0073 §0.7 — closes OQ-097; both must pass).
+    handler: [
+      resolvePrincipal,
+      rateLimit('cards:adopt'),
+      rateLimit('cards:adopt:daily'),
+      asyncHandler(adoptCard),
+    ],
   }),
   defineRoute({
     method: 'get',

@@ -29,6 +29,12 @@ export const ERROR_CODES = [
   // DUPLICATE_COMPOSITION · STARTER_PACK_CONSUMED) append as P2/P3 build their gates.
   'ALREADY_ADOPTED', // 409 — POST /cards/:id/adopt refused: the caller already adopted this card (OQ-101)
   'NOT_PUBLISHED', // 409 — adopt/share against a card that is not published (CARD-04/20)
+  // M5 P3 publish gates (decision 0073 §0.4/0.7 / api-contract 0.58) — CARD-19 + CARD-13, the F-17
+  // additive path (each code lands as its gate builds on the publish/save-private endpoints).
+  'MIN_COMPLEXITY', // 409 — POST /cards/:id/publish refused: below the CARD-19 min-complexity floor
+  'DUPLICATE_COMPOSITION', // 409 — publish refused: a global composition-hash match (CARD-19; carries nothing — no card leak)
+  'PREMIUM_UNRECONCILED', // 409 — publish/save-private refused: unowned premium components; carries { unowned, total } (CARD-13)
+  'HAS_ADOPTERS', // 409 — DELETE /cards/:id refused: the published design has adopters (unpublish instead, CARD-20)
   // M5 P2 IAP seam (decision 0072/0073 §0.4 / api-contract 0.57) — the F-17 additive path (the code
   // lands as its endpoint builds). A second one-time Starter Pack purchase is refused per account (ECON-10).
   'STARTER_PACK_CONSUMED', // 409 — POST /iap/validate refused: the once-per-account Starter Pack is already owned
@@ -77,6 +83,13 @@ export interface ApiErrorBody {
     suggestions?: DedupSuggestion[];
     /** `INSUFFICIENT_BALANCE` only (ECON-01/03, api-contract 0.57) — PX still needed for the spend. */
     shortBy?: number;
+    /**
+     * `PREMIUM_UNRECONCILED` only (CARD-13, api-contract 0.58) — the unowned premium components the
+     * owner must acquire before publish/save-private, best-first, plus their summed PX `total`. Drives
+     * the client's ReconcileSheet (the ACQUIRE ALL bridge). Dormant while the roster is all-free.
+     */
+    unowned?: Array<{ cosmeticId: string; price: number }>;
+    total?: number;
   };
 }
 

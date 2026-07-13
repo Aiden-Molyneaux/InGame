@@ -17,6 +17,8 @@ interface EnvelopeExtras {
   details?: ValidationDetail[];
   suggestions?: DedupSuggestion[];
   shortBy?: number;
+  unowned?: Array<{ cosmeticId: string; price: number }>;
+  total?: number;
 }
 
 function send(
@@ -32,6 +34,8 @@ function send(
   if (extra.details && extra.details.length > 0) body.error.details = extra.details;
   if (extra.suggestions) body.error.suggestions = extra.suggestions;
   if (typeof extra.shortBy === 'number') body.error.shortBy = extra.shortBy;
+  if (extra.unowned) body.error.unowned = extra.unowned;
+  if (typeof extra.total === 'number') body.error.total = extra.total;
   res.status(status).json(body);
 }
 
@@ -43,6 +47,8 @@ function extrasOf(err: AppError): EnvelopeExtras {
     details?: ValidationDetail[];
     suggestions?: DedupSuggestion[];
     shortBy?: number;
+    unowned?: Array<{ cosmeticId: string; price: number }>;
+    total?: number;
   };
   const out: EnvelopeExtras = {};
   if (typeof e.reason === 'string') out.reason = e.reason;
@@ -50,6 +56,10 @@ function extrasOf(err: AppError): EnvelopeExtras {
   if (Array.isArray(e.details)) out.details = e.details;
   if (Array.isArray(e.suggestions)) out.suggestions = e.suggestions;
   if (typeof e.shortBy === 'number') out.shortBy = e.shortBy;
+  if (Array.isArray(e.unowned)) {
+    out.unowned = e.unowned;
+    if (typeof e.total === 'number') out.total = e.total;
+  }
   return out;
 }
 

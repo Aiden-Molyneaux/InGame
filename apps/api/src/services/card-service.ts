@@ -2,31 +2,54 @@ import {
   compositionHash,
   compositionSchema,
   DEFAULT_CARD_STUB,
+  type AdoptResponse,
   type CardDesignView,
   type CollectionCard,
   type Composition,
   type CreateCardRequest,
   type EntryCardsResponse,
+  type GalleryCardView,
+  type GameGalleryResponse,
   type MyCardsResponse,
+  type TrendingCardsResponse,
   type UpdateCardRequest,
 } from '@ingame/shared';
+import type { Executor } from '../db/client';
 import { mutation } from '../db/mutation';
 import * as cardRepo from '../repositories/card-repo';
 import * as catalogRepo from '../repositories/catalog-repo';
 import * as collectionRepo from '../repositories/collection-repo';
 import * as adoptionRepo from '../repositories/adoption-repo';
+import * as entitlementRepo from '../repositories/entitlement-repo';
+import * as relationshipRepo from '../repositories/relationship-repo';
+import { acquireComponents } from './cosmetics/cosmetic-service';
 import {
   AlreadyAdoptedError,
   CardEquippedError,
+  DuplicateCompositionError,
+  HasAdoptersError,
+  MinComplexityError,
   NotFoundError,
   NotPublishedError,
+  PremiumUnreconciledError,
   ValidationError,
 } from '../errors/AppError';
 import { flattenComposition } from '../render/flatten';
 import { getStorage } from '../storage';
-import { isPremiumComposition } from '../config/cosmetics';
+import {
+  collectCosmeticRefs,
+  isPremiumComposition,
+  lookupCosmeticTier,
+  priceForTier,
+} from '../config/cosmetics';
 import type { CardDesignRow } from '../db/schema';
 import type { PublishedDesignRow } from '../repositories/card-repo';
+
+// M5 P3 — CARD-19 min-complexity floor (decision 0073 §0.7, SYS-04-tunable). Publish requires the
+// composition carry ≥ MIN_ELEMENTS elements OR ≥ MIN_DISTINCT_TYPES distinct element types. Drafts /
+// private are exempt (the gate fires only at publish). Tunable seeds — not schema.
+const MIN_ELEMENTS = 3;
+const MIN_DISTINCT_TYPES = 2;
 
 // Card-design service (CARD-14/15/24 · decision 0066). card_designs is USER-OWNED — every path is
 // actor-scoped (SYS-01); actor-B reaching for actor-A's design gets the same 404 an unknown id gets.
@@ -88,8 +111,33 @@ function designNotFound(): NotFoundError {
   return new NotFoundError('Card design not found.');
 }
 
+/** The create-draft result — `reused` drives the controller's 200 (idempotent) vs 201 (created) status. */
+export interface CreateDraftResult {
+  card: CardDesignView;
+  reused: boolean;
+}
+
+/**
+ * POST /cards (CARD-14/24a) with the OQ-141 copy-POST idempotency guard (decision 0067/0073 §0.10): a
+ * repeated copy-POST — the SAME `derivedFromCardId` + an IDENTICAL composition hash by the SAME owner —
+ * returns the EXISTING draft copy (200, `reused: true`) instead of minting a second identical draft.
+ * The pre-check runs on `getDb()` OUTSIDE the create tx (a plain read); a miss falls through to create.
+ */
+export async function createDraft(
+  actorId: string,
+  input: CreateCardRequest,
+): Promise<CreateDraftResult> {
+  if (input.derivedFromCardId) {
+    const hash = compositionHash(input.composition as Composition);
+    const existing = await cardRepo.findDraftCopy(actorId, input.derivedFromCardId, hash);
+    if (existing) return { card: toCardView(existing), reused: true }; // OQ-141 idempotent
+  }
+  const card = await createDraftMutation(actorId, input);
+  return { card, reused: false };
+}
+
 /** @mutation — POST /cards (CARD-14/24a): create the draft document. */
-export const createDraft = mutation(
+const createDraftMutation = mutation(
   { name: 'card.createDraft', specIds: ['CARD-14', 'CARD-24', 'SYS-01', 'SYS-02'] },
   async (ctx, actorId, input: CreateCardRequest): Promise<CardDesignView> => {
     const [game] = await catalogRepo.gamesByIds([input.gameId], ctx.tx);
@@ -194,6 +242,10 @@ export const savePrivate = mutation(
       throw new ValidationError('This draft cannot be finalized.', 'invalid_composition');
     }
     const composition = parsed.data as Composition;
+    // CARD-13 premium-reconcile (decision 0072/0073) — a private save that references premium
+    // components the OWNER doesn't own is refused (→ PREMIUM_UNRECONCILED {unowned,total}); the client
+    // reconciles via ACQUIRE ALL. Dormant while the roster is all-free.
+    await assertPremiumReconciled(actorId, composition, ctx.tx);
     const row =
       (await cardRepo.updateOwnedDesign(
         actorId,
@@ -214,17 +266,26 @@ export const savePrivate = mutation(
   },
 );
 
-/** @mutation — DELETE /cards/:id (CARD-14 · decision 0040): 409 CARD_EQUIPPED while equipped. */
+/** @mutation — DELETE /cards/:id (CARD-14/20 · decision 0040): 409 CARD_EQUIPPED while equipped;
+ *  409 HAS_ADOPTERS on a published-with-adopters design (unpublish instead). */
 export const deleteCard = mutation(
-  { name: 'card.delete', specIds: ['CARD-14', 'COL-06', 'SYS-01'] },
+  { name: 'card.delete', specIds: ['CARD-14', 'CARD-20', 'COL-06', 'SYS-01'] },
   async (ctx, actorId, cardId: string): Promise<void> => {
     if (!UUID_RE.test(cardId)) throw designNotFound();
     const current = await cardRepo.findOwnedDesign(actorId, cardId, ctx.tx);
     if (!current) throw designNotFound();
-    // M5 note (CARD-20): a published-with-adopters design refuses deletion (unpublish only) — the
-    // adoption substrate doesn't exist yet, so at M4 draft/private/never-adopted all delete.
     if ((await cardRepo.countEquippedReferences(actorId, cardId, ctx.tx)) > 0) {
       throw new CardEquippedError();
+    }
+    // CARD-20 (decision 0040) — a published card that HAS adopters refuses deletion (unpublish
+    // instead; adopters keep their grants forever). A never-adopted published card may delete.
+    // 409 HAS_ADOPTERS — the CONFLICT family, like its sibling CARD_EQUIPPED (F-17 additive; the
+    // LOOK_CAP-correction precedent: state-conflict refusals are 409 named codes, 422 is zod-only).
+    if (current.status === 'published') {
+      const counts = await cardRepo.adoptionCountsByCard([cardId], ctx.tx);
+      if ((counts.get(cardId) ?? 0) > 0) {
+        throw new HasAdoptersError();
+      }
     }
     const removed = await cardRepo.deleteOwnedDesign(actorId, cardId, ctx.tx);
     if (!removed) throw designNotFound();
@@ -261,21 +322,64 @@ export async function listCardsForEntry(
 // foundation.
 
 /**
- * The cross-user PUBLIC card shape (OQ-122 `toPublicShape` allowlist): id · name · flattened image
- * urls · designer attribution · public adoption count · premium flag. NEVER carries `composition`
- * (the private layers stay in the owner shape; viewers get the flattened image — CARD-15 / 0066 §2).
+ * The premium cosmetic ids a composition references that fall in a PREMIUM tier (decision 0072). The
+ * denormalized `premium_component_ids` stored at publish; also the CARD-13 reconcile input.
  */
-export interface PublicCardView {
-  id: string;
-  name: string;
-  imageUrl: string | null;
-  thumbUrl: string | null;
-  isPremium: boolean;
-  adoptionCount: number;
-  designer: { userId: string; username: string };
+function premiumRefsOf(composition: unknown): string[] {
+  const refs = collectCosmeticRefs(composition);
+  return [...new Set(refs)].filter((id) => {
+    const tier = lookupCosmeticTier(id);
+    return tier !== undefined && tier !== null;
+  });
 }
 
-function toPublicShape(row: PublishedDesignRow, adoptionCount: number): PublicCardView {
+/**
+ * CARD-19 min-complexity gate (decision 0073 §0.7) — the composition must clear the publish floor:
+ * ≥ MIN_ELEMENTS elements OR ≥ MIN_DISTINCT_TYPES distinct element types. Refuses below with
+ * MIN_COMPLEXITY. Drafts/private never reach this (the gate fires only at publish).
+ */
+function assertMinComplexity(composition: Composition): void {
+  const elements = Array.isArray(composition.elements) ? composition.elements : [];
+  const distinctTypes = new Set(elements.map((el) => (el as { type?: string }).type)).size;
+  if (elements.length < MIN_ELEMENTS && distinctTypes < MIN_DISTINCT_TYPES) {
+    throw new MinComplexityError();
+  }
+}
+
+/**
+ * CARD-13 premium-reconcile gate (decision 0072/0073) — refuses publish/save-private when the
+ * composition references premium components the OWNER doesn't own, carrying the unowned set + total so
+ * the client drives ACQUIRE ALL. Dormant while the roster is all-free (no premium refs → a no-op).
+ * Runs the entitlement read on `exec` so it shares the caller's transaction when one is open.
+ */
+async function assertPremiumReconciled(
+  actorId: string,
+  composition: unknown,
+  exec?: Executor,
+): Promise<string[]> {
+  const premiumIds = premiumRefsOf(composition);
+  if (premiumIds.length === 0) return [];
+  const owned = await entitlementRepo.findOwnedCosmeticIds(actorId, premiumIds, exec);
+  const unowned = premiumIds
+    .filter((id) => !owned.has(id))
+    .map((id) => ({ cosmeticId: id, price: priceForTier(lookupCosmeticTier(id)) }));
+  if (unowned.length > 0) throw new PremiumUnreconciledError(unowned);
+  return premiumIds;
+}
+
+/**
+ * Build the personalized community-gallery view (decision 0072): `priceForYou` = the summed PX of the
+ * card's premium components the CALLER (`ownedByCaller`) does NOT own — 0 for a free card or one fully
+ * owned. NEVER carries `composition` (OQ-122 — the flattened image is the public artifact, 0066 §2).
+ */
+function toGalleryShape(
+  row: PublishedDesignRow,
+  adoptionCount: number,
+  ownedByCaller: Set<string>,
+): GalleryCardView {
+  const priceForYou = row.premiumComponentIds
+    .filter((id) => !ownedByCaller.has(id))
+    .reduce((sum, id) => sum + priceForTier(lookupCosmeticTier(id)), 0);
   return {
     id: row.id,
     name: row.name,
@@ -283,33 +387,92 @@ function toPublicShape(row: PublishedDesignRow, adoptionCount: number): PublicCa
     thumbUrl: row.thumbUrl,
     isPremium: row.isPremium,
     adoptionCount,
+    priceForYou,
     designer: { userId: row.designerId, username: row.designerUsername },
   };
 }
 
 /**
- * @mutation — POST /cards/:id/publish (CARD-15/20 · §1 spike, happy path only): the owner's own
- * draft/private card → flatten (server-side skia, the ported render module) → store the full + thumb
- * PNGs (StorageProvider) → `status='published'` + `imageUrl`/`thumbUrl` set. Already-published is an
- * idempotent no-op. No min-complexity / dedup / rate-limit / premium-reconcile gate — those are P3.
+ * @mutation — POST /cards/:id/publish (CARD-13/15/19/20). Gates in order: min-complexity → global
+ * hash-dedup → premium-reconcile. Then the flatten runs OUTSIDE the transaction (it must not hold the
+ * row lock during the ~ms render — the spike's flag); the tx re-validates (status still not published,
+ * still no dedup) + writes `status='published'` + urls + the denormalized premium refs. On tx failure
+ * the stored PNGs are deleted best-effort. Already-published is an idempotent no-op.
+ *
+ * The gate reads + flatten run pre-tx on `getDb()` (no lock held). The write + its re-checks run in the
+ * mutation tx. The published card is immutable thereafter (PATCH refuses — CARD-20).
  */
-export const publishCard = mutation(
-  { name: 'card.publish', specIds: ['CARD-15', 'CARD-20', 'SYS-01'] },
-  async (ctx, actorId, cardId: string): Promise<CardDesignView> => {
-    if (!UUID_RE.test(cardId)) throw designNotFound();
-    const current = await cardRepo.findOwnedDesign(actorId, cardId, ctx.tx);
-    if (!current) throw designNotFound(); // actor-B → the same 404 (no existence oracle)
-    if (current.status === 'published') return toCardView(current); // idempotent
+export async function publishCard(actorId: string, cardId: string): Promise<CardDesignView> {
+  if (!UUID_RE.test(cardId)) throw designNotFound();
+  const current = await cardRepo.findOwnedDesign(actorId, cardId);
+  if (!current) throw designNotFound(); // actor-B → the same 404 (no existence oracle)
+  if (current.status === 'published') return toCardView(current); // idempotent
 
-    // Flatten the stored composition to the full + thumbnail PNG buffers, then store them under a
-    // per-card key. (P3: move the flatten OUTSIDE the tx — it holds the row lock during the render.)
-    const { full, thumb } = await flattenComposition(current.composition);
-    const storage = getStorage();
-    const imageUrl = await storage.put(`cards/${cardId}/full.png`, full, 'image/png');
-    const thumbUrl = await storage.put(`cards/${cardId}/thumb.png`, thumb, 'image/png');
+  const parsed = compositionSchema.safeParse(current.composition);
+  if (!parsed.success) throw new ValidationError('This card cannot be published.', 'invalid_composition');
+  const composition = parsed.data as Composition;
 
-    const row =
-      (await cardRepo.markPublished(actorId, cardId, { imageUrl, thumbUrl }, ctx.tx)) ?? current;
+  // ── Gates (pre-tx, fail fast BEFORE the render) ──────────────────────────────────────────────────
+  assertMinComplexity(composition); // 1. CARD-19 min-complexity → MIN_COMPLEXITY
+  if (await cardRepo.hasPublishedDuplicate(current.compositionHash, cardId)) {
+    throw new DuplicateCompositionError(); // 2. CARD-19 global hash-dedup → DUPLICATE_COMPOSITION (no leak)
+  }
+  const premiumIds = await assertPremiumReconciled(actorId, composition); // 3. CARD-13 (pre-tx read)
+
+  // ── Flatten OUTSIDE the tx (the spike's flag), then store the full + thumb PNGs ───────────────────
+  const { full, thumb } = await flattenComposition(current.composition);
+  const storage = getStorage();
+  const fullKey = `cards/${cardId}/full.png`;
+  const thumbKey = `cards/${cardId}/thumb.png`;
+  const imageUrl = await storage.put(fullKey, full, 'image/png');
+  const thumbUrl = await storage.put(thumbKey, thumb, 'image/png');
+
+  // ── The publish write (tx: re-validate the race-sensitive gates + write) ─────────────────────────
+  try {
+    return await publishWrite(actorId, cardId, {
+      imageUrl,
+      thumbUrl,
+      premiumComponentIds: premiumIds,
+      compositionHash: current.compositionHash,
+    });
+  } catch (err) {
+    // Best-effort cleanup of the orphaned renders (the row never transitioned).
+    await storage.delete(fullKey).catch(() => {});
+    await storage.delete(thumbKey).catch(() => {});
+    throw err;
+  }
+}
+
+const publishWrite = mutation(
+  { name: 'card.publish', specIds: ['CARD-13', 'CARD-15', 'CARD-19', 'CARD-20', 'SYS-01'] },
+  async (
+    ctx,
+    actorId,
+    cardId: string,
+    fields: {
+      imageUrl: string;
+      thumbUrl: string;
+      premiumComponentIds: string[];
+      compositionHash: string;
+    },
+  ): Promise<CardDesignView> => {
+    // Re-check the dedup under the write (a concurrent identical publish could have landed between the
+    // pre-tx gate and here) — global exact-match refuse (CARD-19), same 409, no leak.
+    if (await cardRepo.hasPublishedDuplicate(fields.compositionHash, cardId, ctx.tx)) {
+      throw new DuplicateCompositionError();
+    }
+    // markPublished is guarded to a non-published status — null ⇒ actor-B / already-published / raced.
+    const row = await cardRepo.markPublished(
+      actorId,
+      cardId,
+      {
+        imageUrl: fields.imageUrl,
+        thumbUrl: fields.thumbUrl,
+        premiumComponentIds: fields.premiumComponentIds,
+      },
+      ctx.tx,
+    );
+    if (!row) throw designNotFound();
     await ctx.emit({
       eventType: 'card.published',
       entityRef: { type: 'card_design', id: cardId },
@@ -319,42 +482,143 @@ export const publishCard = mutation(
   },
 );
 
-/** GET /games/:gameId/cards — the community gallery: PUBLISHED cards only, flattened + attributed. */
-export async function listGameGallery(gameId: string): Promise<{ items: PublicCardView[] }> {
+/**
+ * @mutation — POST /cards/:id/unpublish (CARD-20): the owner delists their OWN published card
+ * (status → private). Existing adopters keep their grants + entitlements (nothing revoked); the
+ * derived adoption count freezes (no new adoptions are possible once it leaves the gallery). Not the
+ * actor's published card → the same 404 (no existence oracle).
+ */
+export const unpublishCard = mutation(
+  { name: 'card.unpublish', specIds: ['CARD-20', 'SYS-01'] },
+  async (ctx, actorId, cardId: string): Promise<CardDesignView> => {
+    if (!UUID_RE.test(cardId)) throw designNotFound();
+    const row = await cardRepo.markUnpublished(actorId, cardId, ctx.tx);
+    if (!row) throw designNotFound(); // not owned / not published → the same nothing
+    await ctx.emit({
+      eventType: 'card.unpublished',
+      entityRef: { type: 'card_design', id: cardId },
+      payload: { gameId: row.gameId },
+    });
+    return toCardView(row);
+  },
+);
+
+/**
+ * GET /games/:gameId/cards — the community gallery: PUBLISHED cards only, flattened + attributed +
+ * PERSONALIZED prices (decision 0072). Block-filtered BOTH directions (SOC-09 §0.6): a card whose
+ * designer is blocked either-way with the caller vanishes from the caller's gallery. `priceForYou` is
+ * the caller's missing-components sum per card.
+ */
+export async function listGameGallery(
+  actorId: string,
+  gameId: string,
+): Promise<GameGalleryResponse> {
   if (!UUID_RE.test(gameId)) throw new NotFoundError('Game not found.');
   const rows = await cardRepo.listPublishedDesignsForGame(gameId);
-  const counts = await cardRepo.adoptionCountsByCard(rows.map((r) => r.id));
-  return { items: rows.map((r) => toPublicShape(r, counts.get(r.id) ?? 0)) };
+  const visible = await filterBlockedDesigners(actorId, rows);
+  const counts = await cardRepo.adoptionCountsByCard(visible.map((r) => r.id));
+  const owned = await ownedPremiumFor(actorId, visible.flatMap((r) => r.premiumComponentIds));
+  return {
+    items: visible.map((r) => toGalleryShape(r, counts.get(r.id) ?? 0, owned)),
+  };
 }
 
 /**
- * @mutation — POST /cards/:id/adopt (CARD-04 · decision 0072 FREE path only): a DIFFERENT user adopts
- * a published card. One transaction = the `card_adoptions` grant + (P3: the premium-component debit,
- * not built — every §1-spike card is free). `NOT_PUBLISHED` if the target is not a published card;
- * `ALREADY_ADOPTED` on a repeat (the unique-pair backstop, idempotent under the F36 race).
+ * GET /discover/trending-cards (DISC-04/OQ-055) — the top published cards by adoption count, block-
+ * filtered per the caller (SOC-09). NON-COMMERCE: counts, never prices (no personalized pricing).
+ */
+export async function listTrendingCards(
+  actorId: string,
+  limit = 20,
+): Promise<TrendingCardsResponse> {
+  const rows = await cardRepo.listPublishedForTrending();
+  const visible = await filterBlockedDesigners(actorId, rows);
+  const counts = await cardRepo.adoptionCountsByCard(visible.map((r) => r.id));
+  const ranked = visible
+    .map((r) => ({ row: r, adoptionCount: counts.get(r.id) ?? 0 }))
+    .sort((a, b) => b.adoptionCount - a.adoptionCount || a.row.id.localeCompare(b.row.id))
+    .slice(0, limit);
+  return {
+    items: ranked.map(({ row, adoptionCount }, i) => ({
+      rank: i + 1,
+      card: {
+        id: row.id,
+        name: row.name,
+        imageUrl: row.imageUrl,
+        thumbUrl: row.thumbUrl,
+        isPremium: row.isPremium,
+      },
+      game: { id: row.gameId, title: row.gameTitle },
+      designer: { userId: row.designerId, username: row.designerUsername },
+      adoptionCount,
+    })),
+  };
+}
+
+/** SOC-09 §0.6 — drop rows whose designer is blocked either-direction with the caller (both ways). */
+async function filterBlockedDesigners<T extends { designerId: string }>(
+  actorId: string,
+  rows: T[],
+): Promise<T[]> {
+  const designerIds = [...new Set(rows.map((r) => r.designerId))];
+  const blocked = await relationshipRepo.listBlockedIds(actorId, designerIds);
+  return blocked.size === 0 ? rows : rows.filter((r) => !blocked.has(r.designerId));
+}
+
+/** The subset of `premiumIds` the caller already owns (account-wide entitlements) — batched. */
+async function ownedPremiumFor(actorId: string, premiumIds: string[]): Promise<Set<string>> {
+  const unique = [...new Set(premiumIds)];
+  if (unique.length === 0) return new Set();
+  return entitlementRepo.findOwnedCosmeticIds(actorId, unique);
+}
+
+/**
+ * @mutation — POST /cards/:id/adopt (CARD-04/05 · decision 0072). ONE transaction: atomic acquire of
+ * the card's premium components the adopter doesn't own (debit = missing sum via P1's ledger + per-
+ * component account-wide entitlements via P4's `acquireComponents`, run inside THIS tx) + the free
+ * design grant (`card_adoptions` row, `currencyPaid` = the acquired sum) + the derived adoption count.
+ * FREE when the card has no premium components or the caller owns them all.
+ *  - `NOT_PUBLISHED` — unknown / not-published / a blocked designer (INDISTINGUISHABLE, MOD-09).
+ *  - `ALREADY_ADOPTED` — the unique-pair backstop (idempotent under the F36 race; the acquire rolls
+ *    back with the tx so a raced loser is NEVER charged).
+ *  - `INSUFFICIENT_BALANCE {shortBy}` — the acquire can't cover the missing-components sum.
  */
 export const adoptCard = mutation(
-  { name: 'card.adopt', specIds: ['CARD-04', 'ECON-03', 'SYS-01'] },
-  async (ctx, actorId, cardId: string): Promise<{ adopted: true; card: PublicCardView }> => {
+  { name: 'card.adopt', specIds: ['CARD-04', 'CARD-05', 'ECON-03', 'ECON-04', 'SYS-01'] },
+  async (ctx, actorId, cardId: string): Promise<AdoptResponse> => {
     if (!UUID_RE.test(cardId)) throw new NotPublishedError();
     const published = await cardRepo.findPublishedDesignById(cardId, ctx.tx);
     if (!published) throw new NotPublishedError(); // unknown OR not-published → the same 409
+    // SOC-09 §0.6 — a block either direction refuses INDISTINGUISHABLY from not-published (MOD-09).
+    if (await relationshipRepo.isBlockedBetween(actorId, published.designerId, ctx.tx)) {
+      throw new NotPublishedError();
+    }
+    // Cheap pre-check: refuse a repeat BEFORE the acquire debits (so an already-adopted retry never
+    // charges). The insert below is the atomic F36 backstop against the pre-check→insert race.
+    if (await adoptionRepo.findMyAdoption(actorId, cardId, ctx.tx)) throw new AlreadyAdoptedError();
 
-    // FREE path (§1 spike): currencyPaid = 0. The premium-component acquire (debit via P1's ledger +
-    // per-component entitlements via P4) is P3 — no premium roster exists yet, so every card is free.
+    // Atomic component acquire INSIDE this tx (decision 0072 — the P4 reuse point; never opens its own
+    // tx). Free when premiumComponentIds is empty or all owned; else debits the missing sum + grants.
+    const acquire = await acquireComponents(ctx.tx, actorId, published.premiumComponentIds);
+
     const adoption = await adoptionRepo.insertAdoption(
       actorId,
-      { cardDesignId: cardId, gameId: published.gameId, currencyPaid: 0 },
+      { cardDesignId: cardId, gameId: published.gameId, currencyPaid: acquire.totalPaid },
       ctx.tx,
     );
-    if (!adoption) throw new AlreadyAdoptedError(); // the unique-pair conflict (idempotent no-op)
+    // The unique-pair conflict (a parallel adopt won the race) → refuse; the tx rolls back, undoing the
+    // acquire debit + entitlement grants, so the loser is left exactly as it started (one row, one charge).
+    if (!adoption) throw new AlreadyAdoptedError();
 
-    const counts = await cardRepo.adoptionCountsByCard([cardId], ctx.tx);
     await ctx.emit({
       eventType: 'card.adopted',
       entityRef: { type: 'card_design', id: cardId },
-      payload: { gameId: published.gameId, currencyPaid: 0 },
+      payload: { gameId: published.gameId, currencyPaid: acquire.totalPaid },
     });
-    return { adopted: true, card: toPublicShape(published, counts.get(cardId) ?? 0) };
+    return {
+      granted: acquire.granted.map((g) => ({ cosmeticId: g.cosmeticId, paid: g.paid })),
+      totalPaid: acquire.totalPaid,
+      balance: acquire.balance,
+    };
   },
 );

@@ -53,3 +53,73 @@ export type StylePresetView = z.infer<typeof stylePresetSchema>;
 
 export const stylePresetsResponseSchema = z.array(stylePresetSchema);
 export type StylePresetsResponse = z.infer<typeof stylePresetsResponseSchema>;
+
+// ── M5 P3 — the CROSS-USER PUBLIC card shapes (gallery · trending · adopt; decision 0072/0073) ─────
+// These are the OQ-122 public views: flattened image urls + attribution, NEVER `composition` (the
+// private layers stay in the owner shape; viewers get the flattened image — CARD-15 / 0066 §2).
+
+/**
+ * One community-gallery card (GET /games/:gameId/cards). `priceForYou` = the caller's PERSONALIZED
+ * adoption price (decision 0072) = the summed PX of the card's premium components the caller does NOT
+ * already own — 0 for a free card or one the caller fully owns. `isPremium` is the card's own flag.
+ */
+export const galleryCardSchema = z
+  .object({
+    id: z.string().uuid(),
+    name: z.string(),
+    imageUrl: z.string().nullable(),
+    thumbUrl: z.string().nullable(),
+    isPremium: z.boolean(),
+    adoptionCount: z.number().int().nonnegative(),
+    priceForYou: z.number().int().nonnegative(), // personalized missing-components sum (0072)
+    designer: z.object({ userId: z.string().uuid(), username: z.string() }).strict(),
+  })
+  .strict();
+export type GalleryCardView = z.infer<typeof galleryCardSchema>;
+
+/** GET /games/:gameId/cards — the community gallery (published only; personalized prices). */
+export const gameGalleryResponseSchema = z.object({ items: z.array(galleryCardSchema) }).strict();
+export type GameGalleryResponse = z.infer<typeof gameGalleryResponseSchema>;
+
+/**
+ * POST /cards/:id/adopt (decision 0072) — one atomic acquire of the card's premium components the
+ * caller doesn't own + the free design grant. `granted` is one row per component actually charged
+ * (already-owned/free → []); `totalPaid` == `card_adoptions.currency_paid`; `balance` is the post-
+ * adopt wallet balance (the STARTING_GRANT effective value when the free path never materializes it).
+ */
+export const adoptResponseSchema = z
+  .object({
+    granted: z.array(
+      z.object({ cosmeticId: z.string(), paid: z.number().int().nonnegative() }).strict(),
+    ),
+    totalPaid: z.number().int().nonnegative(),
+    balance: z.number().int(),
+  })
+  .strict();
+export type AdoptResponse = z.infer<typeof adoptResponseSchema>;
+
+/**
+ * GET /discover/trending-cards (DISC-04 / OQ-055) — featured community cards ranked by adoption.
+ * NON-COMMERCE: counts, never prices (no `priceForYou`). Block-filtered per the caller (SOC-09).
+ */
+export const trendingCardSchema = z
+  .object({
+    rank: z.number().int().positive(),
+    card: z
+      .object({
+        id: z.string().uuid(),
+        name: z.string(),
+        imageUrl: z.string().nullable(),
+        thumbUrl: z.string().nullable(),
+        isPremium: z.boolean(),
+      })
+      .strict(),
+    game: z.object({ id: z.string().uuid(), title: z.string() }).strict(),
+    designer: z.object({ userId: z.string().uuid(), username: z.string() }).strict(),
+    adoptionCount: z.number().int().nonnegative(),
+  })
+  .strict();
+export type TrendingCardView = z.infer<typeof trendingCardSchema>;
+
+export const trendingCardsResponseSchema = z.object({ items: z.array(trendingCardSchema) }).strict();
+export type TrendingCardsResponse = z.infer<typeof trendingCardsResponseSchema>;

@@ -1,4 +1,4 @@
-import { and, eq, or } from 'drizzle-orm';
+import { and, eq, inArray, or } from 'drizzle-orm';
 import type { Relationship } from '@ingame/shared';
 import { getDb, type Executor } from '../db/client';
 import { asActor } from '../db/scoped';
@@ -50,6 +50,36 @@ export async function isBlockedBetween(
     )
     .limit(1);
   return rows.length > 0;
+}
+
+/**
+ * SOC-09 §0.6 — the set of user ids blocked in EITHER direction with the actor (for gallery/trending
+ * block-filtering). When `candidateIds` is given, the read is bounded to those (the common gallery
+ * case — only the designers on the page matter); omitted → every either-direction block for the actor.
+ * Actor-scoped via `asActor` (the query is bounded to rows involving the actor).
+ */
+export async function listBlockedIds(
+  actorId: string,
+  candidateIds?: string[],
+  exec: Executor = getDb(),
+): Promise<Set<string>> {
+  if (candidateIds && candidateIds.length === 0) return new Set();
+  const actor = asActor(actorId);
+  const bounded = candidateIds
+    ? and(
+        or(
+          and(eq(userBlocks.blockerId, actor.actorId), inArray(userBlocks.blockedId, candidateIds)),
+          and(eq(userBlocks.blockedId, actor.actorId), inArray(userBlocks.blockerId, candidateIds)),
+        ),
+      )
+    : or(eq(userBlocks.blockerId, actor.actorId), eq(userBlocks.blockedId, actor.actorId));
+  const rows = await exec.select().from(userBlocks).where(bounded);
+  const out = new Set<string>();
+  for (const r of rows) {
+    // The OTHER party (never the actor) is the blocked/blocking counterpart to filter out.
+    out.add(r.blockerId === actor.actorId ? r.blockedId : r.blockerId);
+  }
+  return out;
 }
 
 async function friendIdsOf(userId: string, exec: Executor): Promise<string[]> {

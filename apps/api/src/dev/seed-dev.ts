@@ -168,12 +168,12 @@ async function ensureCardSubstrate(userId: string, eldenRingId: string | undefin
   const mine = await cardService.listMyCards(userId);
   let design = mine.items.find((c) => c.name === SEED_CARD_NAME && c.gameId === eldenRingId);
   if (!design) {
-    design = await cardService.createDraft(userId, {
+    const created = await cardService.createDraft(userId, {
       gameId: eldenRingId,
       composition: SEED_COMPOSITION,
       name: SEED_CARD_NAME,
     });
-    design = await cardService.savePrivate(userId, design.id);
+    design = await cardService.savePrivate(userId, created.card.id);
   } else if (design.status === 'draft') {
     design = await cardService.savePrivate(userId, design.id);
   }

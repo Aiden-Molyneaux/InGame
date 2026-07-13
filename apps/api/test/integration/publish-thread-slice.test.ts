@@ -150,11 +150,10 @@ describe('CARD-15/CARD-04 spike: publish→gallery→adopt (the full thread, cro
     expect('composition' in galleryCard).toBe(false);
     expect(JSON.stringify(gallery.body)).not.toContain('"composition"');
 
-    // ── 3. B adopts free → grant + count=1 ──────────────────────────────────────────────────────────
+    // ── 3. B adopts free → grant + count=1 (decision 0072 shape: granted/totalPaid/balance) ──────────
     const adopt = await request(app).post(`/api/cards/${card.id}/adopt`).set(authed(b.token));
     expect(adopt.status).toBe(200);
-    expect(adopt.body.adopted).toBe(true);
-    expect(adopt.body.card.adoptionCount).toBe(1);
+    expect(adopt.body).toEqual({ granted: [], totalPaid: 0, balance: 5 }); // free path, wallet untouched
 
     const afterAdopt = await request(app).get(`/api/games/${game.id}/cards`).set(authed(b.token));
     expect(afterAdopt.body.items[0].adoptionCount).toBe(1); // the derived public count moved

@@ -107,6 +107,20 @@ export class CardEquippedError extends AppError {
   }
 }
 
+/**
+ * CARD-20 (decision 0040/0072) — DELETE /cards/:id refused: the published design HAS ADOPTERS (their
+ * grants persist forever; delisting is `unpublish`, never delete). 409 — the CONFLICT family, aligned
+ * with the sibling CARD_EQUIPPED above (the LOOK_CAP-correction precedent, api-contract 0.55: a
+ * business-rule refusal on resource STATE is a 409 named code; 422 stays zod/shape-validation only).
+ */
+export class HasAdoptersError extends AppError {
+  readonly code = 'HAS_ADOPTERS';
+  readonly httpStatus = 409;
+  constructor(message = 'This card has adopters — unpublish it instead.') {
+    super(message);
+  }
+}
+
 /** CARD-24 (SYS-04, owner-set cap 30) — POST /me/style-presets refused: the preset shelf is full. */
 export class PresetLimitError extends AppError {
   readonly code = 'PRESET_LIMIT';
@@ -169,6 +183,56 @@ export class NotPublishedError extends AppError {
   readonly httpStatus = 409;
   constructor(message = 'That card is not available to adopt.') {
     super(message);
+  }
+}
+
+/**
+ * CARD-19 (decision 0073 §0.7) — POST /cards/:id/publish refused: the composition is below the
+ * min-complexity floor (≥ 3 elements OR ≥ 2 distinct element types). 409 (the CONFLICT family): the
+ * request is well-formed but the card's state (too simple to publish) forbids it. Drafts/private are
+ * exempt — the gate fires only at publish.
+ */
+export class MinComplexityError extends AppError {
+  readonly code = 'MIN_COMPLEXITY';
+  readonly httpStatus = 409;
+  constructor(message = 'Add a little more before publishing this card.') {
+    super(message);
+  }
+}
+
+/**
+ * CARD-19 (decision 0073 §0.7) — POST /cards/:id/publish refused: a global composition-hash match with
+ * ANOTHER published card. 409 (the CONFLICT family). Carries NOTHING beyond the code — no card id,
+ * name, or designer leaks (the anti-plagiarism gate must not become a lookup oracle for who published
+ * what).
+ */
+export class DuplicateCompositionError extends AppError {
+  readonly code = 'DUPLICATE_COMPOSITION';
+  readonly httpStatus = 409;
+  constructor(message = 'A matching card is already published.') {
+    super(message);
+  }
+}
+
+/**
+ * CARD-13 (decision 0072/0073) — POST /cards/:id/publish OR /cards/:id/save-private refused: the
+ * composition references premium-tier components the OWNER does not own. 409 (the CONFLICT family);
+ * carries `{ unowned: [{ cosmeticId, price }], total }` so the client drives the ReconcileSheet
+ * (ACQUIRE ALL). Dormant while the roster is all-free (fixture-tested). Mirrors
+ * InsufficientBalanceError's extra-field pattern.
+ */
+export class PremiumUnreconciledError extends AppError {
+  readonly code = 'PREMIUM_UNRECONCILED';
+  readonly httpStatus = 409;
+  readonly unowned: Array<{ cosmeticId: string; price: number }>;
+  readonly total: number;
+  constructor(
+    unowned: Array<{ cosmeticId: string; price: number }>,
+    message = 'This card uses premium components you don’t own yet.',
+  ) {
+    super(message);
+    this.unowned = unowned;
+    this.total = unowned.reduce((sum, u) => sum + u.price, 0);
   }
 }
 

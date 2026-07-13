@@ -32,11 +32,15 @@ export async function insertEntitlement(
   return rows[0] ?? null;
 }
 
-/** The subset of `cosmeticIds` the user already owns (actor-scoped — SYS-01). */
+/**
+ * The subset of `cosmeticIds` the user already owns (actor-scoped — SYS-01). `exec` is LAST + defaults
+ * to `getDb()` so a service pre-check can read without a transaction (no service-layer `getDb()` call);
+ * the acquire core / adopt tx pass their `ctx.tx` explicitly to read under the wallet lock.
+ */
 export async function findOwnedCosmeticIds(
-  exec: Executor,
   userId: string,
   cosmeticIds: string[],
+  exec: Executor = getDb(),
 ): Promise<Set<string>> {
   if (cosmeticIds.length === 0) return new Set();
   const actor = asActor(userId);

@@ -9,6 +9,7 @@ import { usersRoutes } from './routes/users-routes';
 import { catalogRoutes } from './routes/catalog-routes';
 import { collectionRoutes } from './routes/collection-routes';
 import { cardRoutes } from './routes/card-routes';
+import { discoverRoutes } from './routes/discover-routes';
 import { deviceRoutes } from './routes/device-routes';
 import { walletRoutes } from './routes/wallet-routes';
 import { iapRoutes } from './routes/iap-routes';
@@ -50,6 +51,7 @@ export function createApp(): Express {
       ...catalogRoutes,
       ...collectionRoutes,
       ...cardRoutes,
+      ...discoverRoutes,
       ...deviceRoutes,
       ...walletRoutes,
       ...iapRoutes,

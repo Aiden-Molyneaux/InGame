@@ -49,7 +49,8 @@ export const DOMAIN_EVENT_TYPES = [
   'wallet.adjusted', // ECON-11 — an out-of-band operator credit/debit (also writes a MOD-10 audit row).
   // M5 §1 publish-thread (decision 0073: publish → gallery → adopt). Append at the END.
   'card.published', // CARD-15 — draft/private → published (flatten to storage; imageUrl/thumbUrl set).
-  'card.adopted', // CARD-04 — a DIFFERENT user adopted a published card (the free-path grant, §1 spike).
+  'card.unpublished', // CARD-20 — a published card delisted (status → private; adopters keep their grants).
+  'card.adopted', // CARD-04 — a DIFFERENT user adopted a published card (component acquire + design grant).
   // M5 P2 IAP seam (decision 0072/0073: receipt validation + refund reversal). Append at the END.
   'iap.validated', // ECON-06 — a receipt validated → currency granted (pack_purchase), idempotent on receiptId.
   'iap.refunded', // ECON-09 — a platform refund reversed granted currency (refund_reversal), idempotent per receipt.

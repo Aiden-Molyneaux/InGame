@@ -1,10 +1,11 @@
-import { and, count, desc, eq, inArray, type SQL } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, ne, type SQL } from 'drizzle-orm';
 import { getDb, type Executor } from '../db/client';
 import { asActor, ownedBy } from '../db/scoped';
 import {
   cardAdoptions,
   cardDesigns,
   collectionEntries,
+  games,
   users,
   type CardDesignRow,
 } from '../db/schema';
@@ -186,11 +187,18 @@ export interface PublishedDesignRow {
   imageUrl: string | null;
   thumbUrl: string | null;
   isPremium: boolean;
+  /** The DENORMALIZED premium component ids (decision 0072) — feeds personalized pricing + adopt. */
+  premiumComponentIds: string[];
   designerId: string;
   designerUsername: string;
 }
 
-/** The public columns every gallery read selects — no `composition`, no owner-private fields. */
+/**
+ * The public columns every gallery read selects — no `composition`, no owner-private fields.
+ * `premiumComponentIds` is the denormalized premium-refs list (NOT the composition): it feeds the
+ * personalized `priceForYou` + the adopt component-acquire, so no cross-user composition read is ever
+ * needed (the OQ-122 composition-exclusion guarantee — enforced by the serializer + the rule-02 lint).
+ */
 const PUBLIC_COLUMNS = {
   id: cardDesigns.id,
   gameId: cardDesigns.gameId,
@@ -198,6 +206,7 @@ const PUBLIC_COLUMNS = {
   imageUrl: cardDesigns.imageUrl,
   thumbUrl: cardDesigns.thumbUrl,
   isPremium: cardDesigns.isPremium,
+  premiumComponentIds: cardDesigns.premiumComponentIds,
   designerId: users.id,
   designerUsername: users.username,
 } as const;
@@ -250,18 +259,215 @@ export async function adoptionCountsByCard(
   return new Map(rows.map((r) => [r.cardId, Number(r.n)]));
 }
 
-/** The equipped-transition write (the owner's OWN publish): flip status + set the flattened urls. */
+/**
+ * The publish-transition write (the owner's OWN publish): flip status → published, set the flattened
+ * urls + the denormalized premium component ids. Scoped to the actor AND guarded to a non-published
+ * status (`ne` published) so a concurrent double-publish transitions exactly once — the loser's WHERE
+ * matches no row and returns null (the caller treats null as "already published / raced", CARD-20).
+ */
 export async function markPublished(
   actorId: string,
   designId: string,
-  urls: { imageUrl: string; thumbUrl: string },
+  fields: { imageUrl: string; thumbUrl: string; premiumComponentIds: string[] },
   exec: Executor = getDb(),
 ): Promise<CardDesignRow | null> {
   const actor = asActor(actorId);
   const rows = await exec
     .update(cardDesigns)
-    .set({ status: 'published', imageUrl: urls.imageUrl, thumbUrl: urls.thumbUrl, updatedAt: new Date() })
-    .where(ownedBy(actor, cardDesigns.ownerId, eq(cardDesigns.id, designId)))
+    .set({
+      status: 'published',
+      imageUrl: fields.imageUrl,
+      thumbUrl: fields.thumbUrl,
+      premiumComponentIds: fields.premiumComponentIds,
+      updatedAt: new Date(),
+    })
+    .where(
+      ownedBy(
+        actor,
+        cardDesigns.ownerId,
+        and(eq(cardDesigns.id, designId), ne(cardDesigns.status, 'published')),
+      ),
+    )
     .returning();
   return rows[0] ?? null;
+}
+
+/** CARD-20 unpublish — the owner delists their OWN published card (status → private). Adopters keep
+ *  their grants (a separate table); the card just leaves the gallery. Returns null if not the actor's
+ *  published card (actor-B / not-published → the same nothing). */
+export async function markUnpublished(
+  actorId: string,
+  designId: string,
+  exec: Executor = getDb(),
+): Promise<CardDesignRow | null> {
+  const actor = asActor(actorId);
+  const rows = await exec
+    .update(cardDesigns)
+    .set({ status: 'private', updatedAt: new Date() })
+    .where(
+      ownedBy(
+        actor,
+        cardDesigns.ownerId,
+        and(eq(cardDesigns.id, designId), eq(cardDesigns.status, 'published')),
+      ),
+    )
+    .returning();
+  return rows[0] ?? null;
+}
+
+/**
+ * CARD-19 global hash-dedup (decision 0073 §0.7 — global exact-match refuse). True iff ANOTHER
+ * PUBLISHED card carries `hash` (any owner, excluding `selfId` so re-publishing your own card / an
+ * idempotent republish never self-collides). An anonymous cross-published aggregate — never a row read,
+ * never a composition read: `count()` over the published set with the visibility predicate.
+ */
+export async function hasPublishedDuplicate(
+  hash: string,
+  selfId: string,
+  exec: Executor = getDb(),
+): Promise<boolean> {
+  // SYS-01-PUBLIC-READ — cross-published dedup: published cards only, a COUNT (never composition, never
+  // a row) over the global published set; the visibility predicate (status='published') is required.
+  const rows = await exec
+    .select({ n: count() })
+    .from(cardDesigns)
+    .where(
+      and(
+        eq(cardDesigns.status, 'published'),
+        eq(cardDesigns.compositionHash, hash),
+        ne(cardDesigns.id, selfId),
+      ),
+    );
+  return Number(rows[0]?.n ?? 0) > 0;
+}
+
+/**
+ * OQ-141 — the copy-on-write idempotency probe (decision 0067/0073 §0.10). The actor's EXISTING draft
+ * COPY for a given origin + identical composition hash, or null. A repeat copy-POST returns this row
+ * instead of creating a second identical draft. Actor-scoped (SYS-01).
+ */
+export async function findDraftCopy(
+  actorId: string,
+  derivedFromCardId: string,
+  compositionHash: string,
+  exec: Executor = getDb(),
+): Promise<CardDesignRow | null> {
+  const actor = asActor(actorId);
+  const rows = await exec
+    .select()
+    .from(cardDesigns)
+    .where(
+      ownedBy(
+        actor,
+        cardDesigns.ownerId,
+        and(
+          eq(cardDesigns.status, 'draft'),
+          eq(cardDesigns.derivedFromCardId, derivedFromCardId),
+          eq(cardDesigns.compositionHash, compositionHash),
+        ),
+      ),
+    )
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+/** One trending-gallery row — a published card with its game title + designer (OQ-055; no composition). */
+export interface TrendingDesignRow {
+  id: string;
+  name: string;
+  imageUrl: string | null;
+  thumbUrl: string | null;
+  isPremium: boolean;
+  gameId: string;
+  gameTitle: string;
+  designerId: string;
+  designerUsername: string;
+}
+
+/**
+ * GET /discover/trending-cards (DISC-04/OQ-055) — the top published cards by adoption count. A LEFT
+ * JOIN to an adoption-count subquery would be ideal; the personal-scale reading here fetches the
+ * published set (bounded) + the service ranks by the `adoptionCountsByCard` aggregate. Published only.
+ */
+export async function listPublishedForTrending(
+  exec: Executor = getDb(),
+): Promise<TrendingDesignRow[]> {
+  // SYS-01-PUBLIC-READ — cross-user trending: published cards only, flattened urls + attribution, never
+  // composition. Joined to the GLOBAL games catalog for the title; the visibility predicate is required.
+  return exec
+    .select({
+      id: cardDesigns.id,
+      name: cardDesigns.name,
+      imageUrl: cardDesigns.imageUrl,
+      thumbUrl: cardDesigns.thumbUrl,
+      isPremium: cardDesigns.isPremium,
+      gameId: cardDesigns.gameId,
+      gameTitle: games.name,
+      designerId: users.id,
+      designerUsername: users.username,
+    })
+    .from(cardDesigns)
+    .innerJoin(users, eq(users.id, cardDesigns.ownerId))
+    .innerJoin(games, eq(games.id, cardDesigns.gameId))
+    .where(eq(cardDesigns.status, 'published'))
+    .orderBy(desc(cardDesigns.updatedAt));
+}
+
+// ── CAT-07 contributor aggregates (M5 P3 goes-live — GET /users/:id/contributions) ─────────────────
+
+/** The target's PUBLISHED design count (public creations; never their private/draft count). CAT-07. */
+export async function countPublishedByOwner(
+  ownerId: string,
+  exec: Executor = getDb(),
+): Promise<number> {
+  const actor = asActor(ownerId);
+  const rows = await exec
+    .select({ n: count() })
+    .from(cardDesigns)
+    .where(ownedBy(actor, cardDesigns.ownerId, eq(cardDesigns.status, 'published')));
+  return Number(rows[0]?.n ?? 0);
+}
+
+/**
+ * The LIFETIME adoptions across ALL of the target's cards (CARD-05 / ECON-05 clout). An anonymous
+ * cross-user aggregate: `count()` over `card_adoptions` joined to the target's designs. Deliberately
+ * status-agnostic — a creator EARNS the adoption on every path (decision 0072), so unpublishing does
+ * NOT erase clout already earned (the adopters keep their copies; CARD-20).
+ */
+export async function totalAdoptionsForOwner(
+  ownerId: string,
+  exec: Executor = getDb(),
+): Promise<number> {
+  // SYS-01-COMMUNITY-AGGREGATE — an anonymous COUNT of adoptions of the target's cards; the adopter
+  // identities are never read (a pure aggregate over the count).
+  const rows = await exec
+    .select({ n: count() })
+    .from(cardAdoptions)
+    .innerJoin(cardDesigns, eq(cardDesigns.id, cardAdoptions.cardDesignId))
+    .where(eq(cardDesigns.ownerId, ownerId));
+  return Number(rows[0]?.n ?? 0);
+}
+
+/** The target's published cards + game titles (for signatureCard/topCards; ranked by the service). CAT-07. */
+export async function listPublishedByOwner(
+  ownerId: string,
+  exec: Executor = getDb(),
+): Promise<Array<TrendingDesignRow>> {
+  const actor = asActor(ownerId);
+  return exec
+    .select({
+      id: cardDesigns.id,
+      name: cardDesigns.name,
+      imageUrl: cardDesigns.imageUrl,
+      thumbUrl: cardDesigns.thumbUrl,
+      isPremium: cardDesigns.isPremium,
+      gameId: cardDesigns.gameId,
+      gameTitle: games.name,
+      designerId: users.id,
+      designerUsername: users.username,
+    })
+    .from(cardDesigns)
+    .innerJoin(users, eq(users.id, cardDesigns.ownerId))
+    .innerJoin(games, eq(games.id, cardDesigns.gameId))
+    .where(ownedBy(actor, cardDesigns.ownerId, eq(cardDesigns.status, 'published')));
 }

@@ -427,6 +427,13 @@ export const cardDesigns = pgTable(
     imageUrl: text('image_url'),
     thumbUrl: text('thumb_url'),
     isPremium: boolean('is_premium').notNull().default(false),
+    // CARD-13/decision 0072 (M5 P3) — the DENORMALIZED premium component ids this card carries, set at
+    // PUBLISH (from the composition's premium cosmetic refs, after the reconcile gate proved the
+    // DESIGNER owns them all). Empty until publish + empty in real data (roster all-free until P10).
+    // The gallery's personalized `priceForYou` and adopt's component-acquire read THIS — so no
+    // cross-user read of the private `composition` is ever needed (the OQ-122 composition-exclusion
+    // guarantee holds for the whole publish/adopt/gallery surface).
+    premiumComponentIds: text('premium_component_ids').array().notNull().default([]),
     // CARD-24a copy-on-write (decision 0067): editing a committed card spins a draft COPY that
     // points here at its origin. NULL for from-scratch drafts. ON DELETE SET NULL — if the origin
     // is deleted the copy degrades to a standalone draft, never a broken ref (belt-and-braces).

@@ -76,7 +76,7 @@ export async function acquireComponents(
   }
 
   // Cheap unlocked pre-check: everything already owned → stay a pure read (no lock, no materialize).
-  const ownedPre = await entitlementRepo.findOwnedCosmeticIds(exec, actorId, premiumIds);
+  const ownedPre = await entitlementRepo.findOwnedCosmeticIds(actorId, premiumIds, exec);
   if (premiumIds.every((id) => ownedPre.has(id))) {
     const wallet = await economyRepo.findWallet(actorId, exec);
     return { granted: [], totalPaid: 0, balance: wallet?.balance ?? STARTING_GRANT };
@@ -85,7 +85,7 @@ export async function acquireComponents(
   // Real work (or real contention) ahead — lock the wallet FIRST, then RE-CHECK ownership under the
   // lock (closes the race window between the pre-check read above and the lock — the F36 guarantee).
   const wallet = await economyRepo.ensureWalletForUpdate(exec, actorId);
-  const owned = await entitlementRepo.findOwnedCosmeticIds(exec, actorId, premiumIds);
+  const owned = await entitlementRepo.findOwnedCosmeticIds(actorId, premiumIds, exec);
   const missing = premiumIds.filter((id) => !owned.has(id));
   if (missing.length === 0) {
     return { granted: [], totalPaid: 0, balance: wallet.balance };

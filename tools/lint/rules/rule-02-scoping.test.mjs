@@ -350,4 +350,86 @@ export async function abuse(exec, id) {
     ]);
     expect(v.length).toBeGreaterThan(0);
   });
+
+  // P3 finishes the lint work: the composition-exclusion guarantee (CARD-15 / 0066 §2) + a wider,
+  // long-select-tolerant predicate window + the on-disk misuse corpus.
+  it('FLAGS a public read that SELECTS `composition` even WITH a published predicate (0066 §2 leak)', () => {
+    const v = run([
+      repo(`
+import { eq, and } from 'drizzle-orm';
+import { cardDesigns, users } from '../db/schema';
+export async function leak(exec, gameId) {
+  // SYS-01-PUBLIC-READ: gallery read — but leaks the private layers
+  return exec
+    .select({ id: cardDesigns.id, composition: cardDesigns.composition, designer: users.username })
+    .from(cardDesigns)
+    .innerJoin(users, eq(users.id, cardDesigns.ownerId))
+    .where(and(eq(cardDesigns.gameId, gameId), eq(cardDesigns.status, 'published')));
+}
+`),
+    ]);
+    expect(v.length).toBeGreaterThan(0);
+    expect(v.some((x) => /composition/.test(x.message))).toBe(true);
+  });
+
+  it('EXEMPTS a public read that selects `compositionHash` (the dedup read — not the private column)', () => {
+    const v = run([
+      repo(`
+import { count, eq, and, ne } from 'drizzle-orm';
+import { cardDesigns } from '../db/schema';
+export async function hasDup(exec, hash, selfId) {
+  // SYS-01-PUBLIC-READ: cross-published dedup — a COUNT over the published set (never composition)
+  return exec
+    .select({ n: count() })
+    .from(cardDesigns)
+    .where(and(eq(cardDesigns.status, 'published'), eq(cardDesigns.compositionHash, hash), ne(cardDesigns.id, selfId)));
+}
+`),
+    ]);
+    expect(v).toHaveLength(0);
+  });
+
+  it('EXEMPTS a LONG attributed public select whose predicate trails the verb (the wider window)', () => {
+    const v = run([
+      repo(`
+import { eq, desc } from 'drizzle-orm';
+import { cardDesigns, users, games } from '../db/schema';
+export async function trending(exec) {
+  return exec
+    .select({
+      id: cardDesigns.id,
+      name: cardDesigns.name,
+      imageUrl: cardDesigns.imageUrl,
+      thumbUrl: cardDesigns.thumbUrl,
+      isPremium: cardDesigns.isPremium,
+      gameId: cardDesigns.gameId,
+      gameTitle: games.name,
+      designerId: users.id,
+      designerUsername: users.username,
+    })
+    // SYS-01-PUBLIC-READ: cross-user trending — published only, flattened urls, never composition
+    .from(cardDesigns)
+    .innerJoin(users, eq(users.id, cardDesigns.ownerId))
+    .innerJoin(games, eq(games.id, cardDesigns.gameId))
+    .where(eq(cardDesigns.status, 'published'))
+    .orderBy(desc(cardDesigns.updatedAt));
+}
+`),
+    ]);
+    expect(v).toHaveLength(0);
+  });
+
+  it('rejects each on-disk PUBLIC-READ misuse fixture (no-predicate · marked-write · composition-leak)', () => {
+    const dir = join(process.cwd(), 'fixtures', 'bad-pr-corpus', 'rule-02-scoping');
+    const all = collectFiles([dir], { exts: ['.ts'], cwd: process.cwd() });
+    for (const name of [
+      'public-read-no-predicate-repo.ts',
+      'public-read-write-repo.ts',
+      'public-read-composition-repo.ts',
+    ]) {
+      const fixture = all.filter((f) => f.path.endsWith(name));
+      expect(fixture, `${name} missing from the corpus`).toHaveLength(1);
+      expect(run(fixture).length, `${name} was not flagged`).toBeGreaterThan(0);
+    }
+  });
 });

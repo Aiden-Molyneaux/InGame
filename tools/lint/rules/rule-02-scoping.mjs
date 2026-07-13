@@ -50,7 +50,17 @@ const PUBLIC_READ_RE = /\/\/\s*SYS-01-PUBLIC-READ\b/;
 // `publishedOnly(...)` helper — whose whole contract is to INJECT that predicate (decision 0073 §0.1
 // names the helper as the mechanism). Either present in-window means the read is visibility-scoped.
 const PUBLISHED_PREDICATE_RE = /['"]published['"]|\bpublishedOnly\s*\(/;
+// The composition-exclusion guarantee (OQ-122/CARD-15/0066 §2 — P3 finishes the lint work): a
+// SYS-01-PUBLIC-READ read must NEVER select the private `composition` column (cross-user viewers get
+// the flattened image only). The regex matches a `.composition` column ref but NOT `.compositionHash`
+// (no word boundary before `Hash`), so the public dedup read (which selects the hash) is unaffected.
+const COMPOSITION_SELECT_RE = /\.composition\b/;
 const WINDOW = 12;
+// A slightly wider window for the PUBLIC-READ class only (its attributed selects are long — the marker,
+// the `status='published'` predicate, and the selected columns can span more than the base window).
+// This never launders an unscoped NON-public read: the public-read exemption still REQUIRES an explicit
+// visibility predicate in-window, and the general scope-signal window stays the tight WINDOW.
+const PUBLIC_READ_WINDOW = 16;
 /** How far ahead an insert chain is scanned for `.onConflictDoUpdate(` (bounded by the next `;`). */
 const CHAIN_LOOKAHEAD = 2000;
 
@@ -88,14 +98,20 @@ export default {
         const to = Math.min(codeLines.length, lineNo + WINDOW);
         const codeWindow = codeLines.slice(from, to).join('\n');
         const origWindow = origLines.slice(from, to).join('\n');
+        // The wider PUBLIC-READ window (marker · predicate · composition-select detection).
+        const pFrom = Math.max(0, lineNo - 1 - PUBLIC_READ_WINDOW);
+        const pTo = Math.min(codeLines.length, lineNo + PUBLIC_READ_WINDOW);
+        const pCodeWindow = codeLines.slice(pFrom, pTo).join('\n');
+        const pOrigWindow = origLines.slice(pFrom, pTo).join('\n');
         return {
           hasScope: SCOPE_SIGNAL_RE.test(codeWindow),
           hasExemptComment: /SYS-01-EXEMPT/.test(origWindow),
           hasAuthLookupComment: AUTH_LOOKUP_RE.test(origWindow),
           hasAggregateComment: COMMUNITY_AGGREGATE_RE.test(origWindow),
           hasAggregateCall: AGGREGATE_CALL_RE.test(codeWindow),
-          hasPublicReadComment: PUBLIC_READ_RE.test(origWindow),
-          hasPublishedPredicate: PUBLISHED_PREDICATE_RE.test(codeWindow),
+          hasPublicReadComment: PUBLIC_READ_RE.test(pOrigWindow),
+          hasPublishedPredicate: PUBLISHED_PREDICATE_RE.test(pCodeWindow),
+          selectsComposition: COMPOSITION_SELECT_RE.test(pCodeWindow),
         };
       };
 
@@ -139,6 +155,17 @@ export default {
         // A cross-user PUBLIC read (OQ-122): reads-only + an explicit `'published'` visibility predicate.
         const hasPublicRead =
           READ_VERBS.has(verb) && w.hasPublicReadComment && w.hasPublishedPredicate;
+        // The composition-exclusion guarantee: a PUBLIC read that selects `composition` is NEVER
+        // exempt — the private layers must not cross to another principal (CARD-15 / 0066 §2). Flag it
+        // explicitly (a clear message) and skip the generic check (one violation, not two).
+        if (hasPublicRead && w.selectsComposition) {
+          violations.push({
+            file: file.path,
+            line: lineNo,
+            message: `// SYS-01-PUBLIC-READ selects "composition" — a cross-user public read must never expose the private composition (OQ-122/CARD-15). Select the flattened image columns only (toPublicShape allowlist).`,
+          });
+          continue;
+        }
         if (!w.hasScope && !hasExempt && !hasAuthLookup && !hasCommunityAggregate && !hasPublicRead) {
           const kind = READ_VERBS.has(verb) ? 'read' : verb === 'insert' || verb === 'into' ? 'upserted' : 'modified';
           violations.push({
