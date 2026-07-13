@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, Platform, Pressable, StyleSheet, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import type { CollectionItem } from '@ingame/shared';
 import { CardFace, parseComposition } from '../CardFace';
@@ -29,7 +29,12 @@ import { useReducedMotion } from '../../a11y/useReducedMotion';
 // (PressSheet/KeepBeat each hold their own durations). Extract a shared token when that motion pass lands.
 const FLIP_MS = 320;
 
-export function FlipCard({
+// MEMOIZED (round-4 owner report — sibling text flicker on device at tap time): every flip tap swaps
+// the parent's `flippedIds` Set, re-rendering ShelfView/GridView — without memo that re-rendered ALL
+// rows and re-parsed every composition, redrawing every skia Metal canvas at exactly the moment the
+// animation starts. With memo + the STABLE id-passing handler contract below, a tap re-renders only
+// the tapped card; the other rows (and their canvases) are untouched mid-animation.
+export const FlipCard = memo(function FlipCard({
   item,
   flipped,
   onToggle,
@@ -40,10 +45,11 @@ export function FlipCard({
 }: {
   item: CollectionItem;
   flipped: boolean;
-  /** Tap the card (front or back-off-the-button) → toggle the flip. */
-  onToggle: () => void;
-  /** Long-press (either face) + the back's VIEW GAME → the Game page. */
-  onNavigate: () => void;
+  /** Tap the card (front or back-off-the-button) → toggle the flip. Called with the entryId — pass the
+      parent's ONE stable handler (never an inline closure), or the memo is defeated. */
+  onToggle: (entryId: string) => void;
+  /** Long-press (either face) + the back's VIEW GAME → the Game page. Called with the gameId. */
+  onNavigate: (gameId: string) => void;
   /** Fixed pixel size (shelf rows). */
   width?: number;
   height?: number;
@@ -51,6 +57,11 @@ export function FlipCard({
   style?: ViewStyle;
 }) {
   const reduced = useReducedMotion();
+  // Identity-stable composition (keyed on the raw rider) so the skia canvas' props never churn on a
+  // re-render — a fresh parse per render forced a canvas re-encode on every parent state change.
+  const composition = useMemo(() => parseComposition(item.card.composition), [item.card.composition]);
+  const toggle = () => onToggle(item.entryId);
+  const navigate = () => onNavigate(item.gameId);
   const progress = useRef(new Animated.Value(flipped ? 1 : 0)).current;
   // The back needs PIXEL dims (StatsBack draws an SVG silhouette); the grid card is fluid, so measure the
   // box and fall back to the intrinsic size for the first frame (the CardFace measure pattern).
@@ -84,6 +95,10 @@ export function FlipCard({
     return () => anim.stop();
   }, [flipped, reduced, progress]);
 
+  // FLAT rotateY — no `perspective`. The 3D skew was the app's only perspective compositing and the
+  // prime suspect for the iOS sibling-text flicker during the flip (round-4 owner report; web shows no
+  // artifact at any static angle, so it's native-compositor-specific). The flat flip still reads — the
+  // face narrows to an edge and the back unfurls. Revisit the skew once the flicker is confirmed gone.
   const frontRotate = progress.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] });
   const backRotate = progress.interpolate({ inputRange: [0, 1], outputRange: ['180deg', '360deg'] });
   // Hard opacity swap at the midpoint (the near-duplicate 0.5 stops make it a step, not a cross-fade).

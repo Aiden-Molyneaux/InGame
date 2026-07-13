@@ -48,7 +48,9 @@ export function PackTile({
   }
 
   return (
-    <View style={styles.pack}>
+    // F-1 fix 4 — regular tiles read calm (hairline). Only the flashed tile (BEST RATE) keeps the gold
+    // outline emphasis; the Starter keeps its own gold edge in the oneTime branch above.
+    <View style={[styles.pack, flash ? styles.packHot : null]}>
       {flash ? <Ribbon label={flash} /> : null}
       <View style={styles.amt}>
         <Text style={styles.amtNum}>{pack.pixels}</Text>
@@ -80,8 +82,9 @@ const useStyles = themedStyles((t) => ({
     paddingVertical: t.space.md,
     backgroundColor: t.scr.panel,
     borderWidth: 1,
-    borderColor: t.brand.gold,
+    borderColor: t.scr.hairline, // F-1 fix 4 — calm default; gold reserved for the flashed BEST-RATE tile
   },
+  packHot: { borderColor: t.brand.gold }, // F-1 fix 4 — the BEST-RATE tile keeps the gold outline
   starter: {
     flexDirection: 'row',
     alignItems: 'center',

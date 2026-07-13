@@ -7,11 +7,12 @@ import { StatTile } from '../../src/components/StatTile';
 import { ScreenButton } from '../../src/components/ScreenButton';
 import { MiniDevice } from '../../src/components/MiniDevice';
 import { RankChip } from '../../src/components/RankChip';
+import { CurrencyCounter } from '../../src/components/commerce';
 import { TertiaryLink } from '../../src/components/TertiaryLink';
 import { theme, themedStyles } from '../../src/theme';
 import { SHELL_NAMES, SCREEN_THEME_NAMES, resolveShellId, resolveScreenThemeId } from '../../src/theme/palettes';
 import { deviceStripCopy } from '../../src/components/device/deviceCopy';
-import { useGetMeQuery, useGetCollectionQuery, useGetDeviceQuery } from '../../src/store/api';
+import { useGetMeQuery, useGetCollectionQuery, useGetDeviceQuery, useGetWalletQuery } from '../../src/store/api';
 import { useAppDispatch } from '../../src/store/hooks';
 import { setCollectionView } from '../../src/store/prefsSlice';
 import { logoutTeardown } from '../../src/store';
@@ -27,6 +28,8 @@ export default function Profile() {
   const { data: me, isLoading, isError, refetch } = useGetMeQuery();
   const { data: collection } = useGetCollectionQuery();
   const { data: device } = useGetDeviceQuery();
+  // F-1 fix 7 — the persistent PX counter rides the Profile header too (ECON-07 entry point).
+  const { data: wallet } = useGetWalletQuery();
   const styles = useStyles();
 
   async function signOut() {
@@ -68,7 +71,15 @@ export default function Profile() {
       {/* S5-a — the fixed "PROFILE" title band (board `.screen-head` :487), above the scroll. The
           EDIT/SHARE/Settings tools that share that region stay ⛔ M7. */}
       <View style={styles.pad}>
-        <ScreenHead title="Profile" />
+        <ScreenHead
+          title="Profile"
+          trailing={
+            <CurrencyCounter
+              balance={wallet?.balance ?? 0}
+              onPress={() => router.push({ pathname: '/store', params: { view: 'wallet' } })}
+            />
+          }
+        />
       </View>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.body}>
         {/* identity — the real /me self-shape */}

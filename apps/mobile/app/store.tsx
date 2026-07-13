@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, ScrollView, View, Text } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 import type { LedgerEntry, StorePack } from '@ingame/shared';
 import { ScreenHead } from '../src/components/ScreenHead';
 import { ScreenButton } from '../src/components/ScreenButton';
+import { ConfirmSheet } from '../src/components/ConfirmSheet';
 import { TertiaryLink } from '../src/components/TertiaryLink';
 import { LoadError } from '../src/components/lifecycle/LoadError';
 import { Skeleton } from '../src/components/lifecycle/Skeleton';
@@ -17,6 +19,7 @@ import {
   LandedMoment,
   PixelsMark,
   isBestRate,
+  usdFor,
 } from '../src/components/commerce';
 import { themedStyles } from '../src/theme';
 import { useAnnounceOnChange } from '../src/a11y/announce';
@@ -44,13 +47,17 @@ type LandedState = { granted: number; from: number; to: number };
 
 export default function Store() {
   const styles = useStyles();
-  const [view, setView] = useState<StoreView>('browse');
+  // F-1 fix 7 — the header PX counter on Collection/Profile doors straight into the Wallet view
+  // (`/store?view=wallet`); any other entry lands on Browse.
+  const { view: viewParam } = useLocalSearchParams<{ view?: string }>();
+  const [view, setView] = useState<StoreView>(viewParam === 'wallet' ? 'wallet' : 'browse');
   const [aisle, setAisle] = useState<{ key: string; label: string } | null>(null);
   const [tick, setTick] = useState<number | null>(null);
   const [landed, setLanded] = useState<LandedState | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [restoreNote, setRestoreNote] = useState<string | null>(null);
   const [starterNote, setStarterNote] = useState<string | null>(null);
+  const [pendingPack, setPendingPack] = useState<StorePack | null>(null); // F-1 fix 5 — the mock IAP confirm
   const [offline, setOffline] = useState(false);
   const tickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -92,15 +99,20 @@ export default function Store() {
       });
   }, [claimBonus, flashTick, wallet?.dailyBonus.amount]);
 
-  // BUY a pack — the DEV-MOCK path: mint a mock receipt for this productId → POST /iap/validate. The
-  // REAL StoreKit purchase (the native sheet hands back a signed receipt) is the P2b seam — it replaces
-  // exactly this mint+validate call, behind the same /iap/validate + landed moment.
-  const buyPack = useCallback(
+  // BUY a pack — F-1 fix 5: staging the confirm stands in for the native Apple payment sheet. The tap
+  // opens a purchase-toned ConfirmSheet (pack + $ price); confirming runs the mint+validate below. In
+  // production the REAL StoreKit sheet IS this confirm — it replaces the ConfirmSheet + mintMockReceipt.
+  const buyPack = useCallback((pack: StorePack) => {
+    setStarterNote(null);
+    setPendingPack(pack);
+  }, []);
+
+  // The confirmed purchase — the DEV-MOCK path: mint a mock receipt for this productId → POST
+  // /iap/validate. ── P2b SEAM: replace mintMockReceipt(...) with the RevenueCat/StoreKit receipt. ──
+  const runPurchase = useCallback(
     (pack: StorePack) => {
       setOffline(false);
-      setStarterNote(null);
       const platform = Platform.OS === 'android' ? 'android' : 'ios';
-      // ── P2b SEAM: replace mintMockReceipt(...) with the RevenueCat/StoreKit purchase receipt. ──
       const receipt = mintMockReceipt(pack.productId, platform);
       validateIap({ platform, receipt })
         .unwrap()
@@ -124,6 +136,13 @@ export default function Store() {
     },
     [validateIap, flashTick],
   );
+
+  const confirmPending = useCallback(() => {
+    if (!pendingPack) return;
+    const pack = pendingPack;
+    setPendingPack(null);
+    runPurchase(pack);
+  }, [pendingPack, runPurchase]);
 
   const onRestore = useCallback(() => {
     setRestoreNote(null);
@@ -235,6 +254,21 @@ export default function Store() {
           tone="error"
           onRetry={undefined}
           onDismiss={() => setToast(null)}
+        />
+      ) : null}
+
+      {/* F-1 fix 5 — the mock Apple payment sheet: a purchase-toned confirm (NOT destructive-red)
+          echoing the P6 Face-ID framing. In production the native StoreKit sheet replaces this. */}
+      {pendingPack ? (
+        <ConfirmSheet
+          visible
+          tone="purchase"
+          title="CONFIRM PURCHASE"
+          message={`${usdFor(pendingPack.productId) ?? '$—'} will be charged to your Apple account for ${pendingPack.pixels} pixels.`}
+          confirmLabel={`Pay ${usdFor(pendingPack.productId) ?? ''}`.trim()}
+          busy={buying}
+          onConfirm={confirmPending}
+          onClose={() => setPendingPack(null)}
         />
       ) : null}
     </Header>
@@ -428,7 +462,7 @@ function WalletView({ balance, offline, onTopUp }: { balance: number; offline: b
             A refund reversed pixels. Earns &amp; packs recover it — nothing you own is taken back.
           </Text>
         ) : null}
-        <ScreenButton label="Buy pixels" variant="add" size="mini" onPress={onTopUp} disabled={offline} />
+        <ScreenButton label="Buy pixels" variant="add" size="mini" onPress={onTopUp} disabled={offline} style={styles.buyPixels} />
       </View>
 
       <Text style={styles.secTitle}>LEDGER — EVERY EARN &amp; SPEND</Text>
@@ -512,6 +546,9 @@ const useStyles = themedStyles((t) => ({
     borderColor: t.scr.hairline,
   },
   balHeroNeg: { borderColor: t.brand.alert },
+  // F-1 fix 3 — breathing room between the balance hero and the BUY PIXELS affordance (the hero's own
+  // `gap` is sm; this lifts the CTA clear of the number).
+  buyPixels: { marginTop: t.space.md },
   balLbl: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 2 },
   balRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   bal: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.brand.gold, letterSpacing: 1 },

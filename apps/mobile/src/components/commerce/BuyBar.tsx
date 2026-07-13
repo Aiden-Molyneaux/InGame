@@ -100,6 +100,7 @@ export function BuyBar({
         title="BUY THIS?"
         message={`Spend ${price} PX for this item. You have ${balance} PX — pixels are spent instantly.`}
         confirmLabel={`Confirm · ${label}`}
+        tone="purchase"
         onConfirm={() => {
           setConfirming(false);
           onBuy();

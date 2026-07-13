@@ -1,4 +1,4 @@
-import { render, fireEvent, screen } from '@testing-library/react-native';
+import { act, render, fireEvent, screen } from '@testing-library/react-native';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import type { LedgerEntry, StorePack } from '@ingame/shared';
@@ -12,7 +12,10 @@ import { LedgerRow } from './LedgerRow';
 import { LandedMoment } from './LandedMoment';
 import { AisleIndex } from './AisleIndex';
 
-jest.mock('../../a11y/useReducedMotion', () => ({ useReducedMotion: () => true }));
+// A flippable reduce-motion mock (the `mock` prefix lets the factory close over it). Defaults to
+// reduced=true so the LandedMoment burst never plays for the settled-layout assertions below.
+let mockReduced = true;
+jest.mock('../../a11y/useReducedMotion', () => ({ useReducedMotion: () => mockReduced }));
 
 const store = configureStore({ reducer: { prefs: prefsReducer } });
 const wrap = (ui: React.ReactElement) => <Provider store={store}>{ui}</Provider>;
@@ -169,7 +172,12 @@ describe('LedgerRow (§7)', () => {
 });
 
 describe('LandedMoment (P7)', () => {
-  it('shows the +N grant, the arithmetic, and fires both actions', () => {
+  afterEach(() => {
+    mockReduced = true;
+  });
+
+  it('under reduce-motion lands settled — the +N grant, the arithmetic, and both actions (no burst travel)', () => {
+    mockReduced = true;
     const onBack = jest.fn();
     const onViewWallet = jest.fn();
     render(wrap(<LandedMoment granted={30} from={5} to={35} onBack={onBack} onViewWallet={onViewWallet} />));
@@ -178,6 +186,23 @@ describe('LandedMoment (P7)', () => {
     fireEvent.press(screen.getByText('VIEW WALLET ›'));
     expect(onBack).toHaveBeenCalledTimes(1);
     expect(onViewWallet).toHaveBeenCalledTimes(1);
+  });
+
+  it('with motion the burst beat fires on mount and still settles to the arithmetic + actions', () => {
+    mockReduced = false;
+    jest.useFakeTimers();
+    try {
+      const onBack = jest.fn();
+      render(wrap(<LandedMoment granted={12} from={0} to={12} onBack={onBack} onViewWallet={jest.fn()} />));
+      // the celebration plays (beat 160ms + burst 680ms) then the layout is intact
+      act(() => jest.advanceTimersByTime(1000));
+      expect(screen.getByText('+12')).toBeTruthy();
+      fireEvent.press(screen.getByText('BACK TO STORE'));
+      expect(onBack).toHaveBeenCalledTimes(1);
+    } finally {
+      act(() => jest.runOnlyPendingTimers());
+      jest.useRealTimers();
+    }
   });
 });
 

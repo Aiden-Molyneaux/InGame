@@ -107,6 +107,7 @@ const useStyles = themedStyles((t) => ({
   },
   shortText: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.brand.alert, letterSpacing: 1 },
   bridgeHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  bridgeTitle: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 2 },
+  // F-1 fix 1 — the can't-afford TOP-UP bridge title wears the gold economy voice (F-02).
+  bridgeTitle: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.value, letterSpacing: 2 },
   bridgeGrid: { flexDirection: 'row', gap: t.space.md },
 }));

@@ -13,13 +13,14 @@ import { SearchField } from '../../src/components/SearchField';
 import { PulledSheet } from '../../src/components/PulledSheet';
 import { TextField } from '../../src/components/TextField';
 import { GenreTag } from '../../src/components/GenreTag';
+import { CurrencyCounter } from '../../src/components/commerce';
 import { TertiaryLink } from '../../src/components/TertiaryLink';
 import { KeyboardLift } from '../../src/components/KeyboardLift';
 import { COLLECTION_STATUSES, STATUS_LABEL } from '../../src/constants/collection';
 import { theme, themedStyles, useTheme } from '../../src/theme';
 import { useAppDispatch, useAppSelector } from '../../src/store/hooks';
 import { setCollectionView, setCol12CoachmarkSeen, type CollectionView } from '../../src/store/prefsSlice';
-import { useGetCollectionQuery, useUpdateEntryMutation } from '../../src/store/api';
+import { useGetCollectionQuery, useUpdateEntryMutation, useGetWalletQuery } from '../../src/store/api';
 
 // The REAL Collection (COL-01..09 · WTP-03) — the M2 scratch-seed retired; everything renders from
 // GET /me/collection. D2/decision 0058: the sort/filter/search DRAWER executes CLIENT-SIDE over the
@@ -139,6 +140,9 @@ export default function Collection() {
   const view = useAppSelector((s) => s.prefs.collectionView);
   const col12CoachmarkSeen = useAppSelector((s) => s.prefs.col12CoachmarkSeen);
   const { data, isLoading, isError, refetch } = useGetCollectionQuery();
+  // F-1 fix 7 — the persistent PX counter rides the Collection header (ECON-07 entry point); it reads the
+  // shared wallet cache and doors into the Store's wallet view.
+  const { data: wallet } = useGetWalletQuery();
   const styles = useStyles();
 
   // ONE shared query state between the in-place search and the drawer (OQ-034).
@@ -300,7 +304,16 @@ export default function Collection() {
     <View style={styles.screen}>
       <View style={styles.pad}>
         {/* honest totals — filtered count OF the whole shelf (the C4 class); S3-j copy */}
-        <ScreenHead title="Collection" count={countLabel} />
+        <ScreenHead
+          title="Collection"
+          count={countLabel}
+          trailing={
+            <CurrencyCounter
+              balance={wallet?.balance ?? 0}
+              onPress={() => router.push({ pathname: '/store', params: { view: 'wallet' } })}
+            />
+          }
+        />
       </View>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         {/* In-place search: the query live-filters the CURRENT view + a RESULTS header (board :661). */}

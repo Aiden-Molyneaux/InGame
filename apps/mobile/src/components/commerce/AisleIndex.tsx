@@ -68,7 +68,7 @@ const useStyles = themedStyles((t) => ({
     gap: 6,
     width: '48.5%',
     paddingHorizontal: t.space.md,
-    paddingVertical: 5,
+    paddingVertical: t.space.md, // F-1 fix 2 — modest lift for touch comfort (was 5), F-06 type unchanged
     backgroundColor: t.scr.panel,
     borderWidth: 1,
     borderColor: t.scr.hairline,
@@ -82,5 +82,6 @@ const useStyles = themedStyles((t) => ({
     letterSpacing: 1,
   },
   chev: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint },
-  topup: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 0.5 },
+  // F-1 fix 1 — the PIXELS → TOP UP action wears the gold economy voice (F-02), not the orange accent.
+  topup: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.value, letterSpacing: 0.5 },
 }));

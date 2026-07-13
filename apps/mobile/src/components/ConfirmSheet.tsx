@@ -16,6 +16,7 @@ export function ConfirmSheet({
   onConfirm,
   onClose,
   busy = false,
+  tone = 'destructive',
 }: {
   visible: boolean;
   title: string;
@@ -24,6 +25,12 @@ export function ConfirmSheet({
   onConfirm: () => void;
   onClose: () => void;
   busy?: boolean;
+  /**
+   * The confirm-action weight. `destructive` (default) = the alert-red delete/remove voice — the
+   * decision-0040 grammar. `purchase` = the acquisitive GOLD voice (F-02) for a BUY confirm (the mock
+   * IAP sheet · the OQ-046 non-hold buy path), which must never read as destructive-red.
+   */
+  tone?: 'destructive' | 'purchase';
 }) {
   const styles = useStyles();
   return (
@@ -32,7 +39,7 @@ export function ConfirmSheet({
       <View style={styles.actions}>
         <ScreenButton
           label={busy ? '…' : confirmLabel}
-          variant="destructive"
+          variant={tone === 'purchase' ? 'add' : 'destructive'}
           onPress={onConfirm}
           disabled={busy}
           block
