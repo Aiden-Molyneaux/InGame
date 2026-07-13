@@ -4,6 +4,7 @@ import {
   uuid,
   text,
   integer,
+  bigserial,
   boolean,
   timestamp,
   date,
@@ -513,6 +514,113 @@ export const deviceLooks = pgTable(
     userIdx: index('device_looks_user_idx').on(table.userId),
   }),
 );
+
+/**
+ * `wallets` — the ECON-07 currency balance (one per user). USER-OWNED (owner key = `user_id`, UNIQUE
+ * so the lazy get-or-create UPSERTs; NOT on the F32 manifest — rule-2 fails closed). Lazy-materialized
+ * on the first wallet-touching mutation (decision 0072: the 5-PX `starting_grant` row is written in
+ * the same transaction, ECON-02). `balance` is always derivable from `currency_ledger` (the reconcile
+ * invariant, ECON-07) and MAY go negative to the SYS-04 refund floor (ECON-09). Never written raw —
+ * every change funnels through the ledger service (SELECT … FOR UPDATE + one ledger row per delta).
+ */
+export const wallets = pgTable('wallets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  balance: integer('balance').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * `currency_ledger` — the ECON-07 append-only earn/spend history (auditability + the user-facing
+ * ledger). USER-OWNED (owner key = `user_id`; NOT on the F32 manifest — rule-2 fails closed).
+ * APPEND-ONLY: the codebase exposes NO update/delete path — every economic effect is a NEW row, and
+ * `sum(delta) == wallets.balance` is the standing reconcile invariant (ECON-07).
+ *  - `reason` — the pinned enum (decision 0073; shared `LEDGER_REASONS`), validated in the service.
+ *  - `refType`/`refId` — nullable polymorphic context (`refId` is TEXT so it holds a uuid card id, a
+ *    text cosmetic roster id (0063), or an external receipt id). Not a DB FK (polymorphic).
+ *  - `periodKey` — period-scoped idempotency key: the daily bonus stamps the UTC-day (`YYYY-MM-DD`)
+ *    so a partial-unique index makes a second same-day claim impossible even under the F36 race.
+ */
+export const currencyLedger = pgTable(
+  'currency_ledger',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    // Monotonic insertion order — the stable newest-first key. `created_at` is `now()` (transaction
+    // time), so rows written in ONE transaction (the first-touch grant + a claim, or P3's multi-row
+    // adopt) share a timestamp; `seq` breaks the tie deterministically by insertion order.
+    seq: bigserial('seq', { mode: 'number' }).notNull(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    delta: integer('delta').notNull(),
+    reason: text('reason').notNull(),
+    refType: text('ref_type'),
+    refId: text('ref_id'),
+    periodKey: text('period_key'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    // Newest-first paginated reads (ECON-07) — ordered by the monotonic seq (the wallet history view).
+    userSeqIdx: index('currency_ledger_user_seq_idx').on(table.userId, table.seq),
+    // Period-scoped idempotency (ECON-02): one row per (user, reason, period) among period-stamped
+    // rows — the daily-claim race backstop behind the wallet-row FOR UPDATE lock.
+    userReasonPeriodIdx: uniqueIndex('currency_ledger_user_reason_period_idx')
+      .on(table.userId, table.reason, table.periodKey)
+      .where(sql`period_key IS NOT NULL`),
+  }),
+);
+
+/**
+ * `store_products` — the IAP product catalog (currency packs, ECON-10). GLOBAL (on the F32 manifest —
+ * product definitions, not per-user state). Seeded from the decision 0072 pricing sheet by P10.
+ *  - `productId` — the store SKU (`px_pack_starter` / `px_pack_010` …), UNIQUE; matches App Store
+ *    Connect / RevenueCat product ids.
+ *  - `oneTime` — the ECON-10 Starter Pack (once/account, enforced server-side by P2, not here).
+ */
+export const storeProducts = pgTable('store_products', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  productId: text('product_id').notNull().unique(),
+  pixels: integer('pixels').notNull(),
+  oneTime: boolean('one_time').notNull().default(false),
+  active: boolean('active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * `iap_receipts` — validated IAP receipts (ECON-06, P2's grant-idempotency substrate). USER-OWNED
+ * (owner key = `user_id`; NOT on the F32 manifest — rule-2 fails closed). `receiptId` is UNIQUE so a
+ * replayed receipt can never double-grant (the ECON-06 invariant). Built now (P1 migration); the
+ * validation/grant path that writes it is P2.
+ */
+export const iapReceipts = pgTable(
+  'iap_receipts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    platform: text('platform').notNull(), // 'ios' | 'android'
+    receiptId: text('receipt_id').notNull().unique(),
+    productId: text('product_id').notNull(),
+    pixelsGranted: integer('pixels_granted').notNull(),
+    raw: jsonb('raw').notNull().$type<Record<string, unknown>>(),
+    validatedAt: timestamp('validated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    userIdx: index('iap_receipts_user_idx').on(table.userId),
+  }),
+);
+
+export type WalletRow = typeof wallets.$inferSelect;
+export type CurrencyLedgerRow = typeof currencyLedger.$inferSelect;
+export type NewCurrencyLedgerRow = typeof currencyLedger.$inferInsert;
+export type StoreProductRow = typeof storeProducts.$inferSelect;
+export type IapReceiptRow = typeof iapReceipts.$inferSelect;
 
 export type UserRow = typeof users.$inferSelect;
 export type NewUserRow = typeof users.$inferInsert;

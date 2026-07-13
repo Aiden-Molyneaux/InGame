@@ -34,6 +34,9 @@ const DEFAULTS: Record<string, RateLimitRule> = {
   // one-write-pipeline (~1-2s), so 120/min covers the hottest live-edit session; SAVE CURRENT/delete
   // share the bucket. Mirrors the cards:write posture.
   'device:write': { limit: 120, windowMs: 60_000 },
+  // M5 economy spend paths (decision 0073 §0.7 — the P3/P4 adopt/acquire spend buckets; SYS-05/G-K
+  // async). 30/min is ample for real editing/adopt bursts; the daily-bonus claim rides the fallback.
+  'wallet:spend': { limit: 30, windowMs: 60_000 },
 };
 
 const overrides = new Map<string, RateLimitRule>();

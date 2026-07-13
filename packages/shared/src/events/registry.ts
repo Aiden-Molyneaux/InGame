@@ -44,6 +44,9 @@ export const DOMAIN_EVENT_TYPES = [
   'device.updated', // DEV-01/02/03/04 — PATCH /me/device; payload = the changed facet-set (shell/theme/stickers).
   'device.look_saved', // DEV-05 — SAVE CURRENT snapshotted the live combo into a new look.
   'device.look_deleted', // DEV-05 — a saved look removed.
+  // M5 economy substrate (P1 — decision 0072/0073: wallets + currency_ledger). Append at the END.
+  'wallet.daily_claimed', // ECON-02 — the +1-PX Store daily bonus claimed (idempotent per UTC-day).
+  'wallet.adjusted', // ECON-11 — an out-of-band operator credit/debit (also writes a MOD-10 audit row).
 ] as const;
 
 export type DomainEventType = (typeof DOMAIN_EVENT_TYPES)[number];

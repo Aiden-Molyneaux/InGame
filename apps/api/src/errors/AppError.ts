@@ -130,6 +130,22 @@ export class LookCapError extends AppError {
   }
 }
 
+/**
+ * ECON-01/03/07 (decision 0072/0073) — a spend refused because it would drive the balance below the
+ * floor. 409 (the CONFLICT family, aligned with the sibling economy refusals); carries `{ shortBy }`
+ * = the additional PX the caller needs, so the client can drive the in-context Top-Up bridge. Mirrors
+ * DuplicateSuspectedError's extra-field pattern. Credits never raise this (only debits are floored).
+ */
+export class InsufficientBalanceError extends AppError {
+  readonly code = 'INSUFFICIENT_BALANCE';
+  readonly httpStatus = 409;
+  readonly shortBy: number;
+  constructor(shortBy: number, message = 'Not enough Pixels for this.') {
+    super(message);
+    this.shortBy = shortBy;
+  }
+}
+
 /** SERVER_ERROR carries a GENERIC body downstream — the middleware never serializes this message. */
 export class ServerError extends AppError {
   readonly code = 'SERVER_ERROR';

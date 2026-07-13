@@ -19,6 +19,11 @@ export const ERROR_CODES = [
   'PRESET_LIMIT', // 409 — POST /me/style-presets refused: the cap-30 is full (CARD-24, SYS-04)
   // M4 §3.5 Device editor (decision 0030 / api-contract §Device) — the F-17 additive path.
   'LOOK_CAP_REACHED', // 422 — POST /me/device/looks refused: the ~12 saved-looks cap is full (DEV-05, SYS-04)
+  // M5 economy (decision 0072/0073 / api-contract 0.57) — the F-17 additive path (codes land as their
+  // endpoint builds). INSUFFICIENT_BALANCE builds with P1's ledger substrate (the spend floor); the
+  // rest of the M5 refusal family (ALREADY_ADOPTED · NOT_PUBLISHED · MIN_COMPLEXITY ·
+  // DUPLICATE_COMPOSITION · STARTER_PACK_CONSUMED) append as P2/P3 build them.
+  'INSUFFICIENT_BALANCE', // 409 — a spend refused below the floor; carries { shortBy } (ECON-01/03/07)
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];
@@ -62,6 +67,8 @@ export interface ApiErrorBody {
     details?: ValidationDetail[];
     /** `DUPLICATE_SUSPECTED` only (CAT-03, api-contract 0.47) — best-first dedup candidates. */
     suggestions?: DedupSuggestion[];
+    /** `INSUFFICIENT_BALANCE` only (ECON-01/03, api-contract 0.57) — PX still needed for the spend. */
+    shortBy?: number;
   };
 }
 
