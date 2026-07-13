@@ -65,3 +65,12 @@ effects (galaxy/fire/…) · completing the icon library (19 → ~30, the acknow
 product-spec **0.58** (COSM-03 roster-tiering changelog) · m5-build-task P10 gains the roster-seed
 spec + the pre-launch content list · resolves the 0063/0068 deferred split · newcomer set feeds P11's
 `newcomerLadderCosmetic` config slots.
+
+## Amendment (owner, 2026-07-13, same sitting — supersedes the ⚠️ Open items)
+**"3 is the baseline":** premium fonts **2 → 3** · HALFTONE + SCANLINE **→ 3** · screen themes
+**4 → 6** · LINEN stays **3** (confirmed by the baseline rule). HOLO-PLATE-to-pre-launch: nodded.
+**Live price points at launch: 3 / 6 / 8** (tiers 1 · 2 · 4 · 10 all launch empty — the 0072 ladder
+keeps all seven as config vocabulary; the pre-launch content pass populates the gaps). Final:
+**3 PX** = all premium fonts · all static premium frames · BRASS · LINEN · HALFTONE · SCANLINE ·
+**6 PX** = SUNSET · PINK shells · all 4 premium themes · **8 PX** = MARQUEE · FROST · EMBERS ·
+HOLOGRAPHIC · METALLIC · CARBON.
