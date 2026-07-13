@@ -135,7 +135,21 @@
       unconditionally and prunes the subtree from hit-testing before the Svg's custom hitTest is ever consulted,
       both platforms. Web hit-tree re-verified (wrapper `pointer-events:none` confirmed in computed style; probes
       unchanged). The native path is exactly what web cannot exercise → **owner device re-test owed** (with a
-      hard reload — shake → Reload — to rule out a stale bundle as a confound).
+      hard reload — shake → Reload — to rule out a stale bundle as a confound). *(Flip-back confirmed working
+      on device, round-4 report.)*
+- [x] **Owner feedback round 4 (2026-07-13): shelf flip makes the meta text beside the card "flicker/
+      disappear" momentarily, EVERY flip (iOS device).** Diagnosis: a headless-browser filmstrip (freezing
+      the flip at 25°–180° against the real app) shows the projected card NEVER touches the text and the
+      meta rect never moves — the artifact is native-compositor/animation-time only. The two device-only
+      things happening at exactly tap time: (1) **every tap re-rendered ALL rows** (new Set → unmemoized
+      FlipCards → fresh `parseComposition` objects → every skia Metal canvas redrew as the animation
+      started); (2) `perspective` — the app's only 3D compositing. **Both fixed** (each correct
+      independently): FlipCard is `React.memo` with a stable id-passing handler contract
+      (`onToggle(entryId)`/`onNavigate(gameId)`, `useCallback` in the screen, coachmark latch via ref —
+      a tap now re-renders ONLY the tapped card) + `useMemo`'d composition (identity-stable skia props);
+      and the flip is now a **flat rotateY** (perspective dropped — the face narrows to an edge and
+      unfurls; the 3D skew can return once the flicker is confirmed dead). Verified: jest 144/144 ·
+      typecheck · lint · web round-trip (flip → stats-tap → back). **Owner device re-test owed.**
 - [x] **parvati** on the running `:8082` → **0 flags** (`m4-review-notes.md`, 2026-07-12): the back face + coachmark +
       hero-never-flips + meta-beside are screenshot-verified; the flip *motion* + grid faces are DOM/jest-verified
       (the automation renderer throttles `requestAnimationFrame` and won't paint skia FRONT faces — a manual

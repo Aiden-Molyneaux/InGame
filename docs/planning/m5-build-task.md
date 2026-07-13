@@ -285,7 +285,16 @@ Parallel lanes at any moment: {P1→P2 server} ∥ {§1 spike→P3 server} ∥ {
   moment when the slot is filled) — an additive slip into the signed P6 surface (murr diff-guard).
 - Contract bump (mine, at close): the wallet response extension.
 
-### P10 — Seeds + demo content (Sonnet · `effort: low` · after §0.2)
+### P10 — Seeds + demo content + the roster tiering (Sonnet · `effort: low` · after the roster sitting)
+- **The roster tiering (decision 0075):** register all 26 premium items + their tiers into the
+  server registry (`config/cosmetics.ts`) AND the client `roster.ts`/theme rosters (flip the `tier`
+  flags off `basic`); **register `GET /cosmetics`** (the aisle listing the store INDEX + editors read).
+  **Apply the two removals** — BRACKETS frame, SUBTLE GLOSS finish — *after* checking no dev-seed card
+  or preset references those ids (re-point/migrate if so). Wire the **6 filled newcomer slots** (D1
+  LINEN · D2 STENCIL · D3 CHROME · D4 BRASS · D5 MINT · D6 HALFTONE) into P11's
+  `NEWCOMER_LADDER_COSMETICS` config; D7 stays empty. **No new art** — HOLO PLATE, the animated HOLO
+  FOIL, ULTIMATE/accent items, and the D7 exclusive are the **pre-launch content pass** (0075), not P10.
+
 - `store_products` seed from the pricing sheet · roster re-tag data (premium flags + PX prices) ·
   dev-seed: second demo user with published cards (adoptable both price paths), wallet states
   (fresh/rich/negative), consumed starter pack — the `db:seed-dev` shelf grows idempotently ·

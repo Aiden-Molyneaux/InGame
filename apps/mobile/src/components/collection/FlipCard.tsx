@@ -122,14 +122,14 @@ export const FlipCard = memo(function FlipCard({
           <button> inside a <button> — an invalid-HTML hydration error that also froze the flip animation. */}
       <Pressable
         style={StyleSheet.absoluteFill}
-        onPress={onToggle}
-        onLongPress={onNavigate}
+        onPress={toggle}
+        onLongPress={navigate}
         accessibilityRole="button"
         accessibilityLabel={flipped ? backLabel : `${item.title} card`}
         accessibilityHint={flipped ? 'Flips back to the card' : 'Flips to your stats'}
         accessibilityActions={[{ name: 'viewgame', label: 'View game' }]}
         onAccessibilityAction={(e) => {
-          if (e.nativeEvent.actionName === 'viewgame') onNavigate();
+          if (e.nativeEvent.actionName === 'viewgame') navigate();
         }}
       />
 
@@ -138,15 +138,9 @@ export const FlipCard = memo(function FlipCard({
       <Animated.View
         pointerEvents="none"
         aria-hidden
-        style={[styles.face, { opacity: frontOpacity, transform: [{ perspective: 900 }, { rotateY: frontRotate }] }]}
+        style={[styles.face, { opacity: frontOpacity, transform: [{ rotateY: frontRotate }] }]}
       >
-        <CardFace
-          title={item.title}
-          composition={parseComposition(item.card.composition)}
-          size="grid"
-          nowPlaying={item.nowPlaying}
-          style={styles.fill}
-        />
+        <CardFace title={item.title} composition={composition} size="grid" nowPlaying={item.nowPlaying} style={styles.fill} />
       </Animated.View>
 
       {/* BACK — the CARD-01 stats back + the visible VIEW GAME keycap. `box-none` once SETTLED so a tap on
@@ -155,7 +149,7 @@ export const FlipCard = memo(function FlipCard({
       <Animated.View
         pointerEvents={settled && flipped ? 'box-none' : 'none'}
         aria-hidden
-        style={[styles.face, { opacity: backOpacity, transform: [{ perspective: 900 }, { rotateY: backRotate }] }]}
+        style={[styles.face, { opacity: backOpacity, transform: [{ rotateY: backRotate }] }]}
       >
         <StatsBack
           hours={item.hours}
@@ -173,7 +167,7 @@ export const FlipCard = memo(function FlipCard({
               variant="secondary"
               size="mini"
               block
-              onPress={onNavigate}
+              onPress={navigate}
               accessibilityLabel={`View ${item.title} game page`}
             />
           }
@@ -181,7 +175,7 @@ export const FlipCard = memo(function FlipCard({
       </Animated.View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   face: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },

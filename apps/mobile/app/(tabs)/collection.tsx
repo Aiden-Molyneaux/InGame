@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, Pressable, BackHandler, Keyboard, Platform } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
@@ -206,6 +206,29 @@ export default function Collection() {
     setFlippedIds((prev) => (prev.size === 0 ? prev : new Set()));
   }, [view]);
 
+  // COL-12 — a card tap toggles its flip (owner: many-flipped); the first flip retires the coachmark.
+  // STABLE handlers (useCallback + the seen-ref) so the memoized FlipCards skip re-render — a tap must
+  // re-render only the tapped card, never redraw all rows' skia canvases mid-animation (the round-4
+  // device flicker report). Hooks, so they live ABOVE the isLoading/isError early returns.
+  const coachSeenRef = useRef(col12CoachmarkSeen);
+  useEffect(() => {
+    coachSeenRef.current = col12CoachmarkSeen;
+  }, [col12CoachmarkSeen]);
+  const toggleFlip = useCallback(
+    (entryId: string) => {
+      setFlippedIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(entryId)) next.delete(entryId);
+        else next.add(entryId);
+        return next;
+      });
+      if (!coachSeenRef.current) dispatch(setCol12CoachmarkSeen(true));
+    },
+    [dispatch],
+  );
+  // COL-12 — long-press (either face) + the back's VIEW GAME → the Game page (CARD-23 NAVIGATE).
+  const openGame = useCallback((gameId: string) => router.push(`/game/${gameId}`), [router]);
+
   // COL-07/09 — client-side query execution over the loaded shelf (D2).
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -267,18 +290,6 @@ export default function Collection() {
     closeSearch();
   };
 
-  // COL-12 — a card tap toggles its flip (owner: many-flipped); the first flip retires the coachmark.
-  const toggleFlip = (entryId: string) => {
-    setFlippedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(entryId)) next.delete(entryId);
-      else next.add(entryId);
-      return next;
-    });
-    if (!col12CoachmarkSeen) dispatch(setCol12CoachmarkSeen(true));
-  };
-  // COL-12 — long-press (either face) + the back's VIEW GAME → the Game page (CARD-23 NAVIGATE).
-  const openGame = (gameId: string) => router.push(`/game/${gameId}`);
   // COL-12 discoverability — the one-time coachmark, gated on the persisted flag; only where cards flip
   // (shelf/grid), when there's something to flip and no active query (search results replace the view).
   const flippableView = view === 'shelf' || view === 'grid';
@@ -497,11 +508,13 @@ function ShelfView({ items, flippedIds, onToggle, onNavigate }: { items: Collect
       <View style={styles.shelfStack}>
         {items.map((i) => (
           <View key={i.entryId} style={styles.stackRow}>
+            {/* handlers passed RAW (FlipCard calls them with its ids) — an inline closure here would
+                defeat FlipCard's memo and redraw every row's canvas on each tap (the round-4 flicker). */}
             <FlipCard
               item={i}
               flipped={flippedIds.has(i.entryId)}
-              onToggle={() => onToggle(i.entryId)}
-              onNavigate={() => onNavigate(i.gameId)}
+              onToggle={onToggle}
+              onNavigate={onNavigate}
               width={138}
               height={193}
             />
@@ -527,11 +540,12 @@ function GridView({ items, flippedIds, onToggle, onNavigate }: { items: Collecti
       <View style={styles.gridWrap}>
         {items.map((i) => (
           <View key={i.entryId} style={styles.gridCol}>
+            {/* raw handlers — same memo rule as the shelf rows. */}
             <FlipCard
               item={i}
               flipped={flippedIds.has(i.entryId)}
-              onToggle={() => onToggle(i.entryId)}
-              onNavigate={() => onNavigate(i.gameId)}
+              onToggle={onToggle}
+              onNavigate={onNavigate}
               style={styles.fluidCard}
             />
           </View>
