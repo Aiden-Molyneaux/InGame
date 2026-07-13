@@ -5,6 +5,7 @@
 export { Skeleton, type SkeletonVariant } from './Skeleton';
 export { LoadError } from './LoadError';
 export { EmptyState } from './EmptyState';
+export { SectionEmpty } from './SectionEmpty';
 export { Offline } from './Offline';
 export { Unavailable } from './Unavailable';
 export { Toast, type ToastTone } from './Toast';

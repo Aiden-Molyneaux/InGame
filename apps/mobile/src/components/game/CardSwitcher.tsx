@@ -208,11 +208,8 @@ export function CardSwitcher({
         </View>
       ) : null}
 
-      {/* community gallery + adopt — M5 (decision 0062 §2) */}
-      <View style={styles.community}>
-        <Text style={styles.communityText}>BROWSE THE COMMUNITY</Text>
-        <Text style={styles.communityNote}>Adopt other players' cards — arrives in a later release.</Text>
-      </View>
+      {/* the community gallery (M5 P8) renders BELOW this switcher — the game page CARDS section
+          mounts `CommunityGallery` as a sibling; the old BROWSE-THE-COMMUNITY placeholder is retired. */}
     </View>
   );
 }
@@ -293,7 +290,4 @@ const useStyles = themedStyles((t) => ({
   miniBtn: { paddingVertical: t.space.md, paddingHorizontal: t.space.md },
   note: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, lineHeight: 15 },
   err: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.brand.alert },
-  community: { padding: t.space.lg, borderWidth: 1, borderColor: t.scr.hairline, gap: t.space.xs },
-  communityText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
-  communityNote: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint },
 }));

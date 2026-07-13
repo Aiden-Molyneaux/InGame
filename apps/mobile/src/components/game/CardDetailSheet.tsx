@@ -17,6 +17,8 @@ export function CardDetailSheet({
   composition,
   onClose,
   onEdit,
+  onShare,
+  shareBusy = false,
 }: {
   visible: boolean;
   entry: CollectionItem;
@@ -24,6 +26,9 @@ export function CardDetailSheet({
   onClose: () => void;
   /** Resume the equipped design in the Styler — undefined (the default face) disables EDIT. */
   onEdit?: () => void;
+  /** Share the equipped card's branded image (CARD-21) — undefined disables SHARE. */
+  onShare?: () => void;
+  shareBusy?: boolean;
 }) {
   const custom = composition !== null;
   const styles = useStyles();
@@ -44,7 +49,13 @@ export function CardDetailSheet({
       <Text style={styles.credit}>{custom ? 'YOUR DESIGN' : 'THE STANDARD FACE'}</Text>
       <EquipReadout card={entry.card} composition={composition} />
       <View style={styles.actions}>
-        <ScreenButton label="Share" variant="secondary" disabled style={styles.actionBtn} />
+        <ScreenButton
+          label={shareBusy ? '…' : 'Share'}
+          variant="secondary"
+          disabled={!onShare || shareBusy}
+          onPress={onShare}
+          style={styles.actionBtn}
+        />
         <ScreenButton
           label="Edit in Styler"
           variant="secondary"
@@ -55,7 +66,7 @@ export function CardDetailSheet({
       </View>
       <Text style={styles.note}>
         {custom
-          ? 'SHARE (an image with your credit) arrives in a later release.'
+          ? 'SHARE creates an image with your credit (once the card is published). EDIT resumes it in the Styler.'
           : 'Design your own card from the CARDS tab — the Styler is open.'}
       </Text>
     </PulledSheet>
