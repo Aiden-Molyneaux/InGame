@@ -25,10 +25,12 @@ const LABELS: Record<string, { label: string; accent?: NavTab['accent'] }> = {
   profile: { label: 'PROFILE' },
 };
 
-// The built tab routes (the group `(tabs)` is not part of the URL).
-const ROUTES: Record<string, '/(tabs)/collection' | '/(tabs)/profile'> = {
+// The built tab routes (the group `(tabs)` is not part of the URL). STORE (§P6, M5) is a top-level
+// route (`/store`) — the app's permanent commerce door, gold keycap — reached from any tab.
+const ROUTES: Record<string, '/(tabs)/collection' | '/(tabs)/profile' | '/store'> = {
   collection: '/(tabs)/collection',
   profile: '/(tabs)/profile',
+  store: '/store',
 };
 
 export function ShellNav({ bottomInset = 0 }: { bottomInset?: number }) {
@@ -46,8 +48,11 @@ export function ShellNav({ bottomInset = 0 }: { bottomInset?: number }) {
   // The Device editor (`/device`, §3.5) is a FlowTakeover OF Profile (board: NavBand untouched, PROFILE
   // keycap active) — the nav stays live, it is NOT locked.
   const onProfile = pathname.startsWith('/profile') || pathname.startsWith('/device');
-  const locked = !(onCollection || onProfile); // sign-in, index redirect, splash
-  const activeKey = onProfile ? 'profile' : 'collection';
+  // The Store (`/store`, §P6) — its own destination; Top Up + Wallet are in-screen sub-views (the STORE
+  // keycap stays active throughout, the device-editor FlowTakeover precedent).
+  const onStore = pathname.startsWith('/store');
+  const locked = !(onCollection || onProfile || onStore); // sign-in, index redirect, splash
+  const activeKey = onStore ? 'store' : onProfile ? 'profile' : 'collection';
 
   const tabs: NavTab[] = ORDER.map((key) => ({
     key,

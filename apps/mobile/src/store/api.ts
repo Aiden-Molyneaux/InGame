@@ -41,6 +41,19 @@ import {
   type LookResponse,
   type PatchDeviceRequest,
   deviceResponseSchema,
+  type StoreResponse,
+  type WalletResponse,
+  type LedgerResponse,
+  type DailyBonusResponse,
+  type IapValidateRequest,
+  type IapValidateResponse,
+  type EntitlementsResponse,
+  type AcquireResponse,
+  type AcquireBatchResponse,
+  type AcquireBatchRequest,
+  storeResponseSchema,
+  walletResponseSchema,
+  ledgerResponseSchema,
 } from '@ingame/shared';
 import type { RootState } from './index';
 import { setTokens } from './authSlice';
@@ -146,7 +159,19 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
 export const api = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Me', 'Collection', 'Catalog', 'Cards', 'Presets', 'Device', 'DeviceLooks'],
+  tagTypes: [
+    'Me',
+    'Collection',
+    'Catalog',
+    'Cards',
+    'Presets',
+    'Device',
+    'DeviceLooks',
+    'Store',
+    'Wallet',
+    'Ledger',
+    'Entitlements',
+  ],
   endpoints: (build) => ({
     // ── auth ──────────────────────────────────────────────────────────────────────────────────
     register: build.mutation<AuthSession, RegisterRequest>({
@@ -268,6 +293,56 @@ export const api = createApi({
       invalidatesTags: ['DeviceLooks'],
     }),
 
+    // ── store · wallet · economy (M5 — ECON-01..11 · COSM-03 · decision 0072/0073 · api 0.57) ──────
+    // The Store front (ECON-10 pack ladder + honest-empty premium/drops). Parsed at the seam (the
+    // executable contract). Invalidated by an IAP grant (the Starter `purchased` flag flips).
+    getStore: build.query<StoreResponse, void>({
+      query: () => '/store',
+      providesTags: ['Store'],
+      transformResponse: (raw): StoreResponse => storeResponseSchema.parse(raw),
+    }),
+    // The wallet balance + the daily-bonus availability (ECON-02/07). The header CurrencyCounter + the
+    // DailyBonusBar both read this; every currency mutation invalidates ['Wallet'] so the count re-reads.
+    getWallet: build.query<WalletResponse, void>({
+      query: () => '/me/wallet',
+      providesTags: ['Wallet'],
+      transformResponse: (raw): WalletResponse => walletResponseSchema.parse(raw),
+    }),
+    // The ledger page (ECON-07), newest-first. Arg = the opaque cursor (undefined = the first page).
+    // Each cursor is its own cache entry; the Wallet view accumulates pages in component state via the
+    // lazy hook (simpler + correct vs an RTK merge, which mis-refetches a middle page on invalidation).
+    getLedger: build.query<LedgerResponse, string | undefined>({
+      query: (cursor) =>
+        cursor ? `/me/wallet/ledger?cursor=${encodeURIComponent(cursor)}` : '/me/wallet/ledger',
+      providesTags: ['Ledger'],
+      transformResponse: (raw): LedgerResponse => ledgerResponseSchema.parse(raw),
+    }),
+    claimDailyBonus: build.mutation<DailyBonusResponse, void>({
+      query: () => ({ url: '/me/daily-bonus', method: 'POST', body: {} }),
+      invalidatesTags: ['Wallet', 'Ledger'],
+    }),
+    // POST /iap/validate — a pack purchase (receipt) OR restore (rcUserId). Grants → balance + a ledger
+    // row + (for the Starter) a purchased flag, so all three invalidate. The client mints the mock
+    // receipt (store/mockReceipt.ts) at DEV; the real StoreKit receipt is the P2b seam.
+    validateIap: build.mutation<IapValidateResponse, IapValidateRequest>({
+      query: (body) => ({ url: '/iap/validate', method: 'POST', body }),
+      invalidatesTags: ['Wallet', 'Ledger', 'Store'],
+    }),
+    getEntitlements: build.query<EntitlementsResponse, void>({
+      query: () => '/me/entitlements',
+      providesTags: ['Entitlements'],
+    }),
+    // POST /cosmetics/:id/acquire — the Store BUY (COSM-03/ECON-01). 409 INSUFFICIENT_BALANCE {shortBy}
+    // drives the in-sheet bridge; success → an entitlement + a spend ledger row.
+    acquireCosmetic: build.mutation<AcquireResponse, string>({
+      query: (cosmeticId) => ({ url: `/cosmetics/${cosmeticId}/acquire`, method: 'POST', body: {} }),
+      invalidatesTags: ['Wallet', 'Ledger', 'Entitlements'],
+    }),
+    acquireCosmeticBatch: build.mutation<AcquireBatchResponse, AcquireBatchRequest>({
+      query: (body) => ({ url: '/cosmetics/acquire-batch', method: 'POST', body }),
+      invalidatesTags: ['Wallet', 'Ledger', 'Entitlements'],
+    }),
+
     // ── catalog (CAT-01..05/09) ───────────────────────────────────────────────────────────────
     getGenres: build.query<GenresResponse, void>({
       query: () => '/genres',
@@ -316,4 +391,12 @@ export const {
   useGetLooksQuery,
   useSaveLookMutation,
   useDeleteLookMutation,
+  useGetStoreQuery,
+  useGetWalletQuery,
+  useLazyGetLedgerQuery,
+  useClaimDailyBonusMutation,
+  useValidateIapMutation,
+  useGetEntitlementsQuery,
+  useAcquireCosmeticMutation,
+  useAcquireCosmeticBatchMutation,
 } = api;
