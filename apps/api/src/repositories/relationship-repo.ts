@@ -1,7 +1,7 @@
 import { and, eq, inArray, or } from 'drizzle-orm';
 import type { Relationship } from '@ingame/shared';
 import { getDb, type Executor } from '../db/client';
-import { asActor } from '../db/scoped';
+import { asActor, ownedBy } from '../db/scoped';
 import { friendships, userBlocks } from '../db/schema';
 
 // Read-only relationship / block substrate for the GET /users/:id privacy engine (SOC-01/09; PROF-03).
@@ -80,6 +80,43 @@ export async function listBlockedIds(
     out.add(r.blockerId === actor.actorId ? r.blockedId : r.blockerId);
   }
   return out;
+}
+
+// ── SOC-09 block/unblock writes (M5 F-2 — the endpoints the M2 substrate deferred) ──────────────────
+
+/**
+ * SOC-09 — the actor BLOCKS a target. Actor-stamped bare insert (`blockerId` = the actor, SYS-01, never
+ * body-supplied); `onConflictDoNothing` on the (blocker, blocked) unique pair makes a repeat block an
+ * idempotent no-op. Returns true iff a NEW row landed (false = already blocked). An unknown `blockedId`
+ * trips the FK — the service maps it to a 404.
+ */
+export async function insertBlock(
+  actorId: string,
+  blockedId: string,
+  exec: Executor = getDb(),
+): Promise<boolean> {
+  const actor = asActor(actorId);
+  const rows = await exec
+    .insert(userBlocks)
+    .values({ blockerId: actor.actorId, blockedId })
+    .onConflictDoNothing({ target: [userBlocks.blockerId, userBlocks.blockedId] })
+    .returning({ id: userBlocks.id });
+  return rows.length > 0;
+}
+
+/** SOC-09 — the actor UNBLOCKS a target. Scoped to the actor's OWN block row (SYS-01); idempotent
+ *  (removing a non-existent block is a no-op). Returns true iff a row was removed. */
+export async function deleteBlock(
+  actorId: string,
+  blockedId: string,
+  exec: Executor = getDb(),
+): Promise<boolean> {
+  const actor = asActor(actorId);
+  const rows = await exec
+    .delete(userBlocks)
+    .where(ownedBy(actor, userBlocks.blockerId, eq(userBlocks.blockedId, blockedId)))
+    .returning({ id: userBlocks.id });
+  return rows.length > 0;
 }
 
 async function friendIdsOf(userId: string, exec: Executor): Promise<string[]> {

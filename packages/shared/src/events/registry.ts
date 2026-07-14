@@ -59,6 +59,9 @@ export const DOMAIN_EVENT_TYPES = [
   'cosmetic.batch_acquired', // CARD-13 — POST /cosmetics/acquire-batch; payload = the granted id set + totalPaid.
   'cosmetic.entitlement_granted', // ECON-11 — an operator grant (service-op, no route); also writes the MOD-10 audit row.
   'cosmetic.entitlement_clawed_back', // ECON-11 — an operator clawback (service-op, no route); also writes the MOD-10 audit row.
+  // M5 F-2 social block/unblock (decision 0073 §0.6: user_blocks writes). Append at the END.
+  'social.user_blocked', // SOC-09 — POST /me/blocks; the blocked designer's cards leave the caller's community views.
+  'social.user_unblocked', // SOC-09 — DELETE /me/blocks/:userId; the block lifted (idempotent).
 ] as const;
 
 export type DomainEventType = (typeof DOMAIN_EVENT_TYPES)[number];

@@ -2,18 +2,22 @@ import {
   compositionHash,
   compositionSchema,
   DEFAULT_CARD_STUB,
+  type AdoptedEntryCard,
   type AdoptResponse,
   type CardDesignView,
   type CollectionCard,
   type Composition,
   type CreateCardRequest,
+  type EntryCard,
   type EntryCardsResponse,
   type GalleryCardView,
   type GameGalleryResponse,
   type MyCardsResponse,
+  type OwnedEntryCard,
   type TrendingCardsResponse,
   type UpdateCardRequest,
 } from '@ingame/shared';
+import type { AdoptedDesignRow } from '../repositories/adoption-repo';
 import type { Executor } from '../db/client';
 import { mutation } from '../db/mutation';
 import * as cardRepo from '../repositories/card-repo';
@@ -89,6 +93,24 @@ export function toCardRider(design: CardDesignRow | null): CollectionCard {
     isPremium: design.isPremium,
     name: design.name,
     composition: design.composition, // owner-only (0066 §2)
+  };
+}
+
+/**
+ * The `card` rider for an equipped ADOPTED design (COL-06) — a FOREIGN card the caller holds a grant
+ * for. It renders from the FLATTENED image (imageUrl/thumbUrl), NEVER the private composition
+ * (OQ-122/CARD-15/0066 §2) — so no `composition` key rides this shape. `isCustom` stays true (it's a
+ * custom face, just not the caller's own layers).
+ */
+export function toAdoptedCardRider(adopted: AdoptedDesignRow): CollectionCard {
+  return {
+    id: adopted.id,
+    imageUrl: adopted.imageUrl,
+    thumbUrl: adopted.thumbUrl,
+    isCustom: true,
+    isPremium: adopted.isPremium,
+    name: adopted.name,
+    // no `composition` — a cross-user artifact is flattened-image only.
   };
 }
 
@@ -326,7 +348,32 @@ export async function listMyCards(actorId: string): Promise<MyCardsResponse> {
   return { items: rows.map(toCardView) };
 }
 
-/** GET /me/collection/:entryId/cards — the COL-06 switcher feed (own entry → its game's designs). */
+/** One OWNED switcher item (composition rides — owner renders live, 0066 §2). */
+function toOwnedEntryCard(row: CardDesignRow): OwnedEntryCard {
+  return { origin: 'owned', ...toCardView(row) };
+}
+
+/** One ADOPTED switcher item — flattened image + attribution, never the private composition (OQ-122). */
+function toAdoptedEntryCard(row: AdoptedDesignRow): AdoptedEntryCard {
+  return {
+    origin: 'adopted',
+    id: row.id,
+    gameId: row.gameId,
+    name: row.name,
+    imageUrl: row.imageUrl,
+    thumbUrl: row.thumbUrl,
+    isPremium: row.isPremium,
+    designer: { userId: row.designerId, username: row.designerUsername },
+  };
+}
+
+/**
+ * GET /me/collection/:entryId/cards — the COL-06 switcher feed: the caller's OWN designs for this game
+ * (composition rides) UNIONED with the cards they ADOPTED for it (flattened-only + designer attribution,
+ * decision 0072). Own designs come first, then adopted (each newest-first). An adopted card renders from
+ * the FLATTENED image, never the foreign composition (OQ-122/CARD-15) — the adoption-repo read is
+ * actor-scoped through the grant and selects only the flattened + attribution columns.
+ */
 export async function listCardsForEntry(
   actorId: string,
   entryId: string,
@@ -334,8 +381,13 @@ export async function listCardsForEntry(
   if (!UUID_RE.test(entryId)) throw new NotFoundError('Collection entry not found.');
   const entry = await collectionRepo.findOwnedEntry(actorId, entryId);
   if (!entry) throw new NotFoundError('Collection entry not found.'); // actor-B → the same 404
-  const rows = await cardRepo.listOwnedDesignsForGame(actorId, entry.gameId);
-  return { items: rows.map(toCardView) };
+  const owned = await cardRepo.listOwnedDesignsForGame(actorId, entry.gameId);
+  const adopted = await adoptionRepo.listAdoptedDesignsForGame(actorId, entry.gameId);
+  const items: EntryCard[] = [
+    ...owned.map(toOwnedEntryCard),
+    ...adopted.map(toAdoptedEntryCard),
+  ];
+  return { items };
 }
 
 // ── M5 §1 publish thread (publish → gallery → adopt) ─────────────────────────────────────────────────

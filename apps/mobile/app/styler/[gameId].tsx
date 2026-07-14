@@ -52,6 +52,8 @@ import {
   useAcquireCosmeticBatchMutation,
   usePublishCardMutation,
 } from '../../src/store/api';
+import { useLazyGetShareImageQuery } from '../../src/store/communityApi';
+import { presentShareImage } from '../../src/store/shareCard';
 
 // The Styler (§3.2 · design-spec §2.5 · decision 0014 stage 2) — the in-frame card editor over the
 // CARD-24a draft document (decision 0066): pick a start (BaseRail, CARD-16 never-blank) → the live
@@ -138,6 +140,7 @@ export default function Styler() {
   const [createStylePreset] = useCreateStylePresetMutation();
   const [acquireBatch] = useAcquireCosmeticBatchMutation();
   const [publishCardMut] = usePublishCardMutation();
+  const [fetchShareImage] = useLazyGetShareImageQuery();
 
   const entry = useMemo(() => shelf?.items.find((i) => i.gameId === gameId), [shelf, gameId]);
   const title = entry?.title ?? 'GAME';
@@ -715,6 +718,18 @@ export default function Styler() {
     }
   }
 
+  // CARD-21 share from the PrintRitual (F-2 fix): the just-published card is public, so
+  // GET /cards/:id/share-image serves it — hand the branded PNG to the platform share/save path
+  // (web opens/saves; native best-effort). Reuses the P8 shareCard util (gallery/game-page share).
+  async function sharePublished(shareCardId: string, shareTitle: string): Promise<void> {
+    try {
+      const blob = await fetchShareImage(shareCardId).unwrap();
+      await presentShareImage(blob, shareTitle); // best-effort — an 'unavailable' result just no-ops here
+    } catch {
+      // a not-yet-flattened / transient failure stays quiet — the celebration must not error out
+    }
+  }
+
   // ── door 1: ✕ — leave WITHOUT keeping (gate-5 D.23/24) ────────────────────────────────────────
   function requestExit() {
     if (mode !== 'edit' || !cardRow) {
@@ -1046,6 +1061,7 @@ export default function Styler() {
           composition={draft}
           cardsDesigned={me?.stats.cardsDesigned ?? null}
           onDone={() => router.replace(`/game/${gameId}`)}
+          onShare={cardRow ? () => void sharePublished(cardRow.id, title) : undefined}
         />
       </Frame>
     );

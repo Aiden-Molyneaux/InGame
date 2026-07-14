@@ -30,12 +30,50 @@ export const cardDesignSchema = z
   .strict();
 export type CardDesignView = z.infer<typeof cardDesignSchema>;
 
-/** GET /me/cards — my designs across games (drafts · private · published; CARD-14). */
+/** GET /me/cards — my designs across games (drafts · private · published; CARD-14). OWNED-ONLY —
+ *  this is the designer's shelf; an adopted card never appears here (it's not my design). */
 export const myCardsResponseSchema = z.object({ items: z.array(cardDesignSchema) }).strict();
 export type MyCardsResponse = z.infer<typeof myCardsResponseSchema>;
 
-/** GET /me/collection/:entryId/cards — the per-game switcher feed (COL-06). */
-export const entryCardsResponseSchema = z.object({ items: z.array(cardDesignSchema) }).strict();
+// ── COL-06 switcher — the per-game equippable faces (mine + adopted; api-contract 0.62) ──────────────
+// GET /me/collection/:entryId/cards lists two provenances, discriminated by `origin`:
+//  • 'owned'   — my own design (draft/private/published); the full owner shape (composition rides — I
+//                render it LIVE, owner-only per 0066 §2).
+//  • 'adopted' — a card I adopted for this game (decision 0072 grant). FOREIGN-owned → FLATTENED-ONLY:
+//                imageUrl/thumbUrl + designer attribution, NEVER `composition` (OQ-122 / CARD-15 /
+//                0066 §2 — cross-user viewers get the flattened image, never the private layers). The
+//                GRANT (not the card's publish status) is what makes it mine, so it SURVIVES the
+//                designer unpublishing (CARD-20 "adopters keep their copy").
+
+/** An OWNED switcher entry — my design, tagged with its provenance. */
+export const ownedEntryCardSchema = cardDesignSchema.extend({ origin: z.literal('owned') });
+export type OwnedEntryCard = z.infer<typeof ownedEntryCardSchema>;
+
+/** An ADOPTED switcher entry — a foreign card I hold a grant for. Flattened image + attribution only. */
+export const adoptedEntryCardSchema = z
+  .object({
+    origin: z.literal('adopted'),
+    id: z.string().uuid(),
+    gameId: z.string().uuid(),
+    name: z.string(),
+    imageUrl: z.string().nullable(),
+    thumbUrl: z.string().nullable(),
+    isPremium: z.boolean(),
+    designer: z.object({ userId: z.string().uuid(), username: z.string() }).strict(),
+    // NO `composition` — the flattened image is the only cross-user artifact (OQ-122).
+  })
+  .strict();
+export type AdoptedEntryCard = z.infer<typeof adoptedEntryCardSchema>;
+
+/** One switcher item — owned (composition rides) OR adopted (flattened-only), by `origin` (COL-06). */
+export const entryCardSchema = z.discriminatedUnion('origin', [
+  ownedEntryCardSchema,
+  adoptedEntryCardSchema,
+]);
+export type EntryCard = z.infer<typeof entryCardSchema>;
+
+/** GET /me/collection/:entryId/cards — the per-game switcher feed (COL-06): mine + adopted. */
+export const entryCardsResponseSchema = z.object({ items: z.array(entryCardSchema) }).strict();
 export type EntryCardsResponse = z.infer<typeof entryCardsResponseSchema>;
 
 /** One saved style preset (CARD-24b). GET /me/style-presets returns the BARE ARRAY (api 0.51). */

@@ -9,6 +9,7 @@ import * as profileService from '../services/profile-service';
 import * as cardService from '../services/card-service';
 import * as presetService from '../services/style-preset-service';
 import * as cosmeticService from '../services/cosmetics/cosmetic-service';
+import * as deviceService from '../services/device-service';
 import { DuplicateSuspectedError, ValidationError } from '../errors/AppError';
 import { COMPOSITION_SCHEMA_VERSION, type CollectionStatus, type Composition } from '@ingame/shared';
 
@@ -146,6 +147,7 @@ async function main(): Promise<void> {
 
   await ensureCardSubstrate(userId, gameIds.get('Elden Ring'));
   await ensureDemoPremiumEntitlements(userId); // M5 P10 (decision 0075) — so OwnedTags render
+  await ensureDemoDevice(userId); // M5 F-2 — an HONEST worn combo (free shell + an OWNED premium theme)
 
   await ensureRivalWorld(gameIds.get('Hollow Knight')); // M5 P10 — a second designer, a real published card
 
@@ -249,6 +251,20 @@ async function ensureDemoPremiumEntitlements(userId: string): Promise<void> {
     await cosmeticService.acquireCosmetic(userId, cosmeticId);
   }
   console.log(`seed-dev: demo premium entitlements ready — ${DEMO_PREMIUM_ENTITLEMENTS.join(', ')}`);
+}
+
+/**
+ * M5 F-2 — put the demo device in an HONEST worn state. The prior demo wore SUNSET (a premium 6-PX
+ * shell, decision 0075) with NO backing entitlement — a dishonest showcase (parvati P7/P8). We pick
+ * the clean-spend option: a FREE shell (GRAPE — always owned, no lock) plus the demo's OWNED premium
+ * theme (DEEP SEA — acquired above), so the device wears premium honestly (an OwnedTag, not an
+ * ungated premium). Idempotent: PATCH just re-asserts the two facets. `patchDevice` doesn't gate shell
+ * entitlement server-side today (a separate observation parvati filed), so keeping the SEED honest is
+ * the right lever here.
+ */
+async function ensureDemoDevice(userId: string): Promise<void> {
+  await deviceService.patchDevice(userId, { activeShellId: 'grape', screenThemeId: 'deepsea' });
+  console.log('seed-dev: demo device honest — shell GRAPE (free) + theme DEEP SEA (owned premium)');
 }
 
 /** A second designer ('rival@ingame.app') with a PUBLISHED card carrying a premium component — so the

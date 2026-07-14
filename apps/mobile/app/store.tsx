@@ -334,13 +334,19 @@ function BrowseView({
   onTopUp: () => void;
 }) {
   const styles = useStyles();
-  // THE INDEX aisle counts (owner-walk polish 2026-07-13) — the full library from GET /cosmetics,
-  // tallied by `type`. Absent (loading/error) → AisleIndex falls back to plain chevrons.
+  // THE INDEX aisle counts (owner-walk polish 2026-07-13; F-2 fix 2026-07-13) — PREMIUM-only tallies
+  // from GET /cosmetics, by `type`. The store sells premium; the free baseline lives in the editors
+  // (the browse hint says so), and each aisle page stocks premium ItemTiles — so a count that included
+  // the free library over-promised against an emptier aisle (parvati P7/P8). Count only PRICED items
+  // (premium: `price > 0` / a `tier` present). Absent (loading/error) → AisleIndex plain chevrons.
   const { data: library } = useGetCosmeticsQuery();
   const aisleCounts = useMemo(() => {
     if (!library) return undefined;
     const counts: Record<string, number> = {};
-    for (const item of library.items) counts[item.type] = (counts[item.type] ?? 0) + 1;
+    for (const item of library.items) {
+      if (item.price <= 0) continue; // free baseline isn't sold here — don't count it in the aisle
+      counts[item.type] = (counts[item.type] ?? 0) + 1;
+    }
     return counts;
   }, [library]);
   return (

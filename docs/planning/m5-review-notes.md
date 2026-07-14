@@ -177,3 +177,131 @@ Collection/Profile headers + X-GAMES chip height harmonized (ECON-07's "entry po
 **2 answered** (no hold-to-buy visible = premium aisles empty until the roster re-tag, by design ·
 Restore = Apple re-sync, consumables never re-granted (0017), App-Store-required). Hold-to-buy
 remains OWED-to-test at the roster sitting. P7/P8 stay held until F-1 lands + the owner's re-look.
+
+---
+
+## P7 premium-in-editors + P8 community gallery/adopt · parvati (M5, 2026-07-13)
+
+**Verdict:** 1 🚩 flag · 6 ✅ expected · 3 🎨 polish · (many ✔ matches) — measured vs the M5 DoD
+(§8 · §3-P7/P8), the `m5/gallery-manifest.md` enumeration + the m4-review-notes `EXPECTED(M5)` rows
+(Styler/Canvas/Device P7 shopping list), the `game-page-states` CARDS-gallery + `styler`/`canvas`/`device`
+boards, and the adopt/gallery/share/publish/acquire seams (api-contract 0.60/0.61; decisions
+0072/0073/0074/0075).
+**Reviewed from:** own real-Chrome `:8082` walk (logged in as `demo@ingame.app`), driven largely via the
+a11y tree + `get_page_text` + live DB/ledger reads, because CDP screenshots froze on every animated
+surface (see friction note). **This build shipped WITHOUT its crashed builders' BOOT walks — first eyes on
+the running result.** **Roster-reality note:** unlike the P6 store-review era, the **P10 roster re-tag
+(0075) HAS landed** — premium cosmetics are live entitlements now (chrome/deepsea/bitter owned by demo;
+26 premium items tiered) — so P7's premium states are **reachable-live**, not roster-empty-EXPECTED.
+**Pre-state found:** a crashed builder had already **adopted the Rival Cut as demo** (card_adoption row,
+paid 3 PX, `bitter` entitlement granted) — so I verified the **already-adopted/owned** path renders, per
+the task note. **Walk mutations disclosed:** (a) re-confirmed adopt → `ALREADY_ADOPTED` (idempotent, no
+charge); (b) **published demo's "Elden Ring — Aurora" card** (`db648bb0`, status→published) to exercise
+the Canvas PrintRitual — reversible via CARD-20 unpublish; (c) previewed device theme BERRY → **CANCEL**
+(no spend). **Wallet ended 106 PX, ledger reconciles 106==106** (no off-by-one this milestone). Zero
+console errors observed across the interactions tracked.
+
+### 🚩 Flag (owed at M5)
+- **Adopted card never lands in the "YOUR CARDS" switcher (COL-06)** — ABSENT/COHERENCE — after adopt, the
+  success toast and the `ALREADY_ADOPTED` owned-note both assert **"it's in your switcher,"** but it is
+  not: on Hollow Knight (where demo owns the adopted Rival Cut) **"YOUR CARDS FOR HOLLOW KNIGHT — 1"**
+  shows only demo's own PRIVATE card, and the adopted design appears **nowhere** in the adopter's own
+  surfaces. Confirmed structural at the source: the switcher is fed by `listMyCards` → `card-repo.listOwnedDesignsForGame`
+  (`card-service.ts:324/337` · `card-repo.ts:68`), which filters strictly on `ownerId = actor` and **never
+  unions `card_adoptions`**; the adopt mutation creates no adopter-side `card_designs` row and leaves the
+  collection entry's `active_card_design_id` **NULL**. So a Cards-tag invalidation can't surface it — the
+  adopted card is unequippable. **The DoD's browse→adopt→equip walk (§8 P8) cannot complete.** → the adopt
+  path (or `listMyCards`) must materialize a switcher-visible representation of the adopted grant (a derived
+  read that unions adoptions, or an equip pointer), OR the "it's in your switcher" copy is false and must
+  change. Parvati reports; this becomes an **OQ** (behavior/contract gap, not a client-only edit). Cite:
+  gallery-manifest §Inspect sheet row 4 (OWED · COL-06) · DoD §8 P8 "browse→adopt→**equip**" · board
+  `:708` toast "it's in your switcher now (equip it any time)".
+
+### ✅ Expected (deferred / documented-GAP — proceed)
+- **No per-component equip readout on the inspect sheet** — the board draws an `equip` row (FRAME·… / FX·…
+  / FIN·… / PLATE·…); the built sheet omits it. Cite: gallery-manifest §Inspect sheet row 3 —
+  **GAP(no pre-adopt component breakdown on `galleryCardSchema`)**; the wire carries only the summed
+  `priceForYou`, so the itemized list is deliberately absent (owner may add a `components[]`). Not a defect.
+- **Styler ReconcileSheet funded-path (apply premium → cost-stack → KEEP → confirm-acquire + KeepBeat PX
+  line)** — **not walkable in the web lane**: the Styler frame-rail premium swatches (GOLD/PLASMA, tried by
+  ref + `scroll_to`+click) did **not register a selection** (save-line stayed "SAVED …s AGO"), so I could
+  not reach KEEP. NOTE: this is a web-lane synthetic-event quirk on the Styler skia rail, **not** an
+  asserted product bug — the **sibling acquire-batch funded-cart works** (Device KeepBar, below). Owed to
+  the owner's device walk to confirm premium frame selection + ReconcileSheet end-to-end.
+- **Live block execution** (`POST /me/blocks`) — the **affordance is present** ("Block rival_curator" in the
+  sheet overflow; not executed per instruction) but the route may 404. Cite: gallery-manifest §Block —
+  GAP(server route not registered at manifest time; P3/SOC tail).
+- **Discover trending tap-through** — no Discover surface exists (M6). Cite: gallery-manifest §Discover —
+  GAP(no Discover surface).
+- **Native share / hold-to-buy feel / PrintRitual motion / reduce-motion** — all owed to the owner's device
+  walk (web can only show the fallbacks: SHARE opened the branded PNG in a new tab; the Device KeepBar shows
+  "HOLD TO BUY · 6 PX" but the hold gesture + its motion weren't exercised; the PrintRitual's animation
+  froze CDP capture). Cite: gallery-manifest §SHARE row 2 (native = EXPECTED P9) · store first-article
+  (hold-to-buy OWED-to-test).
+- **Gallery SORT** — inert/decorative (no sort param on the wire). Cite: gallery-manifest §Gallery row 1 —
+  EXPECTED(later · sort/pagination).
+
+### 🎨 Polish / iteration (built-app visual/DS; owner's eye)
+- **PrintRitual success SHARE reads deferred while CARD-21 share is LIVE** — the publish-success ritual
+  shows **"↗ SHARE — arrives with card sharing"** (a deferred/disabled placeholder), yet the inspect-sheet
+  SHARE **works** (opened the branded share PNG in a new tab). The just-published card is published →
+  `/cards/:id/share-image` would serve it. → wire the ritual's SHARE to the now-live `shareCard` util, or
+  drop the "arrives" copy. Inconsistent shipped-vs-deferred messaging for the same feature.
+- **Store INDEX aisle count over-promises vs the empty aisle** — COHERENCE — THE INDEX now shows live counts
+  ("FRAMES · 14 items", etc., a genuine improvement over the P6-review GAP), but tapping FRAMES lands on
+  "This aisle is being stocked…" (empty). A user taps "14 items" → empty shelf. The count reads the full
+  free+premium catalog while the aisle's buyable ItemTiles aren't wired. Store/P10 lane, tangential to
+  P7/P8 — surfaced while passing through. Board `:1328`/`:1344`.
+- **Device wears premium shell SUNSET (6 PX) without an owning entitlement** — the device readout wears
+  SUNSET (a 6-PX-chipped premium shell) while demo's entitlements are only chrome/deepsea/bitter — no
+  KeepBar/lock gates the worn shell the way THEME gates BERRY. Likely a pre-economy shell-pref carry-over;
+  owner's call whether worn premium shells must be entitlement-gated at M5. Observation, not a hard flag.
+
+### ✔ Matches (present · placed · behaving · on-aesthetic)
+- **P8 CommunityGallery cell** — flattened `FlatCardImage` thumb (the Rival Cut art, RN `<Image>` not skia),
+  "BY RIVAL_CURATOR", gold cell edge, foot row **FREE** chip + **1×** AdoptCount. Personalized price is
+  correct: **FREE** because demo owns `bitter` (the stale pre-login tab's "3 / 0×" was a cache artifact;
+  the live logged-in gallery reads FREE / 1× — matching the DB: 1 adoption, demo entitled). The M3 "arrives
+  in a later release" placeholder is correctly **replaced** by the live gallery.
+- **Inspect sheet** — head "COMMUNITY CARD — HOLLOW KNIGHT — RIVAL CUT" + ✕ · large flattened render ·
+  "DESIGNED BY RIVAL_CURATOR · ADOPTED 1×" · overflow ⋯ carrying **"Block rival_curator"** · adopt bar
+  "ADOPT — THE WHOLE CARD" + "You get the image, not the layers." (CARD-15) + **ADOPT · FREE** · SHARE ·
+  free-adopt hint.
+- **ADOPT → FREE-path ConfirmSheet** — "ADOPT THIS CARD?" + "It's free — the designer earns clout, not
+  currency." + ADOPT/CANCEL, **no debit line** (correct FREE path).
+- **ALREADY_ADOPTED owned state** — confirming adopt (already-owned) collapses the adopt bar to
+  **"✓ YOU ALREADY HAVE THIS CARD — it's in your switcher."** — renders correctly, idempotent, no charge.
+- **SHARE web fallback** — opened the branded share PNG (blob URL, 224×353 portrait) in a new tab — the
+  documented web path (authenticated blob → object URL → new tab).
+- **Empty-gallery SectionEmpty** (Elden Ring, pre-publish) — "NO COMMUNITY CARDS YET / Be the first to
+  design a card for this game — the community gallery starts with you." + **DESIGN A CARD** door.
+- **P7 Styler premium states** — PX **CurrencyCounter (106)** · PriceChips on unowned premium (GOLD 3 ·
+  ORNATE GOLD 3 · EMBER GLOW 3 · PLASMA 3 · MARQUEE 8) · **✓ OwnedTag on CHROME** (demo owns it). Pays
+  down the m4 `EXPECTED(M5)` price-chip/owned-tag/counter rows.
+- **P7 Canvas publish thread** — PRESS ▸ → **"THE PRESS — WHERE DOES IT GO?"** with the CARD-19 checklist
+  (**✓ Enough to stand on its own** · **◇ Checked against the gallery on publish** · **✓ Premium components
+  owned**) + SAVE PRIVATE / TO THE STYLER → ◆ PUBLISH → **PrintRitual fires** ("THE PRESS RUNS · PUBLISHED
+  · ◆ PUBLISHED FOR ELDEN RING · it's in the community gallery now · **18 CARDS DESIGNED** · 0 ADOPTIONS")
+  → threaded to P3 live (card db648bb0 published, contributor stat ticked).
+- **P7 Device premium states + KeepBar** — PX CountTag (106) · SHELL chips (GRAPE free · **SUNSET 6 · PINK
+  6 · CARBON 8**) · THEME chips (**✓ OwnedTag DEEP SEA** · BERRY/MINT/LILAC 6 · MIDNIGHT/PAPER free) +
+  "LEGIBILITY FLOOR HELD · SHELL STAYS SUNSET" · applying BERRY → **KeepBar cart**: "PREVIEWING PREMIUM · 6
+  TO KEEP · BERRY 6 PX · YOU HAVE 106 PX · keep all 1 · **HOLD TO BUY · 6 PX** · CANCEL" → **CANCEL**
+  reverted cleanly (theme back to MIDNIGHT, no spend).
+- **Contributor stats live** — rival's `totalAdoptions = 1` (DB, post-adopt) · demo's designed count ticked
+  to 18 on publish.
+- **Wallet ledger honesty** — the adoption's `acquire −3 · cosmetic · bitter` row present; balance 106
+  derives exactly from the ledger (no M4-style off-by-one).
+- **CROSS — store aisle header fixed** — H1 reads **"STORE AISLE"** + aisle-name eyebrow "FRAMES" (the
+  P6-review double-print is resolved); THE INDEX aisle counts now render.
+
+**Workflow friction (doctor-nick):** the MCP Chrome window lived **whole-hidden** (`document.visibilityState:
+hidden`) — the runbook's known freeze. The user32 foreground P/Invoke (ShowWindow+SetForegroundWindow, even
+topmost-pin) **did not hold** — focus was stolen back within ~1s every time, so CDP `captureScreenshot`
+timed out on nearly every animated RN-web/skia surface (gallery cell + a few static views captured; sheets,
+Styler, Canvas, Device did not). Ran the whole walk off the **a11y tree + `get_page_text` + live DB/ledger
+reads**, which never froze. Second friction: **Styler frame-rail premium swatches don't register synthetic
+ref/coordinate clicks** (device swatches + all nav/dialog buttons do) — blocked the in-Styler ReconcileSheet
+walk. Both belong in the "owed to the owner's device walk" bucket (native taps + reduce-motion + hold-to-buy
+feel + PrintRitual motion). Candidate runbook addition: *foreground P/Invoke no longer holds on this box —
+prefer a11y-tree-driven walking over screenshots for RN-web QA; the device-walk is the visual gate.*

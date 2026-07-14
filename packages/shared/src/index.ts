@@ -24,6 +24,7 @@ export * from './schemas/request/collection';
 export * from './schemas/request/cards';
 export * from './schemas/request/device';
 export * from './schemas/request/economy';
+export * from './schemas/request/social';
 export * from './schemas/response/profile';
 export * from './schemas/response/auth';
 export * from './schemas/response/gamertag';

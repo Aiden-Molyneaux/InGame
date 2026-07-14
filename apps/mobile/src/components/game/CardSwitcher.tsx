@@ -3,6 +3,7 @@ import { View, Text, Pressable, ActivityIndicator, StyleSheet } from 'react-nati
 import Svg, { Path } from 'react-native-svg';
 import type { CollectionItem } from '@ingame/shared';
 import { CardFace, parseComposition } from '../CardFace';
+import { FlatCardImage } from './FlatCardImage';
 import { ScreenButton } from '../ScreenButton';
 import { EquipReadout } from './EquipReadout';
 import { themedStyles, useTheme } from '../../theme';
@@ -24,13 +25,30 @@ const CELL_W = 96;
 const CELL_H = 134;
 const RING = 4;
 
-type Row = {
+// A switcher row is either one of MY designs (composition rides — renders live) or a card I ADOPTED
+// (COL-06/decision 0072 — foreign-owned, so it renders from the FLATTENED image + designer attribution,
+// never the private layers; CARD-15). Discriminated by `origin`, mirroring the wire shape.
+type OwnedRow = {
+  origin: 'owned';
   id: string;
   name: string;
   status: 'draft' | 'private' | 'published';
   composition: ReturnType<typeof parseComposition>;
   equipped: boolean;
 };
+type AdoptedRow = {
+  origin: 'adopted';
+  id: string;
+  name: string;
+  designer: string;
+  imageUrl: string | null;
+  equipped: boolean;
+};
+type Row = OwnedRow | AdoptedRow;
+
+/** The tag chip key — an owned design's lifecycle status, or the ADOPTED provenance. */
+type TagKey = 'draft' | 'private' | 'published' | 'adopted';
+const tagKeyOf = (row: Row): TagKey => (row.origin === 'adopted' ? 'adopted' : row.status);
 
 export function CardSwitcher({
   entry,
@@ -56,26 +74,40 @@ export function CardSwitcher({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [inlineError, setInlineError] = useState<string | null>(null);
 
-  const TAG_STYLE: Record<Row['status'], object> = {
+  const TAG_STYLE: Record<TagKey, object> = {
     draft: { backgroundColor: 'rgba(13,11,30,0.78)', borderWidth: 1, borderColor: t.scr.hairline },
     private: { backgroundColor: t.brand.cream },
     published: { backgroundColor: t.brand.gold },
+    adopted: { backgroundColor: t.scr.accent }, // an adopted grant — the accent provenance tag
   };
-  const TAG_TEXT: Record<Row['status'], object> = {
+  const TAG_TEXT: Record<TagKey, object> = {
     draft: { color: t.scr.dim },
     private: { color: t.brand.navy },
     published: { color: t.brand.goldInk },
+    adopted: { color: t.scr.accentInk },
   };
 
   const rows = useMemo<Row[]>(
     () =>
-      (data?.items ?? []).map((c) => ({
-        id: c.id,
-        name: c.name,
-        status: c.status as Row['status'],
-        composition: parseComposition(c.composition),
-        equipped: entry.card.id === c.id,
-      })),
+      (data?.items ?? []).map((c): Row =>
+        c.origin === 'adopted'
+          ? {
+              origin: 'adopted',
+              id: c.id,
+              name: c.name,
+              designer: c.designer.username,
+              imageUrl: c.imageUrl,
+              equipped: entry.card.id === c.id,
+            }
+          : {
+              origin: 'owned',
+              id: c.id,
+              name: c.name,
+              status: c.status,
+              composition: parseComposition(c.composition),
+              equipped: entry.card.id === c.id,
+            },
+      ),
     [data, entry],
   );
 
@@ -131,8 +163,8 @@ export function CardSwitcher({
               }}
             >
               {sel ? <SelectRing /> : null}
-              <View style={[styles.tag, TAG_STYLE[row.status]]}>
-                <Text style={[styles.tagText, TAG_TEXT[row.status]]}>{TAG_LABEL[row.status]}</Text>
+              <View style={[styles.tag, TAG_STYLE[tagKeyOf(row)]]}>
+                <Text style={[styles.tagText, TAG_TEXT[tagKeyOf(row)]]}>{TAG_LABEL[tagKeyOf(row)]}</Text>
               </View>
               {row.equipped ? (
                 // the worn marker is a GLYPH chip, not a word — it coexists with the status tag (C.11)
@@ -140,7 +172,12 @@ export function CardSwitcher({
                   <Text style={styles.wornGlyph}>◆</Text>
                 </View>
               ) : null}
-              <CardFace title={row.name} composition={row.composition} size="cell" width={CELL_W} height={CELL_H} />
+              {row.origin === 'adopted' ? (
+                // a foreign card renders from its FLATTENED published image, never live skia (CARD-15)
+                <FlatCardImage title={row.name} imageUrl={row.imageUrl} size="cell" width={CELL_W} height={CELL_H} />
+              ) : (
+                <CardFace title={row.name} composition={row.composition} size="cell" width={CELL_W} height={CELL_H} />
+              )}
             </Pressable>
           );
         })}
@@ -164,9 +201,14 @@ export function CardSwitcher({
       ) : selected ? (
         <View style={styles.opts}>
           <Text style={styles.optsTitle}>
-            {selected.name} — {TAG_LABEL[selected.status]}
+            {selected.name} — {TAG_LABEL[tagKeyOf(selected)]}
           </Text>
-          <EquipReadout card={{ ...entry.card, isCustom: true }} composition={selected.composition} />
+          {selected.origin === 'adopted' ? (
+            // CARD-15 — an adopted card is the IMAGE, not the layers; no per-attribute readout to show.
+            <Text style={styles.note}>Adopted from {selected.designer} — the image, not the layers.</Text>
+          ) : (
+            <EquipReadout card={{ ...entry.card, isCustom: true }} composition={selected.composition} />
+          )}
           <View style={styles.actions}>
             {selected.equipped ? (
               <ScreenButton
@@ -180,28 +222,34 @@ export function CardSwitcher({
               <ScreenButton
                 label={equipState.isLoading ? '…' : 'Set as main'}
                 variant="secondary"
-                disabled={selected.status === 'draft' || equipState.isLoading}
+                disabled={(selected.origin === 'owned' && selected.status === 'draft') || equipState.isLoading}
                 onPress={() => void setMain(selected.id)}
                 style={styles.miniBtn}
               />
             )}
-            <ScreenButton
-              label="Edit in Styler"
-              variant="secondary"
-              onPress={() => onEditInStyler(selected.id)}
-              style={styles.miniBtn}
-            />
-            <ScreenButton
-              label="Delete"
-              variant={selected.equipped ? 'secondary' : 'destructive'}
-              disabled={selected.equipped}
-              onPress={() => onRequestDelete(selected.id, selected.name)}
-              style={styles.miniBtn}
-            />
+            {/* Edit / Delete are OWNED-only — a foreign adopted card has no layers to edit and isn't
+                mine to delete (un-adopt is a later affordance). */}
+            {selected.origin === 'owned' ? (
+              <>
+                <ScreenButton
+                  label="Edit in Styler"
+                  variant="secondary"
+                  onPress={() => onEditInStyler(selected.id)}
+                  style={styles.miniBtn}
+                />
+                <ScreenButton
+                  label="Delete"
+                  variant={selected.equipped ? 'secondary' : 'destructive'}
+                  disabled={selected.equipped}
+                  onPress={() => onRequestDelete(selected.id, selected.name)}
+                  style={styles.miniBtn}
+                />
+              </>
+            ) : null}
           </View>
-          {selected.status === 'draft' ? (
+          {selected.origin === 'owned' && selected.status === 'draft' ? (
             <Text style={styles.note}>A draft resumes in the Styler — finish it (KEEP or SAVE PRIVATE) to equip it.</Text>
-          ) : selected.equipped ? (
+          ) : selected.origin === 'owned' && selected.equipped ? (
             <Text style={styles.note}>Your shelf wears this card. Unequip it before deleting it.</Text>
           ) : null}
           {inlineError || deleteError ? <Text style={styles.err}>{inlineError ?? deleteError}</Text> : null}
@@ -237,10 +285,11 @@ function SelectRing() {
   );
 }
 
-const TAG_LABEL: Record<Row['status'], string> = {
+const TAG_LABEL: Record<TagKey, string> = {
   draft: 'DRAFT',
   private: 'PRIVATE',
   published: 'PUBLISHED',
+  adopted: 'ADOPTED',
 };
 
 const useStyles = themedStyles((t) => ({
