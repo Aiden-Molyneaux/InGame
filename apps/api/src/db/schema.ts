@@ -525,7 +525,7 @@ export const deviceLooks = pgTable(
 /**
  * `wallets` — the ECON-07 currency balance (one per user). USER-OWNED (owner key = `user_id`, UNIQUE
  * so the lazy get-or-create UPSERTs; NOT on the F32 manifest — rule-2 fails closed). Lazy-materialized
- * on the first wallet-touching mutation (decision 0072: the 5-PX `starting_grant` row is written in
+ * on the first wallet-touching mutation (decision 0072/0074: the 10-PX `starting_grant` row is written in
  * the same transaction, ECON-02). `balance` is always derivable from `currency_ledger` (the reconcile
  * invariant, ECON-07) and MAY go negative to the SYS-04 refund floor (ECON-09). Never written raw —
  * every change funnels through the ledger service (SELECT … FOR UPDATE + one ledger row per delta).

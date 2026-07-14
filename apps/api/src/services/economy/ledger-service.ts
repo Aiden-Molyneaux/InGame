@@ -21,8 +21,8 @@ import {
 import type { CurrencyLedgerRow } from '../../db/schema';
 
 // The ECON-07 ledger service — the ONE seam through which the currency balance ever changes (decision
-// 0072/0073). Every effect is a transaction of { SELECT wallet FOR UPDATE (lazy-materialize the 5-PX
-// starting grant on first touch) → floor-check spends → UPDATE balance + INSERT one ledger row }, so
+// 0072/0073). Every effect is a transaction of { SELECT wallet FOR UPDATE (lazy-materialize the 10-PX
+// starting grant on first touch — decision 0074) → floor-check spends → UPDATE balance + INSERT one ledger row }, so
 // `sum(ledger.delta) == wallet.balance` is a standing invariant (ECON-07). The `credit`/`debit`
 // primitives are exec-based so P2 (IAP) / P3 (adopt) / P4 (acquire) call them INSIDE their own
 // mutation's transaction (passing `ctx.tx`); this file owns the wallet-only endpoints + the ECON-11
@@ -91,12 +91,28 @@ async function applyDelta(
   return { balance: newBalance, ledgerRow };
 }
 
+/**
+ * M5 F-3 (§4 audit LOW) — `credit`/`debit` take a POSITIVE integer amount by contract; a 0/negative/
+ * fractional amount is corrupted upstream content (e.g. a bad `store_products.pixels`), and with no DB
+ * CHECK constraints it would silently drain or fabricate balance. Throws a plain Error BEFORE any DB
+ * touch (nothing locked, nothing written). The signed-delta path (`adjustPixels`, ECON-11) is the one
+ * deliberate exception and calls `applyDelta` directly.
+ */
+function assertPositiveAmount(amount: number, op: 'credit' | 'debit'): void {
+  if (!Number.isInteger(amount) || amount <= 0) {
+    throw new Error(
+      `ledger.${op}: amount must be a positive integer (got ${amount}) — refusing a corrupted delta (ECON-07).`,
+    );
+  }
+}
+
 /** Credit the caller's wallet (an earn — never refused). P2/P3/P4 call this inside their mutation tx. */
 export function credit(
   exec: Executor,
   actorId: string,
   args: CreditArgs,
 ): Promise<{ balance: number; ledgerRow: CurrencyLedgerRow }> {
+  assertPositiveAmount(args.amount, 'credit');
   return applyDelta(exec, actorId, {
     delta: args.amount,
     reason: args.reason,
@@ -112,6 +128,7 @@ export function debit(
   actorId: string,
   args: DebitArgs,
 ): Promise<{ balance: number; ledgerRow: CurrencyLedgerRow }> {
+  assertPositiveAmount(args.amount, 'debit');
   return applyDelta(exec, actorId, {
     delta: -args.amount,
     reason: args.reason,

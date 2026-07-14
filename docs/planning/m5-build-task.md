@@ -379,24 +379,24 @@ R2, APNs/FCM, EAS) is parked with M6–M8 due-dates in the log — **do not re-l
 
 ## §8 — DEFINITION OF DONE
 
-- [ ] §0 rulings recorded → decision 0072 + `m5-entry-decision-log.md` · spec/contract/OQ bumps · `/health` 🟢
-- [ ] §1 spike GO recorded (or the fallback decision recorded)
-- [ ] P1 built test-first · G-I passed at the owner checkpoint · ECON-11 service op tested
-- [ ] P2 built on the mock seam · replay/restore/refund invariants green · refund demo shown
-- [ ] P2b + G-J + manual sandbox pass — **done, or explicitly recorded as owed on provisioning** (§6)
-- [ ] P3 built · G-D re-fire RED shown · publish→gallery→adopt walked cross-user · contributor stats live-verified
-- [ ] P4 batch-atomicity green · premium derivation live against the re-tagged roster
-- [ ] P5 lifecycle kit built · consumed by every M5 surface
-- [ ] P6 Store+Wallet through the full pipeline (manifest→murr→parvati→0 flags) · **first-article owner walk passed** · OQ-046 non-hold alt built + verified
-- [ ] P7 reconcile/publish/premium rows landed on all three editors · no regression on signed M4 behavior (murr diff lane) · owner walked reconcile + publish ritual
-- [ ] P8 gallery+adopt through the pipeline · owner walked browse→adopt→equip both price paths
-- [ ] P9 share-image live · moderation-hidden refusal tested
-- [ ] P10 seeds idempotent · factories shared test↔seed
-- [ ] G-N dry-run walked on a scratch DB against the new M5 tables · findings filed for M8
-- [ ] §4 independent Opus audit run on the economy core · findings closed
-- [ ] Six-check CI green on `m5` · every new test ID-tagged · SYS-07/F06/F36 counts reconcile
-- [ ] Receipts: `m5/economy-receipt.md` (P1–P4) + per-surface receipts (P6/P7/P8) · SCREEN-STATUS rows updated · component-map bumped (commerce kit + lifecycle kit built) · `/health` 🟢
-- [ ] Owner gate-as-we-go log complete — every checkpoint above has a ✓ or an explicit carry-over line
+- [x] §0 rulings recorded → decision 0072 + `m5-entry-decision-log.md` · spec/contract/OQ bumps · `/health` 🟢
+- [x] §1 spike GO recorded (or the fallback decision recorded) — **§1-GO ratified (decision 0074 §5): in-process node-skia flatten, no worker fallback**
+- [x] P1 built test-first · G-I passed at the owner checkpoint · ECON-11 service op tested — **G-I PASSED (decision 0074, 23/23 real PG)**
+- [x] P2 built on the mock seam · replay/restore/refund invariants green · refund demo shown
+- [ ] P2b + G-J + manual sandbox pass — **done, or explicitly recorded as owed on provisioning** (§6) — **OWED·provisioning** (`react-native-purchases` uninstalled; RC webhook unwired; rides Google Play verification — provisioning-log #6/#7/#8; recorded in `m5/economy-receipt.md`)
+- [ ] P3 built · G-D re-fire RED shown · publish→gallery→adopt walked cross-user · contributor stats live-verified — **P3 built · cross-user walked (P7/P8 parvati) · stats live-verified; the owner-watched G-D re-fire sitting is OWED** (the predicate-strip→RED test exists in CI)
+- [x] P4 batch-atomicity green · premium derivation live against the re-tagged roster
+- [x] P5 lifecycle kit built · consumed by every M5 surface
+- [x] P6 Store+Wallet through the full pipeline (manifest→murr→parvati→0 flags) · **first-article owner walk passed** · OQ-046 non-hold alt built + verified — **first-article walk round 1 → F-1 fix-round built; OQ-046 alt unit-tested (live-verify + owner re-look ride the device walk)**
+- [ ] P7 reconcile/publish/premium rows landed on all three editors · no regression on signed M4 behavior (murr diff lane) · owner walked reconcile + publish ritual — **P7 built + murr-diff-guarded + parvati; the owner DEVICE WALK (reconcile funded path · publish ritual motion) is OWED**
+- [ ] P8 gallery+adopt through the pipeline · owner walked browse→adopt→equip both price paths — **P8 built + parvati (1 🚩 → F-2/F-2b fixed the equip); the owner DEVICE WALK (browse→adopt→equip, hold-to-buy feel) is OWED**
+- [x] P9 share-image live · moderation-hidden refusal tested
+- [x] P10 seeds idempotent · factories shared test↔seed
+- [x] G-N dry-run walked on a scratch DB against the new M5 tables · findings filed for M8 — **PASSED (4/4; 2 M8-blockers caught → OQ-145)**
+- [x] §4 independent Opus audit run on the economy core · findings closed — **RAN 2026-07-13** (blind adversarial pass, after the receipts flagged the gap): every attack surface CLEAN, zero config drift vs decisions 0072/0074/0075, verdict "real invariant testing, not happy-path theater"; **1 HIGH finding** (no production floor on the mock IAP provider — silent free-Pixel faucet if P2b mis-deploys) + a hardening tail → **F-3 fixed all five** (fail-closed startup guard w/ behavior-matrix tests · cross-user receipt-hijack net · positive-amount asserts · publish TOCTOU 409 COMPOSITION_CHANGED · doc-drift sweep). Contract 0.64. Verdict flipped NO-GO → **GO**.
+- [x] Six-check CI green on `m5` · every new test ID-tagged · SYS-07/F06/F36 counts reconcile — **261 integration + 182 mobile at head**
+- [x] Receipts: `m5/economy-receipt.md` (P1–P4) + per-surface receipts (P6/P7/P8) · SCREEN-STATUS rows updated · component-map bumped (commerce kit + lifecycle kit built) · `/health` 🟢
+- [x] Owner gate-as-we-go log complete — every checkpoint above has a ✓ or an explicit carry-over line (the owed gates carried in the receipts' ⛔ lists)
 
 ---
 

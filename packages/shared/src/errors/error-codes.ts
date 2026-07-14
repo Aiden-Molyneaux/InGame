@@ -38,6 +38,8 @@ export const ERROR_CODES = [
   // M5 P2 IAP seam (decision 0072/0073 §0.4 / api-contract 0.57) — the F-17 additive path (the code
   // lands as its endpoint builds). A second one-time Starter Pack purchase is refused per account (ECON-10).
   'STARTER_PACK_CONSUMED', // 409 — POST /iap/validate refused: the once-per-account Starter Pack is already owned
+  // M5 F-3 (§4 economy-audit LOW — the publish TOCTOU guard) — the F-17 additive path.
+  'COMPOSITION_CHANGED', // 409 — publish refused: the composition changed mid-publish (a concurrent autosave drifted it from the flattened snapshot); RETRYABLE — publish again
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];

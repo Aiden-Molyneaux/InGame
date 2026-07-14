@@ -140,7 +140,7 @@ describe('ECON-02: the starting grant is exactly-once under the concurrent first
     expect(await countRows('wallets', a.id)).toBe(1);
     expect(await countRows('currencyLedger', a.id, 'starting_grant')).toBe(1);
     const rec = await ledger.reconcile(a.id);
-    expect(rec.balance).toBe(STARTING_GRANT); // 5
+    expect(rec.balance).toBe(STARTING_GRANT); // 10 (decision 0074)
     expect(rec.ok).toBe(true);
   });
 });

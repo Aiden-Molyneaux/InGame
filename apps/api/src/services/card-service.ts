@@ -31,6 +31,7 @@ import { acquireComponents } from './cosmetics/cosmetic-service';
 import {
   AlreadyAdoptedError,
   CardEquippedError,
+  CompositionChangedError,
   DuplicateCompositionError,
   HasAdoptersError,
   MinComplexityError,
@@ -562,6 +563,15 @@ const publishWrite = mutation(
     // pre-tx gate and here) — global exact-match refuse (CARD-19), same 409, no leak.
     if (await cardRepo.hasPublishedDuplicate(fields.compositionHash, cardId, ctx.tx)) {
       throw new DuplicateCompositionError();
+    }
+    // F-3 TOCTOU guard (§4 audit): the flatten ran OUTSIDE the tx on a pre-tx snapshot — a concurrent
+    // self-PATCH in that window would leave imageUrl/premiumComponentIds inconsistent with the stored
+    // composition. Re-read the row's hash IN-TX and refuse on drift with the RETRYABLE 409
+    // COMPOSITION_CHANGED (publish again re-snapshots).
+    const inTx = await cardRepo.findOwnedDesign(actorId, cardId, ctx.tx);
+    if (!inTx) throw designNotFound();
+    if (inTx.compositionHash !== fields.compositionHash) {
+      throw new CompositionChangedError();
     }
     // markPublished is guarded to a non-published status — null ⇒ actor-B / already-published / raced.
     const row = await cardRepo.markPublished(

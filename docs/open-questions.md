@@ -16,6 +16,16 @@
 
 ## Open
 
+- OQ-145: **AUTH-07 deletion-ripple — the M8 implementation checklist** (G-N dry-run, M5 2026-07-13;
+  findings: docs/planning/m5/gn-dryrun-findings.md; receipt `m5/economy-receipt.md`). Two M8-blockers
+  found early: (1) a hard card-delete CASCADES through card_adoptions + active_card_design_id —
+  adopters' grants and equipped faces are silently destroyed (AUTH-07/MOD-08 requires adopters-keep →
+  deletion must flip status, never DELETE the row); (2) the designer-attribution anonymization seam
+  (authorShapeFor) is unwired — a tombstoned user's real username still serves through
+  gallery/contributions/share paths. Plus: the ledger/receipts PII kept-set needs an owner ruling;
+  revoked-adoption count semantics under deleter-cascade; orphaned share-image files; orphaned blocks.
+  Nothing reachable today (no deletion endpoint exists — deferred M8 work, not yet resolved). [behavior]
+  **M8** (gate G-N, road-to-market §11)
 - ~~OQ-144~~ **RESOLVED (2026-07-10, decision 0070 — owner ruling "adapt the hue").** The fixed-brand
   on-screen colours become THEMED tokens that carry a light-theme-legible value: **`scr.key`** (secondary/
   keycap face — cream on dark, WHITE + a `scr.dim` border on light), **`scr.value`** (F-02 gold — bright
@@ -635,12 +645,3 @@
 - OQ-052 → **Friend-view SHARE chip cut** — sharing is self-only (your invite link, SOC-07); others'-profile deep links stay parked (§10). PROF-05 / design-req 3.5. Decision 0019. (2026-06-13)
 - OQ-007 → **RESOLVED design-side — the DIEGETIC breakout** (Canvas converge, `canvas/canvas-states.html` P1–P2): entering the Canvas the device shell **swings open like a cabinet** onto a workshop bench; the card lies on a **press bed**; layers become **physical slips**. Three treatments were drafted (total-yield HUD · partial-yield rails · diegetic press); the owner picked the press. Reduce-motion = a fade (CARD-16). Rescoped by decision 0014 to the Card editor's Canvas posture (stage 3 of the Add Game arc; Add Game + the Styler stay in-frame). (2026-06-13) **↦ RE-RESOLVED 2026-07-08 (decision 0067 §1 · CR-01): the cabinet-swing is retired — the breakout is now a scale-transform ZOOM** (the screen area grows to full-bleed on entry, shrinks back on exit); transform-only, no remount (CARD-24a). The press-bed / physical-slips workshop grammar stays; only the *entry mechanism* changed (swing → zoom). Reduce-motion = the zoom without the flourish.
 - OQ-040 → **RESOLVED design-side — the "first print" ritual** (Canvas converge, `canvas/canvas-states.html` P8): ① the press runs (client-rendered platen sweep, never network-bound) · ② the slips fly in (the composition-JSON assembly replay) · ③ the print lifted off the press (gallery staging, bloom + haptics) → routing: shelf slot · SHARE (CARD-21) · NOTIF-04 adoption-ask. **Tiered:** full here (canvas completions / publishes); the **light KeepBeat** for Styler keeps was designed in `styler/styler-states.html` P7. Mid-edit **hold-to-preview** = the Canvas's PROOF (P6). Decision 0015 moments layer / decision 0014 editor arc. (2026-06-13) **↦ AMENDED 2026-07-08 (decision 0067 §6 · CR-17): SAVE PRIVATE gains a LIGHT press beat at M4** — a lighter tier than the full PUBLISH `PrintRitual` (which stays M5), so the press moment is reachable when saving private without discouraging it (0015 tiers respected — a new light-tier press beat beside KEEP's).
-- OQ-145: **AUTH-07 deletion-ripple — the M8 implementation checklist** (G-N dry-run, M5 2026-07-13;
-  findings: docs/planning/m5/gn-dryrun-findings.md). Two M8-blockers found early: (1) a hard
-  card-delete CASCADES through card_adoptions + active_card_design_id — adopters' grants and equipped
-  faces are silently destroyed (AUTH-07/MOD-08 requires adopters-keep → deletion must flip status,
-  never DELETE the row); (2) the designer-attribution anonymization seam (authorShapeFor) is unwired —
-  a tombstoned user's real username still serves through gallery/contributions/share paths. Plus:
-  the ledger/receipts PII kept-set needs an owner ruling; revoked-adoption count semantics under
-  deleter-cascade; orphaned share-image files; orphaned blocks. Nothing reachable today (no deletion
-  endpoint exists). [behavior] **M8** (gate G-N, road-to-market §11)

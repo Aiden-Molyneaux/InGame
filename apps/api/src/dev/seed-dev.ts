@@ -258,9 +258,9 @@ async function ensureDemoPremiumEntitlements(userId: string): Promise<void> {
  * shell, decision 0075) with NO backing entitlement — a dishonest showcase (parvati P7/P8). We pick
  * the clean-spend option: a FREE shell (GRAPE — always owned, no lock) plus the demo's OWNED premium
  * theme (DEEP SEA — acquired above), so the device wears premium honestly (an OwnedTag, not an
- * ungated premium). Idempotent: PATCH just re-asserts the two facets. `patchDevice` doesn't gate shell
- * entitlement server-side today (a separate observation parvati filed), so keeping the SEED honest is
- * the right lever here.
+ * ungated premium). Idempotent: PATCH just re-asserts the two facets. Since F-2b, `patchDevice` also
+ * GATES premium shell/theme ids server-side (409 PREMIUM_UNRECONCILED) — this seed combo passes it
+ * honestly (free shell + an owned theme), which is exactly the point.
  */
 async function ensureDemoDevice(userId: string): Promise<void> {
   await deviceService.patchDevice(userId, { activeShellId: 'grape', screenThemeId: 'deepsea' });

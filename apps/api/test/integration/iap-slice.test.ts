@@ -222,6 +222,41 @@ describe('ECON-06: a valid receipt grants once; the SAME receipt replayed never 
     expect(rec.balance).toBe(STARTING_GRANT + 30); // 40 — one grant only
     expect(rec.ok).toBe(true);
   });
+
+  it('CROSS-USER receipt hijack (F-3, §4 audit): user B replaying user A’s receiptId gets NOTHING', async () => {
+    const a = await registerUser();
+    const b = await registerUser();
+    const { token } = receiptFor('px_pack_030');
+
+    // A validates their own receipt — the legitimate grant.
+    const mine = await request(app)
+      .post('/api/iap/validate')
+      .set(authed(a.token))
+      .send({ platform: 'ios', receipt: token });
+    expect(mine.status).toBe(200);
+    expect(mine.body.granted).toBe(true);
+
+    // B replays A's EXACT receipt token — the UNIQUE receiptId is global, so B gets granted:false,
+    // no ledger row, no receipt row, wallet untouched (the security-load-bearing invariant).
+    const hijack = await request(app)
+      .post('/api/iap/validate')
+      .set(authed(b.token))
+      .send({ platform: 'ios', receipt: token });
+    expect(hijack.status).toBe(200);
+    expect(hijack.body.granted).toBe(false);
+    expect(await ledgerCount(b.id, 'pack_purchase')).toBe(0); // B earned nothing
+    expect(await receiptCount(b.id)).toBe(0); // the receipt stays A's
+    const bRec = await ledger.reconcile(b.id);
+    expect(bRec.ok).toBe(true); // B's wallet coherent + un-inflated (0 or the untouched grant)
+    expect(bRec.balance).toBeLessThanOrEqual(STARTING_GRANT);
+
+    // A's grant is intact — exactly one pack_purchase, balance unchanged by the hijack attempt.
+    expect(await ledgerCount(a.id, 'pack_purchase')).toBe(1);
+    expect(await receiptCount(a.id)).toBe(1);
+    const aRec = await ledger.reconcile(a.id);
+    expect(aRec.balance).toBe(STARTING_GRANT + 30);
+    expect(aRec.ok).toBe(true);
+  });
 });
 
 // ── ECON-06 restore: consumables are never re-granted ───────────────────────────────────────────────────

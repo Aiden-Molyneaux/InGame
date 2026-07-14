@@ -564,3 +564,54 @@ describe('CAT-07: contributor data goes LIVE after publish + adopt (honest-zeros
     expect(limited.status).toBe(200); // self — full shape (sanity that the happy path still resolves)
   });
 });
+
+describe('F-3 (§4 audit): the publish TOCTOU guard — a mid-publish composition drift refuses 409 COMPOSITION_CHANGED', () => {
+  it('a concurrent autosave landing between the pre-tx flatten and the publish write → 409, retry succeeds', async () => {
+    const a = await registerUser();
+    const game = await seedGame(a.token, 'TOCTOU RPG');
+    const draft = await createDraft(a.token, game.id, comp({ rects: 3, seed: 40 }), 'Drifter');
+
+    // Interleave deterministically (no real race needed): wrap the storage so the FIRST `put` —
+    // which runs AFTER the pre-tx snapshot/flatten and BEFORE the publish-write tx — lands a
+    // concurrent self-PATCH that drifts the composition (a new hash). The in-tx hash re-read must
+    // then refuse with the retryable 409.
+    const { getStorage, setStorage } = await import('../../src/storage');
+    const cardService = await import('../../src/services/card-service');
+    const real = getStorage();
+    let fired = false;
+    setStorage({
+      put: async (key: string, body: Buffer, contentType: string) => {
+        if (!fired) {
+          fired = true;
+          await cardService.updateCard(a.id, draft.id, {
+            composition: comp({ rects: 4, seed: 41 }) as never, // the harness comp() shape — parsed at the boundary in prod
+          });
+        }
+        return real.put(key, body, contentType);
+      },
+      get: real.get.bind(real),
+      getUrl: real.getUrl.bind(real),
+      delete: real.delete.bind(real),
+    });
+
+    try {
+      const res = await publish(a.token, draft.id);
+      expect(res.status).toBe(409);
+      expect(res.body.error.code).toBe('COMPOSITION_CHANGED');
+      expect(fired).toBe(true);
+      // the row never transitioned — still an unpublished draft, no stale flattened urls.
+      const mine = await request(app).get('/api/me/cards').set(authed(a.token));
+      const row = mine.body.items.find((c: { id: string }) => c.id === draft.id);
+      expect(row.status).toBe('draft');
+      expect(row.imageUrl).toBeNull();
+    } finally {
+      setStorage(real); // restore the real provider for the rest of the suite
+    }
+
+    // RETRYABLE: publishing again re-snapshots the (drifted) composition and succeeds.
+    const retry = await publish(a.token, draft.id);
+    expect(retry.status).toBe(200);
+    expect(retry.body.status).toBe('published');
+    expect(retry.body.imageUrl).toBeTruthy();
+  });
+});

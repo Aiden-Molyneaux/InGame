@@ -215,6 +215,21 @@ export class DuplicateCompositionError extends AppError {
 }
 
 /**
+ * M5 F-3 (§4 economy-audit LOW — the publish TOCTOU guard). POST /cards/:id/publish refused: the
+ * composition CHANGED between the pre-tx snapshot/flatten and the publish write (a concurrent autosave
+ * PATCH landed in the window), so the flattened image + denormalized premium refs would not match the
+ * stored composition. 409 (the CONFLICT family) and RETRYABLE — publishing again snapshots the current
+ * composition. The publish-write tx re-reads the row's `compositionHash` and refuses on drift.
+ */
+export class CompositionChangedError extends AppError {
+  readonly code = 'COMPOSITION_CHANGED';
+  readonly httpStatus = 409;
+  constructor(message = 'This card changed while publishing — try publishing again.') {
+    super(message);
+  }
+}
+
+/**
  * CARD-13 (decision 0072/0073) — POST /cards/:id/publish OR /cards/:id/save-private refused: the
  * composition references premium-tier components the OWNER does not own. 409 (the CONFLICT family);
  * carries `{ unowned: [{ cosmeticId, price }], total }` so the client drives the ReconcileSheet

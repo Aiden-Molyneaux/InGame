@@ -6,8 +6,9 @@
 > each shared component **once, reusably**, instead of re-deriving it per screen. The map governs
 > **naming + reuse conventions from the ground stage** — it is the executable echo of §1.5.
 
-**Version:** 0.11 · **Date:** 2026-07-10 · **Author:** Claude · **Owner:** Aiden ·
+**Version:** 0.12 · **Date:** 2026-07-13 · **Author:** Claude · **Owner:** Aiden ·
 **Maps from:** `design-spec.md` §1.5 (v0.57) · **Implements toward:** Expo / RN (product-spec §9).
+**0.12:** M5 build (economy + community · receipts [`m5/economy-receipt.md`](../planning/m5/economy-receipt.md) + [`m5/surfaces-receipt.md`](../planning/m5/surfaces-receipt.md)) — the **commerce kit (§7) BUILT** (`CurrencyCounter`/`PriceChip`/`BuyBar` hold-to-buy + the OQ-046 non-hold alt/`PackTile`/`ItemTile`/`LedgerRow`/`DailyBonusBar`/`AisleIndex`/`PreviewStrip`/`PreviewStage` + `LandedMoment`/`ItemSheet`, §P6, on api 0.58–0.63); the **lifecycle family (§5.6) BUILT** (`Skeleton`/`LoadError`/`EmptyState`/`Unavailable`/`Offline`/`Toast`, §P5, themed-token-native); **`CommunityGallery`** now flattened-only (`FlatCardImage`, OQ-138) + new infra **`AdoptCardSheet`** (composes `PulledSheet`+FlatCardImage+PriceChip+adopt bar+bridge) + **`SectionEmpty`** BUILT (§P8); **`ReconcileSheet`/`KeepBeat`/`PrintRitual` BUILT** (§P7, CARD-13/19) + **`KeepBar` now BUILT** (§P7/F-2b, device premium gate); **`CardSwitcher` gains adopted rows** (COL-06 origin-union, FLATTENED-ONLY, no edit/delete + REMOVE un-adopt, F-2/F-2b).
 **0.5:** §3.4 Canvas gate-5 batch (decision 0067) — **`TransformDrawer`** (position/size/rotation) **subsumes `NumPop`**; new shared **`ColorPicker`** (HS+value+hex; Canvas element fill/stroke — title-ink adoption OQ-137/M5); Canvas breakout = **zoom** (transform-only, no remount); **base pseudo-slip** + BASE off ADD; isolation **toggle**; cap-meter **orange**.
 **0.6:** §3.4 gate-5 iteration round 3 (design-spec 0.54) — rail **z-ascending L→R, base leading**; TransformDrawer **finer nudges + hold ramp + X·Y read-out**; RESIZE-BOX-OFF hides the whole ring + the toggle rides the EDIT sheet; TRANSFORM accent-weighted + an EDIT-panel door; **one fixed bottom-panel height**; ColorPicker **applies on release** + FROM-CARD unfiltered; sliders/pickers **scroll-lock their host while held** (new `ScrollLock` util, not a UI component).
 **0.7:** §3.4 gate-5 iteration round 4 (design-spec 0.55) — TRANSFORM keys go **cream** (the PROOF voice) + the panel-head doors run **both ways** (EDIT↔TRANSFORM); the TransformDrawer **condenses** (ROTATE inside POSITION; RESIZE BOX as the EDIT row grammar); tap = one 0.5% nudge (~350ms repeat delay) + a harder hold ramp; the **sel-ring rotates with the slip + gains a rotation handle** (quarter snaps; the slider stays the CARD-16 pair — CanvasStage gains `onRotate`); rack caption + cap-meter under the rail; PROOF∥PRESS right-docked, held through PROOFING; EDIT sheet meta-line dropped + OPACITY under FILL; ISOLATION chip higher + accent-when-ON.
@@ -129,6 +130,8 @@ domain sets. A screen never ships before its primitives.
 | Skeleton·LoadError·Unavailable·Offline | `Skeleton` `LoadError` `Unavailable` `Offline`+`OfflineStrip` | shared silhouette; retry/terminal/calm (SYS-10/MOD-09) | scr · accent RETRY | ✅⭐ |
 | Toast | `Toast` | under-header banner + accent RETRY | scr.accent | ✅⭐ |
 
+> ✅ **BUILT (M5 §P5, 2026-07-12 — `8cfbac7`).** The whole family lives in `apps/mobile/src/components/lifecycle/`, themed-token-native (0070), F-06 scale, RTK-Query-shaped props (`isLoading`/`isError`/`refetch`), reduce-motion + announce; **25 jest**. Consumed by every M5 surface; existing screens migrate opportunistically later (not swept). `SectionEmpty` = the §10 thin `EmptyState` wrapper (built §P8).
+
 ### 5.7 Overlays / sheets (one primitive)
 | §1.5 name | Code | Variants / props | Status |
 |---|---|---|---|
@@ -159,21 +162,24 @@ domain sets. A screen never ships before its primitives.
 | OwnedTag·LockedTag·EarnedOnlyTag | `OwnedTag` `LockedTag` `EarnedOnlyTag` | gold-outline never fill (COSM-04) | ✅ |
 | DailyBonusBar·AisleIndex·PreviewStrip·PreviewStage | same | claimed · index · theme preview (DEV-04) | ✅ |
 
+> ✅ **BUILT (M5 §P6 first-article, 2026-07-12 — `7299ecf`; receipt `m5/surfaces-receipt.md`).** The full kit + `app/store.tsx` (P1–P12 board) on 8 RTK endpoints (api 0.58–0.63); `BuyBar` ships **both** hold-to-buy AND the OQ-046 non-hold `ConfirmSheet` alt (launch gate, fake-timer unit-tested); `DailyBonusBar` went **ladder-aware** (P11 — step N of 7 + cosmetic-drop moment). New infra (not §1.5 surfaces): `LandedMoment` · `ItemSheet` · `packMeta.ts` · `storeCopy.ts` · `store/mockReceipt.ts` (the `__DEV__` P2b seam). **25 jest.** Premium ItemTile/PreviewStage live content = EXPECTED(P10 roster, landed 0075); owed on device: hold-to-buy feel + reduce-motion BUY.
+
 # 8. Editor — Styler (8a) + Canvas (8b)
 | §1.5 name | Code | Variants / props | Status |
 |---|---|---|---|
-| AttributeSection · BaseRail · ReconcileSheet · KeepBeat | same | 5 attrs incl NAMEPLATE · start-from · acquire-gate · light celebrate | ✅ |
+| AttributeSection · BaseRail · ReconcileSheet · KeepBeat | same | 5 attrs incl NAMEPLATE · start-from · acquire-gate · light celebrate — **`ReconcileSheet` (funded/short) + KeepBeat PX-spent line BUILT (M5 §P7, `078df68`)** on the P3/P4 acquire seams (CARD-13); owed on device = the funded path end-to-end (web skia-rail quirk) | ✅ |
 | CanvasStage · AssetShelf/ElementTray | `CanvasStage` `AssetShelf` | press-bed + **zoom** breakout (transform-only, no remount, 0067/CR-01) · ADD drawer (reuses `Sheet`; **BASE off categories** CR-08; **pick→open-EDIT** CR-09) | ✅ |
 | LayerRack · slip · editbar · TransformDrawer | `LayerRack` `Slip` `EditBar` `TransformDrawer` | pull-to-isolate (isolation **toggle**, CR-05) · **base pseudo-slip** (pinned · recolour-only, CR-08) — rides **at the rail HEAD** (leftmost; the rail reads **z-ascending L→R**, round 3) · cap-meter 30 (**orange** F-02, CR-03) · undo/redo · **`TransformDrawer`** = position (**direction arrows, 0.5% nudge + slow-start hold ramp + X·Y read-out**, round 3) / size (sliders) / rotation (**slider 0–360°**) + a **hide-resize-box toggle** (OFF hides the WHOLE sel-ring; the toggle also rides the EDIT sheet — round 3), **subsumes `NumPop`** (deleted); the editbar TRANSFORM key is **accent-weighted** + the EDIT panel head carries a TRANSFORM door (round 3); base slip lives **in the rail** (colour-only EDIT). Rendered **inline in the CanvasSurface bottom panel at ONE fixed (bench-measured) height**, not a drawer (device-walks 2026-07-08/09). Round 4 (0.55): TRANSFORM keys **cream** (PROOF voice) · head doors **both ways** · ROTATE folded into POSITION · RESIZE BOX row grammar · tap=one 0.5% nudge + harder hold ramp · **sel-ring rotates with the slip + a rotation handle** (`CanvasStage onRotate`, quarter snaps) · rack caption+chip under the rail · PROOF∥PRESS held through PROOFING. | ✅ |
-| PROOF · PRESS · PrintRitual | `ProofView` `PressSheet` `PrintRitual` | size-ladder · finish-up · first-print 3-beat | ✅ |
+| PROOF · PRESS · PrintRitual | `ProofView` `PressSheet` `PrintRitual` | size-ladder · finish-up · first-print 3-beat — **full-tier `PrintRitual` BUILT + wired to P3 publish (M5 §P7, `078df68`)** via the CARD-19 press checklist → ◆ PUBLISH; walked live (card published, contributor stat ticked); owed on device = the ritual motion | ✅ |
 
 # 9. Discover · Settings · Game page
 | §1.5 name | Code | Variants | Status |
 |---|---|---|---|
 | QueueRow·ReleaseRow·RecRow·AdoptCount·NotifyToggle | same | reorder · upcoming · friend-rec · clout count · notify | ✅ |
 | LogAttach·FeedbackConfirm·TriageCard | same | bug-logs opt-in · seal · type-chooser | ✅ |
-| DualFaceHero·PlayStats·CardSwitcher·FriendContext | same | face+stats · dossier · 3-up select · friend compare | ✅ |
-| CommunityGallery | `CommunityGallery` | 3-up `GameCard/cell` roster; each cell `AdoptCount` + DESIGNED-BY credit + `PriceChip`/FREE; tap → `CardDetail` enlarge (CARD-22, decision 0048); GET /games/:gameId/cards, adopt POST /cards/:id/adopt (ECON-03/04, M4) | ✅ |
+| DualFaceHero·PlayStats·CardSwitcher·FriendContext | same | face+stats · dossier · 3-up select · friend compare — **`CardSwitcher` gains adopted rows (M5 F-2/F-2b, `a2846e4`/`37e7cb1`):** COL-06 origin-union of owned designs + adoption grants; adopted = `FlatCardImage`, FLATTENED-ONLY, no edit/delete, a **REMOVE** un-adopt (soft-revoke, migration 0012) | ✅ |
+| CommunityGallery | `CommunityGallery` | 3-up **flattened** roster (`FlatCardImage` on `thumbUrl` — RN `<Image>`, never skia, OQ-138); each cell `AdoptCount` + DESIGNED-BY credit + **personalized `PriceChip`**/FREE (the caller's missing-components sum, 0072); tap → `AdoptCardSheet` inspect. **BUILT (M5 §P8, `c7c670d`/`a2846e4`; receipt `m5/surfaces-receipt.md`)** on `GET /games/:gameId/cards` (communityApi injectEndpoints) + adopt `POST /cards/:id/adopt` (ECON-03/04, api 0.60–0.63); the M3 "arrives later" placeholder replaced live | ✅ |
+| AdoptCardSheet · FlatCardImage | `AdoptCardSheet` `FlatCardImage` | NEW infra (M5 §P8): `AdoptCardSheet` composes `PulledSheet`+`FlatCardImage`+`PriceChip`+the adopt bar (0072 component-confirm `ConfirmSheet`, FREE = no debit line)+the `INSUFFICIENT_BALANCE {shortBy}` TOP-UP bridge+the block action; `FlatCardImage` = the cross-user flattened-image renderer (null-url → `GameCard` fallback). `src/store/communityApi.ts`·`mediaUrl.ts`·`share/shareCard.ts` are its data/util layer (not §1.5 surfaces) | ✅ |
 
 # 10. Social — Friends · Find/Add · Compare · Contributor
 | §1.5 name | Code | Variants | Status |
@@ -181,13 +187,13 @@ domain sets. A screen never ships before its primitives.
 | FeedRow·FriendRow·FriendTile·RequestRow·InviteHook | same | activity · roster row/tile · request · cold-start CTA | ✅ |
 | PersonRow·QrCard·InviteLanding·SenderSummary | same | relationship spine (ADD/CANCEL/ACCEPT…) · QR · arrival | ✅ |
 | CompareHeader·CompareTotals·ComparePair·FriendsLeaderboard·LeaderRow | same | face-off · card-vs-card · cohort rank | ✅ |
-| SectionEmpty | `SectionEmpty` | gold DESIGN-A-CARD / neutral ADD-A-GAME | ✅ |
+| SectionEmpty | `SectionEmpty` | gold DESIGN-A-CARD / neutral ADD-A-GAME — **BUILT (M5 §P8, `c7c670d`)** as the thin `EmptyState` wrapper; the community-gallery contributor-hook empty | ✅ |
 | RecommendSheet | `RecommendSheet` | GameCard/cell picker + note TextField/area + SEND → Toast; POST /recommendations (SOC-05, decision 0036) | ✅ |
 
 # 11. Device editor
 | §1.5 name | Code | Status |
 |---|---|---|
-| SectionCard·StickerStage·TransformBox·PlacedSticker·StickerTray·SavedLook·LooksGrid·KeepBar | see 0.10 note | ✅ — **BUILT (M4 §3.5, 2026-07-10).** Code mapping (the `EditSlipSheet` provisional-name precedent — flag to the spec owner at gate): **`StickerStage`+`TransformBox` → `StickerBandLayer`** (one per plastic zone; the stage IS the band, the box its selected-sticker overlay) · **`SectionCard` → rendered inside `DeviceSectionRail`** (the /rail host — bespoke, NOT a `SectionSwitch` variant: icons + accent-border, no `StateMark` pip) · `PlacedSticker`·`StickerTray`·`SavedLook`·`LooksGrid` verbatim · **`KeepBar` NOT built (M5, 0062)**. New unlisted code: `DeviceItemTile`·`ThemeSwatch`·`DevicePreviewStrip` (PreviewStrip's device voice)·`OfflineStrip`·`DeviceStickerContext`·`deviceStickers`/`stickerGeometry`/`looksOnNow`/`deviceCopy` (registries + pure helpers, not §1.5 surfaces) |
+| SectionCard·StickerStage·TransformBox·PlacedSticker·StickerTray·SavedLook·LooksGrid·KeepBar | see 0.10 note | ✅ — **BUILT (M4 §3.5, 2026-07-10).** Code mapping (the `EditSlipSheet` provisional-name precedent — flag to the spec owner at gate): **`StickerStage`+`TransformBox` → `StickerBandLayer`** (one per plastic zone; the stage IS the band, the box its selected-sticker overlay) · **`SectionCard` → rendered inside `DeviceSectionRail`** (the /rail host — bespoke, NOT a `SectionSwitch` variant: icons + accent-border, no `StateMark` pip) · `PlacedSticker`·`StickerTray`·`SavedLook`·`LooksGrid` verbatim · **`KeepBar` now BUILT (M5 §P7/F-2b, `078df68`/`37e7cb1`):** the device premium row's cart → `acquire-batch`, gated by the server premium gate on `PATCH /me/device` (409 `PREMIUM_UNRECONCILED` pre-write, migration 0012); walked live (BERRY 6 PX → CANCEL reverted clean); owed on device = the hold-to-buy feel. New unlisted code: `DeviceItemTile`·`ThemeSwatch`·`DevicePreviewStrip` (PreviewStrip's device voice)·`OfflineStrip`·`DeviceStickerContext`·`deviceStickers`/`stickerGeometry`/`looksOnNow`/`deviceCopy` (registries + pure helpers, not §1.5 surfaces) |
 
 # 12. Collection TOP view-mode (Top-10 curation — §4.7 Lists editor RETIRED, relocated into Collection)
 | §1.5 name | Code | Status |
