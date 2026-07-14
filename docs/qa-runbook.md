@@ -143,3 +143,15 @@ silently breaks wallet↔ledger reconciliation for every later walk (found by pa
 balance 77 vs ledger 76). To reset economy state: use the service ops (`adjustPixels` — writes an
 honest `admin_adjustment` row) or a disposable `PORT=4001` DB. If you must hand-fix, re-derive the
 balance from the ledger afterward.
+
+## Multi-Metro manifest contamination (the phone-lane trap, 2026-07-14)
+Symptom: the phone's login POSTs go to a stale IP **no matter how many times the 8081 Metro is
+restarted with `-c`.** Cause: the :8081 phone Metro and the :8082 agents Metro share
+`apps/mobile/.expo/` state — the manifest served on 8081 can point the phone's BUNDLE download at
+:8082, whose cache carries the `.env` from ITS last restart. The `-c` cleans the wrong server.
+Diagnosis: `curl -H "expo-platform: ios" http://localhost:8081/ | grep -oE 'http://[0-9.]+:[0-9]+'`
+— more than one host, or any :8082, = contaminated. Fix: kill BOTH Metros → `rm -rf
+apps/mobile/.expo` → start the phone lane with the advertised host pinned:
+`REACT_NATIVE_PACKAGER_HOSTNAME=100.83.86.46 npx expo start -c --port 8081` (the tailnet address —
+see the web-loop memory). Verify by grepping the served bundle for exactly one `:4000/api` host.
+In Expo Go: NEVER tap recents/discovered entries after a server change — type the URL fresh.
