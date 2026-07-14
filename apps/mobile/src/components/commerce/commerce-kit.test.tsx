@@ -171,36 +171,83 @@ describe('LedgerRow (§7)', () => {
   });
 });
 
-describe('LandedMoment (P7)', () => {
+describe('LandedMoment (P7 — the coin drop)', () => {
   afterEach(() => {
     mockReduced = true;
   });
 
-  it('under reduce-motion lands settled — the +N grant, the arithmetic, and both actions (no burst travel)', () => {
+  it('under reduce-motion lands settled — the +N grant, the final balance, and both actions (no drop/burst/roll)', () => {
     mockReduced = true;
     const onBack = jest.fn();
     const onViewWallet = jest.fn();
     render(wrap(<LandedMoment granted={30} from={5} to={35} onBack={onBack} onViewWallet={onViewWallet} />));
     expect(screen.getByText('+30')).toBeTruthy();
+    expect(screen.getByText('35')).toBeTruthy(); // the counter is settled on `to`, not mid-roll
     fireEvent.press(screen.getByText('BACK TO STORE'));
     fireEvent.press(screen.getByText('VIEW WALLET ›'));
     expect(onBack).toHaveBeenCalledTimes(1);
     expect(onViewWallet).toHaveBeenCalledTimes(1);
   });
 
-  it('with motion the burst beat fires on mount and still settles to the arithmetic + actions', () => {
+  it('with motion the four beats play and the counter rolls to EXACTLY `to` on an odd delta (+7)', () => {
     mockReduced = false;
     jest.useFakeTimers();
     try {
       const onBack = jest.fn();
-      render(wrap(<LandedMoment granted={12} from={0} to={12} onBack={onBack} onViewWallet={jest.fn()} />));
-      // the celebration plays (beat 160ms + burst 680ms) then the layout is intact
-      act(() => jest.advanceTimersByTime(1000));
-      expect(screen.getByText('+12')).toBeTruthy();
+      render(wrap(<LandedMoment granted={7} from={0} to={7} onBack={onBack} onViewWallet={jest.fn()} />));
+      act(() => jest.advanceTimersByTime(1500));
+      expect(screen.getByText('7')).toBeTruthy(); // rolled to exactly `to`, not 6 or 8
+      expect(screen.getByText('+7')).toBeTruthy();
       fireEvent.press(screen.getByText('BACK TO STORE'));
       expect(onBack).toHaveBeenCalledTimes(1);
     } finally {
       act(() => jest.runOnlyPendingTimers());
+      jest.useRealTimers();
+    }
+  });
+
+  it('with motion a large capped delta (+140) still lands the counter EXACTLY on `to`', () => {
+    mockReduced = false;
+    jest.useFakeTimers();
+    try {
+      render(wrap(<LandedMoment granted={140} from={100} to={240} onBack={jest.fn()} onViewWallet={jest.fn()} />));
+      act(() => jest.advanceTimersByTime(1500));
+      expect(screen.getByText('240')).toBeTruthy();
+    } finally {
+      act(() => jest.runOnlyPendingTimers());
+      jest.useRealTimers();
+    }
+  });
+
+  it('tap-to-skip mid-sequence jumps to settled — counter shows `to`, actions live', () => {
+    mockReduced = false;
+    jest.useFakeTimers();
+    try {
+      const onBack = jest.fn();
+      render(wrap(<LandedMoment granted={40} from={10} to={50} onBack={onBack} onViewWallet={jest.fn()} />));
+      act(() => jest.advanceTimersByTime(120)); // mid-drop, before the roll even starts
+      fireEvent.press(screen.getByLabelText(/Pack landed/)); // tap anywhere skips
+      expect(screen.getByText('50')).toBeTruthy();
+      fireEvent.press(screen.getByText('BACK TO STORE'));
+      expect(onBack).toHaveBeenCalledTimes(1);
+    } finally {
+      act(() => jest.runOnlyPendingTimers());
+      jest.useRealTimers();
+    }
+  });
+
+  it('unmounting mid-sequence clears its roll timers (no leak into an unmounted tree)', () => {
+    mockReduced = false;
+    jest.useFakeTimers();
+    const clearSpy = jest.spyOn(global, 'clearTimeout');
+    try {
+      // delta 20 → 20 scheduled roll ticks (buildRoll caps at 20), armed synchronously on mount.
+      const view = render(wrap(<LandedMoment granted={20} from={0} to={20} onBack={jest.fn()} onViewWallet={jest.fn()} />));
+      clearSpy.mockClear();
+      view.unmount(); // cleanup must clearTimeout every pending roll tick
+      expect(clearSpy.mock.calls.length).toBeGreaterThanOrEqual(20); // all 20 roll ticks torn down
+    } finally {
+      clearSpy.mockRestore();
       jest.useRealTimers();
     }
   });

@@ -192,6 +192,9 @@ export default function Styler() {
   // which commit to run once the components are acquired (KEEP equips · SAVE PRIVATE files · PUBLISH ships).
   const pendingCommitRef = useRef<null | 'keep' | 'savePrivate' | 'publish'>(null);
   const [busyPublish, setBusyPublish] = useState(false);
+  // the FLATTENED render the publish response returns (0066 §1) — the PrintRitual "print emerges" beat
+  // slides this real image up; null (e.g. web dev, flatten still pending) falls back to the live CardFace.
+  const [publishedImageUrl, setPublishedImageUrl] = useState<string | null>(null);
   const [dupFailed, setDupFailed] = useState(false); // a DUPLICATE_COMPOSITION 409 flips the checklist
   // per-roster-id premium badge lookup (price + owned) — only PREMIUM ids get an entry.
   const badgeFor = useCallback(
@@ -689,7 +692,8 @@ export default function Styler() {
       const copyToDiscard = originRef.current && curRow.id !== commitTarget ? curRow.id : null;
       const d = draftRef.current;
       if (d) await updateCard({ cardId: commitTarget, composition: d }).unwrap(); // flatten reads the saved doc
-      await publishCardMut(commitTarget).unwrap();
+      const published = await publishCardMut(commitTarget).unwrap();
+      setPublishedImageUrl(published.imageUrl); // the PrintRitual "print emerges" beat (null → live fallback)
       const publishedRow = { id: commitTarget, name: curRow.name, status: 'published' };
       cardRef.current = publishedRow;
       setCardRow(publishedRow);
@@ -1059,6 +1063,7 @@ export default function Styler() {
         <PrintRitual
           title={title}
           composition={draft}
+          imageUrl={publishedImageUrl}
           cardsDesigned={me?.stats.cardsDesigned ?? null}
           onDone={() => router.replace(`/game/${gameId}`)}
           onShare={cardRow ? () => void sharePublished(cardRow.id, title) : undefined}
