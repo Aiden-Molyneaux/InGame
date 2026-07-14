@@ -253,3 +253,112 @@ describe('SOC-09 §0.6: POST/DELETE /me/blocks — block hides a designer end-to
     expect(res.status).toBe(401);
   });
 });
+
+describe('CARD-14/20 (F-2b): UN-ADOPT — DELETE /cards/:id on an adopted card removes only my copy', () => {
+  it('un-adopt removes the card from MY switcher; the gallery entry + adoption count are UNTOUCHED', async () => {
+    const a = await registerUser();
+    const b = await registerUser();
+    const game = await seedGame(a.token, 'Unadopt RPG');
+    const { id: cardId } = await publishFresh(a.token, game.id, 30, 'Removable');
+    const bEntry = await addEntry(b.token, game.id);
+    await request(app).post(`/api/cards/${cardId}/adopt`).set(authed(b.token));
+
+    // baseline: count 1, switcher lists it.
+    let gallery = await request(app).get(`/api/games/${game.id}/cards`).set(authed(b.token));
+    expect(gallery.body.items[0].adoptionCount).toBe(1);
+
+    // B un-adopts via the SAME DELETE route.
+    const del = await request(app).delete(`/api/cards/${cardId}`).set(authed(b.token));
+    expect(del.status).toBe(200);
+    expect(del.body).toEqual({ ok: true });
+
+    // gone from B's switcher…
+    const switcher = await request(app).get(`/api/me/collection/${bEntry}/cards`).set(authed(b.token));
+    expect(switcher.body.items.some((c: { id: string }) => c.id === cardId)).toBe(false);
+    // …but the design + gallery entry survive, and the ALL-TIME count is unchanged (CARD-14/20).
+    gallery = await request(app).get(`/api/games/${game.id}/cards`).set(authed(b.token));
+    expect(gallery.body.items).toHaveLength(1);
+    expect(gallery.body.items[0].adoptionCount).toBe(1);
+    // the designer's clout is also untouched.
+    const contrib = await request(app).get(`/api/users/${a.id}/contributions`).set(authed(a.token));
+    expect(contrib.body.stats.totalAdoptions).toBe(1);
+    // and a revoked grant can no longer be equipped (422 — same as never-adopted).
+    const equip = await request(app)
+      .patch(`/api/me/collection/${bEntry}`)
+      .set(authed(b.token))
+      .send({ activeCardDesignId: cardId });
+    expect(equip.status).toBe(422);
+  });
+
+  it('un-adopt is refused while the adopted card is EQUIPPED → 409 CARD_EQUIPPED (switch first)', async () => {
+    const a = await registerUser();
+    const b = await registerUser();
+    const game = await seedGame(a.token, 'Equipped Unadopt RPG');
+    const { id: cardId } = await publishFresh(a.token, game.id, 31, 'Worn');
+    const bEntry = await addEntry(b.token, game.id);
+    await request(app).post(`/api/cards/${cardId}/adopt`).set(authed(b.token));
+    await request(app)
+      .patch(`/api/me/collection/${bEntry}`)
+      .set(authed(b.token))
+      .send({ activeCardDesignId: cardId });
+
+    const del = await request(app).delete(`/api/cards/${cardId}`).set(authed(b.token));
+    expect(del.status).toBe(409);
+    expect(del.body.error.code).toBe('CARD_EQUIPPED');
+    // still adopted + still equipped — nothing was revoked.
+    const switcher = await request(app).get(`/api/me/collection/${bEntry}/cards`).set(authed(b.token));
+    expect(switcher.body.items.some((c: { id: string; origin: string }) => c.id === cardId && c.origin === 'adopted')).toBe(true);
+
+    // unequip → un-adopt now succeeds.
+    await request(app)
+      .patch(`/api/me/collection/${bEntry}`)
+      .set(authed(b.token))
+      .send({ activeCardDesignId: null });
+    const del2 = await request(app).delete(`/api/cards/${cardId}`).set(authed(b.token));
+    expect(del2.status).toBe(200);
+  });
+
+  it('re-adopt after un-adopt REACTIVATES the grant free (entitlements persist — no re-charge, count still 1)', async () => {
+    const a = await registerUser();
+    const b = await registerUser();
+    const game = await seedGame(a.token, 'Readopt RPG');
+    const { id: cardId } = await publishFresh(a.token, game.id, 32, 'Boomerang');
+    const bEntry = await addEntry(b.token, game.id);
+
+    const first = await request(app).post(`/api/cards/${cardId}/adopt`).set(authed(b.token));
+    expect(first.status).toBe(200);
+    const balanceAfterFirst = first.body.balance;
+    await request(app).delete(`/api/cards/${cardId}`).set(authed(b.token)); // un-adopt
+
+    // re-adopt: succeeds (not ALREADY_ADOPTED), charges nothing, count stays 1 (the row reactivated).
+    const again = await request(app).post(`/api/cards/${cardId}/adopt`).set(authed(b.token));
+    expect(again.status).toBe(200);
+    expect(again.body.totalPaid).toBe(0);
+    expect(again.body.balance).toBe(balanceAfterFirst); // no re-charge
+    const gallery = await request(app).get(`/api/games/${game.id}/cards`).set(authed(b.token));
+    expect(gallery.body.items[0].adoptionCount).toBe(1); // reactivated, not duplicated
+    // and it is back in the switcher + a repeat adopt now refuses ALREADY_ADOPTED again.
+    const switcher = await request(app).get(`/api/me/collection/${bEntry}/cards`).set(authed(b.token));
+    expect(switcher.body.items.some((c: { id: string; origin: string }) => c.id === cardId && c.origin === 'adopted')).toBe(true);
+    const repeat = await request(app).post(`/api/cards/${cardId}/adopt`).set(authed(b.token));
+    expect(repeat.status).toBe(409);
+    expect(repeat.body.error.code).toBe('ALREADY_ADOPTED');
+  });
+
+  it('un-adopting a card I never adopted (or my OWN card path unchanged) → the standing behaviors hold', async () => {
+    const a = await registerUser();
+    const b = await registerUser();
+    const game = await seedGame(a.token, 'Unadopt Authz RPG');
+    const { id: cardId } = await publishFresh(a.token, game.id, 33, 'Untouched');
+    // actor-B never adopted → DELETE is the same 404 an unknown id gets (no existence oracle).
+    const stranger = await request(app).delete(`/api/cards/${cardId}`).set(authed(b.token));
+    expect(stranger.status).toBe(404);
+    // the owner's delete guard is UNCHANGED: adopted-published still refuses HAS_ADOPTERS even after
+    // the adopter un-adopts (the count is ALL-TIME — re-adoption stays possible; unpublish instead).
+    await request(app).post(`/api/cards/${cardId}/adopt`).set(authed(b.token));
+    await request(app).delete(`/api/cards/${cardId}`).set(authed(b.token)); // b un-adopts
+    const ownerDel = await request(app).delete(`/api/cards/${cardId}`).set(authed(a.token));
+    expect(ownerDel.status).toBe(409);
+    expect(ownerDel.body.error.code).toBe('HAS_ADOPTERS');
+  });
+});

@@ -633,6 +633,12 @@ export const iapReceipts = pgTable(
  *  - The card's public adoption count is DERIVED (`count(card_adoptions)` per card, an anonymous
  *    cross-user aggregate — SYS-01-COMMUNITY-AGGREGATE), never a denormalized counter, so the adopter
  *    never writes the card owner's row (a cross-owner write the SYS-01 scope-lint would rightly refuse).
+ *  - `revokedAt` (M5 F-2b, migration 0012) — the UN-ADOPT soft flag (CARD-14/20: deleting an adopted
+ *    card removes only the caller's copy, "no effect on the adoption count"). A revoked row vanishes
+ *    from the adopter's OWN surfaces (switcher/rider/equip/share) but STAYS in the derived count +
+ *    the designer's clout (count = all-time adoptions — the honest reading of the count-unaffected
+ *    clause). Re-adopting REACTIVATES the row (clears the flag; the acquire re-runs, charging only
+ *    components no longer owned — normally 0, entitlements persist). Rows are never hard-deleted.
  */
 export const cardAdoptions = pgTable(
   'card_adoptions',
@@ -649,6 +655,7 @@ export const cardAdoptions = pgTable(
       .references(() => games.id),
     currencyPaid: integer('currency_paid').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }), // null = active grant (M5 F-2b un-adopt)
   },
   (table) => ({
     adopterCardIdx: uniqueIndex('card_adoptions_adopter_card_idx').on(

@@ -63,7 +63,9 @@ export default function GamePage() {
   const [confirmRemove, setConfirmRemove] = useState(false);
   // the switcher's card-delete confirm lives HERE — a sheet mounted inside the ScrollView docks to
   // the switcher's box, not the screen bottom (PulledSheet's screen-root contract; gate-5 D.27)
-  const [confirmDeleteCard, setConfirmDeleteCard] = useState<{ id: string; name: string } | null>(null);
+  // `adopted` varies the confirm copy: an owned design DELETES; an adopted card only REMOVES the
+  // caller's copy (un-adopt, F-2b — the design/gallery/count are untouched, and it can be re-adopted).
+  const [confirmDeleteCard, setConfirmDeleteCard] = useState<{ id: string; name: string; adopted: boolean } | null>(null);
   const [deleteCardError, setDeleteCardError] = useState<string | null>(null);
   // ── P8 community gallery / adopt / share / block ────────────────────────────────────────────────
   const [inspectCard, setInspectCard] = useState<GalleryCardView | null>(null); // the community card in the adopt sheet
@@ -287,7 +289,7 @@ export default function GamePage() {
                 entry={entry}
                 onEditInStyler={(cardId) => router.push(`/styler/${entry.gameId}?cardId=${cardId}`)}
                 onDesignNew={() => router.push(`/styler/${entry.gameId}`)}
-                onRequestDelete={(id, name) => setConfirmDeleteCard({ id, name })}
+                onRequestDelete={(id, name, adopted) => setConfirmDeleteCard({ id, name, adopted: adopted ?? false })}
                 deleteError={deleteCardError}
                 onClearDeleteError={() => setDeleteCardError(null)}
               />
@@ -358,12 +360,17 @@ export default function GamePage() {
         onClose={() => setConfirmRemove(false)}
       />
 
-      {/* the switcher's card delete — at the screen root so it docks to the in-app bottom (D.27) */}
+      {/* the switcher's card delete / adopted-copy remove — at the screen root so it docks to the
+          in-app bottom (D.27). Un-adopt copy is honest: only YOUR copy goes; re-adopting brings it back. */}
       <ConfirmSheet
         visible={confirmDeleteCard !== null}
-        title="Delete this card?"
-        message={`"${confirmDeleteCard?.name ?? ''}" is deleted everywhere — the switcher and your designs shelf. This can't be undone.`}
-        confirmLabel="Delete"
+        title={confirmDeleteCard?.adopted ? 'Remove this adopted card?' : 'Delete this card?'}
+        message={
+          confirmDeleteCard?.adopted
+            ? `"${confirmDeleteCard?.name ?? ''}" leaves your switcher — the designer's card and its adoption count aren't touched. You can adopt it again any time.`
+            : `"${confirmDeleteCard?.name ?? ''}" is deleted everywhere — the switcher and your designs shelf. This can't be undone.`
+        }
+        confirmLabel={confirmDeleteCard?.adopted ? 'Remove' : 'Delete'}
         busy={deleteCardState.isLoading}
         onConfirm={() => void doDeleteCard()}
         onClose={() => setConfirmDeleteCard(null)}

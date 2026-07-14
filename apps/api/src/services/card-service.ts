@@ -299,14 +299,35 @@ export const savePrivate = mutation(
   },
 );
 
-/** @mutation — DELETE /cards/:id (CARD-14/20 · decision 0040): 409 CARD_EQUIPPED while equipped;
- *  409 HAS_ADOPTERS on a published-with-adopters design (unpublish instead). */
+/** @mutation — DELETE /cards/:id (CARD-14/20 · decision 0040 · F-2b un-adopt): the caller's OWN design
+ *  deletes (409 CARD_EQUIPPED while equipped; 409 HAS_ADOPTERS on a published-with-adopters design —
+ *  unpublish instead). A design the caller ADOPTED (not owns) UN-ADOPTS instead: only the caller's copy
+ *  is removed (the grant soft-revokes; migration 0012) — the design, the gallery entry, and the ALL-TIME
+ *  adoption count are untouched (CARD-14/20). Same 409 CARD_EQUIPPED guard while the adopted card is
+ *  worn (switch first). Neither owned nor adopted → the same 404 (no existence oracle). Returns which
+ *  path ran so the caller clears the share cache only on a real delete. */
 const deleteCardWrite = mutation(
   { name: 'card.delete', specIds: ['CARD-14', 'CARD-20', 'COL-06', 'SYS-01'] },
-  async (ctx, actorId, cardId: string): Promise<void> => {
+  async (ctx, actorId, cardId: string): Promise<'deleted' | 'unadopted'> => {
     if (!UUID_RE.test(cardId)) throw designNotFound();
     const current = await cardRepo.findOwnedDesign(actorId, cardId, ctx.tx);
-    if (!current) throw designNotFound();
+    if (!current) {
+      // F-2b — not my design: the ADOPTED path. Un-adopt removes only MY copy (soft-revoke); the
+      // equipped guard mirrors the owned-delete rule (a worn face can't be removed out from under
+      // the shelf — countEquippedReferences counts MY entries wearing it, so it works for adopters).
+      if (!(await adoptionRepo.findMyAdoption(actorId, cardId, ctx.tx))) throw designNotFound();
+      if ((await cardRepo.countEquippedReferences(actorId, cardId, ctx.tx)) > 0) {
+        throw new CardEquippedError();
+      }
+      const revoked = await adoptionRepo.revokeAdoption(actorId, cardId, ctx.tx);
+      if (!revoked) throw designNotFound(); // raced away — same nothing
+      await ctx.emit({
+        eventType: 'card.adoption_revoked',
+        entityRef: { type: 'card_design', id: cardId },
+        payload: { gameId: revoked.gameId },
+      });
+      return 'unadopted';
+    }
     if ((await cardRepo.countEquippedReferences(actorId, cardId, ctx.tx)) > 0) {
       throw new CardEquippedError();
     }
@@ -314,6 +335,8 @@ const deleteCardWrite = mutation(
     // instead; adopters keep their grants forever). A never-adopted published card may delete.
     // 409 HAS_ADOPTERS — the CONFLICT family, like its sibling CARD_EQUIPPED (F-17 additive; the
     // LOOK_CAP-correction precedent: state-conflict refusals are 409 named codes, 422 is zod-only).
+    // The count is ALL-TIME (revoked included) — a fully-un-adopted published card still refuses
+    // deletion (its adopters may re-adopt; unpublish is the designer's delist lever).
     if (current.status === 'published') {
       const counts = await cardRepo.adoptionCountsByCard([cardId], ctx.tx);
       if ((counts.get(cardId) ?? 0) > 0) {
@@ -327,19 +350,23 @@ const deleteCardWrite = mutation(
       entityRef: { type: 'card_design', id: cardId },
       payload: {},
     });
+    return 'deleted';
   },
 );
 
 /**
- * DELETE /cards/:id — delete, then CARD-21 (P9) best-effort clear the cached share image (storage
- * hygiene: no orphaned public artifact for a card that no longer exists). `deleteCardWrite` throwing
- * short-circuits before this line runs — nothing to invalidate on a refused delete.
+ * DELETE /cards/:id — delete (or un-adopt), then CARD-21 (P9) best-effort clear the cached share image
+ * on a REAL delete only (storage hygiene: no orphaned public artifact for a card that no longer
+ * exists). An un-adopt must NOT clear it — the design still exists and its designer/other adopters
+ * still share it. `deleteCardWrite` throwing short-circuits before this line runs.
  */
 export async function deleteCard(actorId: string, cardId: string): Promise<void> {
-  await deleteCardWrite(actorId, cardId);
-  await getStorage()
-    .delete(shareImageKey(cardId))
-    .catch(() => {}); // best-effort — a cache-invalidation failure must not fail the delete
+  const outcome = await deleteCardWrite(actorId, cardId);
+  if (outcome === 'deleted') {
+    await getStorage()
+      .delete(shareImageKey(cardId))
+      .catch(() => {}); // best-effort — a cache-invalidation failure must not fail the delete
+  }
 }
 
 /** GET /me/cards — the CARD-14 My Designs shelf (all games, all statuses, newest first). */
@@ -683,18 +710,26 @@ export const adoptCard = mutation(
       throw new NotPublishedError();
     }
     // Cheap pre-check: refuse a repeat BEFORE the acquire debits (so an already-adopted retry never
-    // charges). The insert below is the atomic F36 backstop against the pre-check→insert race.
+    // charges). ACTIVE grants only — a REVOKED (un-adopted) grant falls through to the reactivate
+    // path below. The insert is the atomic F36 backstop against the pre-check→insert race.
     if (await adoptionRepo.findMyAdoption(actorId, cardId, ctx.tx)) throw new AlreadyAdoptedError();
 
     // Atomic component acquire INSIDE this tx (decision 0072 — the P4 reuse point; never opens its own
     // tx). Free when premiumComponentIds is empty or all owned; else debits the missing sum + grants.
+    // On a RE-adopt this normally charges 0 — the entitlements from the first adopt persist (F-2b);
+    // only a component clawed back in between would re-charge, which is the correct behavior.
     const acquire = await acquireComponents(ctx.tx, actorId, published.premiumComponentIds);
 
-    const adoption = await adoptionRepo.insertAdoption(
-      actorId,
-      { cardDesignId: cardId, gameId: published.gameId, currencyPaid: acquire.totalPaid },
-      ctx.tx,
-    );
+    // F-2b re-adopt: a previously UN-ADOPTED (revoked) grant REACTIVATES instead of inserting a
+    // duplicate (the unique pair forbids a second row). The IS-NOT-NULL-guarded update transitions
+    // exactly once under a race — the loser falls to the insert, whose conflict refuses it.
+    const adoption =
+      (await adoptionRepo.reactivateAdoption(actorId, cardId, ctx.tx)) ??
+      (await adoptionRepo.insertAdoption(
+        actorId,
+        { cardDesignId: cardId, gameId: published.gameId, currencyPaid: acquire.totalPaid },
+        ctx.tx,
+      ));
     // The unique-pair conflict (a parallel adopt won the race) → refuse; the tx rolls back, undoing the
     // acquire debit + entitlement grants, so the loser is left exactly as it started (one row, one charge).
     if (!adoption) throw new AlreadyAdoptedError();

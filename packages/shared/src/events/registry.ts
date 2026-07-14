@@ -62,6 +62,8 @@ export const DOMAIN_EVENT_TYPES = [
   // M5 F-2 social block/unblock (decision 0073 §0.6: user_blocks writes). Append at the END.
   'social.user_blocked', // SOC-09 — POST /me/blocks; the blocked designer's cards leave the caller's community views.
   'social.user_unblocked', // SOC-09 — DELETE /me/blocks/:userId; the block lifted (idempotent).
+  // M5 F-2b un-adopt (CARD-14/20 — the adopted-side DELETE; migration 0012). Append at the END.
+  'card.adoption_revoked', // CARD-14 — the adopter removed their copy (soft-revoke; all-time count unchanged).
 ] as const;
 
 export type DomainEventType = (typeof DOMAIN_EVENT_TYPES)[number];

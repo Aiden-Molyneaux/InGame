@@ -227,9 +227,66 @@ describe('DEV-03: the server zone/bounds triple (layer 3) — 422 on every out-o
   });
 });
 
+describe('COSM-03 (F-2b): the premium gate on device writes — unowned premium refused, owned/free pass', () => {
+  it('an UNOWNED premium shell+theme → 409 PREMIUM_UNRECONCILED {unowned,total}; nothing persisted', async () => {
+    const a = await registerUser();
+    // sunset = big (6 PX) · berry = big (6 PX) — the 0075 roster, neither owned by a fresh user.
+    const res = await patchDevice(a.token, { activeShellId: 'sunset', screenThemeId: 'berry' });
+    expect(res.status).toBe(409);
+    expect(res.body.error.code).toBe('PREMIUM_UNRECONCILED');
+    expect(res.body.error.unowned).toEqual(
+      expect.arrayContaining([
+        { cosmeticId: 'sunset', price: 6 },
+        { cosmeticId: 'berry', price: 6 },
+      ]),
+    );
+    expect(res.body.error.total).toBe(12);
+    // the refusal wrote nothing — the device still reads the free defaults.
+    const got = await request(app).get('/api/me/device').set(authed(a.token));
+    expect(got.body.activeShellId).toBe('teal');
+    expect(got.body.screenThemeId).toBe('midnight');
+  });
+
+  it('the KeepBar sequence lands: acquire-batch the premium ids, then the PATCH succeeds', async () => {
+    const a = await registerUser();
+    // the client's KEEP flow (device.tsx keepPremium): acquireBatch AWAITED, then the device PATCH.
+    const acq = await request(app)
+      .post('/api/cosmetics/acquire-batch')
+      .set(authed(a.token))
+      .send({ cosmeticIds: ['sunset'] }); // 6 PX — affordable from the 10-PX starting grant
+    expect(acq.status).toBe(200);
+    const res = await patchDevice(a.token, { activeShellId: 'sunset' });
+    expect(res.status).toBe(200);
+    expect(res.body.activeShellId).toBe('sunset');
+  });
+
+  it('free ids (grape/paper) pass ungated; a mixed patch refuses on the unowned premium half only', async () => {
+    const a = await registerUser();
+    const free = await patchDevice(a.token, { activeShellId: 'grape', screenThemeId: 'paper' });
+    expect(free.status).toBe(200);
+    // free shell + UNOWNED premium theme → refused, and the free half did NOT sneak through.
+    const mixed = await patchDevice(a.token, { activeShellId: 'teal', screenThemeId: 'mint' });
+    expect(mixed.status).toBe(409);
+    expect(mixed.body.error.unowned).toEqual([{ cosmeticId: 'mint', price: 6 }]);
+    const got = await request(app).get('/api/me/device').set(authed(a.token));
+    expect(got.body.activeShellId).toBe('grape'); // the earlier free write held; the refused one didn't
+  });
+
+  it('stickers stay ungated — a sticker write needs no entitlement', async () => {
+    const a = await registerUser();
+    const res = await patchDevice(a.token, { stickerComposition: composition([sticker()]) });
+    expect(res.status).toBe(200);
+  });
+});
+
 describe('DEV-05: saved looks — SAVE CURRENT, list, delete, and the cap', () => {
   it('SAVE CURRENT snapshots the live combo; GET lists newest-first; delete works + is idempotent-safe', async () => {
     const a = await registerUser();
+    // carbon (8 PX) + berry (6 PX) are premium since 0075 — the F-2b gate requires owning them to
+    // wear them; grant out-of-band (14 > the 10-PX starting grant) so the snapshot test still runs.
+    const { grantEntitlement } = await import('../../src/services/cosmetics/cosmetic-service');
+    await grantEntitlement(a.id, a.id, 'carbon', 'seed');
+    await grantEntitlement(a.id, a.id, 'berry', 'seed');
     await patchDevice(a.token, { activeShellId: 'carbon', screenThemeId: 'berry' });
 
     const saved = await request(app).post('/api/me/device/looks').set(authed(a.token)).send({});

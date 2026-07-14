@@ -61,8 +61,9 @@ export function CardSwitcher({
   entry: CollectionItem;
   onEditInStyler: (cardId: string) => void;
   onDesignNew: () => void;
-  /** The 0040 confirm renders at the PAGE root (D.27) — the switcher only asks. */
-  onRequestDelete: (cardId: string, name: string) => void;
+  /** The 0040 confirm renders at the PAGE root (D.27) — the switcher only asks. `adopted` = the
+   *  F-2b un-adopt path (REMOVE my copy; the page varies the confirm copy accordingly). */
+  onRequestDelete: (cardId: string, name: string, adopted?: boolean) => void;
   deleteError?: string | null;
   /** Selection changed — the page clears its delete error so it can't blame the wrong card. */
   onClearDeleteError?: () => void;
@@ -227,8 +228,7 @@ export function CardSwitcher({
                 style={styles.miniBtn}
               />
             )}
-            {/* Edit / Delete are OWNED-only — a foreign adopted card has no layers to edit and isn't
-                mine to delete (un-adopt is a later affordance). */}
+            {/* Edit is OWNED-only — a foreign adopted card has no layers to edit (CARD-15). */}
             {selected.origin === 'owned' ? (
               <>
                 <ScreenButton
@@ -245,12 +245,26 @@ export function CardSwitcher({
                   style={styles.miniBtn}
                 />
               </>
-            ) : null}
+            ) : (
+              // F-2b un-adopt — REMOVE my copy (DELETE /cards/:id on an adopted card revokes only the
+              // caller's grant). Same worn guard as owned-delete (409 CARD_EQUIPPED — switch first).
+              <ScreenButton
+                label="Remove"
+                variant={selected.equipped ? 'secondary' : 'destructive'}
+                disabled={selected.equipped}
+                onPress={() => onRequestDelete(selected.id, selected.name, true)}
+                style={styles.miniBtn}
+              />
+            )}
           </View>
           {selected.origin === 'owned' && selected.status === 'draft' ? (
             <Text style={styles.note}>A draft resumes in the Styler — finish it (KEEP or SAVE PRIVATE) to equip it.</Text>
-          ) : selected.origin === 'owned' && selected.equipped ? (
-            <Text style={styles.note}>Your shelf wears this card. Unequip it before deleting it.</Text>
+          ) : selected.equipped ? (
+            <Text style={styles.note}>
+              {selected.origin === 'adopted'
+                ? 'Your shelf wears this card. Unequip it before removing it.'
+                : 'Your shelf wears this card. Unequip it before deleting it.'}
+            </Text>
           ) : null}
           {inlineError || deleteError ? <Text style={styles.err}>{inlineError ?? deleteError}</Text> : null}
         </View>

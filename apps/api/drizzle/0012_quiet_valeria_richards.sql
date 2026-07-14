@@ -1,0 +1,1 @@
+ALTER TABLE "card_adoptions" ADD COLUMN "revoked_at" timestamp with time zone;
