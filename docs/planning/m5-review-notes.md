@@ -305,3 +305,15 @@ ref/coordinate clicks** (device swatches + all nav/dialog buttons do) — blocke
 walk. Both belong in the "owed to the owner's device walk" bucket (native taps + reduce-motion + hold-to-buy
 feel + PrintRitual motion). Candidate runbook addition: *foreground P/Invoke no longer holds on this box —
 prefer a11y-tree-driven walking over screenshots for RN-web QA; the device-walk is the visual gate.*
+
+---
+
+## G-D re-fire — 2026-07-14 (owner-watched) — PASSED, with a catch
+Predicate stripped from the marked gallery read live: **runtime teeth CONFIRMED** (the OQ-122
+standing test went RED — drafts leaked, net caught them; restored → 6/6 green). **Lint teeth
+MISSING**: rule-02's ±16-line predicate window matched the *sibling* read's `publishedOnly(` —
+a marked, predicate-less read passed GREEN (neighbor-laundering). **Fixed same-day**:
+statement-scoped predicate/composition detection (`markedStatementOf`), 3 new rule tests + the
+exact miss as an on-disk corpus fixture; RED proof = 2 fail-closed violations on the stripped read.
+Rule suite 29/29 · unit 175/175 · real repo lint green. The gate found a real hole — working as
+designed.

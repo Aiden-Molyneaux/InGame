@@ -419,13 +419,89 @@ export async function trending(exec) {
     expect(v).toHaveLength(0);
   });
 
-  it('rejects each on-disk PUBLIC-READ misuse fixture (no-predicate · marked-write · composition-leak)', () => {
+  // P3 REGRESSION — the predicate must belong to the MARKED STATEMENT, not a ±16-line window. Here the
+  // marked gallery read has NO predicate, but `publishedOnly` is DEFINED just above AND a sibling marked
+  // read calls `publishedOnly(...)` just below. The old window matched the neighbour and passed GREEN;
+  // the statement-scoped check correctly fails the predicate-less read closed while keeping the sibling
+  // (a genuine `publishedOnly(...)` read) green — one violation, on the stripped read only.
+  it('FAILS CLOSED on a predicate-stripped marked read even when a sibling read uses publishedOnly()', () => {
+    const v = run([
+      repo(`
+import { eq, and } from 'drizzle-orm';
+import { cardDesigns, users } from '../db/schema';
+export function publishedOnly(extra) {
+  const pub = eq(cardDesigns.status, 'published');
+  return extra ? and(pub, extra) : pub;
+}
+export async function listForGame(exec, gameId) {
+  // SYS-01-PUBLIC-READ: cross-user gallery — published cards only, never composition
+  return exec
+    .select({ id: cardDesigns.id, name: cardDesigns.name, designer: users.username })
+    .from(cardDesigns)
+    .innerJoin(users, eq(users.id, cardDesigns.ownerId))
+    .where(eq(cardDesigns.gameId, gameId));
+}
+export async function findById(exec, cardId) {
+  // SYS-01-PUBLIC-READ: cross-user adopt lookup — published cards only, never composition
+  const rows = await exec
+    .select({ id: cardDesigns.id, name: cardDesigns.name, designer: users.username })
+    .from(cardDesigns)
+    .innerJoin(users, eq(users.id, cardDesigns.ownerId))
+    .where(publishedOnly(eq(cardDesigns.id, cardId)))
+    .limit(1);
+  return rows[0] ?? null;
+}
+`),
+    ]);
+    // The stripped listForGame read fails closed (its `.from`/join carry no visibility predicate). The
+    // companion test below proves the sibling findById is NOT falsely flagged once the predicate is
+    // present — together they prove the check binds to the statement, not a neighbour's predicate.
+    expect(v.length).toBeGreaterThan(0);
+    expect(v.some((x) => /cardDesigns|card_designs|users/.test(x.message))).toBe(true);
+  });
+
+  // The complement: the SAME two-read file with the predicate RESTORED is fully green (no false
+  // positive on a legitimate `publishedOnly(...)` gallery read sitting next to its sibling).
+  it('EXEMPTS the gallery read once its publishedOnly() predicate is present (sibling reads, both green)', () => {
+    const v = run([
+      repo(`
+import { eq, and } from 'drizzle-orm';
+import { cardDesigns, users } from '../db/schema';
+export function publishedOnly(extra) {
+  const pub = eq(cardDesigns.status, 'published');
+  return extra ? and(pub, extra) : pub;
+}
+export async function listForGame(exec, gameId) {
+  // SYS-01-PUBLIC-READ: cross-user gallery — published cards only, never composition
+  return exec
+    .select({ id: cardDesigns.id, name: cardDesigns.name, designer: users.username })
+    .from(cardDesigns)
+    .innerJoin(users, eq(users.id, cardDesigns.ownerId))
+    .where(publishedOnly(eq(cardDesigns.gameId, gameId)));
+}
+export async function findById(exec, cardId) {
+  // SYS-01-PUBLIC-READ: cross-user adopt lookup — published cards only, never composition
+  const rows = await exec
+    .select({ id: cardDesigns.id, name: cardDesigns.name, designer: users.username })
+    .from(cardDesigns)
+    .innerJoin(users, eq(users.id, cardDesigns.ownerId))
+    .where(publishedOnly(eq(cardDesigns.id, cardId)))
+    .limit(1);
+  return rows[0] ?? null;
+}
+`),
+    ]);
+    expect(v).toHaveLength(0);
+  });
+
+  it('rejects each on-disk PUBLIC-READ misuse fixture (no-predicate · marked-write · composition-leak · neighbour-launder)', () => {
     const dir = join(process.cwd(), 'fixtures', 'bad-pr-corpus', 'rule-02-scoping');
     const all = collectFiles([dir], { exts: ['.ts'], cwd: process.cwd() });
     for (const name of [
       'public-read-no-predicate-repo.ts',
       'public-read-write-repo.ts',
       'public-read-composition-repo.ts',
+      'public-read-neighbor-launder-repo.ts',
     ]) {
       const fixture = all.filter((f) => f.path.endsWith(name));
       expect(fixture, `${name} missing from the corpus`).toHaveLength(1);
