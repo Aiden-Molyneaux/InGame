@@ -49,6 +49,12 @@ export const ledgerEntrySchema = z
     delta: z.number().int(), // +earn / −spend
     refType: z.string().nullable(), // context tag (e.g. 'card' | 'cosmetic' | 'iap_receipt'), P2/P3
     refId: z.string().nullable(),
+    // F-4 ledger honesty — the server-enriched specific phrase for this row (the board's "ADOPTED
+    // 'DESTINY' BY RIKO" / "EMBERS · EFFECT" / "PIXEL PACK · 30" standard), resolved at READ time from
+    // refType/refId (batched, no N+1). ABSENT when the reason has no specific detail to add (the generic
+    // label stands) or the referenced row was deleted (a degrade, never a 500). Purely presentational —
+    // the client shows `detail` when present, else the reason's generic label.
+    detail: z.string().optional(),
     createdAt: z.string(), // ISO-8601 UTC
   })
   .strict();

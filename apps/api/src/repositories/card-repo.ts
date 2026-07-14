@@ -260,6 +260,30 @@ export async function adoptionCountsByCard(
 }
 
 /**
+ * F-4 ledger honesty — the card NAME + DESIGNER USERNAME for a batch of card-design ids (an `adoption`
+ * ledger row keys off `refId = cardDesignId`). ATTRIBUTION columns only (`name` + the owner's public
+ * `username`) — never `composition` (the OQ-122 exclusion holds; the ledger only needs the board's
+ * "ADOPTED '«name»' BY «username»" phrase). A cross-user read of PUBLIC attribution, gated to PUBLISHED
+ * cards (the SYS-01-PUBLIC-READ class, OQ-122): a card later unpublished degrades to the generic ledger
+ * label (never names a now-private card). Flattened-safe; a missing/unpublished id simply drops out (the
+ * detail degrades — never a 500). One batched join, no N+1.
+ */
+export async function designNamesByIds(
+  cardIds: string[],
+  exec: Executor = getDb(),
+): Promise<Map<string, { name: string; designerUsername: string }>> {
+  if (cardIds.length === 0) return new Map();
+  // SYS-01-PUBLIC-READ — cross-user PUBLIC attribution (name + designer handle), 'published'-gated,
+  // never selects composition (OQ-122/CARD-15). Reads-only.
+  const rows = await exec
+    .select({ id: cardDesigns.id, name: cardDesigns.name, username: users.username })
+    .from(cardDesigns)
+    .innerJoin(users, eq(users.id, cardDesigns.ownerId))
+    .where(and(inArray(cardDesigns.id, cardIds), eq(cardDesigns.status, 'published')));
+  return new Map(rows.map((r) => [r.id, { name: r.name, designerUsername: r.username }]));
+}
+
+/**
  * The publish-transition write (the owner's OWN publish): flip status → published, set the flattened
  * urls + the denormalized premium component ids. Scoped to the actor AND guarded to a non-published
  * status (`ne` published) so a concurrent double-publish transitions exactly once — the loser's WHERE

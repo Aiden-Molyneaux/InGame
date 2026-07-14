@@ -11,6 +11,9 @@ import { mutation } from '../../db/mutation';
 import type { Executor } from '../../db/client';
 import * as economyRepo from '../../repositories/economy-repo';
 import * as entitlementRepo from '../../repositories/entitlement-repo';
+import * as cardRepo from '../../repositories/card-repo';
+import * as iapRepo from '../../repositories/iap-repo';
+import { lookupCosmeticDisplay } from '../../config/cosmetics';
 import { InsufficientBalanceError } from '../../errors/AppError';
 import {
   DAILY_BONUS,
@@ -171,15 +174,85 @@ export async function getWallet(actorId: string): Promise<WalletResponse> {
   };
 }
 
-function toLedgerEntry(row: CurrencyLedgerRow): LedgerEntry {
+function toLedgerEntry(row: CurrencyLedgerRow, detail?: string): LedgerEntry {
   return {
     id: row.id,
     type: row.reason as LedgerReason,
     delta: row.delta,
     refType: row.refType,
     refId: row.refId,
+    ...(detail ? { detail } : {}),
     createdAt: row.createdAt.toISOString(),
   };
+}
+
+// ── F-4 ledger honesty: `detail` enrichment (the board's "ADOPTED '«name»' BY «designer»" standard) ──
+// Resolve each row's specific human phrase at READ time from its refType/refId, in BATCHED lookups (no
+// N+1): one card-name join for the page's `adoption` rows, one receipt read for its `pack_purchase`/
+// `refund_reversal` rows, an in-memory catalog map for `acquire`, and pure formatting for the ladder.
+// A missing/deleted ref (or a reason with no specific detail) simply yields no `detail` — the client
+// falls back to the reason's generic label, and a deleted card/receipt NEVER 500s the ledger page.
+
+/** The specific `detail` phrase for one row, given the batched lookup maps — or `undefined` to fall back. */
+function detailForRow(
+  row: CurrencyLedgerRow,
+  cardNames: Map<string, { name: string; designerUsername: string }>,
+  receipts: Map<string, { productId: string; pixels: number }>,
+): string | undefined {
+  switch (row.reason) {
+    case 'acquire': {
+      // refId = the bare (premium) cosmetic id → its catalog name + type ("EMBERS · EFFECT").
+      const c = row.refId ? lookupCosmeticDisplay(row.refId) : undefined;
+      return c ? `${c.name} · ${c.type}` : undefined;
+    }
+    case 'adoption': {
+      // refId = the adopted card-design id → the flattened card name + designer handle.
+      const n = row.refId ? cardNames.get(row.refId) : undefined;
+      return n ? `ADOPTED "${n.name.toUpperCase()}" BY ${n.designerUsername.toUpperCase()}` : undefined;
+    }
+    case 'pack_purchase': {
+      // refId = the iap_receipt id → the pack's pixel amount ("PIXEL PACK · 30").
+      const rec = row.refId ? receipts.get(row.refId) : undefined;
+      return rec ? `PIXEL PACK · ${rec.pixels}` : undefined;
+    }
+    case 'refund_reversal': {
+      const rec = row.refId ? receipts.get(row.refId) : undefined;
+      return rec ? `REFUND REVERSAL · PACK ${rec.pixels}` : undefined;
+    }
+    case 'milestone': {
+      // The Newcomer-Ladder step (refType='newcomer_ladder', refId=step) → "DAY N BONUS"; generic M7
+      // milestones (refType null) keep their label.
+      return row.refType === 'newcomer_ladder' && row.refId ? `DAY ${row.refId} BONUS` : undefined;
+    }
+    default:
+      // starting_grant / daily_claim / admin_adjustment — the existing generic labels stand.
+      return undefined;
+  }
+}
+
+/** Batched `detail` map (rowId → phrase) for a page of ledger rows. Actor-scoped receipt read (SYS-01). */
+async function buildLedgerDetails(
+  actorId: string,
+  rows: CurrencyLedgerRow[],
+): Promise<Map<string, string>> {
+  const cardIds = new Set<string>();
+  const receiptIds = new Set<string>();
+  for (const r of rows) {
+    if (r.reason === 'adoption' && r.refId) cardIds.add(r.refId);
+    else if ((r.reason === 'pack_purchase' || r.reason === 'refund_reversal') && r.refId) {
+      receiptIds.add(r.refId);
+    }
+  }
+  const [cardNames, receipts] = await Promise.all([
+    cardRepo.designNamesByIds([...cardIds]),
+    iapRepo.receiptsByReceiptIds(actorId, [...receiptIds]),
+  ]);
+  const details = new Map<string, string>();
+  for (const r of rows) {
+    const d = detailForRow(r, cardNames, receipts);
+    if (d) details.set(r.id, d);
+  }
+  return details;
 }
 
 /** Decode the opaque next-page cursor (an offset token) — defensively floored at 0. */
@@ -199,8 +272,9 @@ export async function listLedger(
   const rows = await economyRepo.listLedger(actorId, limit + 1, offset); // +1 probes for a next page
   const hasMore = rows.length > limit;
   const page = hasMore ? rows.slice(0, limit) : rows;
+  const details = await buildLedgerDetails(actorId, page); // F-4 — enrich the PAGE only (batched)
   return {
-    items: page.map(toLedgerEntry),
+    items: page.map((row) => toLedgerEntry(row, details.get(row.id))),
     nextCursor: hasMore ? String(offset + limit) : null,
   };
 }

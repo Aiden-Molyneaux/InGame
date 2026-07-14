@@ -5,6 +5,7 @@ import { themedStyles } from '../../theme';
 import { PulledSheet } from '../PulledSheet';
 import { TertiaryLink } from '../TertiaryLink';
 import { PriceChip } from './PriceChip';
+import { OwnedTag } from './Tags';
 import { BuyBar } from './BuyBar';
 import { PreviewStage } from './PreviewStage';
 import { PackTile } from './PackTile';
@@ -27,11 +28,16 @@ export function ItemSheet({
   visible,
   item,
   balance,
+  owned = false,
+  ownedNote = 'In your editor',
   onClose,
   onBuy,
   buyNote,
   preview,
   previewLabel = 'Previewed on your card — live',
+  previewSwapLabel,
+  onPreviewSwap,
+  freePack = false,
   shortBy = null,
   bridgePacks = [],
   onBuyPack,
@@ -40,11 +46,18 @@ export function ItemSheet({
   visible: boolean;
   item: StoreItem | null;
   balance: number;
+  /** true = the caller already owns this (P9 grammar): NO BuyBar, an OWNED row instead — the price is gone. */
+  owned?: boolean;
+  ownedNote?: string;
   onClose: () => void;
   onBuy: () => void;
   buyNote?: string;
   preview?: ReactNode;
   previewLabel?: string;
+  previewSwapLabel?: string;
+  onPreviewSwap?: () => void;
+  /** a FREE item (the one sticker pack, P2b): no PriceChip, no BuyBar — an owned-style acquire row. */
+  freePack?: boolean;
   /** the PX still needed (from a 409 INSUFFICIENT_BALANCE {shortBy}); non-null = the P5 bridge shows. */
   shortBy?: number | null;
   bridgePacks?: StorePack[];
@@ -54,22 +67,25 @@ export function ItemSheet({
   const styles = useStyles();
   if (!item) return null;
   const short = shortBy != null && shortBy > 0;
+  const free = freePack || item.price <= 0;
   return (
     <PulledSheet visible={visible} onClose={onClose}>
-      <PreviewStage label={previewLabel}>{preview}</PreviewStage>
+      <PreviewStage label={previewLabel} swapLabel={previewSwapLabel} onSwap={onPreviewSwap}>
+        {preview}
+      </PreviewStage>
 
       <View style={styles.titleRow}>
-        <Text style={styles.name} numberOfLines={1}>
+        <Text style={styles.name} numberOfLines={2}>
           {item.name}
         </Text>
         <Text style={styles.type} numberOfLines={1}>
           {item.type}
         </Text>
         <View style={styles.spacer} />
-        <PriceChip pixels={item.price} big />
+        {owned ? <OwnedTag /> : free ? null : <PriceChip pixels={item.price} big />}
       </View>
 
-      {short ? (
+      {short && !owned ? (
         <>
           <View style={styles.shortStrip}>
             <Text style={styles.shortText}>
@@ -88,16 +104,43 @@ export function ItemSheet({
         </>
       ) : null}
 
-      <BuyBar price={item.price} balance={balance} onBuy={onBuy} disabled={short} note={buyNote} />
+      {owned ? (
+        // P9 owned grammar — the just-bought / already-owned state: no BuyBar, the price never returns.
+        <View style={styles.ownedRow}>
+          <OwnedTag />
+          <Text style={styles.ownedNote}>{ownedNote.toUpperCase()}</Text>
+        </View>
+      ) : free ? (
+        // P2b free sticker pack — no BuyBar either way (the pack is free); a plain acquire row.
+        <View style={styles.ownedRow}>
+          <Text style={styles.ownedNote}>{ownedNote.toUpperCase()}</Text>
+        </View>
+      ) : (
+        <BuyBar price={item.price} balance={balance} onBuy={onBuy} disabled={short} note={buyNote} />
+      )}
     </PulledSheet>
   );
 }
 
 const useStyles = themedStyles((t) => ({
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
-  name: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
+  // F-4 — long premium names ("HOLOGRAPHIC", "ORNATE GOLD") wrap to 2 lines rather than shove the type +
+  // PriceChip off the row (numberOfLines={2}); `flexShrink` lets the title yield to the trailing chip.
+  name: { flexShrink: 1, fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
   type: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
   spacer: { flex: 1 },
+  ownedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: t.space.md,
+    marginTop: t.space.md,
+    paddingHorizontal: t.space.lg,
+    paddingVertical: t.space.md,
+    backgroundColor: t.scr.bg,
+    borderWidth: 1,
+    borderColor: t.scr.hairline,
+  },
+  ownedNote: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
   shortStrip: {
     paddingHorizontal: t.space.lg,
     paddingVertical: t.space.md,

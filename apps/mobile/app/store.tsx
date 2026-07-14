@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, ScrollView, View, Text } from 'react-native';
+import { Platform, Pressable, ScrollView, View, Text } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import type { LedgerEntry, StorePack } from '@ingame/shared';
+import type { CosmeticListItem, LedgerEntry, StorePack } from '@ingame/shared';
 import { ScreenHead } from '../src/components/ScreenHead';
 import { ScreenButton } from '../src/components/ScreenButton';
 import { ConfirmSheet } from '../src/components/ConfirmSheet';
@@ -10,17 +10,26 @@ import { LoadError } from '../src/components/lifecycle/LoadError';
 import { Skeleton } from '../src/components/lifecycle/Skeleton';
 import { Toast } from '../src/components/lifecycle/Toast';
 import { Offline } from '../src/components/lifecycle/Offline';
+import { MiniDevice } from '../src/components/MiniDevice';
+import { ThemeSwatch } from '../src/components/device/ThemeSwatch';
 import {
   CurrencyCounter,
   DailyBonusBar,
   AisleIndex,
+  AISLES,
   PackTile,
+  PriceChip,
+  OwnedTag,
+  ItemSheet,
+  PreviewStrip,
   LedgerRow,
   LandedMoment,
   PixelsMark,
   isBestRate,
   usdFor,
+  type StoreItem,
 } from '../src/components/commerce';
+import { COSMETIC_TYPE_LABEL } from '../src/components/commerce/storeCopy';
 import { themedStyles } from '../src/theme';
 import { useAnnounceOnChange } from '../src/a11y/announce';
 import { mintMockReceipt } from '../src/store/mockReceipt';
@@ -28,6 +37,8 @@ import {
   useGetWalletQuery,
   useGetStoreQuery,
   useGetCosmeticsQuery,
+  useGetDeviceQuery,
+  useAcquireCosmeticMutation,
   useClaimDailyBonusMutation,
   useValidateIapMutation,
   useLazyGetLedgerQuery,
@@ -244,9 +255,9 @@ export default function Store() {
         )
       ) : view === 'wallet' ? (
         <WalletView balance={balance} offline={offline} onTopUp={() => setView('topup')} />
-      ) : (
-        <AisleView label={aisle?.label ?? ''} />
-      )}
+      ) : aisle ? (
+        <AisleView aisle={aisle} offline={offline} onTopUp={() => setView('topup')} />
+      ) : null}
 
       {toast ? (
         <Toast
@@ -503,18 +514,246 @@ function WalletView({ balance, offline, onTopUp }: { balance: number; offline: b
   );
 }
 
-// ── P9 Aisle (category page) — honest-empty at M5 (no GET /cosmetics; roster re-tag = P4) ─────────────
-function AisleView({ label }: { label: string }) {
+// ── P9 Aisle (category page) — REAL premium items from GET /cosmetics; the P2 sheet buys in place ──────
+// The aisle STOCKS PREMIUM items (price > 0) of its type — reconciled with THE INDEX counts (F-2:
+// premium-only tallies). The free baseline lives in the editors (COSM-02), never here. Tapping a row
+// raises the P2 ItemSheet (the item live on your own stuff + the BuyBar); a BUY runs the acquire
+// mutation FROM THE SHEET, and on success the sheet flips to OWNED in place (the just-bought moment,
+// no reopen). A 409 INSUFFICIENT_BALANCE grows the P5 bridge (short strip + a covering pack + ALL PACKS).
+function AisleView({
+  aisle,
+  offline,
+  onTopUp,
+}: {
+  aisle: { key: string; label: string };
+  offline: boolean;
+  onTopUp: () => void;
+}) {
   const styles = useStyles();
+  const { data: library, isLoading, isError, refetch } = useGetCosmeticsQuery();
+  const { data: wallet } = useGetWalletQuery();
+  const { data: store } = useGetStoreQuery();
+  const { data: device } = useGetDeviceQuery();
+  const [acquire, { isLoading: buying }] = useAcquireCosmeticMutation();
+
+  const balance = wallet?.balance ?? 0;
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [justBought, setJustBought] = useState(false);
+  const [shortBy, setShortBy] = useState<number | null>(null);
+  const [buyErr, setBuyErr] = useState<string | null>(null);
+
+  const items = useMemo(
+    () => (library?.items ?? []).filter((i) => i.type === aisle.key && i.price > 0),
+    [library, aisle.key],
+  );
+  // The open item is READ from the live library (not a snapshot) so its `owned` flag reflects the
+  // acquire invalidation — the sheet flips to OWNED the instant the BUY lands, without reopening.
+  const open = useMemo(() => items.find((i) => i.id === openId) ?? null, [items, openId]);
+  const owned = (open?.owned ?? false) || justBought;
+
+  const closeSheet = useCallback(() => {
+    setOpenId(null);
+    setJustBought(false);
+    setShortBy(null);
+    setBuyErr(null);
+  }, []);
+
+  const openItem = useCallback((id: string) => {
+    setOpenId(id);
+    setJustBought(false);
+    setShortBy(null);
+    setBuyErr(null);
+  }, []);
+
+  const onBuy = useCallback(() => {
+    if (!open) return;
+    setBuyErr(null);
+    acquire(open.id)
+      .unwrap()
+      .then(() => {
+        setJustBought(true); // the sheet transitions to OWNED in place (no reopen)
+        setShortBy(null);
+      })
+      .catch((e) => {
+        const err = e as { data?: { error?: { code?: string; shortBy?: number } } };
+        const code = err?.data?.error?.code;
+        if (code === 'INSUFFICIENT_BALANCE') {
+          setShortBy(err?.data?.error?.shortBy ?? Math.max(0, open.price - balance));
+        } else {
+          setBuyErr("Couldn't complete — your pixels are safe.");
+        }
+      });
+  }, [open, acquire, balance]);
+
+  // the cheapest pack that covers the gap — the P5 bridge's inline covering tile.
+  const bridgePacks = useMemo(() => {
+    if (shortBy == null || !open) return [];
+    const need = open.price - balance;
+    const covering = (store?.packs ?? [])
+      .filter((p) => !p.oneTime && p.pixels >= need)
+      .sort((a, b) => a.pixels - b.pixels);
+    return covering.slice(0, 1);
+  }, [shortBy, open, balance, store]);
+
+  if (isLoading) {
+    return (
+      <View style={styles.body}>
+        <Text style={styles.secTitle}>{aisle.label}</Text>
+        <Skeleton variant="tile-row" count={4} />
+      </View>
+    );
+  }
+  if (isError) {
+    return (
+      <View style={styles.errWrap}>
+        <LoadError
+          title="Signal Lost"
+          message="This aisle didn't answer. Your pixels are safe — this is a connection problem."
+          onRetry={() => void refetch()}
+        />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.body}>
-      <Text style={styles.secTitle}>{label}</Text>
-      <Text style={styles.emptyNote}>
-        This aisle is being stocked. Its items arrive as the catalog fills — the free baseline already
-        lives in the editors.
+      <Text style={styles.secTitle}>
+        FROM THE INDEX — {items.length} {aisle.label}
       </Text>
+      {items.length === 0 ? (
+        <Text style={styles.emptyNote}>
+          This aisle is being stocked — its premium items arrive as the catalog fills. The free baseline
+          already lives in the editors.
+        </Text>
+      ) : (
+        <View style={styles.aisleList}>
+          {items.map((it) => (
+            <AisleRow key={it.id} item={it} onPress={() => openItem(it.id)} />
+          ))}
+        </View>
+      )}
+      <Text style={styles.baseHint}>The free baseline isn&apos;t sold here — it lives in the editors.</Text>
+
+      <ItemSheet
+        visible={open !== null}
+        item={open ? toStoreItem(open) : null}
+        balance={balance}
+        owned={owned}
+        ownedNote={justBought ? 'Yours — in your editor' : 'In your editor'}
+        onClose={closeSheet}
+        onBuy={onBuy}
+        buyNote={buyErr ?? previewNoteFor(open?.type)}
+        preview={open ? <ItemPreview item={open} deviceShellId={device?.activeShellId} /> : null}
+        previewLabel={previewLabelFor(open?.type)}
+        shortBy={shortBy}
+        bridgePacks={bridgePacks}
+        onBuyPack={onTopUp}
+        onAllPacks={onTopUp}
+      />
+      {/* the sheet's BUY is gated offline by the note; the header offline strip already warns globally. */}
+      {offline && open && !owned ? <Text style={styles.emptyNote}>Offline — purchases need a connection.</Text> : null}
     </View>
   );
+}
+
+/** One aisle row (P9 itemrow) — a preview thumb · name · type · its state chip (OwnedTag or PriceChip). */
+function AisleRow({ item, onPress }: { item: CosmeticListItem; onPress: () => void }) {
+  const styles = useStyles();
+  return (
+    <Pressable
+      style={styles.aisleRow}
+      accessibilityRole="button"
+      accessibilityLabel={`${item.name}, ${COSMETIC_TYPE_LABEL[item.type]}${item.owned ? ', owned' : `, ${item.price} pixels`}`}
+      onPress={onPress}
+    >
+      <View style={styles.rowThumb}>
+        <RowThumb item={item} />
+      </View>
+      <View style={styles.rowMeta}>
+        <Text style={styles.rowName} numberOfLines={1}>
+          {item.name}
+        </Text>
+        <Text style={styles.rowType} numberOfLines={1}>
+          {COSMETIC_TYPE_LABEL[item.type]}
+        </Text>
+      </View>
+      {item.owned ? <OwnedTag /> : <PriceChip pixels={item.price} />}
+    </Pressable>
+  );
+}
+
+// The item preview art. Shells + themes reuse the device-editor primitives (MiniDevice / ThemeSwatch —
+// the same components the Device editor previews with); a device_shell shows the P4 before→after pair on
+// YOUR device; a screen_theme shows the theme applied to a mini screen. Card cosmetics (frame/effect/
+// finish/nameplate/font) have no live card render at this iteration — they show a typed placeholder
+// (never invented card art; the live-on-your-card preview is a later wiring of the M4 CardFace).
+function RowThumb({ item }: { item: CosmeticListItem }) {
+  if (item.type === 'device_shell') return <MiniDevice shellId={item.id} />;
+  if (item.type === 'screen_theme') return <ThemeSwatch themeId={item.id} />;
+  const styles = useStyles();
+  const glyph = AISLES.find((a) => a.key === item.type)?.glyph ?? '◆';
+  return (
+    <View style={styles.glyphThumb}>
+      <Text style={styles.glyphText}>{glyph}</Text>
+    </View>
+  );
+}
+
+function ItemPreview({ item, deviceShellId }: { item: CosmeticListItem; deviceShellId?: string | null }) {
+  const styles = useStyles();
+  if (item.type === 'screen_theme') {
+    // P3 — the theme applied live to a mini screen (visual-only; no PATCH). The PreviewStrip signals it.
+    return (
+      <View style={styles.previewCol}>
+        <PreviewStrip name={item.name} onExit={() => {}} />
+        <MiniDevice themeId={item.id} />
+        <Text style={styles.previewLine}>YOUR WHOLE SCREEN, RESTYLED — LEGIBILITY FLOOR HELD (DEV-04)</Text>
+      </View>
+    );
+  }
+  if (item.type === 'device_shell') {
+    // P4 — the before→after pair on YOUR pocket (current shell → the new wrap). Same silhouette.
+    return (
+      <View style={styles.beforeAfter}>
+        <View style={styles.baCol}>
+          <MiniDevice shellId={deviceShellId ?? undefined} />
+          <Text style={styles.baLbl}>NOW</Text>
+        </View>
+        <Text style={styles.baArrow}>➔</Text>
+        <View style={styles.baCol}>
+          <MiniDevice shellId={item.id} />
+          <Text style={[styles.baLbl, styles.baLblNew]}>{item.name}</Text>
+        </View>
+      </View>
+    );
+  }
+  const glyph = AISLES.find((a) => a.key === item.type)?.glyph ?? '◆';
+  return (
+    <View style={styles.glyphPreview}>
+      <Text style={styles.glyphPreviewText}>{glyph}</Text>
+    </View>
+  );
+}
+
+function toStoreItem(item: CosmeticListItem): StoreItem {
+  return {
+    id: item.id,
+    name: item.name,
+    type: `${COSMETIC_TYPE_LABEL[item.type]} · CATALOG`,
+    price: item.price,
+  };
+}
+
+function previewLabelFor(type?: CosmeticListItem['type']): string {
+  if (type === 'screen_theme') return 'Your whole screen, restyled — this page is the preview';
+  if (type === 'device_shell') return 'Same pocket — new shell, previewed on your device';
+  return 'Previewed on your card — live';
+}
+
+function previewNoteFor(type?: CosmeticListItem['type']): string {
+  if (type === 'screen_theme') return 'Preview free — apply it in the device editor';
+  if (type === 'device_shell') return 'Swap shells in the device editor';
+  return 'Spends pixels instantly';
 }
 
 const useStyles = themedStyles((t) => ({
@@ -579,4 +818,54 @@ const useStyles = themedStyles((t) => ({
   },
   ledger: { backgroundColor: t.scr.panel, borderWidth: 1, borderColor: t.scr.hairline },
   loadMoreRow: { alignItems: 'center', marginTop: t.space.sm },
+  // ── P9 aisle rows ──
+  aisleList: { gap: t.space.sm },
+  aisleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: t.space.lg,
+    paddingHorizontal: t.space.md,
+    paddingVertical: t.space.md,
+    backgroundColor: t.scr.panel,
+    borderWidth: 1,
+    borderColor: t.scr.hairline,
+  },
+  rowThumb: { width: 46, alignItems: 'center', justifyContent: 'center' },
+  rowMeta: { flex: 1, gap: 3 },
+  rowName: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 1 },
+  rowType: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
+  glyphThumb: {
+    width: 42,
+    height: 58,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: t.scr.panel,
+    borderWidth: 1,
+    borderColor: t.scr.hairline,
+  },
+  glyphText: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.accent },
+  // ── ItemSheet previews (P3 theme · P4 shell before/after · glyph fallback) ──
+  previewCol: { alignItems: 'center', gap: t.space.md, alignSelf: 'stretch' },
+  previewLine: {
+    fontFamily: t.font.screenSemi,
+    fontSize: t.type.micro,
+    color: t.scr.dim,
+    letterSpacing: 0.5,
+    textAlign: 'center',
+  },
+  beforeAfter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: t.space.xl },
+  baCol: { alignItems: 'center', gap: t.space.sm },
+  baLbl: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
+  baLblNew: { color: t.brand.gold },
+  baArrow: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.accent },
+  glyphPreview: {
+    width: 84,
+    height: 108,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: t.scr.panel,
+    borderWidth: 1,
+    borderColor: t.scr.hairline,
+  },
+  glyphPreviewText: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.accent },
 }));

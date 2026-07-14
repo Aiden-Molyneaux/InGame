@@ -18,8 +18,11 @@ export function LedgerRow({ entry, last = false }: { entry: LedgerEntry; last?: 
         <Text style={[styles.sigText, toneStyle]}>{ledgerSign(entry)}</Text>
       </View>
       <View style={styles.mid}>
+        {/* F-4 ledger honesty — the server-enriched `detail` (the board's "ADOPTED '«name»' BY «designer»"
+            / "EMBERS · EFFECT" / "PIXEL PACK · 30" phrase) is the specific what-line when present; else
+            the reason's generic label stands. One line, F-06 body (the board's `.lwhat` grammar). */}
         <Text style={[styles.what, tone === 'reversal' && styles.rev]} numberOfLines={1}>
-          {ledgerLabel(entry)}
+          {entry.detail ?? ledgerLabel(entry)}
         </Text>
         <Text style={styles.when}>{ledgerWhen(entry.createdAt)}</Text>
       </View>

@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { getDb, type Executor } from '../db/client';
 import { asActor, ownedBy } from '../db/scoped';
 import { iapReceipts, type IapReceiptRow } from '../db/schema';
@@ -46,6 +46,30 @@ export async function hasOwnReceiptForProduct(
     .where(ownedBy(actor, iapReceipts.userId, eq(iapReceipts.productId, productId)))
     .limit(1);
   return rows.length > 0;
+}
+
+/**
+ * F-4 ledger honesty — the caller's own `{ productId, pixels }` for a batch of receiptIds (a
+ * `pack_purchase`/`refund_reversal` ledger row keys off `refId = receiptId`). Actor-scoped (SYS-01):
+ * only the caller's own receipts resolve; an id with no owned row simply drops out (the ledger detail
+ * degrades to the generic label — never a leak, never a 500). One batched read, no N+1.
+ */
+export async function receiptsByReceiptIds(
+  actorId: string,
+  receiptIds: string[],
+  exec: Executor = getDb(),
+): Promise<Map<string, { productId: string; pixels: number }>> {
+  if (receiptIds.length === 0) return new Map();
+  const actor = asActor(actorId);
+  const rows = await exec
+    .select({
+      receiptId: iapReceipts.receiptId,
+      productId: iapReceipts.productId,
+      pixelsGranted: iapReceipts.pixelsGranted,
+    })
+    .from(iapReceipts)
+    .where(ownedBy(actor, iapReceipts.userId, inArray(iapReceipts.receiptId, receiptIds)));
+  return new Map(rows.map((r) => [r.receiptId, { productId: r.productId, pixels: r.pixelsGranted }]));
 }
 
 /** The set of productIds the caller owns a receipt for — the GET /store `purchased` flags. */

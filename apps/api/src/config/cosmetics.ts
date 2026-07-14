@@ -188,6 +188,32 @@ export function listCatalog(type?: CosmeticType): CosmeticCatalogEntry[] {
   return type ? COSMETIC_CATALOG.filter((e) => e.type === type) : COSMETIC_CATALOG;
 }
 
+/** COSM-01 type → the human display noun for a ledger `detail` (e.g. `device_shell` → "DEVICE SHELL"). */
+export const COSMETIC_TYPE_LABELS: Record<CosmeticType, string> = {
+  frame: 'FRAME',
+  effect: 'EFFECT',
+  finish: 'FINISH',
+  nameplate: 'NAMEPLATE',
+  font: 'FONT',
+  device_shell: 'DEVICE SHELL',
+  screen_theme: 'SCREEN THEME',
+  shell_sticker_pack: 'STICKER PACK',
+};
+
+// The premium-id → catalog-entry index (F-4 ledger honesty). An `acquire` ledger row keys off the bare
+// cosmetic id (`refType='cosmetic'`); only PREMIUM items are ever charged/acquired, and premium ids are
+// unique across the catalog (REAL_ROSTER), so a bare id resolves to exactly one entry here. Free ids
+// (never acquired) are intentionally absent — a lookup miss degrades to the generic label.
+const PREMIUM_BY_ID = new Map<string, CosmeticCatalogEntry>(
+  COSMETIC_CATALOG.filter((e) => e.tier !== null).map((e) => [e.id, e]),
+);
+
+/** The display `{ name, type }` for an acquired (premium) cosmetic id, or `undefined` if unknown. */
+export function lookupCosmeticDisplay(cosmeticId: string): { name: string; type: string } | undefined {
+  const entry = PREMIUM_BY_ID.get(cosmeticId);
+  return entry ? { name: entry.name, type: COSMETIC_TYPE_LABELS[entry.type] } : undefined;
+}
+
 // ── CARD-06 derivation support (M5 P7 — the CLOSED-ATTRIBUTE extension) ──────────────────────────────
 // A composition's CLOSED attributes are `kind`/`shape`-keyed (render/composition.ts). For EFFECT,
 // FINISH and NAMEPLATE the kind/shape string IS the roster id one-for-one (`'frost'`, `'linen'`,

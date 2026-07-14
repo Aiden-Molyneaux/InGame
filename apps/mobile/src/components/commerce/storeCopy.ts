@@ -1,4 +1,17 @@
-import type { LedgerEntry } from '@ingame/shared';
+import type { CosmeticType, LedgerEntry } from '@ingame/shared';
+
+// COSM-01 type → the human display noun for the Store aisle sheets (mirrors the server's
+// COSMETIC_TYPE_LABELS in config/cosmetics.ts — the wire vocabulary is shared, the copy is the client's).
+export const COSMETIC_TYPE_LABEL: Record<CosmeticType, string> = {
+  frame: 'FRAME',
+  effect: 'EFFECT',
+  finish: 'FINISH',
+  nameplate: 'NAMEPLATE',
+  font: 'FONT',
+  device_shell: 'DEVICE SHELL',
+  screen_theme: 'SCREEN THEME',
+  shell_sticker_pack: 'STICKER PACK',
+};
 
 // Copy helpers for the Store/Wallet surface (OQ-110 — no spec-ID strings in rendered copy). The ledger
 // `type` is the pinned `currency_ledger.reason` enum (decision 0073); we render a plain human label per
