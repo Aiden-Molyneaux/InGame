@@ -258,6 +258,7 @@ export default function GamePage() {
                 <DualFaceHero
                   title={entry.title}
                   composition={equippedComposition}
+                  imageUrl={entry.card.imageUrl}
                   hours={entry.hours}
                   percent={entry.percentComplete}
                   status={entry.status}

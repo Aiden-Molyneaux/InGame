@@ -59,10 +59,13 @@ type LandedState = { granted: number; from: number; to: number };
 
 export default function Store() {
   const styles = useStyles();
-  // F-1 fix 7 — the header PX counter on Collection/Profile doors straight into the Wallet view
-  // (`/store?view=wallet`); any other entry lands on Browse.
-  const { view: viewParam } = useLocalSearchParams<{ view?: string }>();
-  const [view, setView] = useState<StoreView>(viewParam === 'wallet' ? 'wallet' : 'browse');
+  // F-1 fix 7 — the header PX counter doors straight into the Wallet view (`/store?view=wallet`); the
+  // Canvas/Styler can't-afford short-path doors into TOP UP (`/store?view=topup`, M5 D3); any other
+  // entry lands on Browse. `k` is the Misc-1 nav-reset bump (see the effect below).
+  const { view: viewParam, k } = useLocalSearchParams<{ view?: string; k?: string }>();
+  const [view, setView] = useState<StoreView>(
+    viewParam === 'wallet' ? 'wallet' : viewParam === 'topup' ? 'topup' : 'browse',
+  );
   const [aisle, setAisle] = useState<{ key: string; label: string } | null>(null);
   const [tick, setTick] = useState<number | null>(null);
   const [landed, setLanded] = useState<LandedState | null>(null);
@@ -88,6 +91,22 @@ export default function Store() {
   useEffect(() => () => {
     if (tickTimer.current) clearTimeout(tickTimer.current);
   }, []);
+
+  // Misc-1 — the STORE nav keycap ALWAYS returns to the storefront. ShellNav bumps a fresh `k` on every
+  // store-key press; when it changes, snap any in-screen sub-view (wallet / top-up / aisle) back to
+  // browse. The header PX counter's ?view= deep links carry NO `k`, so those are untouched (the guard
+  // skips the absent + the mount value — a first press that mounts the screen is already on browse).
+  const firstK = useRef(true);
+  useEffect(() => {
+    if (k === undefined) return;
+    if (firstK.current) {
+      firstK.current = false;
+      return;
+    }
+    setView('browse');
+    setAisle(null);
+    setLanded(null);
+  }, [k]);
 
   // A transient (network) failure = the app's one offline signal (no client NetInfo yet — the
   // device-editor precedent; ASSUMPTION recorded in the manifest). A 4xx is a real refusal, not offline.
@@ -719,7 +738,12 @@ function AisleRow({ item, onPress }: { item: CosmeticListItem; onPress: () => vo
           {COSMETIC_TYPE_LABEL[item.type]}
         </Text>
       </View>
-      {item.owned ? <OwnedTag /> : <PriceChip pixels={item.price} />}
+      {/* F-8 (E3-D1): the price/owned chip must stay READABLE — never painted behind the swatch. It's
+          `flexShrink:0` so a narrow phone can't squeeze it under the thumb, and `zIndex:1` so it
+          always composites in front of the swatch SVG regardless of any overflow. */}
+      <View style={styles.rowState}>
+        {item.owned ? <OwnedTag /> : <PriceChip pixels={item.price} />}
+      </View>
     </Pressable>
   );
 }
@@ -859,8 +883,12 @@ const useStyles = themedStyles((t) => ({
     borderWidth: 1,
     borderColor: t.scr.hairline,
   },
-  rowThumb: { width: 46, alignItems: 'center', justifyContent: 'center' },
-  rowMeta: { flex: 1, gap: 3 },
+  // `overflow:'hidden'` clips the swatch SVG to its 46px slot so it can never bleed over the row's
+  // meta or its trailing chip (F-8 E3-D1).
+  rowThumb: { width: 46, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  rowMeta: { flex: 1, gap: 3, minWidth: 0 },
+  // the trailing price/owned chip — never shrinks, always in front (E3-D1).
+  rowState: { flexShrink: 0, zIndex: 1 },
   rowName: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 1 },
   rowType: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
   // NEW THIS WEEK featured grid (board `.rack3`) — a 3-up dense grid of ItemTiles.

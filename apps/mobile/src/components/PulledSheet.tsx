@@ -105,7 +105,17 @@ export function PulledSheet({
         >
           <View style={styles.handle} />
           {title ? <Text style={styles.title}>{title.toUpperCase()}</Text> : null}
-          <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" scrollEnabled={scrollEnabled}>
+          {/* `flexShrink:1` (F-8 E3, the Inspect-drawer overspill) — without it the ScrollView keeps
+              its FULL content height inside the maxHeight-capped sheet, so tall content (a big card +
+              readout + actions, or the new PreviewStage floor) overflowed BELOW the sheet's cap and the
+              bottom rows rendered off screen. Shrinking the scroll view to the space the cap leaves
+              makes overflow SCROLL within the sheet instead of spilling past it. */}
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.body}
+            keyboardShouldPersistTaps="handled"
+            scrollEnabled={scrollEnabled}
+          >
             <ScrollLockContext.Provider value={scrollLockApi}>{children}</ScrollLockContext.Provider>
           </ScrollView>
         </Animated.View>
@@ -143,5 +153,6 @@ const useStyles = themedStyles((t) => ({
     paddingHorizontal: t.space.xl,
     paddingTop: t.space.md,
   },
+  scroll: { flexShrink: 1 }, // scroll within the sheet's height cap, never overflow past it (F-8 E3)
   body: { padding: t.space.xl, gap: t.space.xl },
 }));

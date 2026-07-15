@@ -169,7 +169,7 @@ export const FlipCard = memo(function FlipCard({
         renderToHardwareTextureAndroid={!settled}
         style={[styles.face, frontStyle]}
       >
-        <CardFace title={item.title} composition={composition} size="grid" nowPlaying={item.nowPlaying} style={styles.fill} />
+        <CardFace title={item.title} composition={composition} imageUrl={item.card.imageUrl} size="grid" nowPlaying={item.nowPlaying} style={styles.fill} />
       </Animated.View>
 
       {/* BACK — the CARD-01 stats back + the visible VIEW GAME keycap. `box-none` once SETTLED so a tap on

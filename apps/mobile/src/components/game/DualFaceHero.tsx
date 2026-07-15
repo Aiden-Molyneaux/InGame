@@ -13,6 +13,7 @@ import type { CardComposition } from '../../render/composition';
 export function DualFaceHero({
   title,
   composition = null,
+  imageUrl,
   hours,
   percent,
   status,
@@ -24,6 +25,8 @@ export function DualFaceHero({
   title: string;
   /** The equipped design's composition (owner-side live render, 0066) — null → the default face. */
   composition?: CardComposition | null;
+  /** Flattened image for an equipped ADOPTED card (no composition; F-8 E3-1a) — CardFace renders it. */
+  imageUrl?: string | null;
   hours: number;
   percent: number | null;
   status: string;
@@ -43,7 +46,7 @@ export function DualFaceHero({
       >
         {/* /grid (161×225) — one size up from /pick per the owner's gate-5 B.5. `animate`: the
             game-page hero is the shelf's showpiece — animated cosmetics run here (0068 opt-in). */}
-        <CardFace title={title} composition={composition} size="grid" animate />
+        <CardFace title={title} composition={composition} imageUrl={imageUrl} size="grid" animate />
         <Text style={styles.label}>THE FACE</Text>
       </Pressable>
       <View style={styles.face}>

@@ -36,6 +36,19 @@ const CORNERS: Corner[] = [
   { ox: 0, oy: -40, shade: 0, size: 5, rot: 6 },
 ];
 
+// D8b — the share affordance's icon as a HOUSE inline SVG glyph (the PixelsMark/StateMark approach),
+// not a Unicode arrow that renders as an emoji on some platforms. An export/share mark: an up-arrow
+// lifting out of an open tray. Stroke-drawn so it inherits the row's ink via `color`.
+function ShareGlyph({ size = 11, color }: { size?: number; color: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M5 12 V20 H19 V12" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M12 3.5 V14" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M8 7 L12 3.5 L16 7" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
 export function PrintRitual({
   title,
   composition,
@@ -271,11 +284,15 @@ export function PrintRitual({
         ) : null}
 
         {onShare ? (
-          <Pressable accessibilityRole="button" accessibilityLabel="Share this card" onPress={onShare} hitSlop={6}>
-            <Text style={styles.shareDoorLive}>↗ SHARE THIS CARD</Text>
+          <Pressable accessibilityRole="button" accessibilityLabel="Share this card" onPress={onShare} hitSlop={6} style={styles.shareRow}>
+            <ShareGlyph size={11} color={t.scr.accent} />
+            <Text style={styles.shareDoorLive}>SHARE THIS CARD</Text>
           </Pressable>
         ) : (
-          <Text pointerEvents="none" style={styles.shareDoor}>↗ SHARE — arrives with card sharing</Text>
+          <View pointerEvents="none" style={styles.shareRow}>
+            <ShareGlyph size={11} color={t.scr.faint} />
+            <Text style={styles.shareDoor}>SHARE — arrives with card sharing</Text>
+          </View>
         )}
         <ScreenButton label="Done — back to the game" onPress={onDone} block />
       </Animated.View>
@@ -316,6 +333,7 @@ const useStyles = themedStyles((t) => ({
   okSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
   settleBlock: { alignItems: 'center', gap: t.space.lg, alignSelf: 'stretch' },
   clout: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
+  shareRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.sm },
   shareDoor: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5 },
   shareDoorLive: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 0.5 },
 }));

@@ -32,6 +32,11 @@ const communityApi = api
       // grant (0072). Success drops the card into the adopter's switcher (COL-06) and may debit PX, so it
       // invalidates the wallet/ledger/entitlements AND the switcher feed (Cards/Collection); the gallery
       // re-reads because adoptionCount + everyone's priceForYou moved.
+      // F-8 (E3-1b): adopt GRANTS the card's premium components as entitlements (same as a Store buy —
+      // card-service acquireComponents), so it MUST invalidate the OWNED-flag reads the editors bind to
+      // — `Cosmetics` (the /cosmetics `owned` flags the Styler rails / Device rows read) and `Store`
+      // (the featured tiles' caller-scoped `owned`). Without these the just-adopted components read as
+      // UNOWNED in the editors until an app restart (owner device-walk 🚩). Mirrors `acquireCosmetic`.
       adoptCard: build.mutation<AdoptResponse, string>({
         query: (cardId) => ({ url: `/cards/${cardId}/adopt`, method: 'POST', body: {} }),
         transformResponse: (raw): AdoptResponse => adoptResponseSchema.parse(raw),
@@ -39,6 +44,8 @@ const communityApi = api
           'Wallet',
           'Ledger',
           'Entitlements',
+          'Cosmetics',
+          'Store',
           'Collection',
           'Cards',
           'CommunityCards',

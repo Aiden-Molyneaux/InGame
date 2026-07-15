@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { Animated, Text, View } from 'react-native';
 import { PulledSheet } from '../PulledSheet';
+import { InlineBanner } from '../InlineBanner';
 import { SaveOption } from '../styler/SaveOption';
 import { PixelsMark } from '../commerce/PixelsMark';
 import { themedStyles } from '../../theme';
@@ -35,6 +36,7 @@ export function PressSheet({
   checklist,
   onPublish,
   publishBusy,
+  publishError,
 }: {
   visible: boolean;
   onClose: () => void;
@@ -44,6 +46,10 @@ export function PressSheet({
   checklist: PublishChecklist;
   onPublish: () => void;
   publishBusy: boolean;
+  /** M5 D6 — a publish-path refusal re-homed INTO the sheet (RATE_LIMITED · COMPOSITION_CHANGED ·
+   *  MIN_COMPLEXITY · network · generic), rendered as a calm in-flow InlineBanner. DUPLICATE flips the
+   *  UNIQUE checklist row instead; PREMIUM_UNRECONCILED routes to the ReconcileSheet. null = clear. */
+  publishError?: string | null;
 }) {
   const styles = useStyles();
   const beat = useRef(new Animated.Value(1)).current;
@@ -64,7 +70,7 @@ export function PressSheet({
 
   const complexityFails = checklist.complexity === 'fail';
   const publishSub = complexityFails
-    ? 'Add a little more first — 3 elements or 2 kinds.'
+    ? 'Add a little more first — at least 3 elements, or 2 different kinds.'
     : checklist.premium === 'debt'
       ? `Adoptable by everyone — acquires ${checklist.premiumCost} PX of premium first.`
       : 'Adoptable by everyone — it joins the community gallery.';
@@ -78,12 +84,15 @@ export function PressSheet({
         disabled={busy || publishBusy || complexityFails}
         onPress={onPublish}
       />
+      {/* M5 D6 — a publish refusal lands HERE, in the sheet's own grammar (calm, in-flow, no toast, no
+          layout jump) rather than jarring the screen behind it. DUPLICATE flips the UNIQUE row below. */}
+      {publishError ? <InlineBanner title="Couldn't publish"><Text style={styles.errText}>{publishError}</Text></InlineBanner> : null}
       {/* the CARD-19 checklist — what publishing requires (board P7) */}
       <View style={styles.checklist}>
         <CheckRow
           state={checklist.complexity === 'ok' ? 'ok' : 'fail'}
           okText="Enough to stand on its own"
-          failText="Needs 3 elements or 2 kinds"
+          failText="A published card needs a little more going on — at least 3 elements, or 2 different kinds."
         />
         <CheckRow
           state={checklist.unique === 'fail' ? 'fail' : 'pending'}
@@ -96,7 +105,7 @@ export function PressSheet({
             <Text style={styles.checkPending}>◇</Text>
             <Text style={styles.premText}>Premium components — </Text>
             <Text style={styles.premCost}>{checklist.premiumCost}</Text>
-            <PixelsMark size={9} />
+            <PixelsMark size={11} />
             <Text style={styles.premTail}> to reconcile</Text>
           </View>
         ) : (
@@ -163,15 +172,20 @@ const useStyles = themedStyles((t) => ({
     marginLeft: t.space.sm,
     marginBottom: t.space.sm,
   },
+  // D4b (M5 type audit) — the checklist rows are the load-bearing copy of this sheet (they say WHY a
+  // card can/can't publish). They sat at the F-06 micro floor (9); raised to body (11), the next scale
+  // step, so the refusal reads clearly. The SaveOption consequence sub-lines stay at 9 (app convention).
   checkRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.sm },
   checkGlyph: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.faint, width: 14 },
   checkOk: { color: t.brand.gold },
   checkFail: { color: t.brand.alert },
-  checkText: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5, flexShrink: 1 },
+  checkText: { fontFamily: t.font.screenSemi, fontSize: t.type.body, color: t.scr.dim, letterSpacing: 0.5, flexShrink: 1 },
   checkFailText: { color: t.scr.ink },
   checkPending: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.brand.gold, width: 14 },
-  premRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  premText: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
-  premCost: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.brand.gold, marginLeft: 2 },
-  premTail: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5 },
+  premRow: { flexDirection: 'row', alignItems: 'center', gap: 2, flexWrap: 'wrap' },
+  premText: { fontFamily: t.font.screenSemi, fontSize: t.type.body, color: t.scr.dim, letterSpacing: 0.5 },
+  premCost: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.brand.gold, marginLeft: 2 },
+  premTail: { fontFamily: t.font.screenSemi, fontSize: t.type.body, color: t.scr.faint, letterSpacing: 0.5 },
+  // D6 — the in-sheet publish-error body (inside the accent InlineBanner). Body scale, calm dim ink.
+  errText: { fontFamily: t.font.screenSemi, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 0.3, lineHeight: 15 },
 }));

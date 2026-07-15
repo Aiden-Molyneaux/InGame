@@ -11,7 +11,7 @@ const wrap = (ui: React.ReactElement) => <Provider store={store}>{ui}</Provider>
 
 const CHECK_OK: PublishChecklist = { complexity: 'ok', unique: 'unknown', premium: 'ok', premiumCost: 0 };
 
-function sheet(checklist: PublishChecklist, onPublish = jest.fn(), publishBusy = false) {
+function sheet(checklist: PublishChecklist, onPublish = jest.fn(), publishBusy = false, publishError: string | null = null) {
   return wrap(
     <PressSheet
       visible
@@ -22,6 +22,7 @@ function sheet(checklist: PublishChecklist, onPublish = jest.fn(), publishBusy =
       checklist={checklist}
       onPublish={onPublish}
       publishBusy={publishBusy}
+      publishError={publishError}
     />,
   );
 }
@@ -38,12 +39,20 @@ describe('PressSheet — the CARD-19 checklist drives ◆ PUBLISH', () => {
     expect(onPublish).toHaveBeenCalledTimes(1);
   });
 
-  it('complexity fail: PUBLISH disables and the row names the floor', () => {
+  it('complexity fail: PUBLISH disables and the row names the floor (D4a — warm voice)', () => {
     const onPublish = jest.fn();
     render(sheet({ ...CHECK_OK, complexity: 'fail' }, onPublish));
-    expect(screen.getByText('Needs 3 elements or 2 kinds')).toBeTruthy();
+    expect(
+      screen.getByText('A published card needs a little more going on — at least 3 elements, or 2 different kinds.'),
+    ).toBeTruthy();
     fireEvent.press(screen.getByLabelText('◆ Publish'));
     expect(onPublish).not.toHaveBeenCalled();
+  });
+
+  it('D6 — a publish refusal renders as a calm in-sheet banner (not a screen toast)', () => {
+    render(sheet(CHECK_OK, jest.fn(), false, "You're publishing quickly — give it a moment, then try the press again."));
+    expect(screen.getByText("COULDN'T PUBLISH")).toBeTruthy();
+    expect(screen.getByText("You're publishing quickly — give it a moment, then try the press again.")).toBeTruthy();
   });
 
   it('dedup fail (a DUPLICATE_COMPOSITION 409 surfaced): the UNIQUE row flips to its fail copy', () => {

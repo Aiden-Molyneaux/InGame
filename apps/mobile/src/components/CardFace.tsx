@@ -3,6 +3,7 @@ import { Platform, Text, View, type LayoutChangeEvent, type ViewStyle } from 're
 import { useTheme } from '../theme';
 import { compositionSchema } from '@ingame/shared';
 import { GameCard, type GameCardSize } from './GameCard';
+import { FlatCardImage } from './game/FlatCardImage';
 import { SkiaErrorBoundary } from './SkiaErrorBoundary';
 import type { CardComposition as Comp } from '../render/composition';
 
@@ -79,6 +80,7 @@ export function parseComposition(raw: unknown): Comp | null {
 export function CardFace({
   title,
   composition,
+  imageUrl,
   size = 'grid',
   width,
   height,
@@ -88,6 +90,16 @@ export function CardFace({
 }: {
   title: string;
   composition?: Comp | null;
+  /**
+   * The FLATTENED published render (relative `/media/…` or absolute) for a card whose composition is
+   * NOT available to this viewer — an ADOPTED cross-user card (COL-06/CARD-15/OQ-122): the owner-side
+   * surfaces (collection · Game-page hero · CardDetail) render it live from `composition`, but a
+   * foreign adopted card carries no composition, only the flattened image. When `composition` is null
+   * and `imageUrl` is set, this draws the image via `FlatCardImage` (which routes through
+   * `resolveMediaUrl`, so a native `<Image>` gets an ABSOLUTE uri — F-8 E3-1a). Ignored whenever a
+   * composition is present (the owner always renders live).
+   */
+  imageUrl?: string | null;
   size?: GameCardSize;
   /** Explicit pixel size (overrides `size` dims — the Styler hero). */
   width?: number;
@@ -114,6 +126,17 @@ export function CardFace({
     }
   };
   if (!composition) {
+    // Adopted cross-user card (no composition, only the flattened image) — draw the image through
+    // FlatCardImage so the relative `/media/…` url is resolved to an absolute one for native <Image>
+    // (F-8 E3-1a). The nowPlaying marker rides as an overlay to match the composition/default branches.
+    if (imageUrl) {
+      return (
+        <View style={[{ width: w, height: h }, style]} pointerEvents="none">
+          <FlatCardImage title={title} imageUrl={imageUrl} size={size} width={w} height={h} />
+          {nowPlaying ? <NowTag /> : null}
+        </View>
+      );
+    }
     return <GameCard title={title} size={size} nowPlaying={nowPlaying} style={{ width: w, height: h, ...style }} />;
   }
   return (

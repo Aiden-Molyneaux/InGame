@@ -35,7 +35,9 @@ describe('KeepBar — the Device premium cart', () => {
     );
     expect(screen.getByText('PREVIEWING PREMIUM')).toBeTruthy();
     expect(screen.getByText('14')).toBeTruthy();
-    expect(screen.getByText(/CARBON 8 PX · DEEP SEA 6 PX/)).toBeTruthy();
+    // D7 — each per-item PX price renders as its own (gold) span.
+    expect(screen.getByText('8 PX')).toBeTruthy();
+    expect(screen.getByText('6 PX')).toBeTruthy();
     fireEvent.press(screen.getByLabelText('Buy for 14 PX'));
     fireEvent.press(screen.getByText('CONFIRM · 14 PX'));
     expect(onKeep).toHaveBeenCalledTimes(1);

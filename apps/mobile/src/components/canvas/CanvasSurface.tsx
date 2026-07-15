@@ -42,6 +42,10 @@ export interface CanvasPublish {
   checklist: PublishChecklist;
   onPublish: () => void;
   busy: boolean;
+  /** M5 D6 — a publish refusal shown INSIDE the PressSheet (not as a screen-jarring banner). */
+  error: string | null;
+  /** clear that in-sheet error (on sheet dismiss). */
+  onClearError: () => void;
   reconcile: {
     open: boolean;
     items: ReconcileItem[];
@@ -656,7 +660,10 @@ export function CanvasSurface({
 
       <PressSheet
         visible={pressOpen}
-        onClose={() => setPressOpen(false)}
+        onClose={() => {
+          setPressOpen(false);
+          publish.onClearError(); // D6 — a dismissed sheet drops any stale publish error
+        }}
         busy={busyExit}
         onSavePrivate={() => {
           setPressOpen(false);
@@ -668,10 +675,10 @@ export function CanvasSurface({
         }}
         checklist={publish.checklist}
         publishBusy={publish.busy}
-        onPublish={() => {
-          setPressOpen(false);
-          publish.onPublish();
-        }}
+        publishError={publish.error}
+        // D6 — the sheet STAYS OPEN through publish: success unmounts the surface (→ PrintRitual), a
+        // refusal surfaces in-sheet, and the premium path opens the ReconcileSheet over it. No auto-close.
+        onPublish={() => publish.onPublish()}
       />
       {/* CARD-13 reconcile inside the press — a PUBLISH carrying unowned premium opens ACQUIRE ALL here */}
       <ReconcileSheet

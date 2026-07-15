@@ -70,7 +70,13 @@ export function ShellNav({ bottomInset = 0 }: { bottomInset?: number }) {
       showLabels={SHOW_NAV_LABELS}
       onSelect={(key) => {
         const route = ROUTES[key];
-        if (route) router.navigate(route);
+        if (!route) return;
+        // Misc-1 — the STORE keycap ALWAYS returns to the storefront: bump a fresh `k` so the store route
+        // resets any in-screen sub-view (wallet / top-up / aisle) back to browse (the store reads `k` and
+        // snaps to browse when it changes). The counter's ?view= deep links don't pass through here, so
+        // they keep working. Other tabs navigate plainly.
+        if (key === 'store') router.navigate(`/store?k=${Date.now()}`);
+        else router.navigate(route);
       }}
     />
   );

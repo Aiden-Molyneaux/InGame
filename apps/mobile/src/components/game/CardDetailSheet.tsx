@@ -23,6 +23,7 @@ export function CardDetailSheet({
   visible: boolean;
   entry: CollectionItem;
   composition: CardComposition | null;
+  /** (imageUrl for an equipped ADOPTED card rides on `entry.card` — see the CardFace call below.) */
   onClose: () => void;
   /** Resume the equipped design in the Styler — undefined (the default face) disables EDIT. */
   onEdit?: () => void;
@@ -44,7 +45,7 @@ export function CardDetailSheet({
       <View style={styles.cardWrap}>
         {/* larger than the hero it enlarges FROM (C.14) — /grid is 161, this inspects at 189×264.
             `animate`: the INSPECT view is exactly where a card shows off (0068 opt-in). */}
-        <CardFace title={entry.title} composition={composition} size="pick" width={189} height={264} animate />
+        <CardFace title={entry.title} composition={composition} imageUrl={entry.card.imageUrl} size="pick" width={189} height={264} animate />
       </View>
       <Text style={styles.credit}>{custom ? 'YOUR DESIGN' : 'THE STANDARD FACE'}</Text>
       <EquipReadout card={entry.card} composition={composition} />

@@ -41,7 +41,11 @@ const useStyles = themedStyles((t) => ({
     gap: t.space.md,
   },
   // the header-right cluster: the gold count chip + any trailing control (the CurrencyCounter).
-  right: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
+  // F-1 (M5) — `stretch` makes the count chip and the CurrencyCounter EXACTLY the same height: the
+  // counter is the taller sibling (its PixelsMark glyph + 11px value set a taller intrinsic box than
+  // the 9px count text), so the flat count chip was ~2px short. Stretching both to the row's cross-size
+  // equalizes them without a magic number; the count chip centres its own text (below).
+  right: { flexDirection: 'row', alignItems: 'stretch', gap: t.space.md },
   title: {
     fontFamily: t.font.screenBold,
     fontSize: t.type.display, // 21 (F-06)
@@ -51,9 +55,11 @@ const useStyles = themedStyles((t) => ({
   count: {
     backgroundColor: t.brand.gold,
     borderRadius: t.corner.screen, // F-07 square
-    // F-1 fix 7b — match the CurrencyCounter keycap padding (8×5) so the sibling chips read the same height.
+    // F-1 fix 7b — match the CurrencyCounter keycap padding (8×5); F-1 (M5) — `justifyContent: center`
+    // keeps the label vertically centred once the chip is stretched to the counter's height (see `right`).
     paddingHorizontal: 8,
     paddingVertical: 5,
+    justifyContent: 'center',
   },
   countText: {
     fontFamily: t.font.screenBold,

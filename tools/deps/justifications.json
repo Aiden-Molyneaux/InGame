@@ -31,6 +31,8 @@
   "expo-constants": "App/runtime constants required by expo-router + the Expo runtime (SDK 54 peer). Provenance: Expo.",
   "@expo/metro-runtime": "Expo's Metro runtime shim required by expo-router for Fast Refresh + web/runtime bootstrap (SDK 54 peer). Provenance: Expo.",
   "expo-status-bar": "Status-bar component pulled in by the Expo app template. Provenance: Expo.",
+  "expo-sharing": "Native OS share sheet for the CARD-21 branded share-image (F-8 E7b) — hands a local file URI to the platform share so the IMAGE travels, not a text line. RN-core Share.share carries only a message string (no image attach), so no stdlib/existing path. Bundled in Expo Go SDK 54 (no dev-client rebuild). Provenance: Expo.",
+  "expo-file-system": "Writes the already-fetched branded share-image blob to the app cache so expo-sharing can hand its file URI to the OS share sheet (F-8 E7b, CARD-21). RN has no filesystem primitive; the legacy API (writeAsStringAsync + cacheDirectory) is the minimal path and avoids a re-download (the auth'd blob is reused). Bundled in Expo Go SDK 54. Provenance: Expo.",
   "react": "The UI runtime underpinning React Native. Provenance: Meta.",
   "react-dom": "React web renderer — required for the Expo web (Chrome) dev/test loop. Provenance: Meta.",
   "react-native": "The native client runtime (iOS/Android) (decision 0046 #2). Provenance: Meta.",

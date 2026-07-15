@@ -12,6 +12,7 @@ import { AttributeSection, type AttributeOption } from '../../src/components/sty
 import { IntensitySlider } from '../../src/components/styler/IntensitySlider';
 import { ScrollLockContext, useScrollLockHost } from '../../src/components/ScrollLock';
 import { KeepBeat } from '../../src/components/styler/KeepBeat';
+import { SaveAsNewBeat } from '../../src/components/styler/SaveAsNewBeat';
 import { ScreenButton } from '../../src/components/ScreenButton';
 import { PulledSheet } from '../../src/components/PulledSheet';
 import { ConfirmSheet } from '../../src/components/ConfirmSheet';
@@ -176,6 +177,7 @@ export default function Styler() {
   // (assertive Text handles TalkBack; this is the VoiceOver + explicit-transition half).
   useAnnounceOnChange(inlineError);
   const [saveOpen, setSaveOpen] = useState(false); // the SAVE ▸ outcome sheet (door 2)
+  const [savedAsNew, setSavedAsNew] = useState(false); // D5 — the in-place SAVE-AS-NEW acknowledgment beat
   const [confirmDiscard, setConfirmDiscard] = useState(false); // the ✕ leave-without-keeping gate (door 1)
   const [busyKeep, setBusyKeep] = useState(false);
   // one in-flight guard across the exit writes — a double-tap on DISCARD/SAVE PRIVATE/KEEP AS
@@ -196,6 +198,11 @@ export default function Styler() {
   // slides this real image up; null (e.g. web dev, flatten still pending) falls back to the live CardFace.
   const [publishedImageUrl, setPublishedImageUrl] = useState<string | null>(null);
   const [dupFailed, setDupFailed] = useState(false); // a DUPLICATE_COMPOSITION 409 flips the checklist
+  // M5 D6 — a publish refusal re-homed INTO the PressSheet (calm, in-flow), instead of the old
+  // screen-jarring inlineError banner. DUPLICATE uses the UNIQUE checklist row (dupFailed); premium
+  // routes to the ReconcileSheet; everything else (RATE_LIMITED · COMPOSITION_CHANGED · MIN_COMPLEXITY ·
+  // network · generic) lands here and renders as the sheet's InlineBanner. Cleared on any edit / retry.
+  const [publishError, setPublishError] = useState<string | null>(null);
   // per-roster-id premium badge lookup (price + owned) — only PREMIUM ids get an entry.
   const badgeFor = useCallback(
     (ids: string[]): Record<string, TileBadge> => {
@@ -658,6 +665,7 @@ export default function Styler() {
   }, [draft]);
   useEffect(() => {
     setDupFailed(false);
+    setPublishError(null); // D6 — any edit clears a stale publish refusal (dedup/rate/changed/etc.)
   }, [userEdits]);
   const publishChecklist: PublishChecklist = {
     complexity: complexityOk ? 'ok' : 'fail',
@@ -680,6 +688,7 @@ export default function Styler() {
     if (!cardRow || busyPublish) return;
     setBusyPublish(true);
     setInlineError(null);
+    setPublishError(null); // D6 — a fresh attempt clears the prior in-sheet refusal
     try {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
@@ -705,17 +714,27 @@ export default function Styler() {
       setPosture('styler'); // leave the workshop; the ritual is a full-screen moment
       setMode('published');
     } catch (e) {
-      const code = (e as { data?: { error?: { code?: string } } })?.data?.error?.code;
+      // D6 — every publish-path refusal is re-homed into the PressSheet's own grammar (no screen jar,
+      // no raw toast). DUPLICATE flips the UNIQUE checklist row; PREMIUM opens the ReconcileSheet;
+      // the rest render as the sheet's calm InlineBanner via `publishError`.
+      const err = e as { status?: unknown; data?: { error?: { code?: string } } };
+      const code = err?.data?.error?.code;
+      const isNetwork = err?.status === 'FETCH_ERROR' || err?.status === 'TIMEOUT_ERROR';
       if (code === 'DUPLICATE_COMPOSITION') {
-        setDupFailed(true);
-        setInlineError('This exact card already exists — tweak it to make it your own before publishing.');
+        setDupFailed(true); // the UNIQUE checklist row carries this one — no banner (avoid double-speak)
       } else if (code === 'PREMIUM_UNRECONCILED') {
         pendingCommitRef.current = 'publish';
         setReconcileOpen(true);
       } else if (code === 'MIN_COMPLEXITY') {
-        setInlineError('Add a little more — 3 elements or 2 kinds — before publishing.');
+        setPublishError('This card needs a little more going on before it can publish — at least 3 elements, or 2 different kinds.');
+      } else if (code === 'RATE_LIMITED') {
+        setPublishError("You're publishing quickly — give it a moment, then try the press again.");
+      } else if (code === 'COMPOSITION_CHANGED') {
+        setPublishError('Your card changed while it was going to press — take another look, then publish again.');
+      } else if (isNetwork) {
+        setPublishError("Couldn't reach the press — your card is safe. Check your connection and try again.");
       } else {
-        setInlineError(errMsg(e, 'Could not publish. Your card is safe — try again.'));
+        setPublishError(errMsg(e, 'Couldn’t publish just now. Your card is safe — try again.'));
       }
     } finally {
       setBusyPublish(false);
@@ -836,6 +855,7 @@ export default function Styler() {
       setUserEdits(0);
       setSaveState('saved');
       setSavedAt(Date.now());
+      setSavedAsNew(true); // D5 — the session continues on the fork; a light in-place beat confirms it landed
     } catch (e) {
       setInlineError(errMsg(e, 'Could not duplicate. Try again.'));
     } finally {
@@ -1175,6 +1195,8 @@ export default function Styler() {
           checklist: publishChecklist,
           onPublish: requestPublish,
           busy: busyPublish,
+          error: publishError, // D6 — refusals show in the PressSheet
+          onClearError: () => setPublishError(null),
           reconcile: {
             open: reconcileOpen,
             items: premium.unowned.map((u) => ({ cosmeticId: u.cosmeticId, name: u.name, price: u.price })),
@@ -1186,7 +1208,9 @@ export default function Styler() {
               setReconcileOpen(false);
               pendingCommitRef.current = null;
             },
-            onTopUp: () => router.push('/store'),
+            // D3 — the can't-afford short-path doors straight to the Store's TOP UP view (draft stays
+            // safe on this card — the session route stays mounted + the last autosave already persisted).
+            onTopUp: () => router.push('/store?view=topup'),
           },
         }}
       />
@@ -1273,6 +1297,10 @@ export default function Styler() {
         </View>
       ) : null}
 
+      {/* D5 — the in-place SAVE-AS-NEW acknowledgment: a light beat beside the work (the session
+          continues on the fork), auto-dismissing. Sits above the tools so the scroll body absorbs it. */}
+      {savedAsNew ? <SaveAsNewBeat title={title} onDone={() => setSavedAsNew(false)} /> : null}
+
       {/* the pinned tools bar (gate-5 D.20/D.23): the Canvas door + the ONE forward door */}
       <View style={styles.tools}>
         <ScreenButton
@@ -1350,7 +1378,7 @@ export default function Styler() {
         busy={reconcileBusy || busyKeep}
         context="keep"
         onAcquireAll={() => void onAcquireAll()}
-        onTopUp={() => router.push('/store')}
+        onTopUp={() => router.push('/store?view=topup')}
       />
 
     </Frame>
