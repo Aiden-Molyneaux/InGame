@@ -317,3 +317,12 @@ statement-scoped predicate/composition detection (`markedStatementOf`), 3 new ru
 exact miss as an on-disk corpus fixture; RED proof = 2 fail-closed violations on the stripped read.
 Rule suite 29/29 · unit 175/175 · real repo lint green. The gate found a real hole — working as
 designed.
+
+---
+
+## Owner device walk — acceptance suite (2026-07-14, live)
+**A1 ✅** (fresh account: 10 PX + DAY 1 ladder). Ride-along 🚩 (pre-existing, NOT M5): **post-logout
+sign-in screen flicker** — landing on sign-in after logout sometimes flickers and is untargetable
+(occasionally one email-field tap works, then flicker starts); Expo Go restart fixes it, sometimes
+crashing the app. Signed M3R surface; beta-critical (every tester's second session). → background
+investigation dispatched (F-7 lane).
