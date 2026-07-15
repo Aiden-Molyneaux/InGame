@@ -326,3 +326,28 @@ sign-in screen flicker** — landing on sign-in after logout sometimes flickers 
 (occasionally one email-field tap works, then flicker starts); Expo Go restart fixes it, sometimes
 crashing the app. Signed M3R surface; beta-critical (every tester's second session). → background
 investigation dispatched (F-7 lane).
+
+---
+
+## Owner device walk — FULL SUITE (2026-07-14) — the E3 cluster + 4 fix waves
+**PASSED:** A1–A6 (generosity: "honestly yes!") · B1/B4/B6 · C5/C6 · E9 · F2/F5 · D8-core.
+**🚩 BLOCKERS (F-8):** E3 — adopt→equip errors on device, collection blank; **adoption-acquired
+cosmetics unusable in new designs despite the ledger debit** (entitlement invalidation/read gap);
+adopted card's equipped cosmetics not displayed; E4–E6 blocked on it · C3 a11y buy = stacked
+half-open drawer · E7b native share sends text not image · F4 disabled-states lazy until first tap
+· B2b BEST-RATE ribbon over the confirm scrim · D1 price chip behind swatch · inspect drawer bottom
+overspill.
+**RULINGS (F-9, the Buy-Experience Unification):** ONE purchase grammar app-wide — gold-when-costs
+· hold-everywhere (incl. mock PAY) · FILLING hold animation · insufficient = no-hold + inline
+"not enough" + pack offer (C4) · swatches in buy lists (D2) · components listed on inspect (E2) ·
+adopt sheet == styler buy sheet (E1) · in-place confirm never toast (E3a) · acquire celebration ·
+coin-drop multi-burst + to-Top-Up option · Keep-menu share affordance (CARD-21) · Restore
+clarifying sub-copy (B5).
+**F-10:** inspect = LIVE full-effect preview (one canvas/sheet within OQ-138 budget) · live
+shell/theme previews · gallery low-res fix (E1e) · F3 light-theme contrast-floor token pass +
+CI contrast test (Fable's proposal, owner judges).
+**F-11 (editor polish):** D3 top-up-direct+draft-safe · D4 copy+font check · D5 save-as-new ack ·
+D6 inline error patterns · D7 gold cart prices/right-align/glyph · D8 glyph · F1 heights · Misc-1
+store-keycap reset.
+**FILED FORWARD:** E8b report affordance → M6-entry (recommended; App Store 1.2) · E8a designer-tap
+→ contributor profile now, full profile M6 · E3c adopted card staying in gallery = valid, stands.
