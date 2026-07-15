@@ -117,6 +117,7 @@ export default function Profile() {
                 <CardFace
                   title={me.favouriteGame.title}
                   composition={parseComposition(me.favouriteGame.card.composition)}
+                  imageUrl={me.favouriteGame.card.imageUrl} // adopted-card parity (round-2 bug 9)
                   size="grid"
                   width={120}
                   height={168}
@@ -144,7 +145,15 @@ export default function Profile() {
                   accessibilityLabel={`Open ${g.title}`}
                   onPress={() => router.push(`/game/${g.gameId}`)}
                 >
-                  <CardFace title={g.title} composition={parseComposition(g.card.composition)} size="cell" />
+                  {/* imageUrl threaded (round-2 bug 9): an equipped ADOPTED card has no composition,
+                      only a flattened image — without imageUrl it fell back to the default placeholder,
+                      so the Top-3 "showed wrong" for adopted cards. */}
+                  <CardFace
+                    title={g.title}
+                    composition={parseComposition(g.card.composition)}
+                    imageUrl={g.card.imageUrl}
+                    size="cell"
+                  />
                   <RankChip rank={i + 1} />
                 </Pressable>
               ))}
@@ -165,6 +174,7 @@ export default function Profile() {
                 <CardFace
                   title={me.nowPlaying.title}
                   composition={parseComposition(me.nowPlaying.card.composition)}
+                  imageUrl={me.nowPlaying.card.imageUrl} // adopted-card parity (round-2 bug 9)
                   size="cell"
                   nowPlaying
                   animate // the one now-playing card (0068 opt-in)

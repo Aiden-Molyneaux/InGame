@@ -69,17 +69,11 @@ const communityApi = api
         invalidatesTags: ['CommunityCards', 'TrendingCards'],
       }),
 
-      // GET /cards/:id/share-image — the branded CARD-21 PNG (raw image bytes, not JSON). Fetched as a
-      // Blob through the base query so the auth token + OQ-123 reauth ride along. Refused while
-      // moderation-hidden / not published (404) → the caller shows a quiet "unavailable".
-      getShareImage: build.query<Blob, string>({
-        query: (cardId) => ({
-          url: `/cards/${cardId}/share-image`,
-          responseHandler: (response) => response.blob(),
-        }),
-        // A binary blob is not cache-worthy across the app — keep it out of the tag graph.
-        keepUnusedDataFor: 0,
-      }),
+      // NOTE: the CARD-21 share-image (GET /cards/:id/share-image) is deliberately NOT an RTK endpoint.
+      // Its raw PNG is a Blob — storing a fulfilled Blob in redux tripped the serializability check
+      // (owner round-2 bug 6). It is fetched off-store by `shareCardImage` (store/shareCard.ts) with a
+      // plain authenticated fetch/download instead — a binary that never needs caching stays out of the
+      // tag graph entirely.
     }),
   });
 
@@ -88,7 +82,6 @@ export const {
   useAdoptCardMutation,
   useGetTrendingCardsQuery,
   useBlockUserMutation,
-  useLazyGetShareImageQuery,
 } = communityApi;
 
 export { communityApi };

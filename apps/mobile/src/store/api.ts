@@ -174,6 +174,10 @@ export const api = createApi({
     'Ledger',
     'Entitlements',
     'Cosmetics',
+    // Declared here (not only via communityApi's enhanceEndpoints) so the base-slice mutations that
+    // MOVE community state — publishCard drops a new card into the gallery — can invalidate it. RTK
+    // dedupes with communityApi's addTagTypes; the getGameGallery provider still lives in communityApi.
+    'CommunityCards',
   ],
   endpoints: (build) => ({
     // ── auth ──────────────────────────────────────────────────────────────────────────────────
@@ -361,9 +365,12 @@ export const api = createApi({
     // POST /cards/:id/publish (CARD-13/15/19/20) — the Canvas ◆ PUBLISH. Gates return 409s the client
     // renders as the CARD-19 checklist / ReconcileSheet: MIN_COMPLEXITY · DUPLICATE_COMPOSITION ·
     // PREMIUM_UNRECONCILED {unowned,total}. Success flattens + sets status=published (immutable after).
+    // Invalidates CommunityCards so the game's gallery re-reads and the just-published card appears
+    // WITHOUT an app restart (owner round-2 bug 3): the general (id-less) tag is a wildcard across every
+    // gameId's gallery entry, the same cross-slice pattern adoptCard uses.
     publishCard: build.mutation<CardDesignView, string>({
       query: (cardId) => ({ url: `/cards/${cardId}/publish`, method: 'POST', body: {} }),
-      invalidatesTags: ['Cards', 'Me', 'Collection'],
+      invalidatesTags: ['Cards', 'Me', 'Collection', 'CommunityCards'],
     }),
 
     // ── catalog (CAT-01..05/09) ───────────────────────────────────────────────────────────────

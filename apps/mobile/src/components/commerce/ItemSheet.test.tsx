@@ -93,6 +93,34 @@ describe('ItemSheet — the P2/P9 state grammar', () => {
     expect(screen.queryByTestId('live-preview')).toBeNull(); // unmounted with the closed sheet
   });
 
+  it('REGRESSION (bug 4 / C1): with the F-10 LIVE preview mounted, the BuyBar + meta still render below it', () => {
+    // The C1 aisle drawer regressed when F-10 swapped the small static swatch for a tall live animated
+    // CardFace preview — the report was "preview renders but the buy button / content below is gone."
+    // This locks the invariant: the preview node AND the price chip AND the meta line AND the hold-to-buy
+    // BuyBar all coexist in the open sheet (the sheet is the SAME CosmeticSheet the aisle rows and the
+    // NEW-THIS-WEEK featured tiles both open — store.tsx CosmeticSheet, one component, both paths).
+    const frame: StoreItem = { id: 'gold', name: 'GOLD', type: 'FRAME · CATALOG', price: 3 };
+    const livePreview = <Text testID="live-card-preview">live card</Text>;
+    render(
+      wrap(
+        <ItemSheet
+          visible
+          item={frame}
+          balance={92}
+          onClose={jest.fn()}
+          onBuy={jest.fn()}
+          preview={livePreview}
+        />,
+      ),
+    );
+    expect(screen.getByTestId('live-card-preview')).toBeTruthy(); // the F-10 live preview
+    expect(screen.getByText('GOLD')).toBeTruthy(); // name meta
+    expect(screen.getByText('FRAME · CATALOG')).toBeTruthy(); // type meta
+    expect(screen.getByLabelText('3 pixels')).toBeTruthy(); // the PriceChip
+    expect(screen.getByText('YOU HAVE 92 PX')).toBeTruthy(); // the balance line
+    expect(screen.getByLabelText('Hold to buy for 3 PX')).toBeTruthy(); // the BuyBar survives the preview
+  });
+
   it('a 409 SHORT state shows the P5 bridge strip + sleeps the BuyBar', () => {
     render(
       wrap(

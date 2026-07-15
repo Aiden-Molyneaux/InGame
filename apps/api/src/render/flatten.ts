@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 import { createElement } from 'react';
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { buildCardElements } from './buildCard';
 import type { CardComposition } from './composition';
 
@@ -28,12 +28,15 @@ const require = createRequire(import.meta.url);
 // across a 96pt cell = a 6× blow-up). Both sizes are raised so each is served at ≥ its consumer's
 // physical pixels:
 //   • thumb → 288×402: the gallery cell is `cell` = 96pt wide (FlatCardImage), ×3 DPR = 288 physical px.
-//   • full  → 448×626 (2×): the inspect/CardDetail large view (up to ~189pt → 567px at 3×) + adopted
-//     `grid` cards (161pt → 483px) + the CARD-21 share composite base all read crisp; downscaled, never
-//     upscaled. The gallery/inspect are still flattened PNGs (never a live canvas — OQ-138); a bigger
-//     PNG on local disk is free (no CDN/egress at M5).
+//   • full  → 672×939 (3×): the inspect/CardDetail large view (189pt → 567px at 3×) + the adopted `grid`
+//     hero/shelf cards (fluid boxes measured by CardFace, ~180pt → 540px at 3×) + the CARD-21 share
+//     composite base all read crisp; DOWN-scaled, never up-scaled. The prior 448px full (a 2× floor)
+//     was UP-scaled ~20-26% on those adopted surfaces → the "crushed/pixelated" adopted hero/shelf the
+//     owner flagged (round-2 bug 2): 448 stretched to 567 physical px is a visible softening. 672 out-
+//     resolves the largest consumer at 3× DPR. Still a flattened PNG (never a live canvas — OQ-138); a
+//     bigger PNG on local disk is free (no CDN/egress at M5).
 export const RENDER_SIZES = {
-  full: { w: 448, h: 626 },
+  full: { w: 672, h: 939 },
   thumb: { w: 288, h: 402 },
 } as const;
 
@@ -72,14 +75,19 @@ async function getSkiaCtx(): Promise<any> {
 
     // Best-effort nameplate/text typeface (the same free font the M4 spike used). Absent → the
     // renderer degrades text/plate gracefully (the F21 posture); it never crashes the flatten.
+    //
+    // The font MUST be resolved through node module resolution — NOT `process.cwd()`. The API's
+    // dev/prod scripts run with cwd = `apps/api` (npm `-w @ingame/api run …` sets the script cwd to
+    // the workspace dir), but `@expo-google-fonts/*` is HOISTED to the repo-root `node_modules`, so a
+    // cwd-relative read hit `apps/api/node_modules/…` → ENOENT → the catch swallowed it → `typeface`
+    // undefined → EVERY server flatten silently dropped ALL text (the nameplate title AND text
+    // elements): the plate band rendered but the card name never did (owner round-2 bug 1). Resolving
+    // the package.json via `require` (the same createRequire the skia libs use) finds the hoisted font
+    // regardless of cwd.
     let typeface: any;
     try {
-      const ttf = readFileSync(
-        join(
-          process.cwd(),
-          'node_modules/@expo-google-fonts/chakra-petch/700Bold/ChakraPetch_700Bold.ttf',
-        ),
-      );
+      const pkgJson = require.resolve('@expo-google-fonts/chakra-petch/package.json');
+      const ttf = readFileSync(join(dirname(pkgJson), '700Bold/ChakraPetch_700Bold.ttf'));
       typeface = Skia.Typeface.MakeFreeTypeFaceFromData(Skia.Data.fromBytes(new Uint8Array(ttf)));
     } catch {
       typeface = undefined;

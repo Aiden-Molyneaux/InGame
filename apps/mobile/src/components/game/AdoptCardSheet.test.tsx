@@ -77,6 +77,36 @@ describe('AdoptCardSheet (P8 · SOC-11 · M5 F-9 E1 — the styler-buy anatomy)'
     expect(screen.queryByLabelText('Adopt for 3 PX')).toBeNull();
   });
 
+  it('REGRESSION (bug 5): the post-adopt DONE button fires onClose (the AcquireBeat no longer traps it)', async () => {
+    // The settle overlay's AcquireBeat was mounted permanently (no onDone) as an absolute-fill sibling
+    // stacked over the Done button, and its internal tap-catcher ate every press → the DONE button was
+    // dead. It now self-dismisses via a `beat` flag, so Done is a live control that closes the sheet.
+    jest.useFakeTimers();
+    try {
+      const onAdopt = jest.fn<Promise<AdoptOutcome>, []>().mockResolvedValue({
+        ok: true,
+        result: { granted: [{ cosmeticId: 'bitter', paid: 3 }], totalPaid: 3, balance: 17 },
+      });
+      const onClose = jest.fn();
+      renderSheet({ onAdopt, onClose, balance: 20 });
+      fireEvent.press(screen.getByLabelText('Adopt for 3 PX'));
+      await act(async () => {
+        fireEvent.press(screen.getByLabelText('Confirm adopt for 3 PX'));
+      });
+      // settled — the Done button is present and live (ScreenButton uppercases the label)
+      const done = screen.getByText('DONE');
+      expect(done).toBeTruthy();
+      // let the AcquireBeat celebration run out (self-dismiss) — no permanent overlay left behind
+      await act(async () => {
+        jest.advanceTimersByTime(700);
+      });
+      fireEvent.press(done);
+      expect(onClose).toHaveBeenCalledTimes(1);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('INSUFFICIENT (pre-emptive, balance < price) NEVER offers the hold — NOT-ENOUGH + Top Up (G3)', () => {
     const onTopUp = jest.fn();
     renderSheet({ balance: 1, onTopUp }); // 1 < 3

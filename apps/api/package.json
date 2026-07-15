@@ -13,7 +13,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:reset": "tsx src/db/reset.ts",
-    "db:seed-dev": "tsx src/dev/seed-dev.ts"
+    "db:seed-dev": "tsx src/dev/seed-dev.ts",
+    "reflatten": "tsx --env-file=.env.dev scripts/reflatten.ts"
   },
   "dependencies": {
     "@ingame/shared": "*",

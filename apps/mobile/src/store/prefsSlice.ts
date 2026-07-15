@@ -59,6 +59,14 @@ const prefsSlice = createSlice({
     setCol12CoachmarkSeen(state, action: PayloadAction<boolean>) {
       state.col12CoachmarkSeen = action.payload;
     },
+    // F20 logout — reset the whole slice to defaults IN MEMORY. `persistor.purge()` only clears the
+    // async STORAGE; without this the live in-memory prefs survived logout, so an ACTIVE device-editor
+    // preview (a premium shell/theme dispatched to `shellId`/`themeId`) bled straight through to the
+    // sign-in screen and the next user's first frames — the leak this slice's header promised never
+    // happens (owner round-2 bug 7: "shell/theme preview + logout"). Dispatched by `logoutTeardown`.
+    resetPrefs() {
+      return initialState;
+    },
   },
 });
 
@@ -68,5 +76,6 @@ export const {
   setThemeId,
   setStickerComposition,
   setCol12CoachmarkSeen,
+  resetPrefs,
 } = prefsSlice.actions;
 export default prefsSlice.reducer;

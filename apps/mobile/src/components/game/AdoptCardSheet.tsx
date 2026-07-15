@@ -63,12 +63,14 @@ export function AdoptCardSheet({
   const [confirming, setConfirming] = useState(false); // the FREE-path confirm gate
   const [outcome, setOutcome] = useState<Exclude<AdoptOutcome, { ok: true }> | null>(null);
   const [adopted, setAdopted] = useState(false); // G5 — the in-place success settle
+  const [beat, setBeat] = useState(false); // G6 — the AcquireBeat celebration (self-dismissing)
 
   // Reset the transient state whenever a new card is inspected (or the sheet closes).
   useEffect(() => {
     setConfirming(false);
     setOutcome(null);
     setAdopted(false);
+    setBeat(false);
   }, [card?.id, visible]);
 
   if (!card) return null;
@@ -82,6 +84,7 @@ export function AdoptCardSheet({
     const r = await onAdopt();
     if (r.ok) {
       setAdopted(true); // G5/G6 — settle in place + celebrate; container invalidates in the background
+      setBeat(true);
       onAdopted(r.result, card);
     } else {
       setOutcome(r);
@@ -140,7 +143,11 @@ export function AdoptCardSheet({
               </View>
             </View>
             <ScreenButton label="Done" variant="primary" onPress={onClose} block />
-            <AcquireBeat />
+            {/* G6 — the acquire celebration. It renders as an absolute-fill overlay with an internal
+                tap-to-skip Pressable, so it MUST self-dismiss: mounted permanently (no onDone) it sat
+                on top of the Done button forever and ate every tap → the DONE button was dead (owner
+                round-2 bug 5). `beat` clears it after ≤600ms (the ItemSheet pattern), freeing Done. */}
+            {beat ? <AcquireBeat onDone={() => setBeat(false)} /> : null}
           </View>
         ) : outcome?.code === 'ALREADY_ADOPTED' ? (
           <View style={styles.ownedBar}>

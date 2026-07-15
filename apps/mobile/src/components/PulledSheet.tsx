@@ -128,6 +128,14 @@ const useStyles = themedStyles((t) => ({
   overlay: {
     ...StyleSheet.absoluteFillObject, // the routed screen area INSIDE the well — not the OS window
     justifyContent: 'flex-end',
+    // The drawer is a MODAL layer — it must stack above ALL page content. On web zIndex handles that;
+    // on Android, sibling content that sets a `zIndex` (the PackTile "BEST RATE" / "FIRST PURCHASE"
+    // corner ribbons carry zIndex:2) is promoted toward elevation and drew THROUGH an un-elevated
+    // overlay — the ribbons floated over the open pack-confirm drawer on device (owner round-2 bug 8;
+    // F-8's zIndex-only fix was web-only, wrong on native). A high overlay elevation dominates any
+    // content elevation so the whole drawer (scrim + sheet) sits on top everywhere.
+    elevation: 24,
+    zIndex: 100,
   },
   scrim: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' },
   scrimClear: { backgroundColor: 'transparent' },

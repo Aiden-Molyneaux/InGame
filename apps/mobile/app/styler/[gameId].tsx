@@ -53,8 +53,8 @@ import {
   useAcquireCosmeticBatchMutation,
   usePublishCardMutation,
 } from '../../src/store/api';
-import { useLazyGetShareImageQuery } from '../../src/store/communityApi';
-import { presentShareImage } from '../../src/store/shareCard';
+import { shareCardImage } from '../../src/store/shareCard';
+import { useAppSelector } from '../../src/store/hooks';
 
 // The Styler (§3.2 · design-spec §2.5 · decision 0014 stage 2) — the in-frame card editor over the
 // CARD-24a draft document (decision 0066): pick a start (BaseRail, CARD-16 never-blank) → the live
@@ -141,7 +141,8 @@ export default function Styler() {
   const [createStylePreset] = useCreateStylePresetMutation();
   const [acquireBatch] = useAcquireCosmeticBatchMutation();
   const [publishCardMut] = usePublishCardMutation();
-  const [fetchShareImage] = useLazyGetShareImageQuery();
+  // Share bytes ride an off-store authenticated fetch (round-2 bug 6) — the token comes from the auth slice.
+  const shareToken = useAppSelector((s) => s.auth.accessToken);
 
   const entry = useMemo(() => shelf?.items.find((i) => i.gameId === gameId), [shelf, gameId]);
   const title = entry?.title ?? 'GAME';
@@ -746,8 +747,7 @@ export default function Styler() {
   // (web opens/saves; native best-effort). Reuses the P8 shareCard util (gallery/game-page share).
   async function sharePublished(shareCardId: string, shareTitle: string): Promise<void> {
     try {
-      const blob = await fetchShareImage(shareCardId).unwrap();
-      await presentShareImage(blob, shareTitle); // best-effort — an 'unavailable' result just no-ops here
+      await shareCardImage(shareCardId, shareTitle, shareToken); // best-effort — 'unavailable' just no-ops here
     } catch {
       // a not-yet-flattened / transient failure stays quiet — the celebration must not error out
     }

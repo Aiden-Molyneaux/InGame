@@ -129,10 +129,17 @@ export function CardFace({
     // Adopted cross-user card (no composition, only the flattened image) — draw the image through
     // FlatCardImage so the relative `/media/…` url is resolved to an absolute one for native <Image>
     // (F-8 E3-1a). The nowPlaying marker rides as an overlay to match the composition/default branches.
+    //
+    // MEASURE the box (round-2 bug 2): callers on FLUID surfaces (the FlipCard shelf, DualFaceHero,
+    // CardDetail) size the face via `style` (width:'100%' / aspectRatio) and the OWNER branch below
+    // fills that measured box. The adopted branch must do the SAME — a hardcoded SIZE_DIMS[size] drew
+    // the flattened image at a fixed intrinsic size inside a larger cell (adopted cards rendered
+    // smaller/softer than their sibling owner cards on the shelf + hero). Fill `box` so an adopted card
+    // occupies the identical footprint; the bumped full render (672px) keeps it crisp at 3× DPR.
     if (imageUrl) {
       return (
-        <View style={[{ width: w, height: h }, style]} pointerEvents="none">
-          <FlatCardImage title={title} imageUrl={imageUrl} size={size} width={w} height={h} />
+        <View style={[{ width: w, height: h }, style]} onLayout={onLayout} pointerEvents="none">
+          <FlatCardImage title={title} imageUrl={imageUrl} size={size} width={box.w} height={box.h} />
           {nowPlaying ? <NowTag /> : null}
         </View>
       );
