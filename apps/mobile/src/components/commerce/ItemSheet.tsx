@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { View, Text } from 'react-native';
 import type { StorePack } from '@ingame/shared';
 import { themedStyles } from '../../theme';
@@ -7,6 +7,7 @@ import { TertiaryLink } from '../TertiaryLink';
 import { PriceChip } from './PriceChip';
 import { OwnedTag } from './Tags';
 import { BuyBar } from './BuyBar';
+import { AcquireBeat } from './AcquireBeat';
 import { PreviewStage } from './PreviewStage';
 import { PackTile } from './PackTile';
 
@@ -42,6 +43,8 @@ export function ItemSheet({
   bridgePacks = [],
   onBuyPack,
   onAllPacks,
+  onTopUp,
+  celebrate = false,
 }: {
   visible: boolean;
   item: StoreItem | null;
@@ -63,8 +66,19 @@ export function ItemSheet({
   bridgePacks?: StorePack[];
   onBuyPack?: (pack: StorePack) => void;
   onAllPacks?: () => void;
+  /** G3 (M5 F-9) — the top-up destination; lets the BuyBar render its pre-emptive NOT-ENOUGH state. */
+  onTopUp?: () => void;
+  /** G6 (M5 F-9) — true right after a fresh buy → the AcquireBeat celebration plays over the owned flip. */
+  celebrate?: boolean;
 }) {
   const styles = useStyles();
+  // G6 — fire the acquire celebration once when `celebrate` rises (the just-bought owned flip).
+  const [beat, setBeat] = useState(false);
+  const wasCelebrating = useRef(false);
+  useEffect(() => {
+    if (celebrate && !wasCelebrating.current) setBeat(true);
+    wasCelebrating.current = celebrate;
+  }, [celebrate]);
   if (!item) return null;
   const short = shortBy != null && shortBy > 0;
   const free = freePack || item.price <= 0;
@@ -116,8 +130,12 @@ export function ItemSheet({
           <Text style={styles.ownedNote}>{ownedNote.toUpperCase()}</Text>
         </View>
       ) : (
-        <BuyBar price={item.price} balance={balance} onBuy={onBuy} disabled={short} note={buyNote} />
+        <BuyBar price={item.price} balance={balance} onBuy={onBuy} onTopUp={onTopUp} disabled={short} note={buyNote} />
       )}
+
+      {/* G6 — the acquire celebration, at the point of purchase (survives the BUY→OWNED flip because it
+          lives at the sheet level, not inside the BuyBar). Tap-through; auto-settles ≤600ms. */}
+      {beat ? <AcquireBeat onDone={() => setBeat(false)} /> : null}
     </PulledSheet>
   );
 }

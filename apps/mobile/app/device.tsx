@@ -573,6 +573,7 @@ export default function DeviceEditor() {
     cartItems.push({
       cosmeticId: pendingPremium.shell,
       name: SHELL_NAMES[pendingPremium.shell],
+      type: 'device_shell',
       price: cosmeticFor(pendingPremium.shell, 'device_shell')?.price ?? 0,
     });
   }
@@ -580,6 +581,7 @@ export default function DeviceEditor() {
     cartItems.push({
       cosmeticId: pendingPremium.theme,
       name: SCREEN_THEME_NAMES[pendingPremium.theme],
+      type: 'screen_theme',
       price: cosmeticFor(pendingPremium.theme, 'screen_theme')?.price ?? 0,
     });
   }

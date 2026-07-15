@@ -1,56 +1,54 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, View, Text } from 'react-native';
 import { themedStyles } from '../../theme';
 import { useReducedMotion } from '../../a11y/useReducedMotion';
+import { HoldFillButton, HOLD_MS } from './HoldFillButton';
+import { ScreenButton } from '../ScreenButton';
 import { PixelsMark } from './PixelsMark';
 
-// BuyBar (component-map §7 · design-spec §2.3 motion.holdToBuy · OQ-046) — the item-sheet spend bar. THE
-// LAUNCH GATE ships BOTH buy paths:
-//   • HOLD-TO-BUY (default) — the gold keycap sits PRESSED (F-03 held = darkened fill, NO motion) for a
-//     ~rated hold; completing the hold spends; releasing early cancels (nothing spent).
-//   • THE NON-HOLD ACCESSIBLE ALT (OQ-046) — under OS reduce-motion a single PRESS flips the keycap to
-//     an INLINE two-step confirm (CANCEL · CONFIRM), so a timed gesture never gates a motor-impaired
-//     user. (ASSUMPTION: reduce-motion is the a11y trigger today; a dedicated "confirm with a tap"
-//     toggle can replace it when Settings lands.)
-//   F-8 (E3-C3): the confirm is INLINE (rendered inside the bar), NOT a nested ConfirmSheet. The BuyBar
-//   lives INSIDE a PulledSheet (ItemSheet/ReconcileSheet/KeepBar), and a PulledSheet is an absolute
-//   overlay that fills its PARENT — so a ConfirmSheet mounted from here filled only the item-sheet body
-//   and rendered half-open, stacked inside it (uninteractable; the launch-gate a11y flow was broken).
-//   An inline confirm needs no second overlay, so it renders fully and works from within the open sheet
-//   (and removes the nested scrim the PackTile BEST-RATE ribbon was escaping — E3-B2b). The house
-//   root-hoist pattern (decision 0040 D.27) still owns confirms that AREN'T born inside another sheet.
-// Both funnel to the same `onBuy`. `disabled` sleeps the key (offline / the P5 bridge short state).
-export const HOLD_MS = 650;
+// BuyBar (component-map §7 · design-spec §2.3 motion.holdToBuy · OQ-046 · M5 F-9 grammar) — the shared
+// PX spend bar every in-context buy (ItemSheet · ReconcileSheet · KeepBar · the adopt sheet) speaks
+// through. It carries the F-9 unification (owner device walk 2026-07-14):
+//   G1 — a PX cost renders the GOLD economy voice (F-02).
+//   G2 — HOLD-to-activate with a FILLING gold sweep while held (the shared HoldFillButton); releasing
+//        early spends nothing. Reduce-motion (OQ-046 / 0044 §104) collapses to an INLINE two-step
+//        confirm (CANCEL · CONFIRM), so a timed gesture never gates a motor-impaired user.
+//   G3 — INSUFFICIENT funds NEVER offer the hold (pre-emptive, uniform, no failed-attempt flow): when
+//        the balance can't cover the price AND a top-up destination exists, the bar renders its
+//        can't-afford state — "NOT ENOUGH ◇ — YOU HAVE N" — with the TOP UP door INLINE beneath. The
+//        server 409 stays the backstop, never the UX.
+//   G6 (the acquire celebration) is SURFACE-owned, not bar-owned — a surface that settles into
+//        owned/kept mounts <AcquireBeat> where the action was (so it survives the bar unmounting on the
+//        owned flip). BuyBar just fires `onBuy`.
+// F-8 (E3-C3): the reduce-motion confirm is INLINE (never a nested ConfirmSheet — a PulledSheet parent
+// would clip it half-open).
+export { HOLD_MS };
 
 export function BuyBar({
   price,
   balance,
   onBuy,
+  onTopUp,
   disabled = false,
   note,
   holdMs = HOLD_MS,
+  verb = 'BUY',
 }: {
   price: number;
   balance: number;
   onBuy: () => void;
+  /** G3 — the top-up destination. Present + can't-afford + not disabled → the pre-emptive NOT-ENOUGH state. */
+  onTopUp?: () => void;
   disabled?: boolean;
   /** the second bb-meta line (e.g. "spends pixels instantly" / the offline reason). */
   note?: string;
   holdMs?: number;
+  /** the action verb — 'BUY' (cosmetics) or 'ADOPT' (a community card); one shared grammar, one knob. */
+  verb?: 'BUY' | 'ADOPT';
 }) {
   const styles = useStyles();
   const reduceMotion = useReducedMotion();
-  const [holding, setHolding] = useState(false);
   const [confirming, setConfirming] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const clear = useCallback(() => {
-    if (timer.current) {
-      clearTimeout(timer.current);
-      timer.current = null;
-    }
-  }, []);
-  useEffect(() => clear, [clear]);
 
   // Drop out of the inline confirm if the item/price changes or the key sleeps (a short bridge opened),
   // so a stale "CONFIRM" can never spend against a changed price or a disabled key.
@@ -58,23 +56,15 @@ export function BuyBar({
     if (disabled) setConfirming(false);
   }, [disabled, price]);
 
-  const startHold = useCallback(() => {
-    if (disabled) return;
-    setHolding(true);
-    clear();
-    timer.current = setTimeout(() => {
-      setHolding(false);
-      timer.current = null;
-      onBuy();
-    }, holdMs);
-  }, [disabled, clear, holdMs, onBuy]);
-
-  const cancelHold = useCallback(() => {
-    clear();
-    setHolding(false);
-  }, [clear]);
-
   const label = `${price} PX`;
+  const verbLower = verb === 'ADOPT' ? 'adopt' : 'buy';
+  // G3 — pre-emptive can't-afford: never offer the hold, show NOT-ENOUGH + the inline top-up door.
+  const cantAfford = !disabled && onTopUp !== undefined && balance < price;
+
+  const handleBuy = useCallback(() => {
+    setConfirming(false);
+    onBuy();
+  }, [onBuy]);
 
   return (
     <View style={styles.bar}>
@@ -88,7 +78,24 @@ export function BuyBar({
         ) : null}
       </View>
       <View style={styles.spacer} />
-      {reduceMotion ? (
+
+      {cantAfford ? (
+        // G3 — the uniform can't-afford state: no hold, the shortfall + a TOP UP door inline.
+        <View style={styles.shortWrap}>
+          <View style={styles.shortLine}>
+            <Text style={styles.shortText}>NOT ENOUGH </Text>
+            <PixelsMark size={11} />
+            <Text style={styles.shortText}> — YOU HAVE {balance}</Text>
+          </View>
+          <ScreenButton
+            label="Top up"
+            variant="add"
+            size="mini"
+            icon={<PixelsMark size={11} />}
+            onPress={onTopUp}
+          />
+        </View>
+      ) : reduceMotion ? (
         // OQ-046 accessible alt — a single press flips to an INLINE confirm (no hold, no nested sheet).
         confirming ? (
           <>
@@ -102,11 +109,8 @@ export function BuyBar({
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`Confirm buy for ${label}`}
-              onPress={() => {
-                setConfirming(false);
-                onBuy();
-              }}
+              accessibilityLabel={`Confirm ${verbLower} for ${label}`}
+              onPress={handleBuy}
               style={styles.buy}
             >
               <Text style={styles.buyText}>CONFIRM · {label}</Text>
@@ -115,27 +119,25 @@ export function BuyBar({
         ) : (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Buy for ${label}`}
+            accessibilityLabel={`${verb === 'ADOPT' ? 'Adopt' : 'Buy'} for ${label}`}
             accessibilityState={{ disabled }}
             disabled={disabled}
             onPress={() => setConfirming(true)}
             style={[styles.buy, disabled && styles.buyDisabled]}
           >
-            <Text style={styles.buyText}>BUY · {label}</Text>
+            <Text style={styles.buyText}>{verb} · {label}</Text>
           </Pressable>
         )
       ) : (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`Hold to buy for ${label}`}
-          accessibilityState={{ disabled }}
+        // G2 — the filling hold key (the shared primitive).
+        <HoldFillButton
+          label={`HOLD TO ${verb} · ${label}`}
+          accessibilityLabel={`Hold to ${verbLower} for ${label}`}
+          onComplete={handleBuy}
           disabled={disabled}
-          onPressIn={startHold}
-          onPressOut={cancelHold}
-          style={[styles.buy, holding && styles.buyHolding, disabled && styles.buyDisabled]}
-        >
-          <Text style={styles.buyText}>HOLD TO BUY · {label}</Text>
-        </Pressable>
+          holdMs={holdMs}
+          tone="gold"
+        />
       )}
     </View>
   );
@@ -161,12 +163,13 @@ const useStyles = themedStyles((t) => ({
     paddingHorizontal: t.space.lg,
     paddingVertical: t.space.md,
   },
-  // F-03 held = pressed (darkened fill, NO motion) — the board's `.btn.buy.holding`.
-  buyHolding: { backgroundColor: '#e0b933' },
   buyDisabled: { opacity: 0.4 },
   buyText: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.brand.goldInk, letterSpacing: 1 },
-  // the inline-confirm CANCEL — the safe/secondary weight beside the gold CONFIRM (mirrors the
-  // ConfirmSheet grammar: cancel is quiet, the spend is the loud gold key).
+  // G3 — the pre-emptive can't-afford cluster (F-02 gold voice on the shortfall glyph, not alert-red).
+  shortWrap: { alignItems: 'flex-end', gap: t.space.sm },
+  shortLine: { flexDirection: 'row', alignItems: 'center' },
+  shortText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.value, letterSpacing: 0.8 },
+  // the inline-confirm CANCEL — the safe/secondary weight beside the gold CONFIRM.
   cancel: {
     backgroundColor: t.scr.key,
     paddingHorizontal: t.space.lg,

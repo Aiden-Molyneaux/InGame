@@ -92,7 +92,8 @@ describe('CARD-13: premiumStatusOf — the cost-stack sums only UNOWNED premium'
 describe('CARD-13: resolvePremiumRefs — names/prices/ownership join from the library', () => {
   it('joins by id and falls back honestly for an unknown id', () => {
     const refs = resolvePremiumRefs(['frost', 'mystery'], LIB);
-    expect(refs[0]).toEqual({ cosmeticId: 'frost', name: 'FROST', price: 8, owned: false });
-    expect(refs[1]).toEqual({ cosmeticId: 'mystery', name: 'MYSTERY', price: 0, owned: false });
+    // M5 F-9 (G4): `type` rides for the reconcile/keep buy-list swatch — from the library, else inferred.
+    expect(refs[0]).toEqual({ cosmeticId: 'frost', name: 'FROST', type: 'effect', price: 8, owned: false });
+    expect(refs[1]).toEqual({ cosmeticId: 'mystery', name: 'MYSTERY', type: 'frame', price: 0, owned: false });
   });
 });

@@ -1,8 +1,10 @@
+import type { CosmeticType } from '@ingame/shared';
 import { View, Text } from 'react-native';
 import { themedStyles } from '../../theme';
 import { ScreenButton } from '../ScreenButton';
 import { BuyBar } from '../commerce/BuyBar';
 import { PixelsMark } from '../commerce/PixelsMark';
+import { CosmeticSwatch } from '../commerce/CosmeticSwatch';
 
 // KeepBar (component-map §5 device · board D7/D7b/D7c) — the Device premium CART. Applying an unowned
 // premium shell/theme previews it LIVE on the handheld but does NOT persist; the KeepBar collects the
@@ -14,6 +16,8 @@ import { PixelsMark } from '../commerce/PixelsMark';
 export interface KeepBarItem {
   cosmeticId: string;
   name: string;
+  /** COSM-01 type — drives the G4 CosmeticSwatch (M5 F-9): the shell/theme shown, not just named. */
+  type: CosmeticType;
   price: number;
 }
 
@@ -48,16 +52,22 @@ export function KeepBar({
         <PixelsMark size={11} />
         <Text style={styles.tail}>TO KEEP</Text>
       </View>
-      {/* D7 — per-item PX prices ride the economy GOLD (F-02 t.brand.gold); the name stays dim. */}
-      <Text style={styles.items} numberOfLines={1}>
-        {items.map((i, idx) => (
-          <Text key={i.cosmeticId}>
-            {idx > 0 ? '   ·   ' : ''}
-            {i.name}{' '}
-            <Text style={styles.itemPrice}>{i.price} PX</Text>
-          </Text>
+      {/* G4 (M5 F-9) — each cart item carries its swatch (shell/theme shown, not just named); the
+          per-item PX price rides the economy GOLD (F-02 t.brand.gold), the name stays dim. */}
+      <View style={styles.itemsRow}>
+        {items.map((i) => (
+          <View key={i.cosmeticId} style={styles.itemChip}>
+            <View style={styles.chipThumb}>
+              <View style={styles.chipScale}>
+                <CosmeticSwatch type={i.type} id={i.cosmeticId} size="row" />
+              </View>
+            </View>
+            <Text style={styles.itemName} numberOfLines={1}>
+              {i.name} <Text style={styles.itemPrice}>{i.price} PX</Text>
+            </Text>
+          </View>
         ))}
-      </Text>
+      </View>
       {short ? (
         <View style={styles.shortRow}>
           <Text style={styles.shortLine}>{shortBy} PX short — top up to keep {items.length === 1 ? 'it' : 'them'}.</Text>
@@ -97,7 +107,13 @@ const useStyles = themedStyles((t) => ({
   spacer: { flex: 1 },
   total: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.brand.gold, letterSpacing: 0.5 },
   tail: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 1, marginLeft: 2 },
-  items: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
+  // G4 — the cart items as swatch+label chips (wrapping so a shell+theme pair reads on a narrow phone).
+  itemsRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: t.space.md },
+  itemChip: { flexDirection: 'row', alignItems: 'center', gap: t.space.sm },
+  // a compact clipped slot; the swatch (MiniDevice/ThemeSwatch) is scaled to fit the pinned bar.
+  chipThumb: { width: 24, height: 44, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  chipScale: { transform: [{ scale: 0.5 }] },
+  itemName: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
   // D7 — the economy gold token (F-02) on the per-item price.
   itemPrice: { fontFamily: t.font.screenBold, color: t.brand.gold },
   // D7 — the descriptive line grows so the Buy/Cancel action pair right-aligns to the bar edge.

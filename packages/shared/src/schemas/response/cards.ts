@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { compositionSchema } from '../composition';
+import { cosmeticTypeSchema } from '../common';
 import { stylePresetStyleSchema } from '../request/cards';
 
 // RESPONSE/VIEW schemas for the M4 card substrate (api-contract 0.53 / decision 0066). OWNER-ONLY
@@ -8,6 +9,25 @@ import { stylePresetStyleSchema } from '../request/cards';
 
 export const cardDesignStatusSchema = z.enum(['draft', 'private', 'published']); // CARD-14 lifecycle
 export type CardDesignStatus = z.infer<typeof cardDesignStatusSchema>;
+
+/**
+ * One PREMIUM component a cross-user card carries (M5 F-9 · E2 · api-contract 0.67). Server-computed
+ * display metadata, resolved from the cosmetic registry against the card's DENORMALIZED
+ * `premium_component_ids` — NEVER from the private `composition` (the OQ-122 cross-user exclusion holds;
+ * only premium refs are denormalized, so only premium components are listed). `owned` is caller-scoped
+ * (the caller's own `user_entitlements`); `price` is the tier PX (what the caller would pay if unowned).
+ * Lets the INSPECT sheet list what a published card is built from — "even the premium ones you pay for".
+ */
+export const cardComponentSchema = z
+  .object({
+    cosmeticId: z.string(),
+    name: z.string(),
+    type: cosmeticTypeSchema,
+    price: z.number().int().nonnegative(),
+    owned: z.boolean(),
+  })
+  .strict();
+export type CardComponentView = z.infer<typeof cardComponentSchema>;
 
 /** One of MY designs (the CARD-24a document): /me/cards · /me/collection/:entryId/cards items. */
 export const cardDesignSchema = z
@@ -59,6 +79,10 @@ export const adoptedEntryCardSchema = z
     imageUrl: z.string().nullable(),
     thumbUrl: z.string().nullable(),
     isPremium: z.boolean(),
+    // M5 F-9 E2 — the premium components behind the adopted card (all `owned:true` for the holder), so
+    // a switcher inspect can read them the same way the gallery does. From the denormalized premium refs,
+    // never the composition (OQ-122).
+    components: z.array(cardComponentSchema),
     designer: z.object({ userId: z.string().uuid(), username: z.string() }).strict(),
     // NO `composition` — the flattened image is the only cross-user artifact (OQ-122).
   })
@@ -100,6 +124,8 @@ export type StylePresetsResponse = z.infer<typeof stylePresetsResponseSchema>;
  * One community-gallery card (GET /games/:gameId/cards). `priceForYou` = the caller's PERSONALIZED
  * adoption price (decision 0072) = the summed PX of the card's premium components the caller does NOT
  * already own — 0 for a free card or one the caller fully owns. `isPremium` is the card's own flag.
+ * `components` (M5 F-9 · E2) lists the card's PREMIUM components with per-caller ownership so the adopt
+ * sheet reads like buying-cosmetics-in-the-Styler (rows of swatched components + prices + total).
  */
 export const galleryCardSchema = z
   .object({
@@ -110,6 +136,7 @@ export const galleryCardSchema = z
     isPremium: z.boolean(),
     adoptionCount: z.number().int().nonnegative(),
     priceForYou: z.number().int().nonnegative(), // personalized missing-components sum (0072)
+    components: z.array(cardComponentSchema), // M5 F-9 E2 — the premium refs, resolved + owned per-caller
     designer: z.object({ userId: z.string().uuid(), username: z.string() }).strict(),
   })
   .strict();

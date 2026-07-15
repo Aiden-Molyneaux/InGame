@@ -214,6 +214,13 @@ export function lookupCosmeticDisplay(cosmeticId: string): { name: string; type:
   return entry ? { name: entry.name, type: COSMETIC_TYPE_LABELS[entry.type] } : undefined;
 }
 
+/** The full premium catalog entry (RAW `type` + `name`) for a cosmetic id — the M5 F-9 E2 `components`
+ *  metadata source (the client needs the raw COSM-01 type to draw the CosmeticSwatch). `undefined` for a
+ *  non-premium / unknown id. */
+export function lookupCosmeticEntry(cosmeticId: string): CosmeticCatalogEntry | undefined {
+  return PREMIUM_BY_ID.get(cosmeticId);
+}
+
 // ── The featured storefront (M5 F-6 — the board P1 "NEW THIS WEEK" grid) ───────────────────────────────
 // A SYS-04-tunable seed: six premium ids, one per showy category, emphasizing the showpieces so the
 // storefront leads with the best. Order = display order in the 3-up grid. These are the SAME roster ids

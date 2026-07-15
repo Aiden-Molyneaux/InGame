@@ -120,6 +120,8 @@ export interface AdoptedDesignRow {
   thumbUrl: string | null;
   isPremium: boolean;
   name: string;
+  /** DENORMALIZED premium refs (M5 F-9 E2) — feeds the switcher's `components` readout; NOT composition. */
+  premiumComponentIds: string[];
   designerId: string;
   designerUsername: string;
 }
@@ -134,6 +136,8 @@ const ADOPTED_COLUMNS = {
   thumbUrl: cardDesigns.thumbUrl,
   isPremium: cardDesigns.isPremium,
   name: cardDesigns.name,
+  // M5 F-9 E2 — the DENORMALIZED premium refs (never `composition`; the OQ-122 discipline holds).
+  premiumComponentIds: cardDesigns.premiumComponentIds,
   designerId: cardDesigns.ownerId,
   designerUsername: users.username,
 } as const;

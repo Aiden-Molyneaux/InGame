@@ -11,8 +11,8 @@ const store = configureStore({ reducer: { prefs: prefsReducer } });
 const wrap = (ui: React.ReactElement) => <Provider store={store}>{ui}</Provider>;
 
 const ITEMS = [
-  { cosmeticId: 'carbon', name: 'CARBON', price: 8 },
-  { cosmeticId: 'deepsea', name: 'DEEP SEA', price: 6 },
+  { cosmeticId: 'carbon', name: 'CARBON', type: 'device_shell' as const, price: 8 },
+  { cosmeticId: 'deepsea', name: 'DEEP SEA', type: 'screen_theme' as const, price: 6 },
 ];
 
 // KeepBar (device board D7/D7b/D7c) — the premium cart under a live preview.

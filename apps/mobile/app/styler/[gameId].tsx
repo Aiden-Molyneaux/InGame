@@ -1071,6 +1071,9 @@ export default function Styler() {
             setMode('edit');
             setPosture('canvas');
           }}
+          // E7a — CARD-21 lets the owner share their just-kept PRIVATE card; GET /cards/:id/share-image
+          // serves the owner's own card at any status. Reuses the PrintRitual/gallery share util.
+          onShare={cardRow ? () => void sharePublished(cardRow.id, title) : undefined}
         />
       </Frame>
     );
@@ -1199,7 +1202,7 @@ export default function Styler() {
           onClearError: () => setPublishError(null),
           reconcile: {
             open: reconcileOpen,
-            items: premium.unowned.map((u) => ({ cosmeticId: u.cosmeticId, name: u.name, price: u.price })),
+            items: premium.unowned.map((u) => ({ cosmeticId: u.cosmeticId, name: u.name, type: u.type, price: u.price })),
             total: premium.costStack,
             balance,
             busy: reconcileBusy || busyPublish,
@@ -1372,7 +1375,7 @@ export default function Styler() {
           setReconcileOpen(false);
           pendingCommitRef.current = null;
         }}
-        items={premium.unowned.map((u) => ({ cosmeticId: u.cosmeticId, name: u.name, price: u.price }))}
+        items={premium.unowned.map((u) => ({ cosmeticId: u.cosmeticId, name: u.name, type: u.type, price: u.price }))}
         total={premium.costStack}
         balance={balance}
         busy={reconcileBusy || busyKeep}

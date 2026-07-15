@@ -24,6 +24,7 @@ import { theme, themedStyles, useTheme } from '../../src/theme';
 import { steppedRectPath } from '../../src/theme/steppedPath';
 import {
   useGetCollectionQuery,
+  useGetWalletQuery,
   useRemoveEntryMutation,
   useSetNowPlayingMutation,
   useDeleteCardMutation,
@@ -45,6 +46,8 @@ export default function GamePage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { data, isLoading, isError, refetch } = useGetCollectionQuery();
+  // the wallet balance feeds the adopt sheet's BuyBar meta + its pre-emptive NOT-ENOUGH state (M5 F-9 G3).
+  const { data: wallet } = useGetWalletQuery();
   const styles = useStyles();
 
   const entry = useMemo<CollectionItem | undefined>(
@@ -176,16 +179,11 @@ export default function GamePage() {
     }
   }
   // Success — the mutation already invalidated Cards/Collection (the switcher refetches) + Wallet/Ledger/
-  // Entitlements (the global CurrencyCounter ticks) + CommunityCards (the gallery re-reads).
-  function onAdopted(result: { totalPaid: number }, card: GalleryCardView) {
-    setInspectCard(null);
-    setToast({
-      tone: 'success',
-      message:
-        result.totalPaid > 0
-          ? `Adopted — "${card.name}" is yours. ${result.totalPaid} PX spent · it's in your switcher.`
-          : `Adopted — "${card.name}" is yours · it's in your switcher.`,
-    });
+  // Entitlements (the global CurrencyCounter ticks) + CommunityCards (the gallery re-reads). M5 F-9 G5:
+  // NO toast + NO close — the sheet acknowledges IN PLACE (the settle beat + AcquireBeat), and its Done
+  // door closes it. This just lets the invalidation ride (the args are unused but keep the contract).
+  function onAdopted(_result: { totalPaid: number }, _card: GalleryCardView) {
+    // intentionally empty — the in-place settle is the acknowledgement (G5).
   }
 
   async function doBlock() {
@@ -381,6 +379,7 @@ export default function GamePage() {
       <AdoptCardSheet
         card={inspectCard}
         visible={inspectCard !== null}
+        balance={wallet?.balance ?? 0}
         onClose={() => setInspectCard(null)}
         onAdopt={onAdopt}
         adopting={adoptState.isLoading}

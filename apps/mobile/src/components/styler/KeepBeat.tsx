@@ -1,14 +1,28 @@
 import { useEffect, useRef } from 'react';
 import { View, Text, Animated, AccessibilityInfo, Pressable } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { CardFace } from '../CardFace';
 import { ScreenButton } from '../ScreenButton';
-import { theme, themedStyles } from '../../theme';
+import { theme, themedStyles, useTheme } from '../../theme';
 import type { CardComposition } from '../../render/composition';
 
 // KeepBeat (component-map §8a / board P7) — the LIGHT celebration tier (decision 0015): the finished
 // card + ONE gold edge-pulse + the ✓ strip. Deliberately no ritual (that's canvas-tier, OQ-040).
 // Honors reduce-motion (0044 baseline): the pulse is skipped, the strip stays. The clout line is
 // AGGREGATE + honest (cardsDesigned real; adoptions 0 until M5 — CARD-05/decision 0036).
+
+// E7a (M5 F-9) — the KEEP flow gains the CARD-21 share affordance for the just-kept card (owner may
+// share a PRIVATE card of their own). The mark mirrors the PrintRitual's ShareGlyph (a HOUSE inline SVG
+// up-arrow-out-of-a-tray), never a Unicode/emoji arrow.
+function ShareGlyph({ size = 11, color }: { size?: number; color: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M5 12 V20 H19 V12" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M12 3.5 V14" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M8 7 L12 3.5 L16 7" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
 
 export function KeepBeat({
   title,
@@ -17,6 +31,7 @@ export function KeepBeat({
   pxSpent = 0,
   onDone,
   onEditArt,
+  onShare,
 }: {
   title: string;
   composition: CardComposition;
@@ -26,9 +41,12 @@ export function KeepBeat({
   onDone: () => void;
   /** The Canvas door (§3.4) — absent, the door renders as the disabled "arrives later" line. */
   onEditArt?: () => void;
+  /** E7a (M5 F-9) — CARD-21 share of the just-kept card; absent → the deferred "arrives" line. */
+  onShare?: () => void;
 }) {
   const pulse = useRef(new Animated.Value(0)).current;
   const styles = useStyles();
+  const t = useTheme();
 
   // A ONE-SHOT mount-fire celebration (CARD-16/0044 §104): the reduce-motion setting at KEEP time is
   // what matters (live-update is irrelevant for a fire-once beat), so read it directly and AWAIT it
@@ -93,6 +111,20 @@ export function KeepBeat({
       ) : (
         <Text style={styles.canvasDoor}>⤢ EDIT ART — the Canvas arrives with the deep editor</Text>
       )}
+
+      {/* E7a — the CARD-21 share row (glyph, not emoji), mirroring the PrintRitual share grammar. */}
+      {onShare ? (
+        <Pressable accessibilityRole="button" accessibilityLabel="Share this card" onPress={onShare} hitSlop={6} style={styles.shareRow}>
+          <ShareGlyph size={11} color={t.scr.accent} />
+          <Text style={styles.shareDoorLive}>SHARE THIS CARD</Text>
+        </Pressable>
+      ) : (
+        <View style={styles.shareRow}>
+          <ShareGlyph size={11} color={t.scr.faint} />
+          <Text style={styles.shareDoor}>SHARE — arrives with card sharing</Text>
+        </View>
+      )}
+
       <ScreenButton label="Done — back to the game" onPress={onDone} block />
     </View>
   );
@@ -120,4 +152,7 @@ const useStyles = themedStyles((t) => ({
   clout: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
   canvasDoor: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5 },
   canvasDoorLive: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 0.5 },
+  shareRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.sm },
+  shareDoor: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5 },
+  shareDoorLive: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 0.5 },
 }));

@@ -24,6 +24,7 @@ const FREE_CARD: GalleryCardView = {
   isPremium: false,
   adoptionCount: 31,
   priceForYou: 0, // free → the FREE chip
+  components: [],
   designer: { userId: 'aaaaaaaa-1111-4111-8111-111111111111', username: 'vanta' },
 };
 const PRICED_CARD: GalleryCardView = {
@@ -34,6 +35,9 @@ const PRICED_CARD: GalleryCardView = {
   isPremium: true,
   adoptionCount: 58,
   priceForYou: 3, // 3 PX personalized → the PriceChip
+  components: [
+    { cosmeticId: 'bitter', name: 'SLAB', type: 'font', price: 3, owned: false },
+  ],
   designer: { userId: 'bbbbbbbb-2222-4222-8222-222222222222', username: 'rival_curator' },
 };
 

@@ -257,6 +257,7 @@ export default function Store() {
             from={landed.from}
             to={landed.to}
             onBack={goStore}
+            onTopUpAgain={() => setLanded(null)}
             onViewWallet={() => {
               setLanded(null);
               setView('wallet');
@@ -293,9 +294,10 @@ export default function Store() {
         <ConfirmSheet
           visible
           tone="purchase"
+          holdToConfirm // M5 F-9 G2 — HOLD the mock PAY (filling sweep); the native StoreKit sheet replaces it
           title="CONFIRM PURCHASE"
-          message={`${usdFor(pendingPack.productId) ?? '$—'} will be charged to your Apple account for ${pendingPack.pixels} pixels.`}
-          confirmLabel={`Pay ${usdFor(pendingPack.productId) ?? ''}`.trim()}
+          message={`${usdFor(pendingPack.productId) ?? '$—'} will be charged to your Apple account for ${pendingPack.pixels} pixels. Hold PAY to confirm.`}
+          confirmLabel={`Hold to pay ${usdFor(pendingPack.productId) ?? ''}`.trim()}
           busy={buying}
           onConfirm={confirmPending}
           onClose={() => setPendingPack(null)}
@@ -478,6 +480,8 @@ function TopUpView({
       </Text>
       <View style={styles.restoreRow}>
         <TertiaryLink label="↺ Restore purchases" onPress={onRestore} dim chevron="none" />
+        {/* B5 (M5 F-9) — what Restore actually does, so it never reads as a refund path. */}
+        <Text style={styles.restoreSub}>Reinstalled or new phone? Re-syncs what you own — never refunds.</Text>
       </View>
       {restoreNote ? <Text style={styles.restoreNote}>{restoreNote}</Text> : null}
     </View>
@@ -710,6 +714,8 @@ function CosmeticSheet({
         bridgePacks={bridgePacks}
         onBuyPack={onTopUp}
         onAllPacks={onTopUp}
+        onTopUp={onTopUp}
+        celebrate={justBought}
       />
       {/* the sheet's BUY is gated offline by the note; the header offline strip already warns globally. */}
       {offline && item && !owned ? <Text style={styles.emptyNote}>Offline — purchases need a connection.</Text> : null}
@@ -841,7 +847,8 @@ const useStyles = themedStyles((t) => ({
   },
   packGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.md },
   starterNote: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.brand.gold, letterSpacing: 0.5 },
-  restoreRow: { alignItems: 'center', marginTop: t.space.sm },
+  restoreRow: { alignItems: 'center', marginTop: t.space.sm, gap: t.space.sm },
+  restoreSub: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5, textAlign: 'center', lineHeight: 13 },
   restoreNote: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5, textAlign: 'center' },
   // Wallet
   balHero: {

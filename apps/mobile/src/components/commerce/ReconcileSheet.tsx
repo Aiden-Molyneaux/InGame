@@ -1,9 +1,11 @@
+import type { CosmeticType } from '@ingame/shared';
 import { View, Text } from 'react-native';
 import { PulledSheet } from '../PulledSheet';
 import { ScreenButton } from '../ScreenButton';
 import { BuyBar } from './BuyBar';
 import { PriceChip } from './PriceChip';
 import { PixelsMark } from './PixelsMark';
+import { CosmeticSwatch } from './CosmeticSwatch';
 import { themedStyles } from '../../theme';
 
 // ReconcileSheet (component-map §7 · CARD-13 · styler-states P6 · canvas PRESS reconcile) — the ACQUIRE
@@ -17,6 +19,8 @@ import { themedStyles } from '../../theme';
 export interface ReconcileItem {
   cosmeticId: string;
   name: string;
+  /** COSM-01 type — drives the G4 CosmeticSwatch (M5 F-9): the shopper sees what they're buying. */
+  type: CosmeticType;
   price: number;
 }
 
@@ -58,6 +62,10 @@ export function ReconcileSheet({
       <View style={styles.list}>
         {items.map((it) => (
           <View key={it.cosmeticId} style={styles.row}>
+            {/* G4 — every buy-list row carries the item's swatch, so the shopper isn't buying a name. */}
+            <View style={styles.rowThumb}>
+              <CosmeticSwatch type={it.type} id={it.cosmeticId} size="row" />
+            </View>
             <Text style={styles.itemName} numberOfLines={1}>
               {it.name}
             </Text>
@@ -79,7 +87,17 @@ export function ReconcileSheet({
           <Text style={styles.shortLine}>
             You have {balance} PX — {shortBy} PX short. Top up to acquire {items.length === 1 ? 'it' : 'them'}.
           </Text>
-          <ScreenButton label="Top up pixels ▸" variant="add" onPress={onTopUp} disabled={busy} block />
+          {/* D3 (F-11) — the top-up door wears the PIXELS glyph (a wallet door, not a spend) + a
+              draft-safe reassurance so leaving to top up never reads as losing the edit. */}
+          <ScreenButton
+            label="Top up pixels ▸"
+            variant="add"
+            icon={<PixelsMark size={13} />}
+            onPress={onTopUp}
+            disabled={busy}
+            block
+          />
+          <Text style={styles.draftSafe}>Your draft is saved on this card.</Text>
           <ScreenButton label="Not now" variant="secondary" onPress={onClose} disabled={busy} block />
         </View>
       ) : (
@@ -112,6 +130,8 @@ const useStyles = themedStyles((t) => ({
     borderBottomWidth: 1,
     borderBottomColor: t.scr.hairline,
   },
+  // clip the swatch SVG to its slot so it can never bleed over the name/price (the P9 AisleRow precedent).
+  rowThumb: { width: 46, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   itemName: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 0.5, flexShrink: 1 },
   spacer: { flex: 1 },
   totalRow: {
@@ -124,4 +144,6 @@ const useStyles = themedStyles((t) => ({
   totalValue: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.brand.gold, letterSpacing: 0.5 },
   shortWrap: { gap: t.space.md },
   shortLine: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5, lineHeight: 15 },
+  // D3 — the draft-safe reassurance, tucked under the top-up door (F-06 micro).
+  draftSafe: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5, textAlign: 'center', marginTop: -t.space.sm },
 }));

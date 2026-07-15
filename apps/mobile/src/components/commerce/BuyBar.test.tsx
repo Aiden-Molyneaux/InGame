@@ -87,4 +87,27 @@ describe('BuyBar — the OQ-046 buy gate (both paths)', () => {
     expect(screen.getByText('YOU HAVE 27 PX')).toBeTruthy();
     expect(screen.getByText('Spends pixels instantly')).toBeTruthy();
   });
+
+  // G3 (M5 F-9) — insufficient funds NEVER offer the hold; the bar renders NOT-ENOUGH + an inline TOP UP.
+  it('G3: can’t-afford (balance < price, onTopUp given) shows NOT ENOUGH + TOP UP, never a hold key', () => {
+    const onBuy = jest.fn();
+    const onTopUp = jest.fn();
+    render(wrap(<BuyBar price={8} balance={3} onBuy={onBuy} onTopUp={onTopUp} />));
+    expect(screen.queryByLabelText('Hold to buy for 8 PX')).toBeNull(); // no hold offered
+    expect(screen.getByText(/NOT ENOUGH/)).toBeTruthy();
+    expect(screen.getByText(/— YOU HAVE 3/)).toBeTruthy(); // the G3 shortfall line (distinct from the meta)
+    fireEvent.press(screen.getByText('TOP UP'));
+    expect(onTopUp).toHaveBeenCalledTimes(1);
+    expect(onBuy).not.toHaveBeenCalled();
+  });
+
+  it('G3 is not triggered without a top-up destination (the primitive keeps its hold key)', () => {
+    render(wrap(<BuyBar price={8} balance={3} onBuy={jest.fn()} />)); // no onTopUp
+    expect(screen.getByLabelText('Hold to buy for 8 PX')).toBeTruthy();
+  });
+
+  it('the ADOPT verb relabels the shared bar (one grammar, one knob)', () => {
+    render(wrap(<BuyBar price={3} balance={9} onBuy={jest.fn()} verb="ADOPT" />));
+    expect(screen.getByLabelText('Hold to adopt for 3 PX')).toBeTruthy();
+  });
 });

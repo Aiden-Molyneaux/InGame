@@ -11,8 +11,8 @@ const store = configureStore({ reducer: { prefs: prefsReducer } });
 const wrap = (ui: React.ReactElement) => <Provider store={store}>{ui}</Provider>;
 
 const ITEMS = [
-  { cosmeticId: 'frost', name: 'FROST', price: 8 },
-  { cosmeticId: 'thin-gold', name: 'GOLD', price: 3 },
+  { cosmeticId: 'frost', name: 'FROST', type: 'effect' as const, price: 8 },
+  { cosmeticId: 'thin-gold', name: 'GOLD', type: 'frame' as const, price: 3 },
 ];
 
 // ReconcileSheet (CARD-13 · styler-states P6) — the ACQUIRE ALL bridge, funded + short fragments.

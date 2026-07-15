@@ -13,28 +13,38 @@ import { PixelsMark } from './PixelsMark';
 // state (never trap the user). Honors reduce-motion (0044 §104): the final number + ONE glow pulse +
 // the receipt, instant — no drop, no burst, no roll. RN-Animated + the shared useReducedMotion gate.
 
-// ── shard choreography (beat 2) ──────────────────────────────────────────────────────────────────────
-// 10 arcade-confetti shards fanning out along hand-authored angles (deterministic — no Math.random, so
-// the layout is test-stable). `dist` ≤ ~86px (arcade burst, not fireworks); `shade` picks one of three
-// gold tones; `gem` marks the 2 that are tiny PixelsMarks instead of pixel squares. `s0` = the per-shard
-// stagger start (fraction of the burst) — ~0.03 apart ≈ 15ms at a 500ms burst.
-type Shard = { angle: number; dist: number; shade: 0 | 1 | 2; gem?: boolean; rot: number; size: number };
+// ── shard choreography (beat 2, M5 F-9 B3) ──────────────────────────────────────────────────────────
+// 12 arcade-confetti shards fanning out along hand-authored angles (deterministic — no Math.random, so
+// the layout is test-stable), fired as FOUR staggered SUB-BURSTS (`wave` 0-3) instead of one splash —
+// the coin drop reads as a series of pops, not a single flat spray (B3-a). `dist` ≤ ~88px (arcade burst,
+// not fireworks); `shade` picks one of three gold tones; `gem` marks the tiny PixelsMarks; sizes vary
+// 4-12 across waves. `s0` (below) = each shard's stagger start (fraction of the burst) = its wave offset
+// + a small within-wave step; the whole burst still lands ≤1.4s total (SEQUENCE_MS).
+type Shard = { angle: number; dist: number; shade: 0 | 1 | 2; gem?: boolean; rot: number; size: number; wave: 0 | 1 | 2 | 3 };
 const SHARDS: Shard[] = [
-  { angle: -0.5 * Math.PI, dist: 84, shade: 0, rot: 12, size: 7 }, // straight up
-  { angle: -0.30 * Math.PI, dist: 78, shade: 1, rot: -20, size: 6 },
-  { angle: -0.10 * Math.PI, dist: 72, shade: 2, gem: true, rot: 0, size: 12 },
-  { angle: 0.08 * Math.PI, dist: 80, shade: 0, rot: 28, size: 6 },
-  { angle: 0.28 * Math.PI, dist: 74, shade: 1, rot: -14, size: 7 },
-  { angle: 0.5 * Math.PI, dist: 68, shade: 2, rot: 8, size: 5 }, // straight down
-  { angle: 0.72 * Math.PI, dist: 76, shade: 0, rot: -26, size: 6 },
-  { angle: 0.92 * Math.PI, dist: 82, shade: 1, gem: true, rot: 0, size: 12 },
-  { angle: 1.12 * Math.PI, dist: 70, shade: 2, rot: 18, size: 5 },
-  { angle: 1.30 * Math.PI, dist: 80, shade: 0, rot: -10, size: 7 },
+  // wave 0 — the first pop (with the drop's tail)
+  { angle: -0.5 * Math.PI, dist: 84, shade: 0, rot: 12, size: 8, wave: 0 }, // straight up
+  { angle: -0.10 * Math.PI, dist: 72, shade: 2, gem: true, rot: 0, size: 12, wave: 0 },
+  { angle: 1.12 * Math.PI, dist: 70, shade: 2, rot: 18, size: 5, wave: 0 },
+  // wave 1
+  { angle: -0.30 * Math.PI, dist: 78, shade: 1, rot: -20, size: 6, wave: 1 },
+  { angle: 0.5 * Math.PI, dist: 68, shade: 2, rot: 8, size: 4, wave: 1 }, // straight down
+  { angle: 0.92 * Math.PI, dist: 82, shade: 1, gem: true, rot: 0, size: 11, wave: 1 },
+  // wave 2
+  { angle: 0.08 * Math.PI, dist: 80, shade: 0, rot: 28, size: 7, wave: 2 },
+  { angle: 0.72 * Math.PI, dist: 76, shade: 0, rot: -26, size: 5, wave: 2 },
+  { angle: 1.30 * Math.PI, dist: 80, shade: 0, rot: -10, size: 9, wave: 2 },
+  // wave 3 — the last, smallest pop
+  { angle: 0.28 * Math.PI, dist: 74, shade: 1, rot: -14, size: 6, wave: 3 },
+  { angle: -0.70 * Math.PI, dist: 88, shade: 2, gem: true, rot: 0, size: 10, wave: 3 },
+  { angle: 1.5 * Math.PI, dist: 66, shade: 1, rot: 22, size: 4, wave: 3 },
 ];
 const GRAVITY = 16; // the outer-third downward drift (arcade fall)
-const BURST_START = 0.18; // burst opens ~120ms in — overlaps the drop's tail
-const COUNT_START_MS = 260; // the roll starts as the burst peaks
+const BURST_START = 0.06; // wave 0 opens right on the drop's tail
+const WAVE_STEP = 0.2; // each sub-burst opens 0.2 of the burst later (staggered pops, B3-a)
+const COUNT_START_MS = 260; // the roll starts as the first waves peak
 const COUNT_MS = 600; // the roll's total span
+const BURST_MS = 900; // the full four-wave span (drop 190 + delay 90 + 900 ≈ 1.18s ≤ 1.4s, B3-a)
 const MAX_TICKS = 20; // cap so +140 doesn't tick forever
 
 /** The from→to display values, one per tick, ACCELERATING (slow start) and landing EXACTLY on `to`. */
@@ -62,6 +72,7 @@ export function LandedMoment({
   backLabel = 'Back to store',
   onBack,
   onViewWallet,
+  onTopUpAgain,
 }: {
   granted: number;
   from: number;
@@ -69,6 +80,8 @@ export function LandedMoment({
   backLabel?: string;
   onBack: () => void;
   onViewWallet: () => void;
+  /** B3-b — a session often buys MORE packs; the primary door returns to Top Up, beside View Wallet. */
+  onTopUpAgain?: () => void;
 }) {
   const styles = useStyles();
   const t = useTheme();
@@ -138,10 +151,10 @@ export function LandedMoment({
       easing: Easing.out(Easing.quad),
       useNativeDriver: true,
     });
-    // beat 2 THE BURST — the shards fan out (staggered per-shard inside the interpolation).
+    // beat 2 THE BURST — four staggered sub-bursts fan out (per-wave offset inside the interpolation).
     const burstAnim = Animated.timing(burst, {
       toValue: 1,
-      duration: 520,
+      duration: BURST_MS,
       easing: Easing.out(Easing.quad),
       useNativeDriver: true,
     });
@@ -215,16 +228,18 @@ export function LandedMoment({
         {/* the pixel-burst overlay (beat 2) — decorative, fans out then fades to nothing */}
         <View style={styles.burstLayer} pointerEvents="none">
           {SHARDS.map((s, i) => {
-            const s0 = BURST_START + i * 0.03;
+            // each wave opens WAVE_STEP later; a small within-wave jitter keeps a wave from firing as one
+            // hard line. The travel span is ~0.34 of the burst so a shard finishes before the next wave.
+            const s0 = Math.min(0.82, BURST_START + s.wave * WAVE_STEP + (i % 3) * 0.015);
             const p = burst.interpolate({
-              inputRange: [s0, Math.min(1, s0 + 0.6)],
+              inputRange: [s0, Math.min(1, s0 + 0.34)],
               outputRange: [0, 1],
               extrapolate: 'clamp',
             });
             const tx = Math.cos(s.angle) * s.dist;
             const ty = Math.sin(s.angle) * s.dist;
             const opacity = burst.interpolate({
-              inputRange: [s0, s0 + 0.08, Math.min(1, s0 + 0.5), 1],
+              inputRange: [s0, s0 + 0.05, Math.min(1, s0 + 0.28), Math.min(1, s0 + 0.34)],
               outputRange: [0, 1, 1, 0],
               extrapolate: 'clamp',
             });
@@ -276,7 +291,12 @@ export function LandedMoment({
       <Animated.View pointerEvents="box-none" style={[styles.receipt, { opacity: receipt }]}>
         <View pointerEvents="none" style={styles.rule} />
         <Text pointerEvents="none" style={styles.hint}>Logged in your wallet ledger.</Text>
+        {/* B3-b — BACK TO TOP UP (buy more this session) sits alongside VIEW WALLET, with BACK TO STORE.
+            The row wraps on a narrow phone so all three doors read. */}
         <View pointerEvents="auto" style={styles.actions}>
+          {onTopUpAgain ? (
+            <ScreenButton label="Back to top up" variant="add" size="mini" onPress={onTopUpAgain} />
+          ) : null}
           <ScreenButton label={backLabel} variant="secondary" size="mini" onPress={onBack} />
           <TertiaryLink label="View wallet" onPress={onViewWallet} />
         </View>
@@ -307,5 +327,5 @@ const useStyles = themedStyles((t) => ({
     opacity: 0.6,
   },
   hint: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5, marginTop: t.space.sm },
-  actions: { flexDirection: 'row', alignItems: 'center', gap: t.space.lg, marginTop: t.space.md },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: t.space.md, marginTop: t.space.md },
 }));

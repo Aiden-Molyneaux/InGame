@@ -1,6 +1,7 @@
 import { View, Text } from 'react-native';
 import { PulledSheet } from './PulledSheet';
 import { ScreenButton } from './ScreenButton';
+import { HoldFillButton } from './commerce/HoldFillButton';
 import { themedStyles } from '../theme';
 
 // ConfirmSheet (decision 0040 — the destructive-action confirm grammar) — the pre-confirm gate every
@@ -17,6 +18,7 @@ export function ConfirmSheet({
   onClose,
   busy = false,
   tone = 'destructive',
+  holdToConfirm = false,
 }: {
   visible: boolean;
   title: string;
@@ -31,19 +33,30 @@ export function ConfirmSheet({
    * IAP sheet · the OQ-046 non-hold buy path), which must never read as destructive-red.
    */
   tone?: 'destructive' | 'purchase';
+  /**
+   * M5 F-9 (G2) — the mock PAY on packs holds-to-activate with a FILLING sweep, so a dollar confirm
+   * speaks the same hold grammar as every PX spend. The button fills gold over a hold; reduce-motion
+   * collapses to a plain press (this sheet is already the confirm gate). Cream tone — the $ is the
+   * neutral voice (0069), the fill is gold. Only meaningful with `tone='purchase'`.
+   */
+  holdToConfirm?: boolean;
 }) {
   const styles = useStyles();
   return (
     <PulledSheet visible={visible} onClose={onClose} title={title}>
       <Text style={styles.message}>{message}</Text>
       <View style={styles.actions}>
-        <ScreenButton
-          label={busy ? '…' : confirmLabel}
-          variant={tone === 'purchase' ? 'add' : 'destructive'}
-          onPress={onConfirm}
-          disabled={busy}
-          block
-        />
+        {holdToConfirm && tone === 'purchase' ? (
+          <HoldFillButton label={busy ? '…' : confirmLabel} tone="cream" onComplete={onConfirm} disabled={busy} block />
+        ) : (
+          <ScreenButton
+            label={busy ? '…' : confirmLabel}
+            variant={tone === 'purchase' ? 'add' : 'destructive'}
+            onPress={onConfirm}
+            disabled={busy}
+            block
+          />
+        )}
         <ScreenButton label="Cancel" variant="secondary" onPress={onClose} disabled={busy} block />
       </View>
     </PulledSheet>

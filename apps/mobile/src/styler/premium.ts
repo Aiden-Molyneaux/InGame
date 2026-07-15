@@ -1,6 +1,6 @@
 import type { CardComposition } from '../render/composition';
 import { FRAMES, EFFECTS, FINISHES, NAMEPLATES, FONTS } from './roster';
-import type { CosmeticListItem } from '@ingame/shared';
+import type { CosmeticListItem, CosmeticType } from '@ingame/shared';
 
 // CARD-13 / COSM-03 (M5 P7) — the CLIENT premium derivation. Mirrors the server's
 // `config/cosmetics.ts#collectCosmeticRefs`: given a composition, resolve the premium roster ids it
@@ -58,6 +58,8 @@ export function isPremiumRosterId(id: string): boolean {
 export interface PremiumRef {
   cosmeticId: string;
   name: string;
+  /** COSM-01 type — drives the G4 CosmeticSwatch in the reconcile/keep buy lists (M5 F-9). */
+  type: CosmeticType;
   price: number;
   owned: boolean;
 }
@@ -70,10 +72,23 @@ export function resolvePremiumRefs(ids: string[], library: CosmeticListItem[] | 
     return {
       cosmeticId: id,
       name: item?.name ?? id.toUpperCase(),
+      type: item?.type ?? inferCosmeticType(id),
       price: item?.price ?? 0,
       owned: item?.owned ?? false,
     };
   });
+}
+
+// The library is the source of truth for `type`; but a ref can precede the GET /cosmetics load, so infer
+// the type from which roster array owns the id (the swatch needs SOMETHING to draw). Falls back to
+// 'frame' (a neutral sample card) for an unknown id.
+function inferCosmeticType(id: string): CosmeticType {
+  if (FRAMES.some((f) => f.id === id)) return 'frame';
+  if (EFFECTS.some((e) => e.id === id)) return 'effect';
+  if (FINISHES.some((f) => f.id === id)) return 'finish';
+  if (NAMEPLATES.some((n) => n.id === id)) return 'nameplate';
+  if (FONTS.some((f) => f.id === id)) return 'font';
+  return 'frame';
 }
 
 export interface PremiumStatus {

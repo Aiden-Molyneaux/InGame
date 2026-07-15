@@ -46,9 +46,11 @@ import { getStorage, type StorageProvider } from '../storage';
 import {
   collectCosmeticRefs,
   isPremiumComposition,
+  lookupCosmeticEntry,
   lookupCosmeticTier,
   priceForTier,
 } from '../config/cosmetics';
+import type { CardComponentView, CosmeticType } from '@ingame/shared';
 import type { CardDesignRow } from '../db/schema';
 import type { PublishedDesignRow } from '../repositories/card-repo';
 
@@ -381,8 +383,10 @@ function toOwnedEntryCard(row: CardDesignRow): OwnedEntryCard {
   return { origin: 'owned', ...toCardView(row) };
 }
 
-/** One ADOPTED switcher item — flattened image + attribution, never the private composition (OQ-122). */
+/** One ADOPTED switcher item — flattened image + attribution, never the private composition (OQ-122).
+ *  Its `components` (M5 F-9 E2) are all `owned:true` — the holder acquired every premium ref by adopting. */
 function toAdoptedEntryCard(row: AdoptedDesignRow): AdoptedEntryCard {
+  const ownedAll = new Set(row.premiumComponentIds);
   return {
     origin: 'adopted',
     id: row.id,
@@ -391,6 +395,7 @@ function toAdoptedEntryCard(row: AdoptedDesignRow): AdoptedEntryCard {
     imageUrl: row.imageUrl,
     thumbUrl: row.thumbUrl,
     isPremium: row.isPremium,
+    components: resolveComponents(row.premiumComponentIds, ownedAll),
     designer: { userId: row.designerId, username: row.designerUsername },
   };
 }
@@ -491,8 +496,34 @@ function toGalleryShape(
     isPremium: row.isPremium,
     adoptionCount,
     priceForYou,
+    components: resolveComponents(row.premiumComponentIds, ownedByCaller),
     designer: { userId: row.designerId, username: row.designerUsername },
   };
+}
+
+/**
+ * M5 F-9 (E2) — the cross-user `components` metadata: resolve the card's DENORMALIZED premium refs
+ * (`premium_component_ids`, NEVER the composition — the OQ-122 guarantee) to display rows the INSPECT
+ * sheet lists (swatch · name · price · owned). `owned` is caller-scoped; an unknown/unregistered id
+ * degrades to its uppercased id + a neutral `frame` swatch rather than vanishing. Deduped (a card can
+ * reference the same premium id in two slots — it's ONE acquire).
+ */
+function resolveComponents(premiumIds: string[], ownedByCaller: Set<string>): CardComponentView[] {
+  const seen = new Set<string>();
+  const out: CardComponentView[] = [];
+  for (const id of premiumIds) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const entry = lookupCosmeticEntry(id);
+    out.push({
+      cosmeticId: id,
+      name: entry?.name ?? id.toUpperCase(),
+      type: (entry?.type ?? 'frame') as CosmeticType,
+      price: priceForTier(lookupCosmeticTier(id)),
+      owned: ownedByCaller.has(id),
+    });
+  }
+  return out;
 }
 
 /**

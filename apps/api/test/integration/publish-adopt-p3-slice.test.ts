@@ -615,3 +615,81 @@ describe('F-3 (§4 audit): the publish TOCTOU guard — a mid-publish compositio
     expect(retry.body.imageUrl).toBeTruthy();
   });
 });
+
+// ── M5 F-9 (E2) — the cross-user `components` metadata on gallery + adopted-switcher payloads ──────────
+// The owner's device-walk ask: "inspecting a published card doesn't list the components used, not even
+// the premium ones you have to pay for." The gallery/adopt payloads now carry server-computed
+// `components: [{cosmeticId,name,type,price,owned}]`, resolved from the DENORMALIZED premium refs (never
+// the composition — the OQ-122 exclusion holds), with per-caller ownership. `bitter` is a REAL roster
+// font (standard tier = 3 PX) so name/type resolve to SLAB/font.
+describe('M5 F-9 E2: cross-user `components` metadata (registry-resolved, owned-per-caller, no leak)', () => {
+  it('the gallery lists a card’s premium components — priced + owned=false for a non-owner; no composition', async () => {
+    const a = await registerUser();
+    const b = await registerUser();
+    const game = await seedGame(a.token, 'Components RPG');
+    await acquire(a.token, 'bitter'); // A must own the premium component to publish with it (3 PX of 10)
+    const { id } = await publishFresh(a.token, game.id, { rects: 2, fontIds: ['bitter'], seed: 71 });
+
+    // B (does NOT own bitter) reads the gallery.
+    const gallery = await request(app).get(`/api/games/${game.id}/cards`).set(authed(b.token));
+    expect(gallery.status).toBe(200);
+    const card = gallery.body.items.find((c: { id: string }) => c.id === id);
+    expect(card).toBeDefined();
+    expect(card.priceForYou).toBe(3);
+    // the components metadata — resolved from the registry, owned per B (unowned).
+    expect(card.components).toEqual([
+      { cosmeticId: 'bitter', name: 'SLAB', type: 'font', price: 3, owned: false },
+    ]);
+    // OQ-122 — no composition leaks onto the cross-user shape, nor onto any component row.
+    expect('composition' in card).toBe(false);
+    for (const comp of card.components) expect('composition' in comp).toBe(false);
+  });
+
+  it('the SAME card reads owned=true (and priceForYou 0) for the designer who owns the component', async () => {
+    const a = await registerUser();
+    const game = await seedGame(a.token, 'Owner Components RPG');
+    await acquire(a.token, 'bitter');
+    const { id } = await publishFresh(a.token, game.id, { rects: 2, fontIds: ['bitter'], seed: 72 });
+
+    const gallery = await request(app).get(`/api/games/${game.id}/cards`).set(authed(a.token));
+    const card = gallery.body.items.find((c: { id: string }) => c.id === id);
+    expect(card.priceForYou).toBe(0);
+    expect(card.components).toEqual([
+      { cosmeticId: 'bitter', name: 'SLAB', type: 'font', price: 3, owned: true },
+    ]);
+  });
+
+  it('a free card carries an empty components list (nothing premium to list)', async () => {
+    const a = await registerUser();
+    const b = await registerUser();
+    const game = await seedGame(a.token, 'Free Components RPG');
+    const { id } = await publishFresh(a.token, game.id, { rects: 3, seed: 73 });
+    const gallery = await request(app).get(`/api/games/${game.id}/cards`).set(authed(b.token));
+    const card = gallery.body.items.find((c: { id: string }) => c.id === id);
+    expect(card.priceForYou).toBe(0);
+    expect(card.components).toEqual([]);
+  });
+
+  it('the adopted-switcher item carries the components too — all owned:true for the holder, no leak', async () => {
+    const a = await registerUser();
+    const b = await registerUser();
+    const game = await seedGame(a.token, 'Adopt Components RPG');
+    await acquire(a.token, 'bitter');
+    const { id } = await publishFresh(a.token, game.id, { rects: 2, fontIds: ['bitter'], seed: 74 });
+
+    // B needs the game in their collection to read the per-entry switcher.
+    const entryRes = await request(app).post('/api/me/collection').set(authed(b.token)).send({ gameId: game.id });
+    const entryId = entryRes.body.entryId as string;
+    // B adopts (acquires bitter as part of the adopt) → the switcher lists it, components owned.
+    const adopt = await request(app).post(`/api/cards/${id}/adopt`).set(authed(b.token));
+    expect(adopt.status).toBe(200);
+
+    const switcher = await request(app).get(`/api/me/collection/${entryId}/cards`).set(authed(b.token));
+    const adopted = switcher.body.items.find((c: { id: string }) => c.id === id);
+    expect(adopted.origin).toBe('adopted');
+    expect(adopted.components).toEqual([
+      { cosmeticId: 'bitter', name: 'SLAB', type: 'font', price: 3, owned: true },
+    ]);
+    expect('composition' in adopted).toBe(false);
+  });
+});
