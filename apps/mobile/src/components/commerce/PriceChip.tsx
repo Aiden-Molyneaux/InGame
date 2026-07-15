@@ -25,10 +25,10 @@ const useStyles = themedStyles((t) => ({
     alignItems: 'center',
     gap: 3,
     backgroundColor: t.brand.gold,
-    paddingHorizontal: 5,
+    paddingHorizontal: 8, // owner walk C1 (2026-07-14): chips read a little wider
     paddingVertical: 3,
   },
-  chipBig: { paddingHorizontal: 7, paddingVertical: 4, gap: 4 },
+  chipBig: { paddingHorizontal: 10, paddingVertical: 4, gap: 4 },
   value: {
     fontFamily: t.font.screenBold,
     fontSize: t.type.micro, // 9 (F-06)
