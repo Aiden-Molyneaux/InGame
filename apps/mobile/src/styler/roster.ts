@@ -157,6 +157,21 @@ function plate(title: string, ink = '#f3ecd9', shape: NameplateShape = 'slab', f
   return { shape, fontId, title: title.toUpperCase(), plate: '#141026', ink, size: 0.05 };
 }
 
+/**
+ * CARD-11 (owner ruling 2026-07-15): a card's nameplate TITLE TEXT is ALWAYS the game title —
+ * system-derived, never user-authored (only font + ink + the plate cosmetic are customizable). This
+ * forces the live draft's nameplate title to the game title (uppercased, matching plate()) so a
+ * RESUMED card carrying a legacy/drifted stored title normalizes for WYSIWYG; the server flatten is
+ * the authoritative backstop. No nameplate (legacy plateless doc) → returned untouched. Pure +
+ * idempotent (same title in → same reference out).
+ */
+export function withGameTitle(comp: CardComposition, gameTitle: string): CardComposition {
+  if (!comp.nameplate) return comp;
+  const want = gameTitle.toUpperCase();
+  if (comp.nameplate.title === want) return comp;
+  return { ...comp, nameplate: { ...comp.nameplate, title: want } };
+}
+
 /** The CARD-18 default face as a composition — the BaseRail's incumbent forefront. */
 export function defaultBase(gameTitle: string): CardComposition {
   return {

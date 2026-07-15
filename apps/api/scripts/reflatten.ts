@@ -17,17 +17,25 @@
  * (the SYS-01 lint correctly forbids cross-user composition reads there — CONVENTIONS rules 1/2), so
  * this one-shot admin tool sits beside the maintenance scripts instead of inside the guarded runtime.
  */
-import { isNull, not } from 'drizzle-orm';
+import { eq, isNull, not } from 'drizzle-orm';
 import { getDb, closeDb } from '../src/db/client';
-import { cardDesigns } from '../src/db/schema';
-import { flattenComposition } from '../src/render/flatten';
+import { cardDesigns, games } from '../src/db/schema';
+import { flattenComposition, withGameTitle } from '../src/render/flatten';
 import { getStorage } from '../src/storage';
 
 async function main(): Promise<void> {
   const db = getDb();
+  // CARD-11 (owner ruling 2026-07-15): the nameplate title text is the GAME title — join `games`
+  // so every regenerated render is forced to the game title regardless of the stored composition.
   const rows = await db
-    .select({ id: cardDesigns.id, name: cardDesigns.name, composition: cardDesigns.composition })
+    .select({
+      id: cardDesigns.id,
+      name: cardDesigns.name,
+      composition: cardDesigns.composition,
+      gameTitle: games.name,
+    })
     .from(cardDesigns)
+    .innerJoin(games, eq(games.id, cardDesigns.gameId))
     .where(not(isNull(cardDesigns.imageUrl)));
 
   const storage = getStorage();
@@ -35,7 +43,7 @@ async function main(): Promise<void> {
   let ok = 0;
   for (const row of rows) {
     try {
-      const { full, thumb } = await flattenComposition(row.composition);
+      const { full, thumb } = await flattenComposition(withGameTitle(row.composition, row.gameTitle));
       await storage.put(`cards/${row.id}/full.png`, full, 'image/png');
       await storage.put(`cards/${row.id}/thumb.png`, thumb, 'image/png');
       ok += 1;

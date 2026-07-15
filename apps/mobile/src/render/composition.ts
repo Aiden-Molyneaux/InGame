@@ -64,7 +64,11 @@ export type CardComposition = {
   base: { gradient: [string, string] } | { fill: string };
   elements: CardElement[]; // cap MAX_ELEMENTS (validated by the shared compositionSchema)
   frame?: { kind?: FrameKind; color: string; width: number }; // width normalized 0..1 of card width; kind defaults thin-line
-  nameplate?: { shape?: NameplateShape; fontId?: string; title: string; plate: string; ink: string; size: number }; // shape defaults slab; fontId defaults clean-sans
+  // `title` is GAME-DERIVED, not user content (CARD-11 / owner ruling 2026-07-15): the text is ALWAYS
+  // the game title (system-forced by the server flatten + the styler write-path); only shape/fontId/ink
+  // + the plate cosmetic are user-customizable. Stored as a render INPUT, never trusted as authored copy.
+  // shape defaults slab; fontId defaults clean-sans.
+  nameplate?: { shape?: NameplateShape; fontId?: string; title: string; plate: string; ink: string; size: number };
   effect?: { kind: EffectKind; intensity: number }; // ONE at a time (CARD-12) — a RUNTIME overlay, not baked
   finish?: { kind: FinishKind }; // stacks OVER the effect; binary material, no slider (CARD-12/OQ-048)
 };

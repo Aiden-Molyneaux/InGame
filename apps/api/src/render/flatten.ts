@@ -47,6 +47,24 @@ export interface FlattenResult {
   thumb: Buffer;
 }
 
+/**
+ * CARD-11 (owner ruling 2026-07-15): a card's nameplate TITLE TEXT is ALWAYS the game title —
+ * system-derived, never user-authored. Only the title's font + ink (and the plate cosmetic) are
+ * user-customizable. The stored `composition.nameplate.title` is therefore NOT trusted for the text;
+ * every server-side render forces the game title so that cross-user artifacts (gallery · adopted ·
+ * published · share) can never surface a drifted or stale title. Uppercased to match the render's
+ * title convention (the styler's plate()/basePlate() store titles uppercased). A plateless legacy
+ * composition (no nameplate) is returned untouched.
+ */
+export function withGameTitle(
+  composition: Record<string, unknown>,
+  gameTitle: string,
+): Record<string, unknown> {
+  const nameplate = composition.nameplate as { title?: string } | undefined;
+  if (!nameplate) return composition;
+  return { ...composition, nameplate: { ...nameplate, title: gameTitle.toUpperCase() } };
+}
+
 // Lazily-initialised, cached skia context — LoadSkiaWeb pulls the ~canvaskit wasm once (~250ms cold),
 // then every flatten reuses it. A module-level promise dedupes concurrent first-touch (F36-safe).
 let skiaCtxPromise: Promise<any> | null = null;

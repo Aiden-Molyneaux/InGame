@@ -36,6 +36,7 @@ import {
   NAMEPLATES,
   START_SOURCES,
   surpriseDeal,
+  withGameTitle,
 } from '../../src/styler/roster';
 import {
   useGetCollectionQuery,
@@ -273,6 +274,24 @@ export default function Styler() {
   // ── the autosave document (CARD-24a · 0066 §6): debounced PATCH; failure-tolerant ─────────────
   const draftRef = useRef<CardComposition | null>(null);
   draftRef.current = draft;
+
+  // CARD-11 (owner ruling 2026-07-15): a card's nameplate title text is ALWAYS the game title —
+  // system-guaranteed, never user-authored (only font + ink + the plate cosmetic are customizable).
+  // New cards already default the title to the game title; a RESUMED card, though, can carry a legacy
+  // or drifted stored title, so normalize the live draft to the game title as soon as the shelf entry
+  // (the authoritative title) is known. setDraft directly, NOT patchDraft: this is a system correction,
+  // not a user edit — it must not count toward userEdits or trigger the copy-on-write autosave on its
+  // own. The next real edit (or an explicit save/publish) then persists the normalized title, and the
+  // server flatten forces it regardless (the authoritative guarantee). Idempotent: once the title
+  // matches, the guard returns and no state update fires.
+  useEffect(() => {
+    if (!entry || !draft) return;
+    const normalized = withGameTitle(draft, entry.title);
+    if (normalized === draft) return; // idempotent — already the game title
+    draftRef.current = normalized;
+    setDraft(normalized);
+  }, [entry, draft]);
+
   const cardRef = useRef(cardRow);
   cardRef.current = cardRow;
   // a held slider (the EFFECT intensity) must not scroll the edit body (round-3 scroll-lock rule)

@@ -172,7 +172,9 @@ const SEED_COMPOSITION: Composition = {
     { type: 'text', x: 0.5, y: 0.55, text: 'TARNISHED', size: 0.075, fill: '#f3ecd9' },
   ],
   frame: { color: '#e8c14a', width: 0.012 },
-  nameplate: { title: 'AURORA', plate: '#141026', ink: '#f3ecd9', size: 0.05 },
+  // CARD-11 (owner ruling 2026-07-15): the nameplate title text IS the game title (system-derived,
+  // non-editable) — the server flatten forces it regardless, but honest seed data matches it.
+  nameplate: { title: 'ELDEN RING', plate: '#141026', ink: '#f3ecd9', size: 0.05 },
   // SOFT GLOW is free — the demo's default showcase card must save/publish without a premium debt now
   // that P7's derivation covers closed attributes (SCANLINE re-tagged premium by decision 0075).
   effect: { kind: 'soft-glow', intensity: 0.55 },
@@ -194,9 +196,14 @@ async function ensureCardSubstrate(userId: string, eldenRingId: string | undefin
     // card — derivation covers closed attributes since P7, so its next save-private would 409
     // PREMIUM_UNRECONCILED. Re-point at the free composition (idempotent — a no-op once clean).
     const effectKind = (design.composition as { effect?: { kind?: string } } | null)?.effect?.kind;
-    if (design.status !== 'published' && effectKind === 'scanline') {
+    const storedTitle = (design.composition as { nameplate?: { title?: string } } | null)?.nameplate?.title;
+    // CARD-11 (owner ruling 2026-07-15): the nameplate title text IS the game title. A dev DB seeded
+    // before this ruling carries the old hand-authored 'AURORA' — re-point at the corrected free
+    // composition (which now stores 'ELDEN RING') so the owner's PRIVATE demo card (live-rendered on the
+    // collection, no flatten) reads honestly. Idempotent — a no-op once the title matches.
+    if (design.status !== 'published' && (effectKind === 'scanline' || storedTitle !== 'ELDEN RING')) {
       design = await cardService.updateCard(userId, design.id, { composition: SEED_COMPOSITION });
-      console.log('seed-dev: repaired the demo card — SCANLINE (premium since 0075) → SOFT GLOW');
+      console.log('seed-dev: repaired the demo card — free composition + CARD-11 game-title nameplate');
     }
     if (design.status === 'draft') {
       design = await cardService.savePrivate(userId, design.id);
@@ -284,7 +291,8 @@ const RIVAL_COMPOSITION: Composition = {
     { type: 'text', x: 0.5, y: 0.5, text: 'RIVAL', size: 0.08, fill: '#f3ecd9', fontId: RIVAL_PREMIUM_FONT },
   ],
   frame: { color: '#e8c14a', width: 0.012 },
-  nameplate: { title: 'RIVAL CUT', plate: '#141026', ink: '#f3ecd9', size: 0.05 },
+  // CARD-11 (owner ruling 2026-07-15): title text = game title (system-derived, non-editable).
+  nameplate: { title: 'HOLLOW KNIGHT', plate: '#141026', ink: '#f3ecd9', size: 0.05 },
   effect: { kind: 'vignette', intensity: 0.5 },
 } as Composition;
 

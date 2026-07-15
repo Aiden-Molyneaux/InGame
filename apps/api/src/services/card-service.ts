@@ -41,7 +41,7 @@ import {
   ServerError,
   ValidationError,
 } from '../errors/AppError';
-import { compositeShareImage, flattenComposition } from '../render/flatten';
+import { compositeShareImage, flattenComposition, withGameTitle } from '../render/flatten';
 import { getStorage, type StorageProvider } from '../storage';
 import {
   collectCosmeticRefs,
@@ -559,7 +559,13 @@ export async function publishCard(actorId: string, cardId: string): Promise<Card
   const premiumIds = await assertPremiumReconciled(actorId, composition); // 3. CARD-13 (pre-tx read)
 
   // ── Flatten OUTSIDE the tx (the spike's flag), then store the full + thumb PNGs ───────────────────
-  const { full, thumb } = await flattenComposition(current.composition);
+  // CARD-11 (owner ruling 2026-07-15): the nameplate title text is ALWAYS the game title (system-
+  // derived), NOT the stored composition value — the server flatten is the authoritative source of
+  // truth. Join the game and force the title so every cross-user artifact (gallery · adopted · share)
+  // shows the game title regardless of any drift in `composition.nameplate.title`.
+  const [game] = await catalogRepo.gamesByIds([current.gameId]);
+  const renderComposition = game ? withGameTitle(current.composition, game.name) : current.composition;
+  const { full, thumb } = await flattenComposition(renderComposition);
   const storage = getStorage();
   const fullKey = fullImageKey(cardId);
   const thumbKey = `cards/${cardId}/thumb.png`;
@@ -830,6 +836,9 @@ export async function getShareImage(actorId: string, cardId: string): Promise<Bu
   let designerUsername: string;
   let imageUrl: string | null;
   let composition: Record<string, unknown> | null = null;
+  // CARD-11: the game title forces the nameplate title on the ONLY branch that flattens a live
+  // composition (the owner's never-published own card); published/adopted read the stored PNG.
+  let gameTitle: string | null = null;
 
   const owned = await cardRepo.findOwnedDesign(actorId, cardId);
   if (owned) {
@@ -837,6 +846,8 @@ export async function getShareImage(actorId: string, cardId: string): Promise<Bu
     designerUsername = me?.username ?? '';
     imageUrl = owned.imageUrl;
     composition = owned.composition;
+    const [game] = await catalogRepo.gamesByIds([owned.gameId]);
+    gameTitle = game?.name ?? null;
   } else {
     const published = await cardRepo.findPublishedDesignById(cardId);
     if (published) {
@@ -854,7 +865,7 @@ export async function getShareImage(actorId: string, cardId: string): Promise<Bu
   const cached = await storage.get(shareKey);
   if (cached) return cached; // regenerated only when absent — the standing cache-first contract
 
-  const base = await resolveBaseRender(cardId, imageUrl, composition, storage);
+  const base = await resolveBaseRender(cardId, imageUrl, composition, gameTitle, storage);
   const composite = await compositeShareImage(base, { designerUsername });
   await storage.put(shareKey, composite, 'image/png');
   return composite;
@@ -867,6 +878,7 @@ async function resolveBaseRender(
   cardId: string,
   imageUrl: string | null,
   composition: Record<string, unknown> | null,
+  gameTitle: string | null,
   storage: StorageProvider,
 ): Promise<Buffer> {
   if (imageUrl) {
@@ -874,7 +886,9 @@ async function resolveBaseRender(
     if (stored) return stored;
   }
   if (composition) {
-    const { full } = await flattenComposition(composition);
+    // CARD-11: force the game title before the on-demand flatten (server-authoritative title text).
+    const render = gameTitle ? withGameTitle(composition, gameTitle) : composition;
+    const { full } = await flattenComposition(render);
     return full;
   }
   throw new ServerError('This card has no flattened render to share.');
