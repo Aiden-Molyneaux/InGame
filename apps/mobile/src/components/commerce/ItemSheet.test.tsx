@@ -58,6 +58,27 @@ describe('ItemSheet — the P2/P9 state grammar', () => {
     expect(screen.getByText('YOURS — IN YOUR EDITOR')).toBeTruthy();
   });
 
+  it('the item IDENTITY row leads — name/type/PriceChip render ABOVE the preview (F-15 fix 3)', () => {
+    const preview = <Text testID="preview-node">preview</Text>;
+    render(
+      wrap(
+        <ItemSheet
+          visible
+          item={holo}
+          balance={27}
+          onClose={jest.fn()}
+          onBuy={jest.fn()}
+          preview={preview}
+          previewLabel="Previewed on your card"
+        />,
+      ),
+    );
+    // the identity (name) must appear before the preview label + preview node in document order.
+    const tree = JSON.stringify(screen.toJSON());
+    expect(tree.indexOf('HOLOGRAPHIC')).toBeLessThan(tree.indexOf('PREVIEWED ON YOUR CARD'));
+    expect(tree.indexOf('HOLOGRAPHIC')).toBeLessThan(tree.indexOf('preview-node'));
+  });
+
   it('a LONG name renders in full alongside the type + PriceChip (title row does not drop them)', () => {
     const longName: StoreItem = { id: 'ornate-gold', name: 'ORNATE GOLD', type: 'FRAME · CATALOG', price: 3 };
     render(wrap(<ItemSheet visible item={longName} balance={27} onClose={jest.fn()} onBuy={jest.fn()} />));

@@ -84,10 +84,9 @@ export function ItemSheet({
   const free = freePack || item.price <= 0;
   return (
     <PulledSheet visible={visible} onClose={onClose}>
-      <PreviewStage label={previewLabel} swapLabel={previewSwapLabel} onSwap={onPreviewSwap}>
-        {preview}
-      </PreviewStage>
-
+      {/* F-15 fix 3 — the item IDENTITY leads: name · type · PriceChip sit at the TOP of the sheet (right
+          under the grab handle), ABOVE the preview, so you know WHAT you're looking at before the live
+          preview loads. General to every ItemSheet (card cosmetics too), not just themes/shells. */}
       <View style={styles.titleRow}>
         <Text style={styles.name} numberOfLines={2}>
           {item.name}
@@ -98,6 +97,10 @@ export function ItemSheet({
         <View style={styles.spacer} />
         {owned ? <OwnedTag /> : free ? null : <PriceChip pixels={item.price} big />}
       </View>
+
+      <PreviewStage label={previewLabel} swapLabel={previewSwapLabel} onSwap={onPreviewSwap}>
+        {preview}
+      </PreviewStage>
 
       {short && !owned ? (
         <>

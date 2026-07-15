@@ -79,6 +79,11 @@ export default function Store() {
   const [restoreNote, setRestoreNote] = useState<string | null>(null);
   const [starterNote, setStarterNote] = useState<string | null>(null);
   const [pendingPack, setPendingPack] = useState<StorePack | null>(null); // F-1 fix 5 — the mock IAP confirm
+  // F-15 fix 4 (owner round-3) — the OPEN item sheet is lifted to the SCREEN ROOT (rendered in the Header
+  // overlay, a sibling of the head + scroll) so its full-screen scrim dims the HEADER too. Previously each
+  // view rendered its own CosmeticSheet INSIDE the ScrollView, so the sheet's absolute-fill scrim was
+  // clipped to the scroll viewport and the ScreenHead + CurrencyCounter stayed lit above it.
+  const [openItem, setOpenItem] = useState<CosmeticListItem | null>(null);
   const [offline, setOffline] = useState(false);
   const tickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -112,6 +117,7 @@ export default function Store() {
     setView('browse');
     setAisle(null);
     setLanded(null);
+    setOpenItem(null);
   }, [k]);
 
   // A transient (network) failure = the app's one offline signal (no client NetInfo yet — the
@@ -196,6 +202,7 @@ export default function Store() {
     setView('browse');
     setLanded(null);
     setAisle(null);
+    setOpenItem(null);
   }, []);
 
   // announce the landed grant (an async result the user should hear).
@@ -253,6 +260,17 @@ export default function Store() {
               onClose={() => setPendingPack(null)}
             />
           ) : null}
+          {/* F-15 fix 4 — the item sheet lives HERE (screen root), so its scrim covers the whole screen
+              incl. the header. Both entry points (NEW-THIS-WEEK featured + aisle rows) open THIS sheet. */}
+          <CosmeticSheet
+            item={openItem}
+            offline={offline}
+            onClose={() => setOpenItem(null)}
+            onTopUp={() => {
+              setOpenItem(null);
+              setView('topup');
+            }}
+          />
         </>
       }
     >
@@ -277,6 +295,7 @@ export default function Store() {
             setAisle(a);
             setView('aisle');
           }}
+          onOpen={setOpenItem}
           onTopUp={() => setView('topup')}
         />
       ) : view === 'topup' ? (
@@ -305,7 +324,7 @@ export default function Store() {
       ) : view === 'wallet' ? (
         <WalletView balance={balance} offline={offline} onTopUp={() => setView('topup')} />
       ) : aisle ? (
-        <AisleView aisle={aisle} offline={offline} onTopUp={() => setView('topup')} />
+        <AisleView aisle={aisle} onOpen={setOpenItem} />
       ) : null}
     </Header>
   );
@@ -369,6 +388,7 @@ function BrowseView({
   claiming,
   featured,
   onAisle,
+  onOpen,
   onTopUp,
 }: {
   available: boolean;
@@ -379,12 +399,11 @@ function BrowseView({
   claiming: boolean;
   featured: CosmeticListItem[];
   onAisle: (a: { key: string; label: string }) => void;
+  /** F-15 fix 4 — raise the screen-root item sheet (lifted to Store so its scrim covers the header). */
+  onOpen: (item: CosmeticListItem) => void;
   onTopUp: () => void;
 }) {
   const styles = useStyles();
-  // the featured item whose P2 sheet is open (M5 F-6 — the NEW-THIS-WEEK grid opens its own sheets).
-  const [featOpenId, setFeatOpenId] = useState<string | null>(null);
-  const featOpen = useMemo(() => featured.find((i) => i.id === featOpenId) ?? null, [featured, featOpenId]);
   // THE INDEX aisle counts (owner-walk polish 2026-07-13; F-2 fix 2026-07-13) — PREMIUM-only tallies
   // from GET /cosmetics, by `type`. The store sells premium; the free baseline lives in the editors
   // (the browse hint says so), and each aisle page stocks premium ItemTiles — so a count that included
@@ -427,7 +446,7 @@ function BrowseView({
                 price={it.owned ? undefined : it.price}
                 owned={it.owned}
                 preview={<CosmeticSwatch type={it.type} id={it.id} size="row" />}
-                onPress={() => setFeatOpenId(it.id)}
+                onPress={() => onOpen(it)}
               />
             ))}
           </View>
@@ -440,8 +459,6 @@ function BrowseView({
       )}
       <AisleIndex onAisle={onAisle} onTopUp={onTopUp} counts={aisleCounts} />
       <Text style={styles.baseHint}>The free baseline isn&apos;t sold here — it lives in the editors.</Text>
-
-      <CosmeticSheet item={featOpen} offline={false} onClose={() => setFeatOpenId(null)} onTopUp={onTopUp} />
     </View>
   );
 }
@@ -586,24 +603,19 @@ function WalletView({ balance, offline, onTopUp }: { balance: number; offline: b
 // no reopen). A 409 INSUFFICIENT_BALANCE grows the P5 bridge (short strip + a covering pack + ALL PACKS).
 function AisleView({
   aisle,
-  offline,
-  onTopUp,
+  onOpen,
 }: {
   aisle: { key: string; label: string };
-  offline: boolean;
-  onTopUp: () => void;
+  /** F-15 fix 4 — raise the screen-root item sheet (lifted to Store so its scrim covers the header). */
+  onOpen: (item: CosmeticListItem) => void;
 }) {
   const styles = useStyles();
   const { data: library, isLoading, isError, refetch } = useGetCosmeticsQuery();
-  const [openId, setOpenId] = useState<string | null>(null);
 
   const items = useMemo(
     () => (library?.items ?? []).filter((i) => i.type === aisle.key && i.price > 0),
     [library, aisle.key],
   );
-  // The open item is READ from the live library (not a snapshot) so its `owned` flag reflects the
-  // acquire invalidation — the sheet flips to OWNED the instant the BUY lands, without reopening.
-  const open = useMemo(() => items.find((i) => i.id === openId) ?? null, [items, openId]);
 
   if (isLoading) {
     return (
@@ -638,13 +650,11 @@ function AisleView({
       ) : (
         <View style={styles.aisleList}>
           {items.map((it) => (
-            <AisleRow key={it.id} item={it} onPress={() => setOpenId(it.id)} />
+            <AisleRow key={it.id} item={it} onPress={() => onOpen(it)} />
           ))}
         </View>
       )}
       <Text style={styles.baseHint}>The free baseline isn&apos;t sold here — it lives in the editors.</Text>
-
-      <CosmeticSheet item={open} offline={offline} onClose={() => setOpenId(null)} onTopUp={onTopUp} />
     </View>
   );
 }
@@ -805,7 +815,7 @@ function ItemPreview({ item, deviceShellId }: { item: CosmeticListItem; deviceSh
         <ThemePreview themeId={item.id}>
           <ThemePreviewScreen />
         </ThemePreview>
-        <Text style={styles.previewLine}>YOUR WHOLE SCREEN, RESTYLED — LEGIBILITY FLOOR HELD (DEV-04)</Text>
+        <Text style={styles.previewLine}>YOUR WHOLE SCREEN, RESTYLED</Text>
       </View>
     );
   }
@@ -858,7 +868,7 @@ function toStoreItem(item: CosmeticListItem): StoreItem {
 
 function previewLabelFor(type?: CosmeticListItem['type']): string {
   if (type === 'screen_theme') return 'Your whole screen, restyled — this page is the preview';
-  if (type === 'device_shell') return 'Same pocket — new shell, previewed on your device';
+  if (type === 'device_shell') return 'New shell, previewed on your device';
   return 'Previewed on your card — live';
 }
 

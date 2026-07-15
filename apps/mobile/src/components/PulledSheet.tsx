@@ -166,5 +166,8 @@ const useStyles = themedStyles((t) => ({
     paddingTop: t.space.md,
   },
   scroll: { flexShrink: 1 }, // scroll within the sheet's height cap, never overflow past it (F-8 E3)
-  body: { padding: t.space.xl, gap: t.space.xl },
+  // F-15 fix 1 (owner round-3) — a DISTINCT, larger bottom inset so the final control (the BuyBar) never
+  // sits flush to the sheet's bottom edge when tall content fills the maxFraction cap. It's contentContainer
+  // padding, so it reads identically whether the sheet scrolls or fits — no dead band on short sheets.
+  body: { paddingHorizontal: t.space.xl, paddingTop: t.space.xl, paddingBottom: t.space.xxl, gap: t.space.xl },
 }));
