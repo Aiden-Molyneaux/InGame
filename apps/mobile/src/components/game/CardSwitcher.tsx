@@ -257,15 +257,6 @@ export function CardSwitcher({
               />
             )}
           </View>
-          {selected.origin === 'owned' && selected.status === 'draft' ? (
-            <Text style={styles.note}>A draft resumes in the Styler — finish it (KEEP or SAVE PRIVATE) to equip it.</Text>
-          ) : selected.equipped ? (
-            <Text style={styles.note}>
-              {selected.origin === 'adopted'
-                ? 'Your shelf wears this card. Unequip it before removing it.'
-                : 'Your shelf wears this card. Unequip it before deleting it.'}
-            </Text>
-          ) : null}
           {inlineError || deleteError ? <Text style={styles.err}>{inlineError ?? deleteError}</Text> : null}
         </View>
       ) : null}

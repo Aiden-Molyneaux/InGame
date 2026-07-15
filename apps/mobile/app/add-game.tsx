@@ -175,7 +175,6 @@ function SearchMode({
               foreIndex={safeFore}
               onFocus={setForeIndex}
             />
-            {focused?.inCollection ? <Text style={styles.hintLine}>ITS DETAIL OFFERS THE GAME PAGE INSTEAD OF RE-ADDING</Text> : null}
             {addError ? <Text style={styles.errLine}>{addError}</Text> : null}
             <ScreenButton
               label={

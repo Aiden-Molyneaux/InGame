@@ -234,9 +234,6 @@ export function PlayDossier({ entry }: { entry: CollectionItem }) {
           )}
         </Row>
       </View>
-      <Text style={styles.caption}>
-        Tap ✎ to edit a stat in place. Platforms surface once their data ships; rating is pending.
-      </Text>
     </View>
   );
 }

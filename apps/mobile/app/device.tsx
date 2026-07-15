@@ -718,9 +718,6 @@ export default function DeviceEditor() {
                 </DeviceItemTile>
               ))}
             </View>
-            <Text style={styles.floorNote}>
-              ☑ LEGIBILITY FLOOR HELD · THE SHELL STAYS {SHELL_NAMES[liveShellId]} PLASTIC
-            </Text>
           </>
         ) : section === 'stickers' ? (
           <>
