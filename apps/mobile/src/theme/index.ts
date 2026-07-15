@@ -90,6 +90,7 @@ export type Theme = Omit<typeof theme, 'scr' | 'shell'> & {
 // those tokens use `useTheme()` / `themedStyles()` instead of the static `theme`; brand/type/font/
 // space/corner/step stay on the static `theme`. Re-exported here so imports stay `from '../theme'`.
 export { useTheme, themedStyles } from './useTheme';
+export { ThemePreview, ThemeOverrideContext, type ThemeOverride } from './ThemePreview';
 export {
   SCREEN_THEMES,
   SHELL_PALETTES,

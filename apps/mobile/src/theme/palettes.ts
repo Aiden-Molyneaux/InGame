@@ -68,9 +68,16 @@ const LED = '#ff5a4e'; // the POWER LED (code `shell.led` today) — constant ac
 const KEY_DARK = '#f5f1e4'; // cream secondary/keycap face (= brand.cream) on dark themes
 const KEY_LIGHT = '#ffffff'; // white key face on light themes (the button also gets a border, see ScreenButton)
 const VALUE_DARK = '#ffd23f'; // bright gold (= brand.gold) on dark themes
-const VALUE_LIGHT = '#8a6d0a'; // deep goldenrod on light themes (~4:1 on the paper/mint/lilac bgs; still gold)
+// VALUE_LIGHT — the "gold-on-light" / deepened antique-gold for gold TEXT & glyphs (prices, TOP-UP
+// links, the DESIGN-NEW label, counters shown as text) on the 3 light themes (F3, decision 0076). The
+// 0070 #8a6d0a only reached ~3.1–4.1:1 on the paper/mint/lilac surfaces (the worst offender the owner
+// called out); deepened to #6a5308 it clears the 4.5:1 floor on EVERY light surface (bg/panel/panelHi)
+// while staying squarely gold-family — the F-02 value signal holds. Gold as a BACKGROUND (the `add`
+// button, PriceChip/CurrencyCounter chips) is the invariant bright `brand.gold` + dark `brand.goldInk`
+// (0069), NOT this token — a deep-antique face would read muddy; the split is deliberate.
+const VALUE_LIGHT = '#6a5308'; // deepened antique gold — gold TEXT/glyph on light themes (≥4.5:1 on all surfaces)
 const VALUE_INK_DARK = '#3c2a09'; // dark ink on bright gold (= brand.goldInk)
-const VALUE_INK_LIGHT = '#f5f1e4'; // cream ink on the deep gold (reads on VALUE_LIGHT)
+const VALUE_INK_LIGHT = '#f5f1e4'; // cream ink on the deep value face (6.5:1 on VALUE_LIGHT; retained for value-faced chips)
 
 // ── Screen themes ───────────────────────────────────────────────────────────────────────────────────
 // hairline is derived a step off `panel` toward `ink` — mirroring how today's Midnight #322d48 sits over
@@ -132,9 +139,9 @@ export const SCREEN_THEMES: Record<ScreenThemeId, ScreenTheme> = {
     panelHi: '#dfd6bd', // §1.1 tools
     hairline: '#e2ded5', // panel→ink step (darkens the light panel into a visible divider)
     ink: '#2a2633', // §1.1 text
-    dim: '#8a8270', // §1.1 dim
-    faint: '#5d5747', // §1.1 soft
-    accent: '#c75c12', // §1.1 accent
+    dim: '#615b4f', // F3 (0076) — deepened along the paper hue from #8a8270 (was 2.63:1 on panelHi) to clear 4.5:1
+    faint: '#5d5747', // §1.1 soft (already ≥4.96:1)
+    accent: '#bf5811', // F3 (0076) — a hair deeper than §1.1 #c75c12 so white ink on the accent face clears 4.5:1
     accentInk: '#ffffff', // §1.1 accentInk
     key: KEY_LIGHT,
     value: VALUE_LIGHT,
@@ -148,8 +155,8 @@ export const SCREEN_THEMES: Record<ScreenThemeId, ScreenTheme> = {
     panelHi: '#c8e0d8', // §1.1 tools
     hairline: '#dce4e1', // panel→ink step
     ink: '#16302c', // §1.1 text
-    dim: '#5f827b', // §1.1 dim
-    faint: '#3c5a54', // §1.1 soft
+    dim: '#49645f', // F3 (0076) — deepened along the mint hue from #5f827b (was 3.04:1 on panelHi) to clear 4.5:1
+    faint: '#3c5a54', // §1.1 soft (already ≥5.43:1)
     accent: '#117672', // §1.1 accent
     accentInk: '#ffffff', // §1.1 accentInk
     key: KEY_LIGHT,
@@ -164,8 +171,8 @@ export const SCREEN_THEMES: Record<ScreenThemeId, ScreenTheme> = {
     panelHi: '#d2c9ec', // §1.1 tools
     hairline: '#e0dee8', // panel→ink step
     ink: '#2a2444', // §1.1 text
-    dim: '#7d76a0', // §1.1 dim
-    faint: '#4a4466', // §1.1 soft
+    dim: '#585276', // F3 (0076) — deepened along the lilac hue from #7d76a0 (was 2.68:1 on panelHi) to clear 4.5:1
+    faint: '#4a4466', // §1.1 soft (already ≥5.76:1)
     accent: '#6c4fd8', // §1.1 accent
     accentInk: '#ffffff', // §1.1 accentInk
     key: KEY_LIGHT,

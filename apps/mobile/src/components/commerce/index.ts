@@ -15,5 +15,7 @@ export { PreviewStage } from './PreviewStage';
 export { LandedMoment } from './LandedMoment';
 export { ItemSheet, type StoreItem } from './ItemSheet';
 export { CosmeticSwatch, type SwatchSize } from './CosmeticSwatch';
+export { ThemePreviewScreen } from './ThemePreviewScreen';
+export { sampleCompositionWith, isCardCosmetic } from './sampleComposition';
 export * from './packMeta';
 export * from './storeCopy';

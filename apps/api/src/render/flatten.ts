@@ -19,10 +19,22 @@ import type { CardComposition } from './composition';
 // via Node resolution keeps them off the tsc graph (typed `any` at this seam by design).
 const require = createRequire(import.meta.url);
 
-/** The PROOF size-ladder the flatten emits (px). Full = the CardDetail render; thumb = the gallery 3-up. */
+// The PROOF size-ladder the flatten emits (px). Full = the CardDetail / inspect / share-base render;
+// thumb = the community-gallery 3-up cell.
+//
+// F3 gallery-resolution pass (owner device-walk E1e / decision 0076): the M5 seed emitted these at
+// 224×313 / 48×67 — but the CLIENT renders them into much larger boxes at up to 3× device-pixel-ratio
+// (iPhone), so a native <Image> upscaled them into mush (the gallery thumb was a 48px PNG stretched
+// across a 96pt cell = a 6× blow-up). Both sizes are raised so each is served at ≥ its consumer's
+// physical pixels:
+//   • thumb → 288×402: the gallery cell is `cell` = 96pt wide (FlatCardImage), ×3 DPR = 288 physical px.
+//   • full  → 448×626 (2×): the inspect/CardDetail large view (up to ~189pt → 567px at 3×) + adopted
+//     `grid` cards (161pt → 483px) + the CARD-21 share composite base all read crisp; downscaled, never
+//     upscaled. The gallery/inspect are still flattened PNGs (never a live canvas — OQ-138); a bigger
+//     PNG on local disk is free (no CDN/egress at M5).
 export const RENDER_SIZES = {
-  full: { w: 224, h: 313 },
-  thumb: { w: 48, h: 67 },
+  full: { w: 448, h: 626 },
+  thumb: { w: 288, h: 402 },
 } as const;
 
 export interface FlattenResult {

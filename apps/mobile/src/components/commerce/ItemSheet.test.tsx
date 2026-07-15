@@ -1,3 +1,4 @@
+import { Text } from 'react-native';
 import { render, screen } from '@testing-library/react-native';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
@@ -75,6 +76,21 @@ describe('ItemSheet — the P2/P9 state grammar', () => {
     expect(screen.queryByLabelText('0 pixels')).toBeNull();
     expect(screen.queryByLabelText(/Hold to buy/)).toBeNull();
     expect(screen.getByText('IN THE DEVICE EDITOR')).toBeTruthy();
+  });
+
+  it('the LIVE preview node (F-10) mounts only while the sheet is OPEN — unmounts on close (canvas budget)', () => {
+    // The store passes the live animated CardFace as the `preview` node; the OQ-138 budget rule is that
+    // the one canvas mounts only while the sheet is open. ItemSheet renders `preview` inside PulledSheet,
+    // which returns null when not visible — so closing the sheet unmounts the canvas. A sentinel stands
+    // in for the CardFace (skia isn't exercised in jsdom).
+    const preview = <Text testID="live-preview">canvas</Text>;
+    render(wrap(<ItemSheet visible item={holo} balance={27} onClose={jest.fn()} onBuy={jest.fn()} preview={preview} />));
+    expect(screen.queryByTestId('live-preview')).toBeTruthy(); // mounted while open
+
+    screen.rerender(
+      wrap(<ItemSheet visible={false} item={holo} balance={27} onClose={jest.fn()} onBuy={jest.fn()} preview={preview} />),
+    );
+    expect(screen.queryByTestId('live-preview')).toBeNull(); // unmounted with the closed sheet
   });
 
   it('a 409 SHORT state shows the P5 bridge strip + sleeps the BuyBar', () => {

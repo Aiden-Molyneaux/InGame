@@ -56,14 +56,17 @@ export function ScreenButton({
     'action-alt': t.scr.accent,
     secondary: t.scr.key, // decision 0069 cream voice, now THEMED (0070/OQ-144): cream on dark, white on light
     destructive: t.brand.alert,
-    add: t.scr.value, // F-02 acquisitive — themed gold (bright on dark, deep on light; 0070)
+    // F-02/F3 (0076) — the gold BUTTON is a FILL, so it stays the invariant bright gold + dark ink on
+    // EVERY theme (the 0069 look), NOT the deepened light-theme `scr.value` (that token is gold TEXT).
+    // A deep-antique face would read muddy; the notched pixel-step silhouette carries it on a light bg.
+    add: t.brand.gold,
   };
   const INK: Record<ScreenButtonVariant, string> = {
     primary: t.scr.accentInk,
     'action-alt': t.scr.accentInk,
     secondary: t.brand.navy, // decision 0069 — navy reads on both cream + white
     destructive: t.brand.cream,
-    add: t.scr.valueInk, // F-02 — dark ink on bright gold, cream ink on the deep light-theme gold (0070)
+    add: t.brand.goldInk, // F-02/F3 — dark ink on the invariant bright gold face (0069), all themes
   };
   // A flat light key can't self-contrast on a light bg (0070/OQ-144) — the SECONDARY button takes a
   // border on light themes so its edge reads; dark themes keep the borderless 0069 cream look.

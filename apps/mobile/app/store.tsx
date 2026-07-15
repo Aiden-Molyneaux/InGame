@@ -21,6 +21,9 @@ import {
   ItemTile,
   ItemSheet,
   CosmeticSwatch,
+  ThemePreviewScreen,
+  sampleCompositionWith,
+  isCardCosmetic,
   PreviewStrip,
   LedgerRow,
   LandedMoment,
@@ -29,8 +32,9 @@ import {
   usdFor,
   type StoreItem,
 } from '../src/components/commerce';
+import { CardFace } from '../src/components/CardFace';
 import { COSMETIC_TYPE_LABEL } from '../src/components/commerce/storeCopy';
-import { themedStyles } from '../src/theme';
+import { themedStyles, ThemePreview } from '../src/theme';
 import { useAnnounceOnChange } from '../src/a11y/announce';
 import { mintMockReceipt } from '../src/store/mockReceipt';
 import {
@@ -761,20 +765,30 @@ function RowThumb({ item }: { item: CosmeticListItem }) {
   return <CosmeticSwatch type={item.type} id={item.id} size="row" />;
 }
 
+// The item-sheet preview slot — the F-10 LIVE inspect (decision 0076). Where the aisle rows/tiles keep
+// the lightweight static CosmeticSwatch, the OPEN sheet upgrades to a real live preview: card cosmetics
+// render on a live animated skia CardFace (full effect + motion), a screen theme repaints a mock screen
+// to the previewed palette, and a shell shows the before→after on the real shell colourways. The single
+// CardFace is the ONE live canvas per open sheet the amended OQ-138 budget sanctions (per-row canvases
+// stay banned — the aisle still uses CosmeticSwatch).
 function ItemPreview({ item, deviceShellId }: { item: CosmeticListItem; deviceShellId?: string | null }) {
   const styles = useStyles();
   if (item.type === 'screen_theme') {
-    // P3 — the theme applied live to a mini screen (visual-only; no PATCH). The PreviewStrip signals it.
+    // P3 — the theme applied live: the ThemePreview subtree repaints the mock screen to the previewed
+    // palette (no PATCH, no global repaint), so "PREVIEWING — BERRY" actually shows BERRY.
     return (
       <View style={styles.previewCol}>
         <PreviewStrip name={item.name} onExit={() => {}} />
-        <MiniDevice themeId={item.id} />
+        <ThemePreview themeId={item.id}>
+          <ThemePreviewScreen />
+        </ThemePreview>
         <Text style={styles.previewLine}>YOUR WHOLE SCREEN, RESTYLED — LEGIBILITY FLOOR HELD (DEV-04)</Text>
       </View>
     );
   }
   if (item.type === 'device_shell') {
-    // P4 — the before→after pair on YOUR pocket (current shell → the new wrap). Same silhouette.
+    // P4 — the before→after pair on YOUR pocket (current shell → the new wrap). MiniDevice reads the
+    // real SHELL_PALETTES so the "after" wears the actual colourway live.
     return (
       <View style={styles.beforeAfter}>
         <View style={styles.baCol}>
@@ -789,8 +803,24 @@ function ItemPreview({ item, deviceShellId }: { item: CosmeticListItem; deviceSh
       </View>
     );
   }
-  // frame/effect/finish/nameplate/font — the cosmetic worn on a neutral sample (M5 F-6 note 2), the
-  // board's rack-tile grammar. The live-on-YOUR-card render stays an editor concern (OQ-138).
+  // frame/effect/finish/nameplate/font — LIVE on a neutral sample card (F-10): the ONE animated skia
+  // CardFace the open sheet is allowed. Frost shimmers, marquee runs, holographic sweeps — reduce-motion
+  // renders the static keyframe (handled inside the render layer). Mounts only while the sheet is open
+  // (PulledSheet unmounts its children on close — the canvas budget rule).
+  if (isCardCosmetic(item.type)) {
+    return (
+      <View style={styles.livePreview}>
+        <CardFace
+          title={item.name}
+          composition={sampleCompositionWith(item.type, item.id)}
+          width={132}
+          height={184}
+          animate
+        />
+      </View>
+    );
+  }
+  // Any other type (defensive) — the static swatch.
   return <CosmeticSwatch type={item.type} id={item.id} size="sheet" />;
 }
 
@@ -900,7 +930,8 @@ const useStyles = themedStyles((t) => ({
   rowType: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
   // NEW THIS WEEK featured grid (board `.rack3`) — a 3-up dense grid of ItemTiles.
   rack3: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.md },
-  // ── ItemSheet previews (P3 theme · P4 shell before/after · card-cosmetic swatch) ──
+  // ── ItemSheet previews (P3 theme · P4 shell before/after · card-cosmetic live CardFace) ──
+  livePreview: { alignItems: 'center', justifyContent: 'center', alignSelf: 'stretch' },
   previewCol: { alignItems: 'center', gap: t.space.md, alignSelf: 'stretch' },
   previewLine: {
     fontFamily: t.font.screenSemi,
