@@ -11,16 +11,16 @@ import { Skeleton } from '../src/components/lifecycle/Skeleton';
 import { Toast } from '../src/components/lifecycle/Toast';
 import { Offline } from '../src/components/lifecycle/Offline';
 import { MiniDevice } from '../src/components/MiniDevice';
-import { ThemeSwatch } from '../src/components/device/ThemeSwatch';
 import {
   CurrencyCounter,
   DailyBonusBar,
   AisleIndex,
-  AISLES,
   PackTile,
   PriceChip,
   OwnedTag,
+  ItemTile,
   ItemSheet,
+  CosmeticSwatch,
   PreviewStrip,
   LedgerRow,
   LandedMoment,
@@ -224,7 +224,7 @@ export default function Store() {
           ladderReward={wallet?.dailyBonus.ladderReward}
           onClaim={onClaim}
           claiming={claiming}
-          hasPremium={(store?.premiumCosmetics.length ?? 0) > 0}
+          featured={store?.premiumCosmetics ?? []}
           onAisle={(a) => {
             setAisle(a);
             setView('aisle');
@@ -330,7 +330,7 @@ function BrowseView({
   ladderReward,
   onClaim,
   claiming,
-  hasPremium,
+  featured,
   onAisle,
   onTopUp,
 }: {
@@ -340,11 +340,14 @@ function BrowseView({
   ladderReward?: { pixels: number; cosmeticId?: string };
   onClaim: () => void;
   claiming: boolean;
-  hasPremium: boolean;
+  featured: CosmeticListItem[];
   onAisle: (a: { key: string; label: string }) => void;
   onTopUp: () => void;
 }) {
   const styles = useStyles();
+  // the featured item whose P2 sheet is open (M5 F-6 — the NEW-THIS-WEEK grid opens its own sheets).
+  const [featOpenId, setFeatOpenId] = useState<string | null>(null);
+  const featOpen = useMemo(() => featured.find((i) => i.id === featOpenId) ?? null, [featured, featOpenId]);
   // THE INDEX aisle counts (owner-walk polish 2026-07-13; F-2 fix 2026-07-13) — PREMIUM-only tallies
   // from GET /cosmetics, by `type`. The store sells premium; the free baseline lives in the editors
   // (the browse hint says so), and each aisle page stocks premium ItemTiles — so a count that included
@@ -372,14 +375,36 @@ function BrowseView({
       />
       {/* the seasonal drop cover (ECON-08) is EXPECTED(P10) — /store.drops is [] at M5, no cover drawn. */}
 
+      {/* NEW THIS WEEK (board P1) — the featured storefront: six premium ItemTiles, each wearing its real
+          preview (M5 F-6) + PriceChip, opening its own P2 sheet. Empty-graceful: no featured → the aisle
+          index is the browse spine and an honest one-liner stands in. */}
+      {featured.length > 0 ? (
+        <>
+          <Text style={styles.secTitle}>NEW THIS WEEK</Text>
+          <View style={styles.rack3}>
+            {featured.map((it) => (
+              <ItemTile
+                key={`${it.type}:${it.id}`}
+                name={it.name}
+                type={COSMETIC_TYPE_LABEL[it.type]}
+                price={it.owned ? undefined : it.price}
+                owned={it.owned}
+                preview={<CosmeticSwatch type={it.type} id={it.id} size="row" />}
+                onPress={() => setFeatOpenId(it.id)}
+              />
+            ))}
+          </View>
+        </>
+      ) : null}
+
       <Text style={styles.secTitle}>THE INDEX — ALL AISLES</Text>
-      {/* the NEW-THIS-WEEK premium grid is EXPECTED(P4 roster) — /store.premiumCosmetics is [] at M5, so
-          the aisle index is the live browse spine. A one-line honest note stands in for the empty grid. */}
-      {hasPremium ? null : (
+      {featured.length > 0 ? null : (
         <Text style={styles.emptyNote}>New premium items arrive as the catalog fills — browse the aisles below.</Text>
       )}
       <AisleIndex onAisle={onAisle} onTopUp={onTopUp} counts={aisleCounts} />
       <Text style={styles.baseHint}>The free baseline isn&apos;t sold here — it lives in the editors.</Text>
+
+      <CosmeticSheet item={featOpen} offline={false} onClose={() => setFeatOpenId(null)} onTopUp={onTopUp} />
     </View>
   );
 }
@@ -531,16 +556,7 @@ function AisleView({
 }) {
   const styles = useStyles();
   const { data: library, isLoading, isError, refetch } = useGetCosmeticsQuery();
-  const { data: wallet } = useGetWalletQuery();
-  const { data: store } = useGetStoreQuery();
-  const { data: device } = useGetDeviceQuery();
-  const [acquire, { isLoading: buying }] = useAcquireCosmeticMutation();
-
-  const balance = wallet?.balance ?? 0;
   const [openId, setOpenId] = useState<string | null>(null);
-  const [justBought, setJustBought] = useState(false);
-  const [shortBy, setShortBy] = useState<number | null>(null);
-  const [buyErr, setBuyErr] = useState<string | null>(null);
 
   const items = useMemo(
     () => (library?.items ?? []).filter((i) => i.type === aisle.key && i.price > 0),
@@ -549,51 +565,6 @@ function AisleView({
   // The open item is READ from the live library (not a snapshot) so its `owned` flag reflects the
   // acquire invalidation — the sheet flips to OWNED the instant the BUY lands, without reopening.
   const open = useMemo(() => items.find((i) => i.id === openId) ?? null, [items, openId]);
-  const owned = (open?.owned ?? false) || justBought;
-
-  const closeSheet = useCallback(() => {
-    setOpenId(null);
-    setJustBought(false);
-    setShortBy(null);
-    setBuyErr(null);
-  }, []);
-
-  const openItem = useCallback((id: string) => {
-    setOpenId(id);
-    setJustBought(false);
-    setShortBy(null);
-    setBuyErr(null);
-  }, []);
-
-  const onBuy = useCallback(() => {
-    if (!open) return;
-    setBuyErr(null);
-    acquire(open.id)
-      .unwrap()
-      .then(() => {
-        setJustBought(true); // the sheet transitions to OWNED in place (no reopen)
-        setShortBy(null);
-      })
-      .catch((e) => {
-        const err = e as { data?: { error?: { code?: string; shortBy?: number } } };
-        const code = err?.data?.error?.code;
-        if (code === 'INSUFFICIENT_BALANCE') {
-          setShortBy(err?.data?.error?.shortBy ?? Math.max(0, open.price - balance));
-        } else {
-          setBuyErr("Couldn't complete — your pixels are safe.");
-        }
-      });
-  }, [open, acquire, balance]);
-
-  // the cheapest pack that covers the gap — the P5 bridge's inline covering tile.
-  const bridgePacks = useMemo(() => {
-    if (shortBy == null || !open) return [];
-    const need = open.price - balance;
-    const covering = (store?.packs ?? [])
-      .filter((p) => !p.oneTime && p.pixels >= need)
-      .sort((a, b) => a.pixels - b.pixels);
-    return covering.slice(0, 1);
-  }, [shortBy, open, balance, store]);
 
   if (isLoading) {
     return (
@@ -628,31 +599,102 @@ function AisleView({
       ) : (
         <View style={styles.aisleList}>
           {items.map((it) => (
-            <AisleRow key={it.id} item={it} onPress={() => openItem(it.id)} />
+            <AisleRow key={it.id} item={it} onPress={() => setOpenId(it.id)} />
           ))}
         </View>
       )}
       <Text style={styles.baseHint}>The free baseline isn&apos;t sold here — it lives in the editors.</Text>
 
+      <CosmeticSheet item={open} offline={offline} onClose={() => setOpenId(null)} onTopUp={onTopUp} />
+    </View>
+  );
+}
+
+// The P2 item sheet + its BUY flow (shared by the aisle rows and the NEW-THIS-WEEK featured grid). Owns
+// the acquire mutation, the in-place OWNED flip (justBought), and the P5 insufficient-balance bridge.
+// `item` is passed LIVE (re-read from its query on invalidation) so `owned` reflects a just-landed buy.
+function CosmeticSheet({
+  item,
+  offline,
+  onClose,
+  onTopUp,
+}: {
+  item: CosmeticListItem | null;
+  offline: boolean;
+  onClose: () => void;
+  onTopUp: () => void;
+}) {
+  const styles = useStyles();
+  const { data: wallet } = useGetWalletQuery();
+  const { data: store } = useGetStoreQuery();
+  const { data: device } = useGetDeviceQuery();
+  const [acquire] = useAcquireCosmeticMutation();
+  const balance = wallet?.balance ?? 0;
+
+  const [justBought, setJustBought] = useState(false);
+  const [shortBy, setShortBy] = useState<number | null>(null);
+  const [buyErr, setBuyErr] = useState<string | null>(null);
+
+  // Reset the transient buy state whenever a different item opens (or the sheet closes).
+  useEffect(() => {
+    setJustBought(false);
+    setShortBy(null);
+    setBuyErr(null);
+  }, [item?.id]);
+
+  const owned = (item?.owned ?? false) || justBought;
+
+  const onBuy = useCallback(() => {
+    if (!item) return;
+    setBuyErr(null);
+    acquire(item.id)
+      .unwrap()
+      .then(() => {
+        setJustBought(true); // the sheet transitions to OWNED in place (no reopen)
+        setShortBy(null);
+      })
+      .catch((e) => {
+        const err = e as { data?: { error?: { code?: string; shortBy?: number } } };
+        const code = err?.data?.error?.code;
+        if (code === 'INSUFFICIENT_BALANCE') {
+          setShortBy(err?.data?.error?.shortBy ?? Math.max(0, item.price - balance));
+        } else {
+          setBuyErr("Couldn't complete — your pixels are safe.");
+        }
+      });
+  }, [item, acquire, balance]);
+
+  // the cheapest pack that covers the gap — the P5 bridge's inline covering tile.
+  const bridgePacks = useMemo(() => {
+    if (shortBy == null || !item) return [];
+    const need = item.price - balance;
+    return (store?.packs ?? [])
+      .filter((p) => !p.oneTime && p.pixels >= need)
+      .sort((a, b) => a.pixels - b.pixels)
+      .slice(0, 1);
+  }, [shortBy, item, balance, store]);
+
+  return (
+    <>
       <ItemSheet
-        visible={open !== null}
-        item={open ? toStoreItem(open) : null}
+        visible={item !== null}
+        item={item ? toStoreItem(item) : null}
         balance={balance}
         owned={owned}
         ownedNote={justBought ? 'Yours — in your editor' : 'In your editor'}
-        onClose={closeSheet}
+        onClose={onClose}
         onBuy={onBuy}
-        buyNote={buyErr ?? previewNoteFor(open?.type)}
-        preview={open ? <ItemPreview item={open} deviceShellId={device?.activeShellId} /> : null}
-        previewLabel={previewLabelFor(open?.type)}
+        buyNote={buyErr ?? previewNoteFor(item?.type)}
+        preview={item ? <ItemPreview item={item} deviceShellId={device?.activeShellId} /> : null}
+        previewLabel={previewLabelFor(item?.type)}
         shortBy={shortBy}
         bridgePacks={bridgePacks}
         onBuyPack={onTopUp}
         onAllPacks={onTopUp}
       />
       {/* the sheet's BUY is gated offline by the note; the header offline strip already warns globally. */}
-      {offline && open && !owned ? <Text style={styles.emptyNote}>Offline — purchases need a connection.</Text> : null}
-    </View>
+      {offline && item && !owned ? <Text style={styles.emptyNote}>Offline — purchases need a connection.</Text> : null}
+    </>
   );
 }
 
@@ -682,21 +724,11 @@ function AisleRow({ item, onPress }: { item: CosmeticListItem; onPress: () => vo
   );
 }
 
-// The item preview art. Shells + themes reuse the device-editor primitives (MiniDevice / ThemeSwatch —
-// the same components the Device editor previews with); a device_shell shows the P4 before→after pair on
-// YOUR device; a screen_theme shows the theme applied to a mini screen. Card cosmetics (frame/effect/
-// finish/nameplate/font) have no live card render at this iteration — they show a typed placeholder
-// (never invented card art; the live-on-your-card preview is a later wiring of the M4 CardFace).
+// The aisle-row thumb — the cosmetic worn on a neutral sample (M5 F-6 note 2): shells/themes reuse the
+// device-editor primitives (MiniDevice / ThemeSwatch), card cosmetics render a mini sample card / plate /
+// "Aa" swatch. CosmeticSwatch dispatches by type; all are PLAIN Views/SVG (OQ-138), never Skia canvases.
 function RowThumb({ item }: { item: CosmeticListItem }) {
-  if (item.type === 'device_shell') return <MiniDevice shellId={item.id} />;
-  if (item.type === 'screen_theme') return <ThemeSwatch themeId={item.id} />;
-  const styles = useStyles();
-  const glyph = AISLES.find((a) => a.key === item.type)?.glyph ?? '◆';
-  return (
-    <View style={styles.glyphThumb}>
-      <Text style={styles.glyphText}>{glyph}</Text>
-    </View>
-  );
+  return <CosmeticSwatch type={item.type} id={item.id} size="row" />;
 }
 
 function ItemPreview({ item, deviceShellId }: { item: CosmeticListItem; deviceShellId?: string | null }) {
@@ -727,12 +759,9 @@ function ItemPreview({ item, deviceShellId }: { item: CosmeticListItem; deviceSh
       </View>
     );
   }
-  const glyph = AISLES.find((a) => a.key === item.type)?.glyph ?? '◆';
-  return (
-    <View style={styles.glyphPreview}>
-      <Text style={styles.glyphPreviewText}>{glyph}</Text>
-    </View>
-  );
+  // frame/effect/finish/nameplate/font — the cosmetic worn on a neutral sample (M5 F-6 note 2), the
+  // board's rack-tile grammar. The live-on-YOUR-card render stays an editor concern (OQ-138).
+  return <CosmeticSwatch type={item.type} id={item.id} size="sheet" />;
 }
 
 function toStoreItem(item: CosmeticListItem): StoreItem {
@@ -834,17 +863,9 @@ const useStyles = themedStyles((t) => ({
   rowMeta: { flex: 1, gap: 3 },
   rowName: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 1 },
   rowType: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
-  glyphThumb: {
-    width: 42,
-    height: 58,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: t.scr.panel,
-    borderWidth: 1,
-    borderColor: t.scr.hairline,
-  },
-  glyphText: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.accent },
-  // ── ItemSheet previews (P3 theme · P4 shell before/after · glyph fallback) ──
+  // NEW THIS WEEK featured grid (board `.rack3`) — a 3-up dense grid of ItemTiles.
+  rack3: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.md },
+  // ── ItemSheet previews (P3 theme · P4 shell before/after · card-cosmetic swatch) ──
   previewCol: { alignItems: 'center', gap: t.space.md, alignSelf: 'stretch' },
   previewLine: {
     fontFamily: t.font.screenSemi,
@@ -858,14 +879,4 @@ const useStyles = themedStyles((t) => ({
   baLbl: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
   baLblNew: { color: t.brand.gold },
   baArrow: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.accent },
-  glyphPreview: {
-    width: 84,
-    height: 108,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: t.scr.panel,
-    borderWidth: 1,
-    borderColor: t.scr.hairline,
-  },
-  glyphPreviewText: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.accent },
 }));

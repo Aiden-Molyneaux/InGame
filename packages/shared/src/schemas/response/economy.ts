@@ -124,16 +124,33 @@ export const storePackSchema = z
 export type StorePack = z.infer<typeof storePackSchema>;
 
 /**
+ * One library item (GET /cosmetics, decision 0075; also the GET /store featured element, M5 F-6). `tier`
+ * is absent for a free item (never priced, always `owned:true`); `price` is 0 for a free item, the tier's
+ * PX otherwise. `owned` is caller-scoped (the caller's own `user_entitlements` — never another
+ * principal's). Defined here (above `storeResponseSchema`) so the store's `premiumCosmetics` can reuse it.
+ */
+export const cosmeticListItemSchema = z
+  .object({
+    id: z.string(),
+    type: cosmeticTypeSchema,
+    name: z.string(),
+    tier: cosmeticTierSchema.optional(),
+    price: z.number().int().nonnegative(),
+    owned: z.boolean(),
+  })
+  .strict();
+export type CosmeticListItem = z.infer<typeof cosmeticListItemSchema>;
+
+/**
  * GET /store — `{ packs, premiumCosmetics, drops }` (ECON-01/07/08/10). `packs` is the real-money
- * currency ladder (decision 0072). `premiumCosmetics` (COSM-03 PX-priced store items) and `drops`
- * (ECON-08 seasonal) are HONEST EMPTIES at P2 — the surfaces render, the content is authored later
- * (premium cosmetics → P4 acquire + P10 roster re-tag; drops → P10/ECON-08). No cosmetic data is
- * invented here; the arrays gain typed items when those packets land.
+ * currency ladder (decision 0072). `premiumCosmetics` (M5 F-6) is the FEATURED storefront set — the board
+ * P1 "NEW THIS WEEK" grid — as `cosmeticListItem`s (COSM-03 PX-priced, caller-scoped `owned`). `drops`
+ * (ECON-08 seasonal) stays an HONEST EMPTY — the drawer renders, the content is authored at P10.
  */
 export const storeResponseSchema = z
   .object({
     packs: z.array(storePackSchema),
-    premiumCosmetics: z.array(z.unknown()), // TODO(P4/P10): COSM-03 premium store items — empty until authored
+    premiumCosmetics: z.array(cosmeticListItemSchema),
     drops: z.array(z.unknown()), // TODO(P10/ECON-08): seasonal drops — the drawer renders, authoring is later
   })
   .strict();
@@ -205,23 +222,7 @@ export const acquireBatchResponseSchema = z
 export type AcquireBatchResponse = z.infer<typeof acquireBatchResponseSchema>;
 
 // ── M5 P10 roster tiering (COSM-01 — decision 0075; api-contract GET /cosmetics) ───────────────────────
-
-/**
- * One library item (GET /cosmetics, decision 0075). `tier` is absent for a free item (never priced,
- * always `owned:true`); `price` is 0 for a free item, the tier's PX otherwise. `owned` is caller-scoped
- * (the caller's own `user_entitlements` — never another principal's).
- */
-export const cosmeticListItemSchema = z
-  .object({
-    id: z.string(),
-    type: cosmeticTypeSchema,
-    name: z.string(),
-    tier: cosmeticTierSchema.optional(),
-    price: z.number().int().nonnegative(),
-    owned: z.boolean(),
-  })
-  .strict();
-export type CosmeticListItem = z.infer<typeof cosmeticListItemSchema>;
+// `cosmeticListItemSchema` is defined above (it is shared with GET /store's `premiumCosmetics`, M5 F-6).
 
 /** GET /cosmetics — `{ items }` (COSM-01, decision 0075). The full free+premium library, optionally
  *  filtered to one type; feeds the Store aisle listings + the editors' asset pickers. */

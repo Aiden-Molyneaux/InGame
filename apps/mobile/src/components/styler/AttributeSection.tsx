@@ -7,6 +7,7 @@ import { StateMark } from '../StateMark';
 import { PriceChip } from '../commerce/PriceChip';
 import { theme, themedStyles, useTheme } from '../../theme';
 import type { CardComposition } from '../../render/composition';
+import { FONT_FAMILY, previewFontSize, platePath } from '../../render/previewPrimitives';
 
 // CARD-13 (M5 P7) — per-tile premium badging. A key present in `badges` marks that roster id premium:
 //   • owned      → a compact ✓ (the price is gone — COSM-03)
@@ -33,21 +34,8 @@ export interface AttributeOption {
 
 export type PreviewKind = 'card' | 'plate' | 'font';
 
-/** RN-registered families for the roster font ids (loaded app-wide in the root layout, _layout.tsx). */
-const FONT_FAMILY: Record<string, string> = {
-  'clean-sans': 'ChakraPetch_700Bold',
-  'bold-display': 'PaytoneOne_400Regular',
-  // decision 0068 — the FontPreview <Text> needs the RN family; the skia hero uses the typeface map.
-  'press-start': 'PressStart2P_400Regular',
-  bitter: 'Bitter_700Bold',
-  'space-mono': 'SpaceMono_700Bold',
-  pacifico: 'Pacifico_400Regular',
-  stencil: 'AllertaStencil_400Regular',
-};
-
-/** Optical size correction, mirroring the renderer's FONT_SCALE (PIXEL draws huge at a given em). */
-const FONT_SIZE_SCALE: Record<string, number> = { 'press-start': 0.6 };
-const previewFontSize = (base: number, fontId?: string) => base * (FONT_SIZE_SCALE[fontId ?? ''] ?? 1);
+// FONT_FAMILY · previewFontSize · platePath are shared with the Store's CosmeticSwatch — see
+// render/previewPrimitives.ts (M5 F-6: one source of truth for the non-Skia cosmetic previews).
 
 // The card-preview rail geometry (decision 0068 — ONE strip canvas + transparent Pressable overlays,
 // so a 16-tile FRAME rail is 1 WebGL context, not 16). The strip draws each card into its tile's card
@@ -201,34 +189,10 @@ function CardRail({
 function PlatePreview({ comp }: { comp: CardComposition }) {
   const t = useTheme();
   const np = comp.nameplate;
-  const raw = np?.shape ?? 'slab';
-  const shape = raw === 'none' ? 'slab' : raw;
+  const shape = (np?.shape ?? 'slab') === 'none' ? 'slab' : (np?.shape ?? 'slab');
   const W = 96;
   const H = 30;
-  let d: string;
-  if (shape === 'ribbon') {
-    const nx = W * 0.06;
-    d = `M ${nx} 0 L ${W - nx} 0 L ${W} ${H / 2} L ${W - nx} ${H} L ${nx} ${H} L 0 ${H / 2} Z`;
-  } else if (shape === 'bevel') {
-    const ch = H * 0.35;
-    d = `M ${ch} 0 L ${W - ch} 0 L ${W} ${ch} L ${W} ${H} L 0 ${H} L 0 ${ch} Z`;
-  } else if (shape === 'dogtag') {
-    const ch = H * 0.5;
-    d = `M ${ch} 0 L ${W - ch} 0 L ${W} ${H / 2} L ${W - ch} ${H} L ${ch} ${H} L 0 ${H / 2} Z`;
-  } else if (shape === 'arch') {
-    const r = Math.min(H * 0.7, W / 2);
-    d = `M 0 ${r} A ${r} ${r} 0 0 1 ${r} 0 L ${W - r} 0 A ${r} ${r} 0 0 1 ${W} ${r} L ${W} ${H} L 0 ${H} Z`;
-  } else if (shape === 'capsule') {
-    const r = H / 2;
-    d = `M ${r} 0 L ${W - r} 0 A ${r} ${r} 0 0 1 ${W - r} ${H} L ${r} ${H} A ${r} ${r} 0 0 1 ${r} 0 Z`;
-  } else if (shape === 'tab') {
-    const th = H * 0.28;
-    const t0 = W * 0.06;
-    const t1 = W * 0.42;
-    d = `M 0 ${th} L ${t0} ${th} L ${t0} 0 L ${t1} 0 L ${t1} ${th} L ${W} ${th} L ${W} ${H} L 0 ${H} Z`;
-  } else {
-    d = `M 0 0 L ${W} 0 L ${W} ${H} L 0 ${H} Z`; // slab · brass (brass tints gold)
-  }
+  const d = platePath(shape, W, H);
   const plateFill = shape === 'brass' ? '#e8c14a' : (np?.plate ?? '#141026');
   return (
     <View style={{ width: W, height: H, alignItems: 'center', justifyContent: 'center' }}>

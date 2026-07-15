@@ -14,5 +14,6 @@ export { PreviewStrip } from './PreviewStrip';
 export { PreviewStage } from './PreviewStage';
 export { LandedMoment } from './LandedMoment';
 export { ItemSheet, type StoreItem } from './ItemSheet';
+export { CosmeticSwatch, type SwatchSize } from './CosmeticSwatch';
 export * from './packMeta';
 export * from './storeCopy';

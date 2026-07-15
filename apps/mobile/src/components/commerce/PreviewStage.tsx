@@ -44,6 +44,8 @@ const useStyles = themedStyles((t) => ({
     borderColor: t.scr.hairline,
   },
   label: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 2, textAlign: 'center' },
-  previewSlot: { alignItems: 'center', justifyContent: 'center' },
+  // minHeight — the slot never collapses to a broken sliver when the preview content is small/absent
+  // (M5 F-6 note 1: the card-cosmetic sheet rendered broken when its preview was a bare placeholder).
+  previewSlot: { alignItems: 'center', justifyContent: 'center', minHeight: 122, alignSelf: 'stretch' },
   swap: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 0.5 },
 }));

@@ -214,6 +214,29 @@ export function lookupCosmeticDisplay(cosmeticId: string): { name: string; type:
   return entry ? { name: entry.name, type: COSMETIC_TYPE_LABELS[entry.type] } : undefined;
 }
 
+// ── The featured storefront (M5 F-6 — the board P1 "NEW THIS WEEK" grid) ───────────────────────────────
+// A SYS-04-tunable seed: six premium ids, one per showy category, emphasizing the showpieces so the
+// storefront leads with the best. Order = display order in the 3-up grid. These are the SAME roster ids
+// the client rosters use (no synthetic namespacing); each is premium (a tier), so GET /store computes
+// `owned` from the caller's entitlements exactly as GET /cosmetics does. Tunable — swap ids to re-curate
+// the featured shelf; the pre-launch content pass owns ECON-08 seasonal drops (a separate surface).
+export const FEATURED_COSMETICS: readonly string[] = [
+  'marquee', // FRAME · showpiece — the animated marquee band
+  'frost', // EFFECT · showpiece — the frost sweep
+  'holographic', // FINISH · showpiece — the rainbow foil
+  'brass', // NAMEPLATE · standard — the brass plate
+  'carbon', // DEVICE SHELL · showpiece — the carbon body
+  'berry', // SCREEN THEME · big — the berry palette
+];
+
+/** The featured catalog entries in display order (M5 F-6). Any id absent from the catalog is skipped —
+ *  the seed degrades gracefully rather than surfacing a phantom item. */
+export function listFeaturedCatalog(): CosmeticCatalogEntry[] {
+  return FEATURED_COSMETICS.map((id) => PREMIUM_BY_ID.get(id)).filter(
+    (e): e is CosmeticCatalogEntry => e != null,
+  );
+}
+
 // ── CARD-06 derivation support (M5 P7 — the CLOSED-ATTRIBUTE extension) ──────────────────────────────
 // A composition's CLOSED attributes are `kind`/`shape`-keyed (render/composition.ts). For EFFECT,
 // FINISH and NAMEPLATE the kind/shape string IS the roster id one-for-one (`'frost'`, `'linen'`,

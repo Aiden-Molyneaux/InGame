@@ -8,6 +8,8 @@ import { mutation } from '../../db/mutation';
 import * as iapRepo from '../../repositories/iap-repo';
 import * as storeRepo from '../../repositories/store-repo';
 import * as economyRepo from '../../repositories/economy-repo';
+import * as entitlementRepo from '../../repositories/entitlement-repo';
+import { listFeaturedCatalog, priceForTier } from '../../config/cosmetics';
 import * as ledger from '../economy/ledger-service';
 import { getIapProvider } from './index';
 import type { IapProvider } from './IapProvider';
@@ -255,12 +257,19 @@ const reverseRefund = mutation(
 
 /**
  * The Store front (ECON-01/07/08/10). The real-money pack ladder with per-caller `purchased` flags (the
- * consumed one-time Starter is marked purchased, ECON-10). `premiumCosmetics` + `drops` are honest
- * empties — the surfaces render, the content is authored at P4/P10 (no cosmetic data invented here).
+ * consumed one-time Starter is marked purchased, ECON-10). `premiumCosmetics` = the M5 F-6 FEATURED set
+ * (the board P1 "NEW THIS WEEK" grid) — the SYS-04 seed's premium ids as `CosmeticListItem`s with
+ * caller-scoped `owned` flags (computed from `user_entitlements`, consistent with GET /cosmetics; a
+ * batched read, never per-item). `drops` stays an honest empty (ECON-08 seasonal content is P10).
  */
 export async function getStore(actorId: string): Promise<StoreResponse> {
   const products = await storeRepo.listActiveProducts();
   const purchased = await iapRepo.listOwnPurchasedProductIds(actorId);
+  const featured = listFeaturedCatalog();
+  const owned = await entitlementRepo.findOwnedCosmeticIds(
+    actorId,
+    featured.map((e) => e.id),
+  );
   return {
     packs: products.map((p) => ({
       productId: p.productId,
@@ -268,7 +277,14 @@ export async function getStore(actorId: string): Promise<StoreResponse> {
       oneTime: p.oneTime,
       purchased: purchased.has(p.productId),
     })),
-    premiumCosmetics: [], // TODO(P4/P10): COSM-03 premium store items — empty until authored
+    premiumCosmetics: featured.map((e) => ({
+      id: e.id,
+      type: e.type,
+      name: e.name,
+      ...(e.tier ? { tier: e.tier } : {}),
+      price: priceForTier(e.tier),
+      owned: e.tier === null ? true : owned.has(e.id),
+    })),
     drops: [], // TODO(P10/ECON-08): seasonal drops — the drawer renders, authoring is later
   };
 }

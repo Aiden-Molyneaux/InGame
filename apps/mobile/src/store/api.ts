@@ -348,7 +348,9 @@ export const api = createApi({
     // `owned` flags flip, so the editor rails re-read.
     acquireCosmetic: build.mutation<AcquireResponse, string>({
       query: (cosmeticId) => ({ url: `/cosmetics/${cosmeticId}/acquire`, method: 'POST', body: {} }),
-      invalidatesTags: ['Wallet', 'Ledger', 'Entitlements', 'Cosmetics'],
+      // 'Store' — the featured-storefront tiles carry caller-scoped `owned` flags (M5 F-6), so a buy
+      // must re-read /store to flip them (the aisle rides 'Cosmetics').
+      invalidatesTags: ['Wallet', 'Ledger', 'Entitlements', 'Cosmetics', 'Store'],
     }),
     // POST /cosmetics/acquire-batch — CARD-13 ACQUIRE ALL (the ReconcileSheet / KeepBar). Atomic against
     // the total; already-owned ids are silent no-ops. Ticks the wallet + flips ownership everywhere.
