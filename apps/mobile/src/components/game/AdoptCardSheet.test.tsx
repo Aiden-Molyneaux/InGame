@@ -5,8 +5,11 @@ import type { GalleryCardView } from '@ingame/shared';
 import prefsReducer from '../../store/prefsSlice';
 import { AdoptCardSheet, type AdoptOutcome } from './AdoptCardSheet';
 
-// reduce-motion on → the shared BuyBar's OQ-046 single-press → inline-confirm path (deterministic).
-jest.mock('../../a11y/useReducedMotion', () => ({ useReducedMotion: () => true }));
+// reduce-motion is controllable per-test: ON (default) → the shared BuyBar's OQ-046 single-press →
+// inline-confirm path + the FREE two-step (deterministic, no timed hold); OFF → the gold fill-hold
+// (F-13 E8). `mock`-prefixed so the jest.mock factory may close over it.
+let mockReduceMotion = true;
+jest.mock('../../a11y/useReducedMotion', () => ({ useReducedMotion: () => mockReduceMotion }));
 
 const store = configureStore({ reducer: { prefs: prefsReducer } });
 const wrap = (ui: React.ReactElement) => <Provider store={store}>{ui}</Provider>;
@@ -21,6 +24,8 @@ const PRICED: GalleryCardView = {
   priceForYou: 3,
   components: [{ cosmeticId: 'bitter', name: 'SLAB', type: 'font', price: 3, owned: false }],
   designer: { userId: 'bbbbbbbb-2222-4222-8222-222222222222', username: 'rival_curator' },
+  byViewer: false,
+  adopted: false,
 };
 const FREE: GalleryCardView = { ...PRICED, id: 'f', name: 'Free Cut', priceForYou: 0, isPremium: false, components: [] };
 
@@ -43,6 +48,10 @@ function renderSheet(over: Partial<React.ComponentProps<typeof AdoptCardSheet>> 
 }
 
 describe('AdoptCardSheet (P8 · SOC-11 · M5 F-9 E1 — the styler-buy anatomy)', () => {
+  beforeEach(() => {
+    mockReduceMotion = true;
+  });
+
   it('lists the premium components (swatch rows) + the total + the CARD-15 honesty (E1/E2)', () => {
     renderSheet();
     expect(screen.getByText('PREMIUM COMPONENTS — ACQUIRED WITH THE CARD')).toBeTruthy();
@@ -117,12 +126,26 @@ describe('AdoptCardSheet (P8 · SOC-11 · M5 F-9 E1 — the styler-buy anatomy)'
     expect(onTopUp).toHaveBeenCalledTimes(1);
   });
 
-  it('the FREE path is a standard (non-gold) tap → confirm with no debit line (G1)', () => {
-    renderSheet({ card: FREE });
+  it('reduce-motion FREE path keeps the two-step: a tap → confirm with no debit line (F-13 E8)', () => {
+    renderSheet({ card: FREE }); // mockReduceMotion = true (default)
     expect(screen.getByText('ADOPT · FREE')).toBeTruthy();
     fireEvent.press(screen.getByText('ADOPT · FREE'));
     expect(screen.getByText(/free — the designer earns clout/)).toBeTruthy();
     expect(screen.queryByText(/pixels total/)).toBeNull();
+  });
+
+  it('F-13 E8 — with motion, adopt is HOLD-to-adopt by default (FREE = gold fill-hold, no confirm tap)', () => {
+    mockReduceMotion = false;
+    renderSheet({ card: FREE });
+    // the single gold fill-hold key — not the two-tap ScreenButton → ConfirmSheet path
+    expect(screen.getByText('HOLD TO ADOPT · FREE')).toBeTruthy();
+    expect(screen.queryByText('ADOPT · FREE')).toBeNull();
+  });
+
+  it('F-13 E8 — with motion, the priced path is the gold BuyBar hold-to-adopt', () => {
+    mockReduceMotion = false;
+    renderSheet(); // PRICED, funded
+    expect(screen.getByText('HOLD TO ADOPT · 3 PX')).toBeTruthy();
   });
 
   it('ALREADY_ADOPTED → the owned state', async () => {
@@ -135,10 +158,35 @@ describe('AdoptCardSheet (P8 · SOC-11 · M5 F-9 E1 — the styler-buy anatomy)'
     expect(screen.getByText(/YOU ALREADY HAVE THIS CARD/)).toBeTruthy();
   });
 
-  it('the ⋯ on the credit fires onBlock (SOC-09-light)', () => {
+  it('the ⋯ on the credit fires onBlock (SOC-09-light · F-13 E8 quick-press)', () => {
     const onBlock = jest.fn();
     renderSheet({ onBlock });
     fireEvent.press(screen.getByLabelText('Block rival_curator'));
     expect(onBlock).toHaveBeenCalledTimes(1);
+  });
+
+  it('F-13 E8 — a QUICK tap on the designer credit opens block (no long-press)', () => {
+    const onBlock = jest.fn();
+    renderSheet({ onBlock });
+    // the credit itself is now a quick-press block affordance
+    fireEvent.press(screen.getByLabelText('Designed by rival_curator'));
+    expect(onBlock).toHaveBeenCalled();
+  });
+
+  it('F-13 E8 — your OWN card reads "BY YOU", offers NO block on yourself (self-tap)', () => {
+    const onBlock = jest.fn();
+    renderSheet({ card: { ...PRICED, byViewer: true }, onBlock });
+    expect(screen.getByText('YOU')).toBeTruthy();
+    // no ⋯ / block affordance on your own card
+    expect(screen.queryByLabelText('Block rival_curator')).toBeNull();
+    expect(screen.queryByText('⋯')).toBeNull();
+  });
+
+  it('F-13 E7 — SHARE is a quiet link (TertiaryLink), firing onShare', () => {
+    const onShare = jest.fn();
+    renderSheet({ onShare });
+    const share = screen.getByText('↗ SHARE'); // TertiaryLink uppercases
+    fireEvent.press(share);
+    expect(onShare).toHaveBeenCalledTimes(1);
   });
 });

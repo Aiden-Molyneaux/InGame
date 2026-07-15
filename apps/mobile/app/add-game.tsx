@@ -144,7 +144,7 @@ function SearchMode({
 
   return (
     <>
-      <ScrollView style={styles.flex} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+      <ScrollView style={styles.flex} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         {/* R14 — the board's match COUNT, not a static "RESULTS" (board P2 "MATCHING…" · P3 "N MATCHES") */}
         <Text style={styles.railHead}>
           {querying
@@ -246,7 +246,7 @@ function StatusBeat({ item, onDone }: { item: CollectionItem; onDone: () => void
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.body}>
+    <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
       <View style={styles.addedWrap}>
         <GameCard title={item.title} size="grid" />
         <Text style={styles.addedTitle}>ADDED TO YOUR SHELF</Text>
@@ -335,6 +335,7 @@ function CreateForm({
       contentContainerStyle={styles.body}
       keyboardShouldPersistTaps="handled"
       automaticallyAdjustKeyboardInsets
+      showsVerticalScrollIndicator={false}
     >
       <Text style={styles.railHead}>CREATE A CATALOG ENTRY</Text>
 

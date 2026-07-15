@@ -62,6 +62,32 @@ describe('ConfirmSheet', () => {
     expect(tree).not.toContain(ALERT_RED);
   });
 
+  it('F-13 B2 — holdToConfirm+purchase paints the PAY key GOLD (cosmetic-buy look) + ALL-CAPS', () => {
+    const onConfirm = jest.fn();
+    const view = render(
+      wrap(
+        <ConfirmSheet
+          visible
+          tone="purchase"
+          holdToConfirm
+          title="CONFIRM PURCHASE"
+          message="$1.99 will be charged for 10 pixels. Hold PAY to confirm."
+          confirmLabel="Hold to pay $1.99"
+          onConfirm={onConfirm}
+          onClose={jest.fn()}
+        />,
+      ),
+    );
+    // ALL-CAPS (the label is uppercased) — the same voice as the cosmetic HoldFillButton
+    const key = screen.getByText('HOLD TO PAY $1.99');
+    // reduce-motion (mocked on) collapses the fill-hold to a plain press → fires immediately
+    fireEvent.press(key);
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    const tree = JSON.stringify(view.toJSON());
+    expect(tree).toContain(GOLD); // gold default fill, never the neutral cream $ voice
+    expect(tree).not.toContain(ALERT_RED);
+  });
+
   it('busy disables the actions and shows the working glyph', () => {
     render(
       wrap(

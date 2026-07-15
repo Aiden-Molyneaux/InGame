@@ -11,6 +11,7 @@ import { ScreenButton } from '../../src/components/ScreenButton';
 import { ToolButton } from '../../src/components/ToolButton';
 import { SearchField } from '../../src/components/SearchField';
 import { PulledSheet } from '../../src/components/PulledSheet';
+import { useSheetLocked } from '../../src/components/SheetLock';
 import { TextField } from '../../src/components/TextField';
 import { GenreTag } from '../../src/components/GenreTag';
 import { CurrencyCounter } from '../../src/components/commerce';
@@ -144,6 +145,7 @@ export default function Collection() {
   // shared wallet cache and doors into the Store's wallet view.
   const { data: wallet } = useGetWalletQuery();
   const styles = useStyles();
+  const bgLocked = useSheetLocked(); // C2 (F-13) — freeze the shelf scroll while the sort/filter drawer is open
 
   // ONE shared query state between the in-place search and the drawer (OQ-034).
   const [q, setQ] = useState('');
@@ -326,7 +328,7 @@ export default function Collection() {
           }
         />
       </View>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} scrollEnabled={!bgLocked}>
         {/* In-place search: the query live-filters the CURRENT view + a RESULTS header (board :661). */}
         {searchOpen && q.trim() !== '' && data.collectionTotal > 0 ? (
           <Text style={styles.resultsHead}>RESULTS — TITLE · DEVELOPER · PUBLISHER</Text>

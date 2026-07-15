@@ -5,6 +5,7 @@ import { themedStyles } from '../theme';
 import { useReducedMotion } from '../a11y/useReducedMotion';
 import { KeyboardLift } from './KeyboardLift';
 import { ScrollLockContext, useScrollLockHost } from './ScrollLock';
+import { useHoldSheetLock } from './SheetLock';
 
 // PulledSheet (component-map §5.7) — the GRAB-HANDLE bottom drawer (sort/filter, log-hours, store
 // detail). One primitive; scrim tap dismisses.
@@ -54,6 +55,8 @@ export function PulledSheet({
   const overlayRef = useRef<View>(null);
   // a held slider/picker inside the sheet must not scroll the sheet body (round-3 scroll-lock rule)
   const { scrollEnabled, api: scrollLockApi } = useScrollLockHost();
+  // C2 (F-13) — while this sheet is open, freeze the background screen's scroll (root counter).
+  useHoldSheetLock(visible);
 
   useEffect(() => {
     if (visible) {
@@ -115,6 +118,7 @@ export function PulledSheet({
             contentContainerStyle={styles.body}
             keyboardShouldPersistTaps="handled"
             scrollEnabled={scrollEnabled}
+            showsVerticalScrollIndicator={false}
           >
             <ScrollLockContext.Provider value={scrollLockApi}>{children}</ScrollLockContext.Provider>
           </ScrollView>

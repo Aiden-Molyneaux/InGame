@@ -138,6 +138,11 @@ export const galleryCardSchema = z
     priceForYou: z.number().int().nonnegative(), // personalized missing-components sum (0072)
     components: z.array(cardComponentSchema), // M5 F-9 E2 — the premium refs, resolved + owned per-caller
     designer: z.object({ userId: z.string().uuid(), username: z.string() }).strict(),
+    // M5 F-13 E4 (owner round-2) — cheap per-caller provenance so the gallery cell can tag the caller's
+    // OWN published cards ("BY YOU") and the ones they've ALREADY ADOPTED ("ADOPTED"). Both derive from
+    // data already read for the gallery (designerId == caller · the caller's active adoptions).
+    byViewer: z.boolean(), // the caller is this card's designer
+    adopted: z.boolean(), // the caller holds an ACTIVE adoption grant for this card
   })
   .strict();
 export type GalleryCardView = z.infer<typeof galleryCardSchema>;

@@ -24,6 +24,8 @@ import { loadTokens } from '../src/auth/tokenStore';
 import { useGetDeviceQuery } from '../src/store/api';
 import { setShellId, setThemeId, setStickerComposition } from '../src/store/prefsSlice';
 import { DeviceShell } from '../src/components/DeviceShell';
+import { StoreThemePreviewProvider } from '../src/components/StoreThemePreview';
+import { SheetLockProvider } from '../src/components/SheetLock';
 import { BreakoutProvider } from '../src/components/BreakoutContext';
 import { DeviceStickerProvider } from '../src/components/device/DeviceStickerContext';
 import { theme, useTheme, SCREEN_THEMES, DEFAULT_THEME_ID, resolveShellId, resolveScreenThemeId } from '../src/theme';
@@ -121,14 +123,22 @@ export default function RootLayout() {
                 BreakoutProvider lets the Canvas posture (§2.5b) tell the shell to hide its chrome so
                 the workshop fills the whole device (decision 0014 stage-3). */}
             <BreakoutProvider>
+              {/* SheetLockProvider (C2, F-13) — a root counter so an open PulledSheet freezes the
+                  background screen's scroll regardless of where the sheet is mounted. */}
+              <SheetLockProvider>
               {/* DeviceStickerProvider sits ABOVE DeviceShell so the /device editor (a descendant) can
                   publish its edit session UP to the shell's plastic-band sticker layers (ARCH 2). */}
               <DeviceStickerProvider>
                 <DeviceHydrator />
-                <DeviceShell>
-                  <ThemedStack />
-                </DeviceShell>
+                {/* C7 (F-13) — StoreThemePreview wraps the DeviceShell so a store shell/theme sheet can
+                    live-preview on the real device chrome (subtree override, never a prefs write). */}
+                <StoreThemePreviewProvider>
+                  <DeviceShell>
+                    <ThemedStack />
+                  </DeviceShell>
+                </StoreThemePreviewProvider>
               </DeviceStickerProvider>
+              </SheetLockProvider>
             </BreakoutProvider>
           </AuthBootstrap>
         </PersistGate>

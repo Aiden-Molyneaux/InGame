@@ -4,8 +4,11 @@ import type { GalleryCardView, AdoptResponse } from '@ingame/shared';
 import { PulledSheet } from '../PulledSheet';
 import { ConfirmSheet } from '../ConfirmSheet';
 import { ScreenButton } from '../ScreenButton';
+import { TertiaryLink } from '../TertiaryLink';
 import { themedStyles } from '../../theme';
+import { useReducedMotion } from '../../a11y/useReducedMotion';
 import { BuyBar } from '../commerce/BuyBar';
+import { HoldFillButton } from '../commerce/HoldFillButton';
 import { AcquireBeat } from '../commerce/AcquireBeat';
 import { CosmeticSwatch } from '../commerce/CosmeticSwatch';
 import { PriceChip } from '../commerce/PriceChip';
@@ -60,7 +63,8 @@ export function AdoptCardSheet({
   shareBusy?: boolean;
 }) {
   const styles = useStyles();
-  const [confirming, setConfirming] = useState(false); // the FREE-path confirm gate
+  const reduceMotion = useReducedMotion();
+  const [confirming, setConfirming] = useState(false); // the FREE-path (reduce-motion) confirm gate
   const [outcome, setOutcome] = useState<Exclude<AdoptOutcome, { ok: true }> | null>(null);
   const [adopted, setAdopted] = useState(false); // G5 — the in-place success settle
   const [beat, setBeat] = useState(false); // G6 — the AcquireBeat celebration (self-dismissing)
@@ -107,28 +111,40 @@ export function AdoptCardSheet({
           <FlatCardImage title={card.name} imageUrl={card.imageUrl ?? card.thumbUrl} size="pick" />
         </View>
 
-        {/* DESIGNED BY «designer» · ADOPTED N× — long-press / the ⋯ opens the block confirm (SOC-09-light) */}
+        {/* F-13 E8 (owner round-2) — the block affordance is now a QUICK press (the ⋯ + the credit tap),
+            never a hidden long-press; and tapping YOUR OWN credit reads "THIS IS YOU" with NO block
+            offered on yourself (byViewer). onBlock opens the block CONFIRM at the screen root (not an
+            immediate block), so a quick tap is safe. */}
         <View style={styles.creditRow}>
           <Pressable
-            onLongPress={onBlock}
-            accessibilityRole="text"
-            accessibilityHint="Long-press to block this designer"
+            onPress={card.byViewer ? undefined : onBlock}
+            accessibilityRole={card.byViewer ? 'text' : 'button'}
+            accessibilityLabel={card.byViewer ? 'Designed by you' : `Designed by ${card.designer.username}`}
+            accessibilityHint={card.byViewer ? undefined : `Block ${card.designer.username}`}
             style={styles.creditPress}
           >
-            <Text style={styles.credit}>
-              DESIGNED BY <Text style={styles.creditName}>{card.designer.username.toUpperCase()}</Text> ·
-              ADOPTED{' '}
-            </Text>
+            {card.byViewer ? (
+              <Text style={styles.credit}>
+                DESIGNED BY <Text style={styles.creditYou}>YOU</Text> · ADOPTED{' '}
+              </Text>
+            ) : (
+              <Text style={styles.credit}>
+                DESIGNED BY <Text style={styles.creditName}>{card.designer.username.toUpperCase()}</Text> ·
+                ADOPTED{' '}
+              </Text>
+            )}
             <AdoptCount count={card.adoptionCount} />
           </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Block ${card.designer.username}`}
-            onPress={onBlock}
-            hitSlop={8}
-          >
-            <Text style={styles.ovf}>⋯</Text>
-          </Pressable>
+          {card.byViewer ? null : (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Block ${card.designer.username}`}
+              onPress={onBlock}
+              hitSlop={8}
+            >
+              <Text style={styles.ovf}>⋯</Text>
+            </Pressable>
+          )}
         </View>
 
         {adopted ? (
@@ -198,16 +214,30 @@ export function AdoptCardSheet({
 
             <Text style={styles.card15}>You get the image, not the layers.</Text>
 
-            {/* the action (G1/G2/G3) — FREE = a standard tap → purchase-toned confirm (no debit); PRICED =
-                the shared gold BuyBar hold-to-adopt, which owns the pre-emptive NOT-ENOUGH (G3). */}
+            {/* the action (G1/G2/G3 · F-13 E8) — HOLD-to-adopt is the default everywhere: FREE = the gold
+                fill-hold (no separate confirm tap — the owner hit a two-tap path); PRICED = the shared
+                gold BuyBar hold-to-adopt, which owns the pre-emptive NOT-ENOUGH (G3). Reduce-motion keeps
+                the FREE path's explicit two-step (a tap → the purchase-toned confirm), so a timed gesture
+                never gates a motor-impaired user. */}
             {free ? (
-              <ScreenButton
-                label="Adopt · Free"
-                variant="primary"
-                onPress={() => setConfirming(true)}
-                disabled={adopting}
-                block
-              />
+              reduceMotion ? (
+                <ScreenButton
+                  label="Adopt · Free"
+                  variant="primary"
+                  onPress={() => setConfirming(true)}
+                  disabled={adopting}
+                  block
+                />
+              ) : (
+                <HoldFillButton
+                  label={adopting ? 'ADOPTING…' : 'HOLD TO ADOPT · FREE'}
+                  accessibilityLabel="Hold to adopt this free card"
+                  tone="gold"
+                  onComplete={() => void runAdopt()}
+                  disabled={adopting}
+                  block
+                />
+              )
             ) : (
               <BuyBar
                 price={card.priceForYou}
@@ -224,13 +254,15 @@ export function AdoptCardSheet({
 
         {!adopted ? (
           <>
+            {/* F-13 E7 (owner round-2) — SHARE is a quiet clickable LINK (TertiaryLink grammar), not a
+                full cream button; it's a secondary action beside the primary adopt, not a peer key. */}
             <View style={styles.actions}>
-              <ScreenButton
-                label={shareBusy ? '…' : 'Share'}
-                variant="secondary"
-                onPress={onShare}
-                disabled={shareBusy}
-                style={styles.actionBtn}
+              <TertiaryLink
+                label={shareBusy ? 'Sharing…' : '↗ Share'}
+                chevron="none"
+                onPress={() => {
+                  if (!shareBusy) onShare();
+                }}
               />
             </View>
             <Text style={styles.note}>
@@ -267,6 +299,8 @@ const useStyles = themedStyles((t) => ({
   creditPress: { flexDirection: 'row', alignItems: 'center', flexShrink: 1 },
   credit: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5, textAlign: 'center' },
   creditName: { fontFamily: t.font.screenBold, color: t.scr.ink },
+  // F-13 E8 — your own credit reads in the gold authorship voice ("YOU").
+  creditYou: { fontFamily: t.font.screenBold, color: t.brand.gold, letterSpacing: 0.5 },
   ovf: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.dim, marginTop: -6 },
   // ── the component list (reconcile anatomy) ──
   componentBlock: { marginTop: t.space.md, gap: t.space.sm },
@@ -306,7 +340,7 @@ const useStyles = themedStyles((t) => ({
   ownedBar: { marginTop: t.space.md, padding: t.space.md, backgroundColor: t.scr.panel, borderWidth: 1, borderColor: t.scr.hairline },
   ownedText: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.ink, letterSpacing: 0.5 },
   unavailText: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
-  actions: { flexDirection: 'row', gap: t.space.md, marginTop: t.space.md },
-  actionBtn: { flex: 1 },
+  // F-13 E7 — SHARE is a left-aligned quiet link now, not a full-width button row.
+  actions: { flexDirection: 'row', alignItems: 'center', gap: t.space.md, marginTop: t.space.md },
   note: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, lineHeight: 15, marginTop: t.space.sm },
 }));

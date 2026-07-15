@@ -59,23 +59,39 @@ export function CommunityGallery({
   );
 }
 
-// One gallery cell — flattened thumb + BY «designer» + a foot: price (or FREE) + AdoptCount.
+// One gallery cell — flattened thumb + BY «designer» + a foot: price (or FREE / a provenance tag) +
+// AdoptCount. F-13 E4 (owner round-2): the caller's OWN published cards read "BY YOU", and cards the
+// caller has already ADOPTED wear an "ADOPTED" tag in place of a price (they already hold the grant).
 function GalleryCell({ card, onPress }: { card: GalleryCardView; onPress: () => void }) {
   const styles = useStyles();
   const free = card.priceForYou <= 0;
+  const a11y = card.byViewer
+    ? `${card.name} by you, adopted ${card.adoptionCount} times`
+    : `${card.name} by ${card.designer.username}, ${card.adopted ? 'already adopted' : free ? 'free' : `${card.priceForYou} pixels`} to adopt, adopted ${card.adoptionCount} times`;
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${card.name} by ${card.designer.username}, ${free ? 'free' : `${card.priceForYou} pixels`} to adopt, adopted ${card.adoptionCount} times`}
+      accessibilityLabel={a11y}
       style={styles.cell}
     >
       <FlatCardImage title={card.name} imageUrl={card.thumbUrl ?? card.imageUrl} size="cell" />
       <Text style={styles.credit} numberOfLines={1}>
-        BY <Text style={styles.creditName}>{card.designer.username.toUpperCase()}</Text>
+        {card.byViewer ? (
+          <Text style={styles.creditYou}>BY YOU</Text>
+        ) : (
+          <>
+            BY <Text style={styles.creditName}>{card.designer.username.toUpperCase()}</Text>
+          </>
+        )}
       </Text>
       <View style={styles.foot}>
-        {free ? (
+        {/* provenance wins over price: an already-adopted card (or your own) never shows a buy price. */}
+        {card.byViewer || card.adopted ? (
+          <View style={styles.tag}>
+            <Text style={styles.tagText}>{card.byViewer ? 'YOURS' : 'ADOPTED'}</Text>
+          </View>
+        ) : free ? (
           <View style={styles.freeChip}>
             <Text style={styles.freeChipText}>FREE</Text>
           </View>
@@ -107,8 +123,14 @@ const useStyles = themedStyles((t) => ({
   cell: { width: 96, gap: 3 },
   credit: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5, marginTop: 3 },
   creditName: { fontFamily: t.font.screenBold, color: t.scr.ink },
+  // F-13 E4 — "BY YOU" reads in the gold economy/authorship voice so it's unmistakably the caller's card.
+  creditYou: { fontFamily: t.font.screenBold, color: t.brand.gold, letterSpacing: 1 },
   foot: { flexDirection: 'row', alignItems: 'center', gap: t.space.sm },
   freeChip: { backgroundColor: t.scr.panelHi, paddingHorizontal: 5, paddingVertical: 3, borderWidth: 1, borderColor: t.scr.hairline },
   freeChipText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.ink, letterSpacing: 0.5 },
+  // F-13 E4 — the YOURS/ADOPTED provenance tag: a gold-OUTLINE chip (COSM-04 grammar — never a fill, so
+  // it can't read as a price), distinct from the cream OwnedTag and the gold-fill PriceChip.
+  tag: { borderWidth: 1, borderColor: t.brand.gold, paddingHorizontal: 5, paddingVertical: 2.5 },
+  tagText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.brand.gold, letterSpacing: 0.8 },
   count: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5 },
 }));

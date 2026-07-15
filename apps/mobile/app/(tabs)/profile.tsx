@@ -81,7 +81,7 @@ export default function Profile() {
           }
         />
       </View>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.body}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
         {/* identity — the real /me self-shape */}
         <IdentityBlock
           username={me.username}
@@ -211,6 +211,11 @@ export default function Profile() {
                   <Text style={styles.devTitle}>{copy.title}</Text>
                   <Text style={styles.devSub}>{copy.sub}</Text>
                 </View>
+                {/* F-13 D7 (owner round-2) — the row read as static; give it the house pressable
+                    affordance (F-03 keycap grammar), so it clearly opens the editor. */}
+                <View style={styles.devEdit}>
+                  <Text style={styles.devEditText}>EDIT ›</Text>
+                </View>
               </Pressable>
             );
           })()}
@@ -295,7 +300,15 @@ const useStyles = themedStyles((t) => ({
     padding: t.space.lg,
   },
   devRowPressed: { opacity: 0.82 },
-  devMeta: { gap: 2 },
+  devMeta: { flex: 1, gap: 2 },
+  // F-13 D7 — the trailing EDIT keycap (F-03 cream keycap grammar): a clear "this opens" affordance.
+  devEdit: {
+    backgroundColor: t.scr.key,
+    paddingHorizontal: t.space.md,
+    paddingVertical: t.space.sm,
+    ...(t.scr.isLight ? { borderWidth: 1, borderColor: t.scr.dim } : null),
+  },
+  devEditText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.brand.navy, letterSpacing: 1 },
   devTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5 },
   devSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
 }));

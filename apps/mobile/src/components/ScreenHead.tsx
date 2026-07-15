@@ -63,7 +63,9 @@ const useStyles = themedStyles((t) => ({
   },
   countText: {
     fontFamily: t.font.screenBold,
-    fontSize: t.type.micro, // 9
+    // F-13 F1 (owner round-2) — the count chip and the CurrencyCounter must read as siblings: same
+    // F-06 size (body/11, matching the counter's value) and same height (`right` stretch, above).
+    fontSize: t.type.body, // 11 (F-06) — was micro/9; unified with CurrencyCounter
     color: t.brand.goldInk,
     letterSpacing: 1,
   },

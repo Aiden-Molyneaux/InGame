@@ -650,5 +650,5 @@
   cross-user composition read (forbidden, OQ-122) or **publish-time label denormalization** (a
   migration snapshotting display labels beside `premium_component_ids`). M5 ships `components[]`
   (premium refs + names + prices + owned — the owner's walk ask, contract 0.67); the full free-slot
-  readout is deferred. Decide the denormalization at **M6 entry**. (F-9 build review, 2026-07-14)
+  readout is deferred. Decide the denormalization at **M6 entry**. (F-9 build review, 2026-07-14; the read-class constraint = decision 0073 §0.1/OQ-122)
   [behavior] M6-entry

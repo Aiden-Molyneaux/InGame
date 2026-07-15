@@ -36,8 +36,10 @@ export function ConfirmSheet({
   /**
    * M5 F-9 (G2) — the mock PAY on packs holds-to-activate with a FILLING sweep, so a dollar confirm
    * speaks the same hold grammar as every PX spend. The button fills gold over a hold; reduce-motion
-   * collapses to a plain press (this sheet is already the confirm gate). Cream tone — the $ is the
-   * neutral voice (0069), the fill is gold. Only meaningful with `tone='purchase'`.
+   * collapses to a plain press (this sheet is already the confirm gate). M5 F-13 B2 (owner round-2
+   * ruling): the pack PAY hold now wears the SAME look as the cosmetic HoldFillButton — GOLD default
+   * fill (not the cream $-voice), ALL-CAPS label — so a pack purchase reads identically to a PX buy.
+   * Only meaningful with `tone='purchase'`.
    */
   holdToConfirm?: boolean;
 }) {
@@ -47,7 +49,7 @@ export function ConfirmSheet({
       <Text style={styles.message}>{message}</Text>
       <View style={styles.actions}>
         {holdToConfirm && tone === 'purchase' ? (
-          <HoldFillButton label={busy ? '…' : confirmLabel} tone="cream" onComplete={onConfirm} disabled={busy} block />
+          <HoldFillButton label={busy ? '…' : confirmLabel.toUpperCase()} tone="gold" onComplete={onConfirm} disabled={busy} block />
         ) : (
           <ScreenButton
             label={busy ? '…' : confirmLabel}

@@ -636,6 +636,9 @@ describe('M5 F-9 E2: cross-user `components` metadata (registry-resolved, owned-
     const card = gallery.body.items.find((c: { id: string }) => c.id === id);
     expect(card).toBeDefined();
     expect(card.priceForYou).toBe(3);
+    // F-13 E4 — a non-designer who hasn't adopted: neither provenance flag is set.
+    expect(card.byViewer).toBe(false);
+    expect(card.adopted).toBe(false);
     // the components metadata — resolved from the registry, owned per B (unowned).
     expect(card.components).toEqual([
       { cosmeticId: 'bitter', name: 'SLAB', type: 'font', price: 3, owned: false },
@@ -654,6 +657,9 @@ describe('M5 F-9 E2: cross-user `components` metadata (registry-resolved, owned-
     const gallery = await request(app).get(`/api/games/${game.id}/cards`).set(authed(a.token));
     const card = gallery.body.items.find((c: { id: string }) => c.id === id);
     expect(card.priceForYou).toBe(0);
+    // F-13 E4 — the designer viewing their own card in the gallery reads byViewer=true.
+    expect(card.byViewer).toBe(true);
+    expect(card.adopted).toBe(false);
     expect(card.components).toEqual([
       { cosmeticId: 'bitter', name: 'SLAB', type: 'font', price: 3, owned: true },
     ]);
@@ -683,6 +689,12 @@ describe('M5 F-9 E2: cross-user `components` metadata (registry-resolved, owned-
     // B adopts (acquires bitter as part of the adopt) → the switcher lists it, components owned.
     const adopt = await request(app).post(`/api/cards/${id}/adopt`).set(authed(b.token));
     expect(adopt.status).toBe(200);
+
+    // F-13 E4 — after adopting, B's gallery view of this card reads adopted=true (byViewer stays false).
+    const galleryAfter = await request(app).get(`/api/games/${game.id}/cards`).set(authed(b.token));
+    const cardAfter = galleryAfter.body.items.find((c: { id: string }) => c.id === id);
+    expect(cardAfter.adopted).toBe(true);
+    expect(cardAfter.byViewer).toBe(false);
 
     const switcher = await request(app).get(`/api/me/collection/${entryId}/cards`).set(authed(b.token));
     const adopted = switcher.body.items.find((c: { id: string }) => c.id === id);

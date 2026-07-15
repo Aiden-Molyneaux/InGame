@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, View, Text, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import type { DeviceResponse, LookResponse, PatchDeviceRequest, Sticker, StickerComposition } from '@ingame/shared';
 import { ScreenHead } from '../src/components/ScreenHead';
 import { ScreenButton } from '../src/components/ScreenButton';
@@ -20,6 +20,7 @@ import { KeepBar, type KeepBarItem } from '../src/components/device/KeepBar';
 import { STICKER_ASSET_BY_ID } from '../src/components/device/deviceStickers';
 import { useStickerContext } from '../src/components/device/DeviceStickerContext';
 import { CurrencyCounter } from '../src/components/commerce/CurrencyCounter';
+import { useSheetLocked } from '../src/components/SheetLock';
 import { PriceChip } from '../src/components/commerce/PriceChip';
 import { OwnedTag, LockedTag } from '../src/components/commerce/Tags';
 import {
@@ -81,6 +82,7 @@ export default function DeviceEditor() {
   const styles = useStyles();
   const t = useTheme();
   const dispatch = useAppDispatch();
+  const bgLocked = useSheetLocked(); // C2 (F-13) — freeze the editor scroll while a sheet (delete-look) is open
 
   // The LIVE frame reads shell/theme from the persisted prefs slice (P2's theme engine, useTheme).
   const liveShellId = resolveShellId(useAppSelector((s) => s.prefs.shellId));
@@ -332,6 +334,32 @@ export default function DeviceEditor() {
     setPendingPremium({ shell: null, theme: null });
     setSwitchBeat(null);
   }, [dispatch, pendingPremium]);
+
+  // ── D7 (owner round-2, F-13) — the premium preview MUST END when leaving the editor ────────────────
+  // A previewed-but-unowned premium shell/theme lives in the redux `prefs` (so the live frame repaints)
+  // but is NOT persisted/acquired. Without this, navigating away (Top Up, the STORE keycap, a back-pop)
+  // LEFT that preview painting the whole app — the user wore a premium theme they never bought until the
+  // next edit reverted it. Tie it to the screen's focus lifecycle: on BLUR/UNMOUNT, revert the prefs to
+  // the saved device and drop the cart (the KeepBeat lesson — the preview dies with the editor). A ref so
+  // the focus effect never re-subscribes as the cart changes.
+  const pendingPremiumRef = useRef(pendingPremium);
+  pendingPremiumRef.current = pendingPremium;
+  const endPreviewRef = useRef<() => void>(() => {});
+  endPreviewRef.current = () => {
+    if (!pendingPremiumRef.current.shell && !pendingPremiumRef.current.theme) return;
+    const savedShell = resolveShellId(savedRef.current?.activeShellId);
+    const savedTheme = resolveScreenThemeId(savedRef.current?.screenThemeId);
+    if (pendingPremiumRef.current.shell) dispatch(setShellId(savedShell));
+    if (pendingPremiumRef.current.theme) dispatch(setThemeId(savedTheme));
+    // clear the cart too, so a return to the editor starts clean (the preview ended with the exit).
+    setPendingPremium({ shell: null, theme: null });
+    setSwitchBeat(null);
+  };
+  useFocusEffect(
+    useCallback(() => {
+      return () => endPreviewRef.current();
+    }, []),
+  );
 
   // ── THEME EXIT — revert the pick to the saved theme (the one un-commit door, walk 4) ───────────────
   const exitPreview = useCallback(() => {
@@ -621,14 +649,22 @@ export default function DeviceEditor() {
         </View>
       </View>
 
-      <Text accessibilityLiveRegion="polite" style={styles.saveLine}>
-        {saveLineText}
-      </Text>
+      {/* F-13 D7 (owner round-2) — drop the resting "SAVED LIVE" display (the whole editor autosaves;
+          announcing "saved" on every idle beat is clutter). The line now shows ONLY the in-flight/error
+          states (SAVING… · NOT SAVED — RETRYING · an inline error); the ok-dot on the readout above
+          already signals the settled/saved state. A11y still announces the transition (below). */}
+      {saveState !== 'saved' ? (
+        <Text accessibilityLiveRegion="polite" style={styles.saveLine}>
+          {saveLineText}
+        </Text>
+      ) : null}
 
       <ScrollView
         style={styles.flex}
         contentContainerStyle={styles.body}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        scrollEnabled={!bgLocked}
       >
         {/* the D2 before→after mini pair rides above the tray while the beat holds */}
         {beatActive && switchBeat ? (
@@ -695,10 +731,9 @@ export default function DeviceEditor() {
                   ☑ STICKERS RIDE THE REAL SHELL · NAV STAYS FULLY LEGIBLE
                 </Text>
                 <Text style={styles.secSub}>
-                  Handles hidden, controls quiet — the true on-shell preview. Saved live to your device.
+                  Handles hidden, controls quiet — the true on-shell preview.
                 </Text>
                 <View style={styles.previewRow}>
-                  <Text style={styles.savedLive}>SAVED LIVE</Text>
                   <View style={styles.flexSpacer} />
                   <ScreenButton label="◅ Keep editing" variant="primary" size="mini" onPress={() => setPreviewing(false)} />
                   <ScreenButton label="Done" variant="secondary" size="mini" onPress={goBack} />
@@ -930,7 +965,6 @@ const useStyles = themedStyles((t) => ({
   onShellLabel: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accentInk, letterSpacing: 1 },
   onShellEdit: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accentInk, letterSpacing: 1 },
   previewRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.md, paddingTop: t.space.md },
-  savedLive: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
   flexSpacer: { flex: 1 },
   // LOOKS (D6)
   looksHead: {

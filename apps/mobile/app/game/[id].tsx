@@ -16,6 +16,7 @@ import { PulledSheet } from '../../src/components/PulledSheet';
 import { ScreenButton } from '../../src/components/ScreenButton';
 import { TertiaryLink } from '../../src/components/TertiaryLink';
 import { Toast } from '../../src/components/lifecycle/Toast';
+import { useSheetLocked } from '../../src/components/SheetLock';
 // shareCard rides src/store/ beside mockReceipt.ts (the non-slice helper precedent) — also a Metro
 // constraint: the standing :8082 watcher does not see a BRAND-NEW top-level src/ directory without a
 // restart (observed 2026-07-13; new files in existing dirs resolve fine — qa-runbook candidate).
@@ -49,6 +50,7 @@ export default function GamePage() {
   // the wallet balance feeds the adopt sheet's BuyBar meta + its pre-emptive NOT-ENOUGH state (M5 F-9 G3).
   const { data: wallet } = useGetWalletQuery();
   const styles = useStyles();
+  const bgLocked = useSheetLocked(); // C2 (F-13) — freeze the page scroll while the inspect/adopt sheet is open
 
   const entry = useMemo<CollectionItem | undefined>(
     () => data?.items.find((it) => it.gameId === id),
@@ -249,6 +251,8 @@ export default function GamePage() {
           contentContainerStyle={styles.body}
           keyboardShouldPersistTaps="handled"
           automaticallyAdjustKeyboardInsets // the NOTES editor must not hide behind the keyboard (B.6)
+          showsVerticalScrollIndicator={false}
+          scrollEnabled={!bgLocked}
         >
           <TertiaryLink label="Return to collection" chevron="leading-back" onPress={() => router.back()} />
 
@@ -438,7 +442,7 @@ function Frame({ children, onBack }: { children: ReactNode; onBack: () => void }
             GAME
           </Text>
         </View>
-        <ScrollView style={styles.flex} contentContainerStyle={styles.body}>
+        <ScrollView style={styles.flex} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
           <TertiaryLink label="Return to collection" chevron="leading-back" onPress={onBack} />
           {children}
         </ScrollView>

@@ -1240,7 +1240,7 @@ export default function Styler() {
         ))}
       </View>
 
-      <ScrollView style={styles.flex} contentContainerStyle={styles.sectionBody} keyboardShouldPersistTaps="handled" scrollEnabled={editScrollEnabled}>
+      <ScrollView style={styles.flex} contentContainerStyle={styles.sectionBody} keyboardShouldPersistTaps="handled" scrollEnabled={editScrollEnabled} showsVerticalScrollIndicator={false}>
         {sectionUi ? (
           <AttributeSection
             heading={sectionUi.heading}

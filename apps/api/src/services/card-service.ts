@@ -484,6 +484,8 @@ function toGalleryShape(
   row: PublishedDesignRow,
   adoptionCount: number,
   ownedByCaller: Set<string>,
+  actorId: string,
+  adoptedByCaller: Set<string>,
 ): GalleryCardView {
   const priceForYou = row.premiumComponentIds
     .filter((id) => !ownedByCaller.has(id))
@@ -498,6 +500,9 @@ function toGalleryShape(
     priceForYou,
     components: resolveComponents(row.premiumComponentIds, ownedByCaller),
     designer: { userId: row.designerId, username: row.designerUsername },
+    // M5 F-13 E4 — provenance tags for the gallery cell (both from data already in hand).
+    byViewer: row.designerId === actorId,
+    adopted: adoptedByCaller.has(row.id),
   };
 }
 
@@ -675,8 +680,12 @@ export async function listGameGallery(
   const visible = await filterBlockedDesigners(actorId, rows);
   const counts = await cardRepo.adoptionCountsByCard(visible.map((r) => r.id));
   const owned = await ownedPremiumFor(actorId, visible.flatMap((r) => r.premiumComponentIds));
+  // M5 F-13 E4 — which of these cards the caller has ACTIVELY adopted (one batched read, reusing the
+  // switcher-rider resolver); drives the "ADOPTED" cell tag.
+  const adopted = await adoptionRepo.adoptedDesignsByIds(actorId, visible.map((r) => r.id));
+  const adoptedIds = new Set(adopted.keys());
   return {
-    items: visible.map((r) => toGalleryShape(r, counts.get(r.id) ?? 0, owned)),
+    items: visible.map((r) => toGalleryShape(r, counts.get(r.id) ?? 0, owned, actorId, adoptedIds)),
   };
 }
 

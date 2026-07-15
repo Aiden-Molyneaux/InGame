@@ -34,6 +34,8 @@ import {
 } from '../src/components/commerce';
 import { CardFace } from '../src/components/CardFace';
 import { COSMETIC_TYPE_LABEL } from '../src/components/commerce/storeCopy';
+import { useStorePreview } from '../src/components/StoreThemePreview';
+import { useSheetLocked } from '../src/components/SheetLock';
 import { themedStyles, ThemePreview } from '../src/theme';
 import { useAnnounceOnChange } from '../src/a11y/announce';
 import { mintMockReceipt } from '../src/store/mockReceipt';
@@ -230,6 +232,29 @@ export default function Store() {
       balance={balance}
       tick={tick}
       onWallet={() => setView('wallet')}
+      overlay={
+        <>
+          {toast ? (
+            <Toast message={toast} tone="error" onRetry={undefined} onDismiss={() => setToast(null)} />
+          ) : null}
+          {/* F-1 fix 5 — the mock Apple payment sheet: a purchase-toned confirm (NOT destructive-red)
+              echoing the P6 Face-ID framing. F-13 B2 — the PAY hold now wears the gold cosmetic-buy
+              look (ConfirmSheet · holdToConfirm). In production the native StoreKit sheet replaces this. */}
+          {pendingPack ? (
+            <ConfirmSheet
+              visible
+              tone="purchase"
+              holdToConfirm
+              title="CONFIRM PURCHASE"
+              message={`${usdFor(pendingPack.productId) ?? '$—'} will be charged to your Apple account for ${pendingPack.pixels} pixels. Hold PAY to confirm.`}
+              confirmLabel={`Hold to pay ${usdFor(pendingPack.productId) ?? ''}`.trim()}
+              busy={buying}
+              onConfirm={confirmPending}
+              onClose={() => setPendingPack(null)}
+            />
+          ) : null}
+        </>
+      }
     >
       {offline ? <Offline variant="strip" message="OFFLINE — PURCHASES NEED A CONNECTION" retrying /> : null}
 
@@ -282,31 +307,6 @@ export default function Store() {
       ) : aisle ? (
         <AisleView aisle={aisle} offline={offline} onTopUp={() => setView('topup')} />
       ) : null}
-
-      {toast ? (
-        <Toast
-          message={toast}
-          tone="error"
-          onRetry={undefined}
-          onDismiss={() => setToast(null)}
-        />
-      ) : null}
-
-      {/* F-1 fix 5 — the mock Apple payment sheet: a purchase-toned confirm (NOT destructive-red)
-          echoing the P6 Face-ID framing. In production the native StoreKit sheet replaces this. */}
-      {pendingPack ? (
-        <ConfirmSheet
-          visible
-          tone="purchase"
-          holdToConfirm // M5 F-9 G2 — HOLD the mock PAY (filling sweep); the native StoreKit sheet replaces it
-          title="CONFIRM PURCHASE"
-          message={`${usdFor(pendingPack.productId) ?? '$—'} will be charged to your Apple account for ${pendingPack.pixels} pixels. Hold PAY to confirm.`}
-          confirmLabel={`Hold to pay ${usdFor(pendingPack.productId) ?? ''}`.trim()}
-          busy={buying}
-          onConfirm={confirmPending}
-          onClose={() => setPendingPack(null)}
-        />
-      ) : null}
     </Header>
   );
 }
@@ -318,15 +318,20 @@ function Header({
   balance,
   tick,
   onWallet,
+  overlay,
   children,
 }: {
   view: StoreView;
   balance: number;
   tick: number | null;
   onWallet: () => void;
+  /** C2 (F-13) — sheets/toasts render OUTSIDE the ScrollView (a screen-root sibling), so their scrim
+   *  overlays the whole screen and the background scroll can freeze behind them (never inside content). */
+  overlay?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const styles = useStyles();
+  const locked = useSheetLocked();
   // decision 0075 (parvati 🎨 — the aisle-header double-print fix): H1 is the generic "STORE AISLE";
   // AisleView's body secTitle (right below it) carries the specific aisle name — was the same string
   // twice (H1 + body), now the H1 is generic and the specific name reads once, as an eyebrow.
@@ -340,9 +345,16 @@ function Header({
           <CurrencyCounter balance={balance} tick={tick} onPress={onWallet} />
         ) : null}
       </View>
-      <ScrollView style={styles.flex} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        style={styles.flex}
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        scrollEnabled={!locked}
+      >
         {children}
       </ScrollView>
+      {overlay}
     </View>
   );
 }
@@ -656,6 +668,7 @@ function CosmeticSheet({
   const { data: store } = useGetStoreQuery();
   const { data: device } = useGetDeviceQuery();
   const [acquire] = useAcquireCosmeticMutation();
+  const { setPreview } = useStorePreview();
   const balance = wallet?.balance ?? 0;
 
   const [justBought, setJustBought] = useState(false);
@@ -668,6 +681,16 @@ function CosmeticSheet({
     setShortBy(null);
     setBuyErr(null);
   }, [item?.id]);
+
+  // C7 (F-13) — a shell/theme sheet live-previews on the REAL device chrome: push the previewed id up to
+  // the root StoreThemePreview subtree while this sheet is open; clear it on close/unmount (the preview
+  // dies with the sheet). Card cosmetics keep their in-sheet CardFace preview (no app-chrome repaint).
+  useEffect(() => {
+    if (item?.type === 'screen_theme') setPreview({ themeId: item.id });
+    else if (item?.type === 'device_shell') setPreview({ shellId: item.id });
+    else setPreview({});
+    return () => setPreview({});
+  }, [item?.id, item?.type, setPreview]);
 
   const owned = (item?.owned ?? false) || justBought;
 

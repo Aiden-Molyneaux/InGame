@@ -151,7 +151,7 @@ export default function SignIn() {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Text style={styles.wordmark}>INGAME</Text>
         <Text style={styles.tagline}>YOUR COLLECTION, ON DISPLAY</Text>
 

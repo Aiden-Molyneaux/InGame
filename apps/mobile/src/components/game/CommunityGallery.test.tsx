@@ -26,6 +26,8 @@ const FREE_CARD: GalleryCardView = {
   priceForYou: 0, // free → the FREE chip
   components: [],
   designer: { userId: 'aaaaaaaa-1111-4111-8111-111111111111', username: 'vanta' },
+  byViewer: false,
+  adopted: false,
 };
 const PRICED_CARD: GalleryCardView = {
   id: '22222222-2222-4222-8222-222222222222',
@@ -39,6 +41,8 @@ const PRICED_CARD: GalleryCardView = {
     { cosmeticId: 'bitter', name: 'SLAB', type: 'font', price: 3, owned: false },
   ],
   designer: { userId: 'bbbbbbbb-2222-4222-8222-222222222222', username: 'rival_curator' },
+  byViewer: false,
+  adopted: false,
 };
 
 describe('CommunityGallery (§9)', () => {
@@ -57,6 +61,26 @@ describe('CommunityGallery (§9)', () => {
     expect(screen.getByText('RIVAL_CURATOR')).toBeTruthy();
     expect(screen.getByText('31×')).toBeTruthy();
     expect(screen.getByText('58×')).toBeTruthy();
+  });
+
+  it('F-13 E4 — marks the caller\'s OWN card "BY YOU" + "YOURS" (no price, no designer name)', () => {
+    const mine: GalleryCardView = { ...PRICED_CARD, byViewer: true };
+    mockUseGallery.mockReturnValue({ data: { items: [mine] }, isLoading: false, isError: false });
+    render(wrap(<CommunityGallery gameId="g1" onInspect={jest.fn()} onDesignACard={jest.fn()} />));
+    expect(screen.getByText('BY YOU')).toBeTruthy();
+    expect(screen.getByText('YOURS')).toBeTruthy();
+    // provenance wins over price — no PriceChip / FREE chip on your own card
+    expect(screen.queryByText('FREE')).toBeNull();
+    expect(screen.queryByText('RIVAL_CURATOR')).toBeNull();
+  });
+
+  it('F-13 E4 — marks an ALREADY-ADOPTED card "ADOPTED" in place of a price', () => {
+    const mineAdopted: GalleryCardView = { ...PRICED_CARD, adopted: true };
+    mockUseGallery.mockReturnValue({ data: { items: [mineAdopted] }, isLoading: false, isError: false });
+    render(wrap(<CommunityGallery gameId="g1" onInspect={jest.fn()} onDesignACard={jest.fn()} />));
+    expect(screen.getByText('ADOPTED')).toBeTruthy();
+    // the buy price is replaced by the ADOPTED tag (only the adoption count remains numeric)
+    expect(screen.queryByText('3')).toBeNull();
   });
 
   it('taps a cell → onInspect with that card', () => {

@@ -73,22 +73,19 @@ export function KeepBar({
           <Text style={styles.shortLine}>{shortBy} PX short — top up to keep {items.length === 1 ? 'it' : 'them'}.</Text>
           {/* D7 — the short-state TOP UP door carries the PIXELS glyph (it's a wallet door, not a spend). */}
           <ScreenButton label="Top up ▸" variant="add" size="mini" icon={<PixelsMark size={11} />} onPress={onTopUp} disabled={busy} />
-          <ScreenButton label="Cancel" variant="secondary" size="mini" onPress={onCancel} disabled={busy} />
         </View>
       ) : (
-        <View style={styles.fundedRow}>
-          <View style={styles.buyFill}>
-            <BuyBar
-              price={total}
-              balance={balance}
-              onBuy={onKeep}
-              disabled={busy}
-              note={busy ? 'acquiring…' : `keep all ${items.length} · applied to your device`}
-            />
-          </View>
-          <ScreenButton label="Cancel" variant="secondary" size="mini" onPress={onCancel} disabled={busy} />
-        </View>
+        <BuyBar
+          price={total}
+          balance={balance}
+          onBuy={onKeep}
+          disabled={busy}
+          note={busy ? 'acquiring…' : `keep all ${items.length} · applied to your device`}
+        />
       )}
+      {/* F-13 D7 (owner round-2) — CANCEL sits on its OWN line BELOW the buy/short row, never crowded
+          beside the hold/top-up key. Full-width secondary weight. */}
+      <ScreenButton label="Cancel" variant="secondary" size="mini" onPress={onCancel} disabled={busy} block />
     </View>
   );
 }
@@ -119,6 +116,4 @@ const useStyles = themedStyles((t) => ({
   // D7 — the descriptive line grows so the Buy/Cancel action pair right-aligns to the bar edge.
   shortRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.md, flexWrap: 'wrap' },
   shortLine: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5, flex: 1, minWidth: 140 },
-  fundedRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
-  buyFill: { flex: 1 },
 }));
