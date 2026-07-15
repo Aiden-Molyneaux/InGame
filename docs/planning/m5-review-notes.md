@@ -351,3 +351,24 @@ D6 inline error patterns · D7 gold cart prices/right-align/glyph · D8 glyph ·
 store-keycap reset.
 **FILED FORWARD:** E8b report affordance → M6-entry (recommended; App Store 1.2) · E8a designer-tap
 → contributor profile now, full profile M6 · E3c adopted card staying in gallery = valid, stands.
+
+---
+
+## Owner device walk — ROUND 2 (2026-07-15, suite rev 2) — verdict: massive improvement, 9 bugs + 13 rulings
+**PASSED clean:** all of §A, B1/B3-B6, C3 ("fixed, nice job")/C4-C6, D2-D4/D6/D8, E1/E2/E5/E6/E9, F2/**F3 ("looks pretty good!")**/F4/F5, G-implicit.
+**🚩 F-12 (bugs):** (1) server flatten OMITS the title band/nameplate — press print, gallery cells,
+adopted renders, share composite all title-less (one root cause; regenerate after fix) · (2) adopted+
+equipped cards render at wrong resolution on shelf + game hero (825/828/829) · (3) publish doesn't
+invalidate the gallery (appears only after app restart) · (4) C1 aisle item drawer broken again —
+preview renders, buy button/content missing · (5) E3 post-adopt DONE button dead (overlay pointer-
+events suspected) · (6) E7 share: non-serializable Blob in RTK state (console screenshot = smoking
+gun) + no message text + composite title-less · (7) D7 shell/theme preview + LOGOUT = crash
+(screenshots owed from owner) · (8) B2 BEST-RATE/FIRST-PURCHASE chips still over the confirm drawer
+on device (F-8's no-change call was wrong — Android/native elevation) · (9) Profile Top-3 "showing
+wrong" (screenshot pending; likely flatten-related).
+**F-13 (rulings):** B2 pack PAY = same gold HoldFill look as cosmetic buys (all-caps, bigger, yellow
+default) · C2 scroll-lock behind open sheets · C7 store shell/theme sheets LIVE-preview on the
+device chrome (owner overrides his overspill caution) · D7 preview ends on editor exit · drop
+"Saved Live" · cart Cancel on own line · Profile device-editor entry affordance · E3 HOLD-to-adopt
+· gallery marks YOUR OWN cards + ADOPTED ones · E8 quick-press block + self-tap affordance · F1
+chip FONT sizes unified · app-wide: never show vertical scrollbars.
