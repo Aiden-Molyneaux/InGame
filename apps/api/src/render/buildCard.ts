@@ -1,5 +1,5 @@
 import { createElement } from 'react';
-import { steppedRectPath } from './steppedPath';
+import { cardStepUnit, steppedRectPath } from './steppedPath';
 import { MAX_ELEMENTS, type CardComposition, type CardElement } from './composition';
 import { ICON_PATHS, ICON_VIEWBOX } from './icons';
 
@@ -696,7 +696,7 @@ export function buildCardElements(c: CardComposition, W: number, H: number, ctx:
   }
   const h = createElement;
   const { Group, Fill, Rect, LinearGradient, Skia } = ctx;
-  const u = W >= 96 ? 6 : 3; // matches GameCard: plated sizes step 6, mini/thumb 3
+  const u = cardStepUnit(W); // F-18: proportional so live == flatten at any render size
   const clip = Skia.Path.MakeFromSVGString(steppedRectPath(W, H, u));
   // F-06 drops the plate on mini/thumb. A plate is REQUIRED (OQ-135 ruling) — legacy 'none'
   // documents keep their object and render as SLAB (see the shape coercion below).
@@ -883,7 +883,7 @@ export function buildBaseStrip(
 export function buildOverlayElements(c: CardComposition, W: number, H: number, ctx: SkiaCtx): any {
   const h = createElement;
   const { Group, Skia } = ctx;
-  const u = W >= 96 ? 6 : 3;
+  const u = cardStepUnit(W); // F-18: proportional (matches buildCardElements)
   const clip = Skia.Path.MakeFromSVGString(steppedRectPath(W, H, u));
   const children: any[] = [];
   if (c.effect && c.effect.kind !== 'none') {

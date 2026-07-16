@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { RENDER_SIZES } from './flatten';
+import { cardStepUnit, CANONICAL_CARD_W, CANONICAL_STEP } from './steppedPath';
 
 // The F3 gallery-resolution floor (decision 0076) — the flatten ladder must out-resolve its client
 // consumers so a native <Image> DOWN-scales (crisp) instead of UP-scaling (mush). The regression the
@@ -31,5 +32,24 @@ describe('flatten RENDER_SIZES — the gallery-resolution floor', () => {
     for (const s of [RENDER_SIZES.full, RENDER_SIZES.thumb]) {
       expect(s.w / s.h).toBeCloseTo(0.715, 1);
     }
+  });
+
+  // F-18 — the flatten canvas is proportional to the CANONICAL card, and the full render is exactly the
+  // 224px canonical card at 3× DPR. That anchoring is what makes cardStepUnit(full) downscale to the
+  // live card's step (the sibling invariant is pinned in the mobile steppedPath test).
+  it('the full render is exactly the canonical card at 3× DPR (so its stepped silhouette matches live)', () => {
+    expect(RENDER_SIZES.full.w).toBe(CANONICAL_CARD_W * 3);
+    // and cardStepUnit at the full render, downscaled to the canonical display, is the historical step
+    expect(cardStepUnit(RENDER_SIZES.full.w) * (CANONICAL_CARD_W / RENDER_SIZES.full.w)).toBeCloseTo(
+      CANONICAL_STEP,
+      10,
+    );
+  });
+
+  it('full and thumb share one canonical aspect (w/h within integer-rounding of each other)', () => {
+    expect(RENDER_SIZES.full.w / RENDER_SIZES.full.h).toBeCloseTo(
+      RENDER_SIZES.thumb.w / RENDER_SIZES.thumb.h,
+      2,
+    );
   });
 });

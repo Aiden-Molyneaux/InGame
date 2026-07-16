@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import Svg, { Path, Line } from 'react-native-svg';
-import { theme, themedStyles, useTheme } from '../theme';
-import { steppedRectPath } from '../theme/steppedPath';
+import { themedStyles, useTheme } from '../theme';
+import { cardStepUnit, steppedRectPath } from '../theme/steppedPath';
 
 // GameCard (component-map §5.2) — the universal game handle. F-01: NEVER cropped — the full face at
 // the fixed 63:88 ratio, only scaled. F-02: the signature TL+BR pixel-STEP silhouette is now REAL
@@ -13,13 +13,15 @@ import { steppedRectPath } from '../theme/steppedPath';
 
 export type GameCardSize = 'hero' | 'pick' | 'grid' | 'cell' | 'mini' | 'thumb';
 
-const SIZES: Record<GameCardSize, { w: number; h: number; plate: number | null; step: number }> = {
-  hero: { w: 224, h: 313, plate: 11, step: theme.step },
-  pick: { w: 138, h: 193, plate: 11, step: theme.step }, // the board `.gcard.pick` — dual-face hero + CardDetail enlarge (M4 Game page)
-  grid: { w: 161, h: 225, plate: 11, step: theme.step },
-  cell: { w: 96, h: 134, plate: 10, step: theme.step }, // /cell plate at the 10px floor (decision 0047)
-  mini: { w: 64, h: 89, plate: null, step: theme.step / 2 }, // half-step keeps the notch proportionate
-  thumb: { w: 48, h: 67, plate: null, step: theme.step / 2 },
+// The F-02 pixel-step is no longer per-size here — it scales with the drawn box via `cardStepUnit`
+// (F-18) so the default face matches the composed/flattened card silhouette at every size.
+const SIZES: Record<GameCardSize, { w: number; h: number; plate: number | null }> = {
+  hero: { w: 224, h: 313, plate: 11 },
+  pick: { w: 138, h: 193, plate: 11 }, // the board `.gcard.pick` — dual-face hero + CardDetail enlarge (M4 Game page)
+  grid: { w: 161, h: 225, plate: 11 },
+  cell: { w: 96, h: 134, plate: 10 }, // /cell plate at the 10px floor (decision 0047)
+  mini: { w: 64, h: 89, plate: null },
+  thumb: { w: 48, h: 67, plate: null },
 };
 
 /** A stable, distinct face colour derived from the title (until the M4 custom render lands). */
@@ -45,7 +47,7 @@ export function GameCard({
   const t = useTheme();
   const styles = useStyles();
   const dims = SIZES[size];
-  const { w, h, step: u } = dims;
+  const { w, h } = dims;
   const hue = faceHue(title);
   const showPlate = dims.plate !== null;
   const plateH = showPlate ? (dims.plate as number) + 8 : 0; // text + vertical padding; > 2u so the BR notch fits
@@ -68,6 +70,9 @@ export function GameCard({
   };
   const bw = box.w;
   const bh = box.h;
+  // F-18 — the pixel-step scales with the drawn box so the default face matches the composed/flattened
+  // silhouette at every size (was the fixed `dims.step`, which drifted from the proportional card render).
+  const u = cardStepUnit(bw);
 
   return (
     <View

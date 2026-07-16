@@ -10,7 +10,7 @@ import {
   Easing,
   type SharedValue,
 } from 'react-native-reanimated';
-import { steppedRectPath } from '../theme/steppedPath';
+import { cardStepUnit, steppedRectPath } from '../theme/steppedPath';
 import type { CardComposition } from './composition';
 
 // The MOTION layer (decision 0068) — the live half of the animated cosmetics. It is a PURE ADDITIVE
@@ -172,7 +172,7 @@ export function AnimatedCardLayer({
   height: number;
 }) {
   const reduce = useReducedMotion();
-  const u = width >= 96 ? 6 : 3;
+  const u = cardStepUnit(width); // F-18: match the card's proportional silhouette (was fixed W>=96?6:3)
   const clip = useMemo(() => Skia.Path.MakeFromSVGString(steppedRectPath(width, height, u)), [width, height, u]);
   if (reduce) return null;
 
