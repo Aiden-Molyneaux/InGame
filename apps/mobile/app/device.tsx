@@ -493,30 +493,13 @@ export default function DeviceEditor() {
       .finally(() => setDeleting(false));
   }, [deleteLook, pendingDelete]);
 
-  // ── lifecycle: D8 Skeleton (first load) · D10 LoadError ────────────────────────────────────────
-  if (isLoading) {
-    // D8 — chrome (head · return · rail) renders immediately; the body is solid skeleton fills.
-    return (
-      <Frame onBack={goBack} section={section} onSection={changeSection}>
-        <DeviceSkeleton />
-      </Frame>
-    );
-  }
-  if (isError) {
-    return (
-      <Frame onBack={goBack} section={section} onSection={changeSection} railDim>
-        <View style={styles.errWrap}>
-          <Text style={styles.errEyebrow}>COULDN'T LOAD COSMETICS</Text>
-          <Text style={styles.errTitle}>SIGNAL LOST</Text>
-          <Text style={styles.errSub}>
-            Your device and its current look are safe. Check your connection and try again.
-          </Text>
-          <ScreenButton label="↻ Retry" variant="primary" onPress={() => void refetch()} />
-        </View>
-      </Frame>
-    );
-  }
-
+  // NOTE — the D8/D10 lifecycle early-returns (isLoading / isError) live at the BOTTOM of this
+  // component, right before the main return, NOT here. EVERY hook (incl. the two useAnnounceOnChange
+  // below + the useFocusEffect above) must run on every render: returning early up here skipped those
+  // trailing hooks, so when logout's `api.util.resetApiState()` flips this still-mounted editor's
+  // getDevice query back to isLoading, React saw "Rendered fewer hooks than expected" and crashed the
+  // whole tree (which in turn broke the profile signOut's router.replace — the F-16 logout crash).
+  // rules-of-hooks: no hook may sit after a conditional return. (react-hooks lint doesn't cover app/.)
   const stickerCount = liveComposition.stickers.length;
   const beatActive = switchBeat !== null && section === 'shell';
   // the decal whose TransformBox + stepper rows show (STICKERS · not previewing · one selected).
@@ -614,6 +597,34 @@ export default function DeviceEditor() {
     });
   }
   const cartTotal = cartItems.reduce((s, i) => s + i.price, 0);
+
+  // ── lifecycle: D8 Skeleton (first load) · D10 LoadError ────────────────────────────────────────
+  // These early-returns sit AFTER every hook (rules-of-hooks): all the useState/useRef/useCallback/
+  // useEffect/useFocusEffect/useAnnounceOnChange above run unconditionally, so a loading/error render
+  // never renders a different hook count than a loaded one. The computations between the hooks and
+  // here are all state-derived and null-safe, so running them in the loading/error frame is harmless.
+  if (isLoading) {
+    // D8 — chrome (head · return · rail) renders immediately; the body is solid skeleton fills.
+    return (
+      <Frame onBack={goBack} section={section} onSection={changeSection}>
+        <DeviceSkeleton />
+      </Frame>
+    );
+  }
+  if (isError) {
+    return (
+      <Frame onBack={goBack} section={section} onSection={changeSection} railDim>
+        <View style={styles.errWrap}>
+          <Text style={styles.errEyebrow}>COULDN'T LOAD COSMETICS</Text>
+          <Text style={styles.errTitle}>SIGNAL LOST</Text>
+          <Text style={styles.errSub}>
+            Your device and its current look are safe. Check your connection and try again.
+          </Text>
+          <ScreenButton label="↻ Retry" variant="primary" onPress={() => void refetch()} />
+        </View>
+      </Frame>
+    );
+  }
 
   return (
     <Frame
