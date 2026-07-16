@@ -866,7 +866,7 @@ function toStoreItem(item: CosmeticListItem): StoreItem {
 }
 
 function previewLabelFor(type?: CosmeticListItem['type']): string {
-  if (type === 'screen_theme') return 'Preview';
+  if (type === 'screen_theme') return 'New theme, previewed on your device';
   if (type === 'device_shell') return 'New shell, previewed on your device';
   return 'Previewed on your card — live';
 }
