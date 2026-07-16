@@ -119,6 +119,21 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
   const is401 = result.error?.status === 401;
   if (!is401 || urlOf(args).startsWith('/auth/')) return result;
 
+  // F-17 — the post-logout sign-in FLICKER (a self-perpetuating renderer storm). `logoutTeardown()`
+  // — an explicit sign-out, OR the OQ-123 teardown at the bottom of this handler — dispatches
+  // `api.util.resetApiState()`, which makes EVERY still-mounted query REFETCH. Those refetches are now
+  // tokenless, so each 401s straight back into this handler. Without this guard, each such 401 re-runs
+  // the FULL teardown (resetApiState AGAIN + router.replace('/sign-in')) → the cache resets again → a
+  // fresh refetch wave → more 401s … an unbounded loop that re-navigates to /sign-in hundreds of times
+  // a second (proven on web 2026-07-16: ~1200 fetches + ~400 router.replace in ~4s until the main
+  // thread starved; on device it reads as the sign-in screen flickering, barely targetable, cleared
+  // only by an app restart). A 401 on a request that carried NO live session is EXPECTED once we're
+  // logging out — there is nothing left to tear down — so just surface it. The session is gone the
+  // instant `clearSession` runs inside `logoutTeardown`, so this reads true for every refetch in the
+  // wave and collapses the loop to a single bounded burst. The genuine "valid session, server refused"
+  // 401 still has its token here, so it falls through to the refresh/teardown below unchanged.
+  if ((api.getState() as RootState).auth.accessToken == null) return result;
+
   const refreshToken = (api.getState() as RootState).auth.refreshToken;
   if (refreshToken) {
     if (!refreshPromise) {

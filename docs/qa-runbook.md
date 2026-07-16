@@ -155,3 +155,10 @@ apps/mobile/.expo` → start the phone lane with the advertised host pinned:
 `REACT_NATIVE_PACKAGER_HOSTNAME=100.83.86.46 npx expo start -c --port 8081` (the tailnet address —
 see the web-loop memory). Verify by grepping the served bundle for exactly one `:4000/api` host.
 In Expo Go: NEVER tap recents/discovered entries after a server change — type the URL fresh.
+
+## Post-logout renderer freeze = the reauth loop signature (F-17, 2026-07-15)
+If the web renderer freezes so hard even `Runtime.evaluate` times out right after a logout, it's the
+teardown→refetch→401→teardown loop class (fixed by the tokenless-401 guard in `baseQueryWithReauth`,
+commit F-17): check for cycling 401s in the API log. Related recipe: RN-web Pressables ignore CDP
+ref-clicks while the tab is hidden — dispatch a synthetic pointerdown/mousedown/pointerup/mouseup/click
+sequence via javascript_tool instead; it makes the hidden-tab lane fully drivable.
