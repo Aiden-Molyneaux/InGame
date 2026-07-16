@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -9,7 +9,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import type { CollectionItem } from '@ingame/shared';
-import { CardFace, parseComposition } from '../CardFace';
+import { EntryCard } from '../EntryCard';
 import { StatsBack } from '../game/StatsBack';
 import { ScreenButton } from '../ScreenButton';
 import { STATUS_LABEL } from '../../constants/collection';
@@ -73,9 +73,6 @@ export const FlipCard = memo(function FlipCard({
   style?: ViewStyle;
 }) {
   const reduced = useReducedMotion();
-  // Identity-stable composition (keyed on the raw rider) so the skia canvas' props never churn on a
-  // re-render — a fresh parse per render forced a canvas re-encode on every parent state change.
-  const composition = useMemo(() => parseComposition(item.card.composition), [item.card.composition]);
   const toggle = () => onToggle(item.entryId);
   const navigate = () => onNavigate(item.gameId);
   const progress = useSharedValue(flipped ? 1 : 0);
@@ -169,7 +166,9 @@ export const FlipCard = memo(function FlipCard({
         renderToHardwareTextureAndroid={!settled}
         style={[styles.face, frontStyle]}
       >
-        <CardFace title={item.title} composition={composition} imageUrl={item.card.imageUrl} size="grid" nowPlaying={item.nowPlaying} style={styles.fill} />
+        {/* EntryCard owns the composition-vs-flattened branch, memoizing the parse on the raw rider so
+            the skia canvas' props never churn on a re-render (the round-4 canvas re-encode lesson). */}
+        <EntryCard title={item.title} card={item.card} size="grid" nowPlaying={item.nowPlaying} style={styles.fill} />
       </Animated.View>
 
       {/* BACK — the CARD-01 stats back + the visible VIEW GAME keycap. `box-none` once SETTLED so a tap on

@@ -2,7 +2,7 @@ import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-nati
 import { useRouter } from 'expo-router';
 import { IdentityBlock } from '../../src/components/IdentityBlock';
 import { ScreenHead } from '../../src/components/ScreenHead';
-import { CardFace, parseComposition } from '../../src/components/CardFace';
+import { EntryCard } from '../../src/components/EntryCard';
 import { StatTile } from '../../src/components/StatTile';
 import { ScreenButton } from '../../src/components/ScreenButton';
 import { MiniDevice } from '../../src/components/MiniDevice';
@@ -114,10 +114,9 @@ export default function Profile() {
                 accessibilityLabel={`Open ${me.favouriteGame.title}`}
                 onPress={() => router.push(`/game/${me.favouriteGame!.gameId}`)}
               >
-                <CardFace
+                <EntryCard
                   title={me.favouriteGame.title}
-                  composition={parseComposition(me.favouriteGame.card.composition)}
-                  imageUrl={me.favouriteGame.card.imageUrl} // adopted-card parity (round-2 bug 9)
+                  card={me.favouriteGame.card} // both branches owned by EntryCard (adopted-card parity, round-2 bug 9)
                   size="grid"
                   width={120}
                   height={168}
@@ -145,15 +144,10 @@ export default function Profile() {
                   accessibilityLabel={`Open ${g.title}`}
                   onPress={() => router.push(`/game/${g.gameId}`)}
                 >
-                  {/* imageUrl threaded (round-2 bug 9): an equipped ADOPTED card has no composition,
-                      only a flattened image — without imageUrl it fell back to the default placeholder,
-                      so the Top-3 "showed wrong" for adopted cards. */}
-                  <CardFace
-                    title={g.title}
-                    composition={parseComposition(g.card.composition)}
-                    imageUrl={g.card.imageUrl}
-                    size="cell"
-                  />
+                  {/* EntryCard owns the composition-vs-flattened branch (round-2 bug 9): an equipped
+                      ADOPTED card has no composition, only a flattened image — the wrapper can't drop it,
+                      so the Top-3 can't regress to the default placeholder for adopted cards. */}
+                  <EntryCard title={g.title} card={g.card} size="cell" />
                   <RankChip rank={i + 1} />
                 </Pressable>
               ))}
@@ -171,10 +165,9 @@ export default function Profile() {
                 accessibilityLabel={`Open ${me.nowPlaying.title}`}
                 onPress={() => router.push(`/game/${me.nowPlaying!.gameId}`)}
               >
-                <CardFace
+                <EntryCard
                   title={me.nowPlaying.title}
-                  composition={parseComposition(me.nowPlaying.card.composition)}
-                  imageUrl={me.nowPlaying.card.imageUrl} // adopted-card parity (round-2 bug 9)
+                  card={me.nowPlaying.card} // both branches owned by EntryCard (adopted-card parity, round-2 bug 9)
                   size="cell"
                   nowPlaying
                   animate // the one now-playing card (0068 opt-in)

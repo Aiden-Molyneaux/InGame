@@ -4,7 +4,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import type { CollectionItem, CollectionStatus, GenreView } from '@ingame/shared';
 import { ScreenHead } from '../../src/components/ScreenHead';
-import { CardFace, parseComposition } from '../../src/components/CardFace';
+import { EntryCard } from '../../src/components/EntryCard';
 import { FlipCard } from '../../src/components/collection/FlipCard';
 import { Coachmark } from '../../src/components/Coachmark';
 import { ScreenButton } from '../../src/components/ScreenButton';
@@ -466,10 +466,9 @@ function NowPlayingHero({ hero, onLogHours }: { hero: CollectionItem | null; onL
         accessibilityLabel={`Open ${hero.title}`}
         onPress={() => router.push(`/game/${hero.gameId}`)}
       >
-        <CardFace
+        <EntryCard
           title={hero.title}
-          composition={parseComposition(hero.card.composition)}
-          imageUrl={hero.card.imageUrl}
+          card={hero.card}
           size="grid"
           width={138}
           height={193}
@@ -581,7 +580,7 @@ function ListView({ items }: { items: CollectionItem[] }) {
             accessibilityLabel={`Open ${i.title}`}
             onPress={() => router.push(`/game/${i.gameId}`)}
           >
-            <CardFace title={i.title} composition={parseComposition(i.card.composition)} imageUrl={i.card.imageUrl} size="thumb" />
+            <EntryCard title={i.title} card={i.card} size="thumb" />
             <View style={styles.stripMeta}>
               <View style={styles.stripTitleRow}>
                 <Text style={styles.stripTitle} numberOfLines={1}>
@@ -620,10 +619,9 @@ function TopView({ items }: { items: CollectionItem[] }) {
           onPress={() => router.push(`/game/${i.gameId}`)}
         >
           <Text style={[styles.rank, idx === 0 && styles.rankFirst]}>#{idx + 1}</Text>
-          <CardFace
+          <EntryCard
             title={i.title}
-            composition={parseComposition(i.card.composition)}
-            imageUrl={i.card.imageUrl}
+            card={i.card}
             size={idx === 0 ? 'cell' : 'mini'}
           />
           <View style={styles.rowMeta}>

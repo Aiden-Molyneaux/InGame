@@ -5,23 +5,38 @@
 // is the card / StateMark / intent-button signature; TR + BL stay square. Clockwise, closed.
 export type SteppedCorners = { tl?: boolean; tr?: boolean; bl?: boolean; br?: boolean };
 
-// The canonical card: a 224px-wide face steps at `u = 6` (theme.step). The full CARD-15 flatten is
-// exactly 3× that (672px — a 224pt card at iPhone 3× DPR); the thumb flatten is 3× the 96px cell.
+// The canonical card is a 224px-wide face (the full CARD-15 flatten is exactly 3× that — 672px, a
+// 224pt card at iPhone 3× DPR; the thumb flatten is 3× the 96px cell). CANONICAL_CARD_W anchors the
+// flatten ladder (see flatten-sizes.test) and is NOT the chunk knob — that is CARD_STEP_RATIO below.
 export const CANONICAL_CARD_W = 224;
-export const CANONICAL_STEP = 6;
 
 /**
- * The F-02 pixel-step unit (`u` in `steppedRectPath`), scaled PROPORTIONALLY to the card's pixel
- * width so a card's stepped silhouette is IDENTICAL live vs flattened at ANY size (F-18). A card is
- * rendered LIVE at its display px, but the CARD-15 flatten renders at 3× DPR (672px for a 224pt card)
- * and the PNG is then downscaled into the display box — so a FIXED-px `u` (the old `W>=96?6:3`) drew
- * ~3× finer steps on the flattened card than on the live one at the same on-screen size (7× at the
- * 96px cell: live 12.5%-of-width notch vs flat 1.8%). Scaling `u` with `w` makes `u/w` constant, so
- * the silhouette is resolution-independent and live == flatten everywhere. Anchored to the canonical
- * 224px card so it (and the hero/detail showcase it maps to) keeps its historical `u = 6`.
+ * OWNER TUNE-KNOB (F-20 ruling 1 — "bigger cards should scale the chunkiness of their corners to give
+ * the retro feel"). The pixel-step unit `u` as a fraction of card width, so the notch (t = 2u) is
+ * `2 × CARD_STEP_RATIO` of the width at EVERY size. F-18 made this proportional but deliberately subtle
+ * (6/224 → notch 5.36% of width, anchored to keep the hero looking as it did); the owner instead wants
+ * the RETRO CHUNK to scale UP, so this is the chunkier 6/112 (notch 10.7% of width — double F-18).
+ * This is the ONLY number to touch: soften toward ~6/150 (notch ~8%) if too loud on device, or push
+ * higher for more chunk. Everything downstream (live GameCard face, StatsBack, the animated clip, and
+ * the server-side CARD-15 flatten) reads `cardStepUnit`, so they stay in lockstep automatically.
+ * Geometry note: the TL+BR notch self-intersects only past ~50% of the min dimension; 10.7% is far
+ * clear even at the smallest mini/thumb sizes (~48px → t ≈ 5px), so no clamp is required.
+ */
+export const CARD_STEP_RATIO = 6 / 112;
+
+// The canonical 224pt card's resulting step (was 6 at the F-18 ratio; 12 at the F-20 chunk). Derived
+// from the knob so it can never drift; kept exported for the flatten anchor + F-18 invariant tests.
+export const CANONICAL_STEP = CANONICAL_CARD_W * CARD_STEP_RATIO;
+
+/**
+ * The F-02 pixel-step unit (`u` in `steppedRectPath`), scaled PROPORTIONALLY to the card's pixel width
+ * (F-18) so a card's stepped silhouette is IDENTICAL live vs flattened at ANY size — a card renders
+ * LIVE at its display px, but the CARD-15 flatten renders at 3× DPR then downscales into the display
+ * box, so a scale-invariant `u/w` is what makes live == flatten everywhere. The ratio itself is the
+ * owner's chunk knob (CARD_STEP_RATIO).
  */
 export function cardStepUnit(w: number): number {
-  return (w * CANONICAL_STEP) / CANONICAL_CARD_W;
+  return w * CARD_STEP_RATIO;
 }
 
 export function steppedRectPath(

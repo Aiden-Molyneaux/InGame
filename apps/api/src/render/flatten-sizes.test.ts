@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { RENDER_SIZES } from './flatten';
-import { cardStepUnit, CANONICAL_CARD_W, CANONICAL_STEP } from './steppedPath';
+import { cardStepUnit, CANONICAL_CARD_W, CANONICAL_STEP, CARD_STEP_RATIO } from './steppedPath';
 
 // The F3 gallery-resolution floor (decision 0076) — the flatten ladder must out-resolve its client
 // consumers so a native <Image> DOWN-scales (crisp) instead of UP-scaling (mush). The regression the
@@ -39,7 +39,10 @@ describe('flatten RENDER_SIZES — the gallery-resolution floor', () => {
   // live card's step (the sibling invariant is pinned in the mobile steppedPath test).
   it('the full render is exactly the canonical card at 3× DPR (so its stepped silhouette matches live)', () => {
     expect(RENDER_SIZES.full.w).toBe(CANONICAL_CARD_W * 3);
-    // and cardStepUnit at the full render, downscaled to the canonical display, is the historical step
+    // and cardStepUnit at the full render, downscaled to the canonical display, is the canonical step
+    // (F-20 chunk: CANONICAL_STEP is now 12 = 224 × 6/112, not the F-18 value of 6).
+    expect(CARD_STEP_RATIO).toBeCloseTo(6 / 112, 10);
+    expect(CANONICAL_STEP).toBe(12);
     expect(cardStepUnit(RENDER_SIZES.full.w) * (CANONICAL_CARD_W / RENDER_SIZES.full.w)).toBeCloseTo(
       CANONICAL_STEP,
       10,

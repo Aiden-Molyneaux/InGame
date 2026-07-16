@@ -1,4 +1,10 @@
-import { cardStepUnit, CANONICAL_CARD_W, CANONICAL_STEP, steppedRectPath } from './steppedPath';
+import {
+  cardStepUnit,
+  CANONICAL_CARD_W,
+  CANONICAL_STEP,
+  CARD_STEP_RATIO,
+  steppedRectPath,
+} from './steppedPath';
 
 // The F-02 TL+BR pixel-step silhouette (decision 0041 — the GameCard corner signature).
 // `u` = the unit stair; the total notch is 2u. TR + BL stay square by default; a consumer
@@ -33,15 +39,31 @@ describe('steppedRectPath', () => {
 // rendered LIVE at its display px or FLATTENED at 3× DPR then downscaled. The bug it fixes: a fixed-px
 // `u` (old `W>=96?6:3`) drew ~3-7× finer steps on the flattened card (rendered at 672px, then shrunk to
 // the display box) than on the live one at the same on-screen size.
-describe('cardStepUnit (F-18 scale-invariant pixel-step)', () => {
-  it('keeps the canonical 224px card at the historical u = 6', () => {
+describe('cardStepUnit (F-18 scale-invariant pixel-step, F-20 chunk)', () => {
+  it('applies the F-20 chunk ratio — 6/112, a 10.7%-of-width notch (double F-18)', () => {
+    // The owner tune-knob (F-20 ruling 1): u/w = 6/112, so the notch t = 2u = 10.7% of width.
+    expect(CARD_STEP_RATIO).toBeCloseTo(6 / 112, 10);
+    expect((2 * CARD_STEP_RATIO)).toBeCloseTo(0.10714, 4); // notch as fraction of width
+  });
+
+  it('steps the canonical 224px card at u = 12 (was 6 pre-F-20)', () => {
     expect(cardStepUnit(CANONICAL_CARD_W)).toBe(CANONICAL_STEP);
+    expect(cardStepUnit(CANONICAL_CARD_W)).toBe(12);
   });
 
   it('is scale-invariant — u/w is constant at every render size', () => {
     const ratio = CANONICAL_STEP / CANONICAL_CARD_W;
+    expect(ratio).toBeCloseTo(6 / 112, 10);
     for (const w of [48, 96, 138, 161, 224, 288, 672]) {
       expect(cardStepUnit(w) / w).toBeCloseTo(ratio, 10);
+    }
+  });
+
+  it('never self-intersects — the notch stays well under 50% of the min dimension at the smallest sizes', () => {
+    // TL+BR notches collide only once t = 2u exceeds ~half the width; check the smallest live/flatten sizes.
+    for (const w of [48, 96, 138, 161, 224]) {
+      const t = 2 * cardStepUnit(w);
+      expect(t).toBeLessThan(0.5 * w);
     }
   });
 

@@ -1,5 +1,5 @@
 import { View, Text, Pressable } from 'react-native';
-import { CardFace } from '../CardFace';
+import { EntryCard } from '../EntryCard';
 import { StatsBack } from './StatsBack';
 import { themedStyles } from '../../theme';
 import type { CardComposition } from '../../render/composition';
@@ -45,8 +45,9 @@ export function DualFaceHero({
         onPress={onInspect}
       >
         {/* /grid (161×225) — one size up from /pick per the owner's gate-5 B.5. `animate`: the
-            game-page hero is the shelf's showpiece — animated cosmetics run here (0068 opt-in). */}
-        <CardFace title={title} composition={composition} imageUrl={imageUrl} size="grid" animate />
+            game-page hero is the shelf's showpiece — animated cosmetics run here (0068 opt-in).
+            EntryCard owns the own-composition vs adopted-flattened branch (F-8/F-19 class). */}
+        <EntryCard title={title} card={{ composition, imageUrl }} size="grid" animate />
         <Text style={styles.label}>THE FACE</Text>
       </Pressable>
       <View style={styles.face}>
