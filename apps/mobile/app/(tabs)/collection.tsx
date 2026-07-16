@@ -469,6 +469,7 @@ function NowPlayingHero({ hero, onLogHours }: { hero: CollectionItem | null; onL
         <CardFace
           title={hero.title}
           composition={parseComposition(hero.card.composition)}
+          imageUrl={hero.card.imageUrl}
           size="grid"
           width={138}
           height={193}
@@ -580,7 +581,7 @@ function ListView({ items }: { items: CollectionItem[] }) {
             accessibilityLabel={`Open ${i.title}`}
             onPress={() => router.push(`/game/${i.gameId}`)}
           >
-            <CardFace title={i.title} composition={parseComposition(i.card.composition)} size="thumb" />
+            <CardFace title={i.title} composition={parseComposition(i.card.composition)} imageUrl={i.card.imageUrl} size="thumb" />
             <View style={styles.stripMeta}>
               <View style={styles.stripTitleRow}>
                 <Text style={styles.stripTitle} numberOfLines={1}>
@@ -622,6 +623,7 @@ function TopView({ items }: { items: CollectionItem[] }) {
           <CardFace
             title={i.title}
             composition={parseComposition(i.card.composition)}
+            imageUrl={i.card.imageUrl}
             size={idx === 0 ? 'cell' : 'mini'}
           />
           <View style={styles.rowMeta}>
