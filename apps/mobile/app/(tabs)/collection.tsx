@@ -784,6 +784,7 @@ function LogHoursSheet({ item, onClose }: { item: CollectionItem | null; onClose
       setValue(String(item.hours));
       setError(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional value-driven deps (see above); `item` identity would re-seed and wipe in-progress typing
   }, [item?.entryId, item?.hours]);
 
   async function save() {

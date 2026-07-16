@@ -3,6 +3,8 @@
   "typescript": "The language + tsc typecheck/build (CI six-check steps 1 & 6). No stdlib equivalent. Provenance: Microsoft.",
   "tsx": "Run TS entrypoints (dev server, db:migrate, db:reset, drizzle scripts) without a build step. Avoids a compile-to-JS dance in M1. Provenance: privatenumber/esbuild.",
   "typescript-eslint": "TypeScript-aware ESLint integration + recommended rules (lint step). Provenance: typescript-eslint org.",
+  "eslint-plugin-react-hooks": "Runs react-hooks/rules-of-hooks (ERROR) on the mobile route files (apps/mobile/app/**) — the guard for the F-16 logout-crash class (a Hook after an early return; commit 00d75f0). exhaustive-deps runs as a warning. The root eslint pass ignores apps/mobile/**, so the client keeps its own mobile-local flat config; no stdlib/existing rule catches hook-ordering. Provenance: Meta (React team).",
+  "@typescript-eslint/parser": "The TSX-aware parser the mobile-local ESLint flat config (apps/mobile/eslint.config.mjs) needs to lint app/**/*.tsx route files for react-hooks rules — the default espree parser can't read TS/JSX. Declared direct since the config imports it (rather than leaning on the hoisted typescript-eslint transitive). Provenance: typescript-eslint org.",
   "eslint": "The general-quality linter (CI six-check step 1; the InGame [LINT] rules are custom in tools/lint). Provenance: ESLint org.",
   "@eslint/js": "ESLint's official recommended JS ruleset for the flat config. Provenance: ESLint org.",
   "globals": "Canonical global-identifier sets for the ESLint flat config (node/browser). Provenance: sindresorhus.",
