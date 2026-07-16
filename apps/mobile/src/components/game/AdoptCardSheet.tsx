@@ -212,8 +212,6 @@ export function AdoptCardSheet({
               </View>
             ) : null}
 
-            <Text style={styles.card15}>You get the image, not the layers.</Text>
-
             {/* the action (G1/G2/G3 · F-13 E8) — HOLD-to-adopt is the default everywhere: FREE = the gold
                 fill-hold (no separate confirm tap — the owner hit a two-tap path); PRICED = the shared
                 gold BuyBar hold-to-adopt, which owns the pre-emptive NOT-ENOUGH (G3). Reduce-motion keeps
@@ -265,11 +263,6 @@ export function AdoptCardSheet({
                 }}
               />
             </View>
-            <Text style={styles.note}>
-              {free
-                ? 'This card is free to adopt — the designer earns clout, not currency.'
-                : 'Premium components are acquired once and yours account-wide. The designer earns clout, not currency.'}
-            </Text>
           </>
         ) : null}
       </PulledSheet>
@@ -320,7 +313,6 @@ const useStyles = themedStyles((t) => ({
   totalRow: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingTop: t.space.sm },
   totalLabel: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
   totalValue: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.brand.gold, letterSpacing: 0.5 },
-  card15: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, lineHeight: 13, marginTop: t.space.md, marginBottom: t.space.sm },
   // ── settle / states ──
   settleWrap: { marginTop: t.space.md, gap: t.space.md },
   okStrip: {
@@ -342,5 +334,4 @@ const useStyles = themedStyles((t) => ({
   unavailText: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
   // F-13 E7 — SHARE is a left-aligned quiet link now, not a full-width button row.
   actions: { flexDirection: 'row', alignItems: 'center', gap: t.space.md, marginTop: t.space.md },
-  note: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, lineHeight: 15, marginTop: t.space.sm },
 }));

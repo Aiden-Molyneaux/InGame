@@ -19,9 +19,7 @@ const ITEMS = [
 describe('KeepBar — the Device premium cart', () => {
   it('renders nothing with an empty cart', () => {
     const view = render(
-      wrap(
-        <KeepBar items={[]} total={0} balance={10} onKeep={jest.fn()} onCancel={jest.fn()} onTopUp={jest.fn()} />,
-      ),
+      wrap(<KeepBar items={[]} total={0} balance={10} onKeep={jest.fn()} onTopUp={jest.fn()} />),
     );
     expect(view.toJSON()).toBeNull();
   });
@@ -29,9 +27,7 @@ describe('KeepBar — the Device premium cart', () => {
   it('FUNDED: shows the running total + items and KEEP confirms → onKeep', () => {
     const onKeep = jest.fn();
     render(
-      wrap(
-        <KeepBar items={ITEMS} total={14} balance={20} onKeep={onKeep} onCancel={jest.fn()} onTopUp={jest.fn()} />,
-      ),
+      wrap(<KeepBar items={ITEMS} total={14} balance={20} onKeep={onKeep} onTopUp={jest.fn()} />),
     );
     expect(screen.getByText('PREVIEWING PREMIUM')).toBeTruthy();
     expect(screen.getByText('14')).toBeTruthy();
@@ -46,9 +42,7 @@ describe('KeepBar — the Device premium cart', () => {
   it('SHORT: shows the shortfall + TOP UP door; no buy control', () => {
     const onTopUp = jest.fn();
     render(
-      wrap(
-        <KeepBar items={ITEMS} total={14} balance={5} onKeep={jest.fn()} onCancel={jest.fn()} onTopUp={onTopUp} />,
-      ),
+      wrap(<KeepBar items={ITEMS} total={14} balance={5} onKeep={jest.fn()} onTopUp={onTopUp} />),
     );
     expect(screen.getByText(/9 PX short/)).toBeTruthy();
     expect(screen.queryByLabelText('Buy for 14 PX')).toBeNull();
@@ -56,16 +50,13 @@ describe('KeepBar — the Device premium cart', () => {
     expect(onTopUp).toHaveBeenCalledTimes(1);
   });
 
-  it('CANCEL reverts (fires onCancel, never onKeep)', () => {
-    const onCancel = jest.fn();
-    const onKeep = jest.fn();
+  // F-21 ruling 5 — no standalone CANCEL: backing out is re-selecting a saved/owned facet or leaving the
+  // editor (device.tsx). At rest the funded cart offers only the buy affordance, no dedicated cancel key.
+  it('offers no standalone CANCEL control at rest (ruling 5)', () => {
     render(
-      wrap(
-        <KeepBar items={ITEMS} total={14} balance={20} onKeep={onKeep} onCancel={onCancel} onTopUp={jest.fn()} />,
-      ),
+      wrap(<KeepBar items={ITEMS} total={14} balance={20} onKeep={jest.fn()} onTopUp={jest.fn()} />),
     );
-    fireEvent.press(screen.getByText('CANCEL'));
-    expect(onCancel).toHaveBeenCalledTimes(1);
-    expect(onKeep).not.toHaveBeenCalled();
+    expect(screen.queryByText('CANCEL')).toBeNull();
+    expect(screen.getByLabelText('Buy for 14 PX')).toBeTruthy();
   });
 });

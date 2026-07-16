@@ -207,7 +207,7 @@ export default function Profile() {
                 {/* F-13 D7 (owner round-2) — the row read as static; give it the house pressable
                     affordance (F-03 keycap grammar), so it clearly opens the editor. */}
                 <View style={styles.devEdit}>
-                  <Text style={styles.devEditText}>EDIT ›</Text>
+                  <Text style={styles.devEditText}>EDIT</Text>
                 </View>
               </Pressable>
             );

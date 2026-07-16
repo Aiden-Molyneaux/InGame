@@ -57,7 +57,6 @@ describe('AdoptCardSheet (P8 · SOC-11 · M5 F-9 E1 — the styler-buy anatomy)'
     expect(screen.getByText('PREMIUM COMPONENTS — ACQUIRED WITH THE CARD')).toBeTruthy();
     expect(screen.getByText('SLAB')).toBeTruthy(); // the component name
     expect(screen.getByText('TOTAL — WHAT YOU PAY')).toBeTruthy();
-    expect(screen.getByText('You get the image, not the layers.')).toBeTruthy();
     expect(screen.getByText(/DESIGNED BY/)).toBeTruthy();
     expect(screen.getByText('58×')).toBeTruthy();
   });
@@ -69,8 +68,8 @@ describe('AdoptCardSheet (P8 · SOC-11 · M5 F-9 E1 — the styler-buy anatomy)'
     });
     const onAdopted = jest.fn();
     renderSheet({ onAdopt, onAdopted, balance: 20 });
-    // the shared BuyBar meta + adopt verb
-    expect(screen.getByText('YOU HAVE 20 PX')).toBeTruthy();
+    // the shared BuyBar prominent balance line (F-21 r4) + adopt verb
+    expect(screen.getByLabelText('You have 20 pixels')).toBeTruthy();
     fireEvent.press(screen.getByLabelText('Adopt for 3 PX'));
     expect(screen.getByText('CONFIRM · 3 PX')).toBeTruthy();
     await act(async () => {

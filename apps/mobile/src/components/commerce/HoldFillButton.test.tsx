@@ -57,4 +57,16 @@ describe('HoldFillButton — the filling hold-to-activate primitive', () => {
     fireEvent.press(screen.getByLabelText('Pay'));
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
+
+  // F-21 ruling 1 — once laid out, the key paints the house stepped-edge silhouette (an SVG polygon face);
+  // before layout it falls back to a plain fill. Fire a layout to prove the stepped face mounts.
+  it('paints the stepped SVG face once laid out (ruling 1)', () => {
+    render(wrap(<HoldFillButton label="HOLD TO PAY" accessibilityLabel="Hold to pay" onComplete={jest.fn()} />));
+    const key = screen.getByLabelText('Hold to pay');
+    expect(screen.UNSAFE_queryAllByType(require('react-native-svg').Svg).length).toBe(0); // no face pre-layout
+    act(() => {
+      fireEvent(key, 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: 220, height: 40 } } });
+    });
+    expect(screen.UNSAFE_queryAllByType(require('react-native-svg').Svg).length).toBeGreaterThan(0);
+  });
 });

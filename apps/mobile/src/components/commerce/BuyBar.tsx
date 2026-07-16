@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, View, Text } from 'react-native';
+import { View, Text } from 'react-native';
 import { themedStyles } from '../../theme';
 import { useReducedMotion } from '../../a11y/useReducedMotion';
 import { HoldFillButton, HOLD_MS } from './HoldFillButton';
@@ -22,6 +22,13 @@ import { PixelsMark } from './PixelsMark';
 //        owned flip). BuyBar just fires `onBuy`.
 // F-8 (E3-C3): the reduce-motion confirm is INLINE (never a nested ConfirmSheet — a PulledSheet parent
 // would clip it half-open).
+//
+// F-21 (owner buy-drawer walk 2026-07-16) — the bar is UNBOXED: the action key stands FREE (no bordered
+// container), a vertical stack of {a prominent balance line · the note/spend-prompt · the free-standing
+// stepped BUY/HOLD key}. Ruling 2 (unboxed) + ruling 4 (the balance reads prominently — its own gold-
+// marked line near the action, at title size) both land in this restructure; the key steps via
+// HoldFillButton (ruling 1). The parent surface owns horizontal padding, so a block key spans the
+// content width and reads as a free-standing button, not a boxed toolbar.
 export { HOLD_MS };
 
 export function BuyBar({
@@ -40,7 +47,7 @@ export function BuyBar({
   /** G3 — the top-up destination. Present + can't-afford + not disabled → the pre-emptive NOT-ENOUGH state. */
   onTopUp?: () => void;
   disabled?: boolean;
-  /** the second bb-meta line (e.g. "spends pixels instantly" / the offline reason). */
+  /** the note line under the balance (e.g. "spends pixels instantly" / the offline reason). */
   note?: string;
   holdMs?: number;
   /** the action verb — 'BUY' (cosmetics) or 'ADOPT' (a community card); one shared grammar, one knob. */
@@ -58,6 +65,7 @@ export function BuyBar({
 
   const label = `${price} PX`;
   const verbLower = verb === 'ADOPT' ? 'adopt' : 'buy';
+  const verbTitle = verb === 'ADOPT' ? 'Adopt' : 'Buy';
   // G3 — pre-emptive can't-afford: never offer the hold, show NOT-ENOUGH + the inline top-up door.
   const cantAfford = !disabled && onTopUp !== undefined && balance < price;
 
@@ -68,16 +76,23 @@ export function BuyBar({
 
   return (
     <View style={styles.bar}>
-      <View style={styles.meta}>
-        <Text style={styles.have}>YOU HAVE {balance} PX</Text>
-        {/* while confirming, the note becomes the spend prompt (the ConfirmSheet's old `message`). */}
-        {confirming ? (
-          <Text style={styles.noteText}>Spend {price} PX — pixels are spent instantly.</Text>
-        ) : note ? (
-          <Text style={styles.noteText}>{note}</Text>
-        ) : null}
-      </View>
-      <View style={styles.spacer} />
+      {/* ruling 4 — the balance reads PROMINENTLY: its own clear line near the action, a gold-marked count
+          at title size (F-06 15) so it's plainly legible before committing to a hold. Suppressed in the
+          can't-afford state (the NOT-ENOUGH line states the balance there). */}
+      {!cantAfford ? (
+        <View style={styles.balanceLine} accessibilityLabel={`You have ${balance} pixels`}>
+          <Text style={styles.balanceLabel}>YOU HAVE</Text>
+          <Text style={styles.balanceValue}>{balance}</Text>
+          <PixelsMark size={14} />
+        </View>
+      ) : null}
+
+      {/* the note / spend-prompt line — while confirming, it becomes the spend prompt. */}
+      {confirming ? (
+        <Text style={styles.noteText}>Spend {price} PX — pixels are spent instantly.</Text>
+      ) : note ? (
+        <Text style={styles.noteText}>{note}</Text>
+      ) : null}
 
       {cantAfford ? (
         // G3 — the uniform can't-afford state: no hold, the shortfall + a TOP UP door inline.
@@ -96,40 +111,41 @@ export function BuyBar({
           />
         </View>
       ) : reduceMotion ? (
-        // OQ-046 accessible alt — a single press flips to an INLINE confirm (no hold, no nested sheet).
+        // OQ-046 accessible alt — a single press flips to an INLINE confirm (no hold, no nested sheet). The
+        // keys are HoldFillButtons (immediate-press under reduce-motion), so they wear the same stepped face.
         confirming ? (
-          <>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Cancel"
-              onPress={() => setConfirming(false)}
-              style={styles.cancel}
-            >
-              <Text style={styles.cancelText}>CANCEL</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Confirm ${verbLower} for ${label}`}
-              onPress={handleBuy}
-              style={styles.buy}
-            >
-              <Text style={styles.buyText}>CONFIRM · {label}</Text>
-            </Pressable>
-          </>
+          <View style={styles.confirmRow}>
+            <View style={styles.confirmCell}>
+              <HoldFillButton
+                label="CANCEL"
+                accessibilityLabel="Cancel"
+                tone="cream"
+                onComplete={() => setConfirming(false)}
+                block
+              />
+            </View>
+            <View style={styles.confirmCell}>
+              <HoldFillButton
+                label={`CONFIRM · ${label}`}
+                accessibilityLabel={`Confirm ${verbLower} for ${label}`}
+                tone="gold"
+                onComplete={handleBuy}
+                block
+              />
+            </View>
+          </View>
         ) : (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`${verb === 'ADOPT' ? 'Adopt' : 'Buy'} for ${label}`}
-            accessibilityState={{ disabled }}
+          <HoldFillButton
+            label={`${verb} · ${label}`}
+            accessibilityLabel={`${verbTitle} for ${label}`}
+            tone="gold"
+            onComplete={() => setConfirming(true)}
             disabled={disabled}
-            onPress={() => setConfirming(true)}
-            style={[styles.buy, disabled && styles.buyDisabled]}
-          >
-            <Text style={styles.buyText}>{verb} · {label}</Text>
-          </Pressable>
+            block
+          />
         )
       ) : (
-        // G2 — the filling hold key (the shared primitive).
+        // G2 — the free-standing filling hold key (the shared stepped primitive).
         <HoldFillButton
           label={`HOLD TO ${verb} · ${label}`}
           accessibilityLabel={`Hold to ${verbLower} for ${label}`}
@@ -137,6 +153,7 @@ export function BuyBar({
           disabled={disabled}
           holdMs={holdMs}
           tone="gold"
+          block
         />
       )}
     </View>
@@ -144,37 +161,19 @@ export function BuyBar({
 }
 
 const useStyles = themedStyles((t) => ({
-  bar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: t.space.md,
-    paddingHorizontal: t.space.lg,
-    paddingVertical: t.space.md,
-    backgroundColor: t.scr.bg,
-    borderWidth: 1,
-    borderColor: t.scr.hairline,
-  },
-  meta: { gap: 2, flexShrink: 1 },
-  have: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
+  // F-21 ruling 2 — UNBOXED: a plain vertical stack, no border/panel container. The parent surface
+  // (PulledSheet body, KeepBar wrap) owns horizontal padding, so the block key spans the content width.
+  bar: { gap: t.space.md },
+  // ruling 4 — the prominent balance line: "YOU HAVE" (dim body) + a gold count (title 15) + the mark.
+  balanceLine: { flexDirection: 'row', alignItems: 'center', gap: t.space.sm },
+  balanceLabel: { fontFamily: t.font.screenSemi, fontSize: t.type.body, color: t.scr.dim, letterSpacing: 1 },
+  balanceValue: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.value, letterSpacing: 0.5 },
   noteText: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5 },
-  spacer: { flex: 1 },
-  buy: {
-    backgroundColor: t.brand.gold,
-    paddingHorizontal: t.space.lg,
-    paddingVertical: t.space.md,
-  },
-  buyDisabled: { opacity: 0.4 },
-  buyText: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.brand.goldInk, letterSpacing: 1 },
+  // the reduce-motion two-step keys share a row (CANCEL · CONFIRM), each stretching to half the width.
+  confirmRow: { flexDirection: 'row', gap: t.space.md },
+  confirmCell: { flex: 1 },
   // G3 — the pre-emptive can't-afford cluster (F-02 gold voice on the shortfall glyph, not alert-red).
   shortWrap: { alignItems: 'flex-end', gap: t.space.sm },
   shortLine: { flexDirection: 'row', alignItems: 'center' },
   shortText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.value, letterSpacing: 0.8 },
-  // the inline-confirm CANCEL — the safe/secondary weight beside the gold CONFIRM.
-  cancel: {
-    backgroundColor: t.scr.key,
-    paddingHorizontal: t.space.lg,
-    paddingVertical: t.space.md,
-    ...(t.scr.isLight ? { borderWidth: 1, borderColor: t.scr.dim } : null),
-  },
-  cancelText: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.brand.navy, letterSpacing: 1 },
 }));

@@ -9,9 +9,15 @@ import { CosmeticSwatch } from '../commerce/CosmeticSwatch';
 // KeepBar (component-map §5 device · board D7/D7b/D7c) — the Device premium CART. Applying an unowned
 // premium shell/theme previews it LIVE on the handheld but does NOT persist; the KeepBar collects the
 // previewed unowned premium, shows the running PX total, and KEEP acquires them all (acquire-batch) then
-// commits the facets. CANCEL reverts the preview to the saved device. FUNDED = the BuyBar hold-to-buy
-// (+ OQ-046 non-hold alt); SHORT = the shortfall + a TOP UP door (never a bare spend, ECON-01). A pinned
-// bar so it rides above the section rail while a preview is live. Themed-token native (0070).
+// commits the facets. FUNDED = the BuyBar hold-to-buy (+ OQ-046 non-hold alt); SHORT = the shortfall +
+// a TOP UP door (never a bare spend, ECON-01). A pinned bar so it rides above the section rail while a
+// preview is live. Themed-token native (0070).
+//
+// F-21 ruling 5 (owner buy-drawer walk 2026-07-16) — NO explicit CANCEL. Backing out of a pending premium
+// preview is already covered without dedicated chrome: re-selecting a saved/owned shell or theme reverts
+// the live preview (device.tsx pickShell/pickTheme clear the cart + apply the owned pick), and LEAVING
+// the editor reverts the prefs to the saved device + drops the cart (device.tsx endPreview useFocusEffect,
+// the F-13 D7 rule). So the standalone CANCEL was redundant.
 
 export interface KeepBarItem {
   cosmeticId: string;
@@ -27,7 +33,6 @@ export function KeepBar({
   balance,
   busy = false,
   onKeep,
-  onCancel,
   onTopUp,
 }: {
   items: KeepBarItem[];
@@ -35,7 +40,6 @@ export function KeepBar({
   balance: number;
   busy?: boolean;
   onKeep: () => void;
-  onCancel: () => void;
   onTopUp: () => void;
 }) {
   const styles = useStyles();
@@ -83,9 +87,6 @@ export function KeepBar({
           note={busy ? 'acquiring…' : `keep all ${items.length} · applied to your device`}
         />
       )}
-      {/* F-13 D7 (owner round-2) — CANCEL sits on its OWN line BELOW the buy/short row, never crowded
-          beside the hold/top-up key. Full-width secondary weight. */}
-      <ScreenButton label="Cancel" variant="secondary" size="mini" onPress={onCancel} disabled={busy} block />
     </View>
   );
 }

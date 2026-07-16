@@ -19,9 +19,9 @@ const holo: StoreItem = { id: 'holographic', name: 'HOLOGRAPHIC', type: 'FINISH 
 describe('ItemSheet — the P2/P9 state grammar', () => {
   it('an UNOWNED item shows the PriceChip + the hold-to-buy BuyBar (the spend gate)', () => {
     render(wrap(<ItemSheet visible item={holo} balance={27} onClose={jest.fn()} onBuy={jest.fn()} />));
-    expect(screen.getByLabelText('8 pixels')).toBeTruthy(); // the big PriceChip
+    expect(screen.getByLabelText('8 pixels')).toBeTruthy(); // F-21 r3 — the title-row gold-text price
     expect(screen.getByLabelText('Hold to buy for 8 PX')).toBeTruthy(); // the BuyBar key
-    expect(screen.getByText('YOU HAVE 27 PX')).toBeTruthy();
+    expect(screen.getByLabelText('You have 27 pixels')).toBeTruthy(); // F-21 r4 — the prominent balance line
   });
 
   it('an OWNED item shows NO BuyBar — the OWNED row instead (P9: the price never returns)', () => {
@@ -137,8 +137,8 @@ describe('ItemSheet — the P2/P9 state grammar', () => {
     expect(screen.getByTestId('live-card-preview')).toBeTruthy(); // the F-10 live preview
     expect(screen.getByText('GOLD')).toBeTruthy(); // name meta
     expect(screen.getByText('FRAME · CATALOG')).toBeTruthy(); // type meta
-    expect(screen.getByLabelText('3 pixels')).toBeTruthy(); // the PriceChip
-    expect(screen.getByText('YOU HAVE 92 PX')).toBeTruthy(); // the balance line
+    expect(screen.getByLabelText('3 pixels')).toBeTruthy(); // the title-row gold-text price
+    expect(screen.getByLabelText('You have 92 pixels')).toBeTruthy(); // the prominent balance line
     expect(screen.getByLabelText('Hold to buy for 3 PX')).toBeTruthy(); // the BuyBar survives the preview
   });
 

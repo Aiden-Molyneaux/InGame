@@ -4,7 +4,7 @@ import type { StorePack } from '@ingame/shared';
 import { themedStyles } from '../../theme';
 import { PulledSheet } from '../PulledSheet';
 import { TertiaryLink } from '../TertiaryLink';
-import { PriceChip } from './PriceChip';
+import { PixelsMark } from './PixelsMark';
 import { OwnedTag } from './Tags';
 import { BuyBar } from './BuyBar';
 import { AcquireBeat } from './AcquireBeat';
@@ -12,7 +12,7 @@ import { PreviewStage } from './PreviewStage';
 import { PackTile } from './PackTile';
 
 // ItemSheet (component-map §7 infra · board P2/P2b/P5) — the premium-item detail as a PulledSheet:
-// PreviewStage (the item live on your own stuff) · title row + PriceChip/big · the BuyBar (the OQ-046
+// PreviewStage (the item live on your own stuff) · title row + gold-text price (F-21 r3) · the BuyBar (the OQ-046
 // launch gate). When a BUY returns INSUFFICIENT_BALANCE {shortBy}, the sheet grows the P5 bridge (the
 // short-strip + the cheapest covering PackTile minis) and the BuyBar sleeps until a pack lands.
 //
@@ -84,9 +84,11 @@ export function ItemSheet({
   const free = freePack || item.price <= 0;
   return (
     <PulledSheet visible={visible} onClose={onClose}>
-      {/* F-15 fix 3 — the item IDENTITY leads: name · type · PriceChip sit at the TOP of the sheet (right
+      {/* F-15 fix 3 — the item IDENTITY leads: name · type · price sit at the TOP of the sheet (right
           under the grab handle), ABOVE the preview, so you know WHAT you're looking at before the live
-          preview loads. General to every ItemSheet (card cosmetics too), not just themes/shells. */}
+          preview loads. General to every ItemSheet (card cosmetics too), not just themes/shells.
+          F-21 ruling 3 — the price is GOLD TEXT (the economy text voice, F-06 title 15) with the PixelsMark
+          glyph, NOT a gold-filled chip; the chip stays for aisle rows/tiles, the sheet reads as text. */}
       <View style={styles.titleRow}>
         <Text style={styles.name} numberOfLines={2}>
           {item.name}
@@ -95,7 +97,14 @@ export function ItemSheet({
           {item.type}
         </Text>
         <View style={styles.spacer} />
-        {owned ? <OwnedTag /> : free ? null : <PriceChip pixels={item.price} big />}
+        {owned ? (
+          <OwnedTag />
+        ) : free ? null : (
+          <View style={styles.priceText} accessibilityLabel={`${item.price} pixels`} accessibilityRole="text">
+            <Text style={styles.priceValue}>{item.price}</Text>
+            <PixelsMark size={14} />
+          </View>
+        )}
       </View>
 
       <PreviewStage label={previewLabel} swapLabel={previewSwapLabel} onSwap={onPreviewSwap}>
@@ -150,6 +159,9 @@ const useStyles = themedStyles((t) => ({
   name: { flexShrink: 1, fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
   type: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
   spacer: { flex: 1 },
+  // F-21 ruling 3 — the sheet price as GOLD TEXT (economy text voice, F-02 `scr.value`) + the mark glyph.
+  priceText: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  priceValue: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.value, letterSpacing: 0.5 },
   ownedRow: {
     flexDirection: 'row',
     alignItems: 'center',

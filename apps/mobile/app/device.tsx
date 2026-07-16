@@ -131,7 +131,8 @@ export default function DeviceEditor() {
   const [saved, setSaved] = useState<DeviceResponse | null>(null);
   // the theme try-on: non-null while the picked theme differs from the saved theme (the PreviewStrip).
   const [previewTheme, setPreviewTheme] = useState<ScreenThemeId | null>(null);
-  // the D2 shell-switch beat (before→after minis) — cleared on a section change or the next pick.
+  // the D2 shell-switch beat — drives the single-line "SWITCHED — «shell» WRAP" edit readout (F-21 r6
+  // removed the redundant was→now MiniDevice pair); cleared on a section change or the next pick.
   const [switchBeat, setSwitchBeat] = useState<{ from: ShellId; to: ShellId } | null>(null);
 
   const savedRef = useRef<DeviceResponse | null>(null);
@@ -305,7 +306,9 @@ export default function DeviceEditor() {
     [patchDevice, cosmeticFor, dispatch, saveState, inlineError],
   );
 
-  // ── D7 premium cart — KEEP acquires the previewed premium then commits the facets; CANCEL reverts ──
+  // ── D7 premium cart — KEEP acquires the previewed premium then commits the facets ──────────────────
+  // (F-21 ruling 5) No explicit CANCEL: re-selecting a saved/owned shell/theme reverts the preview, and
+  // leaving the editor reverts + drops the cart (endPreview useFocusEffect below).
   const keepPremium = useCallback(async () => {
     if (keepBusy) return;
     const ids: string[] = [pendingPremium.shell, pendingPremium.theme].filter((x): x is ShellId | ScreenThemeId => !!x);
@@ -325,15 +328,6 @@ export default function DeviceEditor() {
       setKeepBusy(false);
     }
   }, [keepBusy, pendingPremium, acquireBatch, patchDevice]);
-
-  const cancelPremium = useCallback(() => {
-    const savedShell = resolveShellId(savedRef.current?.activeShellId);
-    const savedTheme = resolveScreenThemeId(savedRef.current?.screenThemeId);
-    if (pendingPremium.shell) dispatch(setShellId(savedShell));
-    if (pendingPremium.theme) dispatch(setThemeId(savedTheme));
-    setPendingPremium({ shell: null, theme: null });
-    setSwitchBeat(null);
-  }, [dispatch, pendingPremium]);
 
   // ── D7 (owner round-2, F-13) — the premium preview MUST END when leaving the editor ────────────────
   // A previewed-but-unowned premium shell/theme lives in the redux `prefs` (so the live frame repaints)
@@ -677,21 +671,9 @@ export default function DeviceEditor() {
         showsVerticalScrollIndicator={false}
         scrollEnabled={!bgLocked}
       >
-        {/* the D2 before→after mini pair rides above the tray while the beat holds */}
-        {beatActive && switchBeat ? (
-          <View style={styles.pairRow}>
-            <View style={styles.pairCol}>
-              <MiniDevice shellId={switchBeat.from} themeId={liveThemeId} />
-              <Text style={styles.pairLbl}>WAS · {SHELL_NAMES[switchBeat.from]}</Text>
-            </View>
-            <Text style={styles.pairArrow}>➔</Text>
-            <View style={styles.pairCol}>
-              <MiniDevice shellId={switchBeat.to} themeId={liveThemeId} />
-              <Text style={[styles.pairLbl, { color: t.brand.gold }]}>NOW · {SHELL_NAMES[switchBeat.to]}</Text>
-            </View>
-          </View>
-        ) : null}
-
+        {/* F-21 ruling 6 — no was→now MiniDevice comparison pair here: the device chrome above IS the live
+            preview, so an old-vs-new render is redundant. The switch still surfaces as a single status line
+            in the edit readout ("SWITCHED — «shell» WRAP", via switchReadout). */}
         {section === 'shell' ? (
           <>
             <Text style={styles.secTitle}>SHELL</Text>
@@ -820,14 +802,14 @@ export default function DeviceEditor() {
         )}
       </ScrollView>
 
-      {/* D7 — the premium cart: preview live, KEEP acquires-all + applies, CANCEL reverts to saved */}
+      {/* D7 — the premium cart: preview live, KEEP acquires-all + applies (F-21 r5: no CANCEL — re-select
+          or leave the editor reverts) */}
       <KeepBar
         items={cartItems}
         total={cartTotal}
         balance={balance}
         busy={keepBusy}
         onKeep={() => void keepPremium()}
-        onCancel={cancelPremium}
         onTopUp={() => router.push('/store')}
       />
 
@@ -1003,18 +985,6 @@ const useStyles = themedStyles((t) => ({
     lineHeight: 13,
     paddingTop: t.space.sm,
   },
-  // D2 pair
-  pairRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: t.space.xl,
-    backgroundColor: t.scr.panel,
-    paddingVertical: t.space.md,
-  },
-  pairCol: { alignItems: 'center', gap: t.space.sm },
-  pairLbl: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
-  pairArrow: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.accent },
   // skeleton
   skWrap: { flex: 1, paddingHorizontal: t.space.lg, paddingTop: t.space.md, gap: t.space.md },
   skBar: { backgroundColor: t.scr.panel, borderRadius: 2 },

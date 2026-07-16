@@ -82,9 +82,11 @@ describe('BuyBar — the OQ-046 buy gate (both paths)', () => {
     expect(onBuy).not.toHaveBeenCalled();
   });
 
-  it('shows the balance and an optional note', () => {
+  it('shows the prominent balance line (ruling 4) and an optional note', () => {
     render(wrap(<BuyBar price={4} balance={27} onBuy={jest.fn()} note="Spends pixels instantly" />));
-    expect(screen.getByText('YOU HAVE 27 PX')).toBeTruthy();
+    // F-21 ruling 4 — the balance is its own gold-marked line (label + count + glyph), read via its a11y label.
+    expect(screen.getByLabelText('You have 27 pixels')).toBeTruthy();
+    expect(screen.getByText('27')).toBeTruthy();
     expect(screen.getByText('Spends pixels instantly')).toBeTruthy();
   });
 
