@@ -308,13 +308,6 @@ const useStyles = themedStyles((t) => ({
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
   stars: { fontSize: t.type.body, color: t.scr.faint, letterSpacing: 1 },
   pending: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5 },
-  caption: {
-    fontFamily: t.font.screen,
-    fontSize: t.type.micro,
-    color: t.scr.faint,
-    lineHeight: 15,
-    marginTop: t.space.md,
-  },
   editor: { paddingHorizontal: t.space.lg, paddingBottom: t.space.md, gap: t.space.md },
   editorRow: { flexDirection: 'row', gap: t.space.md },
   editorBtn: { flex: 1, paddingVertical: t.space.md },
