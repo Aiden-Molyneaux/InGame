@@ -1,6 +1,5 @@
 import { View, Text } from 'react-native';
 import { themedStyles, useTheme } from '../../theme';
-import { PixelsMark } from './PixelsMark';
 
 // ThemePreviewScreen (M5 F-10 live inspect, decision 0076) — a compact mock of "your screen in this
 // theme," rendered entirely from the LIVE `scr.*` tokens. The store's screen-theme item-sheet wraps this
@@ -17,10 +16,6 @@ export function ThemePreviewScreen() {
     <View style={styles.screen} accessibilityLabel="Theme preview">
       <View style={styles.headRow}>
         <Text style={styles.heading}>YOUR SCREEN</Text>
-        <View style={styles.value}>
-          <PixelsMark size={12} />
-          <Text style={styles.valueNum}>12</Text>
-        </View>
       </View>
 
       <View style={styles.panel}>
@@ -51,8 +46,6 @@ const useStyles = themedStyles((t) => ({
   },
   headRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   heading: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
-  value: { flexDirection: 'row', alignItems: 'center', gap: t.space.sm },
-  valueNum: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.value, letterSpacing: 0.5 },
   panel: {
     backgroundColor: t.scr.panel,
     borderWidth: 1,

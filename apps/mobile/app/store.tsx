@@ -811,11 +811,10 @@ function ItemPreview({ item, deviceShellId }: { item: CosmeticListItem; deviceSh
     // palette (no PATCH, no global repaint), so "PREVIEWING — BERRY" actually shows BERRY.
     return (
       <View style={styles.previewCol}>
-        <PreviewStrip name={item.name} onExit={() => {}} />
+        <PreviewStrip name={item.name} />
         <ThemePreview themeId={item.id}>
           <ThemePreviewScreen />
         </ThemePreview>
-        <Text style={styles.previewLine}>YOUR WHOLE SCREEN, RESTYLED</Text>
       </View>
     );
   }
@@ -867,7 +866,7 @@ function toStoreItem(item: CosmeticListItem): StoreItem {
 }
 
 function previewLabelFor(type?: CosmeticListItem['type']): string {
-  if (type === 'screen_theme') return 'Your whole screen, restyled — this page is the preview';
+  if (type === 'screen_theme') return 'Preview';
   if (type === 'device_shell') return 'New shell, previewed on your device';
   return 'Previewed on your card — live';
 }
