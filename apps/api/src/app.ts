@@ -6,6 +6,7 @@ import { errorMiddleware } from './http/errorMiddleware';
 import { meRoutes } from './routes/me-routes';
 import { authRoutes } from './routes/auth-routes';
 import { usersRoutes } from './routes/users-routes';
+import { friendsRoutes } from './routes/friends-routes';
 import { catalogRoutes } from './routes/catalog-routes';
 import { collectionRoutes } from './routes/collection-routes';
 import { cardRoutes } from './routes/card-routes';
@@ -55,6 +56,7 @@ export function createApp(): Express {
       ...authRoutes,
       ...meRoutes,
       ...usersRoutes,
+      ...friendsRoutes,
       ...catalogRoutes,
       ...collectionRoutes,
       ...cardRoutes,

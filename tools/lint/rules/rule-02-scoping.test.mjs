@@ -509,3 +509,122 @@ export async function findById(exec, cardId) {
     }
   });
 });
+
+// decision 0076 §0.1 — the FOURTH read class. `// SYS-01-FRIEND-READ` exempts a cross-user READ of a
+// user-owned table ONLY when the MARKED STATEMENT carries an explicit accepted-friendship predicate
+// (`friendScoped(...)` or an `'accepted'` status literal), and NEVER a write. Statement-scoped (the M5
+// neighbour-launder fix) so a sibling's `friendScoped(` cannot launder a predicate-less read. This is
+// the guard twelve M6 surfaces build on — the G-D strip→RED demonstration keys off it.
+describe('rule-02 SYS-01-FRIEND-READ marker (accepted-friendship reads only — 0076 §0.1)', () => {
+  const repo = (text) => file('apps/api/src/repositories/friend-read-repo.ts', text);
+
+  it('EXEMPTS a marked friend read WITH a friendScoped() predicate (the friend/full profile read)', () => {
+    const v = run([
+      repo(`
+import { eq } from 'drizzle-orm';
+import { users, friendships } from '../db/schema';
+export function friendScoped(actorId, targetCol) {
+  return eq(friendships.requesterId, actorId);
+}
+export async function friendScopedProfile(exec, actorId, targetId) {
+  // SYS-01-FRIEND-READ — friend/full profile: served only when an accepted friendship binds actor↔target
+  return exec
+    .select({ id: users.id, bio: users.bio })
+    .from(users)
+    .innerJoin(friendships, friendScoped(actorId, users.id))
+    .where(eq(users.id, targetId))
+    .limit(1);
+}
+`),
+    ]);
+    expect(v).toHaveLength(0);
+  });
+
+  it('EXEMPTS a marked friend read WITH an inline `accepted` status predicate (no helper)', () => {
+    const v = run([
+      repo(`
+import { eq, and } from 'drizzle-orm';
+import { users, friendships } from '../db/schema';
+export async function friendProfile(exec, targetId) {
+  // SYS-01-FRIEND-READ — friend/full profile: accepted friendship only
+  return exec
+    .select({ id: users.id, bio: users.bio })
+    .from(users)
+    .innerJoin(friendships, and(eq(friendships.addresseeId, users.id), eq(friendships.status, 'accepted')))
+    .where(eq(users.id, targetId));
+}
+`),
+    ]);
+    expect(v).toHaveLength(0);
+  });
+
+  it('does NOT exempt a marked friend read with NO friendship predicate (STRIP → fails closed)', () => {
+    const v = run([
+      repo(`
+import { eq } from 'drizzle-orm';
+import { users } from '../db/schema';
+export async function leakAnyProfile(exec, targetId) {
+  // SYS-01-FRIEND-READ: (ABUSED) claims a friend read but carries no accepted-friendship predicate
+  return exec.select({ id: users.id, bio: users.bio }).from(users).where(eq(users.id, targetId));
+}
+`),
+    ]);
+    expect(v.length).toBeGreaterThan(0);
+  });
+
+  it('does NOT exempt a marked WRITE even with friendScoped() nearby (reads-only contract)', () => {
+    const v = run([
+      repo(`
+import { eq } from 'drizzle-orm';
+import { users } from '../db/schema';
+export function friendScoped(actorId) { return eq(users.id, actorId); }
+export async function abuse(exec, actorId, targetId, bio) {
+  // SYS-01-FRIEND-READ: (ABUSED) claims a friend read but mutates another user's row
+  return exec.update(users).set({ bio }).where(friendScoped(actorId));
+}
+`),
+    ]);
+    expect(v.length).toBeGreaterThan(0);
+  });
+
+  // The statement-scoped guarantee: a predicate-STRIPPED marked read fails closed even when a SIBLING
+  // marked read legitimately uses friendScoped() — the neighbour's predicate must not launder it.
+  it('FAILS CLOSED on a predicate-stripped marked read even when a sibling read uses friendScoped()', () => {
+    const v = run([
+      repo(`
+import { eq, and } from 'drizzle-orm';
+import { users, friendships } from '../db/schema';
+export function friendScoped(actorId, targetCol) {
+  return and(eq(friendships.status, 'accepted'), eq(friendships.requesterId, actorId));
+}
+export async function leaky(exec, actorId, targetId) {
+  // SYS-01-FRIEND-READ — friend/full profile: accepted friendship only
+  return exec
+    .select({ id: users.id, bio: users.bio })
+    .from(users)
+    .where(eq(users.id, targetId));
+}
+export async function ok(exec, actorId, targetId) {
+  // SYS-01-FRIEND-READ — friend/full profile: accepted friendship only
+  return exec
+    .select({ id: users.id, bio: users.bio })
+    .from(users)
+    .innerJoin(friendships, friendScoped(actorId, users.id))
+    .where(eq(users.id, targetId));
+}
+`),
+    ]);
+    expect(v.length).toBeGreaterThan(0);
+    expect(v.some((x) => /users/.test(x.message))).toBe(true);
+  });
+
+  it('rejects each on-disk FRIEND-READ misuse fixture (no-predicate · marked-write)', () => {
+    const dir = join(process.cwd(), 'fixtures', 'bad-pr-corpus', 'rule-02-scoping');
+    const all = collectFiles([dir], { exts: ['.ts'], cwd: process.cwd() });
+    for (const name of ['friend-read-no-predicate-repo.ts', 'friend-read-write-repo.ts']) {
+      const fixture = all.filter((f) => f.path.endsWith(name));
+      expect(fixture, `${name} missing from the corpus`).toHaveLength(1);
+      expect(run(fixture).length, `${name} was not flagged`).toBeGreaterThan(0);
+    }
+  });
+});

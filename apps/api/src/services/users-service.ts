@@ -7,6 +7,7 @@ import type {
 } from '@ingame/shared';
 import * as profileRepo from '../repositories/profile-repo';
 import * as relationshipRepo from '../repositories/relationship-repo';
+import * as friendReadRepo from '../repositories/friend-read-repo';
 import * as suspensionRepo from '../repositories/suspension-repo';
 import * as cardRepo from '../repositories/card-repo';
 import * as catalogRepo from '../repositories/catalog-repo';
@@ -57,12 +58,17 @@ export async function getUserProfile(
     ? 0
     : await relationshipRepo.countMutualFriends(actorId, targetId);
 
-  if (relationship === 'friend') {
+  // SYS-01-FRIEND-READ gate (decision 0076 §0.1): the friend/full shape is served ONLY when the
+  // friendScoped predicate (an ACCEPTED friendship) binds actor↔target — enforced at the DB, not by a
+  // service `if`. Self is always full. Strip the predicate (in friend-read-repo) → a non-friend leaks
+  // the full shape and the G-D field-diff / lint tests both go RED.
+  const friendRow = isSelf ? target : await friendReadRepo.friendScopedProfile(actorId, targetId);
+  if (friendRow) {
     const [gamertags, friendsCount] = await Promise.all([
       profileService.listGamertags(targetId),
       relationshipRepo.countFriends(targetId),
     ]);
-    return toFriendShape(target, { relationship, mutualFriendsCount, friendsCount, gamertags });
+    return toFriendShape(friendRow, { relationship, mutualFriendsCount, friendsCount, gamertags });
   }
   return toPublicShape(target, { relationship, mutualFriendsCount });
 }

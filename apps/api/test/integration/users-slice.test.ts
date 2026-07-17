@@ -23,10 +23,19 @@ async function seedUser(over: Record<string, unknown> = {}) {
     .values({ id, username, email: `${username}@example.com`, bio: 'my bio', ...over });
   return { id, username, token: await signAccessToken(id) };
 }
+// M6 split (0076 §0.1): the ACCEPTED bond lives in `friendships`; a PENDING request lives in
+// `friend_requests` (from = requester, to = addressee). This helper routes by status so the M2
+// outgoing/incoming/friend assertions still hold against the new two-table model.
 async function seedFriendship(requesterId: string, addresseeId: string, status: string) {
   const { getDb } = await import('../../src/db/client');
-  const { friendships } = await import('../../src/db/schema');
-  await getDb().insert(friendships).values({ requesterId, addresseeId, status });
+  const { friendships, friendRequests } = await import('../../src/db/schema');
+  if (status === 'accepted') {
+    await getDb().insert(friendships).values({ requesterId, addresseeId, status: 'accepted' });
+  } else {
+    await getDb()
+      .insert(friendRequests)
+      .values({ fromUserId: requesterId, toUserId: addresseeId, status });
+  }
 }
 async function seedBlock(blockerId: string, blockedId: string) {
   const { getDb } = await import('../../src/db/client');

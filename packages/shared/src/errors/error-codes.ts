@@ -40,6 +40,12 @@ export const ERROR_CODES = [
   'STARTER_PACK_CONSUMED', // 409 — POST /iap/validate refused: the once-per-account Starter Pack is already owned
   // M5 F-3 (§4 economy-audit LOW — the publish TOCTOU guard) — the F-17 additive path.
   'COMPOSITION_CHANGED', // 409 — publish refused: the composition changed mid-publish (a concurrent autosave drifted it from the flattened snapshot); RETRYABLE — publish again
+  // M6 §1 friend-fabric spike (decision 0076 §0.7) — the SOC-01/08 friend-request refusals, F-17
+  // additive path (the rest of the 0.7 family — REQUEST_COOLDOWN · NOT_FRIENDS · LIST_FULL · INVITE_* —
+  // append as P1–P5 build their endpoints).
+  'SELF_TARGET', // 409 — friend/recommend/report yourself (POST /friends/requests {toUserId} === actor)
+  'ALREADY_FRIENDS', // 409 — POST /friends/requests refused: an accepted friendship already binds the pair
+  'REQUEST_PENDING', // 409 — POST /friends/requests refused: a pending request already exists between the pair
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];

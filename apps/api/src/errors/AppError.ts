@@ -265,6 +265,42 @@ export class StarterPackConsumedError extends AppError {
   }
 }
 
+/**
+ * SOC-01/08 (decision 0076 §0.7) — POST /friends/requests refused because the target IS the actor
+ * (you cannot friend yourself). 409 (the CONFLICT family, aligned with the sibling social refusals).
+ */
+export class SelfTargetError extends AppError {
+  readonly code = 'SELF_TARGET';
+  readonly httpStatus = 409;
+  constructor(message = 'You cannot send that to yourself.') {
+    super(message);
+  }
+}
+
+/**
+ * SOC-01 (decision 0076 §0.7) — POST /friends/requests refused: an ACCEPTED friendship already binds the
+ * pair. 409 (the CONFLICT family). The client treats it as an idempotent no-op (they are already friends).
+ */
+export class AlreadyFriendsError extends AppError {
+  readonly code = 'ALREADY_FRIENDS';
+  readonly httpStatus = 409;
+  constructor(message = 'You are already friends.') {
+    super(message);
+  }
+}
+
+/**
+ * SOC-08 (decision 0076 §0.7) — POST /friends/requests refused: a PENDING request already exists between
+ * the pair (either direction). 409 (the CONFLICT family). P1 adds the mutual-pending auto-accept path.
+ */
+export class RequestPendingError extends AppError {
+  readonly code = 'REQUEST_PENDING';
+  readonly httpStatus = 409;
+  constructor(message = 'A friend request is already pending.') {
+    super(message);
+  }
+}
+
 /** SERVER_ERROR carries a GENERIC body downstream — the middleware never serializes this message. */
 export class ServerError extends AppError {
   readonly code = 'SERVER_ERROR';

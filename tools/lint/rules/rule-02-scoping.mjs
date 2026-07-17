@@ -50,6 +50,16 @@ const PUBLIC_READ_RE = /\/\/\s*SYS-01-PUBLIC-READ\b/;
 // `publishedOnly(...)` helper — whose whole contract is to INJECT that predicate (decision 0073 §0.1
 // names the helper as the mechanism). Either present in-window means the read is visibility-scoped.
 const PUBLISHED_PREDICATE_RE = /['"]published['"]|\bpublishedOnly\s*\(/;
+// SYS-01-FRIEND-READ (OQ-146/decision 0076 §0.1 — the FOURTH read class): exempts a cross-user READ of a
+// user-owned table ONLY when the marked statement carries an explicit ACCEPTED-FRIENDSHIP predicate (a
+// literal `'accepted'` status filter, OR a call to `friendScoped(...)` — the helper whose whole contract
+// is to INJECT that predicate, 0076 §0.1 names it as the mechanism). Reads-only + predicate-required — a
+// marked write/upsert or a predicate-less marked read still fails closed. The predicate is read from the
+// MARKED STATEMENT (markedStatementOf), NOT a loose line window, so a neighbouring query's `friendScoped(`
+// can never launder a predicate-less marked read (the M5 neighbour-launder fix, mirrored). Guard-surface
+// marker → auditable at the gate-3 seam review; the payload allowlist is the serializer's (toFriendShape).
+const FRIEND_READ_RE = /\/\/\s*SYS-01-FRIEND-READ\b/;
+const FRIEND_PREDICATE_RE = /['"]accepted['"]|\bfriendScoped\s*\(/;
 // The composition-exclusion guarantee (OQ-122/CARD-15/0066 §2 — P3 finishes the lint work): a
 // SYS-01-PUBLIC-READ read must NEVER select the private `composition` column (cross-user viewers get
 // the flattened image only). The regex matches a `.composition` column ref but NOT `.compositionHash`
@@ -127,6 +137,7 @@ export default {
           hasAggregateComment: COMMUNITY_AGGREGATE_RE.test(origWindow),
           hasAggregateCall: AGGREGATE_CALL_RE.test(codeWindow),
           hasPublicReadComment: PUBLIC_READ_RE.test(pOrigWindow),
+          hasFriendReadComment: FRIEND_READ_RE.test(pOrigWindow),
         };
       };
 
@@ -172,10 +183,14 @@ export default {
         // window) so a neighbouring query's `publishedOnly(` / `'published'` can never launder a
         // predicate-less marked read (the P3 window hole). Only computed for a marked read verb.
         const marksPublicRead = READ_VERBS.has(verb) && w.hasPublicReadComment;
-        const statement = marksPublicRead ? markedStatementOf(code, idx) : '';
+        // A cross-user FRIEND read (0076 §0.1): reads-only + an explicit accepted-friendship predicate,
+        // bound to the MARKED STATEMENT (not a loose window) so a neighbour's friendScoped can't launder.
+        const marksFriendRead = READ_VERBS.has(verb) && w.hasFriendReadComment;
+        const statement = marksPublicRead || marksFriendRead ? markedStatementOf(code, idx) : '';
         const hasPublishedPredicate = marksPublicRead && PUBLISHED_PREDICATE_RE.test(statement);
         const selectsComposition = marksPublicRead && COMPOSITION_SELECT_RE.test(statement);
         const hasPublicRead = marksPublicRead && hasPublishedPredicate;
+        const hasFriendRead = marksFriendRead && FRIEND_PREDICATE_RE.test(statement);
         // The composition-exclusion guarantee: a PUBLIC read that selects `composition` is NEVER
         // exempt — the private layers must not cross to another principal (CARD-15 / 0066 §2). Flag it
         // explicitly (a clear message) and skip the generic check (one violation, not two).
@@ -187,7 +202,14 @@ export default {
           });
           continue;
         }
-        if (!w.hasScope && !hasExempt && !hasAuthLookup && !hasCommunityAggregate && !hasPublicRead) {
+        if (
+          !w.hasScope &&
+          !hasExempt &&
+          !hasAuthLookup &&
+          !hasCommunityAggregate &&
+          !hasPublicRead &&
+          !hasFriendRead
+        ) {
           const kind = READ_VERBS.has(verb) ? 'read' : verb === 'insert' || verb === 'into' ? 'upserted' : 'modified';
           violations.push({
             file: file.path,

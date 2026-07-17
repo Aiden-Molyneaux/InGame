@@ -64,6 +64,9 @@ export const DOMAIN_EVENT_TYPES = [
   'social.user_unblocked', // SOC-09 — DELETE /me/blocks/:userId; the block lifted (idempotent).
   // M5 F-2b un-adopt (CARD-14/20 — the adopted-side DELETE; migration 0012). Append at the END.
   'card.adoption_revoked', // CARD-14 — the adopter removed their copy (soft-revoke; all-time count unchanged).
+  // M6 §1 friend-fabric spike (decision 0076 §0.1 — friend_requests + friendships). Append at the END.
+  'friend.request_created', // SOC-08 — POST /friends/requests (a pending request opened).
+  'friend.added', // SOC-01 — a request accepted → the accepted friendship formed (the P4 feed + P6 engine consume this).
 ] as const;
 
 export type DomainEventType = (typeof DOMAIN_EVENT_TYPES)[number];

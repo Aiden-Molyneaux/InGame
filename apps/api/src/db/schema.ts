@@ -198,6 +198,36 @@ export const friendships = pgTable(
 );
 
 /**
+ * `friend_requests` — the SOC-08 friend-REQUEST lifecycle (M6 §1 spike / P1). USER-OWNED (both parties;
+ * every read is actor-scoped — the actor is `from` OR `to`). `status ∈ pending|accepted|declined|
+ * cancelled`; a PENDING row is the live request that drives `outgoing`/`incoming` (getRelationship reads
+ * pending direction from HERE, accepted bonds from `friendships`). `cooldownUntil` is the SOC-08
+ * re-request cooldown stamp (set on decline; NOT enforced in the spike — P1 wires enforcement + the
+ * partial-unique-on-pending F36 race guard + mutual-pending auto-accept). Accepting a request writes the
+ * `accepted` bond into `friendships` (the accepted store all the M2/M5 readers already consume).
+ */
+export const friendRequests = pgTable(
+  'friend_requests',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    fromUserId: uuid('from_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    toUserId: uuid('to_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    status: text('status').notNull().default('pending'), // pending | accepted | declined | cancelled
+    cooldownUntil: timestamp('cooldown_until', { withTimezone: true }), // SOC-08 (stamped on decline; unenforced in the spike)
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    fromToIdx: index('friend_requests_from_to_idx').on(table.fromUserId, table.toUserId),
+    toIdx: index('friend_requests_to_idx').on(table.toUserId),
+  }),
+);
+
+/**
  * `user_blocks` — the minimal READ substrate for the GET /users/:id non-disclosure collapse (SOC-09).
  * A block in EITHER direction collapses the target to the generic "unavailable" shape. M2 builds the
  * table + read resolver + seed helper ONLY — the block/unblock ENDPOINTS are SOC/M6. USER-OWNED.
@@ -719,6 +749,8 @@ export type RefreshTokenRow = typeof refreshTokens.$inferSelect;
 export type AuthTokenRow = typeof authTokens.$inferSelect;
 export type GamertagRow = typeof gamertags.$inferSelect;
 export type FriendshipRow = typeof friendships.$inferSelect;
+export type FriendRequestRow = typeof friendRequests.$inferSelect;
+export type NewFriendRequestRow = typeof friendRequests.$inferInsert;
 export type UserBlockRow = typeof userBlocks.$inferSelect;
 export type UserSuspensionRow = typeof userSuspensions.$inferSelect;
 export type AdminAuditRow = typeof adminAuditLog.$inferSelect;

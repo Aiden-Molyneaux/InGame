@@ -1,7 +1,10 @@
 import type { Request, Response } from 'express';
-import type { BlockUserRequest } from '@ingame/shared';
+import { z } from 'zod';
+import type { BlockUserRequest, CreateFriendRequest } from '@ingame/shared';
 import { AuthFailedError, NotFoundError } from '../errors/AppError';
 import * as socialService from '../services/social-service';
+
+const uuidSchema = z.string().uuid();
 
 // The `/me/blocks` controllers (SOC-09). The actor is the authenticated principal ONLY (SYS-01); the
 // target is the `userId` body field (POST) or the `:userId` path param (DELETE).
@@ -22,5 +25,22 @@ export async function deleteBlock(req: Request, res: Response): Promise<void> {
   const userId = req.params.userId;
   if (!userId) throw new NotFoundError('Not found.');
   await socialService.unblockUser(actorOf(req), userId);
+  res.json({ ok: true });
+}
+
+// SOC-08 friend-request lifecycle (M6 §1). The actor is the authenticated principal ONLY (SYS-01); the
+// target is the `toUserId` body field (POST) / the request `:id` path param (accept — scoped so only the
+// addressee can accept). A malformed `:id` collapses to the generic NotFound (never a 500).
+
+export async function postFriendRequest(req: Request, res: Response): Promise<void> {
+  const body = req.validated as CreateFriendRequest;
+  await socialService.createFriendRequest(actorOf(req), body.toUserId);
+  res.status(201).json({ ok: true });
+}
+
+export async function acceptFriendRequest(req: Request, res: Response): Promise<void> {
+  const parsed = uuidSchema.safeParse(req.params.id);
+  if (!parsed.success) throw new NotFoundError('Request not found.'); // malformed id → same as unknown
+  await socialService.acceptFriendRequest(actorOf(req), parsed.data);
   res.json({ ok: true });
 }
