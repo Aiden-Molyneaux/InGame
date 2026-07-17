@@ -32,12 +32,20 @@
   M6 beta ships without in-app deletion (5.1.1(v) binds at submission; support-channel path in the
   beta welcome note). Stays OPEN as the M8/G-N implementation checklist.
 - OQ-147: **Should voluntary request-CANCEL share decline's 7-day re-request cooldown?** SOC-08 says cooldown after "decline/cancel" and the M6 P1 build conforms — but an accidental cancel now locks the sender out for 7 days (the friends:request bucket already throttles cancel-resend pestering at 10/hr). Options: keep as specced · cancel exempt · a shorter cancel-specific window (SYS-04). (P1 build review, M6 2026-07-16; decision 0076 era) [behavior] M6
+  **→ RULED (owner, 2026-07-17 morning batch — decision 0078 pending): CANCEL EXEMPT** — only decline
+  cools down; SOC-08 spec edit + the server revert ride the post-walk fix round.
 - OQ-150: **CAT-11 `/catalog/new-releases` was never built** — drawn in api-contract 0.33 and pulled to
   M4 by decision 0062 ("the CAT-11 NEW-RELEASES rail lands on Add Game"), but grep confirms no server
   route and no client call exist (found at M6 P7 while building its `/catalog/upcoming` sibling — the
   brief said "mirror new-releases", which turned out to be paper-only). The M4 Add-Game rail apparently
   shipped without it. A mechanical build (the `/catalog/popular` pattern now has THREE live siblings to
   mirror); slot it M7-entry or as an M6 tail. (P7 build, M6 2026-07-17) [behavior] M7-entry
+  **→ RULED (owner, 2026-07-17 morning batch — decision 0078 pending): BUILD NOW (M6 tail)** + the
+  owner asks the Add-Game rails question: he recalls THREE rows (a "recommended" first row, then
+  releases) and asks whether TRENDING belongs — verify the add-game board's drawn rail set (popular ·
+  new-releases · friends-active?) and report; a true recency-weighted trending-GAMES rail would be
+  new behavior (not specced — popular = most-collected covers it at beta scale). Answer owed at the
+  walk wrap.
 - OQ-151: **In-progress achievements can read `current > target` pre-unlock** (e.g. "FIRST PRINT 3/1")
   — the count-from-genesis design (0076 §0.4 / the P6 build): counters honestly count pre-engine
   history, but unlocks fire only on the NEXT live event, so an already-satisfied counter displays over
@@ -45,7 +53,13 @@
   options: accept (self-heals with use — the beta cohort acts daily) · a one-time activation sweep that
   unlocks already-satisfied counters at deploy (contradicts the no-back-grant stance; owner may bless
   it for beta warmth) · "READY — one more to go" copy. (P11 GAP-4, M6 2026-07-17) [behavior] M6
+  **→ RULED (owner, 2026-07-17 morning: "I think it looks fine" — decision 0078 pending): ACCEPT** —
+  count-from-genesis stands as built; self-heals with use.
 - OQ-148: **Should a friend's feed name an unlocked SECRET achievement?** ACH-05 shows earned secrets on the profile (name visible to friends), and SOC-06 lists achievement unlocks as feed events — but a named secret in the feed spoils the egg for friends who haven't found it. M6 ships the conservative default (the feed masks secret-tier labels → "found a secret achievement", implemented with P6); the owner may prefer naming them. (§4 audit, M6 2026-07-17) [behavior] M6
+  **→ RULED (owner, 2026-07-17 morning batch — decision 0078 pending): KEEP THE MASK — and WIDEN it:**
+  friends' achievement pages must ALSO mask secrets (an earned secret renders count-only/masked on
+  `/users/:id/achievements` — "you shouldn't be able to figure out secret achievements by looking at
+  friends' pages"). ACH-05 spec edit + server+client changes ride the post-walk fix round.
 - OQ-149: **Non-friend refusal codes are inconsistent across the friend-read surfaces** — contributions VIEW-ALL subroutes 403, compare 409 NOT_FRIENDS, friend-collection 404. No leak (existence is public via /users/:id limited), but the mixed codes are a consistency wart; align at M7 entry. (§4 audit, M6 2026-07-17) [behavior] M7-entry
 - ~~OQ-144~~ **RESOLVED (2026-07-10, decision 0070 — owner ruling "adapt the hue").** The fixed-brand
   on-screen colours become THEMED tokens that carry a light-theme-legible value: **`scr.key`** (secondary/
