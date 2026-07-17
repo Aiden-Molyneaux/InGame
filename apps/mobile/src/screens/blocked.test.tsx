@@ -1,16 +1,19 @@
 import { render, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import prefsReducer from '../../src/store/prefsSlice';
-import Blocked from './blocked';
+import prefsReducer from '../store/prefsSlice';
+// The blocked-users page is a routed screen at app/settings/blocked.tsx. Its test lives under src/
+// (the repo convention — expo-router scans app/** for ROUTES and would treat a co-located *.test.tsx
+// as a route, failing the whole route tree; observed on the P12 BOOT check 2026-07-17).
+import Blocked from '../../app/settings/blocked';
 
-jest.mock('../../src/a11y/useReducedMotion', () => ({ useReducedMotion: () => true }));
+jest.mock('../a11y/useReducedMotion', () => ({ useReducedMotion: () => true }));
 jest.mock('expo-router', () => ({ useRouter: () => ({ back: jest.fn(), push: jest.fn() }) }));
 
 // Controllable RTK hooks — the blocked page's data/mutation seam.
 let mockBlocks: { data?: { blocks: unknown[] }; isLoading: boolean; isError: boolean };
 const mockUnblock = jest.fn(() => ({ unwrap: () => Promise.resolve({}) }));
-jest.mock('../../src/store/settingsApi', () => ({
+jest.mock('../store/settingsApi', () => ({
   useGetBlocksQuery: () => ({ ...mockBlocks, refetch: jest.fn() }),
   useUnblockUserMutation: () => [mockUnblock, { isLoading: false }],
 }));
