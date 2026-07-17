@@ -3,7 +3,7 @@
 > **Status: BUILT (§1 spike · P1 · P2 · P3 · P4 · P5 · P6+P6c · P7+riders) · every packet test-first ·
 > every diff Fable-reviewed (murr lanes) with fix-loops applied · the §4 independent privacy
 > cross-audit RAN (scheduled, not remembered — the M5 lesson applied): 1 HIGH + 1 MED + 1 LOW found,
-> ALL FIXED same-night, verdict flipped NO-GO → GO · suites at head: 235 unit · 444 integration ·
+> ALL FIXED same-night, verdict flipped NO-GO → GO · suites at head: 235 unit · 441 integration ·
 > 493 mobile (69 suites) · typecheck/lint clean → ⛔ STILL OWED: the owner sittings (G-D re-fire ·
 > ACH intent/no-farm demo · §1-GO ratify) · P14 (rides the Google email) · P15/P16 (owner provisioning) ·
 > the owner's first-article + device walks.** Built autonomously overnight per the owner's directive
