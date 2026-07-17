@@ -10,6 +10,7 @@ import type {
   FriendCollectionItem,
   FriendCollectionResponse,
   FriendProfile,
+  FriendTopTenEntry,
   GenreView,
   PersonSearchResult,
   PublicProfile,
@@ -27,6 +28,7 @@ import * as cardRepo from '../repositories/card-repo';
 import * as catalogRepo from '../repositories/catalog-repo';
 import * as collectionRepo from '../repositories/collection-repo';
 import * as adoptionRepo from '../repositories/adoption-repo';
+import * as listRepo from '../repositories/list-repo';
 import * as profileService from './profile-service';
 import { toPublicShape, toFriendShape } from '../serializers/user-shape';
 import { ForbiddenError, NotFoundError, NotFriendsError } from '../errors/AppError';
@@ -115,13 +117,57 @@ export async function getUserProfile(
   // the full shape and the G-D field-diff / lint tests both go RED.
   const friendRow = isSelf ? target : await friendReadRepo.friendScopedProfile(actorId, targetId);
   if (friendRow) {
-    const [gamertags, friendsCount] = await Promise.all([
+    const [gamertags, friendsCount, top10] = await Promise.all([
       profileService.listGamertags(targetId),
       relationshipRepo.countFriends(targetId),
+      resolveFriendTopTen(actorId, targetId),
     ]);
-    return toFriendShape(friendRow, { relationship, mutualFriendsCount, friendsCount, gamertags });
+    return toFriendShape(friendRow, { relationship, mutualFriendsCount, friendsCount, gamertags, top10 });
   }
   return toPublicShape(target, { relationship, mutualFriendsCount });
+}
+
+/**
+ * SOC-04 (M6 P5) — the TARGET's Top-10, FLATTENED (never `composition`, OQ-122) — the same friend-view
+ * card resolution `/users/:id/collection` uses (`friendCardFromRow`), reused here keyed by gameId.
+ * Only reachable from the friend/full branch above (self OR an accepted friend), so no extra gate is
+ * needed here — the caller already resolved friendship.
+ */
+async function resolveFriendTopTen(actorId: string, targetId: string): Promise<FriendTopTenEntry[]> {
+  const list = await listRepo.findListByUser(targetId, 'top10');
+  if (!list) return [];
+  const rows = await listRepo.listItemsForList(targetId, list.id);
+  if (rows.length === 0) return [];
+  const cardsByGame = await friendEquippedCardsByGameId(actorId, targetId, rows.map((r) => r.game.id));
+  const defaultCard: FriendCollectionCard = { id: 'default', imageUrl: null, thumbUrl: null, isCustom: false, isPremium: false };
+  return rows.map((r) => ({
+    rank: r.item.rank,
+    gameId: r.game.id,
+    title: r.game.name,
+    card: cardsByGame.get(r.game.id) ?? defaultCard,
+  }));
+}
+
+/** Bulk-resolve the TARGET's flattened card riders for a set of THEIR OWN games (the top10 substrate).
+ *  Self reads its own rows directly (`ownCollectionAsFriendRows`); anyone else goes through the
+ *  FRIEND-READ class (`friendReadRepo.listFriendCollection`) — the SAME branch `getFriendCollection`
+ *  uses, so the top10 card resolution never diverges from the collection one. */
+async function friendEquippedCardsByGameId(
+  actorId: string,
+  targetId: string,
+  gameIds: string[],
+): Promise<Map<string, FriendCollectionCard>> {
+  if (gameIds.length === 0) return new Map();
+  const rows =
+    actorId === targetId
+      ? await ownCollectionAsFriendRows(actorId)
+      : await friendReadRepo.listFriendCollection(actorId, targetId);
+  const wanted = new Set(gameIds);
+  const map = new Map<string, FriendCollectionCard>();
+  for (const r of rows) {
+    if (wanted.has(r.game.id)) map.set(r.game.id, friendCardFromRow(r));
+  }
+  return map;
 }
 
 /**

@@ -2,6 +2,7 @@ import {
   ANONYMIZED_AUTHOR,
   type AnonymizedAuthor,
   type FriendProfile,
+  type FriendTopTenEntry,
   type GamertagView,
   type Privacy,
   type PublicProfile,
@@ -10,6 +11,7 @@ import {
   type SelfGameExpansion,
   type SelfProfile,
   type SelfStats,
+  type SelfTopTenEntry,
 } from '@ingame/shared';
 import type { UserRow, GamertagRow } from '../db/schema';
 
@@ -43,6 +45,8 @@ export interface SelfExtras {
   /** PROF-01/05 + WTP-03 (M3) — the expanded pins (null ⇒ unset). */
   favouriteGame: SelfGameExpansion | null;
   nowPlaying: SelfGameExpansion | null;
+  /** SOC-04 (M6 P5) — the actor's own Top-10, rank-ordered (`[]` ⇒ never curated). */
+  top10: SelfTopTenEntry[];
 }
 
 export function toSelfShape(
@@ -53,6 +57,7 @@ export function toSelfShape(
     stats: EMPTY_SELF_STATS,
     favouriteGame: null,
     nowPlaying: null,
+    top10: [],
   },
 ): SelfProfile {
   return {
@@ -73,6 +78,7 @@ export function toSelfShape(
     stats: extras.stats,
     favouriteGame: extras.favouriteGame,
     nowPlaying: extras.nowPlaying,
+    top10: extras.top10,
   };
 }
 
@@ -85,6 +91,8 @@ export interface OtherPrincipalContext {
 export interface FriendContext extends OtherPrincipalContext {
   friendsCount: number;
   gamertags: GamertagView[];
+  /** SOC-04 (M6 P5) — the target's Top-10, FLATTENED (never `composition`, OQ-122). */
+  top10: FriendTopTenEntry[];
 }
 
 /** Non-friend / limited public shape (PROF-03) — nothing beyond this allowlist leaks. */
@@ -113,6 +121,7 @@ export function toFriendShape(row: UserRow, ctx: FriendContext): FriendProfile {
     favouriteGenreIds: row.favouriteGenreIds,
     gamertags: ctx.gamertags,
     friendsCount: ctx.friendsCount,
+    top10: ctx.top10,
   };
 }
 

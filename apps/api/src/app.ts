@@ -17,6 +17,8 @@ import { deviceRoutes } from './routes/device-routes';
 import { walletRoutes } from './routes/wallet-routes';
 import { iapRoutes } from './routes/iap-routes';
 import { cosmeticRoutes } from './routes/cosmetic-routes';
+import { queueRoutes } from './routes/queue-routes';
+import { listRoutes } from './routes/list-routes';
 import { mediaRoot, MEDIA_URL_PREFIX, PUBLIC_MEDIA_PREFIXES } from './storage';
 import { join } from 'node:path';
 
@@ -69,6 +71,8 @@ export function createApp(): Express {
       ...walletRoutes,
       ...iapRoutes,
       ...cosmeticRoutes,
+      ...queueRoutes,
+      ...listRoutes,
     ]),
   );
 

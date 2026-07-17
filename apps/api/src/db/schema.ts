@@ -842,6 +842,117 @@ export const userEntitlements = pgTable(
   }),
 );
 
+/**
+ * `queue_items` — the WTP-01/02 "Up Next" queue (M6 P5). USER-OWNED (owner key = `user_id`; NOT on
+ * the F32 manifest — rule-2 fails closed). Spans OWNED and UNOWNED games (WTP-01 — an unowned game is
+ * an effective wishlist entry, the `owned` flag on the wire is DERIVED at read-time against the
+ * caller's own collection, never stored). One row per (user, game) — the unique pair backs the
+ * duplicate-add idempotent-200 posture (P5 design call, see queue-service) and decides the F36
+ * concurrent-add race.
+ *  - `source ∈ collection | discovery | friend_rec` (WTP-02 — the add origin).
+ *  - `fromRecId` — set ONLY when `source = 'friend_rec'`; the originating `recommendations` row this
+ *    queue-add carries `recommendedBy`/`note` from (SOC-05 thread). ON DELETE SET NULL — a rec row is
+ *    never hard-deleted today (dismiss is soft), but this is belt-and-braces (mirrors
+ *    `card_designs.derived_from_card_id`): losing the FK degrades the item to attribution-less, never
+ *    a broken ref. The rec itself is NOT dismissed by a queue-add (independent lifecycles).
+ *  - `position` — manual order (append on add; `PATCH /me/queue/reorder` rewrites) — mirrors
+ *    `collection_entries.position` exactly, incl. no DB-level uniqueness (the reorder is a same-
+ *    transaction full-array rewrite). UNLIKE the cap-check races, a bare per-row lock is NOT enough
+ *    here — two concurrent reorders with DIFFERENT target orderings can lock the same rows in
+ *    OPPOSITE sequences and Postgres-deadlock (discovered writing this table's F36 test); the
+ *    queue-service `reorder` mutation wraps the whole rewrite in a per-actor advisory lock instead,
+ *    making concurrent reorders fully serial (one whole ordering wins, never an interleave or a
+ *    raw 500). `collection_entries.position`'s OWN reorder has the same latent gap, unfixed — flagged.
+ */
+export const queueItems = pgTable(
+  'queue_items',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    gameId: uuid('game_id')
+      .notNull()
+      .references(() => games.id),
+    position: integer('position').notNull(),
+    source: text('source').notNull(), // 'collection' | 'discovery' | 'friend_rec' (WTP-02)
+    fromRecId: uuid('from_rec_id').references(() => recommendations.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    userGameIdx: uniqueIndex('queue_items_user_game_idx').on(table.userId, table.gameId),
+    userPositionIdx: index('queue_items_user_position_idx').on(table.userId, table.position),
+  }),
+);
+
+/**
+ * `lists` — the SOC-04 Top-10 substrate (M6 P5). USER-OWNED (owner key = `user_id`; NOT on the F32
+ * manifest — rule-2 fails closed). One row per (user, kind); v2 has exactly ONE live kind
+ * (`'top10'` — "Extensible to other list types later," product-spec SOC-04; general lists parked
+ * §10). `unique(userId, kind)` is what makes the lazy get-or-create in list-repo race-safe (F36: two
+ * parallel first-adds both attempt the insert, `onConflictDoNothing` + re-select converges to one row).
+ * The wire `id` the client uses is the STABLE KIND STRING (`'top10'`), not this internal uuid — see
+ * list-service's design note (the contract draws no create-a-list endpoint, so a client must be able
+ * to address "my top10 list" before it exists; kind IS the address in v2's one-kind world).
+ */
+export const lists = pgTable(
+  'lists',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    kind: text('kind').notNull().default('top10'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    userKindIdx: uniqueIndex('lists_user_kind_idx').on(table.userId, table.kind),
+  }),
+);
+
+/**
+ * `list_items` — Top-10 membership + rank (M6 P5). USER-OWNED (owner key = `user_id`, DENORMALIZED
+ * from `lists.user_id` at insert — mirrors every other user-owned child table in this codebase
+ * (`collection_entries`, `queue_items`, …), all of which carry a DIRECT owner column rather than
+ * requiring a join for the SYS-01 scoped helper; `list_items` follows the same shape rather than being
+ * the one exception, since the rule-02 scope-lint's `asActor()`/`ownedBy()` helper binds to a column on
+ * THIS table). Composite PK `(list_id, game_id)` backs `unique(listId, gameId)` (COL-13 uniqueness).
+ * `rank` deliberately carries NO DB-level uniqueness — mirroring `collection_entries.position` (a
+ * plain index, not a unique constraint): the full-permutation re-rank is a same-transaction rewrite of
+ * every row's rank. A bare per-row lock is NOT enough to make that safe under concurrency, though —
+ * two re-ranks with DIFFERENT target orderings can lock the same rows in OPPOSITE sequences and
+ * Postgres-deadlock (discovered writing this table's F36 test); `list-service.rerankList` wraps the
+ * whole rewrite in a per-actor advisory lock instead, making concurrent re-ranks fully serial (one
+ * whole ordering wins, never an interleave or a raw 500 — see the F36 test). Members are drawn from
+ * the owner's OWN collection (product-spec COL-13 — the CardPicker "searches your collection"; the
+ * api-contract row is silent on this, flagged as a P5 design call).
+ */
+export const listItems = pgTable(
+  'list_items',
+  {
+    listId: uuid('list_id')
+      .notNull()
+      .references(() => lists.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    gameId: uuid('game_id')
+      .notNull()
+      .references(() => games.id),
+    rank: integer('rank').notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.listId, table.gameId] }),
+    listRankIdx: index('list_items_list_rank_idx').on(table.listId, table.rank),
+    userIdx: index('list_items_user_idx').on(table.userId),
+  }),
+);
+
+export type QueueItemRow = typeof queueItems.$inferSelect;
+export type NewQueueItemRow = typeof queueItems.$inferInsert;
+export type ListRow = typeof lists.$inferSelect;
+export type ListItemRow = typeof listItems.$inferSelect;
+
 export type UserEntitlementRow = typeof userEntitlements.$inferSelect;
 export type NewUserEntitlementRow = typeof userEntitlements.$inferInsert;
 

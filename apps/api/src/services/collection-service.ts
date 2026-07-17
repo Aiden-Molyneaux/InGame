@@ -114,6 +114,55 @@ async function assembleItem(
   return toItem(entry, game, genres.get(game.id) ?? [], user?.nowPlayingGameId ?? null, card);
 }
 
+/**
+ * Bulk-resolve the ACTOR's OWN equipped-card riders (own design → adopted design → default stub),
+ * keyed by GAME id rather than entry id — the same CARD-07/18 resolution `listCollection` uses,
+ * shared with the M6 P5 queue/Top-10 serializers (a queue/list item's `card` follows the SAME
+ * owner-only rule: it renders from the caller's OWN collection entry for that game, composition and
+ * all — never a cross-user read). A `gameId` with no collection entry (an unowned queue/wishlist
+ * item) resolves to the CARD-18 default stub.
+ */
+export async function equippedCardsByGameId(
+  actorId: string,
+  gameIds: string[],
+  exec?: Executor,
+): Promise<Map<string, CollectionCard>> {
+  if (gameIds.length === 0) return new Map();
+  const wanted = new Set(gameIds);
+  const entries = exec
+    ? await collectionRepo.listEntriesWithGames(actorId, exec)
+    : await collectionRepo.listEntriesWithGames(actorId);
+  const designIdByGame = new Map<string, string | null>();
+  for (const e of entries) {
+    if (wanted.has(e.game.id)) designIdByGame.set(e.game.id, e.entry.activeCardDesignId);
+  }
+  const designIds = [...designIdByGame.values()].filter((id): id is string => id !== null);
+  const ownedDesigns = exec
+    ? await cardRepo.ownedDesignsByIds(actorId, designIds, exec)
+    : await cardRepo.ownedDesignsByIds(actorId, designIds);
+  const adoptedIds = designIds.filter((id) => !ownedDesigns.has(id));
+  const adoptedDesigns = exec
+    ? await adoptionRepo.adoptedDesignsByIds(actorId, adoptedIds, exec)
+    : await adoptionRepo.adoptedDesignsByIds(actorId, adoptedIds);
+
+  const result = new Map<string, CollectionCard>();
+  for (const gameId of gameIds) {
+    const designId = designIdByGame.get(gameId) ?? null;
+    if (!designId) {
+      result.set(gameId, toCardRider(null));
+      continue;
+    }
+    const owned = ownedDesigns.get(designId);
+    if (owned) {
+      result.set(gameId, toCardRider(owned));
+      continue;
+    }
+    const adopted = adoptedDesigns.get(designId);
+    result.set(gameId, adopted ? toAdoptedCardRider(adopted) : toCardRider(null));
+  }
+  return result;
+}
+
 /** GET /me/collection — the whole shelf in manual order; honest totals (the C4 class). */
 export async function listCollection(actorId: string): Promise<CollectionResponse> {
   const rows = await collectionRepo.listEntriesWithGames(actorId);

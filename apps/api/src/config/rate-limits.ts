@@ -72,6 +72,11 @@ const DEFAULTS: Record<string, RateLimitRule> = {
   // scanning a QR (one hit) or tapping a link (one hit), tight against a brute-force scanner. The token
   // is 256-bit random so guessing is infeasible regardless; this caps the attempt RATE as defence-in-depth.
   'invites:resolve': { limit: 30, windowMs: 60_000 },
+  // M6 P5 WTP queue + Top-10 writes (SYS-05 — NOT in the §0.7 seed table; builder's pick, flagged for
+  // G-K, same posture as `invites:resolve` above). Mirrors the `collection:write` precedent exactly
+  // (60/min — ample for a real drag-reorder/add burst; the only way past it is a scripted client).
+  'queue:write': { limit: 60, windowMs: 60_000 },
+  'lists:write': { limit: 60, windowMs: 60_000 },
 };
 
 const overrides = new Map<string, RateLimitRule>();

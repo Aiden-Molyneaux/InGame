@@ -60,16 +60,18 @@ describe('F06: read-path privacy serializer (relationship matrix)', () => {
     }
   });
 
-  it('friend (full) shape adds exactly bio + privacy', () => {
+  it('friend (full) shape adds exactly bio + privacy + top10', () => {
     const out = toFriendShape(makeUser(), {
       relationship: 'friend',
       mutualFriendsCount: 5,
       friendsCount: 12,
       gamertags: [],
+      top10: [],
     });
     expect(friendProfileSchema.parse(out)).toEqual(out);
     expect(out.bio).toBe('collector of trophies');
     expect(out.friendsCount).toBe(12);
+    expect(out.top10).toEqual([]);
     expect('email' in out).toBe(false);
   });
 

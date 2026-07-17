@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { privacySchema, roleSchema, adminTierSchema, relationshipSchema } from '../common';
 import { gamertagViewSchema } from './gamertag';
-import { collectionCardSchema } from './collection';
+import { collectionCardSchema, friendCollectionCardSchema } from './collection';
 
 // RESPONSE/VIEW schemas — owned by the F06 privacy serializer (decision 0051/F06/F23, the sanctioned
 // divergence from the request half). Each is an ALLOWLIST of fields per the PROF-03 privacy state:
@@ -48,11 +48,42 @@ export const selfGameExpansionSchema = z
 export type SelfGameExpansion = z.infer<typeof selfGameExpansionSchema>;
 
 /**
+ * SOC-04 — one Top-10 entry inlined on `/me` (M6 P5, api-contract line 68). `card` = the OWNER's
+ * equipped-design rider (may carry `composition` — a self-view, never cross-user, CARD-15). The
+ * Profile renders the top 3 of this array as set-pieces; VIEW TOP 10 renders all of it.
+ */
+export const selfTopTenEntrySchema = z
+  .object({
+    rank: z.number().int().min(1).max(10),
+    gameId: z.string().uuid(),
+    title: z.string(),
+    card: collectionCardSchema,
+  })
+  .strict();
+export type SelfTopTenEntry = z.infer<typeof selfTopTenEntrySchema>;
+
+/**
+ * SOC-04 — one Top-10 entry inlined on `/users/:id` (friend/full shape only, M6 P5). `card` is the
+ * FLATTENED friend-view rider (never `composition` — OQ-122/CARD-15), the SAME resolution
+ * `/users/:id/collection` uses (P2's friend-collection card resolution).
+ */
+export const friendTopTenEntrySchema = z
+  .object({
+    rank: z.number().int().min(1).max(10),
+    gameId: z.string().uuid(),
+    title: z.string(),
+    card: friendCollectionCardSchema,
+  })
+  .strict();
+export type FriendTopTenEntry = z.infer<typeof friendTopTenEntrySchema>;
+
+/**
  * GET /me self-view. `avatarUrl: null` ⇒ the default monogram (PROF-08). The self-view is the only
  * shape exposing `role` + `adminTier` (PROF-09 — tier is private), `usernamePending` (AUTH-09, the
  * SIWA completion gate), and `emailVerified` (AUTH-08, the Settings resend banner). M3 adds the
- * REAL `stats` + the expanded `favouriteGame`/`nowPlaying`; `top10` + the achievements /
- * contributions teasers remain deferred (D3 / M4+).
+ * REAL `stats` + the expanded `favouriteGame`/`nowPlaying`; M6 P5 adds the real `top10` (SOC-04 — all
+ * ≤10 carded entries, ordered by rank; `[]` for a fresh account, never a phantom). The achievements /
+ * contributions teasers remain deferred (M7).
  */
 export const selfProfileSchema = z
   .object({
@@ -74,6 +105,7 @@ export const selfProfileSchema = z
     stats: selfStatsSchema,
     favouriteGame: selfGameExpansionSchema.nullable(),
     nowPlaying: selfGameExpansionSchema.nullable(),
+    top10: z.array(selfTopTenEntrySchema),
   })
   .strict();
 export type SelfProfile = z.infer<typeof selfProfileSchema>;
@@ -98,7 +130,9 @@ export type PublicProfile = z.infer<typeof publicProfileSchema>;
 
 /**
  * Friend / full shape (PROF-05) — the public allowlist + the friend-visible additions M2 has data
- * for: bio, privacy, favourite genres, gamertags (PROF-02), and the honest friends-count.
+ * for: bio, privacy, favourite genres, gamertags (PROF-02), and the honest friends-count. M6 P5 adds
+ * the FLATTENED `top10` (SOC-04 — never `composition`, the same friend-view card resolution
+ * `/users/:id/collection` uses).
  */
 export const friendProfileSchema = publicProfileSchema
   .extend({
@@ -107,6 +141,7 @@ export const friendProfileSchema = publicProfileSchema
     favouriteGenreIds: z.array(z.string().uuid()),
     gamertags: z.array(gamertagViewSchema),
     friendsCount: z.number().int().nonnegative(),
+    top10: z.array(friendTopTenEntrySchema),
   })
   .strict();
 export type FriendProfile = z.infer<typeof friendProfileSchema>;

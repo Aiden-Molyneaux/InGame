@@ -63,6 +63,10 @@ export const ERROR_CODES = [
   // a stranger cannot forge a real-but-expired token). Neither carries any sender detail on the refusal.
   'INVITE_INVALID', // 409 — GET /invites/:token: unknown / revoked / malformed / blocked-sender (indistinguishable)
   'INVITE_EXPIRED', // 409 — GET /invites/:token: the token existed but its TTL (7d) lapsed
+  // M6 P5 WTP queue + Top-10 substrate (decision 0076 §0.7) — the F-17 additive path; LIST_FULL's
+  // FIRST live use (reserved since the §0.7 seed table), reused across BOTH ceilings: the queue's
+  // cap-50 (POST /me/queue) and the Top-10's cap-10 (POST /me/lists/:id/items).
+  'LIST_FULL', // 409 — a capped list write refused: the queue (50) or a Top-10 list (10) is already full
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];

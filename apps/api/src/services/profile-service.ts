@@ -6,7 +6,7 @@ import type {
   SelfProfile,
   GamertagView,
 } from '@ingame/shared';
-import type { SelfGameExpansion, SelfStats } from '@ingame/shared';
+import type { SelfGameExpansion, SelfStats, SelfTopTenEntry } from '@ingame/shared';
 import { mutation } from '../db/mutation';
 import type { Executor } from '../db/client';
 import * as profileRepo from '../repositories/profile-repo';
@@ -15,10 +15,12 @@ import * as gamertagRepo from '../repositories/gamertag-repo';
 import * as authRepo from '../repositories/auth-repo';
 import * as collectionRepo from '../repositories/collection-repo';
 import * as catalogRepo from '../repositories/catalog-repo';
+import * as listRepo from '../repositories/list-repo';
 import { isUniqueViolation } from '../db/pg-errors';
 import * as relationshipRepo from '../repositories/relationship-repo';
 import * as cardRepo from '../repositories/card-repo';
 import { toCardRider } from './card-service';
+import { equippedCardsByGameId } from './collection-service';
 import { NotFoundError, ValidationError } from '../errors/AppError';
 import { toSelfShape, toGamertagView } from '../serializers/user-shape';
 import type { CollectionEntryRow } from '../db/schema';
@@ -62,9 +64,34 @@ function statsOf(entries: CollectionEntryRow[], friends: number, cardsDesigned: 
 }
 
 /**
+ * SOC-04 (M6 P5) — the actor's OWN Top-10, all ≤10 carded entries in rank order (`[]` for a fresh
+ * account or one who never curated — never a phantom). `card` = the owner's equipped rider (may carry
+ * `composition` — self-view, CARD-15).
+ */
+async function resolveTopTen(actorId: string, exec?: Executor): Promise<SelfTopTenEntry[]> {
+  const list = exec
+    ? await listRepo.findListByUser(actorId, 'top10', exec)
+    : await listRepo.findListByUser(actorId, 'top10');
+  if (!list) return [];
+  const rows = exec
+    ? await listRepo.listItemsForList(actorId, list.id, exec)
+    : await listRepo.listItemsForList(actorId, list.id);
+  if (rows.length === 0) return [];
+  const cards = exec
+    ? await equippedCardsByGameId(actorId, rows.map((r) => r.game.id), exec)
+    : await equippedCardsByGameId(actorId, rows.map((r) => r.game.id));
+  return rows.map((r) => ({
+    rank: r.item.rank,
+    gameId: r.game.id,
+    title: r.game.name,
+    card: cards.get(r.game.id) ?? toCardRider(null),
+  }));
+}
+
+/**
  * The ONE self-shape assembler (OQ-121 / decision 0056): `GET /me` AND the auth issuance path
  * (register/login/apple) both emit this, so the session `user` can never drift from the `/me`
- * self-shape (gamertags + the M3 stats/expansions inlined on both).
+ * self-shape (gamertags + the M3 stats/expansions + the M6 P5 top10 inlined on both).
  * The executor passes THROUGH to the repos (which own the getDb() default) — rule-1 layering.
  */
 export async function assembleSelfShape(row: UserRow, exec?: Executor): Promise<SelfProfile> {
@@ -112,6 +139,7 @@ export async function assembleSelfShape(row: UserRow, exec?: Executor): Promise<
     stats: statsOf(entries, friends, cardsDesigned),
     favouriteGame: await expand(row.favouriteGameId),
     nowPlaying: await expand(row.nowPlayingGameId),
+    top10: await resolveTopTen(row.id, exec),
   });
 }
 

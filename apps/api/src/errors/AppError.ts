@@ -360,6 +360,20 @@ export class InviteExpiredError extends AppError {
   }
 }
 
+/**
+ * WTP-01/SOC-04 (decision 0076 §0.7) — a capped list write refused: the queue (POST /me/queue, cap 50)
+ * or a Top-10 list (POST /me/lists/:id/items, cap 10) is already full. 409 (the CONFLICT family,
+ * aligned with the sibling cap refusals PRESET_LIMIT/LOOK_CAP_REACHED) — LIST_FULL's first live use,
+ * reused across both ceilings per the §0.7 ruling (one code, two callers).
+ */
+export class ListFullError extends AppError {
+  readonly code = 'LIST_FULL';
+  readonly httpStatus = 409;
+  constructor(message = 'That list is full.') {
+    super(message);
+  }
+}
+
 /** SERVER_ERROR carries a GENERIC body downstream — the middleware never serializes this message. */
 export class ServerError extends AppError {
   readonly code = 'SERVER_ERROR';

@@ -78,6 +78,13 @@ export const DOMAIN_EVENT_TYPES = [
   // M6 P4 recommendations (decision 0076 §0.7 — the recommendations table; SOC-05). Append at the END.
   'recommendation.sent', // SOC-05 — POST /recommendations: a friend recommended a game (lands in the recipient's rec inbox, NOT auto-queued). Payload = { toUserId, gameId } (ids only — the note is UNSCREENED user text, kept out of the event spine, F18/MOD-07).
   'recommendation.dismissed', // SOC-05 — DELETE /me/recommendations/:recId: the recipient soft-dismissed an inbox rec. Payload = {} (a private inbox touch; ids only via entityRef).
+  // M6 P5 What-to-Play queue + Top-10 substrate (decision 0076 §0.7 — queue_items/lists/list_items). Append at the END.
+  'queue.item_added', // WTP-01/02 — POST /me/queue: a game entered the Up Next queue. Payload = { gameId, source }.
+  'queue.item_removed', // WTP-01 — DELETE /me/queue/:id. Payload = { gameId }.
+  'queue.reordered', // WTP-01 — PATCH /me/queue/reorder (manual order rewrite). Payload = { count }.
+  'list.item_added', // SOC-04 — POST /me/lists/:id/items: a game joined the Top-10. Payload = { kind, gameId }.
+  'list.item_removed', // SOC-04 — DELETE /me/lists/:id/items/:gameId. Payload = { kind, gameId }.
+  'list.reranked', // SOC-04/COL-07 — PATCH /me/lists/:id (the ARRANGE re-rank). Payload = { kind, count }.
 ] as const;
 
 export type DomainEventType = (typeof DOMAIN_EVENT_TYPES)[number];
