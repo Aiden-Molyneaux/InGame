@@ -18,7 +18,7 @@ import * as cardRepo from '../repositories/card-repo';
 import * as adoptionRepo from '../repositories/adoption-repo';
 import { toAdoptedCardRider, toCardRider } from './card-service';
 import { NotFoundError, ValidationError } from '../errors/AppError';
-import type { CollectionEntryRow, GameRow } from '../db/schema';
+import type { CardDesignRow, CollectionEntryRow, GameRow } from '../db/schema';
 
 // A malformed :entryId path param would otherwise reach Postgres as an invalid uuid cast (22P02 → 500);
 // treat it as the same 404 an unknown id gets (mirrors users-service's target-id guard).
