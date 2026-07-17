@@ -112,9 +112,13 @@ One **standing, shared, restart-safe** stack. Do NOT hand-build parallel service
 ```
 node scripts/dev-stack.mjs up      # idempotent first move — ~1s no-op when already running
 node scripts/dev-stack.mjs status  # one-shot health JSON (db/api/metro)
+node scripts/dev-stack.mjs doctor  # stuck? read-only diagnosis of known failure signatures + the exact fix
 ```
 `up` ensures docker Postgres (`ingame-dev-db`), the API on **:4000**, Metro web on **:8082**, and
 pre-warms the web bundle. Logs/pidfiles live in `.devstack/` (gitignored).
+- **QA workflow friction? `doctor` first, runbook second, investigation last** — and capture what
+  you learn: the **doctor-nick** skill + [`docs/qa-runbook.md`](docs/qa-runbook.md) own the QA
+  lessons ladder (decision 0065). Wrap-up receipts answer "workflow friction this run?".
 - **API :4000 is shared** (phone + agents) and **safe to restart** — its env, incl. a stable
   `JWT_SIGNING_SECRET` and `DEV_CORS_ORIGINS=http://localhost:8082` (OQ-120), lives in
   `apps/api/.env.dev` (gitignored; committed template: `apps/api/.env.example`), loaded by
@@ -136,5 +140,33 @@ pre-warms the web bundle. Logs/pidfiles live in `.devstack/` (gitignored).
   parallel API — `PORT=4001` + a disposable DB; kill it after (task-stop orphans the tsx child —
   find it with `netstat -ano | findstr :4001`).
 Login: `demo@ingame.app` / `InGameDemo1!` (the idempotent `npm -w @ingame/api run db:seed-dev` shelf).
-Gotcha: the preview tab can load **before** Metro's first bundle (blank page, `scripts: 0`) —
-reload after "Bundled" appears in the logs (rare now that `up` pre-warms the bundle).
+
+## Model selection for workflows & subagents (owner directive, 2026-07-09)
+Rankings, higher = better. Cost reflects what the owner actually pays, not list price.
+Intelligence is how hard a problem you can hand the model unsupervised. Taste covers UI/UX,
+code quality, API design, and copy.
+
+| model    | cost | intelligence | taste |
+|----------|------|--------------|-------|
+| sonnet-5 | 5    | 5            | 7     |
+| opus-4.8 | 4    | 7            | 8     |
+| fable-5  | 2    | 9            | 9     |
+
+How to apply:
+- **Defaults, not limits.** Standing permission to override: if a cheaper model's output
+  doesn't meet the bar, rerun or redo the work with a smarter model without asking. Judge
+  the output, not the price tag. Escalating costs less than shipping mediocre work.
+- **Cost is a tie-breaker only**; when axes conflict for anything that ships,
+  intelligence > taste > cost.
+- **Bulk/mechanical work** (clear-spec implementation, data analysis, migrations):
+  sonnet-5 — the cheapest model that clears the bar.
+- **Anything user-facing** (UI, copy, API design) needs taste ≥ 7 — opus-4.8 or fable-5;
+  sonnet-5 only for low-stakes surfaces.
+- **Anything hard enough that you'd want to double-check the answer:** fable-5.
+- **Reviews of plans/implementations:** fable-5 or opus-4.8; for anything important, run
+  both as independent perspectives.
+- **Never use Haiku.**
+- **Mechanics:** all three run via the Agent/Workflow `model` parameter (`sonnet`, `opus`,
+  `fable`). Omit the parameter to inherit the session model; pair cheap models with
+  `effort: 'low'` for mechanical stages and reserve higher effort tiers for the hardest
+  verify/judge stages.

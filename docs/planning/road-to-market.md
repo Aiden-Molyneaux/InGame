@@ -44,12 +44,13 @@ critical path), Android following close behind on the same binary logic.
  ───────┼──────────────────────────────────────────────────────────────────────────
  BUILD  │   M1 Tooling gate ──▶ M2 Foundation ──▶ M3 Catalog+Collection ──▶ M4 Customization
         │   (the C gate)        (auth + 1st        (core usable)             ("TROPHY CASE" —
-        │                        vertical slice)    ★ tangible win            ◆ closed beta)
+        │                        vertical slice)    ★ tangible win            completes internally)
         │        ╲
         │         ╲ M1-P  External accounts & provisioning (OWNER, parallel, long-lead) ─────────┐
         │                                                                                        │
         │   M4 ──▶ M5 Community & Economy ──▶ M6 Social ──▶ M7 Engagement ──▶ M8 Public launch   │
-        │           (economy + IAP)            (friends)     (push/ach/mod)   (full v1.0) ◀───────┘
+        │           (economy + IAP)            (friends ·    (push/ach/mod)   (full v1.0) ◀───────┘
+        │                                       ◆ closed beta — decision 0071)
  ───────┴──────────────────────────────────────────────────────────────────────────
    Spine: every change rides an ENFORCED merge gate (green CI + review + secret/dep scan).
    3 change-classes need OWNER sign-off: destructive migration · auth/SYS-01 · economy/IAP.
@@ -59,7 +60,8 @@ critical path), Android following close behind on the same binary logic.
 - **v1.0 = the complete feature set** (M1→M7); the public launch (M8) comes when it's all in. The
   milestones are pure **build-order**, not a cut line (decision 0027).
 - **Release in stages, not all at once** (§2): a real build on your phone at **M2**, a **closed beta
-  ◆ at ~M4** (the trophy case), the **public launch after M7**. "Feature-complete" ≠ "first release."
+  ◆ at ~M6** (the *social* trophy case — customization + sharing + friends; re-timed from ~M4 by
+  **decision 0071**), the **public launch after M7**. "Feature-complete" ≠ "first release."
 - **M1-P runs hidden under the build** — start Apple enrollment during M1, not at M8.
 
 ---
@@ -76,7 +78,7 @@ the full product comes together, so "feature-complete" and "first release" aren'
 | Stage | When | What testers get | Why |
 |---|---|---|---|
 | **On-device build** | end of **M2** | the styled shell + your profile on a physical iPhone | proves the stack + the aesthetic; kills the "invisible for months" risk early |
-| **Closed beta** (TestFlight / Play internal) | ~end of **M4** | the trophy case — collection + full customization | the morale + validation hit; real feel before the economy lands |
+| **Closed beta** (TestFlight / Play internal) | ~end of **M6** (re-timed from ~M4, **decision 0071**) | the **social** trophy case — collection + full customization + **published/adopted cards** (M5) + **friends** (M6) | ships WITH sharing + friends (a fuller first impression) and AFTER block (SOC-09, M6) lands — safer UGC. M4 completes internally; the owner's M2 on-device build + the Gate-5 taste passes cover early device-feel |
 | **Public launch** | after **M7** → **M8** | the complete v1.0 | launch when it's as complete as you want |
 
 **Why full scope is right here:** a collection app without customization, economy, and social isn't a
@@ -135,11 +137,20 @@ steadily through the per-PR agent reviews + per-phase audits.
 | **M1-P** | **External accounts & provisioning** (parallel, owner-only) | starts **with M1** | Apple Dev + Google Play enrolled (identity verification = multi-week) · bundle IDs + signing · RevenueCat acct + per-store products/entitlements · APNs/FCM push creds | owner | **YES** | (provisioning) — unblocks IAP (M5) + push (M7) + ship (M8) |
 | **M2** | **Foundation** + the first vertical slice | M1 green | auth (refresh rotation + SIWA) · users/profile · data layer + migrations · **`SYS-01` scoping w/ standing `SYS-07` authz tests** · tab-nav shell · `ACH-08` events. **Vertical slice:** sign in → your profile → tested → green in CI → **running on a physical iPhone, rendered in the InGame aesthetic** | auto + agent + **owner (authz seam + device smoke)** | **YES** (auth/SYS-01) | `AUTH-*`, `PROF-01..`, `SYS-01/02/06/07`, `ACH-08` |
 | **M3** | **Catalog + Collection** — core usable | M2 | create/search/**dedup** catalog (`CAT-03` test-first) · collection CRUD · status/hours/stats. **You can build a real collection on your phone.** | auto + agent + owner (device feel) | no | `CAT-*`, `COL-*` |
-| **M4** | **Customization** — the trophy case · ◆ **closed beta** | M3 | Card editor (Styler+Canvas) + Device editor (free assets) · **composition→flatten render** (`CARD-15`) · effects/finishes. **Build-order:** `CARD-15` pipeline **before** the editor depth tails (`CARD-09/10/11`); `CARD-16` non-gesture editor path is a launch gate, not a trim | auto + agent + **owner (aesthetic — the product's soul)** | **YES** (taste) | `CARD-*`, `DEV-*`, `COSM-*` (free) |
-| **M5** | **Community & Economy** | M4 **+ M1-P done** | publish/adopt cards · wallet + ledger · store + **IAP + receipt validation** (`ECON-06`) + **refund reversal** (`ECON-09`) + restore · contributor profile. **Economy/IAP seam is test-first.** **Notes:** `ECON-05` reward arrives progressively — raw adoption count here, prestige/milestones with the achievements engine (M7); the **non-hold purchase a11y** alt (`OQ-046`) is a launch gate; ship block-against-card-designer (`SOC-09` light) — `CAT-05` credit is attributable UGC | auto (idempotent grants · ledger reconciles · refund reverses) + agent + **owner (manual IAP sandbox pass)** | **YES** (economy/IAP) | `CARD-15/19/20`, `ECON-*`, `CAT-05/07` |
-| **M6** | **Social** (in v1.0) | M5 | friends · profiles · compare hours (`SOC-03`) · Top-10 · recommendations · What to Play | auto + agent | no | `SOC-*`, `WTP-*` |
+| **M4** | **Customization** — the trophy case (completes **internally**; the ◆ closed beta re-timed to M6, **decision 0071**) | M3 | Card editor (Styler+Canvas) + Device editor (free assets) · **composition→flatten render** (`CARD-15`) · effects/finishes. **Build-order:** `CARD-15` pipeline **before** the editor depth tails (`CARD-09/10/11`); `CARD-16` non-gesture editor path is a launch gate, not a trim · **+ Game page (§4.2) hub shell** — the CARD-23 NAVIGATE target + M3-deferred per-game host (CARDS switcher `OQ-056`/`CARD-24` · status/hours/now-playing/remove · card INSPECT/enlarge). **Scope = free/private only** (§0.8 **DEFAULT**, decision 0062): make · style · compose · save-private · equip your own with free assets — **publish/adopt/premium-reconcile are M5** (drawn, not built); **Onboarding deferred**, but its **CAT-11 NEW-RELEASES rail lands here** on Add Game (0062) | auto + agent + **owner (aesthetic — the product's soul)** | **YES** (taste) | `CARD-*` (incl. `CARD-24`), `DEV-*`, `COSM-*` (free), `CAT-11` |
+| **M5** | **Community & Economy** | M4 **+ M1-P done** | publish/adopt cards **(+ the M4-deferred premium preview→reconcile `CARD-13` + the `OQ-122` published-read guard; §0.8 boundary, decision 0062)** · wallet + ledger · store + **IAP + receipt validation** (`ECON-06`) + **refund reversal** (`ECON-09`) + restore · contributor profile. **Economy/IAP seam is test-first.** **Notes:** `ECON-05` reward arrives progressively — raw adoption count here, prestige/milestones with the achievements engine (M7); the **non-hold purchase a11y** alt (`OQ-046`) is a launch gate; ship block-against-card-designer (`SOC-09` light) — `CAT-05` credit is attributable UGC | auto (idempotent grants · ledger reconciles · refund reverses) + agent + **owner (manual IAP sandbox pass)** | **YES** (economy/IAP) | `CARD-15/19/20`, `ECON-*`, `CAT-05/07` |
+| **M6** | **Social** (in v1.0) · ◆ **closed beta** (re-timed from M4, **decision 0071**) | M5 | friends · profiles · compare hours (`SOC-03`) · Top-10 · recommendations · What to Play. **Exit = the first external closed beta** (TestFlight / Play internal): the *social* trophy case — customization + sharing (M5) + friends — shipped AFTER block (`SOC-09`, M6) lands; owner records the closed/trusted-invite safety-rail acceptance (report M7 / delete M8 still trail) | auto + agent + **owner (beta sign-off)** | no | `SOC-*`, `WTP-*` |
 | **M7** | **Engagement** (in v1.0) | M6; **OQ-004/005 + OQ-060 first** | push (expo-notifications) · activity feed · discovery · moderation console (`MOD-04`) · **achievements engine + celebration** (rides `ACH-08`, completes the `ECON-05` reward). **Note:** `NOTIF-01` push cannot ship without `NOTIF-04` priming (the OS prompt is one-shot) | auto + agent + owner (push creds) | small | `NOTIF-*`, `DISC-*`, `MOD-*`, `ACH-*` |
-| **M8** | **Public launch readiness** | the full feature set (M1–M7) is exit-green | store requirements met · **manual IAP sandbox pass** · privacy/ToS + App Privacy labels + 13+ rating (`AUTH-10`) · UGC compliance (`SYS-09` + report/block) · **`AUTH-07` deletion ripple wired against the kept set** (no hollow row-delete) · public beta → launch checklist | owner + auto (Maestro journeys, testing-strategy §5) | **YES** (submission) | (release) |
+| **M8** | **Public launch readiness** | the full feature set (M1–M7) is exit-green | store requirements met · **manual IAP sandbox pass** · privacy/ToS + App Privacy labels + 13+ rating (`AUTH-10`) · UGC compliance (`SYS-09` + report/block) · **`AUTH-07` deletion ripple wired against the kept set** (no hollow row-delete) · public beta → launch checklist · **COSM roster design pass** (finalize the free/premium cosmetic sets, decision 0063) | owner + auto (Maestro journeys, testing-strategy §5) | **YES** (submission) | (release) |
+
+> **M4-entry orphan + mis-slot resolutions (decision 0062, from the phase-coverage audit).** The
+> **Game-page hub shell → M4** (was a P0 orphan — no prior build owner; now the first-article surface +
+> the CARD-23 NAVIGATE target). **Onboarding (O1–O10) → deferred past M4** (P1 orphan — recorded, *not
+> dropped*; lands near public-launch when real new users arrive; AUTH-06 + NOTIF-04 travel with it; the **CAT-11 NEW-RELEASES rail is pulled out to M4** on Add Game, endpoint exists).
+> **CAT-12** (FRIENDS ARE PLAYING) → **M6** (hard-needs the SOC-01 friend graph). **MOD-07** screening
+> stays **M7** — M2–M4 write paths accept **unscreened** text (acceptable for the closed/trusted beta).
+> **CARD-15 standin:** M2/M3 shelves render the CARD-18 default + static art, **not** composed renders
+> (the flatten pipeline lands M4). **CARD-21** external image-share → **M5**.
 
 **Effort buckets (caveated; agent-accelerated):** M0 M · M1 S–M · M2 M · M3 M · M4 **L** · M5 **L** ·
 M6 M · M7 M–L · M8 S (owner-heavy). M4 (render pipeline) and M5 (real-money) are the two genuinely
@@ -151,7 +162,9 @@ The danger zone is a long plumbing stretch with nothing pretty on the phone. Mit
 the exits above: **M2's vertical slice renders the seeded, *styled* Collection shelf** (the design
 mockups already exist as HTML — the RN shell mirrors them) so Foundation ends with something that
 *looks like InGame* on your device, not a login form. From there each milestone adds visible payoff;
-no stretch runs >~2 weeks dark. The full aesthetic payoff lands at **M4** — the closed-beta checkpoint.
+no stretch runs >~2 weeks dark. The full aesthetic payoff lands at **M4** (the trophy case, on the
+owner's device via the Gate-5 taste passes); the first external **closed beta** waits for the *social*
+payoff at **~M6** (sharing + friends — decision 0071).
 
 ---
 

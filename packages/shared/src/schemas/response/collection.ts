@@ -6,8 +6,11 @@ import { genreViewSchema } from './catalog';
 // the split. The client's shelf/LIST/TOP + profile stats bind to these via z.infer (F31).
 
 /**
- * The `card` rider — pre-M4 this is the CARD-18 default-face STUB (`id: 'default'`, null urls; the
- * client draws the placeholder face). The real render pipeline + custom/premium flags land M4.
+ * The `card` rider — resolves per CARD-18: the equipped design → else the default-face STUB
+ * (`id: 'default'`, null urls). **M4 (api 0.53 / decision 0066 §2):** an equipped CUSTOM design adds
+ * its `name` + `composition` — OWNER-ONLY (the owner renders live; a cross-user serializer must NEVER
+ * emit `composition` — CARD-15: viewers get flattened images, not layers). Urls stay null until the
+ * M5 flatten-to-storage.
  */
 export const collectionCardSchema = z
   .object({
@@ -16,6 +19,8 @@ export const collectionCardSchema = z
     thumbUrl: z.string().nullable(),
     isCustom: z.boolean(),
     isPremium: z.boolean(),
+    name: z.string().optional(), // custom designs only (0.53)
+    composition: z.unknown().optional(), // custom designs only — OWNER-ONLY (0066 §2)
   })
   .strict();
 
@@ -48,6 +53,9 @@ export const collectionItemSchema = z
     // sort keys on this, distinct from the editable ownedSince (OQ-128 resolved, 2026-07-04)
     nowPlaying: z.boolean(), // the ▶ NOW tag (WTP-03)
     card: collectionCardSchema,
+    // OQ-134 (api 0.53) — OWNER-ONLY personal fields; the friend-view subset excludes them by contract.
+    rating: z.number().int().min(1).max(5).nullable(), // COL-03 private ⭐
+    notes: z.string().nullable(), // COL-05
   })
   .strict();
 

@@ -1,6 +1,6 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import type { GamertagView } from '@ingame/shared';
-import { theme } from '../theme';
+import { themedStyles } from '../theme';
 import { Avatar } from './Avatar';
 import { RoleTag, selfRoleLabel } from './RoleTag';
 
@@ -35,6 +35,7 @@ export function IdentityBlock({
   bio?: string;
   gamertags?: GamertagView[];
 }) {
+  const styles = useStyles();
   // Self-view shows the tier (PROF-09); a friend-view passes `staff` for the generic marker.
   const roleLabel = staff ? 'STAFF' : selfRoleLabel(role, adminTier);
   return (
@@ -77,52 +78,52 @@ function formatSince(iso: string): string {
     : d.toLocaleDateString(undefined, { month: 'short', year: 'numeric' }).toUpperCase();
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   well: {
-    backgroundColor: theme.scr.panel,
-    padding: theme.space.lg,
-    gap: theme.space.md,
+    backgroundColor: t.scr.panel,
+    padding: t.space.lg,
+    gap: t.space.md,
   },
-  row: { flexDirection: 'row', alignItems: 'center', gap: theme.space.lg },
-  meta: { flex: 1, gap: theme.space.xs },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md, flexWrap: 'wrap' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: t.space.lg },
+  meta: { flex: 1, gap: t.space.xs },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.md, flexWrap: 'wrap' },
   name: {
-    fontFamily: theme.font.screenBold,
-    fontSize: theme.type.display, // 21 (F-06)
-    color: theme.scr.ink,
+    fontFamily: t.font.screenBold,
+    fontSize: t.type.display, // 21 (F-06)
+    color: t.scr.ink,
     letterSpacing: 0.5,
   },
   since: {
-    fontFamily: theme.font.screen,
-    fontSize: theme.type.micro, // 9
-    color: theme.scr.dim,
+    fontFamily: t.font.screen,
+    fontSize: t.type.micro, // 9
+    color: t.scr.dim,
     letterSpacing: 1,
   },
   bio: {
-    fontFamily: theme.font.screen,
-    fontSize: theme.type.body, // 11 (F-06)
+    fontFamily: t.font.screen,
+    fontSize: t.type.body, // 11 (F-06)
     lineHeight: 16,
-    color: theme.scr.dim,
+    color: t.scr.dim,
   },
-  gtags: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.md },
+  gtags: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.md },
   gtag: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.space.sm,
-    backgroundColor: theme.scr.panelHi,
-    paddingHorizontal: theme.space.md,
+    gap: t.space.sm,
+    backgroundColor: t.scr.panelHi,
+    paddingHorizontal: t.space.md,
     paddingVertical: 4,
   },
   gtagPlatform: {
-    fontFamily: theme.font.screenBold,
-    fontSize: theme.type.micro, // 9
-    color: theme.scr.ink,
+    fontFamily: t.font.screenBold,
+    fontSize: t.type.micro, // 9
+    color: t.scr.ink,
     letterSpacing: 0.5,
   },
   gtagHandle: {
-    fontFamily: theme.font.screen,
-    fontSize: theme.type.micro, // 9
-    color: theme.scr.dim,
+    fontFamily: t.font.screen,
+    fontSize: t.type.micro, // 9
+    color: t.scr.dim,
     letterSpacing: 0.5,
   },
-});
+}));

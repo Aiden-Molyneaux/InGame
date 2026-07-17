@@ -40,5 +40,8 @@
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.16.0",
     "vitest": "^2.1.8"
+  },
+  "overrides": {
+    "react-native-worklets": "0.5.1"
   }
 }

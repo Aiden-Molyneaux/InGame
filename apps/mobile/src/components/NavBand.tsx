@@ -25,6 +25,7 @@ export function NavBand({
   onSelect,
   locked = false,
   bottomInset = 0,
+  showLabels = true,
 }: {
   tabs: NavTab[];
   activeKey: string;
@@ -32,11 +33,14 @@ export function NavBand({
   locked?: boolean;
   /** the bottom safe-area inset — extends the band below the home indicator without shrinking it. */
   bottomInset?: number;
+  /** TEMP: when false, drop the outside key labels and tighten the band to reclaim screen height. */
+  showLabels?: boolean;
 }) {
   return (
     <View
       style={[
         styles.band,
+        !showLabels && styles.bandNoLabels, // TEMP: tighter top pad once the label rows are gone
         { paddingBottom: Math.max(bottomInset - 8, 10) }, // S1-b: keys ~¼cm lower (inset − 8, floor 10)
         locked && styles.bandLocked,
       ]}
@@ -51,6 +55,7 @@ export function NavBand({
           accent={tab.accent}
           active={!locked && tab.key === activeKey}
           disabled={locked || tab.built === false}
+          showLabels={showLabels}
           onPress={() => onSelect(tab.key)}
         />
       ))}
@@ -65,5 +70,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingTop: 16,
   },
+  bandNoLabels: { paddingTop: 10 }, // TEMP: no label rows → tuck the caps just below the content (matches the 10px bottom floor)
   bandLocked: { opacity: 0.45 }, // component-map §5.1 NavBand `locked` (gray + non-interactive)
 });

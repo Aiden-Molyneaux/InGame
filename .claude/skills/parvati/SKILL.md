@@ -72,7 +72,7 @@ the run-inline caveat below applies only when the *owner* pastes images.
 She needs **screenshots of the built screen** as input — if none were provided, ask for them (or, if a
 preview server is running the app, capture them from Expo web at a phone viewport). Parvati can't review
 what she can't see — and note screenshots live in the *reviewing* agent's visual context, so run her
-inline (a spawned subagent can't see pasted images).
+inline (a spawned subagent can't see pasted images). Capturing them yourself? **Preflight first — never debug the preview from scratch:** `node scripts/dev-stack.mjs up` then `doctor` (the **doctor-nick** skill owns that loop).
 
 ## The authority — gather these first, for the screen under review
 Read in this order; the DoD is the arbiter, so never skip it.

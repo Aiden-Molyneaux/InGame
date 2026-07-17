@@ -331,17 +331,23 @@ track" check they flagged as **key for the Styler/Canvas especially**.
 
 ---
 
-## 6. CLOSED BETA (the M4 exit — the ◆ checkpoint)
+## 6. CLOSED BETA — RE-TIMED TO ~M6 (decision 0071; NO LONGER an M4 exit)
 
-At M4 exit, testers get **the trophy case — collection + full (private) customization** via **TestFlight /
-Play internal**. It's the morale + validation hit — real feel before the economy lands.
+**The closed beta moved from ~M4 exit to ~M6** (owner ruling, decision [`0071`](../decisions/0071-beta-retimed-to-social.md)):
+the first external tester build waits for **card sharing (M5) + friends (M6)** so it ships the *social*
+trophy case, not a solo one. **M4 now completes internally** — the editors + render pipeline + free/
+private customization — and flows to M5 with **no external release**. Device-feel at M4 is covered by the
+owner's **M2 on-device build** + the **Gate-5 taste passes** on every customization surface; a small
+**trusted/internal build stays available on request** during M4/M5 but is not an M4 deliverable.
 
-- **Safety-rail caveat (owner sign-off) — conditional on §0.8:** under the **default** (private cards, no
-  publish/adopt) there is **no cross-user UGC**, so the block/report/deletion gap is largely moot. The
-  caveat bites **only if §0.8 pulls publish/adopt forward** — then the beta ships **shared UGC (cards)**
-  ahead of **block (M6) / report-reception (M7) / real deletion (AUTH-07, M8)**, acceptable for a
-  **closed / trusted invite** only, with the owner's acceptance recorded before invites go out.
-- **Gate-5 taste** is the go/no-go for the beta build.
+- **The safety-rail caveat now bites at M6** (where the beta lands, with UGC sharing) — but **block
+  (SOC-09) is IN at M6**, so the sharing beta has block; report-reception (M7) + real deletion
+  (AUTH-07, M8) still trail → the owner records the **closed/trusted-invite** acceptance at the M6 beta.
+  The §0.8 DEFAULT (M4 = free/private, no cross-user UGC) is unchanged.
+- **Gate-5 taste** remains the M4 go/no-go for each customization surface (owner device sign-off) — it's
+  the M4 quality bar even though there's no M4 external release.
+- **CARD-16** (the a11y launch gate) — its *work* stays at M4 (editors' a11y, cheapest while fresh); its
+  *release-blocking* status attaches to the **M6 beta**, not an M4 exit.
 
 ---
 
@@ -373,9 +379,12 @@ Play internal**. It's the morale + validation hit — real feel before the econo
       murr clean on the diff · CONVENTIONS per-task DoD met.
 - [ ] **First-article stop happened** — the owner reviewed the Game page alone before the editors began.
 - [ ] **The Fable-audit stop-point** was offered at §3.3 (used or consciously waived by the owner).
-- [ ] **CARD-16 non-gesture / reduce-motion launch gate met** across the three editors.
-- [ ] **Gate-5 taste passed by the owner** on the customization surfaces.
-- [ ] **Closed beta shipped** (TestFlight / Play internal) + the safety-rail sign-off recorded.
+- [ ] **CARD-16 non-gesture / reduce-motion pass built** across the three editors (the a11y *work* — its
+      release-blocking gate now attaches to the **M6 beta**, decision 0071; still built here while the
+      editors are fresh).
+- [ ] **Gate-5 taste passed by the owner** on the customization surfaces (the M4 quality bar).
+- [ ] ~~Closed beta shipped~~ **RE-TIMED TO ~M6** (decision 0071) — M4 completes internally, no external
+      release; the closed-beta + safety-rail sign-off DoD moves to the **M6 exit**.
 - [ ] **Receipt per surface** — what changed + IDs touched + anything filed to `open-questions.md`.
 
 ---

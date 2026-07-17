@@ -5,6 +5,8 @@
 //                                        pre-warm the web bundle, then exit. Idempotent: a no-op
 //                                        (~1s) when everything is already up. Safe to run always.
 //   node scripts/dev-stack.mjs status  — one-shot health JSON, no side effects.
+//   node scripts/dev-stack.mjs doctor  — read-only diagnosis: probe every KNOWN failure
+//                                        signature and print the exact fix. Never mutates state.
 //   node scripts/dev-stack.mjs down    — kill ONLY the processes this script started (pidfiles);
 //                                        never touches the docker DB or externally-launched procs.
 //
@@ -28,6 +30,8 @@ const RUN_DIR = path.join(ROOT, '.devstack');
 const DB_CONTAINER = 'ingame-dev-db';
 const API_HEALTH = 'http://localhost:4000/api/health';
 const METRO_BASE = 'http://localhost:8082';
+const ENV_LOCAL_TRAP = path.join(ROOT, 'apps', 'mobile', '.env.local');
+const API_ENV_DEV = path.join(ROOT, 'apps', 'api', '.env.dev');
 
 const say = (msg) => console.log(`[dev-stack] ${msg}`);
 
@@ -123,6 +127,10 @@ function startDetached(name, args) {
     detached: true,
     windowsHide: true,
     stdio: ['ignore', out, out],
+    // EXPO_OFFLINE baked in (runbook promotion — Hits≥2): expo-cli's dependency-version validation
+    // fetch double-reads a response / throws in getVersionedNativeModulesAsync and kills `expo start`.
+    // Offline mode skips that network step; LAN/web bundle serving is unaffected. Harmless for the API.
+    env: { ...process.env, EXPO_OFFLINE: '1' },
   });
   fs.writeFileSync(pidFile(name), String(child.pid));
   child.unref();
@@ -156,6 +164,102 @@ async function status() {
   };
   console.log(JSON.stringify(result, null, 2));
   return result;
+}
+
+// --- doctor (QA lessons ladder, tier 2 — decision 0065) -------------------------------------
+// Read-only diagnostics: probe every KNOWN failure signature and print the exact fix.
+// NEVER mutates state — starts/stops/kills nothing, and never touches the phone Metro on :8081.
+// New signatures graduate here from docs/qa-runbook.md when an entry reaches Hits >= 2.
+// Caveat: the warmth probe's bundle GET may kick off a background compile on a cold Metro —
+// beneficial (a later run reports warm), but not strictly zero-effect.
+
+async function doctor() {
+  const rows = [];
+  const check = (sev, name, ok, detail, fix) => rows.push({ sev, name, ok, detail, fix });
+
+  // db
+  const db = await dbUp();
+  check('FAIL', 'db :5432', db,
+    db ? 'postgres answering' : 'no listener on :5432',
+    `node scripts/dev-stack.mjs up  (starts docker ${DB_CONTAINER}; still failing -> is Docker Desktop running?)`);
+
+  // api
+  const api = await apiUp();
+  check('FAIL', 'api :4000', api,
+    api ? '/api/health ok' : '/api/health not answering',
+    'node scripts/dev-stack.mjs up  (API is restart-safe; env incl. stable JWT secret in apps/api/.env.dev)');
+
+  // api env file + CORS for the :8082 web origin (OQ-120)
+  let corsOk = false, corsDetail, corsFix;
+  if (!fs.existsSync(API_ENV_DEV)) {
+    corsDetail = 'apps/api/.env.dev is MISSING';
+    corsFix = 'copy apps/api/.env.example -> apps/api/.env.dev, fill values; if an API is already running it will NOT reload env — kill it first (taskkill /PID (Get-Content .devstack/api.pid) /T /F), then node scripts/dev-stack.mjs up';
+  } else {
+    corsOk = /^DEV_CORS_ORIGINS=.*http:\/\/localhost:8082/m.test(fs.readFileSync(API_ENV_DEV, 'utf8'));
+    corsDetail = corsOk ? 'DEV_CORS_ORIGINS allows :8082' : 'DEV_CORS_ORIGINS missing http://localhost:8082 (web login will CORS-fail)';
+    corsFix = 'add http://localhost:8082 to DEV_CORS_ORIGINS in apps/api/.env.dev, then restart JUST the API so it reloads env (up alone will NOT): taskkill /PID (Get-Content .devstack/api.pid) /T /F, then node scripts/dev-stack.mjs up';
+  }
+  check('FAIL', 'api CORS env', corsOk, corsDetail, corsFix);
+
+  // the retired .env.local trap
+  const trap = fs.existsSync(ENV_LOCAL_TRAP);
+  check('FAIL', '.env.local trap', !trap,
+    trap ? 'apps/mobile/.env.local EXISTS — a restarted Metro would point the PHONE at localhost' : 'absent (good)',
+    'delete apps/mobile/.env.local and never recreate it (the web bundle needs no base-URL override)');
+
+  // metro :8082 — port ownership + packager health
+  const metroPort = await tcpUp(8082);
+  const metro = metroPort && (await metroUp());
+  check('FAIL', 'metro :8082', metro,
+    !metroPort ? 'nothing on :8082' : metro ? 'packager running' : 'port owned but /status unhealthy (booting or wedged)',
+    !metroPort
+      ? 'node scripts/dev-stack.mjs up  (NOT preview_start — its "port 8082 in use" error means the standing Metro is UP)'
+      : 'wait ~60s, re-run doctor; still red -> tail .devstack/metro.log. Do NOT kill :8082 — that re-pays the cold start');
+
+  // web bundle warmth (only meaningful when metro is healthy)
+  if (metro) {
+    let warm = false, warmDetail;
+    const page = await httpGet(`${METRO_BASE}/`, 8000);
+    const m = page?.text.match(/src="([^"]*\.bundle[^"]*)"/);
+    if (!page) warmDetail = 'index page did not answer in 8s (cold)';
+    else if (!m) warmDetail = 'index page has no bundle tag (cold)';
+    else {
+      const res = await httpGet(`${METRO_BASE}${m[1]}`, 15000);
+      warm = res?.ok === true;
+      warmDetail = warm ? 'bundle answers fast (warm)'
+        : res ? `bundle request errored (status ${res.status}) — likely a build error, not cold`
+        : 'bundle did not answer in 15s (cold/building)';
+    }
+    check('WARN', 'web bundle', warm, warmDetail,
+      'node scripts/dev-stack.mjs up (pre-warms); blank preview tab = loaded before "Bundled" appeared in .devstack/metro.log -> reload');
+  } else {
+    check('INFO', 'web bundle', true, 'skipped (metro not healthy)', null);
+  }
+
+  // phone lane — report only, NEVER acted on
+  const phone = await tcpUp(8081);
+  check('INFO', 'phone Metro :8081', true,
+    phone ? "up (owner's lane — NEVER touch)" : 'down (fine — owner not running it)', null);
+
+  // orphaned parallel API from destructive-DB testing
+  const orphan = await tcpUp(4001);
+  check('WARN', 'orphan :4001', !orphan,
+    orphan ? 'something listening on :4001 (leftover parallel API — task-stop orphans the tsx child)' : 'clear',
+    'netstat -ano | findstr :4001  -> taskkill /PID <pid> /F');
+
+  let blocking = 0;
+  for (const r of rows) {
+    const mark = r.sev === 'INFO' ? 'INFO' : r.ok ? 'OK  ' : r.sev;
+    say(`${mark}  ${r.name} — ${r.detail}`);
+    if (!r.ok && r.fix) say(`      fix: ${r.fix}`);
+    if (!r.ok && r.sev === 'FAIL') blocking++;
+  }
+  if (blocking) {
+    say(`doctor: ${blocking} blocking issue(s) — apply the fixes above, re-run doctor. Novel failure? -> docs/qa-runbook.md`);
+    process.exit(1);
+  }
+  const warns = rows.filter((r) => !r.ok && r.sev === 'WARN').length;
+  say(warns ? `doctor: no blocking issues (${warns} warning(s) above) — QA away.` : 'doctor: green board — QA away.');
 }
 
 async function prewarmBundle() {
@@ -281,8 +385,9 @@ async function down() {
 const verb = process.argv[2];
 if (verb === 'up') await up();
 else if (verb === 'status') await status();
+else if (verb === 'doctor') await doctor();
 else if (verb === 'down') await down();
 else {
-  console.log('usage: node scripts/dev-stack.mjs <up|status|down>');
+  console.log('usage: node scripts/dev-stack.mjs <up|status|doctor|down>');
   process.exit(2);
 }

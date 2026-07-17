@@ -5,8 +5,10 @@ import * as authService from '../services/auth-service';
 import * as catalogService from '../services/catalog-service';
 import * as collectionService from '../services/collection-service';
 import * as profileService from '../services/profile-service';
+import * as cardService from '../services/card-service';
+import * as presetService from '../services/style-preset-service';
 import { DuplicateSuspectedError, ValidationError } from '../errors/AppError';
-import type { CollectionStatus } from '@ingame/shared';
+import { COMPOSITION_SCHEMA_VERSION, type CollectionStatus, type Composition } from '@ingame/shared';
 
 // D6 (decision 0058) — the server-side IDEMPOTENT scratch-seed. The client seed file died with the
 // M3 re-wire; this keeps the phone demo populated on a dev/scratch DB WITHOUT hand-adding games.
@@ -134,10 +136,64 @@ async function main(): Promise<void> {
   await collectionService.setNowPlaying(userId, { gameId: gameIds.get('Elden Ring') ?? null });
   await profileService.updateProfile(userId, { favouriteGameId: gameIds.get('Hades') ?? null });
 
+  await ensureCardSubstrate(userId, gameIds.get('Elden Ring'));
+
   const shelf = await collectionService.listCollection(userId);
   console.log(
     `seed-dev: shelf ready — ${shelf.collectionTotal} OF ${shelf.collectionTotal} (now playing: Elden Ring · favourite: Hades)`,
   );
+}
+
+// M4 (decision 0066) — one PRIVATE, EQUIPPED design + two style presets, so the Game-page switcher,
+// the Styler resume path, and the BaseRail preset merge all demo real data. Idempotent by name.
+const SEED_CARD_NAME = 'Elden Ring — Aurora';
+const SEED_COMPOSITION: Composition = {
+  schemaVersion: COMPOSITION_SCHEMA_VERSION,
+  base: { gradient: ['#241a4d', '#0e0b1e'] },
+  elements: [
+    { type: 'poly', shape: 'star', x: 0.5, y: 0.34, w: 0.52, h: 0.52, fill: '#e8c14a' },
+    { type: 'ellipse', x: 0.72, y: 0.2, w: 0.14, h: 0.14, fill: '#f3ecd9' },
+    { type: 'rect', x: 0.5, y: 0.62, w: 0.64, h: 0.028, fill: '#e85ad0' },
+    { type: 'rect', x: 0.5, y: 0.66, w: 0.44, h: 0.02, fill: '#c9a227' },
+    { type: 'poly', shape: 'diamond', x: 0.24, y: 0.24, w: 0.1, h: 0.1, rotation: 20, fill: '#7ad0e8' },
+    { type: 'text', x: 0.5, y: 0.55, text: 'TARNISHED', size: 0.075, fill: '#f3ecd9' },
+  ],
+  frame: { color: '#e8c14a', width: 0.012 },
+  nameplate: { title: 'AURORA', plate: '#141026', ink: '#f3ecd9', size: 0.05 },
+  effect: { kind: 'scanline', intensity: 0.55 },
+} as Composition;
+
+async function ensureCardSubstrate(userId: string, eldenRingId: string | undefined): Promise<void> {
+  if (!eldenRingId) return;
+  const mine = await cardService.listMyCards(userId);
+  let design = mine.items.find((c) => c.name === SEED_CARD_NAME && c.gameId === eldenRingId);
+  if (!design) {
+    design = await cardService.createDraft(userId, {
+      gameId: eldenRingId,
+      composition: SEED_COMPOSITION,
+      name: SEED_CARD_NAME,
+    });
+    design = await cardService.savePrivate(userId, design.id);
+  } else if (design.status === 'draft') {
+    design = await cardService.savePrivate(userId, design.id);
+  }
+  const shelf = await collectionService.listCollection(userId);
+  const entry = shelf.items.find((i) => i.gameId === eldenRingId);
+  if (entry && entry.card.id !== design.id) {
+    await collectionService.updateEntry(userId, entry.entryId, { activeCardDesignId: design.id });
+  }
+
+  const presets = await presetService.listPresets(userId);
+  const wanted: Array<{ name: string; style: Parameters<typeof presetService.createPreset>[1]['style'] }> = [
+    { name: 'Midnight Gilt', style: { frameId: 'gilt', effect: { id: 'scanline', intensity: 0.55 }, title: { fontId: 'chakra', ink: '#f3ecd9' } } },
+    { name: 'Quiet Slate', style: { frameId: 'slate', nameplateId: 'ribbon' } },
+  ];
+  for (const w of wanted) {
+    if (!presets.some((p) => p.name === w.name)) {
+      await presetService.createPreset(userId, { name: w.name, style: w.style });
+    }
+  }
+  console.log(`seed-dev: card substrate ready — "${SEED_CARD_NAME}" (private, equipped) + ${wanted.length} presets`);
 }
 
 main()

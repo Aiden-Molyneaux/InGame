@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, BackHandler, Keyboard, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { ReactNode } from 'react';
-import { theme } from '../theme';
+import { themedStyles } from '../theme';
+import { useReducedMotion } from '../a11y/useReducedMotion';
 import { KeyboardLift } from './KeyboardLift';
+import { ScrollLockContext, useScrollLockHost } from './ScrollLock';
 
 // PulledSheet (component-map §5.7) — the GRAB-HANDLE bottom drawer (sort/filter, log-hours, store
 // detail). One primitive; scrim tap dismisses.
@@ -24,21 +26,42 @@ export function PulledSheet({
   visible,
   onClose,
   title,
+  dimScrim = true,
+  maxFraction = 0.75,
   children,
 }: {
   visible: boolean;
   onClose: () => void;
   /** Optional page title rendered under the grab handle (R2 0b — e.g. the Log-Hours drawer). */
   title?: string;
+  /** false = a transparent (still tap-to-close) scrim — the Canvas EDIT sheet keeps the bed lit
+   *  ("no scrim-dim on the work", board P4 / the Styler's no-scrim lesson). Variant, not a fork. */
+  dimScrim?: boolean;
+  /** cap the sheet to a fraction of the overlay height (default 0.75). The Canvas EDIT/TRANSFORM
+   *  drawers pass a smaller value so they "open up to the bottom of the card" and leave the gamecard
+   *  visible above them (owner gate-5 note) — a stopgap before the drawer overhaul. */
+  maxFraction?: number;
   children: ReactNode;
 }) {
+  const styles = useStyles();
+  // CARD-16/0044 §104 — no slide-in under reduce-motion. Read via a ref (not an effect dep) so a
+  // mid-session toggle while a sheet is OPEN doesn't re-run the effect and replay the slide (murr m3).
+  const reduceMotion = useReducedMotion();
+  const reduceRef = useRef(reduceMotion);
+  reduceRef.current = reduceMotion;
   const slide = useRef(new Animated.Value(0)).current; // 0 = off-stage, 1 = docked
   const [wellTopY, setWellTopY] = useState<number | undefined>(undefined);
   const overlayRef = useRef<View>(null);
+  // a held slider/picker inside the sheet must not scroll the sheet body (round-3 scroll-lock rule)
+  const { scrollEnabled, api: scrollLockApi } = useScrollLockHost();
 
   useEffect(() => {
     if (visible) {
       Keyboard.dismiss(); // the trigger screen's focused field must not type behind the scrim
+      if (reduceRef.current) {
+        slide.setValue(1); // reduce-motion (0044 §104): dock instantly, no slide/fade
+        return;
+      }
       slide.setValue(0);
       Animated.timing(slide, { toValue: 1, duration: 200, useNativeDriver: true }).start();
     }
@@ -64,11 +87,11 @@ export function PulledSheet({
       onLayout={() => overlayRef.current?.measureInWindow((_x, y) => setWellTopY(y))}
     >
       <Pressable style={StyleSheet.absoluteFill} accessibilityLabel="Close" onPress={onClose}>
-        <Animated.View style={[styles.scrim, { opacity: slide }]} />
+        <Animated.View style={[styles.scrim, !dimScrim && styles.scrimClear, { opacity: slide }]} />
       </Pressable>
-      {/* the 75% cap lives on the LIFT WRAPPER (a definite % of the overlay) — on the sheet itself
+      {/* the height cap lives on the LIFT WRAPPER (a definite % of the overlay) — on the sheet itself
           it resolves against the auto-sized wrapper and strands a dead band under the sheet */}
-      <KeyboardLift style={styles.liftSlot} minTopY={wellTopY}>
+      <KeyboardLift style={{ ...styles.liftSlot, maxHeight: `${Math.round(maxFraction * 100)}%` as `${number}%` }} minTopY={wellTopY}>
         <Animated.View
           role="dialog"
           accessibilityViewIsModal
@@ -82,8 +105,8 @@ export function PulledSheet({
         >
           <View style={styles.handle} />
           {title ? <Text style={styles.title}>{title.toUpperCase()}</Text> : null}
-          <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-            {children}
+          <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" scrollEnabled={scrollEnabled}>
+            <ScrollLockContext.Provider value={scrollLockApi}>{children}</ScrollLockContext.Provider>
           </ScrollView>
         </Animated.View>
       </KeyboardLift>
@@ -91,33 +114,34 @@ export function PulledSheet({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   overlay: {
     ...StyleSheet.absoluteFillObject, // the routed screen area INSIDE the well — not the OS window
     justifyContent: 'flex-end',
   },
   scrim: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' },
+  scrimClear: { backgroundColor: 'transparent' },
   liftSlot: { maxHeight: '75%' },
   sheet: {
-    backgroundColor: theme.scr.panel,
+    backgroundColor: t.scr.panel,
     borderTopWidth: 1,
-    borderTopColor: theme.scr.hairline,
+    borderTopColor: t.scr.hairline,
     flexShrink: 1,
   },
   handle: {
     alignSelf: 'center',
     width: 44,
     height: 4,
-    marginTop: theme.space.md,
-    backgroundColor: theme.scr.faint,
+    marginTop: t.space.md,
+    backgroundColor: t.scr.faint,
   },
   title: {
-    fontFamily: theme.font.screenBold,
-    fontSize: theme.type.title, // 15 — the drawer page title (R2 0b)
-    color: theme.scr.ink,
+    fontFamily: t.font.screenBold,
+    fontSize: t.type.title, // 15 — the drawer page title (R2 0b)
+    color: t.scr.ink,
     letterSpacing: 1,
-    paddingHorizontal: theme.space.xl,
-    paddingTop: theme.space.md,
+    paddingHorizontal: t.space.xl,
+    paddingTop: t.space.md,
   },
-  body: { padding: theme.space.xl, gap: theme.space.xl },
-});
+  body: { padding: t.space.xl, gap: t.space.xl },
+}));

@@ -31,6 +31,19 @@ export const DOMAIN_EVENT_TYPES = [
   'collection.entry_removed', // COL-01
   'collection.reordered', // COL-07 manual order (the reorder write).
   'collection.now_playing_set', // WTP-03 — the single pin set/cleared.
+  // M4 — the card substrate (decision 0066: card_designs + style_presets + COL-06 equip). Append at the END.
+  'card.draft_created', // CARD-14 — POST /cards (the CARD-24a draft document row).
+  'card.updated', // CARD-14/24a — the autosave PATCH; payload = the changed field-set.
+  'card.saved_private', // CARD-04 — draft → private (validate + hash; flatten rides M5 publish, 0066).
+  'card.deleted', // CARD-14 — a draft/private design deleted (the 0040 confirm path).
+  'style_preset.created', // CARD-24b
+  'style_preset.updated', // CARD-24b — rename / re-snapshot.
+  'style_preset.deleted', // CARD-24b
+  'collection.card_equipped', // COL-06 — activeCardDesignId set/cleared (the equip write).
+  // M4 §3.5 Device editor (decision 0030: device_configs + device_looks). Append at the END.
+  'device.updated', // DEV-01/02/03/04 — PATCH /me/device; payload = the changed facet-set (shell/theme/stickers).
+  'device.look_saved', // DEV-05 — SAVE CURRENT snapshotted the live combo into a new look.
+  'device.look_deleted', // DEV-05 — a saved look removed.
 ] as const;
 
 export type DomainEventType = (typeof DOMAIN_EVENT_TYPES)[number];

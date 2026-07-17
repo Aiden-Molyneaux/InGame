@@ -1,11 +1,12 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { theme } from '../theme';
+import { View, Text } from 'react-native';
+import { themedStyles } from '../theme';
 
 // RankChip (component-map §5.2) — the trophy rank chip on Top-3 set-pieces: `first` = GOLD (the
 // F-02 trophy carve-out); others = accent outline. (The TOP-view LIST rank marker is a different
 // element — StateMark orange, never gold — C6.)
 export function RankChip({ rank }: { rank: number }) {
   const first = rank === 1;
+  const styles = useStyles();
   return (
     <View style={[styles.chip, first ? styles.first : styles.rest]}>
       <Text style={[styles.label, first ? styles.labelFirst : styles.labelRest]}>#{rank}</Text>
@@ -13,20 +14,20 @@ export function RankChip({ rank }: { rank: number }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   chip: {
-    paddingHorizontal: theme.space.md,
+    paddingHorizontal: t.space.md,
     paddingVertical: 1,
     borderWidth: 1,
     alignSelf: 'center',
   },
-  first: { backgroundColor: theme.brand.gold, borderColor: theme.brand.gold },
-  rest: { backgroundColor: 'transparent', borderColor: theme.scr.accent },
+  first: { backgroundColor: t.brand.gold, borderColor: t.brand.gold },
+  rest: { backgroundColor: 'transparent', borderColor: t.scr.accent },
   label: {
-    fontFamily: theme.font.screenBold,
-    fontSize: theme.type.micro, // 9
+    fontFamily: t.font.screenBold,
+    fontSize: t.type.micro, // 9
     letterSpacing: 0.5,
   },
-  labelFirst: { color: theme.brand.goldInk },
-  labelRest: { color: theme.scr.accent },
-});
+  labelFirst: { color: t.brand.goldInk },
+  labelRest: { color: t.scr.accent },
+}));

@@ -6,8 +6,15 @@
 > each shared component **once, reusably**, instead of re-deriving it per screen. The map governs
 > **naming + reuse conventions from the ground stage** — it is the executable echo of §1.5.
 
-**Version:** 0.4 · **Date:** 2026-06-30 · **Author:** Claude · **Owner:** Aiden ·
-**Maps from:** `design-spec.md` §1.5 (v0.49) · **Implements toward:** Expo / RN (product-spec §9).
+**Version:** 0.11 · **Date:** 2026-07-10 · **Author:** Claude · **Owner:** Aiden ·
+**Maps from:** `design-spec.md` §1.5 (v0.57) · **Implements toward:** Expo / RN (product-spec §9).
+**0.5:** §3.4 Canvas gate-5 batch (decision 0067) — **`TransformDrawer`** (position/size/rotation) **subsumes `NumPop`**; new shared **`ColorPicker`** (HS+value+hex; Canvas element fill/stroke — title-ink adoption OQ-137/M5); Canvas breakout = **zoom** (transform-only, no remount); **base pseudo-slip** + BASE off ADD; isolation **toggle**; cap-meter **orange**.
+**0.6:** §3.4 gate-5 iteration round 3 (design-spec 0.54) — rail **z-ascending L→R, base leading**; TransformDrawer **finer nudges + hold ramp + X·Y read-out**; RESIZE-BOX-OFF hides the whole ring + the toggle rides the EDIT sheet; TRANSFORM accent-weighted + an EDIT-panel door; **one fixed bottom-panel height**; ColorPicker **applies on release** + FROM-CARD unfiltered; sliders/pickers **scroll-lock their host while held** (new `ScrollLock` util, not a UI component).
+**0.7:** §3.4 gate-5 iteration round 4 (design-spec 0.55) — TRANSFORM keys go **cream** (the PROOF voice) + the panel-head doors run **both ways** (EDIT↔TRANSFORM); the TransformDrawer **condenses** (ROTATE inside POSITION; RESIZE BOX as the EDIT row grammar); tap = one 0.5% nudge (~350ms repeat delay) + a harder hold ramp; the **sel-ring rotates with the slip + gains a rotation handle** (quarter snaps; the slider stays the CARD-16 pair — CanvasStage gains `onRotate`); rack caption + cap-meter under the rail; PROOF∥PRESS right-docked, held through PROOFING; EDIT sheet meta-line dropped + OPACITY under FILL; ISOLATION chip higher + accent-when-ON.
+**0.8:** §3.4 gate-5 iteration round 5 (design-spec 0.56) — DeviceShell breakout = a **boundary-continuous zoom** (measured framed→full rects; swap at coincidence; the dip retired); the **editbar persists** across bench/EDIT/TRANSFORM (RESET · cream TRANSFORM · unlabelled ↺/↻, one cluster — the EDIT-head TRANSFORM door retires); **ops/rename swap into the bench-button slot** (single-line scroll row; rename rides `KeyboardLift`; ops rendering lifts from LayerRack to CanvasSurface); rack caption row reverts to round 3; EDIT sheet MORE last; TransformDrawer **sliders → ◀ value ▶ stepper rows** (POSITION arrows inline).
+**0.10:** §3.5 Device BUILT (device-manifest 2026-07-10) — the §11 row's code mapping recorded (`StickerBandLayer` subsumes StickerStage+TransformBox per-zone; `DeviceSectionRail` hosts the SectionCards; `KeepBar` M5-deferred); `MiniDevice` gains `shellId`/`themeId`; the theme ENGINE (`useTheme`/`themedStyles` + `SCREEN_THEMES`/`SHELL_PALETTES`, prefs-persisted) replaces the static scr/shell consumption app-wide (lint-enforced).
+**0.11:** §3.5 Device gate-5 iteration (design-spec 0.58, owner walk 2026-07-10) — **NEW shared `SectionDock`** (§5.3): the ONE in-screen section switcher; **`GameTabDock` (§9) + `DeviceSectionRail` (§11) become thin adapters over it** (owner: same component, one stacked treatment — realizes 0030/OQ-063). New **`shell.cap`** token (nav-keycap face — cream on every shell, grey on Carbon). No new §1.5 names beyond `SectionDock`.
+**0.9:** button-convention ratification (decision 0069) — `ScreenButton/secondary` **build-conformed to cream/navy** (§1.5 already said cream; the build was grey `scr.panelHi`) + `mini` size + a cream `active` ON-state; the bespoke Canvas cream keys retired into the catalog (PROOF/TRANSFORM/panel-door → `secondary·mini`; undo/redo → `ToolButton`+`disabled`); `#d9d4c2` literal → `brand.creamPressed`; the AssetShelf category tabs were left as their original bespoke cream chips — a `SectionSwitch/cream` conversion was built then **reverted on owner visual review**; DESIGN NEW **build-conformed to gold** (F-02); Canvas DELETE → alert **fill**; 3 mockup F-rule rule-wins (styler `.chip.canvas` flat · game-page duplicate `:active` removed · `.newtile` gold). Grey `Tog`/`boxTog` extraction deferred to CARD-16/polish.
 **0.2:** intentionality review — Keycap family → Screen/Tool/Count (owner ruling), social 5→2, Strip/GTag renamed.
 **0.3:** housekeeping (decision 0042) — Admin `QueueRow`→`ModQueueRow`; onboarding banners named `LiveBanner`/`PrePrompt` (+ `InlineBanner` reuse); game-page `.presence` confirmed **live `PresenceStats` (CAT-09)**, not the cut presence — keep.
 **0.4:** re-sync to §1.5 v0.49 — nameplate F-06 binding (0047); GameCard CARD-23 four-mode tap + CardDetail enlarge (0048); §4.7 Lists editor RETIRED, SlotFrame/RankSlot/CardPicker relocate to Collection TOP view-mode (0049/0050); Collection view-switch SHELF·GRID·LIST·TOP; Achievements (§13) + Admin (§14) formalized → 🔶 locked ✅; new brand.secret/scr.secret token; CommunityGallery + RecommendSheet + §1.6b A11y baseline added; §15 QueueRow(Admin)→ModQueueRow alias registered; VIEW COLLECTION / VIEW TOP 10 doors.
@@ -86,14 +93,15 @@ domain sets. A screen never ships before its primitives.
 ### 5.3 Buttons / controls (Keycap system, F-03 flat+scanline)
 | §1.5 name | Code | Variants / props | Tokens | Status |
 |---|---|---|---|---|
-| KeycapButton→ScreenButton | `ScreenButton` | **`variant`**: primary·action-alt·secondary·destructive · `add`(gold+step F-02) · `block`/`mini` size; flat, pressed=scanline | scr.accent · gold · cream · alert | ✅⭐ |
-| ToolKeycap→ToolButton | `ToolButton` | cream 28–32, icon[+label], `active`+StateMark | cream/navy | ✅⭐ |
+| KeycapButton→ScreenButton | `ScreenButton` | **`variant`**: primary·action-alt·secondary·destructive · `add`(gold+step F-02) · `block`/`mini` size; flat, pressed=scanline; **`secondary`=cream/navy** (build conformed 0069) · **`active`** cream ON-state (PROOF/TRANSFORM) | scr.accent · gold · cream · alert | ✅⭐ |
+| ToolKeycap→ToolButton | `ToolButton` | cream 28–32, icon[+label], `active`+StateMark · **`disabled`** (undo/redo ends, 0069) | cream/navy | ✅⭐ |
 | TertiaryLink | `TertiaryLink` | `dim`(cancel) · `return-link`(back-seam) | scr.accent | ✅⭐ |
 
 > Profile→Collection doors are `TertiaryLink` instances: **VIEW TOP 10 ›** (opens Collection TOP view active) and friend-only **VIEW COLLECTION ›** (opens friend Collection shelf); Top-3 cards are GameCard/grid set-pieces whose tap opens Collection TOP focused on that game (decisions 0047 §B, 0050 §C — see the 0047 §B grid/cell size flag above).
 | SectionSwitch | `SectionSwitch` | **`variant`**: pair·chips·rail; active=accent border+StateMark (collapses SegmentedKeycap+SectionChips, §9) | scr.accent | ✅⭐ |
 | Toggle | `Toggle` | square knob; ON=accent+right; `disabled` | scr.accent/grip | ✅ |
-| IntensitySlider | `IntensitySlider` | flat track + cream thumb; value→reconcile | scr.accent | ✅ |
+| IntensitySlider | `IntensitySlider` | flat track + cream thumb; value→reconcile; **scroll-locks its host while held** (round 3) | scr.accent | ✅ |
+| ColorField · ColorPicker | `ColorField` `ColorPicker` | **`ColorField`** = the default colour control (gate-5 iteration): picker CLOSED by default — the last-10 recents + OPEN-PICKER button + a **FROM-CARD** grab (eyedropper interim; carries EVERY card colour incl. the base, unfiltered — round 3). **`ColorPicker`** = the full HS area + value + **hex**, opened on demand; **applies on RELEASE** (live in-picker preview; the cursor never re-seeds off its own echo — round 3); scroll-locks while held. Canvas element fill/stroke + the **base colour-only slip** (CR-08 iteration). CR-11 / decision 0067. *(Styler title-ink rides OQ-137/M5.)* | scr.accent · cream | 🔜 |
 
 ### 5.4 Screen furniture
 | §1.5 name | Code | Variants / props | Tokens | Status |
@@ -155,8 +163,8 @@ domain sets. A screen never ships before its primitives.
 | §1.5 name | Code | Variants / props | Status |
 |---|---|---|---|
 | AttributeSection · BaseRail · ReconcileSheet · KeepBeat | same | 5 attrs incl NAMEPLATE · start-from · acquire-gate · light celebrate | ✅ |
-| CanvasStage · AssetShelf/ElementTray | `CanvasStage` `AssetShelf` | press-bed+shell-swing breakout · ADD drawer (reuses `Sheet`) | ✅ |
-| LayerRack · slip · editbar · NumPop | `LayerRack` `Slip` `EditBar` `NumPop` | pull-to-isolate · cap-meter 30 · undo/redo · X/Y popover | ✅ |
+| CanvasStage · AssetShelf/ElementTray | `CanvasStage` `AssetShelf` | press-bed + **zoom** breakout (transform-only, no remount, 0067/CR-01) · ADD drawer (reuses `Sheet`; **BASE off categories** CR-08; **pick→open-EDIT** CR-09) | ✅ |
+| LayerRack · slip · editbar · TransformDrawer | `LayerRack` `Slip` `EditBar` `TransformDrawer` | pull-to-isolate (isolation **toggle**, CR-05) · **base pseudo-slip** (pinned · recolour-only, CR-08) — rides **at the rail HEAD** (leftmost; the rail reads **z-ascending L→R**, round 3) · cap-meter 30 (**orange** F-02, CR-03) · undo/redo · **`TransformDrawer`** = position (**direction arrows, 0.5% nudge + slow-start hold ramp + X·Y read-out**, round 3) / size (sliders) / rotation (**slider 0–360°**) + a **hide-resize-box toggle** (OFF hides the WHOLE sel-ring; the toggle also rides the EDIT sheet — round 3), **subsumes `NumPop`** (deleted); the editbar TRANSFORM key is **accent-weighted** + the EDIT panel head carries a TRANSFORM door (round 3); base slip lives **in the rail** (colour-only EDIT). Rendered **inline in the CanvasSurface bottom panel at ONE fixed (bench-measured) height**, not a drawer (device-walks 2026-07-08/09). Round 4 (0.55): TRANSFORM keys **cream** (PROOF voice) · head doors **both ways** · ROTATE folded into POSITION · RESIZE BOX row grammar · tap=one 0.5% nudge + harder hold ramp · **sel-ring rotates with the slip + a rotation handle** (`CanvasStage onRotate`, quarter snaps) · rack caption+chip under the rail · PROOF∥PRESS held through PROOFING. | ✅ |
 | PROOF · PRESS · PrintRitual | `ProofView` `PressSheet` `PrintRitual` | size-ladder · finish-up · first-print 3-beat | ✅ |
 
 # 9. Discover · Settings · Game page
@@ -179,7 +187,7 @@ domain sets. A screen never ships before its primitives.
 # 11. Device editor
 | §1.5 name | Code | Status |
 |---|---|---|
-| SectionCard·StickerStage·TransformBox·PlacedSticker·StickerTray·SavedLook·LooksGrid·KeepBar | same | ✅ |
+| SectionCard·StickerStage·TransformBox·PlacedSticker·StickerTray·SavedLook·LooksGrid·KeepBar | see 0.10 note | ✅ — **BUILT (M4 §3.5, 2026-07-10).** Code mapping (the `EditSlipSheet` provisional-name precedent — flag to the spec owner at gate): **`StickerStage`+`TransformBox` → `StickerBandLayer`** (one per plastic zone; the stage IS the band, the box its selected-sticker overlay) · **`SectionCard` → rendered inside `DeviceSectionRail`** (the /rail host — bespoke, NOT a `SectionSwitch` variant: icons + accent-border, no `StateMark` pip) · `PlacedSticker`·`StickerTray`·`SavedLook`·`LooksGrid` verbatim · **`KeepBar` NOT built (M5, 0062)**. New unlisted code: `DeviceItemTile`·`ThemeSwatch`·`DevicePreviewStrip` (PreviewStrip's device voice)·`OfflineStrip`·`DeviceStickerContext`·`deviceStickers`/`stickerGeometry`/`looksOnNow`/`deviceCopy` (registries + pure helpers, not §1.5 surfaces) |
 
 # 12. Collection TOP view-mode (Top-10 curation — §4.7 Lists editor RETIRED, relocated into Collection)
 | §1.5 name | Code | Status |
@@ -230,8 +238,8 @@ Drift fixed above: 0.20 flattened on-screen → "Keycap" reserved to shell keys 
 ScreenButton/ToolButton/CountTag — **rippled into design-spec 0.40, OQ-090 resolved**); social 5→2 collapse; Strip/GTag de-vagued; map's LayerSlip/EditBar
 aligned to spec. **Watch (not renamed):** `KeepBeat`(styler celebrate) vs `KeepBar`(device cart) — 1
 letter apart, keep distinct, never co-located. `AssetShelf`/`ElementTray` = one `Sheet`. Verified
-ACCURATE: GameCard, DualFaceHero, PlayStats, CardFan, StateMark, ReconcileSheet, TransformBox, NumPop,
-SavedLook, PctPill, RoleTag, SectionSwitch + ~30. **Keycap→Screen rename rippled to design-spec 0.40 (OQ-090 done).**
+ACCURATE: GameCard, DualFaceHero, PlayStats, CardFan, StateMark, ReconcileSheet, TransformBox,
+SavedLook, PctPill, RoleTag, SectionSwitch + ~30. **0.5 (0067):** `NumPop` **subsumed by `TransformDrawer`**; **`ColorPicker`** added (§5.3). **Keycap→Screen rename rippled to design-spec 0.40 (OQ-090 done).**
 
 # 16. Gaps & cleanup surfaced by the sweep
 - game-page `.presence` — **maps to `PresenceStats` (CAT-09); KEEP.** The class name collides with the

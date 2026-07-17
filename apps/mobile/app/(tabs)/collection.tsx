@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Pressable, BackHandler, Keyboard, Platform } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, Pressable, BackHandler, Keyboard, Platform } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import type { CollectionItem, CollectionStatus, GenreView } from '@ingame/shared';
 import { ScreenHead } from '../../src/components/ScreenHead';
-import { GameCard } from '../../src/components/GameCard';
+import { CardFace, parseComposition } from '../../src/components/CardFace';
+import { FlipCard } from '../../src/components/collection/FlipCard';
+import { Coachmark } from '../../src/components/Coachmark';
 import { ScreenButton } from '../../src/components/ScreenButton';
 import { ToolButton } from '../../src/components/ToolButton';
 import { SearchField } from '../../src/components/SearchField';
@@ -14,9 +16,9 @@ import { GenreTag } from '../../src/components/GenreTag';
 import { TertiaryLink } from '../../src/components/TertiaryLink';
 import { KeyboardLift } from '../../src/components/KeyboardLift';
 import { COLLECTION_STATUSES, STATUS_LABEL } from '../../src/constants/collection';
-import { theme } from '../../src/theme';
+import { theme, themedStyles, useTheme } from '../../src/theme';
 import { useAppDispatch, useAppSelector } from '../../src/store/hooks';
-import { setCollectionView, type CollectionView } from '../../src/store/prefsSlice';
+import { setCollectionView, setCol12CoachmarkSeen, type CollectionView } from '../../src/store/prefsSlice';
 import { useGetCollectionQuery, useUpdateEntryMutation } from '../../src/store/api';
 
 // The REAL Collection (COL-01..09 · WTP-03) — the M2 scratch-seed retired; everything renders from
@@ -135,7 +137,9 @@ export default function Collection() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const view = useAppSelector((s) => s.prefs.collectionView);
+  const col12CoachmarkSeen = useAppSelector((s) => s.prefs.col12CoachmarkSeen);
   const { data, isLoading, isError, refetch } = useGetCollectionQuery();
+  const styles = useStyles();
 
   // ONE shared query state between the in-place search and the drawer (OQ-034).
   const [q, setQ] = useState('');
@@ -148,6 +152,10 @@ export default function Collection() {
   // Keyed by entryId (not an item snapshot) so the sheet always derives the FRESHEST cached item —
   // a snapshot taken pre-refetch can pre-fill stale hours, and §0.4's Save-as-is would write them back.
   const [logHoursId, setLogHoursId] = useState<string | null>(null);
+  // COL-12 — the peek-flip is TRANSIENT screen state (never persisted). A Set of flipped entryIds
+  // (owner ruling 2026-07-12: many-flipped, not one-at-a-time); cleared on a view-switch (the effect
+  // below) and on blur (the useFocusEffect cleanup). Shelf + grid only — dense-list/top still NAVIGATE.
+  const [flippedIds, setFlippedIds] = useState<Set<string>>(new Set());
 
   const items = useMemo(() => data?.items ?? [], [data]);
   const hero = items.find((i) => i.nowPlaying) ?? null;
@@ -178,11 +186,21 @@ export default function Collection() {
 
   // Leaving the tab with the dock focused would strand the keyboard over the next screen (the Tabs
   // navigator keeps this screen mounted) — dismiss it on blur; the dock itself survives the round trip.
+  // COL-12: the peek-flip is transient — clear every flip on blur too (spec: resets on leaving the screen).
   useFocusEffect(
     useCallback(() => {
-      return () => Keyboard.dismiss();
+      return () => {
+        Keyboard.dismiss();
+        setFlippedIds((prev) => (prev.size === 0 ? prev : new Set()));
+      };
     }, []),
   );
+
+  // COL-12 — switching view mode resets the flips (spec). Catches both the tools View cycle and the
+  // drawer's set-view, since both dispatch setCollectionView → `view` changes.
+  useEffect(() => {
+    setFlippedIds((prev) => (prev.size === 0 ? prev : new Set()));
+  }, [view]);
 
   // COL-07/09 — client-side query execution over the loaded shelf (D2).
   const filtered = useMemo(() => {
@@ -245,6 +263,24 @@ export default function Collection() {
     closeSearch();
   };
 
+  // COL-12 — a card tap toggles its flip (owner: many-flipped); the first flip retires the coachmark.
+  const toggleFlip = (entryId: string) => {
+    setFlippedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(entryId)) next.delete(entryId);
+      else next.add(entryId);
+      return next;
+    });
+    if (!col12CoachmarkSeen) dispatch(setCol12CoachmarkSeen(true));
+  };
+  // COL-12 — long-press (either face) + the back's VIEW GAME → the Game page (CARD-23 NAVIGATE).
+  const openGame = (gameId: string) => router.push(`/game/${gameId}`);
+  // COL-12 discoverability — the one-time coachmark, gated on the persisted flag; only where cards flip
+  // (shelf/grid), when there's something to flip and no active query (search results replace the view).
+  const flippableView = view === 'shelf' || view === 'grid';
+  const showCoachmark =
+    !col12CoachmarkSeen && flippableView && q.trim() === '' && data.collectionTotal > 0 && filtered.length > 0;
+
   // S3-j / §0.3 — count copy: "N game(s)" unfiltered · "N of M games" filtered (singular-aware);
   // absent until the first add (the board shows no count keycap on the empty shelf, :491).
   const filterActive = q.trim() !== '' || statusFilter.size > 0 || genreFilter.size > 0;
@@ -276,6 +312,10 @@ export default function Collection() {
         {data.collectionTotal > 0 && view !== 'top' && q.trim() === '' && filtered.length > 0 ? (
           <NowPlayingHero hero={hero} onLogHours={onLogHours} />
         ) : null}
+        {/* COL-12/CARD-16 — the first-run peek-flip hint (no on-face indicator; owner directive). */}
+        {showCoachmark ? (
+          <Coachmark text="Tap a card to flip it for your stats." onDismiss={() => dispatch(setCol12CoachmarkSeen(true))} />
+        ) : null}
         {data.collectionTotal === 0 ? (
           <EmptyShelf onAdd={() => router.push('/add-game')} />
         ) : filtered.length === 0 ? (
@@ -286,9 +326,9 @@ export default function Collection() {
         ) : view === 'top' ? (
           <TopView items={filtered} />
         ) : view === 'grid' ? (
-          <GridView items={filtered} />
+          <GridView items={filtered} flippedIds={flippedIds} onToggle={toggleFlip} onNavigate={openGame} />
         ) : (
-          <ShelfView items={filtered} />
+          <ShelfView items={filtered} flippedIds={flippedIds} onToggle={toggleFlip} onNavigate={openGame} />
         )}
       </ScrollView>
 
@@ -382,6 +422,9 @@ export default function Collection() {
 // NOW PLAYING eyebrow · stat-line · title · catalog line · LOG HOURS (hero-exclusive). Unset → the
 // "set your Now Playing" nudge (WTP-03; the per-game picker is M4, §0.5/0.8).
 function NowPlayingHero({ hero, onLogHours }: { hero: CollectionItem | null; onLogHours: () => void }) {
+  const router = useRouter(); // CARD-23 NAVIGATE — the now-playing hero card → the Game page (mode 1)
+  const styles = useStyles();
+  const t = useTheme();
   if (!hero) {
     return (
       <View style={styles.nudge}>
@@ -392,7 +435,20 @@ function NowPlayingHero({ hero, onLogHours }: { hero: CollectionItem | null; onL
   }
   return (
     <View style={styles.hero}>
-      <GameCard title={hero.title} size="grid" style={styles.heroCard} />
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Open ${hero.title}`}
+        onPress={() => router.push(`/game/${hero.gameId}`)}
+      >
+        <CardFace
+          title={hero.title}
+          composition={parseComposition(hero.card.composition)}
+          size="grid"
+          width={138}
+          height={193}
+          animate // the ONE now-playing hero — animated cosmetics run here (0068 opt-in)
+        />
+      </Pressable>
       <View style={styles.heroMeta}>
         <Text style={styles.heroEyebrow}>NOW PLAYING</Text>
         <Text style={styles.heroStat}>{statLine(hero)}</Text>
@@ -400,7 +456,7 @@ function NowPlayingHero({ hero, onLogHours }: { hero: CollectionItem | null; onL
         <Text style={styles.heroCatalog}>{catalogLine(hero)}</Text>
         <ScreenButton
           label="Log hours"
-          icon={<PlusIcon color={theme.scr.accentInk} size={11} />}
+          icon={<PlusIcon color={t.scr.accentInk} size={11} />}
           onPress={onLogHours}
           style={styles.heroBtn}
         />
@@ -409,16 +465,33 @@ function NowPlayingHero({ hero, onLogHours }: { hero: CollectionItem | null; onL
   );
 }
 
+// The COL-12 flip wiring shared by shelf + grid: which entries are flipped + the tap/navigate handlers.
+type FlipProps = {
+  flippedIds: Set<string>;
+  onToggle: (entryId: string) => void;
+  onNavigate: (gameId: string) => void;
+};
+
 // SHELF (decision 0061 — the showcase / "flip through your binder"): a stack where EVERY entry gets
 // the hero treatment (full face + stat-line · title · catalog line). LOG HOURS stays hero-exclusive
 // (the NowPlayingHero above, rendered by the parent); ▶ NOW marks the pinned game in the stack.
-function ShelfView({ items }: { items: CollectionItem[] }) {
+// COL-12: the card is now a FlipCard (tap → flip · long-press / VIEW GAME → the Game page); the meta
+// beside it stays display-only labels (the quick scan lives beside the full peek, board :1377).
+function ShelfView({ items, flippedIds, onToggle, onNavigate }: { items: CollectionItem[] } & FlipProps) {
+  const styles = useStyles();
   return (
     <View style={styles.shelf}>
       <View style={styles.shelfStack}>
         {items.map((i) => (
           <View key={i.entryId} style={styles.stackRow}>
-            <GameCard title={i.title} size="grid" nowPlaying={i.nowPlaying} style={styles.heroCard} />
+            <FlipCard
+              item={i}
+              flipped={flippedIds.has(i.entryId)}
+              onToggle={() => onToggle(i.entryId)}
+              onNavigate={() => onNavigate(i.gameId)}
+              width={138}
+              height={193}
+            />
             <View style={styles.heroMeta}>
               <Text style={styles.heroStat}>{statLine(i)}</Text>
               <Text style={styles.heroTitle}>{i.title.toUpperCase()}</Text>
@@ -433,13 +506,21 @@ function ShelfView({ items }: { items: CollectionItem[] }) {
 
 // GRID (decision 0061 — compact browsing): a two-per-row grid of bare card FACES (never cropped,
 // F-01), ▶ NOW in-flow on the pinned face; no per-row meta. The hero renders above (parent).
-function GridView({ items }: { items: CollectionItem[] }) {
+// COL-12: each face is a FlipCard (tap → flip · long-press / VIEW GAME → the Game page).
+function GridView({ items, flippedIds, onToggle, onNavigate }: { items: CollectionItem[] } & FlipProps) {
+  const styles = useStyles();
   return (
     <View style={styles.shelf}>
       <View style={styles.gridWrap}>
         {items.map((i) => (
           <View key={i.entryId} style={styles.gridCol}>
-            <GameCard title={i.title} size="grid" nowPlaying={i.nowPlaying} style={styles.fluidCard} />
+            <FlipCard
+              item={i}
+              flipped={flippedIds.has(i.entryId)}
+              onToggle={() => onToggle(i.entryId)}
+              onNavigate={() => onNavigate(i.gameId)}
+              style={styles.fluidCard}
+            />
           </View>
         ))}
       </View>
@@ -450,12 +531,20 @@ function GridView({ items }: { items: CollectionItem[] }) {
 // LIST (management scan): dense strip rows — thumb + title (▶ NOW inline) + HRS · STATUS + chevron
 // → the Game page (the tap-target is M4). The always-visible per-row stats mode; hero above (parent).
 function ListView({ items }: { items: CollectionItem[] }) {
+  const router = useRouter(); // CARD-23 NAVIGATE — the list row is the Game-page tap-target (M4 §3.1)
+  const styles = useStyles();
   return (
     <View style={styles.shelf}>
       <View style={styles.listStack}>
         {items.map((i) => (
-          <View key={i.entryId} style={styles.strip}>
-            <GameCard title={i.title} size="thumb" />
+          <Pressable
+            key={i.entryId}
+            style={styles.strip}
+            accessibilityRole="button"
+            accessibilityLabel={`Open ${i.title}`}
+            onPress={() => router.push(`/game/${i.gameId}`)}
+          >
+            <CardFace title={i.title} composition={parseComposition(i.card.composition)} size="thumb" />
             <View style={styles.stripMeta}>
               <View style={styles.stripTitleRow}>
                 <Text style={styles.stripTitle} numberOfLines={1}>
@@ -470,7 +559,7 @@ function ListView({ items }: { items: CollectionItem[] }) {
               <Text style={styles.rowSub}>{statLine(i)}</Text>
             </View>
             <Text style={styles.chev}>›</Text>
-          </View>
+          </Pressable>
         ))}
       </View>
     </View>
@@ -480,26 +569,39 @@ function ListView({ items }: { items: CollectionItem[] }) {
 // TOP (D3) — read-only, hours-derived placeholder for the curated Top-10 (COL-13 curation rides
 // M4). The #1 rank marker is scr.accent ORANGE — never gold (C6/F-02).
 function TopView({ items }: { items: CollectionItem[] }) {
+  const router = useRouter(); // CARD-23 NAVIGATE (gate-5 A.3 — every card face opens its game)
+  const styles = useStyles();
   const top = [...items].sort((a, b) => b.hours - a.hours).slice(0, 10);
   return (
     <View style={styles.list}>
       {top.map((i, idx) => (
-        <View key={i.entryId} style={[styles.topRow, idx === 0 && styles.topRowFirst]}>
+        <Pressable
+          key={i.entryId}
+          style={[styles.topRow, idx === 0 && styles.topRowFirst]}
+          accessibilityRole="button"
+          accessibilityLabel={`Open ${i.title}`}
+          onPress={() => router.push(`/game/${i.gameId}`)}
+        >
           <Text style={[styles.rank, idx === 0 && styles.rankFirst]}>#{idx + 1}</Text>
-          <GameCard title={i.title} size={idx === 0 ? 'cell' : 'mini'} />
+          <CardFace
+            title={i.title}
+            composition={parseComposition(i.card.composition)}
+            size={idx === 0 ? 'cell' : 'mini'}
+          />
           <View style={styles.rowMeta}>
             <Text style={styles.rowTitle} numberOfLines={1}>
               {i.title}
             </Text>
             <Text style={styles.rowSub}>{i.hours} HRS</Text>
           </View>
-        </View>
+        </Pressable>
       ))}
     </View>
   );
 }
 
 function EmptyShelf({ onAdd }: { onAdd: () => void }) {
+  const styles = useStyles();
   return (
     <View style={styles.empty}>
       <Text style={styles.nudgeTitle}>YOUR SHELF IS EMPTY</Text>
@@ -513,6 +615,7 @@ function EmptyShelf({ onAdd }: { onAdd: () => void }) {
 // OQ-130 — the filtered-to-zero beat: the shelf HAS games, but the current search/filters match none.
 // A calm message + a Clear affordance (drops filters + exits search) so it's never a dead end.
 function NoResults({ onClear }: { onClear: () => void }) {
+  const styles = useStyles();
   return (
     <View style={styles.noResults}>
       <Text style={styles.noResultsTitle}>NO MATCHES</Text>
@@ -541,6 +644,7 @@ function SortFilterSheet(props: {
   setGenreFilter: (s: Set<string>) => void;
   genres: GenreView[];
 }) {
+  const styles = useStyles();
   const toggle = <T,>(set: Set<T>, value: T, put: (s: Set<T>) => void) => {
     const next = new Set(set);
     if (next.has(value)) next.delete(value);
@@ -687,6 +791,7 @@ function LogHoursSheet({ item, onClose }: { item: CollectionItem | null; onClose
 }
 
 function SheetSection({ title, children }: { title: string; children: React.ReactNode }) {
+  const styles = useStyles();
   return (
     <View style={styles.sheetSection}>
       <Text style={styles.sheetHead}>{title.toUpperCase()}</Text>
@@ -695,27 +800,27 @@ function SheetSection({ title, children }: { title: string; children: React.Reac
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: theme.scr.bg },
-  center: { alignItems: 'center', justifyContent: 'center', gap: theme.space.lg },
-  errTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.accent, letterSpacing: 1 },
-  errSub: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.dim },
-  pad: { paddingHorizontal: theme.space.lg, paddingTop: theme.space.lg, paddingBottom: theme.space.md, gap: theme.space.md },
+const useStyles = themedStyles((t) => ({
+  screen: { flex: 1, backgroundColor: t.scr.bg },
+  center: { alignItems: 'center', justifyContent: 'center', gap: t.space.lg },
+  errTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.accent, letterSpacing: 1 },
+  errSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim },
+  pad: { paddingHorizontal: t.space.lg, paddingTop: t.space.lg, paddingBottom: t.space.md, gap: t.space.md },
   scroll: { flex: 1 },
-  body: { padding: theme.space.lg, gap: theme.space.lg },
+  body: { padding: t.space.lg, gap: t.space.lg },
   // OQ-130 — filtered-to-zero "no results" beat.
-  noResults: { alignItems: 'center', gap: theme.space.md, paddingVertical: theme.space.xxl },
-  noResultsTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 1 },
-  noResultsSub: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.dim, textAlign: 'center' },
+  noResults: { alignItems: 'center', gap: t.space.md, paddingVertical: t.space.xxl },
+  noResultsTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
+  noResultsSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, textAlign: 'center' },
   tools: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.space.lg,
-    paddingHorizontal: theme.space.lg,
-    paddingVertical: theme.space.md,
+    gap: t.space.lg,
+    paddingHorizontal: t.space.lg,
+    paddingVertical: t.space.md,
     borderTopWidth: 1,
-    borderTopColor: theme.scr.hairline,
-    backgroundColor: theme.scr.bg,
+    borderTopColor: t.scr.hairline,
+    backgroundColor: t.scr.bg,
   },
   spacer: { flex: 1 },
   // S3-o — the gold ADD reads larger than the cream tool keycaps (the one loud object). Token-driven
@@ -725,103 +830,103 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.space.md,
-    paddingHorizontal: theme.space.lg,
-    paddingVertical: theme.space.md,
+    gap: t.space.md,
+    paddingHorizontal: t.space.lg,
+    paddingVertical: t.space.md,
     borderTopWidth: 1,
-    borderTopColor: theme.scr.hairline,
-    backgroundColor: theme.scr.bg,
+    borderTopColor: t.scr.hairline,
+    backgroundColor: t.scr.bg,
   },
   searchFieldWrap: { flex: 1 },
   searchClear: {
     width: 32,
     height: 30,
-    backgroundColor: theme.brand.cream,
+    backgroundColor: t.brand.cream,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  resultsHead: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },
-  shelf: { gap: theme.space.lg },
+  resultsHead: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
+  shelf: { gap: t.space.lg },
   hero: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    padding: theme.space.lg,
-    backgroundColor: theme.scr.panel,
+    padding: t.space.lg,
+    backgroundColor: t.scr.panel,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
+    borderColor: t.scr.hairline,
   },
   heroCard: { width: 138, height: 193 }, // mockup `.gcard.hero-size`
   heroMeta: { flex: 1, justifyContent: 'center', gap: 7 },
-  heroEyebrow: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.accent, letterSpacing: 2 },
-  heroStat: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 2 },
-  heroTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.display, color: theme.scr.ink, letterSpacing: 1 },
-  heroCatalog: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
-  heroBtn: { alignSelf: 'flex-start', marginTop: theme.space.sm },
+  heroEyebrow: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 2 },
+  heroStat: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 2 },
+  heroTitle: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, letterSpacing: 1 },
+  heroCatalog: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
+  heroBtn: { alignSelf: 'flex-start', marginTop: t.space.sm },
   nudge: {
-    padding: theme.space.xl,
-    backgroundColor: theme.scr.panel,
+    padding: t.space.xl,
+    backgroundColor: t.scr.panel,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    gap: theme.space.sm,
+    borderColor: t.scr.hairline,
+    gap: t.space.sm,
   },
-  nudgeTitle: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 1 },
-  nudgeSub: { fontFamily: theme.font.screen, fontSize: theme.type.body, color: theme.scr.dim, lineHeight: 16 },
-  empty: { alignItems: 'flex-start', gap: theme.space.lg, padding: theme.space.xl, backgroundColor: theme.scr.panel },
+  nudgeTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
+  nudgeSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, lineHeight: 16 },
+  empty: { alignItems: 'flex-start', gap: t.space.lg, padding: t.space.xl, backgroundColor: t.scr.panel },
   // SHELF stack (decision 0061) — each entry a hero-treatment row (card + meta beside), board `.shelf-stack`.
-  shelfStack: { gap: theme.space.lg },
+  shelfStack: { gap: t.space.lg },
   stackRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    padding: theme.space.lg,
-    backgroundColor: theme.scr.panel,
+    padding: t.space.lg,
+    backgroundColor: t.scr.panel,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
+    borderColor: t.scr.hairline,
   },
   // GRID (decision 0061) — two-per-row bare card faces (board `.grid` 1fr/1fr).
-  gridWrap: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: theme.space.lg },
+  gridWrap: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: t.space.lg },
   gridCol: { width: '48%' },
   fluidCard: { width: '100%', height: 'auto', aspectRatio: 63 / 88 }, // mockup `.grid-size`
   // LIST — dense strip rows (board `.list-stack` gap 9 / `.strip`).
-  listStack: { gap: theme.space.sm + 1 },
+  listStack: { gap: t.space.sm + 1 },
   strip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.space.lg,
-    backgroundColor: theme.scr.panel,
+    gap: t.space.lg,
+    backgroundColor: t.scr.panel,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    paddingHorizontal: theme.space.lg,
-    paddingVertical: theme.space.md,
+    borderColor: t.scr.hairline,
+    paddingHorizontal: t.space.lg,
+    paddingVertical: t.space.md,
   },
-  stripMeta: { flex: 1, gap: theme.space.xs, minWidth: 0 },
-  stripTitleRow: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md },
-  stripTitle: { flexShrink: 1, fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.ink, letterSpacing: 1 },
+  stripMeta: { flex: 1, gap: t.space.xs, minWidth: 0 },
+  stripTitleRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
+  stripTitle: { flexShrink: 1, fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
   // ▶ NOW inline next to the title (board `.now-inline`) — the thumb is too small to wear a tag.
-  nowInline: { backgroundColor: theme.scr.accent, paddingHorizontal: 4, paddingVertical: 1 },
-  nowInlineText: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.accentInk, letterSpacing: 0.5 },
-  chev: { marginLeft: 'auto', fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.faint },
-  list: { gap: theme.space.md },
+  nowInline: { backgroundColor: t.scr.accent, paddingHorizontal: 4, paddingVertical: 1 },
+  nowInlineText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accentInk, letterSpacing: 0.5 },
+  chev: { marginLeft: 'auto', fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.faint },
+  list: { gap: t.space.md },
   rowMeta: { flex: 1, gap: 1 },
-  rowTitle: { fontFamily: theme.font.screenSemi, fontSize: theme.type.title, color: theme.scr.ink },
-  rowSub: { fontFamily: theme.font.screen, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
+  rowTitle: { fontFamily: t.font.screenSemi, fontSize: t.type.title, color: t.scr.ink },
+  rowSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.space.lg,
-    backgroundColor: theme.scr.panel,
+    gap: t.space.lg,
+    backgroundColor: t.scr.panel,
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    padding: theme.space.md,
+    borderColor: t.scr.hairline,
+    padding: t.space.md,
   },
-  topRowFirst: { borderColor: theme.scr.accent },
-  rank: { fontFamily: theme.font.screenBold, fontSize: theme.type.title, color: theme.scr.dim, width: 30 },
+  topRowFirst: { borderColor: t.scr.accent },
+  rank: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.dim, width: 30 },
   // C6/F-02 — the TOP list #1 marker is the on-screen ACCENT (orange), never gold.
-  rankFirst: { color: theme.scr.accent, fontSize: theme.type.display },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.space.md },
-  sheetFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: theme.space.sm },
-  resetLink: { fontFamily: theme.font.screenSemi, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1 },
-  sheetSection: { gap: theme.space.md },
-  sheetHead: { fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: theme.scr.dim, letterSpacing: 1.5 },
-});
+  rankFirst: { color: t.scr.accent, fontSize: t.type.display },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.md },
+  sheetFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: t.space.sm },
+  resetLink: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
+  sheetSection: { gap: t.space.md },
+  sheetHead: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
+}));

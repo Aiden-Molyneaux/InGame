@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, type KeyboardTypeOptions } from 'react-native';
-import { theme } from '../theme';
+import { View, Text, TextInput, Pressable, type KeyboardTypeOptions } from 'react-native';
+import { themedStyles, useTheme } from '../theme';
 
 // TextField (component-map §6) — a labelled input. Text inputs are a NAMED F-09 exception (cream
 // inset is allowed). System keyboard (OQ-035). `error` shows the validation state.
@@ -32,6 +32,8 @@ export function TextField({
   // S2-j — reveal toggles masking of the typed value (not the field). Only meaningful when secure.
   const [revealed, setRevealed] = useState(false);
   const masked = !!secureTextEntry && !revealed;
+  const t = useTheme();
+  const styles = useStyles();
 
   return (
     <View style={styles.field}>
@@ -49,7 +51,7 @@ export function TextField({
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor={theme.scr.faint}
+          placeholderTextColor={t.scr.faint}
           secureTextEntry={masked}
           autoCapitalize={autoCapitalize}
           autoCorrect={false}
@@ -76,13 +78,13 @@ export function TextField({
   );
 }
 
-const styles = StyleSheet.create({
-  field: { gap: theme.space.xs },
+const useStyles = themedStyles((t) => ({
+  field: { gap: t.space.xs },
   labelRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
   label: {
-    fontFamily: theme.font.screenSemi,
-    fontSize: theme.type.micro, // 9
-    color: theme.scr.dim,
+    fontFamily: t.font.screenSemi,
+    fontSize: t.type.micro, // 9
+    color: t.scr.dim,
     letterSpacing: 1,
   },
   // the cream inset now lives on the ROW wrapper so the reveal can dock inside it; the TextInput is
@@ -90,32 +92,32 @@ const styles = StyleSheet.create({
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.space.sm,
-    backgroundColor: theme.brand.cream,
-    paddingHorizontal: theme.space.lg,
-    paddingVertical: theme.space.md,
-    borderRadius: theme.corner.screen, // F-07 square
+    gap: t.space.sm,
+    backgroundColor: t.brand.cream,
+    paddingHorizontal: t.space.lg,
+    paddingVertical: t.space.md,
+    borderRadius: t.corner.screen, // F-07 square
   },
-  inputWrapError: { borderWidth: 1, borderColor: theme.brand.alert },
+  inputWrapError: { borderWidth: 1, borderColor: t.brand.alert },
   inputText: {
     flex: 1,
-    color: theme.brand.navy,
-    fontFamily: theme.font.screen,
-    fontSize: theme.type.title, // 15
+    color: t.brand.navy,
+    fontFamily: t.font.screen,
+    fontSize: t.type.title, // 15
     padding: 0, // padding lives on the wrapper — avoid the platform TextInput default doubling it
   },
   reveal: {
-    fontFamily: theme.font.screenBold, // board `.reveal` 700
-    fontSize: theme.type.micro, // 9
-    color: theme.brand.navy,
+    fontFamily: t.font.screenBold, // board `.reveal` 700
+    fontSize: t.type.micro, // 9
+    color: t.brand.navy,
     opacity: 0.55,
     letterSpacing: 1,
   },
   // R2 (4b) — reserve one line of the 9px error so the field's height is stable with/without an error.
   errorSlot: { minHeight: 13, justifyContent: 'flex-start' },
   error: {
-    fontFamily: theme.font.screenSemi, // S2-e — board `.ferr` 600 (was regular; reads more legibly at 9px)
-    fontSize: theme.type.micro,
-    color: theme.brand.alert,
+    fontFamily: t.font.screenSemi, // S2-e — board `.ferr` 600 (was regular; reads more legibly at 9px)
+    fontSize: t.type.micro,
+    color: t.brand.alert,
   },
-});
+}));

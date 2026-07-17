@@ -95,6 +95,41 @@ export class DuplicateSuspectedError extends AppError {
   }
 }
 
+/**
+ * COL-06/CARD-14 (decision 0040/0066) — DELETE /cards/:id refused: the design is equipped. Switch
+ * the entry to another card (or the default) first; belt-and-braces behind ON DELETE SET NULL.
+ */
+export class CardEquippedError extends AppError {
+  readonly code = 'CARD_EQUIPPED';
+  readonly httpStatus = 409;
+  constructor(message = 'That design is equipped — switch cards first.') {
+    super(message);
+  }
+}
+
+/** CARD-24 (SYS-04, owner-set cap 30) — POST /me/style-presets refused: the preset shelf is full. */
+export class PresetLimitError extends AppError {
+  readonly code = 'PRESET_LIMIT';
+  readonly httpStatus = 409;
+  constructor(message = 'Preset limit reached — delete one to save another.') {
+    super(message);
+  }
+}
+
+/**
+ * DEV-05 (SYS-04, owner-set cap ~12) — POST /me/device/looks refused: the saved-looks shelf is full.
+ * 409 — the CONFLICT family, aligned with the sibling cap PRESET_LIMIT above (api-contract :119):
+ * the request is well-formed; the resource state (a full shelf) refuses it. (Fable P1 review — the
+ * 422 in the original build directive was the reviewer's own mis-spec, corrected at review.)
+ */
+export class LookCapError extends AppError {
+  readonly code = 'LOOK_CAP_REACHED';
+  readonly httpStatus = 409;
+  constructor(message = 'Saved-looks limit reached — delete one to save another.') {
+    super(message);
+  }
+}
+
 /** SERVER_ERROR carries a GENERIC body downstream — the middleware never serializes this message. */
 export class ServerError extends AppError {
   readonly code = 'SERVER_ERROR';

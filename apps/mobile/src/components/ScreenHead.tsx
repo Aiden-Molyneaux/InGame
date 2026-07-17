@@ -1,8 +1,9 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { theme } from '../theme';
+import { View, Text } from 'react-native';
+import { themedStyles } from '../theme';
 
 // CountTag (component-map §5.4 — was CountKeycap) — a flat, DISPLAY-ONLY gold count (never pressable).
 export function CountTag({ label }: { label: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.count}>
       <Text style={styles.countText}>{label}</Text>
@@ -12,6 +13,7 @@ export function CountTag({ label }: { label: string }) {
 
 // ScreenHead (component-map §5.4) — the display title + optional flat gold CountTag.
 export function ScreenHead({ title, count }: { title: string; count?: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.head}>
       <Text style={styles.title} accessibilityRole="header">
@@ -22,29 +24,29 @@ export function ScreenHead({ title, count }: { title: string; count?: string }) 
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   head: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: theme.space.md,
+    gap: t.space.md,
   },
   title: {
-    fontFamily: theme.font.screenBold,
-    fontSize: theme.type.display, // 21 (F-06)
-    color: theme.scr.ink,
+    fontFamily: t.font.screenBold,
+    fontSize: t.type.display, // 21 (F-06)
+    color: t.scr.ink,
     letterSpacing: 1,
   },
   count: {
-    backgroundColor: theme.brand.gold,
-    borderRadius: theme.corner.screen, // F-07 square
-    paddingHorizontal: theme.space.md,
+    backgroundColor: t.brand.gold,
+    borderRadius: t.corner.screen, // F-07 square
+    paddingHorizontal: t.space.md,
     paddingVertical: 2,
   },
   countText: {
-    fontFamily: theme.font.screenBold,
-    fontSize: theme.type.micro, // 9
-    color: theme.brand.goldInk,
+    fontFamily: t.font.screenBold,
+    fontSize: t.type.micro, // 9
+    color: t.brand.goldInk,
     letterSpacing: 1,
   },
-});
+}));

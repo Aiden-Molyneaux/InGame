@@ -1,10 +1,11 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { theme } from '../theme';
+import { View, Text } from 'react-native';
+import { themedStyles } from '../theme';
 
 // RoleTag (component-map §5.4 · PROF-09) — an accent-OUTLINE chip, 9px, deliberately NOT gold (F-02
 // reserves gold for value/acquisitive + the PRESTIGE tier). Self-view shows the tier ("ADMIN II");
 // the public/friend view shows a generic "STAFF". Enhancement, not structure — renders only for admins.
 export function RoleTag({ label }: { label: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.tag} accessibilityRole="text" accessibilityLabel={`role ${label}`}>
       <Text style={styles.label}>{label.toUpperCase()}</Text>
@@ -19,19 +20,19 @@ export function selfRoleLabel(role: string, adminTier: number | null): string | 
   return `ADMIN ${roman}`;
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   tag: {
     borderWidth: 1,
-    borderColor: theme.scr.accent,
-    borderRadius: theme.corner.screen,
-    paddingHorizontal: theme.space.sm,
+    borderColor: t.scr.accent,
+    borderRadius: t.corner.screen,
+    paddingHorizontal: t.space.sm,
     paddingVertical: 1,
     alignSelf: 'flex-start',
   },
   label: {
-    fontFamily: theme.font.screenBold,
-    fontSize: theme.type.micro, // 9 (F-06)
-    color: theme.scr.accent,
+    fontFamily: t.font.screenBold,
+    fontSize: t.type.micro, // 9 (F-06)
+    color: t.scr.accent,
     letterSpacing: 1,
   },
-});
+}));

@@ -8,6 +8,11 @@ import { NavBand, type NavTab } from './NavBand';
 //   • in the app (a built tab route) ⇒ active, and a keypress navigates via the router.
 // M2 wires COLLECTION + PROFILE; DISCOVER · STORE · FRIENDS are shown but inert (screens are M3+).
 
+// TEMP (owner experiment 2026-07-06): hide the outside key labels and tighten the band so the app
+// content reclaims that vertical space. Flip back to `true` (or drop the prop) to restore the
+// labelled NavBand.
+const SHOW_NAV_LABELS = false;
+
 // Key order per the canonical NavBand on every mockup board: STORE · DISCOVER · COLLECTION (the
 // centre/hero key) · PROFILE · FRIENDS.
 const ORDER = ['store', 'discover', 'collection', 'profile', 'friends'] as const;
@@ -30,10 +35,17 @@ export function ShellNav({ bottomInset = 0 }: { bottomInset?: number }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Add-game is a FlowTakeover OF Collection (board: NavBand untouched, COLLECTION keycap active) —
-  // the nav stays live and a keypress switches tabs, it is NOT locked. It counts as Collection context.
-  const onCollection = pathname.startsWith('/collection') || pathname.startsWith('/add-game');
-  const onProfile = pathname.startsWith('/profile');
+  // Add-game, the Game page (`/game/:id`, CARD-23 NAVIGATE target) AND the Styler (`/styler/:gameId`,
+  // §3.2) are FlowTakeovers OF Collection (board: NavBand untouched, COLLECTION keycap active) — the
+  // nav stays live and a keypress switches tabs, it is NOT locked. All count as Collection context.
+  const onCollection =
+    pathname.startsWith('/collection') ||
+    pathname.startsWith('/add-game') ||
+    pathname.startsWith('/game') ||
+    pathname.startsWith('/styler');
+  // The Device editor (`/device`, §3.5) is a FlowTakeover OF Profile (board: NavBand untouched, PROFILE
+  // keycap active) — the nav stays live, it is NOT locked.
+  const onProfile = pathname.startsWith('/profile') || pathname.startsWith('/device');
   const locked = !(onCollection || onProfile); // sign-in, index redirect, splash
   const activeKey = onProfile ? 'profile' : 'collection';
 
@@ -50,6 +62,7 @@ export function ShellNav({ bottomInset = 0 }: { bottomInset?: number }) {
       activeKey={activeKey}
       locked={locked}
       bottomInset={bottomInset}
+      showLabels={SHOW_NAV_LABELS}
       onSelect={(key) => {
         const route = ROUTES[key];
         if (route) router.navigate(route);

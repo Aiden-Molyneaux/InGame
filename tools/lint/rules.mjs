@@ -6,7 +6,9 @@ import rule05 from './rules/rule-05-events.mjs';
 import rule06 from './rules/rule-06-spec-ids.mjs';
 import rule08 from './rules/rule-08-deps.mjs';
 import ruleF03 from './rules/rule-f03-destructive-guard.mjs';
+import ruleThemeTokens from './rules/rule-theme-tokens.mjs';
+import ruleA11yResponder from './rules/rule-a11y-responder.mjs';
 
 // The ordered set of custom CONVENTIONS [LINT] mechanisms. Each ships with a deliberately-bad
 // fixture under fixtures/bad-pr-corpus/<rule.id>/ and is asserted by the F22 corpus meta-test.
-export const rules = [rule01, rule02, rule03, rule04, rule05, rule06, rule08, ruleF03];
+export const rules = [rule01, rule02, rule03, rule04, rule05, rule06, rule08, ruleF03, ruleThemeTokens, ruleA11yResponder];

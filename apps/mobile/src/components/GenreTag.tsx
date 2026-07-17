@@ -1,5 +1,5 @@
-import { Pressable, Text, StyleSheet } from 'react-native';
-import { theme } from '../theme';
+import { Pressable, Text } from 'react-native';
+import { themedStyles } from '../theme';
 
 // GenreTag (component-map §5.4 — was GTag) — a small genre chip. Selection = accent border (F-09);
 // `dashed` = the ADD/ghost variant. Flat + square (F-03/F-07).
@@ -14,6 +14,7 @@ export function GenreTag({
   dashed?: boolean;
   onPress?: () => void;
 }) {
+  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole={onPress ? 'button' : 'text'}
@@ -31,22 +32,22 @@ export function GenreTag({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   tag: {
     borderWidth: 1,
-    borderColor: theme.scr.hairline,
-    backgroundColor: theme.scr.panel,
-    paddingHorizontal: theme.space.md,
+    borderColor: t.scr.hairline,
+    backgroundColor: t.scr.panel,
+    paddingHorizontal: t.space.md,
     paddingVertical: 3,
   },
   dashed: { borderStyle: 'dashed' },
-  selected: { borderColor: theme.scr.accent },
+  selected: { borderColor: t.scr.accent },
   pressed: { opacity: 0.75 },
   label: {
-    fontFamily: theme.font.screenSemi,
-    fontSize: theme.type.micro, // 9
-    color: theme.scr.dim,
+    fontFamily: t.font.screenSemi,
+    fontSize: t.type.micro, // 9
+    color: t.scr.dim,
     letterSpacing: 1,
   },
-  labelSelected: { color: theme.scr.accent },
-});
+  labelSelected: { color: t.scr.accent },
+}));

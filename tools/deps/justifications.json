@@ -1,6 +1,5 @@
 {
   "//": "CONVENTIONS rule 8 ledger — the written justification for every workspace dependency (runtime OR dev). Surfaced at milestone exit for the 30-second G-M owner glance (decision 0051/F44). Internal @ingame/* packages are auto-justified. Format: name → why needed · why no stdlib/existing path · provenance.",
-
   "typescript": "The language + tsc typecheck/build (CI six-check steps 1 & 6). No stdlib equivalent. Provenance: Microsoft.",
   "tsx": "Run TS entrypoints (dev server, db:migrate, db:reset, drizzle scripts) without a build step. Avoids a compile-to-JS dance in M1. Provenance: privatenumber/esbuild.",
   "typescript-eslint": "TypeScript-aware ESLint integration + recommended rules (lint step). Provenance: typescript-eslint org.",
@@ -11,15 +10,11 @@
   "prettier": "Code formatter — one consistent style across the monorepo. Provenance: Prettier org.",
   "vitest": "Unit + integration test runner (CI six-check steps 2 & 3); first-class ESM/TS + Vite resolution for the workspace packages. Provenance: Vitest org.",
   "@types/node": "Node type definitions for the server + tooling. Provenance: DefinitelyTyped.",
-
   "zod": "The single executable FE↔BE contract — request/response schemas (CONVENTIONS rule 3, decision 0046 #1). Provenance: colinhacks.",
-
   "@node-rs/argon2": "Argon2id password hashing for email/password auth (AUTH-01; product-spec §7 argon2/bcrypt). Native-but-prebuilt (napi-rs platform binaries, no node-gyp) so CI stays green on Linux + Windows; wrapped behind a PasswordHasher interface for swappability. No stdlib password KDF. Provenance: napi-rs/node-rs.",
   "jose": "Sign/verify the short-lived access-token JWT (AUTH-02); ESM-native, zero-dependency. Refresh tokens are opaque + server-stored (rotation/reuse-detection), not JWTs. No stdlib JWT. Provenance: panva.",
-
   "pino": "Structured JSON logging + request-ID correlation on the server (product-spec §7 observability; F18). The named logger; low-overhead, the Node standard. Provenance: pinojs.",
   "@sentry/node": "Server error tracking with request-ID correlation + PII/token scrubbing via beforeSend (product-spec §7 observability; F18). Env-gated on SENTRY_DSN — a no-op until the owner provisions the DSN (the F39-style provider carve-out). Provenance: Sentry.",
-
   "express": "The HTTP server framework for the API (product-spec §9, decision 0046 #2). Provenance: expressjs.",
   "drizzle-orm": "Typed SQL + the data-access layer; SQL-transparent + testable (decision 0046 #2/#7). Provenance: Drizzle team.",
   "drizzle-kit": "Generates + journals the committed migrations (decision 0046 #7; F28 journal check). Provenance: Drizzle team.",
@@ -30,7 +25,6 @@
   "@types/express": "Express type definitions. Provenance: DefinitelyTyped.",
   "@types/pg": "pg type definitions. Provenance: DefinitelyTyped.",
   "@types/supertest": "supertest type definitions. Provenance: DefinitelyTyped.",
-
   "expo": "The Expo SDK — the React Native app platform + the Chrome/web dev loop + iPhone path (decision 0046 #2; item 7). Provenance: Expo.",
   "expo-router": "File-based navigation for the Expo client (product-spec §9). Provenance: Expo.",
   "expo-linking": "Deep-linking primitive required by expo-router (SDK 54 peer — the URL/route resolution the router builds on). Provenance: Expo.",
@@ -50,9 +44,14 @@
   "@react-native-async-storage/async-storage": "The redux-persist storage engine on React Native (F20; persist holds drafts/cache only, never tokens). Provenance: React Native Community.",
   "expo-font": "Load the design-system fonts (F-08). Provenance: Expo.",
   "react-native-svg": "Vector glyphs on the NavKeycaps (component-map §5.1 — the mockup `.nav-btn` svg icons; owner directive 2026-07-01) + the M4 card-composition render path ahead. RN has no built-in vector primitive; hand-rolled View shapes can't draw the compass/bag/friends arcs. Expo-SDK-54-pinned via `expo install` (15.12.1). Provenance: Software Mansion.",
+  "@shopify/react-native-skia": "The CARD-15 flatten/render pipeline (M4 §1 spike, GO 2026-07-05): composition JSON -> skia -> flattened image (thumbnail + full) + effect/finish runtime overlays + the cap-30 PROOF size-ladder; offline client-flatten (P11). Included in Expo Go on SDK 54 (no dev build); web via CanvasKit. RN has no rasterizer, and the react-native-svg path can't makeImageSnapshot/flatten a composition. Expo-pinned via `expo install` (2.2.12). Provenance: Shopify.",
   "@expo-google-fonts/chakra-petch": "Chakra Petch — the on-screen typeface (F-08 / design-spec §1.2). Bundled font, no manual asset. Provenance: Expo.",
   "@expo-google-fonts/paytone-one": "Paytone One — the shell/wordmark typeface (F-08 / design-spec §1.2). Provenance: Expo.",
-
+  "@expo-google-fonts/press-start-2p": "Press Start 2P — the PIXEL title face in the decision-0068 roster expansion (CARD-11 title fonts). Bundled TTF, loaded by fontId 'press-start' in useCardSkiaCtx. Provenance: Expo.",
+  "@expo-google-fonts/bitter": "Bitter — the SLAB serif title face (decision 0068 roster; fontId 'bitter'). Bundled TTF. Provenance: Expo.",
+  "@expo-google-fonts/space-mono": "Space Mono — the MONO/terminal title face (decision 0068 roster; fontId 'space-mono'). Bundled TTF. Provenance: Expo.",
+  "@expo-google-fonts/pacifico": "Pacifico — the SCRIPT/signature title face (decision 0068 roster; fontId 'pacifico'). Bundled TTF. Provenance: Expo.",
+  "@expo-google-fonts/allerta-stencil": "Allerta Stencil — the STENCIL title face (decision 0068 roster; fontId 'stencil'). Bundled TTF. Provenance: Expo.",
   "jest-expo": "The Jest preset for Expo/React Native component tests (RNTL) — the client test runner (testing-strategy §2). Provenance: Expo.",
   "jest": "Test runner backing jest-expo for the RN component layer. Provenance: Meta.",
   "@testing-library/react-native": "Behavior-focused RN component testing (testing-strategy §2). Provenance: Testing Library.",
@@ -60,5 +59,7 @@
   "@types/react": "React type definitions for the TS client. Provenance: DefinitelyTyped.",
   "@types/jest": "Jest type definitions for the client component tests. Provenance: DefinitelyTyped.",
   "@babel/core": "Babel core required by the Expo/Metro + jest-expo transform pipeline. Provenance: Babel.",
-  "babel-preset-expo": "The Expo Babel preset the Metro bundler + jest-expo transform pipeline compile against (Expo SDK 54). Explicit dep after the SDK 52→54 upgrade pruned the transitive copy. Provenance: Expo."
+  "babel-preset-expo": "The Expo Babel preset the Metro bundler + jest-expo transform pipeline compile against (Expo SDK 54). Explicit dep after the SDK 52→54 upgrade pruned the transitive copy. Provenance: Expo.",
+  "react-native-reanimated": "Locked-stack member (decision 0046 §2; product-spec §9). Required at M4 §3.2: @shopify/react-native-skia lists it as an optional peer but its NATIVE entry dereferences the reanimated module proxy at import time (external/reanimated/useVideoLoading.js createWorkletRuntime at module scope) — any on-device <Canvas> mount (CardFace wearing a composition, e9138ce) redboxes Expo Go with react-native-reanimated-is-not-installed. Web is unaffected (.web variant). Native side ships in Expo Go SDK 54; babel handled by babel-preset-expo. Expo-pinned via expo-install (~4.1.1). Provenance: Software Mansion.",
+  "react-native-worklets": "Pinned DIRECT (0.5.1, + a root npm override) to match Expo Go SDK 54's bundled native side. Transitively required by react-native-reanimated 4.x; without the pin npm resolves 0.8.3, whose JS mismatches Expo Go's 0.5.1 native module and throws at init — skia's optional-dep proxy swallows that into \"react-native-reanimated is not installed!\" on every on-device Canvas mount. Reanimated 4.1.7 accepts 0.5–0.8. Expo-pinned via expo-install; drop the override when a dev build replaces Expo Go. Provenance: Software Mansion."
 }

@@ -3,7 +3,6 @@ import {
   View,
   Text,
   ScrollView,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -14,7 +13,7 @@ import { useRouter } from 'expo-router';
 import { TextField } from '../src/components/TextField';
 import { ScreenButton } from '../src/components/ScreenButton';
 import { TertiaryLink } from '../src/components/TertiaryLink';
-import { theme } from '../src/theme';
+import { theme, themedStyles, useTheme } from '../src/theme';
 import {
   useLoginMutation,
   useRegisterMutation,
@@ -50,6 +49,8 @@ export default function SignIn() {
   const [register, registerState] = useRegisterMutation();
   // W3 (AUTH-11) — the debounced ADVISORY availability beat; never gates submit.
   const [checkUsername, availability] = useLazyUsernameAvailableQuery();
+  const styles = useStyles();
+  const t = useTheme();
 
   const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
@@ -140,7 +141,7 @@ export default function SignIn() {
         ? 'USERNAME NOT AVAILABLE'
         : 'USERNAME NOT ALLOWED';
   const availabilityColor = !availabilityFresh
-    ? theme.scr.dim
+    ? t.scr.dim
     : availability.data?.available
       ? theme.brand.success
       : theme.brand.alert;
@@ -276,90 +277,90 @@ export default function SignIn() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = themedStyles((t) => ({
   flex: { flex: 1 },
   content: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: theme.space.xxl,
-    gap: theme.space.sm,
+    padding: t.space.xxl,
+    gap: t.space.sm,
   },
   wordmark: {
-    fontFamily: theme.font.shell, // Paytone (the brand voice)
+    fontFamily: t.font.shell, // Paytone (the brand voice)
     fontSize: 34, // W2r — cream/34 (mockup --scr-head), not the F-05 shell-only pink
-    color: theme.brand.cream,
+    color: t.brand.cream,
     letterSpacing: 2,
     textAlign: 'center',
   },
   tagline: {
-    fontFamily: theme.font.screen,
-    fontSize: theme.type.micro,
-    color: theme.scr.dim,
+    fontFamily: t.font.screen,
+    fontSize: t.type.micro,
+    color: t.scr.dim,
     letterSpacing: 2,
     textAlign: 'center',
-    marginBottom: theme.space.xl,
+    marginBottom: t.space.xl,
   },
-  form: { gap: theme.space.lg },
-  usernameBlock: { gap: theme.space.xs },
+  form: { gap: t.space.lg },
+  usernameBlock: { gap: t.space.xs },
   availability: {
-    fontFamily: theme.font.screenSemi,
-    fontSize: theme.type.micro, // 9 — F-06
+    fontFamily: t.font.screenSemi,
+    fontSize: t.type.micro, // 9 — F-06
     letterSpacing: 1,
   },
   error: {
-    fontFamily: theme.font.screen,
-    fontSize: theme.type.body,
-    color: theme.brand.alert,
+    fontFamily: t.font.screen,
+    fontSize: t.type.body,
+    color: t.brand.alert,
     textAlign: 'center',
   },
-  consentRow: { flexDirection: 'row', alignItems: 'flex-start', gap: theme.space.md },
+  consentRow: { flexDirection: 'row', alignItems: 'flex-start', gap: t.space.md },
   checkbox: {
     width: 20,
     height: 20,
     borderWidth: 1,
-    borderColor: theme.scr.faint,
-    backgroundColor: theme.scr.panel,
+    borderColor: t.scr.faint,
+    backgroundColor: t.scr.panel,
     alignItems: 'center',
     justifyContent: 'center', // F-07 — square on-screen chrome (no radius)
   },
-  checkboxOn: { backgroundColor: theme.scr.accent, borderColor: theme.scr.accent },
+  checkboxOn: { backgroundColor: t.scr.accent, borderColor: t.scr.accent },
   checkMark: {
-    fontFamily: theme.font.screenBold,
-    fontSize: theme.type.body, // 11
-    color: theme.scr.accentInk,
+    fontFamily: t.font.screenBold,
+    fontSize: t.type.body, // 11
+    color: t.scr.accentInk,
     lineHeight: 14,
   },
   consentLabel: {
     flex: 1,
-    fontFamily: theme.font.screen,
-    fontSize: theme.type.body, // 11 — F-06
-    color: theme.scr.dim,
+    fontFamily: t.font.screen,
+    fontSize: t.type.body, // 11 — F-06
+    color: t.scr.dim,
     lineHeight: 16,
   },
-  link: { color: theme.scr.accent, fontFamily: theme.font.screenSemi },
+  link: { color: t.scr.accent, fontFamily: t.font.screenSemi },
   // S2-i — the OR divider + compact Apple stub (board `.ordiv` / `.apple.compact`).
-  orDiv: { flexDirection: 'row', alignItems: 'center', gap: theme.space.md, marginVertical: theme.space.xs },
-  orLine: { flex: 1, height: 1, backgroundColor: theme.scr.hairline },
+  orDiv: { flexDirection: 'row', alignItems: 'center', gap: t.space.md, marginVertical: t.space.xs },
+  orLine: { flex: 1, height: 1, backgroundColor: t.scr.hairline },
   orText: {
-    fontFamily: theme.font.screenBold,
-    fontSize: theme.type.micro, // 9
-    color: theme.scr.faint,
+    fontFamily: t.font.screenBold,
+    fontSize: t.type.micro, // 9
+    color: t.scr.faint,
     letterSpacing: 2,
   },
   appleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: theme.space.md,
+    gap: t.space.md,
     alignSelf: 'center', // hugs its content + centred (board `.apple.compact`), not a full slab
     backgroundColor: '#000', // HIG-mandated (token-exempt, board OQ-035)
-    paddingVertical: theme.space.md,
-    paddingHorizontal: theme.space.xl,
+    paddingVertical: t.space.md,
+    paddingHorizontal: t.space.xl,
   },
   applePressed: { opacity: 0.85 },
   appleText: {
-    fontFamily: theme.font.screenBold, // R2 (4a) — match the SIGN IN button label's weight so the two read the same size (both 11px)
-    fontSize: theme.type.body, // 11 — same as the ScreenButton label
+    fontFamily: t.font.screenBold, // R2 (4a) — match the SIGN IN button label's weight so the two read the same size (both 11px)
+    fontSize: t.type.body, // 11 — same as the ScreenButton label
     color: '#fff', // HIG-mandated (token-exempt)
     letterSpacing: 0.3,
   },
@@ -368,13 +369,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: theme.space.xs,
-    marginTop: theme.space.sm,
+    gap: t.space.xs,
+    marginTop: t.space.sm,
   },
   swapText: {
-    fontFamily: theme.font.screen,
-    fontSize: theme.type.body, // 11
-    color: theme.scr.dim,
+    fontFamily: t.font.screen,
+    fontSize: t.type.body, // 11
+    color: t.scr.dim,
     letterSpacing: 0.3,
   },
-});
+}));
