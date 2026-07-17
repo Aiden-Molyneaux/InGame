@@ -144,7 +144,7 @@ function SearchMode({
 
   return (
     <>
-      <ScrollView style={styles.flex} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+      <ScrollView style={styles.flex} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         {/* R14 — the board's match COUNT, not a static "RESULTS" (board P2 "MATCHING…" · P3 "N MATCHES") */}
         <Text style={styles.railHead}>
           {querying
@@ -175,7 +175,6 @@ function SearchMode({
               foreIndex={safeFore}
               onFocus={setForeIndex}
             />
-            {focused?.inCollection ? <Text style={styles.hintLine}>ITS DETAIL OFFERS THE GAME PAGE INSTEAD OF RE-ADDING</Text> : null}
             {addError ? <Text style={styles.errLine}>{addError}</Text> : null}
             <ScreenButton
               label={
@@ -246,7 +245,7 @@ function StatusBeat({ item, onDone }: { item: CollectionItem; onDone: () => void
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.body}>
+    <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
       <View style={styles.addedWrap}>
         <GameCard title={item.title} size="grid" />
         <Text style={styles.addedTitle}>ADDED TO YOUR SHELF</Text>
@@ -335,6 +334,7 @@ function CreateForm({
       contentContainerStyle={styles.body}
       keyboardShouldPersistTaps="handled"
       automaticallyAdjustKeyboardInsets
+      showsVerticalScrollIndicator={false}
     >
       <Text style={styles.railHead}>CREATE A CATALOG ENTRY</Text>
 
@@ -433,7 +433,6 @@ const useStyles = themedStyles((t) => ({
   metaTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5, textAlign: 'center' },
   metaSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, letterSpacing: 1 }, // R2 — inline year·studio (body/dim), baseline in the title line
   metaPresence: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 1, textAlign: 'center' },
-  hintLine: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 1, textAlign: 'center' },
   noneWrap: { gap: t.space.sm, padding: t.space.lg, backgroundColor: t.scr.panel },
   noneTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
   noneSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, lineHeight: 16 },

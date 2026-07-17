@@ -46,6 +46,16 @@
 - **Error model:** one `AppError` hierarchy → Express error middleware → `api-contract` error codes.
 - **Migrations:** Drizzle, generated + committed + **reviewed in the PR**; expand-contract for column
   changes. Tests + real-Postgres (Testcontainers) integration, not mocked repos.
+- **Client (Expo) Hooks lint.** All mobile client code — the route files (`apps/mobile/app/**`) AND the
+  shared components/render/theme (`apps/mobile/src/**`) — is hook-linted by a mobile-local flat config
+  ([`apps/mobile/eslint.config.mjs`](apps/mobile/eslint.config.mjs)) with
+  **`react-hooks/rules-of-hooks` as an ERROR** — the guard for the F-16 logout-crash class (a Hook
+  called after an early return; commit `00d75f0`). All Hooks must run unconditionally, above every
+  early return. `react-hooks/exhaustive-deps` runs as a **warning** (intentional value-driven deps are
+  annotated with a reasoned `eslint-disable-next-line`). The config registers `@typescript-eslint` only
+  so the `eslint-disable` comments in `src/` resolve (no tseslint rule is enabled — the surgical
+  hooks-only scope stands). Wired into CI via root `lint` → `lint:mobile`; the root `eslint .` pass
+  still ignores `apps/mobile/**` otherwise (the client keeps its own toolchain).
 - **Per PR:** `/code-review` + `/security-review`; verify before claiming done.
 
 ## Definition of Done (every task)

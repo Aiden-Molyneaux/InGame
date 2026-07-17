@@ -200,7 +200,7 @@ export function TransformDrawer({
 
   if (inline)
     return (
-      <ScrollView style={styles.inlineScroll} contentContainerStyle={styles.inlineBody} keyboardShouldPersistTaps="handled" scrollEnabled={scrollEnabled}>
+      <ScrollView style={styles.inlineScroll} contentContainerStyle={styles.inlineBody} keyboardShouldPersistTaps="handled" scrollEnabled={scrollEnabled} showsVerticalScrollIndicator={false}>
         <ScrollLockContext.Provider value={scrollLockApi}>{body}</ScrollLockContext.Provider>
       </ScrollView>
     );

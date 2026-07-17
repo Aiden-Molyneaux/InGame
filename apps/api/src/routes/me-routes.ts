@@ -3,6 +3,7 @@ import {
   createGamertagRequestSchema,
   updateGamertagRequestSchema,
   avatarCompositionRequestSchema,
+  blockUserRequestSchema,
 } from '@ingame/shared';
 import { defineRoute, type RouteDef } from '../http/defineRoute';
 import { validateBody } from '../http/validate';
@@ -18,6 +19,7 @@ import {
   saveAvatarDraft,
   publishAvatar,
 } from '../controllers/me-controller';
+import { postBlock, deleteBlock } from '../controllers/social-controller';
 
 // The `/me` route inventory (DATA, not regex-scraped — F30). `mutates` is explicit; every mutating
 // route declares its standing SYS-07 authz test id (paired by the rule-4 inventory-diff lint against a
@@ -92,5 +94,25 @@ export const meRoutes: RouteDef[] = [
     authzTest: 'authz:avatar_publish',
     specIds: ['PROF-08', 'SYS-01', 'SYS-07'],
     handler: [resolvePrincipal, validateBody(avatarCompositionRequestSchema), asyncHandler(publishAvatar)],
+  }),
+
+  // SOC-09 block/unblock (M5 F-2 — the endpoints the M2 substrate deferred). USER-OWNED writes on
+  // `user_blocks`; each declares its standing SYS-07 actor-B 4xx test. The `userId` (POST body /
+  // DELETE path) is the TARGET, never the actor (the actor is the verified principal).
+  defineRoute({
+    method: 'post',
+    path: '/me/blocks',
+    mutates: true,
+    authzTest: 'authz:block_create',
+    specIds: ['SOC-09', 'MOD-09', 'SYS-01', 'SYS-02', 'SYS-07'],
+    handler: [resolvePrincipal, validateBody(blockUserRequestSchema), asyncHandler(postBlock)],
+  }),
+  defineRoute({
+    method: 'delete',
+    path: '/me/blocks/:userId',
+    mutates: true,
+    authzTest: 'authz:block_delete',
+    specIds: ['SOC-09', 'SYS-01', 'SYS-07'],
+    handler: [resolvePrincipal, asyncHandler(deleteBlock)],
   }),
 ];

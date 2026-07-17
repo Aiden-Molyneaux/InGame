@@ -49,5 +49,8 @@ coverage/
 # Dev-stack supervisor runtime (pidfiles + service logs — decision 0060)
 .devstack/
 
+# Flattened published-render storage — the local-disk StorageProvider media root (decision 0073 §0.5)
+apps/api/.media/
+
 # Visual-companion (brainstorming) working files
 .superpowers/

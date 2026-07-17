@@ -10,3 +10,12 @@ export async function getUser(req: Request, res: Response): Promise<void> {
   const shape = await usersService.getUserProfile(principal.userId, req.params.id ?? '');
   res.json(shape);
 }
+
+// GET /users/:id/contributions (CAT-07). The VIEWER is the authenticated principal; the privacy shape
+// + the non-disclosure collapse live in the service.
+export async function getContributions(req: Request, res: Response): Promise<void> {
+  const principal = req.principal;
+  if (!principal) throw new AuthFailedError();
+  const shape = await usersService.getContributions(principal.userId, req.params.id ?? '');
+  res.json(shape);
+}

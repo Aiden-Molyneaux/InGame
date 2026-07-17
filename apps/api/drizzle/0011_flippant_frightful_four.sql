@@ -1,0 +1,1 @@
+ALTER TABLE "card_designs" ADD COLUMN "premium_component_ids" text[] DEFAULT '{}' NOT NULL;

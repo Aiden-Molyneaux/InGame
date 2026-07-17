@@ -2,7 +2,7 @@ import { View, Text, Pressable } from 'react-native';
 import type { CollectionItem } from '@ingame/shared';
 import { PulledSheet } from '../PulledSheet';
 import { ScreenButton } from '../ScreenButton';
-import { CardFace } from '../CardFace';
+import { EntryCard } from '../EntryCard';
 import { EquipReadout } from './EquipReadout';
 import { themedStyles } from '../../theme';
 import type { CardComposition } from '../../render/composition';
@@ -17,13 +17,19 @@ export function CardDetailSheet({
   composition,
   onClose,
   onEdit,
+  onShare,
+  shareBusy = false,
 }: {
   visible: boolean;
   entry: CollectionItem;
   composition: CardComposition | null;
+  /** (imageUrl for an equipped ADOPTED card rides on `entry.card` — see the CardFace call below.) */
   onClose: () => void;
   /** Resume the equipped design in the Styler — undefined (the default face) disables EDIT. */
   onEdit?: () => void;
+  /** Share the equipped card's branded image (CARD-21) — undefined disables SHARE. */
+  onShare?: () => void;
+  shareBusy?: boolean;
 }) {
   const custom = composition !== null;
   const styles = useStyles();
@@ -38,13 +44,20 @@ export function CardDetailSheet({
       </View>
       <View style={styles.cardWrap}>
         {/* larger than the hero it enlarges FROM (C.14) — /grid is 161, this inspects at 189×264.
-            `animate`: the INSPECT view is exactly where a card shows off (0068 opt-in). */}
-        <CardFace title={entry.title} composition={composition} size="pick" width={189} height={264} animate />
+            `animate`: the INSPECT view is exactly where a card shows off (0068 opt-in). EntryCard owns
+            the own-composition vs adopted-flattened branch (imageUrl rides on entry.card; F-8/F-19). */}
+        <EntryCard title={entry.title} card={{ composition, imageUrl: entry.card.imageUrl }} size="pick" width={189} height={264} animate />
       </View>
       <Text style={styles.credit}>{custom ? 'YOUR DESIGN' : 'THE STANDARD FACE'}</Text>
       <EquipReadout card={entry.card} composition={composition} />
       <View style={styles.actions}>
-        <ScreenButton label="Share" variant="secondary" disabled style={styles.actionBtn} />
+        <ScreenButton
+          label={shareBusy ? '…' : 'Share'}
+          variant="secondary"
+          disabled={!onShare || shareBusy}
+          onPress={onShare}
+          style={styles.actionBtn}
+        />
         <ScreenButton
           label="Edit in Styler"
           variant="secondary"
@@ -55,7 +68,7 @@ export function CardDetailSheet({
       </View>
       <Text style={styles.note}>
         {custom
-          ? 'SHARE (an image with your credit) arrives in a later release.'
+          ? 'SHARE creates an image with your credit (once the card is published). EDIT resumes it in the Styler.'
           : 'Design your own card from the CARDS tab — the Styler is open.'}
       </Text>
     </PulledSheet>

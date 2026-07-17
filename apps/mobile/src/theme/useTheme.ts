@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useContext, useMemo } from 'react';
 import { StyleSheet } from 'react-native';
 import { useSelector } from 'react-redux';
 import { theme, type Theme } from './index';
@@ -10,6 +10,7 @@ import {
   type ScreenThemeId,
   type ShellId,
 } from './palettes';
+import { ThemeOverrideContext } from './ThemePreview';
 import type { RootState } from '../store';
 
 // The THEME ENGINE (device-manifest ARCH 1). Today `theme` is a static const with Midnight `scr.*` +
@@ -34,10 +35,13 @@ function resolveShellId(id: string | undefined): ShellId {
  * Memoized on the resolved ids so the object identity is stable while the selection holds.
  */
 export function useTheme(): Theme {
+  // A ThemePreview subtree (F-10 live inspect) overrides the persisted selection WITHOUT a PATCH; absent
+  // (everywhere but the store's theme/shell preview) → the redux prefs win, value-identical to before.
+  const override = useContext(ThemeOverrideContext);
   const themeId = useSelector((s: RootState) => s.prefs.themeId);
   const shellId = useSelector((s: RootState) => s.prefs.shellId);
-  const scrId = resolveScreenThemeId(themeId);
-  const shId = resolveShellId(shellId);
+  const scrId = resolveScreenThemeId(override?.themeId ?? themeId);
+  const shId = resolveShellId(override?.shellId ?? shellId);
   return useMemo(
     () => ({ ...theme, scr: SCREEN_THEMES[scrId], shell: SHELL_PALETTES[shId] }),
     [scrId, shId],

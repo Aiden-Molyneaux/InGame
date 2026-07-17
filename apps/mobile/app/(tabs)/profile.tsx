@@ -2,16 +2,17 @@ import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-nati
 import { useRouter } from 'expo-router';
 import { IdentityBlock } from '../../src/components/IdentityBlock';
 import { ScreenHead } from '../../src/components/ScreenHead';
-import { CardFace, parseComposition } from '../../src/components/CardFace';
+import { EntryCard } from '../../src/components/EntryCard';
 import { StatTile } from '../../src/components/StatTile';
 import { ScreenButton } from '../../src/components/ScreenButton';
 import { MiniDevice } from '../../src/components/MiniDevice';
 import { RankChip } from '../../src/components/RankChip';
+import { CurrencyCounter } from '../../src/components/commerce';
 import { TertiaryLink } from '../../src/components/TertiaryLink';
 import { theme, themedStyles } from '../../src/theme';
 import { SHELL_NAMES, SCREEN_THEME_NAMES, resolveShellId, resolveScreenThemeId } from '../../src/theme/palettes';
 import { deviceStripCopy } from '../../src/components/device/deviceCopy';
-import { useGetMeQuery, useGetCollectionQuery, useGetDeviceQuery } from '../../src/store/api';
+import { useGetMeQuery, useGetCollectionQuery, useGetDeviceQuery, useGetWalletQuery } from '../../src/store/api';
 import { useAppDispatch } from '../../src/store/hooks';
 import { setCollectionView } from '../../src/store/prefsSlice';
 import { logoutTeardown } from '../../src/store';
@@ -27,6 +28,8 @@ export default function Profile() {
   const { data: me, isLoading, isError, refetch } = useGetMeQuery();
   const { data: collection } = useGetCollectionQuery();
   const { data: device } = useGetDeviceQuery();
+  // F-1 fix 7 — the persistent PX counter rides the Profile header too (ECON-07 entry point).
+  const { data: wallet } = useGetWalletQuery();
   const styles = useStyles();
 
   async function signOut() {
@@ -68,9 +71,17 @@ export default function Profile() {
       {/* S5-a — the fixed "PROFILE" title band (board `.screen-head` :487), above the scroll. The
           EDIT/SHARE/Settings tools that share that region stay ⛔ M7. */}
       <View style={styles.pad}>
-        <ScreenHead title="Profile" />
+        <ScreenHead
+          title="Profile"
+          trailing={
+            <CurrencyCounter
+              balance={wallet?.balance ?? 0}
+              onPress={() => router.push({ pathname: '/store', params: { view: 'wallet' } })}
+            />
+          }
+        />
       </View>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.body}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
         {/* identity — the real /me self-shape */}
         <IdentityBlock
           username={me.username}
@@ -103,9 +114,9 @@ export default function Profile() {
                 accessibilityLabel={`Open ${me.favouriteGame.title}`}
                 onPress={() => router.push(`/game/${me.favouriteGame!.gameId}`)}
               >
-                <CardFace
+                <EntryCard
                   title={me.favouriteGame.title}
-                  composition={parseComposition(me.favouriteGame.card.composition)}
+                  card={me.favouriteGame.card} // both branches owned by EntryCard (adopted-card parity, round-2 bug 9)
                   size="grid"
                   width={120}
                   height={168}
@@ -133,7 +144,10 @@ export default function Profile() {
                   accessibilityLabel={`Open ${g.title}`}
                   onPress={() => router.push(`/game/${g.gameId}`)}
                 >
-                  <CardFace title={g.title} composition={parseComposition(g.card.composition)} size="cell" />
+                  {/* EntryCard owns the composition-vs-flattened branch (round-2 bug 9): an equipped
+                      ADOPTED card has no composition, only a flattened image — the wrapper can't drop it,
+                      so the Top-3 can't regress to the default placeholder for adopted cards. */}
+                  <EntryCard title={g.title} card={g.card} size="cell" />
                   <RankChip rank={i + 1} />
                 </Pressable>
               ))}
@@ -151,9 +165,9 @@ export default function Profile() {
                 accessibilityLabel={`Open ${me.nowPlaying.title}`}
                 onPress={() => router.push(`/game/${me.nowPlaying!.gameId}`)}
               >
-                <CardFace
+                <EntryCard
                   title={me.nowPlaying.title}
-                  composition={parseComposition(me.nowPlaying.card.composition)}
+                  card={me.nowPlaying.card} // both branches owned by EntryCard (adopted-card parity, round-2 bug 9)
                   size="cell"
                   nowPlaying
                   animate // the one now-playing card (0068 opt-in)
@@ -189,6 +203,11 @@ export default function Profile() {
                 <View style={styles.devMeta}>
                   <Text style={styles.devTitle}>{copy.title}</Text>
                   <Text style={styles.devSub}>{copy.sub}</Text>
+                </View>
+                {/* F-13 D7 (owner round-2) — the row read as static; give it the house pressable
+                    affordance (F-03 keycap grammar), so it clearly opens the editor. */}
+                <View style={styles.devEdit}>
+                  <Text style={styles.devEditText}>EDIT</Text>
                 </View>
               </Pressable>
             );
@@ -274,7 +293,15 @@ const useStyles = themedStyles((t) => ({
     padding: t.space.lg,
   },
   devRowPressed: { opacity: 0.82 },
-  devMeta: { gap: 2 },
+  devMeta: { flex: 1, gap: 2 },
+  // F-13 D7 — the trailing EDIT keycap (F-03 cream keycap grammar): a clear "this opens" affordance.
+  devEdit: {
+    backgroundColor: t.scr.key,
+    paddingHorizontal: t.space.md,
+    paddingVertical: t.space.sm,
+    ...(t.scr.isLight ? { borderWidth: 1, borderColor: t.scr.dim } : null),
+  },
+  devEditText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.brand.navy, letterSpacing: 1 },
   devTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5 },
   devSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
 }));

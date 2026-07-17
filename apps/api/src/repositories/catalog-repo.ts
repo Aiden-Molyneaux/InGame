@@ -81,6 +81,17 @@ export async function insertGameGenres(
 }
 
 /** Genres per game for item assembly (a global×global join). */
+/** CAT-05/07 — a contributor's LIVE added games (createdBy = target, not soft-deleted). GLOBAL table. */
+export async function listGamesAddedBy(
+  contributorId: string,
+  exec: Executor = getDb(),
+): Promise<Array<{ id: string; name: string }>> {
+  return exec
+    .select({ id: games.id, name: games.name })
+    .from(games)
+    .where(and(eq(games.createdBy, contributorId), isNull(games.deletedAt)));
+}
+
 export async function genresForGames(
   gameIds: string[],
   exec: Executor = getDb(),

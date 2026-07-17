@@ -1,6 +1,7 @@
 import { View, Text } from 'react-native';
 import { PulledSheet } from './PulledSheet';
 import { ScreenButton } from './ScreenButton';
+import { HoldFillButton } from './commerce/HoldFillButton';
 import { themedStyles } from '../theme';
 
 // ConfirmSheet (decision 0040 — the destructive-action confirm grammar) — the pre-confirm gate every
@@ -16,6 +17,8 @@ export function ConfirmSheet({
   onConfirm,
   onClose,
   busy = false,
+  tone = 'destructive',
+  holdToConfirm = false,
 }: {
   visible: boolean;
   title: string;
@@ -24,19 +27,38 @@ export function ConfirmSheet({
   onConfirm: () => void;
   onClose: () => void;
   busy?: boolean;
+  /**
+   * The confirm-action weight. `destructive` (default) = the alert-red delete/remove voice — the
+   * decision-0040 grammar. `purchase` = the acquisitive GOLD voice (F-02) for a BUY confirm (the mock
+   * IAP sheet · the OQ-046 non-hold buy path), which must never read as destructive-red.
+   */
+  tone?: 'destructive' | 'purchase';
+  /**
+   * M5 F-9 (G2) — the mock PAY on packs holds-to-activate with a FILLING sweep, so a dollar confirm
+   * speaks the same hold grammar as every PX spend. The button fills gold over a hold; reduce-motion
+   * collapses to a plain press (this sheet is already the confirm gate). M5 F-13 B2 (owner round-2
+   * ruling): the pack PAY hold now wears the SAME look as the cosmetic HoldFillButton — GOLD default
+   * fill (not the cream $-voice), ALL-CAPS label — so a pack purchase reads identically to a PX buy.
+   * Only meaningful with `tone='purchase'`.
+   */
+  holdToConfirm?: boolean;
 }) {
   const styles = useStyles();
   return (
     <PulledSheet visible={visible} onClose={onClose} title={title}>
       <Text style={styles.message}>{message}</Text>
       <View style={styles.actions}>
-        <ScreenButton
-          label={busy ? '…' : confirmLabel}
-          variant="destructive"
-          onPress={onConfirm}
-          disabled={busy}
-          block
-        />
+        {holdToConfirm && tone === 'purchase' ? (
+          <HoldFillButton label={busy ? '…' : confirmLabel.toUpperCase()} tone="gold" onComplete={onConfirm} disabled={busy} block />
+        ) : (
+          <ScreenButton
+            label={busy ? '…' : confirmLabel}
+            variant={tone === 'purchase' ? 'add' : 'destructive'}
+            onPress={onConfirm}
+            disabled={busy}
+            block
+          />
+        )}
         <ScreenButton label="Cancel" variant="secondary" onPress={onClose} disabled={busy} block />
       </View>
     </PulledSheet>

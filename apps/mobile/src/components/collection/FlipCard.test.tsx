@@ -42,6 +42,7 @@ describe('FlipCard (COL-12 peek-flip)', () => {
     render(wrap(<FlipCard item={item} flipped={false} onToggle={onToggle} onNavigate={onNavigate} width={138} height={193} />));
     fireEvent.press(screen.getByRole('button', { name: 'Elden Ring card' }));
     expect(onToggle).toHaveBeenCalledTimes(1);
+    expect(onToggle).toHaveBeenCalledWith('e1'); // the stable id-passing contract (memo round 4)
     expect(onNavigate).not.toHaveBeenCalled();
   });
 
@@ -51,6 +52,7 @@ describe('FlipCard (COL-12 peek-flip)', () => {
     render(wrap(<FlipCard item={item} flipped={false} onToggle={onToggle} onNavigate={onNavigate} width={138} height={193} />));
     fireEvent(screen.getByRole('button', { name: 'Elden Ring card' }), 'longPress');
     expect(onNavigate).toHaveBeenCalledTimes(1);
+    expect(onNavigate).toHaveBeenCalledWith('g1');
     expect(onToggle).not.toHaveBeenCalled();
   });
 

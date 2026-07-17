@@ -5,6 +5,7 @@ import { themedStyles } from '../theme';
 import { useReducedMotion } from '../a11y/useReducedMotion';
 import { KeyboardLift } from './KeyboardLift';
 import { ScrollLockContext, useScrollLockHost } from './ScrollLock';
+import { useHoldSheetLock } from './SheetLock';
 
 // PulledSheet (component-map §5.7) — the GRAB-HANDLE bottom drawer (sort/filter, log-hours, store
 // detail). One primitive; scrim tap dismisses.
@@ -54,6 +55,8 @@ export function PulledSheet({
   const overlayRef = useRef<View>(null);
   // a held slider/picker inside the sheet must not scroll the sheet body (round-3 scroll-lock rule)
   const { scrollEnabled, api: scrollLockApi } = useScrollLockHost();
+  // C2 (F-13) — while this sheet is open, freeze the background screen's scroll (root counter).
+  useHoldSheetLock(visible);
 
   useEffect(() => {
     if (visible) {
@@ -105,7 +108,18 @@ export function PulledSheet({
         >
           <View style={styles.handle} />
           {title ? <Text style={styles.title}>{title.toUpperCase()}</Text> : null}
-          <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" scrollEnabled={scrollEnabled}>
+          {/* `flexShrink:1` (F-8 E3, the Inspect-drawer overspill) — without it the ScrollView keeps
+              its FULL content height inside the maxHeight-capped sheet, so tall content (a big card +
+              readout + actions, or the new PreviewStage floor) overflowed BELOW the sheet's cap and the
+              bottom rows rendered off screen. Shrinking the scroll view to the space the cap leaves
+              makes overflow SCROLL within the sheet instead of spilling past it. */}
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.body}
+            keyboardShouldPersistTaps="handled"
+            scrollEnabled={scrollEnabled}
+            showsVerticalScrollIndicator={false}
+          >
             <ScrollLockContext.Provider value={scrollLockApi}>{children}</ScrollLockContext.Provider>
           </ScrollView>
         </Animated.View>
@@ -118,6 +132,14 @@ const useStyles = themedStyles((t) => ({
   overlay: {
     ...StyleSheet.absoluteFillObject, // the routed screen area INSIDE the well — not the OS window
     justifyContent: 'flex-end',
+    // The drawer is a MODAL layer — it must stack above ALL page content. On web zIndex handles that;
+    // on Android, sibling content that sets a `zIndex` (the PackTile "BEST RATE" / "FIRST PURCHASE"
+    // corner ribbons carry zIndex:2) is promoted toward elevation and drew THROUGH an un-elevated
+    // overlay — the ribbons floated over the open pack-confirm drawer on device (owner round-2 bug 8;
+    // F-8's zIndex-only fix was web-only, wrong on native). A high overlay elevation dominates any
+    // content elevation so the whole drawer (scrim + sheet) sits on top everywhere.
+    elevation: 24,
+    zIndex: 100,
   },
   scrim: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' },
   scrimClear: { backgroundColor: 'transparent' },
@@ -143,5 +165,9 @@ const useStyles = themedStyles((t) => ({
     paddingHorizontal: t.space.xl,
     paddingTop: t.space.md,
   },
-  body: { padding: t.space.xl, gap: t.space.xl },
+  scroll: { flexShrink: 1 }, // scroll within the sheet's height cap, never overflow past it (F-8 E3)
+  // F-15 fix 1 (owner round-3) — a DISTINCT, larger bottom inset so the final control (the BuyBar) never
+  // sits flush to the sheet's bottom edge when tall content fills the maxFraction cap. It's contentContainer
+  // padding, so it reads identically whether the sheet scrolls or fits — no dead band on short sheets.
+  body: { paddingHorizontal: t.space.xl, paddingTop: t.space.xl, paddingBottom: t.space.xxl, gap: t.space.xl },
 }));

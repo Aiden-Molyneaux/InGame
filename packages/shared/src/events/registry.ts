@@ -44,6 +44,26 @@ export const DOMAIN_EVENT_TYPES = [
   'device.updated', // DEV-01/02/03/04 — PATCH /me/device; payload = the changed facet-set (shell/theme/stickers).
   'device.look_saved', // DEV-05 — SAVE CURRENT snapshotted the live combo into a new look.
   'device.look_deleted', // DEV-05 — a saved look removed.
+  // M5 economy substrate (P1 — decision 0072/0073: wallets + currency_ledger). Append at the END.
+  'wallet.daily_claimed', // ECON-02 — the +1-PX Store daily bonus claimed (idempotent per UTC-day).
+  'wallet.adjusted', // ECON-11 — an out-of-band operator credit/debit (also writes a MOD-10 audit row).
+  // M5 §1 publish-thread (decision 0073: publish → gallery → adopt). Append at the END.
+  'card.published', // CARD-15 — draft/private → published (flatten to storage; imageUrl/thumbUrl set).
+  'card.unpublished', // CARD-20 — a published card delisted (status → private; adopters keep their grants).
+  'card.adopted', // CARD-04 — a DIFFERENT user adopted a published card (component acquire + design grant).
+  // M5 P2 IAP seam (decision 0072/0073: receipt validation + refund reversal). Append at the END.
+  'iap.validated', // ECON-06 — a receipt validated → currency granted (pack_purchase), idempotent on receiptId.
+  'iap.refunded', // ECON-09 — a platform refund reversed granted currency (refund_reversal), idempotent per receipt.
+  // M5 P4 acquire + entitlements (decision 0072/0073: user_entitlements + the acquire endpoints). Append at the END.
+  'cosmetic.acquired', // COSM-03/ECON-01 — POST /cosmetics/:id/acquire; payload notes whether it charged.
+  'cosmetic.batch_acquired', // CARD-13 — POST /cosmetics/acquire-batch; payload = the granted id set + totalPaid.
+  'cosmetic.entitlement_granted', // ECON-11 — an operator grant (service-op, no route); also writes the MOD-10 audit row.
+  'cosmetic.entitlement_clawed_back', // ECON-11 — an operator clawback (service-op, no route); also writes the MOD-10 audit row.
+  // M5 F-2 social block/unblock (decision 0073 §0.6: user_blocks writes). Append at the END.
+  'social.user_blocked', // SOC-09 — POST /me/blocks; the blocked designer's cards leave the caller's community views.
+  'social.user_unblocked', // SOC-09 — DELETE /me/blocks/:userId; the block lifted (idempotent).
+  // M5 F-2b un-adopt (CARD-14/20 — the adopted-side DELETE; migration 0012). Append at the END.
+  'card.adoption_revoked', // CARD-14 — the adopter removed their copy (soft-revoke; all-time count unchanged).
 ] as const;
 
 export type DomainEventType = (typeof DOMAIN_EVENT_TYPES)[number];

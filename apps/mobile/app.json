@@ -9,10 +9,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.ingame.app"
+      "bundleIdentifier": "com.aidenmolyneaux.ingame"
     },
     "android": {
-      "package": "com.ingame.app"
+      "package": "com.aidenmolyneaux.ingame"
     },
     "web": {
       "bundler": "metro",

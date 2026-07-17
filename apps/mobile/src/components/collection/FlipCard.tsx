@@ -1,7 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Platform, Pressable, StyleSheet, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
+import { memo, useEffect, useState } from 'react';
+import { Pressable, StyleSheet, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  cancelAnimation,
+  runOnJS,
+  Easing,
+} from 'react-native-reanimated';
 import type { CollectionItem } from '@ingame/shared';
-import { CardFace, parseComposition } from '../CardFace';
+import { EntryCard } from '../EntryCard';
 import { StatsBack } from '../game/StatsBack';
 import { ScreenButton } from '../ScreenButton';
 import { STATUS_LABEL } from '../../constants/collection';
@@ -13,11 +21,19 @@ import { useReducedMotion } from '../../a11y/useReducedMotion';
 // on the back rather than behind a hidden gesture). Transient — the flipped state lives on the Collection
 // screen and is never persisted (the parent clears it on view-switch + blur).
 //
-// The flip is TWO faces (front rotateY 0→180, back 180→360). The opacity SWAP at the midpoint is the
-// reveal (RN has no reliable cross-platform backface-visibility). But opacity 0 does NOT block touches, so
-// the back's button is gated on a `settled` flag (not the raw prop) — see below. Under REDUCE-MOTION
-// (CARD-16) the timing is skipped for an instant face-swap; the effect re-runs on the runtime toggle so a
-// card can never freeze half-rotated (the KeepBeat lesson, 0044 §104).
+// The flip is TWO faces on a REANIMATED 3D turn (front rotateY 0→180 · back 180→360, perspective, with
+// the opacity step at 90° computed in the SAME worklet — perfectly frame-synchronized on the UI thread).
+// Reanimated, not RN `Animated`, deliberately: rounds 3–5 proved on-device that the Animated native
+// driver's per-frame transform updates TEAR on Fabric-iOS/Expo Go around these faces (skia <Canvas> +
+// react-native-svg content) — the card ripped mid-turn and the shelf row's sibling text flickered, in
+// every variant (perspective turn · flat rotateY · backface-hidden). Reanimated applies props through
+// its own UI-thread ShadowTree path — the same lane that already animates the skia motion layer
+// (`render/animated.tsx`, decision 0068) — and the owner asked for the flip back after a transform-free
+// crossfade confirmed the Animated-transform path was the artifact (round 6/7 lineage in col12-manifest).
+// Touch is separate from visibility: opacity 0 does NOT block hits, so the back's button is gated on a
+// `settled` flag — see below. Under REDUCE-MOTION (CARD-16) the timing is skipped for an instant
+// face-swap; the effect re-runs on the runtime toggle so a card can never freeze mid-turn (the KeepBeat
+// lesson, 0044 §104).
 //
 // A11Y (CARD-16): the whole card is ONE screen-reader button (CARD-07) — a transparent tap layer whose
 // label carries the CURRENT face's content, with a "View game" accessibility action exposing NAVIGATE.
@@ -29,7 +45,12 @@ import { useReducedMotion } from '../../a11y/useReducedMotion';
 // (PressSheet/KeepBeat each hold their own durations). Extract a shared token when that motion pass lands.
 const FLIP_MS = 320;
 
-export function FlipCard({
+// MEMOIZED (round-4 owner report — sibling text flicker on device at tap time): every flip tap swaps
+// the parent's `flippedIds` Set, re-rendering ShelfView/GridView — without memo that re-rendered ALL
+// rows and re-parsed every composition, redrawing every skia Metal canvas at exactly the moment the
+// animation starts. With memo + the STABLE id-passing handler contract below, a tap re-renders only
+// the tapped card; the other rows (and their canvases) are untouched mid-animation.
+export const FlipCard = memo(function FlipCard({
   item,
   flipped,
   onToggle,
@@ -40,10 +61,11 @@ export function FlipCard({
 }: {
   item: CollectionItem;
   flipped: boolean;
-  /** Tap the card (front or back-off-the-button) → toggle the flip. */
-  onToggle: () => void;
-  /** Long-press (either face) + the back's VIEW GAME → the Game page. */
-  onNavigate: () => void;
+  /** Tap the card (front or back-off-the-button) → toggle the flip. Called with the entryId — pass the
+      parent's ONE stable handler (never an inline closure), or the memo is defeated. */
+  onToggle: (entryId: string) => void;
+  /** Long-press (either face) + the back's VIEW GAME → the Game page. Called with the gameId. */
+  onNavigate: (gameId: string) => void;
   /** Fixed pixel size (shelf rows). */
   width?: number;
   height?: number;
@@ -51,7 +73,9 @@ export function FlipCard({
   style?: ViewStyle;
 }) {
   const reduced = useReducedMotion();
-  const progress = useRef(new Animated.Value(flipped ? 1 : 0)).current;
+  const toggle = () => onToggle(item.entryId);
+  const navigate = () => onNavigate(item.gameId);
+  const progress = useSharedValue(flipped ? 1 : 0);
   // The back needs PIXEL dims (StatsBack draws an SVG silhouette); the grid card is fluid, so measure the
   // box and fall back to the intrinsic size for the first frame (the CardFace measure pattern).
   const [box, setBox] = useState<{ w: number; h: number }>({ w: width ?? 138, h: height ?? 193 });
@@ -67,28 +91,36 @@ export function FlipCard({
   const [settled, setSettled] = useState(true);
   useEffect(() => {
     if (reduced) {
-      progress.setValue(flipped ? 1 : 0); // instant swap — never leave a face frozen mid-rotate
+      progress.value = flipped ? 1 : 0; // instant swap — never leave a face frozen mid-turn
       setSettled(true);
       return;
     }
     setSettled(false);
-    const anim = Animated.timing(progress, {
-      toValue: flipped ? 1 : 0,
-      duration: FLIP_MS,
-      easing: Easing.inOut(Easing.ease),
-      useNativeDriver: Platform.OS !== 'web', // rotateY + opacity are native-driver-safe; web has no native module
-    });
-    anim.start(({ finished }) => {
-      if (finished) setSettled(true);
-    });
-    return () => anim.stop();
+    progress.value = withTiming(
+      flipped ? 1 : 0,
+      { duration: FLIP_MS, easing: Easing.inOut(Easing.ease) },
+      (finished) => {
+        'worklet';
+        if (finished) runOnJS(setSettled)(true);
+      },
+    );
+    return () => cancelAnimation(progress);
   }, [flipped, reduced, progress]);
 
-  const frontRotate = progress.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] });
-  const backRotate = progress.interpolate({ inputRange: [0, 1], outputRange: ['180deg', '360deg'] });
-  // Hard opacity swap at the midpoint (the near-duplicate 0.5 stops make it a step, not a cross-fade).
-  const frontOpacity = progress.interpolate({ inputRange: [0, 0.49, 0.5, 1], outputRange: [1, 1, 0, 0] });
-  const backOpacity = progress.interpolate({ inputRange: [0, 0.5, 0.51, 1], outputRange: [0, 0, 1, 1] });
+  // Each face's rotation + its 90°-step opacity live in ONE worklet, so the reveal is computed in the
+  // same UI-thread frame as the turn (no JS↔native desync — the round-4 "half disappears" came from the
+  // two drifting apart). Both faces reach opacity 0 when away — the F-02 silhouettes are notched on
+  // different corners (TL+BR front, TR+BL back), so a still-opaque hidden face would peek through the
+  // other's notches. `backfaceVisibility` is deliberately NOT used (broken with animated turns on
+  // Fabric-iOS, round 5).
+  const frontStyle = useAnimatedStyle(() => ({
+    opacity: progress.value < 0.5 ? 1 : 0,
+    transform: [{ perspective: 900 }, { rotateY: `${progress.value * 180}deg` }],
+  }));
+  const backStyle = useAnimatedStyle(() => ({
+    opacity: progress.value < 0.5 ? 0 : 1,
+    transform: [{ perspective: 900 }, { rotateY: `${180 + progress.value * 180}deg` }],
+  }));
 
   // The single-element SR label: the CURRENT face's content (front = the card; back = the stats read out,
   // since the nested rows/button aren't individually focusable inside the accessible card).
@@ -107,31 +139,36 @@ export function FlipCard({
           <button> inside a <button> — an invalid-HTML hydration error that also froze the flip animation. */}
       <Pressable
         style={StyleSheet.absoluteFill}
-        onPress={onToggle}
-        onLongPress={onNavigate}
+        onPress={toggle}
+        onLongPress={navigate}
         accessibilityRole="button"
         accessibilityLabel={flipped ? backLabel : `${item.title} card`}
         accessibilityHint={flipped ? 'Flips back to the card' : 'Flips to your stats'}
         accessibilityActions={[{ name: 'viewgame', label: 'View game' }]}
         onAccessibilityAction={(e) => {
-          if (e.nativeEvent.actionName === 'viewgame') onNavigate();
+          if (e.nativeEvent.actionName === 'viewgame') navigate();
         }}
       />
 
       {/* FRONT — display-only; pointerEvents:none so taps fall through to the tap layer behind. Hidden
           from the screen reader (the tap layer is the single a11y element). */}
+      {/* RASTERIZED while turning (frame-forensics, owner's 2026-07-13 recording): react-native-svg
+          content MIS-DRAWS under an animated 3D transform on Fabric-iOS — the front's panel-coloured
+          silhouette swept OVER the row's meta text (the "text disappears" — invisible against the
+          same-coloured row) and the back's silhouette vanished mid-turn. Rasterizing the face during
+          the animation draws the subtree ONCE into an offscreen bitmap bounded by the face, and the
+          transform composites the bitmap — the svg never sees the transform. Off when settled (no
+          resting memory/blur cost); reduce-motion never animates so never rasterizes. */}
       <Animated.View
         pointerEvents="none"
         aria-hidden
-        style={[styles.face, { opacity: frontOpacity, transform: [{ perspective: 900 }, { rotateY: frontRotate }] }]}
+        shouldRasterizeIOS={!settled}
+        renderToHardwareTextureAndroid={!settled}
+        style={[styles.face, frontStyle]}
       >
-        <CardFace
-          title={item.title}
-          composition={parseComposition(item.card.composition)}
-          size="grid"
-          nowPlaying={item.nowPlaying}
-          style={styles.fill}
-        />
+        {/* EntryCard owns the composition-vs-flattened branch, memoizing the parse on the raw rider so
+            the skia canvas' props never churn on a re-render (the round-4 canvas re-encode lesson). */}
+        <EntryCard title={item.title} card={item.card} size="grid" nowPlaying={item.nowPlaying} style={styles.fill} />
       </Animated.View>
 
       {/* BACK — the CARD-01 stats back + the visible VIEW GAME keycap. `box-none` once SETTLED so a tap on
@@ -140,7 +177,9 @@ export function FlipCard({
       <Animated.View
         pointerEvents={settled && flipped ? 'box-none' : 'none'}
         aria-hidden
-        style={[styles.face, { opacity: backOpacity, transform: [{ perspective: 900 }, { rotateY: backRotate }] }]}
+        shouldRasterizeIOS={!settled}
+        renderToHardwareTextureAndroid={!settled}
+        style={[styles.face, backStyle]}
       >
         <StatsBack
           hours={item.hours}
@@ -158,7 +197,7 @@ export function FlipCard({
               variant="secondary"
               size="mini"
               block
-              onPress={onNavigate}
+              onPress={navigate}
               accessibilityLabel={`View ${item.title} game page`}
             />
           }
@@ -166,7 +205,7 @@ export function FlipCard({
       </Animated.View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   face: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },

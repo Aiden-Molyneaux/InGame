@@ -1,5 +1,6 @@
 import {
   type AddCollectionEntryRequest,
+  type CollectionCard,
   type CollectionItem,
   type CollectionResponse,
   type GenreView,
@@ -14,9 +15,10 @@ import * as collectionRepo from '../repositories/collection-repo';
 import * as catalogRepo from '../repositories/catalog-repo';
 import * as profileRepo from '../repositories/profile-repo';
 import * as cardRepo from '../repositories/card-repo';
-import { toCardRider } from './card-service';
+import * as adoptionRepo from '../repositories/adoption-repo';
+import { toAdoptedCardRider, toCardRider } from './card-service';
 import { NotFoundError, ValidationError } from '../errors/AppError';
-import type { CardDesignRow, CollectionEntryRow, GameRow } from '../db/schema';
+import type { CollectionEntryRow, GameRow } from '../db/schema';
 
 // A malformed :entryId path param would otherwise reach Postgres as an invalid uuid cast (22P02 → 500);
 // treat it as the same 404 an unknown id gets (mirrors users-service's target-id guard).
@@ -42,7 +44,7 @@ function toItem(
   game: GameRow,
   genres: GenreView[],
   nowPlayingGameId: string | null,
-  design: CardDesignRow | null = null,
+  card: CollectionCard = { ...toCardRider(null) },
 ): CollectionItem {
   return {
     entryId: entry.id,
@@ -58,10 +60,32 @@ function toItem(
     ownedSince: entry.ownedSince,
     addedAt: entry.createdAt.toISOString(), // OQ-128 — immutable add timestamp for the RECENT sort
     nowPlaying: game.id === nowPlayingGameId,
-    card: toCardRider(design),
+    card,
     rating: entry.rating, // OQ-134 (api 0.53) — owner-only readback
     notes: entry.notes,
   };
+}
+
+/**
+ * Resolve the equipped `card` rider (COL-06/CARD-18): the caller's OWN equipped design (composition
+ * rides, owner-only) → else an ADOPTED design they hold a grant for (flattened-only, OQ-122) → else the
+ * default-face stub. An equipped adopted design must still render on the shelf — the switcher can equip
+ * it, so the serializer must resolve it (the COL-06 gap this fix closes).
+ */
+async function resolveCardRider(
+  actorId: string,
+  activeCardDesignId: string | null,
+  exec?: Executor,
+): Promise<CollectionCard> {
+  if (!activeCardDesignId) return toCardRider(null);
+  const owned = exec
+    ? await cardRepo.findOwnedDesign(actorId, activeCardDesignId, exec)
+    : await cardRepo.findOwnedDesign(actorId, activeCardDesignId);
+  if (owned) return toCardRider(owned);
+  const adopted = exec
+    ? await adoptionRepo.findAdoptedDesign(actorId, activeCardDesignId, exec)
+    : await adoptionRepo.findAdoptedDesign(actorId, activeCardDesignId);
+  return adopted ? toAdoptedCardRider(adopted) : toCardRider(null);
 }
 
 async function genresByGameId(gameIds: string[], exec?: Executor): Promise<Map<string, GenreView[]>> {
@@ -86,12 +110,8 @@ async function assembleItem(
   const user = exec
     ? await profileRepo.getOwnProfile(actorId, exec)
     : await profileRepo.getOwnProfile(actorId);
-  const design = entry.activeCardDesignId
-    ? exec
-      ? await cardRepo.findOwnedDesign(actorId, entry.activeCardDesignId, exec)
-      : await cardRepo.findOwnedDesign(actorId, entry.activeCardDesignId)
-    : null;
-  return toItem(entry, game, genres.get(game.id) ?? [], user?.nowPlayingGameId ?? null, design);
+  const card = await resolveCardRider(actorId, entry.activeCardDesignId, exec);
+  return toItem(entry, game, genres.get(game.id) ?? [], user?.nowPlayingGameId ?? null, card);
 }
 
 /** GET /me/collection — the whole shelf in manual order; honest totals (the C4 class). */
@@ -99,18 +119,30 @@ export async function listCollection(actorId: string): Promise<CollectionRespons
   const rows = await collectionRepo.listEntriesWithGames(actorId);
   const user = await profileRepo.getOwnProfile(actorId);
   const genres = await genresByGameId(rows.map((r) => r.game.id));
-  // Bulk-resolve the equipped designs (COL-06/CARD-18) — own rows only, one query.
+  // Bulk-resolve the equipped riders (COL-06/CARD-18): own designs first (composition rides), then any
+  // equipped ADOPTED designs (flattened-only) for the ids that aren't the caller's own — two queries.
   const equippedIds = rows
     .map((r) => r.entry.activeCardDesignId)
     .filter((id): id is string => id !== null);
-  const designs = await cardRepo.ownedDesignsByIds(actorId, equippedIds);
+  const ownedDesigns = await cardRepo.ownedDesignsByIds(actorId, equippedIds);
+  const adoptedDesigns = await adoptionRepo.adoptedDesignsByIds(
+    actorId,
+    equippedIds.filter((id) => !ownedDesigns.has(id)),
+  );
+  const riderFor = (id: string | null): CollectionCard => {
+    if (!id) return toCardRider(null);
+    const owned = ownedDesigns.get(id);
+    if (owned) return toCardRider(owned);
+    const adopted = adoptedDesigns.get(id);
+    return adopted ? toAdoptedCardRider(adopted) : toCardRider(null);
+  };
   const items = rows.map((r) =>
     toItem(
       r.entry,
       r.game,
       genres.get(r.game.id) ?? [],
       user?.nowPlayingGameId ?? null,
-      r.entry.activeCardDesignId ? (designs.get(r.entry.activeCardDesignId) ?? null) : null,
+      riderFor(r.entry.activeCardDesignId),
     ),
   );
   return { items, nextCursor: null, total: items.length, collectionTotal: items.length };
@@ -194,26 +226,35 @@ export const updateEntry = mutation(
       }
     }
 
-    // COL-06 equip (decision 0066 §5): the caller's OWN design, for THIS game, private|published —
-    // a failed validation must NOT equip (422, a body-field error, not a 404).
+    // COL-06 equip (decision 0066 §5 + 0072): the caller's OWN design for THIS game (private|published),
+    // OR a card they ADOPTED for this game (the design grant — 0072). A failed validation must NOT equip
+    // (422, a body-field error, not a 404).
     if (input.activeCardDesignId !== undefined) {
       if (input.activeCardDesignId !== null) {
         const design = await cardRepo.findOwnedDesign(actorId, input.activeCardDesignId, ctx.tx);
-        if (!design) {
-          throw new ValidationError('That card design does not exist.', 'unknown_design', [
-            { path: 'activeCardDesignId', message: 'Pick one of your own designs.' },
-          ]);
-        }
-        if (design.gameId !== current.gameId) {
-          throw new ValidationError('That design is for a different game.', 'design_wrong_game', [
-            { path: 'activeCardDesignId', message: 'Pick a design made for this game.' },
-          ]);
-        }
-        if (design.status === 'draft') {
-          // Drafts are resume-editing handles, not equippable faces (0066 §5).
-          throw new ValidationError('Drafts cannot be equipped.', 'design_not_equippable', [
-            { path: 'activeCardDesignId', message: 'Finish the draft first (KEEP or SAVE PRIVATE).' },
-          ]);
+        if (design) {
+          if (design.gameId !== current.gameId) {
+            throw new ValidationError('That design is for a different game.', 'design_wrong_game', [
+              { path: 'activeCardDesignId', message: 'Pick a design made for this game.' },
+            ]);
+          }
+          if (design.status === 'draft') {
+            // Drafts are resume-editing handles, not equippable faces (0066 §5).
+            throw new ValidationError('Drafts cannot be equipped.', 'design_not_equippable', [
+              { path: 'activeCardDesignId', message: 'Finish the draft first (KEEP or SAVE PRIVATE).' },
+            ]);
+          }
+        } else {
+          // Not the caller's own design → an ADOPTED card for THIS game is equippable too (0072 grant);
+          // it is always published-flattened, never a draft. A card neither owned nor adopted (nor
+          // adopted for a different game) → the same unknown_design 422 (no existence oracle — a foreign
+          // card the caller never adopted is indistinguishable from an unknown id).
+          const adoption = await adoptionRepo.findMyAdoption(actorId, input.activeCardDesignId, ctx.tx);
+          if (!adoption || adoption.gameId !== current.gameId) {
+            throw new ValidationError('That card design does not exist.', 'unknown_design', [
+              { path: 'activeCardDesignId', message: 'Pick one of your own or adopted designs.' },
+            ]);
+          }
         }
       }
       fields.activeCardDesignId = input.activeCardDesignId;

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, View, Text, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import type { DeviceResponse, LookResponse, PatchDeviceRequest, Sticker, StickerComposition } from '@ingame/shared';
 import { ScreenHead } from '../src/components/ScreenHead';
 import { ScreenButton } from '../src/components/ScreenButton';
@@ -16,8 +16,13 @@ import { LooksGrid } from '../src/components/device/LooksGrid';
 import { StickerTray } from '../src/components/device/StickerTray';
 import { StickerRail } from '../src/components/device/StickerRail';
 import { StickerSteppers } from '../src/components/device/StickerSteppers';
+import { KeepBar, type KeepBarItem } from '../src/components/device/KeepBar';
 import { STICKER_ASSET_BY_ID } from '../src/components/device/deviceStickers';
 import { useStickerContext } from '../src/components/device/DeviceStickerContext';
+import { CurrencyCounter } from '../src/components/commerce/CurrencyCounter';
+import { useSheetLocked } from '../src/components/SheetLock';
+import { PriceChip } from '../src/components/commerce/PriceChip';
+import { OwnedTag, LockedTag } from '../src/components/commerce/Tags';
 import {
   addSticker,
   canPlace,
@@ -48,6 +53,9 @@ import {
   useGetLooksQuery,
   useSaveLookMutation,
   useDeleteLookMutation,
+  useGetCosmeticsQuery,
+  useGetWalletQuery,
+  useAcquireCosmeticBatchMutation,
 } from '../src/store/api';
 
 // DEV-05 saved-looks cap (server-authoritative; mirrored here only to pre-dim the save-tile at the cap).
@@ -74,6 +82,7 @@ export default function DeviceEditor() {
   const styles = useStyles();
   const t = useTheme();
   const dispatch = useAppDispatch();
+  const bgLocked = useSheetLocked(); // C2 (F-13) — freeze the editor scroll while a sheet (delete-look) is open
 
   // The LIVE frame reads shell/theme from the persisted prefs slice (P2's theme engine, useTheme).
   const liveShellId = resolveShellId(useAppSelector((s) => s.prefs.shellId));
@@ -93,6 +102,17 @@ export default function DeviceEditor() {
 
   const { data: device, isLoading, isError, refetch } = useGetDeviceQuery();
   const [updateDevice] = useUpdateDeviceMutation();
+  // CARD-13 premium (M5 P7): the library prices + own-flags each shell/theme; the wallet feeds the
+  // header counter + the KeepBar funded/short branch.
+  const { data: cosmetics } = useGetCosmeticsQuery();
+  const { data: wallet } = useGetWalletQuery();
+  const [acquireBatch] = useAcquireCosmeticBatchMutation();
+  // the Device premium CART (D7): unowned premium facets previewed live but not yet acquired/persisted.
+  const [pendingPremium, setPendingPremium] = useState<{ shell: ShellId | null; theme: ScreenThemeId | null }>({
+    shell: null,
+    theme: null,
+  });
+  const [keepBusy, setKeepBusy] = useState(false);
 
   // LOOKS (D6) — the list + the three write triggers. The list drives the ON NOW computation + the cap.
   const { data: looks } = useGetLooksQuery();
@@ -111,7 +131,8 @@ export default function DeviceEditor() {
   const [saved, setSaved] = useState<DeviceResponse | null>(null);
   // the theme try-on: non-null while the picked theme differs from the saved theme (the PreviewStrip).
   const [previewTheme, setPreviewTheme] = useState<ScreenThemeId | null>(null);
-  // the D2 shell-switch beat (before→after minis) — cleared on a section change or the next pick.
+  // the D2 shell-switch beat — drives the single-line "SWITCHED — «shell» WRAP" edit readout (F-21 r6
+  // removed the redundant was→now MiniDevice pair); cleared on a section change or the next pick.
   const [switchBeat, setSwitchBeat] = useState<{ from: ShellId; to: ShellId } | null>(null);
 
   const savedRef = useRef<DeviceResponse | null>(null);
@@ -238,24 +259,100 @@ export default function DeviceEditor() {
     setSection(s);
   }, []);
 
-  // ── SHELL pick (D1/D2) ─────────────────────────────────────────────────────────────────────────
+  // CARD-13 premium (M5 P7) — the library entry for a shell/theme id (tier present = premium).
+  const balance = wallet?.balance ?? 0;
+  const cosmeticFor = useCallback(
+    (id: string, type: 'device_shell' | 'screen_theme') => cosmetics?.items.find((i) => i.id === id && i.type === type),
+    [cosmetics],
+  );
+
+  // ── SHELL pick (D1/D2 · D7 premium) ──────────────────────────────────────────────────────────────
   const pickShell = useCallback(
     (id: ShellId) => {
       const from = liveShellId; // the shell the frame wears BEFORE this pick
+      const c = cosmeticFor(id, 'device_shell');
+      const isOffline = saveState === 'error' && inlineError === null;
+      if (c?.tier && !c.owned) {
+        if (isOffline) return; // D9 — acquiring premium is a write; gated offline
+        setSwitchBeat(id !== from ? { from, to: id } : null);
+        dispatch(setShellId(id)); // preview live only (no server write until KEEP)
+        setPendingPremium((p) => ({ ...p, shell: id }));
+        return;
+      }
+      setPendingPremium((p) => ({ ...p, shell: null })); // a free/owned shell clears the premium preview
       setSwitchBeat(id !== from ? { from, to: id } : null);
       patchDevice({ activeShellId: id });
     },
-    [liveShellId, patchDevice],
+    [liveShellId, patchDevice, cosmeticFor, dispatch, saveState, inlineError],
   );
 
-  // ── THEME pick (D3) ────────────────────────────────────────────────────────────────────────────
+  // ── THEME pick (D3 · D7 premium) ─────────────────────────────────────────────────────────────────
   const pickTheme = useCallback(
     (id: ScreenThemeId) => {
+      const c = cosmeticFor(id, 'screen_theme');
+      const isOffline = saveState === 'error' && inlineError === null;
+      if (c?.tier && !c.owned) {
+        if (isOffline) return;
+        dispatch(setThemeId(id)); // preview live only
+        setPreviewTheme(null); // the KeepBar is the reconcile affordance, not the try-on strip
+        setPendingPremium((p) => ({ ...p, theme: id }));
+        return;
+      }
       const savedTheme = resolveScreenThemeId(savedRef.current?.screenThemeId);
+      setPendingPremium((p) => ({ ...p, theme: null }));
       setPreviewTheme(id === savedTheme ? null : id);
       patchDevice({ screenThemeId: id });
     },
-    [patchDevice],
+    [patchDevice, cosmeticFor, dispatch, saveState, inlineError],
+  );
+
+  // ── D7 premium cart — KEEP acquires the previewed premium then commits the facets ──────────────────
+  // (F-21 ruling 5) No explicit CANCEL: re-selecting a saved/owned shell/theme reverts the preview, and
+  // leaving the editor reverts + drops the cart (endPreview useFocusEffect below).
+  const keepPremium = useCallback(async () => {
+    if (keepBusy) return;
+    const ids: string[] = [pendingPremium.shell, pendingPremium.theme].filter((x): x is ShellId | ScreenThemeId => !!x);
+    if (ids.length === 0) return;
+    setKeepBusy(true);
+    setInlineError(null);
+    try {
+      await acquireBatch({ cosmeticIds: ids }).unwrap();
+      patchDevice({
+        ...(pendingPremium.shell ? { activeShellId: pendingPremium.shell } : {}),
+        ...(pendingPremium.theme ? { screenThemeId: pendingPremium.theme } : {}),
+      });
+      setPendingPremium({ shell: null, theme: null });
+    } catch (e) {
+      setInlineError(errMsg(e, 'Could not acquire — your pixels are unchanged.'));
+    } finally {
+      setKeepBusy(false);
+    }
+  }, [keepBusy, pendingPremium, acquireBatch, patchDevice]);
+
+  // ── D7 (owner round-2, F-13) — the premium preview MUST END when leaving the editor ────────────────
+  // A previewed-but-unowned premium shell/theme lives in the redux `prefs` (so the live frame repaints)
+  // but is NOT persisted/acquired. Without this, navigating away (Top Up, the STORE keycap, a back-pop)
+  // LEFT that preview painting the whole app — the user wore a premium theme they never bought until the
+  // next edit reverted it. Tie it to the screen's focus lifecycle: on BLUR/UNMOUNT, revert the prefs to
+  // the saved device and drop the cart (the KeepBeat lesson — the preview dies with the editor). A ref so
+  // the focus effect never re-subscribes as the cart changes.
+  const pendingPremiumRef = useRef(pendingPremium);
+  pendingPremiumRef.current = pendingPremium;
+  const endPreviewRef = useRef<() => void>(() => {});
+  endPreviewRef.current = () => {
+    if (!pendingPremiumRef.current.shell && !pendingPremiumRef.current.theme) return;
+    const savedShell = resolveShellId(savedRef.current?.activeShellId);
+    const savedTheme = resolveScreenThemeId(savedRef.current?.screenThemeId);
+    if (pendingPremiumRef.current.shell) dispatch(setShellId(savedShell));
+    if (pendingPremiumRef.current.theme) dispatch(setThemeId(savedTheme));
+    // clear the cart too, so a return to the editor starts clean (the preview ended with the exit).
+    setPendingPremium({ shell: null, theme: null });
+    setSwitchBeat(null);
+  };
+  useFocusEffect(
+    useCallback(() => {
+      return () => endPreviewRef.current();
+    }, []),
   );
 
   // ── THEME EXIT — revert the pick to the saved theme (the one un-commit door, walk 4) ───────────────
@@ -390,30 +487,13 @@ export default function DeviceEditor() {
       .finally(() => setDeleting(false));
   }, [deleteLook, pendingDelete]);
 
-  // ── lifecycle: D8 Skeleton (first load) · D10 LoadError ────────────────────────────────────────
-  if (isLoading) {
-    // D8 — chrome (head · return · rail) renders immediately; the body is solid skeleton fills.
-    return (
-      <Frame onBack={goBack} section={section} onSection={changeSection}>
-        <DeviceSkeleton />
-      </Frame>
-    );
-  }
-  if (isError) {
-    return (
-      <Frame onBack={goBack} section={section} onSection={changeSection} railDim>
-        <View style={styles.errWrap}>
-          <Text style={styles.errEyebrow}>COULDN'T LOAD COSMETICS</Text>
-          <Text style={styles.errTitle}>SIGNAL LOST</Text>
-          <Text style={styles.errSub}>
-            Your device and its current look are safe. Check your connection and try again.
-          </Text>
-          <ScreenButton label="↻ Retry" variant="primary" onPress={() => void refetch()} />
-        </View>
-      </Frame>
-    );
-  }
-
+  // NOTE — the D8/D10 lifecycle early-returns (isLoading / isError) live at the BOTTOM of this
+  // component, right before the main return, NOT here. EVERY hook (incl. the two useAnnounceOnChange
+  // below + the useFocusEffect above) must run on every render: returning early up here skipped those
+  // trailing hooks, so when logout's `api.util.resetApiState()` flips this still-mounted editor's
+  // getDevice query back to isLoading, React saw "Rendered fewer hooks than expected" and crashed the
+  // whole tree (which in turn broke the profile signOut's router.replace — the F-16 logout crash).
+  // rules-of-hooks: no hook may sit after a conditional return. (react-hooks lint doesn't cover app/.)
   const stickerCount = liveComposition.stickers.length;
   const beatActive = switchBeat !== null && section === 'shell';
   // the decal whose TransformBox + stepper rows show (STICKERS · not previewing · one selected).
@@ -480,8 +560,73 @@ export default function DeviceEditor() {
   const readoutAnnounce = selectedSticker ? null : readout.title;
   useAnnounceOnChange(readoutAnnounce);
 
+  // ── D7 premium badging + the KeepBar cart ─────────────────────────────────────────────────────────
+  // A tile's badge (top-left): owned → ✓; unowned online → PriceChip; unowned offline → 🔒 LOCKED (D9).
+  const premiumBadge = (id: string, type: 'device_shell' | 'screen_theme') => {
+    const c = cosmeticFor(id, type);
+    if (!c?.tier) return undefined; // free — no badge
+    if (c.owned) return <OwnedTag label="✓" />;
+    if (offline) return <LockedTag label="LOCKED" />;
+    return <PriceChip pixels={c.price} />;
+  };
+  const premiumLocked = (id: string, type: 'device_shell' | 'screen_theme') => {
+    const c = cosmeticFor(id, type);
+    return offline && !!c?.tier && !c.owned; // D9 — dim + writes gated
+  };
+  const cartItems: KeepBarItem[] = [];
+  if (pendingPremium.shell) {
+    cartItems.push({
+      cosmeticId: pendingPremium.shell,
+      name: SHELL_NAMES[pendingPremium.shell],
+      type: 'device_shell',
+      price: cosmeticFor(pendingPremium.shell, 'device_shell')?.price ?? 0,
+    });
+  }
+  if (pendingPremium.theme) {
+    cartItems.push({
+      cosmeticId: pendingPremium.theme,
+      name: SCREEN_THEME_NAMES[pendingPremium.theme],
+      type: 'screen_theme',
+      price: cosmeticFor(pendingPremium.theme, 'screen_theme')?.price ?? 0,
+    });
+  }
+  const cartTotal = cartItems.reduce((s, i) => s + i.price, 0);
+
+  // ── lifecycle: D8 Skeleton (first load) · D10 LoadError ────────────────────────────────────────
+  // These early-returns sit AFTER every hook (rules-of-hooks): all the useState/useRef/useCallback/
+  // useEffect/useFocusEffect/useAnnounceOnChange above run unconditionally, so a loading/error render
+  // never renders a different hook count than a loaded one. The computations between the hooks and
+  // here are all state-derived and null-safe, so running them in the loading/error frame is harmless.
+  if (isLoading) {
+    // D8 — chrome (head · return · rail) renders immediately; the body is solid skeleton fills.
+    return (
+      <Frame onBack={goBack} section={section} onSection={changeSection}>
+        <DeviceSkeleton />
+      </Frame>
+    );
+  }
+  if (isError) {
+    return (
+      <Frame onBack={goBack} section={section} onSection={changeSection} railDim>
+        <View style={styles.errWrap}>
+          <Text style={styles.errEyebrow}>COULDN'T LOAD COSMETICS</Text>
+          <Text style={styles.errTitle}>SIGNAL LOST</Text>
+          <Text style={styles.errSub}>
+            Your device and its current look are safe. Check your connection and try again.
+          </Text>
+          <ScreenButton label="↻ Retry" variant="primary" onPress={() => void refetch()} />
+        </View>
+      </Frame>
+    );
+  }
+
   return (
-    <Frame onBack={goBack} section={section} onSection={changeSection}>
+    <Frame
+      onBack={goBack}
+      section={section}
+      onSection={changeSection}
+      headRight={<CurrencyCounter balance={balance} onPress={() => router.push('/store')} />}
+    >
       {previewTheme && !previewing ? (
         <DevicePreviewStrip name={SCREEN_THEME_NAMES[previewTheme]} onExit={exitPreview} />
       ) : null}
@@ -509,30 +654,26 @@ export default function DeviceEditor() {
         </View>
       </View>
 
-      <Text accessibilityLiveRegion="polite" style={styles.saveLine}>
-        {saveLineText}
-      </Text>
+      {/* F-13 D7 (owner round-2) — drop the resting "SAVED LIVE" display (the whole editor autosaves;
+          announcing "saved" on every idle beat is clutter). The line now shows ONLY the in-flight/error
+          states (SAVING… · NOT SAVED — RETRYING · an inline error); the ok-dot on the readout above
+          already signals the settled/saved state. A11y still announces the transition (below). */}
+      {saveState !== 'saved' ? (
+        <Text accessibilityLiveRegion="polite" style={styles.saveLine}>
+          {saveLineText}
+        </Text>
+      ) : null}
 
       <ScrollView
         style={styles.flex}
         contentContainerStyle={styles.body}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        scrollEnabled={!bgLocked}
       >
-        {/* the D2 before→after mini pair rides above the tray while the beat holds */}
-        {beatActive && switchBeat ? (
-          <View style={styles.pairRow}>
-            <View style={styles.pairCol}>
-              <MiniDevice shellId={switchBeat.from} themeId={liveThemeId} />
-              <Text style={styles.pairLbl}>WAS · {SHELL_NAMES[switchBeat.from]}</Text>
-            </View>
-            <Text style={styles.pairArrow}>➔</Text>
-            <View style={styles.pairCol}>
-              <MiniDevice shellId={switchBeat.to} themeId={liveThemeId} />
-              <Text style={[styles.pairLbl, { color: t.brand.gold }]}>NOW · {SHELL_NAMES[switchBeat.to]}</Text>
-            </View>
-          </View>
-        ) : null}
-
+        {/* F-21 ruling 6 — no was→now MiniDevice comparison pair here: the device chrome above IS the live
+            preview, so an old-vs-new render is redundant. The switch still surfaces as a single status line
+            in the edit readout ("SWITCHED — «shell» WRAP", via switchReadout). */}
         {section === 'shell' ? (
           <>
             <Text style={styles.secTitle}>SHELL</Text>
@@ -544,6 +685,8 @@ export default function DeviceEditor() {
                   name={SHELL_NAMES[id]}
                   selected={liveShellId === id}
                   onPress={() => pickShell(id)}
+                  badge={premiumBadge(id, 'device_shell')}
+                  dimmed={premiumLocked(id, 'device_shell')}
                 >
                   <MiniDevice shellId={id} themeId={liveThemeId} />
                 </DeviceItemTile>
@@ -561,14 +704,13 @@ export default function DeviceEditor() {
                   name={SCREEN_THEME_NAMES[id]}
                   selected={liveThemeId === id}
                   onPress={() => pickTheme(id)}
+                  badge={premiumBadge(id, 'screen_theme')}
+                  dimmed={premiumLocked(id, 'screen_theme')}
                 >
                   <ThemeSwatch themeId={id} />
                 </DeviceItemTile>
               ))}
             </View>
-            <Text style={styles.floorNote}>
-              ☑ LEGIBILITY FLOOR HELD · THE SHELL STAYS {SHELL_NAMES[liveShellId]} PLASTIC
-            </Text>
           </>
         ) : section === 'stickers' ? (
           <>
@@ -579,10 +721,9 @@ export default function DeviceEditor() {
                   ☑ STICKERS RIDE THE REAL SHELL · NAV STAYS FULLY LEGIBLE
                 </Text>
                 <Text style={styles.secSub}>
-                  Handles hidden, controls quiet — the true on-shell preview. Saved live to your device.
+                  Handles hidden, controls quiet — the true on-shell preview.
                 </Text>
                 <View style={styles.previewRow}>
-                  <Text style={styles.savedLive}>SAVED LIVE</Text>
                   <View style={styles.flexSpacer} />
                   <ScreenButton label="◅ Keep editing" variant="primary" size="mini" onPress={() => setPreviewing(false)} />
                   <ScreenButton label="Done" variant="secondary" size="mini" onPress={goBack} />
@@ -661,6 +802,17 @@ export default function DeviceEditor() {
         )}
       </ScrollView>
 
+      {/* D7 — the premium cart: preview live, KEEP acquires-all + applies (F-21 r5: no CANCEL — re-select
+          or leave the editor reverts) */}
+      <KeepBar
+        items={cartItems}
+        total={cartTotal}
+        balance={balance}
+        busy={keepBusy}
+        onKeep={() => void keepPremium()}
+        onTopUp={() => router.push('/store')}
+      />
+
       {/* D6·4 — a saved look is not re-derivable, so removal confirms (ConfirmSheet §1.8). */}
       <ConfirmSheet
         visible={pendingDelete !== null}
@@ -686,12 +838,15 @@ function Frame({
   section,
   onSection,
   railDim = false,
+  headRight,
 }: {
   children: React.ReactNode;
   onBack: () => void;
   section: DeviceSection;
   onSection: (s: DeviceSection) => void;
   railDim?: boolean;
+  /** the trailing head slot — the PX CurrencyCounter (ECON-07 entry point, M5 P7). */
+  headRight?: React.ReactNode;
 }) {
   const styles = useStyles();
   return (
@@ -700,7 +855,11 @@ function Frame({
           the screen top, jammed against the return-link. `headPad` gives it the game-page's breathing
           room (paddingTop + a gap before the link). */}
       <View style={styles.headPad}>
-        <ScreenHead title="DEVICE" />
+        <View style={styles.headRow}>
+          <ScreenHead title="DEVICE" />
+          <View style={styles.headSpacer} />
+          {headRight}
+        </View>
         <TertiaryLink label="Return to profile" chevron="leading-back" onPress={onBack} />
       </View>
       {children}
@@ -738,6 +897,8 @@ const useStyles = themedStyles((t) => ({
   flex: { flex: 1 },
   screen: { flex: 1, backgroundColor: t.scr.bg },
   headPad: { paddingHorizontal: t.space.lg, paddingTop: t.space.lg, gap: t.space.xs },
+  headRow: { flexDirection: 'row', alignItems: 'center' },
+  headSpacer: { flex: 1 },
   dim: { opacity: 0.4 },
   body: { paddingHorizontal: t.space.lg, paddingVertical: t.space.md, gap: t.space.md },
   // readout
@@ -794,7 +955,6 @@ const useStyles = themedStyles((t) => ({
   onShellLabel: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accentInk, letterSpacing: 1 },
   onShellEdit: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accentInk, letterSpacing: 1 },
   previewRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.md, paddingTop: t.space.md },
-  savedLive: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
   flexSpacer: { flex: 1 },
   // LOOKS (D6)
   looksHead: {
@@ -825,18 +985,6 @@ const useStyles = themedStyles((t) => ({
     lineHeight: 13,
     paddingTop: t.space.sm,
   },
-  // D2 pair
-  pairRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: t.space.xl,
-    backgroundColor: t.scr.panel,
-    paddingVertical: t.space.md,
-  },
-  pairCol: { alignItems: 'center', gap: t.space.sm },
-  pairLbl: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
-  pairArrow: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.accent },
   // skeleton
   skWrap: { flex: 1, paddingHorizontal: t.space.lg, paddingTop: t.space.md, gap: t.space.md },
   skBar: { backgroundColor: t.scr.panel, borderRadius: 2 },

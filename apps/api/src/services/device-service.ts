@@ -7,16 +7,28 @@ import {
   type StickerComposition,
 } from '@ingame/shared';
 import { mutation } from '../db/mutation';
+import type { Executor } from '../db/client';
 import { acquireActorLock } from '../db/locks';
 import * as deviceRepo from '../repositories/device-repo';
-import { LookCapError, NotFoundError, ValidationError } from '../errors/AppError';
+import * as entitlementRepo from '../repositories/entitlement-repo';
+import { lookupCosmeticTier, priceForTier } from '../config/cosmetics';
+import {
+  LookCapError,
+  NotFoundError,
+  PremiumUnreconciledError,
+  ValidationError,
+} from '../errors/AppError';
 import type { DeviceConfigRow, DeviceLookRow } from '../db/schema';
 
 // Device service (DEV-01..05 · decision 0030). device_configs + device_looks are USER-OWNED — every
 // path is actor-scoped (SYS-01); actor-B reaching for actor-A's device/look gets the same 404 an
 // unknown id gets. ARCH 3 — every mutation funnels through ONE PATCH pipeline; looks apply by the
-// client re-PATCHing the snapshot's facets (no dedicated apply endpoint). M4 posture (0068): every
-// shell/theme/sticker is free, so /me/device only ever references owned items by construction.
+// client re-PATCHing the snapshot's facets (no dedicated apply endpoint).
+// M5 F-2b — the 0075 roster made shells/themes tiered, so the free-by-construction M4 posture is
+// over: PATCH gates premium shell/theme ids on the caller's entitlements (the CARD-13 sibling —
+// 409 PREMIUM_UNRECONCILED {unowned,total}, the client's existing ReconcileSheet/KeepBar handling).
+// Stickers stay ungated (all basic). SAVE CURRENT needs no gate — it snapshots the LIVE config,
+// which was gate-validated when it was written; applying a look = the client re-PATCHing (gated).
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -78,6 +90,33 @@ function assertStickersInBounds(composition: StickerComposition): void {
   }
 }
 
+/**
+ * M5 F-2b — the COSM-03 premium gate on device writes (the CARD-13 sibling): every PREMIUM id in
+ * `cosmeticIds` (per the P10 registry — `lookupCosmeticTier`) must be backed by one of the caller's
+ * entitlements, else 409 PREMIUM_UNRECONCILED {unowned:[{cosmeticId,price}],total} so the client's
+ * existing reconcile handling (KeepBar / ReconcileSheet) drives ACQUIRE ALL. Free ids (tier null —
+ * teal/grape · midnight/paper) and unregistered ids pass (an unknown id is not sellable — nothing to
+ * gate; the resolvers degrade it to a default client-side, the standing DEV-03 posture).
+ */
+async function assertDeviceCosmeticsOwned(
+  actorId: string,
+  cosmeticIds: string[],
+  exec?: Executor,
+): Promise<void> {
+  const premium = cosmeticIds.filter((id) => {
+    const tier = lookupCosmeticTier(id);
+    return tier !== undefined && tier !== null;
+  });
+  if (premium.length === 0) return;
+  const owned = await entitlementRepo.findOwnedCosmeticIds(actorId, premium, exec);
+  const unowned = premium
+    .filter((id) => !owned.has(id))
+    .map((id) => ({ cosmeticId: id, price: priceForTier(lookupCosmeticTier(id)) }));
+  if (unowned.length > 0) {
+    throw new PremiumUnreconciledError(unowned, 'This look uses premium items you don’t own yet.');
+  }
+}
+
 /** GET /me/device — the live device, or the free DEFAULTS (never creates a row on read, DEV-03). */
 export async function getDevice(actorId: string): Promise<DeviceResponse> {
   const row = await deviceRepo.findConfig(actorId);
@@ -86,18 +125,23 @@ export async function getDevice(actorId: string): Promise<DeviceResponse> {
 
 /** @mutation — PATCH /me/device (ARCH 3): validate + upsert the named facets; ≥1 present (rule-5). */
 export const patchDevice = mutation(
-  { name: 'device.patch', specIds: ['DEV-01', 'DEV-02', 'DEV-03', 'DEV-04', 'SYS-01', 'SYS-02'] },
+  { name: 'device.patch', specIds: ['DEV-01', 'DEV-02', 'DEV-03', 'DEV-04', 'COSM-03', 'SYS-01', 'SYS-02'] },
   async (ctx, actorId, input: PatchDeviceRequest): Promise<DeviceResponse> => {
     const fields: Partial<deviceRepo.DeviceFacets> = {};
     const changed: string[] = [];
+    const wornIds: string[] = [];
     if (input.activeShellId !== undefined) {
       fields.activeShellId = input.activeShellId;
       changed.push('activeShellId');
+      wornIds.push(input.activeShellId);
     }
     if (input.screenThemeId !== undefined) {
       fields.screenThemeId = input.screenThemeId;
       changed.push('screenThemeId');
+      wornIds.push(input.screenThemeId);
     }
+    // COSM-03 (F-2b) — a premium shell/theme must be OWNED to be worn; refuse BEFORE any write.
+    await assertDeviceCosmeticsOwned(actorId, wornIds, ctx.tx);
     if (input.stickerComposition !== undefined) {
       assertStickersInBounds(input.stickerComposition); // DEV-03 layer-3 (server bounds re-check)
       fields.stickerComposition = input.stickerComposition;

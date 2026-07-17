@@ -12,7 +12,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from './api';
 import authReducer, { clearSession } from './authSlice';
-import prefsReducer from './prefsSlice';
+import prefsReducer, { resetPrefs } from './prefsSlice';
 import { clearTokens } from '../auth/tokenStore';
 
 // F20 — redux-persist wraps the PREFS slice ONLY (version-keyed). The auth slice is NOT persisted
@@ -40,9 +40,14 @@ export const persistor = persistStore(store);
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 
-/** F20/F14 — the full logout teardown: purge persisted prefs, reset the API cache, clear tokens. */
+/** F20/F14 — the full logout teardown: reset in-memory prefs, purge persisted prefs, reset the API
+ *  cache, clear tokens. `resetPrefs` must fire alongside `persistor.purge()`: purge only clears the
+ *  async STORAGE, so without the in-memory reset an ACTIVE device-editor preview (a premium shell/theme
+ *  dispatched to the prefs slice) survived logout and bled into the sign-in screen + the next user's
+ *  first frames (owner round-2 bug 7). */
 export async function logoutTeardown(): Promise<void> {
   store.dispatch(clearSession());
+  store.dispatch(resetPrefs());
   store.dispatch(api.util.resetApiState());
   await persistor.purge();
   await clearTokens();

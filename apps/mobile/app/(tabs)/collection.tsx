@@ -1,25 +1,27 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, Pressable, BackHandler, Keyboard, Platform } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import type { CollectionItem, CollectionStatus, GenreView } from '@ingame/shared';
 import { ScreenHead } from '../../src/components/ScreenHead';
-import { CardFace, parseComposition } from '../../src/components/CardFace';
+import { EntryCard } from '../../src/components/EntryCard';
 import { FlipCard } from '../../src/components/collection/FlipCard';
 import { Coachmark } from '../../src/components/Coachmark';
 import { ScreenButton } from '../../src/components/ScreenButton';
 import { ToolButton } from '../../src/components/ToolButton';
 import { SearchField } from '../../src/components/SearchField';
 import { PulledSheet } from '../../src/components/PulledSheet';
+import { useSheetLocked } from '../../src/components/SheetLock';
 import { TextField } from '../../src/components/TextField';
 import { GenreTag } from '../../src/components/GenreTag';
+import { CurrencyCounter } from '../../src/components/commerce';
 import { TertiaryLink } from '../../src/components/TertiaryLink';
 import { KeyboardLift } from '../../src/components/KeyboardLift';
 import { COLLECTION_STATUSES, STATUS_LABEL } from '../../src/constants/collection';
 import { theme, themedStyles, useTheme } from '../../src/theme';
 import { useAppDispatch, useAppSelector } from '../../src/store/hooks';
 import { setCollectionView, setCol12CoachmarkSeen, type CollectionView } from '../../src/store/prefsSlice';
-import { useGetCollectionQuery, useUpdateEntryMutation } from '../../src/store/api';
+import { useGetCollectionQuery, useUpdateEntryMutation, useGetWalletQuery } from '../../src/store/api';
 
 // The REAL Collection (COL-01..09 · WTP-03) — the M2 scratch-seed retired; everything renders from
 // GET /me/collection. D2/decision 0058: the sort/filter/search DRAWER executes CLIENT-SIDE over the
@@ -139,7 +141,11 @@ export default function Collection() {
   const view = useAppSelector((s) => s.prefs.collectionView);
   const col12CoachmarkSeen = useAppSelector((s) => s.prefs.col12CoachmarkSeen);
   const { data, isLoading, isError, refetch } = useGetCollectionQuery();
+  // F-1 fix 7 — the persistent PX counter rides the Collection header (ECON-07 entry point); it reads the
+  // shared wallet cache and doors into the Store's wallet view.
+  const { data: wallet } = useGetWalletQuery();
   const styles = useStyles();
+  const bgLocked = useSheetLocked(); // C2 (F-13) — freeze the shelf scroll while the sort/filter drawer is open
 
   // ONE shared query state between the in-place search and the drawer (OQ-034).
   const [q, setQ] = useState('');
@@ -202,6 +208,29 @@ export default function Collection() {
     setFlippedIds((prev) => (prev.size === 0 ? prev : new Set()));
   }, [view]);
 
+  // COL-12 — a card tap toggles its flip (owner: many-flipped); the first flip retires the coachmark.
+  // STABLE handlers (useCallback + the seen-ref) so the memoized FlipCards skip re-render — a tap must
+  // re-render only the tapped card, never redraw all rows' skia canvases mid-animation (the round-4
+  // device flicker report). Hooks, so they live ABOVE the isLoading/isError early returns.
+  const coachSeenRef = useRef(col12CoachmarkSeen);
+  useEffect(() => {
+    coachSeenRef.current = col12CoachmarkSeen;
+  }, [col12CoachmarkSeen]);
+  const toggleFlip = useCallback(
+    (entryId: string) => {
+      setFlippedIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(entryId)) next.delete(entryId);
+        else next.add(entryId);
+        return next;
+      });
+      if (!coachSeenRef.current) dispatch(setCol12CoachmarkSeen(true));
+    },
+    [dispatch],
+  );
+  // COL-12 — long-press (either face) + the back's VIEW GAME → the Game page (CARD-23 NAVIGATE).
+  const openGame = useCallback((gameId: string) => router.push(`/game/${gameId}`), [router]);
+
   // COL-07/09 — client-side query execution over the loaded shelf (D2).
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -263,18 +292,6 @@ export default function Collection() {
     closeSearch();
   };
 
-  // COL-12 — a card tap toggles its flip (owner: many-flipped); the first flip retires the coachmark.
-  const toggleFlip = (entryId: string) => {
-    setFlippedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(entryId)) next.delete(entryId);
-      else next.add(entryId);
-      return next;
-    });
-    if (!col12CoachmarkSeen) dispatch(setCol12CoachmarkSeen(true));
-  };
-  // COL-12 — long-press (either face) + the back's VIEW GAME → the Game page (CARD-23 NAVIGATE).
-  const openGame = (gameId: string) => router.push(`/game/${gameId}`);
   // COL-12 discoverability — the one-time coachmark, gated on the persisted flag; only where cards flip
   // (shelf/grid), when there's something to flip and no active query (search results replace the view).
   const flippableView = view === 'shelf' || view === 'grid';
@@ -300,9 +317,18 @@ export default function Collection() {
     <View style={styles.screen}>
       <View style={styles.pad}>
         {/* honest totals — filtered count OF the whole shelf (the C4 class); S3-j copy */}
-        <ScreenHead title="Collection" count={countLabel} />
+        <ScreenHead
+          title="Collection"
+          count={countLabel}
+          trailing={
+            <CurrencyCounter
+              balance={wallet?.balance ?? 0}
+              onPress={() => router.push({ pathname: '/store', params: { view: 'wallet' } })}
+            />
+          }
+        />
       </View>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} scrollEnabled={!bgLocked}>
         {/* In-place search: the query live-filters the CURRENT view + a RESULTS header (board :661). */}
         {searchOpen && q.trim() !== '' && data.collectionTotal > 0 ? (
           <Text style={styles.resultsHead}>RESULTS — TITLE · DEVELOPER · PUBLISHER</Text>
@@ -440,9 +466,9 @@ function NowPlayingHero({ hero, onLogHours }: { hero: CollectionItem | null; onL
         accessibilityLabel={`Open ${hero.title}`}
         onPress={() => router.push(`/game/${hero.gameId}`)}
       >
-        <CardFace
+        <EntryCard
           title={hero.title}
-          composition={parseComposition(hero.card.composition)}
+          card={hero.card}
           size="grid"
           width={138}
           height={193}
@@ -484,14 +510,23 @@ function ShelfView({ items, flippedIds, onToggle, onNavigate }: { items: Collect
       <View style={styles.shelfStack}>
         {items.map((i) => (
           <View key={i.entryId} style={styles.stackRow}>
-            <FlipCard
-              item={i}
-              flipped={flippedIds.has(i.entryId)}
-              onToggle={() => onToggle(i.entryId)}
-              onNavigate={() => onNavigate(i.gameId)}
-              width={138}
-              height={193}
-            />
+            {/* cardSlot — GRID PARITY (the round-9 fix): the identical FlipCard renders the turn
+                perfectly in the grid, whose cell is a card-tight box, and broke ONLY here in the wide
+                shelf row where the mis-drawn mid-turn svg (owner's recording) could sweep across the
+                sibling meta text. The slot recreates the grid's structure: a REAL (overflow:'hidden' →
+                never flattened), card-sized, CLIPPING native ancestor — nothing the turning card paints
+                can cross a masksToBounds boundary onto the row, by construction. Handlers passed RAW
+                (an inline closure would defeat FlipCard's memo — the round-4 all-rows redraw). */}
+            <View style={styles.cardSlot} collapsable={false}>
+              <FlipCard
+                item={i}
+                flipped={flippedIds.has(i.entryId)}
+                onToggle={onToggle}
+                onNavigate={onNavigate}
+                width={138}
+                height={193}
+              />
+            </View>
             <View style={styles.heroMeta}>
               <Text style={styles.heroStat}>{statLine(i)}</Text>
               <Text style={styles.heroTitle}>{i.title.toUpperCase()}</Text>
@@ -514,11 +549,12 @@ function GridView({ items, flippedIds, onToggle, onNavigate }: { items: Collecti
       <View style={styles.gridWrap}>
         {items.map((i) => (
           <View key={i.entryId} style={styles.gridCol}>
+            {/* raw handlers — same memo rule as the shelf rows. */}
             <FlipCard
               item={i}
               flipped={flippedIds.has(i.entryId)}
-              onToggle={() => onToggle(i.entryId)}
-              onNavigate={() => onNavigate(i.gameId)}
+              onToggle={onToggle}
+              onNavigate={onNavigate}
               style={styles.fluidCard}
             />
           </View>
@@ -544,7 +580,7 @@ function ListView({ items }: { items: CollectionItem[] }) {
             accessibilityLabel={`Open ${i.title}`}
             onPress={() => router.push(`/game/${i.gameId}`)}
           >
-            <CardFace title={i.title} composition={parseComposition(i.card.composition)} size="thumb" />
+            <EntryCard title={i.title} card={i.card} size="thumb" />
             <View style={styles.stripMeta}>
               <View style={styles.stripTitleRow}>
                 <Text style={styles.stripTitle} numberOfLines={1}>
@@ -583,9 +619,9 @@ function TopView({ items }: { items: CollectionItem[] }) {
           onPress={() => router.push(`/game/${i.gameId}`)}
         >
           <Text style={[styles.rank, idx === 0 && styles.rankFirst]}>#{idx + 1}</Text>
-          <CardFace
+          <EntryCard
             title={i.title}
-            composition={parseComposition(i.card.composition)}
+            card={i.card}
             size={idx === 0 ? 'cell' : 'mini'}
           />
           <View style={styles.rowMeta}>
@@ -748,6 +784,7 @@ function LogHoursSheet({ item, onClose }: { item: CollectionItem | null; onClose
       setValue(String(item.hours));
       setError(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional value-driven deps (see above); `item` identity would re-seed and wipe in-progress typing
   }, [item?.entryId, item?.hours]);
 
   async function save() {
@@ -875,6 +912,9 @@ const useStyles = themedStyles((t) => ({
   empty: { alignItems: 'flex-start', gap: t.space.lg, padding: t.space.xl, backgroundColor: t.scr.panel },
   // SHELF stack (decision 0061) — each entry a hero-treatment row (card + meta beside), board `.shelf-stack`.
   shelfStack: { gap: t.space.lg },
+  // COL-12 round-9 — the card's grid-parity slot: real (overflow prevents flattening), card-tight,
+  // clipping. The masksToBounds boundary is what keeps the turning card's paint off the row's meta text.
+  cardSlot: { width: 138, height: 193, overflow: 'hidden' },
   stackRow: {
     flexDirection: 'row',
     alignItems: 'center',

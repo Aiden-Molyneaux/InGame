@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { themedStyles, useTheme } from '../../theme';
-import { steppedRectPath } from '../../theme/steppedPath';
+import { cardStepUnit, steppedRectPath } from '../../theme/steppedPath';
 
 // StatsBack (CARD-01) — the STANDARDIZED stats back of a game card: the auto-stats layout + printed
 // provenance ("CARD ARTIST" — designer attribution ONLY, no adoption count, decision 0024). NOT a
@@ -93,7 +93,7 @@ export function StatsBack({
       <View style={StyleSheet.absoluteFill} pointerEvents={compact ? 'none' : 'auto'}>
         <Svg width={width} height={height} pointerEvents={compact ? 'none' : 'auto'}>
           <Path
-            d={steppedRectPath(width, height, t.step, { tr: true, bl: true })}
+            d={steppedRectPath(width, height, cardStepUnit(width), { tr: true, bl: true })}
             fill={t.scr.panel}
             stroke={t.scr.hairline}
             strokeWidth={1}

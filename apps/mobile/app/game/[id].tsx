@@ -2,25 +2,39 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import type { CollectionItem } from '@ingame/shared';
+import type { CollectionItem, GalleryCardView } from '@ingame/shared';
 import { parseComposition } from '../../src/components/CardFace';
 import { DualFaceHero } from '../../src/components/game/DualFaceHero';
 import { PlayDossier } from '../../src/components/game/PlayDossier';
 import { CardSwitcher } from '../../src/components/game/CardSwitcher';
 import { CardDetailSheet } from '../../src/components/game/CardDetailSheet';
+import { CommunityGallery } from '../../src/components/game/CommunityGallery';
+import { AdoptCardSheet, type AdoptOutcome } from '../../src/components/game/AdoptCardSheet';
 import { GameTabDock, type GameSection } from '../../src/components/game/GameTabDock';
 import { ConfirmSheet } from '../../src/components/ConfirmSheet';
 import { PulledSheet } from '../../src/components/PulledSheet';
 import { ScreenButton } from '../../src/components/ScreenButton';
 import { TertiaryLink } from '../../src/components/TertiaryLink';
+import { Toast } from '../../src/components/lifecycle/Toast';
+import { useSheetLocked } from '../../src/components/SheetLock';
+// shareCard rides src/store/ beside mockReceipt.ts (the non-slice helper precedent) — also a Metro
+// constraint: the standing :8082 watcher does not see a BRAND-NEW top-level src/ directory without a
+// restart (observed 2026-07-13; new files in existing dirs resolve fine — qa-runbook candidate).
+import { shareCardImage } from '../../src/store/shareCard';
 import { theme, themedStyles, useTheme } from '../../src/theme';
 import { steppedRectPath } from '../../src/theme/steppedPath';
 import {
   useGetCollectionQuery,
+  useGetWalletQuery,
   useRemoveEntryMutation,
   useSetNowPlayingMutation,
   useDeleteCardMutation,
 } from '../../src/store/api';
+import {
+  useAdoptCardMutation,
+  useBlockUserMutation,
+} from '../../src/store/communityApi';
+import { useAppSelector } from '../../src/store/hooks';
 
 // Game page hub shell (§3.1 · design-spec §2.4b / §4.2) — the CARD-23 NAVIGATE target + the
 // M3-deferred per-game host. A root-level Stack screen inside the persistent DeviceShell (like
@@ -33,7 +47,10 @@ export default function GamePage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { data, isLoading, isError, refetch } = useGetCollectionQuery();
+  // the wallet balance feeds the adopt sheet's BuyBar meta + its pre-emptive NOT-ENOUGH state (M5 F-9 G3).
+  const { data: wallet } = useGetWalletQuery();
   const styles = useStyles();
+  const bgLocked = useSheetLocked(); // C2 (F-13) — freeze the page scroll while the inspect/adopt sheet is open
 
   const entry = useMemo<CollectionItem | undefined>(
     () => data?.items.find((it) => it.gameId === id),
@@ -51,12 +68,24 @@ export default function GamePage() {
   const [confirmRemove, setConfirmRemove] = useState(false);
   // the switcher's card-delete confirm lives HERE — a sheet mounted inside the ScrollView docks to
   // the switcher's box, not the screen bottom (PulledSheet's screen-root contract; gate-5 D.27)
-  const [confirmDeleteCard, setConfirmDeleteCard] = useState<{ id: string; name: string } | null>(null);
+  // `adopted` varies the confirm copy: an owned design DELETES; an adopted card only REMOVES the
+  // caller's copy (un-adopt, F-2b — the design/gallery/count are untouched, and it can be re-adopted).
+  const [confirmDeleteCard, setConfirmDeleteCard] = useState<{ id: string; name: string; adopted: boolean } | null>(null);
   const [deleteCardError, setDeleteCardError] = useState<string | null>(null);
+  // ── P8 community gallery / adopt / share / block ────────────────────────────────────────────────
+  const [inspectCard, setInspectCard] = useState<GalleryCardView | null>(null); // the community card in the adopt sheet
+  const [blockCard, setBlockCard] = useState<GalleryCardView | null>(null); // the SOC-09-light block confirm
+  const [toast, setToast] = useState<{ message: string; tone: 'success' | 'error' } | null>(null);
 
   const [removeEntry, removeState] = useRemoveEntryMutation();
   const [setNowPlaying] = useSetNowPlayingMutation();
   const [deleteCard, deleteCardState] = useDeleteCardMutation();
+  const [adoptCard, adoptState] = useAdoptCardMutation();
+  const [blockUser, blockState] = useBlockUserMutation();
+  // Share bytes are fetched off-store (round-2 bug 6): the access token rides to `shareCardImage` and
+  // a plain local busy flag drives the button state (no RTK query cache holds the Blob).
+  const shareToken = useAppSelector((s) => s.auth.accessToken);
+  const [shareBusy, setShareBusy] = useState(false);
 
   // Reset per-game view state when the route param changes — expo-router RE-RENDERS (does not remount)
   // a dynamic route on param change, so a mid-edit draft/section would bleed across games if a future
@@ -69,6 +98,9 @@ export default function GamePage() {
     setConfirmRemove(false);
     setConfirmDeleteCard(null);
     setDeleteCardError(null);
+    setInspectCard(null);
+    setBlockCard(null);
+    setToast(null);
   }, [id]);
 
   // ── lifecycle (L1 · L2) ────────────────────────────────────────────────────────────────────────
@@ -131,6 +163,64 @@ export default function GamePage() {
     }
   }
 
+  // ── P8 adopt (0072) — map the RTK error surface to the sheet's AdoptOutcome ─────────────────────
+  async function onAdopt(): Promise<AdoptOutcome> {
+    if (!inspectCard) return { ok: false, code: 'ERROR' };
+    try {
+      const result = await adoptCard(inspectCard.id).unwrap();
+      return { ok: true, result };
+    } catch (e) {
+      const err = e as { status?: unknown; data?: { error?: { code?: string; shortBy?: number } } };
+      if (err?.status === 'FETCH_ERROR' || err?.status === 'TIMEOUT_ERROR') {
+        return { ok: false, code: 'OFFLINE' }; // adopt is online-only (0073 §0.10)
+      }
+      const code = err?.data?.error?.code;
+      if (code === 'INSUFFICIENT_BALANCE') {
+        return { ok: false, code: 'INSUFFICIENT_BALANCE', shortBy: err?.data?.error?.shortBy ?? 0 };
+      }
+      if (code === 'ALREADY_ADOPTED') return { ok: false, code: 'ALREADY_ADOPTED' };
+      if (code === 'NOT_PUBLISHED') return { ok: false, code: 'NOT_PUBLISHED' };
+      return { ok: false, code: 'ERROR' };
+    }
+  }
+  // Success — the mutation already invalidated Cards/Collection (the switcher refetches) + Wallet/Ledger/
+  // Entitlements (the global CurrencyCounter ticks) + CommunityCards (the gallery re-reads). M5 F-9 G5:
+  // NO toast + NO close — the sheet acknowledges IN PLACE (the settle beat + AcquireBeat), and its Done
+  // door closes it. This just lets the invalidation ride (the args are unused but keep the contract).
+  function onAdopted(_result: { totalPaid: number }, _card: GalleryCardView) {
+    // intentionally empty — the in-place settle is the acknowledgement (G5).
+  }
+
+  async function doBlock() {
+    if (!blockCard) return;
+    const designer = blockCard.designer.username;
+    try {
+      await blockUser(blockCard.designer.userId).unwrap();
+      setToast({ tone: 'success', message: `${designer}'s cards are hidden from your community views.` });
+      setInspectCard(null); // the gallery refetches (CommunityCards invalidated) — their cards vanish
+    } catch {
+      // GAP: POST /me/blocks is not yet registered server-side (gallery-manifest) — surface it honestly.
+      setToast({ tone: 'error', message: `Couldn't block ${designer} right now. Please try again.` });
+    }
+    setBlockCard(null);
+  }
+
+  // ── P8 share (CARD-21) — fetch the branded PNG (authenticated) and present it (web opens/saves;
+  // native best-effort). A not-published / moderation-hidden card → a quiet "unavailable".
+  async function shareCard(cardId: string, title: string) {
+    setShareBusy(true);
+    try {
+      const res = await shareCardImage(cardId, title, shareToken);
+      if (res === 'unavailable') {
+        setToast({ tone: 'error', message: 'Sharing isn’t available for this card yet.' });
+      }
+    } catch {
+      setToast({ tone: 'error', message: 'This card can’t be shared yet.' });
+    } finally {
+      setShareBusy(false);
+    }
+  }
+
   return (
     <View style={styles.flex}>
       <View style={styles.screen}>
@@ -161,6 +251,8 @@ export default function GamePage() {
           contentContainerStyle={styles.body}
           keyboardShouldPersistTaps="handled"
           automaticallyAdjustKeyboardInsets // the NOTES editor must not hide behind the keyboard (B.6)
+          showsVerticalScrollIndicator={false}
+          scrollEnabled={!bgLocked}
         >
           <TertiaryLink label="Return to collection" chevron="leading-back" onPress={() => router.back()} />
 
@@ -173,6 +265,7 @@ export default function GamePage() {
                 <DualFaceHero
                   title={entry.title}
                   composition={equippedComposition}
+                  imageUrl={entry.card.imageUrl}
                   hours={entry.hours}
                   percent={entry.percentComplete}
                   status={entry.status}
@@ -189,18 +282,32 @@ export default function GamePage() {
                   onPress={() => setSection('cards')}
                   style={styles.mini}
                 />
-                <ScreenButton label="Share" variant="secondary" disabled style={styles.mini} />
+                <ScreenButton
+                  label="Share"
+                  variant="secondary"
+                  onPress={() => void shareCard(entry.card.id, entry.title)}
+                  disabled={shareBusy}
+                  style={styles.mini}
+                />
               </View>
             </>
           ) : section === 'cards' ? (
-            <CardSwitcher
-              entry={entry}
-              onEditInStyler={(cardId) => router.push(`/styler/${entry.gameId}?cardId=${cardId}`)}
-              onDesignNew={() => router.push(`/styler/${entry.gameId}`)}
-              onRequestDelete={(id, name) => setConfirmDeleteCard({ id, name })}
-              deleteError={deleteCardError}
-              onClearDeleteError={() => setDeleteCardError(null)}
-            />
+            <>
+              <CardSwitcher
+                entry={entry}
+                onEditInStyler={(cardId) => router.push(`/styler/${entry.gameId}?cardId=${cardId}`)}
+                onDesignNew={() => router.push(`/styler/${entry.gameId}`)}
+                onRequestDelete={(id, name, adopted) => setConfirmDeleteCard({ id, name, adopted: adopted ?? false })}
+                deleteError={deleteCardError}
+                onClearDeleteError={() => setDeleteCardError(null)}
+              />
+              {/* P8 — the community gallery (other users' published cards for this game) → adopt */}
+              <CommunityGallery
+                gameId={entry.gameId}
+                onInspect={setInspectCard}
+                onDesignACard={() => router.push(`/styler/${entry.gameId}`)}
+              />
+            </>
           ) : (
             <View style={styles.about}>
               <Text style={styles.aboutTitle}>ABOUT</Text>
@@ -221,6 +328,8 @@ export default function GamePage() {
         entry={entry}
         composition={equippedComposition}
         onClose={() => setInspectOpen(false)}
+        onShare={entry.card.isCustom ? () => void shareCard(entry.card.id, entry.title) : undefined}
+        shareBusy={shareBusy}
         onEdit={
           entry.card.isCustom
             ? () => {
@@ -259,16 +368,58 @@ export default function GamePage() {
         onClose={() => setConfirmRemove(false)}
       />
 
-      {/* the switcher's card delete — at the screen root so it docks to the in-app bottom (D.27) */}
+      {/* the switcher's card delete / adopted-copy remove — at the screen root so it docks to the
+          in-app bottom (D.27). Un-adopt copy is honest: only YOUR copy goes; re-adopting brings it back. */}
       <ConfirmSheet
         visible={confirmDeleteCard !== null}
-        title="Delete this card?"
-        message={`"${confirmDeleteCard?.name ?? ''}" is deleted everywhere — the switcher and your designs shelf. This can't be undone.`}
-        confirmLabel="Delete"
+        title={confirmDeleteCard?.adopted ? 'Remove this adopted card?' : 'Delete this card?'}
+        message={
+          confirmDeleteCard?.adopted
+            ? `"${confirmDeleteCard?.name ?? ''}" leaves your switcher — the designer's card and its adoption count aren't touched. You can adopt it again any time.`
+            : `"${confirmDeleteCard?.name ?? ''}" is deleted everywhere — the switcher and your designs shelf. This can't be undone.`
+        }
+        confirmLabel={confirmDeleteCard?.adopted ? 'Remove' : 'Delete'}
         busy={deleteCardState.isLoading}
         onConfirm={() => void doDeleteCard()}
         onClose={() => setConfirmDeleteCard(null)}
       />
+
+      {/* P8 — the community card inspect / adopt sheet (SOC-11 atomic adopt) */}
+      <AdoptCardSheet
+        card={inspectCard}
+        visible={inspectCard !== null}
+        balance={wallet?.balance ?? 0}
+        onClose={() => setInspectCard(null)}
+        onAdopt={onAdopt}
+        adopting={adoptState.isLoading}
+        onAdopted={onAdopted}
+        onTopUp={() => {
+          setInspectCard(null);
+          router.push('/store?view=topup');
+        }}
+        onShare={() => {
+          if (inspectCard) void shareCard(inspectCard.id, inspectCard.name);
+        }}
+        onBlock={() => {
+          if (inspectCard) setBlockCard(inspectCard);
+        }}
+        shareBusy={shareBusy}
+      />
+
+      {/* P8 — block-the-designer (SOC-09-light, decision 0073 §0.6): destructive confirm at the root */}
+      <ConfirmSheet
+        visible={blockCard !== null}
+        title={`Block ${blockCard?.designer.username ?? ''}?`}
+        message={`Their cards leave your community views. This doesn't remove a card you already adopted — your copy stays.`}
+        confirmLabel="Block"
+        busy={blockState.isLoading}
+        onConfirm={() => void doBlock()}
+        onClose={() => setBlockCard(null)}
+      />
+
+      {toast ? (
+        <Toast message={toast.message} tone={toast.tone} onDismiss={() => setToast(null)} />
+      ) : null}
     </View>
   );
 }
@@ -291,7 +442,7 @@ function Frame({ children, onBack }: { children: ReactNode; onBack: () => void }
             GAME
           </Text>
         </View>
-        <ScrollView style={styles.flex} contentContainerStyle={styles.body}>
+        <ScrollView style={styles.flex} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
           <TertiaryLink label="Return to collection" chevron="leading-back" onPress={onBack} />
           {children}
         </ScrollView>

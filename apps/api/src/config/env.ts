@@ -26,6 +26,23 @@ export interface ApiEnv {
    * ports). Empty ⇒ OFF — the production posture sends no CORS headers at all.
    */
   devCorsOrigins: string[];
+  /**
+   * M5 P2 — the IAP provider selection ('mock' default OUTSIDE production; 'revenuecat' wired at
+   * P2b). The mock is deterministic (testing-strategy §5); the real RevenueCatProvider swaps in
+   * behind the same `IapProvider` seam when §6 provisioning completes. Chosen via `IAP_PROVIDER`.
+   * FAIL-CLOSED IN PRODUCTION (M5 F-3, §4 economy-audit HIGH): the mock accepts any hand-built
+   * `mockrcpt.v1.*` token — in production it would be a forgeable free-Pixel faucet — so
+   * `loadEnv` HARD-THROWS when nodeEnv === 'production' and IAP_PROVIDER is 'mock' OR unset
+   * (production requires an explicit, non-mock value; the assertDisposableDb pattern).
+   */
+  iapProvider: string;
+  /**
+   * M5 P2 (ECON-06/09) — the RevenueCat webhook Authorization shared secret verified on
+   * POST /iap/webhook (the signature IS the webhook's auth). Server-only (SYS-03). Empty ⇒ the webhook
+   * rejects every call (fail-closed) until the secret is set. The RC REST secret
+   * (REVENUECAT_SECRET_API_KEY, real entitlement re-sync) stays a P2b concern, unread here.
+   */
+  revenueCatWebhookAuth: string;
 }
 
 function num(value: string | undefined, fallback: number): number {
@@ -33,13 +50,36 @@ function num(value: string | undefined, fallback: number): number {
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
+/**
+ * M5 F-3 (§4 economy-audit HIGH) — the fail-closed production floor on the IAP provider, mirroring
+ * `assertDisposableDb` (F03: an allowlist sentinel, never a denylist). The MockRevenueCat accepts any
+ * hand-built `mockrcpt.v1.*` token, so a production process running it is a forgeable free-Pixel
+ * faucet; and an UNSET provider must fail loudly rather than silently meaning mock. Outside
+ * production, unset still defaults to 'mock' (the standing dev/test posture).
+ */
+function resolveIapProvider(nodeEnv: string, raw: string | undefined): string {
+  const isProduction = nodeEnv === 'production';
+  const provider = raw ?? (isProduction ? '' : 'mock');
+  if (isProduction && (provider === '' || provider === 'mock')) {
+    throw new Error(
+      provider === 'mock'
+        ? "IAP_PROVIDER='mock' is refused in production — the mock validates any hand-built receipt " +
+          '(a forgeable free-Pixel faucet). Set IAP_PROVIDER to a real provider (fail-closed, F03 pattern).'
+        : 'IAP_PROVIDER is required in production — an unset provider must not silently mean the mock. ' +
+          'Set IAP_PROVIDER explicitly to a real provider (fail-closed, F03 pattern).',
+    );
+  }
+  return provider;
+}
+
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): ApiEnv {
   const flag = (source.DISPOSABLE_DB ?? '').toLowerCase();
+  const nodeEnv = source.NODE_ENV ?? 'development';
   return {
     databaseUrl: source.DATABASE_URL ?? '',
     disposableDb: flag === '1' || flag === 'true',
     port: num(source.PORT, 4000),
-    nodeEnv: source.NODE_ENV ?? 'development',
+    nodeEnv,
     jwtSigningSecret: source.JWT_SIGNING_SECRET ?? '',
     accessTokenTtlSeconds: num(source.ACCESS_TOKEN_TTL_SECONDS, 15 * 60),
     refreshTokenTtlSeconds: num(source.REFRESH_TOKEN_TTL_SECONDS, 30 * 24 * 60 * 60),
@@ -51,5 +91,7 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): ApiEnv {
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean),
+    iapProvider: resolveIapProvider(nodeEnv, source.IAP_PROVIDER),
+    revenueCatWebhookAuth: source.REVENUECAT_WEBHOOK_AUTH ?? '',
   };
 }

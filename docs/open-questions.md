@@ -16,6 +16,16 @@
 
 ## Open
 
+- OQ-145: **AUTH-07 deletion-ripple — the M8 implementation checklist** (G-N dry-run, M5 2026-07-13;
+  findings: docs/planning/m5/gn-dryrun-findings.md; receipt `m5/economy-receipt.md`). Two M8-blockers
+  found early: (1) a hard card-delete CASCADES through card_adoptions + active_card_design_id —
+  adopters' grants and equipped faces are silently destroyed (AUTH-07/MOD-08 requires adopters-keep →
+  deletion must flip status, never DELETE the row); (2) the designer-attribution anonymization seam
+  (authorShapeFor) is unwired — a tombstoned user's real username still serves through
+  gallery/contributions/share paths. Plus: the ledger/receipts PII kept-set needs an owner ruling;
+  revoked-adoption count semantics under deleter-cascade; orphaned share-image files; orphaned blocks.
+  Nothing reachable today (no deletion endpoint exists — deferred M8 work, not yet resolved). [behavior]
+  **M8** (gate G-N, road-to-market §11)
 - ~~OQ-144~~ **RESOLVED (2026-07-10, decision 0070 — owner ruling "adapt the hue").** The fixed-brand
   on-screen colours become THEMED tokens that carry a light-theme-legible value: **`scr.key`** (secondary/
   keycap face — cream on dark, WHITE + a `scr.dim` border on light), **`scr.value`** (F-02 gold — bright
@@ -41,11 +51,22 @@
   doesn't draw a cap; the owner may want a different number (or none + rely on zone area). (device-
   manifest D4·5, 2026-07-10) [behavior]
 - OQ-141: **copy-on-write copy-POST idempotency (a rare create-retry edge).** `ensureEditableCopy` POSTs a draft copy of a committed card; on a failure it retries on the next edit. If the FIRST POST succeeded server-side but its RESPONSE was lost (network drop), the retry mints a **second** copy of the same origin. Shared with every non-idempotent create — the `creatingRef`/`copyingRef` guards cover double-taps, not lost-response retries. Consider an idempotency key on `POST /cards` (or a client dedup keyed on `derivedFromCardId` + no-saved-copy-yet). Low-frequency, non-data-loss (the original stays pristine); defer with the M5 substrate work. (murr m1, §3.4 device-walk 2026-07-08) [behavior]
+  **→ RESOLVED (decision 0073, 2026-07-12, M5-entry §0.10):** a cheap idempotency guard rides M5 P3 (duplicate
+  copy-POST with same derivedFromCardId + unchanged composition hash returns the existing draft).
 - OQ-140: **canvas compositions saveable as presets (like style-presets).** The owner (gate-5 §3.4 walk) wants to save a whole **composition** as a reusable preset, mirroring CARD-24b `style_presets` — a payload extension carrying the full vector composition + save/apply entry points + naming + a cap. **Deferred to M5** (rides the publish/gallery + preset-scale substrate); not built at M4. (owner, §3.4 Canvas acceptance walk 2026-07-08; decision 0067 §8) [behavior]
+  **→ DEFERRED ⟨stretch⟩ (decision 0073, 2026-07-12, M5-entry §0.10):** rides the publish substrate only if the
+  day has room; otherwise M6-entry re-triage.
 - ~~OQ-139~~ **RESOLVED (2026-07-08, decision 0067 §2 — owner ruling CR-21).** Copy-on-write for committed-card edits: editing an existing **private** card spins a **draft copy** (`card_designs.derived_from_card_id → origin`) on the **first edit**; autosave targets the copy; **KEEP** commits copy→origin (stable id + equip pointer) + deletes the copy, **SAVE AS NEW** forks, **✕** deletes the copy, a **crash** leaves the copy as a resumable **DRAFT** (original pristine). Closes the resume-then-crash overwrite window (the D.23 lineage). Specced: product-spec CARD-24a (0.53) + api-contract (0.54 — `POST /cards` `derivedFromCardId?`, additive nullable FK `ON DELETE SET NULL`). *Orig:* **editing an existing card autosaves in place — a crash before the ✕-revert overwrites the original.** (owner, §3.4 Canvas acceptance walk 2026-07-08) [behavior]
 - OQ-138: **the skia-canvas budget — browsers evict WebGL contexts past ~16 per page.** Found building §3.4: one `<Canvas>` per slip pane / glyph cell lost 17 of 33 contexts and blanked the press bed; the Canvas surface now draws multi-cell previews through single-context strip builders (`buildCellStrip`/`buildBaseStrip`, ≤5 contexts at cap-30). The same ceiling waits for ANY surface that mounts many composed `CardFace`s at once — Collection GRID with a shelf of custom cards, the M5 community gallery, CardFan at scale. Needs an app-wide render-budget stance at M5 entry (shared-surface strips / flatten-to-image for lists — the CARD-15 imageUrl half solves the read side). (raised building M4 §3.4 Canvas, 2026-07-06) [behavior]
+  **→ RESOLVED for M5 (decision 0073, 2026-07-12, M5-entry §0.10):** app-wide stance — galleries/lists consume
+  flattened images (CARD-15), live skia canvases are editor-only; the 16-context ceiling doesn't bind the M5
+  gallery.
 - OQ-137: **an ink colour-PICKER for card titles?** The 0063 free baseline offers 6 curated inks; at gate-5 the owner noted "font colour choices are interesting and something I might allow a colour picker for" — a free-pick ink expands CARD-11's colour-system scope (eyedropper/palettes are drawn for the Canvas tier). Decide with the M5 cosmetics batch: curated-swatches-only vs a picker (and whether picker inks are premium). (owner, gate-5 walk 2026-07-06) [behavior]
+  **→ RESOLVED (decision 0073, 2026-07-12, M5-entry §0.2):** title-ink is FREE — the curated swatches open to
+  the shared free-pick ColorPicker; no economy dimension (the CR-11 reconciliation lands).
 - OQ-136: **pick-a-card joins the ADD-GAME flow.** Gate-5 ruling C.10 made the blank default IMPLICIT (never listed/counted as a card); the owner's stated model: "when a game is added it either takes the card the user selected while adding (part of the add-game process) or the implicit blank default." The add-time card pick (browse bases/community at add-time?) is a new ADD-GAME step — scope it with the M5 gallery/adopt batch (it needs card sources beyond the user's own designs to be meaningful). (owner, gate-5 walk 2026-07-06) [behavior]
+  **→ DEFERRED ⟨stretch⟩ (decision 0073, 2026-07-12, M5-entry §0.10):** builds in M5 only if the day has room;
+  otherwise re-triage at M6 entry.
 - ~~OQ-135~~ **RESOLVED (2026-07-06, owner gate-5 ruling D.22: "a plate is required").** The name always renders: `none` leaves the nameplate roster (decision 0063 §4 amended); every composition carries a plate (min SLAB); legacy `shape:'none'` documents render as SLAB. Built same-day (roster + buildCard coercion + EquipReadout). *Orig:* **nameplate shape NONE renders a card face with no title at all — should the CARD-01 name guarantee survive it?** Decision 0063 §4 sanctioned a `none` plate shape, yet the styler board hints "THE NAME ALWAYS RENDERS (CURATED SHAPES)" (`styler-states.html:907`) and CARD-01 leans legibility-first. (raised by parvati reviewing §3.2 Styler, 2026-07-06) [undecided → behavior]
 - ~~OQ-133~~ **RESOLVED (2026-07-05, decision 0066 — owner default confirmed: built at §3.2).** The card substrate (`card_designs` + `style_presets` tables · `POST/PATCH/DELETE /cards` · `save-private` · `GET /me/cards` · `GET /me/collection/:entryId/cards` · the `/me/style-presets` CRUD · `activeCardDesignId` on the collection PATCH) is implemented with the Styler build; the §3.1 switcher goes fully live with it. *Orig:* **the CARD-24 CARDS-switcher substrate is specced-but-NOT-coded — build it at §3.1 now, or ride the Styler (§3.2)?** Decision 0062 §8 + the M4 brief say the Game-page CARDS switcher "rides CARD-24's `/me/style-presets` + `GET /me/collection/:entryId/cards`" and that these "already exist (api-contract 0.51)" — but they exist **only in the contract doc**. The server has **no** `card_designs` / `style_presets` / `platforms` tables, **no** `GET /me/collection/:entryId/cards`, **no** `activeCardDesignId`/`platformIds` on `PATCH /me/collection/:entryId`, and **no** `/cards/*` mutations. Decision **0058 §7** deferred `activeCardDesignId`+`platformIds` "to M4 **with their substrates**" — that backend build has **not** happened (§3.1 is the *first* M4 surface). And user cards are only *created* in the Styler (§3.2, `POST /cards/:id/save-private`), so at §3.1 there are **no real cards to switch among**. **Interim taken by this build (recorded ASSUMPTION):** the CARDS switcher renders the one **CARD-18 default card** (client-derived from `entry.card`, no new endpoint) + the **DESIGN-NEW** tile; multi-card **SELECT / SET-AS-MAIN (`activeCardDesignId`) / DELETE (`/cards/:id`) / EDIT-IN-STYLER** and the **community gallery + adopt** are marked `EXPECTED(card-pipeline · Styler §3.2 / M5)` in the manifest. Catalog facts for the M4 owned states come from the **collection entry**, not the unbuilt `GET /catalog/games/:id`. **Owner ruling needed at the first-article stop:** build the `card_designs` + switcher-feed backend foundation now (pulls Styler-era backend into §3.1), or let it ride §3.2 as this interim assumes? (raised building M4 §3.1 Game-page shell, 2026-07-05) [behavior]
 - ~~OQ-134~~ **RESOLVED (2026-07-05, decision 0066 / api-contract 0.53 — owner default confirmed).** `notes` + `rating` join the `/me/collection` item (owner-only serializer; the friend subset still excludes them per contract). The Game-page dossier reads back what it writes. *Orig:* **the `CollectionItem` response carries no `notes` / `rating` — the Game-page dossier can't READ them back.** `GET /me/collection`'s `collectionItemSchema` (packages/shared `response/collection.ts`) returns `hours · percentComplete · status · ownedSince · nowPlaying` but **not** `notes` or `rating`, while `PATCH /me/collection/:entryId` *accepts* both (write-only). There is no single-entry `GET`. So the Game-page PLAY dossier can't display the saved NOTES (board draws it, `:490`) and the EDIT NOTES field can't pre-fill; RATING is already board-marked PENDING (OQ-058). **Interim:** hours/%/status/ownedSince round-trip fully; NOTES is a write-only EDIT field (blank start), its readout marked `EXPECTED`; RATING stays PENDING. **Owner/spec ruling:** add `notes` (COL-05) + `rating` (COL-03, if OQ-058 unblocks) to the `CollectionItem` response (they exist in the DB row, just aren't serialized) so the dossier reads what the user wrote — a small serializer + api-contract bump. (raised building M4 §3.1 Game-page shell, 2026-07-05) [behavior]
@@ -95,6 +116,7 @@
   `tools/lint/rules/rule-02-scoping.test.mjs`). Fold into OQ-122's M4-entry scope-model decision;
   **guard-surface change → owner/gate-3 eyes** (the OQ-115 precedent). (raised building CAT-09,
   2026-07-01) [behavior/process] gate-3
+  **→ RESOLVED (decision 0073, 2026-07-12, M5-entry §0.1):** unified under OQ-122's SYS-01-PUBLIC-READ class.
 - OQ-125 → **RESOLVED (M3 closeout, 2026-07-02, decision 0059): the seeded 16-genre list is owner-blessed** as the launch default (amendable via SYS-08 config; the migration 0003 `ASSUMPTION(OQ-125)` tag is hereby owner-ratified — the file is left as-is to preserve its drizzle hash). *Original:* **Pin the canonical CAT-04 controlled genre LIST content.** The behavior (controlled list,
   not free text) is specced, but the list's CONTENT is pinned nowhere — mockups only show sample
   values (`RPG · SOULSLIKE`). The M3 build seeds a 16-genre default (Action · Adventure · RPG ·
@@ -172,6 +194,10 @@
   `// ASSUMPTION(OQ-117)` in `apps/api/src/services/users-service.ts`; reversible, non-STOP (the
   conservative reading is implemented). (raised building G-D, 2026-06-30) [behavior] M2
 - OQ-122 → **DEFERRED to M5 entry (decision 0062):** under the §0.8 **DEFAULT** free/private boundary the published-card gallery/trending reads don't arrive until **M5** — so there's no M4-build pressure; fold OQ-122 + OQ-126 into the M5-entry scope-model decision (the third read-class `// SYS-01-PUBLIC-READ` / `publishedOnly(table)` + the bearer-token AUTH-LOOKUP variant), guard-surface → gate-3 when it lands. *(Flips to ratify-now only under a §0.8 pull-forward.)* *Orig:* **The F32 binary global/user-owned scope model doesn't cover the community / cross-user READS arriving at M4–M7** (foundation review F-09). `rule-02-scoping` admits two classes (global-listed vs user-owned fail-closed) + the auth-layer `AUTH-LOOKUP` exception. Coming reads fit none: the **published-card gallery / trending** (`card_designs` filtered by `published`, M4/M5), **invite-token resolution** by token value (SOC-10, M6 — partly covered only if the repo is named `*-token-repo`), and **feed fan-out** cross-user reads (SOC-06, M7). Each will either fail rule-02 (breeding ad-hoc `asActor`-shaped workarounds) or pressure the manifest to mislabel a user-owned table as global (silently disabling scoping for its private rows — the worse failure). **Proposed:** a third read class — a `// SYS-01-PUBLIC-READ` marker / `publishedOnly(table)` helper valid only for reads carrying an explicit visibility predicate, + a bearer-token-lookup variant of `AUTH-LOOKUP` scoped to an enumerated repo list. **Decide at M4 entry (G-H window)**, not mid-build. Related to OQ-115. (foundation review F-09, 2026-07-01) [behavior/process] M4-entry
+  **→ RESOLVED (decision 0073, 2026-07-12, M5-entry §0.1):** the third read-class is RATIFIED —
+  `// SYS-01-PUBLIC-READ` marker + `publishedOnly(table)` helper (lint-valid only with an explicit visibility
+  predicate; cross-user payloads never expose `composition`) + the enumerated bearer-token `AUTH-LOOKUP`
+  variant. Folds OQ-126. product-spec 0.55 (SYS-01); guard built first in M5 P3, proven at the G-D re-fire.
 - OQ-118 → **RESOLVED (M3 step-1, 2026-07-01): rule-02 flipped to the read-verb ALLOWLIST** —
   detection now covers `.onConflictDoUpdate` upserts, raw `.execute`/`sql``` (fail-closed
   unconditionally inside `repositories/`+`*-repo` files), `db.query.*` relational reads, and
@@ -207,13 +233,20 @@
   wiring the M1 CI SCA step, 2026-06-30) [undecided]
 - OQ-002: First-pass values for the economy levers — starting balance is 5 (ECON-02), but what are
   the login-bonus amount/cadence and milestone thresholds? (tunable later, but design needs a
-  starting number) [behavior]
+  starting number) [behavior] — **PARTIALLY RESOLVED (decision 0072, 2026-07-12):** daily +1 (0017)
+  and the full price/pack sheet are seeded (product-spec 0.54); **milestone thresholds remain open**
+  → the M7 achievements-content brainstorm (OQ-004).
 - OQ-009: **Vector-asset library scope** — how many/which starter SVG packs (shapes/letters/numbers/
   icons) ship at launch, free vs premium split. (CARD-02/17) [content] — **M4-entry (decision 0062): owner content input owed before the editor *build* (§3); not blocking entry formalization.** **→ RESOLVED (decision 0063, 2026-07-05):** the COSM-02 free **vector Essentials** roster is owner-blessed (~12 shapes + ~30 gaming icons + placeable font glyphs; SYS-08 seed; pre-launch design pass owed).
 - OQ-010: **Effect & finish roster** — the launch set of animated effects and finishes, free vs
   premium split. (CARD-12) [content] — **M4-entry (decision 0062): owner content input owed before the editor *build* (§3); not blocking entry formalization.** **→ RESOLVED (decision 0063, 2026-07-05):** the COSM-02 free effect/finish/frame/nameplate/font roster + the premium(M5) split is owner-blessed (SYS-08 seed; dev-preview + pre-launch design-pass notes carried in 0063).
 - OQ-011: **Store pricing** — currency-pack tiers/prices (IAP) and currency costs of premium
-  cosmetics. (ECON-01/02/06) [tuning] — pairs with OQ-002.
+  cosmetics. (ECON-01/02/06) [tuning] — pairs with OQ-002. **→ RESOLVED (decision 0072, 2026-07-12,
+  M5-entry §0.2):** base **5 PX/$** · 7-tier component ladder **1/2/3/4/6/8/10 (ULTIMATE)** · 5-SKU
+  pack line **$0.99 starter-12 (once) / $1.99-10 / $4.99-30 / $9.99-65 / $19.99-140** (conforms to
+  the ruled store-states P6 board) · floor **−25 PX**. All SYS-04-tunable seeds. **Rides the same
+  decision: ECON-03/04 rewritten — adoption = component acquisition + free design grant**
+  (product-spec 0.54 / api-contract 0.56).
 - OQ-004: Specific achievement & easter-egg **content** — which milestones, which eggs, their
   triggers and rewards. Dedicated brainstorm when the engine is built (ACH-*). [behavior/content]
   **Steering (decision 0015):** creation milestones — first card created / first publish / adoption
@@ -351,6 +384,9 @@
   fake-stat rot. Sanity-cap + anomaly pending-review; field-morph on edit. (L001; COL-03/SOC-03/ACH) [behavior] M3/M5
 - OQ-092: **Refund → keep permanents → negative balance = free cosmetics**; the "NOTHING YOU OWN IS TAKEN BACK"
   copy pre-contradicts any clawback. Lock/clawback on reversal + reconcile copy. (L002; ECON-09) [behavior] M5
+  **→ RESOLVED (decision 0073, 2026-07-12, M5-entry §0.8):** v2 has no refund clawback (ECON-09); store copy =
+  "purchases are yours to keep", phrased not to over-promise against the lone ECON-11 operator exception.
+  Floor −25 PX (0072).
 - OQ-093: **No per-reporter cap → report-bomb** soft-hides rivals. Reporter rate-limit + dedupe. (L003; MOD-01/02) [behavior] M7
 - OQ-094 → **RESOLVED (M3 closeout, 2026-07-02, decision 0059):** catalog-create gains a **200/day** cap stacked on the 10/min burst; the previously-UNLIMITED collection writes share a **60/min** cap (test-first burst tests). Soft-queue/two-button UI deferred (not needed at M3 scale). *Original:* **CREATE ANYWAY has no creation rate-limit** (dedup override is one-tap). Cap creates/day + soft-queue +
   two-button layout. (L004; CAT-03, MOD-05) [behavior] M3/M5
@@ -359,14 +395,21 @@
 - OQ-096: **Invite + share/deep links have no TTL/cap/signature** (no "link expired" state). TTL + cap + signature
   for invite AND share links. (L013; SOC-07/10, extends OQ-073) [behavior] M6
 - OQ-097: **Adopt / Up-Next uncapped** — bulk-adopt loop undefended. Length cap + adopt confirm. (L014; WTP, ECON-03) [behavior] M5/M6
+  **→ RESOLVED for the adopt half (decision 0073, 2026-07-12, M5-entry §0.7):** `cards:adopt` rate bucket
+  30/min + 200/day; adopt idempotent via 409 ALREADY_ADOPTED. The WTP/Up-Next list-length cap remains open → M6.
 - OQ-098: **Offline-gated write forms lose their draft** on scrim-dismiss/reconnect (report note, add-game). Persist +
   restore local draft. (L042; SYS-10) [behavior] M3/M7
 - OQ-099: **No "view my reports" / status surface** after a report submits. Reporter status surface. (L043; MOD-01/02) [behavior] M7
 - OQ-100: **Privacy-gating of aggregates** — public per-card ADOPTION counts enable targeting + cross-profile hour
   inference (vs PROF-03 hour-gating); locked SECRET-tier achievement node-detail may ship criterion/unlockedAt/reward.
   Define what leaks to public/non-friends; gate or bucket. (L051; PROF-03, ACH, CARD-20) [behavior] M5/M7
+  **→ PARTIALLY RESOLVED (decision 0073, 2026-07-12, M5-entry §0.10):** gallery AdoptCount stays public by
+  design (decision 0024 precedent); the hour-inference + SECRET-achievement halves remain open → M7.
 - OQ-101: **Offline add/adopt has no disabled state + no idempotency** (collection/discover add stays live offline →
   silent queue + double-add). Offline-disabled state + add/adopt idempotency. (L053; SYS-10) [behavior] M3/M5
+  **→ RESOLVED for the adopt half (decision 0073, 2026-07-12, M5-entry §0.10):** adopt is online-only (disabled
+  offline state, store-board P12 pattern) + idempotent (409 ALREADY_ADOPTED). The M3 add-flow half stands as
+  previously recorded.
 - OQ-102: **Notif pre-prompt is re-triggerable** (no one-shot/cooldown); OPEN PHONE SETTINGS no double-tap guard;
   OS-declined toggles still render green. Server one-shot/cooldown + settings-jump guard + declined-state visual.
   (L056/L057; NOTIF-04) [behavior] M7
@@ -602,3 +645,10 @@
 - OQ-052 → **Friend-view SHARE chip cut** — sharing is self-only (your invite link, SOC-07); others'-profile deep links stay parked (§10). PROF-05 / design-req 3.5. Decision 0019. (2026-06-13)
 - OQ-007 → **RESOLVED design-side — the DIEGETIC breakout** (Canvas converge, `canvas/canvas-states.html` P1–P2): entering the Canvas the device shell **swings open like a cabinet** onto a workshop bench; the card lies on a **press bed**; layers become **physical slips**. Three treatments were drafted (total-yield HUD · partial-yield rails · diegetic press); the owner picked the press. Reduce-motion = a fade (CARD-16). Rescoped by decision 0014 to the Card editor's Canvas posture (stage 3 of the Add Game arc; Add Game + the Styler stay in-frame). (2026-06-13) **↦ RE-RESOLVED 2026-07-08 (decision 0067 §1 · CR-01): the cabinet-swing is retired — the breakout is now a scale-transform ZOOM** (the screen area grows to full-bleed on entry, shrinks back on exit); transform-only, no remount (CARD-24a). The press-bed / physical-slips workshop grammar stays; only the *entry mechanism* changed (swing → zoom). Reduce-motion = the zoom without the flourish.
 - OQ-040 → **RESOLVED design-side — the "first print" ritual** (Canvas converge, `canvas/canvas-states.html` P8): ① the press runs (client-rendered platen sweep, never network-bound) · ② the slips fly in (the composition-JSON assembly replay) · ③ the print lifted off the press (gallery staging, bloom + haptics) → routing: shelf slot · SHARE (CARD-21) · NOTIF-04 adoption-ask. **Tiered:** full here (canvas completions / publishes); the **light KeepBeat** for Styler keeps was designed in `styler/styler-states.html` P7. Mid-edit **hold-to-preview** = the Canvas's PROOF (P6). Decision 0015 moments layer / decision 0014 editor arc. (2026-06-13) **↦ AMENDED 2026-07-08 (decision 0067 §6 · CR-17): SAVE PRIVATE gains a LIGHT press beat at M4** — a lighter tier than the full PUBLISH `PrintRitual` (which stays M5), so the press moment is reachable when saving private without discouraging it (0015 tiers respected — a new light-tier press beat beside KEEP's).
+- OQ-146: **CARD-22 full `equipped` readout on cross-user cards** — the contract's drawn `equipped`
+  display summary (all slots incl. free) can't be computed for adopted/gallery cards without a
+  cross-user composition read (forbidden, OQ-122) or **publish-time label denormalization** (a
+  migration snapshotting display labels beside `premium_component_ids`). M5 ships `components[]`
+  (premium refs + names + prices + owned — the owner's walk ask, contract 0.67); the full free-slot
+  readout is deferred. Decide the denormalization at **M6 entry**. (F-9 build review, 2026-07-14; the read-class constraint = decision 0073 §0.1/OQ-122)
+  [behavior] M6-entry

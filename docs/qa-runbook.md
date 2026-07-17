@@ -28,7 +28,8 @@ under Promoted.
 - **Diagnosis:** Chrome background-tab throttling — `document.visibilityState === 'hidden'` on the QA tab. Closing sibling tabs is NOT enough if the whole window is behind another.
 - **Fix:** check `document.visibilityState` via `javascript_tool` before trusting captures. While hidden, verify via a11y tree / `get_page_text` / network log instead of screenshots (all still work), and prefer flows that flush explicitly (KEEP, ◂ quiet-exit) over waiting on debounce timers. Screenshots resume when the window comes forward. **The MCP tab group may live in a WHOLE-HIDDEN browser window** (the §3.4 walk found it in a minimized Edge window — `IsWindowVisible` false, every screenshot frozen): force it forward from the shell —
   enumerate top-level windows for a `localhost` title, then `ShowWindow(hWnd, 9)` + `SetForegroundWindow(hWnd)` via a PowerShell `Add-Type` user32 P/Invoke. Re-run it whenever captures freeze again mid-walk (the window falls back).
-- **Verified:** 2026-07-07 · **Hits:** 4 *(parvati's §3.2 walk; the fix-round; the §3.4 BOOT walk; parvati's §3.4 walk — re-front ~5× per long session, the window keeps falling back. Not promotable — `doctor` can't probe tab visibility)*
+- **Verified:** 2026-07-13 · **Hits:** 5 *(parvati's §3.2 walk; the fix-round; the §3.4 BOOT walk; parvati's §3.4 walk; parvati's M5 P7/P8 walk — re-front ~5× per long session, the window keeps falling back. Not promotable — `doctor` can't probe tab visibility)*
+- **2026-07-13 update (M5 P7/P8 walk):** on this box the foreground P/Invoke **no longer holds at all** — even topmost-pin (`SetWindowPos HWND_TOPMOST`) + the ALT-key foreground-lock release got stolen back within ~1s, so `captureScreenshot` timed out on **every animated surface** (PulledSheet/adopt sheet, Styler, Canvas, Device — all skia/Reanimated). Only the fresh-tab-first-paint captured. **Working posture: don't fight it — drive the whole walk off the a11y tree (`read_page`/`find`) + `get_page_text` + live DB/ledger reads + `read_network_requests`; the owner's device walk is the visual gate.** Also newly observed: **Styler frame-rail premium swatches ignore synthetic ref/coordinate clicks** (save-line never flips) while **Device swatches + all nav/dialog buttons register fine** — so interactive Styler-rail flows (apply premium → ReconcileSheet) aren't web-lane-drivable; verify the sibling acquire-batch on Device (KeepBar) instead, and leave the Styler ReconcileSheet to the device walk.
 
 ## Chrome MCP `zoom` leaves a stuck viewport override
 - **Symptom:** after a `zoom` capture, the tab's viewport stays frozen at the zoom-region size; `resize_window` and Ctrl+0 don't clear it.
@@ -134,3 +135,30 @@ under Promoted.
 - **Never create `apps/mobile/.env.local`** (also doctor-checked).
 - Behavior checks → **supertest integration tests first**; the :8082 browser lane is for visual/UI verification.
 - Destructive DB testing → parallel API on :4001 + disposable DB, killed after.
+
+## Economy dev-data rule (M5, 2026-07-12)
+**Never hand-delete or hand-edit `currency_ledger` rows on the shared dev DB** — the ledger is
+append-only and `sum(delta) == wallets.balance` is a standing invariant (ECON-07); a deleted row
+silently breaks wallet↔ledger reconciliation for every later walk (found by parvati as a P6 🚩:
+balance 77 vs ledger 76). To reset economy state: use the service ops (`adjustPixels` — writes an
+honest `admin_adjustment` row) or a disposable `PORT=4001` DB. If you must hand-fix, re-derive the
+balance from the ledger afterward.
+
+## Multi-Metro manifest contamination (the phone-lane trap, 2026-07-14)
+Symptom: the phone's login POSTs go to a stale IP **no matter how many times the 8081 Metro is
+restarted with `-c`.** Cause: the :8081 phone Metro and the :8082 agents Metro share
+`apps/mobile/.expo/` state — the manifest served on 8081 can point the phone's BUNDLE download at
+:8082, whose cache carries the `.env` from ITS last restart. The `-c` cleans the wrong server.
+Diagnosis: `curl -H "expo-platform: ios" http://localhost:8081/ | grep -oE 'http://[0-9.]+:[0-9]+'`
+— more than one host, or any :8082, = contaminated. Fix: kill BOTH Metros → `rm -rf
+apps/mobile/.expo` → start the phone lane with the advertised host pinned:
+`REACT_NATIVE_PACKAGER_HOSTNAME=100.83.86.46 npx expo start -c --port 8081` (the tailnet address —
+see the web-loop memory). Verify by grepping the served bundle for exactly one `:4000/api` host.
+In Expo Go: NEVER tap recents/discovered entries after a server change — type the URL fresh.
+
+## Post-logout renderer freeze = the reauth loop signature (F-17, 2026-07-15)
+If the web renderer freezes so hard even `Runtime.evaluate` times out right after a logout, it's the
+teardown→refetch→401→teardown loop class (fixed by the tokenless-401 guard in `baseQueryWithReauth`,
+commit F-17): check for cycling 401s in the API log. Related recipe: RN-web Pressables ignore CDP
+ref-clicks while the tab is hidden — dispatch a synthetic pointerdown/mousedown/pointerup/mouseup/click
+sequence via javascript_tool instead; it makes the hidden-tab lane fully drivable.

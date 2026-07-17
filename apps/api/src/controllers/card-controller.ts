@@ -18,8 +18,12 @@ function actorOf(req: Request): string {
 }
 
 export async function createCard(req: Request, res: Response): Promise<void> {
-  const card = await cardService.createDraft(actorOf(req), req.validated as CreateCardRequest);
-  res.status(201).json(card);
+  // OQ-141 — a repeat copy-POST returns the EXISTING draft copy (200 idempotent) vs a fresh 201.
+  const { card, reused } = await cardService.createDraft(
+    actorOf(req),
+    req.validated as CreateCardRequest,
+  );
+  res.status(reused ? 200 : 201).json(card);
 }
 
 export async function patchCard(req: Request, res: Response): Promise<void> {
@@ -42,6 +46,35 @@ export async function deleteCard(req: Request, res: Response): Promise<void> {
 
 export async function getMyCards(req: Request, res: Response): Promise<void> {
   res.json(await cardService.listMyCards(actorOf(req)));
+}
+
+// M5 §1 publish thread — publish (own card → flatten+store), the community gallery, adopt (free path).
+
+export async function publishCard(req: Request, res: Response): Promise<void> {
+  res.json(await cardService.publishCard(actorOf(req), req.params.cardId!));
+}
+
+export async function unpublishCard(req: Request, res: Response): Promise<void> {
+  res.json(await cardService.unpublishCard(actorOf(req), req.params.cardId!));
+}
+
+export async function getGameGallery(req: Request, res: Response): Promise<void> {
+  res.json(await cardService.listGameGallery(actorOf(req), req.params.gameId!));
+}
+
+export async function getTrendingCards(req: Request, res: Response): Promise<void> {
+  res.json(await cardService.listTrendingCards(actorOf(req)));
+}
+
+export async function adoptCard(req: Request, res: Response): Promise<void> {
+  res.json(await cardService.adoptCard(actorOf(req), req.params.cardId!));
+}
+
+// M5 P9 — CARD-21 external share-image: a raw PNG response (not a JSON envelope).
+export async function getShareImage(req: Request, res: Response): Promise<void> {
+  const png = await cardService.getShareImage(actorOf(req), req.params.cardId!);
+  res.set('Content-Type', 'image/png');
+  res.send(png);
 }
 
 export async function getEntryCards(req: Request, res: Response): Promise<void> {

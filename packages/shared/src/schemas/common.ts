@@ -25,6 +25,64 @@ export const platformSchema = z.enum(['pc', 'playstation', 'xbox', 'nintendo']);
 export type Platform = z.infer<typeof platformSchema>;
 
 /**
+ * ECON-07 — the `currency_ledger.reason` enum, PINNED by decision 0073 (M5-entry §0.4). The ledger
+ * row's `reason` is ALSO the user-facing `type` on the wire (a plain earn/spend history). Append-only,
+ * like the error-code + event-type enums.
+ *  - `starting_grant`   ECON-02 — the 10-PX new-account grant (materialized on first wallet touch).
+ *  - `daily_claim`      ECON-02 — the STANDING +1-PX Store daily bonus (idempotent per UTC-day, lapses;
+ *                       claim 8+ once the Newcomer Ladder is complete).
+ *  - `pack_purchase`    ECON-10 — currency bought via IAP (P2).
+ *  - `adoption`         ECON-03 — the free design grant's ledger marker (0-delta / context row, P3).
+ *  - `acquire`          ECON-01/COSM-03 — a premium component bought/adopted (a spend, P3/P4).
+ *  - `milestone`        ECON-05/ACH-04 — an achievement currency reward (M7) AND the Newcomer-Ladder
+ *                       step grant (`refType='newcomer_ladder'`, decision 0074 — the first 7 claims).
+ *  - `refund_reversal`  ECON-09 — an IAP refund reversing granted currency, floored (P2).
+ *  - `admin_adjustment` ECON-11 — an out-of-band operator credit/debit (service-layer only).
+ */
+export const LEDGER_REASONS = [
+  'starting_grant',
+  'daily_claim',
+  'pack_purchase',
+  'adoption',
+  'acquire',
+  'milestone',
+  'refund_reversal',
+  'admin_adjustment',
+] as const;
+export const ledgerReasonSchema = z.enum(LEDGER_REASONS);
+export type LedgerReason = z.infer<typeof ledgerReasonSchema>;
+
+/**
+ * COSM-03/ECON-01 — the 7-tier cosmetic-pricing ladder (decision 0072 ruling 2), mirrored from
+ * `apps/api/src/config/cosmetics.ts` (the server owns the tier→PX mapping; this is the wire vocabulary
+ * only). A registered-free item carries no tier (`null` on the wire, never one of these strings).
+ */
+export const COSMETIC_TIERS = [
+  'accent',
+  'trim',
+  'standard',
+  'deluxe',
+  'big',
+  'showpiece',
+  'ultimate',
+] as const;
+export const cosmeticTierSchema = z.enum(COSMETIC_TIERS);
+export type CosmeticTier = z.infer<typeof cosmeticTierSchema>;
+
+/** COSM-01 — the cosmetic type taxonomy (decision 0017/0018, api-contract GET /cosmetics). */
+export const cosmeticTypeSchema = z.enum([
+  'shell_sticker_pack',
+  'effect',
+  'finish',
+  'frame',
+  'nameplate',
+  'font',
+  'device_shell',
+  'screen_theme',
+]);
+export type CosmeticType = z.infer<typeof cosmeticTypeSchema>;
+
+/**
  * COL-02 — the six per-game statuses. Wire spelling pinned api-contract 0.47
  * (`completed` = the display name "Completed 100%"; display casing is the client's).
  */

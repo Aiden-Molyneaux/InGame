@@ -41,6 +41,21 @@ import {
   type LookResponse,
   type PatchDeviceRequest,
   deviceResponseSchema,
+  type StoreResponse,
+  type WalletResponse,
+  type LedgerResponse,
+  type DailyBonusResponse,
+  type IapValidateRequest,
+  type IapValidateResponse,
+  type EntitlementsResponse,
+  type AcquireResponse,
+  type AcquireBatchResponse,
+  type AcquireBatchRequest,
+  type CosmeticsResponse,
+  storeResponseSchema,
+  walletResponseSchema,
+  ledgerResponseSchema,
+  cosmeticsResponseSchema,
 } from '@ingame/shared';
 import type { RootState } from './index';
 import { setTokens } from './authSlice';
@@ -104,6 +119,21 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
   const is401 = result.error?.status === 401;
   if (!is401 || urlOf(args).startsWith('/auth/')) return result;
 
+  // F-17 — the post-logout sign-in FLICKER (a self-perpetuating renderer storm). `logoutTeardown()`
+  // — an explicit sign-out, OR the OQ-123 teardown at the bottom of this handler — dispatches
+  // `api.util.resetApiState()`, which makes EVERY still-mounted query REFETCH. Those refetches are now
+  // tokenless, so each 401s straight back into this handler. Without this guard, each such 401 re-runs
+  // the FULL teardown (resetApiState AGAIN + router.replace('/sign-in')) → the cache resets again → a
+  // fresh refetch wave → more 401s … an unbounded loop that re-navigates to /sign-in hundreds of times
+  // a second (proven on web 2026-07-16: ~1200 fetches + ~400 router.replace in ~4s until the main
+  // thread starved; on device it reads as the sign-in screen flickering, barely targetable, cleared
+  // only by an app restart). A 401 on a request that carried NO live session is EXPECTED once we're
+  // logging out — there is nothing left to tear down — so just surface it. The session is gone the
+  // instant `clearSession` runs inside `logoutTeardown`, so this reads true for every refetch in the
+  // wave and collapses the loop to a single bounded burst. The genuine "valid session, server refused"
+  // 401 still has its token here, so it falls through to the refresh/teardown below unchanged.
+  if ((api.getState() as RootState).auth.accessToken == null) return result;
+
   const refreshToken = (api.getState() as RootState).auth.refreshToken;
   if (refreshToken) {
     if (!refreshPromise) {
@@ -146,7 +176,24 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
 export const api = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Me', 'Collection', 'Catalog', 'Cards', 'Presets', 'Device', 'DeviceLooks'],
+  tagTypes: [
+    'Me',
+    'Collection',
+    'Catalog',
+    'Cards',
+    'Presets',
+    'Device',
+    'DeviceLooks',
+    'Store',
+    'Wallet',
+    'Ledger',
+    'Entitlements',
+    'Cosmetics',
+    // Declared here (not only via communityApi's enhanceEndpoints) so the base-slice mutations that
+    // MOVE community state — publishCard drops a new card into the gallery — can invalidate it. RTK
+    // dedupes with communityApi's addTagTypes; the getGameGallery provider still lives in communityApi.
+    'CommunityCards',
+  ],
   endpoints: (build) => ({
     // ── auth ──────────────────────────────────────────────────────────────────────────────────
     register: build.mutation<AuthSession, RegisterRequest>({
@@ -268,6 +315,79 @@ export const api = createApi({
       invalidatesTags: ['DeviceLooks'],
     }),
 
+    // ── store · wallet · economy (M5 — ECON-01..11 · COSM-03 · decision 0072/0073 · api 0.57) ──────
+    // The Store front (ECON-10 pack ladder + honest-empty premium/drops). Parsed at the seam (the
+    // executable contract). Invalidated by an IAP grant (the Starter `purchased` flag flips).
+    getStore: build.query<StoreResponse, void>({
+      query: () => '/store',
+      providesTags: ['Store'],
+      transformResponse: (raw): StoreResponse => storeResponseSchema.parse(raw),
+    }),
+    // The wallet balance + the daily-bonus availability (ECON-02/07). The header CurrencyCounter + the
+    // DailyBonusBar both read this; every currency mutation invalidates ['Wallet'] so the count re-reads.
+    getWallet: build.query<WalletResponse, void>({
+      query: () => '/me/wallet',
+      providesTags: ['Wallet'],
+      transformResponse: (raw): WalletResponse => walletResponseSchema.parse(raw),
+    }),
+    // The ledger page (ECON-07), newest-first. Arg = the opaque cursor (undefined = the first page).
+    // Each cursor is its own cache entry; the Wallet view accumulates pages in component state via the
+    // lazy hook (simpler + correct vs an RTK merge, which mis-refetches a middle page on invalidation).
+    getLedger: build.query<LedgerResponse, string | undefined>({
+      query: (cursor) =>
+        cursor ? `/me/wallet/ledger?cursor=${encodeURIComponent(cursor)}` : '/me/wallet/ledger',
+      providesTags: ['Ledger'],
+      transformResponse: (raw): LedgerResponse => ledgerResponseSchema.parse(raw),
+    }),
+    claimDailyBonus: build.mutation<DailyBonusResponse, void>({
+      query: () => ({ url: '/me/daily-bonus', method: 'POST', body: {} }),
+      invalidatesTags: ['Wallet', 'Ledger'],
+    }),
+    // POST /iap/validate — a pack purchase (receipt) OR restore (rcUserId). Grants → balance + a ledger
+    // row + (for the Starter) a purchased flag, so all three invalidate. The client mints the mock
+    // receipt (store/mockReceipt.ts) at DEV; the real StoreKit receipt is the P2b seam.
+    validateIap: build.mutation<IapValidateResponse, IapValidateRequest>({
+      query: (body) => ({ url: '/iap/validate', method: 'POST', body }),
+      invalidatesTags: ['Wallet', 'Ledger', 'Store'],
+    }),
+    getEntitlements: build.query<EntitlementsResponse, void>({
+      query: () => '/me/entitlements',
+      providesTags: ['Entitlements'],
+    }),
+    // GET /cosmetics (COSM-01, decision 0075) — the full free+premium library with per-item `price` +
+    // caller-scoped `owned` flags. The CARD-13 premium-in-editor surfaces (Styler rails / Device rows /
+    // reconcile cost-stack) read this to price + own-flag every premium cosmetic (parsed at the seam).
+    getCosmetics: build.query<CosmeticsResponse, void>({
+      query: () => '/cosmetics',
+      providesTags: ['Cosmetics'],
+      transformResponse: (raw): CosmeticsResponse => cosmeticsResponseSchema.parse(raw),
+    }),
+    // POST /cosmetics/:id/acquire — the Store BUY (COSM-03/ECON-01). 409 INSUFFICIENT_BALANCE {shortBy}
+    // drives the in-sheet bridge; success → an entitlement + a spend ledger row. Cosmetics — the /cosmetics
+    // `owned` flags flip, so the editor rails re-read.
+    acquireCosmetic: build.mutation<AcquireResponse, string>({
+      query: (cosmeticId) => ({ url: `/cosmetics/${cosmeticId}/acquire`, method: 'POST', body: {} }),
+      // 'Store' — the featured-storefront tiles carry caller-scoped `owned` flags (M5 F-6), so a buy
+      // must re-read /store to flip them (the aisle rides 'Cosmetics').
+      invalidatesTags: ['Wallet', 'Ledger', 'Entitlements', 'Cosmetics', 'Store'],
+    }),
+    // POST /cosmetics/acquire-batch — CARD-13 ACQUIRE ALL (the ReconcileSheet / KeepBar). Atomic against
+    // the total; already-owned ids are silent no-ops. Ticks the wallet + flips ownership everywhere.
+    acquireCosmeticBatch: build.mutation<AcquireBatchResponse, AcquireBatchRequest>({
+      query: (body) => ({ url: '/cosmetics/acquire-batch', method: 'POST', body }),
+      invalidatesTags: ['Wallet', 'Ledger', 'Entitlements', 'Cosmetics'],
+    }),
+    // POST /cards/:id/publish (CARD-13/15/19/20) — the Canvas ◆ PUBLISH. Gates return 409s the client
+    // renders as the CARD-19 checklist / ReconcileSheet: MIN_COMPLEXITY · DUPLICATE_COMPOSITION ·
+    // PREMIUM_UNRECONCILED {unowned,total}. Success flattens + sets status=published (immutable after).
+    // Invalidates CommunityCards so the game's gallery re-reads and the just-published card appears
+    // WITHOUT an app restart (owner round-2 bug 3): the general (id-less) tag is a wildcard across every
+    // gameId's gallery entry, the same cross-slice pattern adoptCard uses.
+    publishCard: build.mutation<CardDesignView, string>({
+      query: (cardId) => ({ url: `/cards/${cardId}/publish`, method: 'POST', body: {} }),
+      invalidatesTags: ['Cards', 'Me', 'Collection', 'CommunityCards'],
+    }),
+
     // ── catalog (CAT-01..05/09) ───────────────────────────────────────────────────────────────
     getGenres: build.query<GenresResponse, void>({
       query: () => '/genres',
@@ -316,4 +436,14 @@ export const {
   useGetLooksQuery,
   useSaveLookMutation,
   useDeleteLookMutation,
+  useGetStoreQuery,
+  useGetWalletQuery,
+  useLazyGetLedgerQuery,
+  useClaimDailyBonusMutation,
+  useValidateIapMutation,
+  useGetEntitlementsQuery,
+  useGetCosmeticsQuery,
+  useAcquireCosmeticMutation,
+  useAcquireCosmeticBatchMutation,
+  usePublishCardMutation,
 } = api;

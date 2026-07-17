@@ -8,7 +8,7 @@ import { TertiaryLink } from './TertiaryLink';
 export function LegalScreen({ title, paragraphs }: { title: string; paragraphs: string[] }) {
   const styles = useStyles();
   return (
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
       {/* S2-b — the ‹ BACK return-seam sits UNDER the screen title (was above it). */}
       <Text style={styles.title}>{title}</Text>
       <TertiaryLink label="Back" chevron="leading-back" onPress={() => router.back()} />

@@ -193,7 +193,7 @@ export function AssetShelf({
 
   if (inline) {
     return (
-      <ScrollView style={styles.inlineScroll} contentContainerStyle={styles.inlineBody} keyboardShouldPersistTaps="handled">
+      <ScrollView style={styles.inlineScroll} contentContainerStyle={styles.inlineBody} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         {inner}
       </ScrollView>
     );

@@ -34,6 +34,22 @@ const DEFAULTS: Record<string, RateLimitRule> = {
   // one-write-pipeline (~1-2s), so 120/min covers the hottest live-edit session; SAVE CURRENT/delete
   // share the bucket. Mirrors the cards:write posture.
   'device:write': { limit: 120, windowMs: 60_000 },
+  // M5 economy spend paths (decision 0073 §0.7 — the P3/P4 adopt/acquire spend buckets; SYS-05/G-K
+  // async). 30/min is ample for real editing/adopt bursts; the daily-bonus claim rides the fallback.
+  'wallet:spend': { limit: 30, windowMs: 60_000 },
+  // M5 P3 publish (decision 0073 §0.7 — CARD-19). Stacked pair per the `catalog:create` precedent: a
+  // per-10-min burst cap AND a per-day cap (both mounted as middlewares — both must pass). Publishing
+  // is a deliberate, infrequent act; a flatten runs server-side, so the burst cap is deliberately tight.
+  'cards:publish': { limit: 3, windowMs: 10 * 60_000 },
+  'cards:publish:daily': { limit: 10, windowMs: 24 * 60 * 60_000 },
+  // M5 P3 adopt (decision 0073 §0.7 — closes OQ-097's uncapped-bulk-adopt hole). Stacked pair: a
+  // per-minute burst cap AND a per-day cap. 30/min covers a browse-and-collect burst; 200/day is ample.
+  'cards:adopt': { limit: 30, windowMs: 60_000 },
+  'cards:adopt:daily': { limit: 200, windowMs: 24 * 60 * 60_000 },
+  // M5 P2 IAP receipt validation (decision 0073 §0.7 — `iap:validate` 10/min; SYS-05/G-K async). A real
+  // purchase/restore is infrequent; 10/min covers a restore-all burst. The webhook is server-to-server
+  // (signature-gated, not IP-keyed) and is NOT rate-limited here.
+  'iap:validate': { limit: 10, windowMs: 60_000 },
 };
 
 const overrides = new Map<string, RateLimitRule>();

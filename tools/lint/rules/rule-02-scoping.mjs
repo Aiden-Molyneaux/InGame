@@ -39,9 +39,46 @@ const AUTH_LOOKUP_RE = /\/\/\s*SYS-01-AUTH-LOOKUP\b/;
 // misuse fixture proves both guards. Guard-surface marker → auditable at the gate-3 seam review.
 const COMMUNITY_AGGREGATE_RE = /\/\/\s*SYS-01-COMMUNITY-AGGREGATE\b/;
 const AGGREGATE_CALL_RE = /\bcount\s*\(/;
+// SYS-01-PUBLIC-READ (OQ-122, decision 0073 §0.1 — the third read class): exempts a cross-user READ
+// of a user-owned table ONLY when the window carries an explicit VISIBILITY PREDICATE (a `'published'`
+// status literal, the M5 spike surface). Reads-only + predicate-required — a marked write/upsert or a
+// predicate-less read still fails closed. The composition-exclusion guarantee is enforced at the
+// serializer (explicit-column selects + toPublicShape), not this lint (P3 finishes the lint work —
+// widen the predicate set / add a misuse fixture). Guard-surface marker → auditable at the seam review.
+const PUBLIC_READ_RE = /\/\/\s*SYS-01-PUBLIC-READ\b/;
+// The visibility predicate signal: a literal `'published'` status filter, OR a call to the
+// `publishedOnly(...)` helper — whose whole contract is to INJECT that predicate (decision 0073 §0.1
+// names the helper as the mechanism). Either present in-window means the read is visibility-scoped.
+const PUBLISHED_PREDICATE_RE = /['"]published['"]|\bpublishedOnly\s*\(/;
+// The composition-exclusion guarantee (OQ-122/CARD-15/0066 §2 — P3 finishes the lint work): a
+// SYS-01-PUBLIC-READ read must NEVER select the private `composition` column (cross-user viewers get
+// the flattened image only). The regex matches a `.composition` column ref but NOT `.compositionHash`
+// (no word boundary before `Hash`), so the public dedup read (which selects the hash) is unaffected.
+const COMPOSITION_SELECT_RE = /\.composition\b/;
 const WINDOW = 12;
+// A slightly wider window for the PUBLIC-READ MARKER only: an attributed select can push the
+// `// SYS-01-PUBLIC-READ` comment several lines off the `.from(...)` verb (it may sit above a long
+// column object). This widens ONLY where the marker is looked for — the visibility predicate and the
+// composition-select are NOT read from this window (that was the P3 hole: the ±16-line window matched a
+// `publishedOnly(` / `'published'` belonging to a NEIGHBOURING query, laundering a predicate-less marked
+// read). Those two now bind to the marked statement itself — see markedStatementOf.
+const PUBLIC_READ_WINDOW = 16;
 /** How far ahead an insert chain is scanned for `.onConflictDoUpdate(` (bounded by the next `;`). */
 const CHAIN_LOOKAHEAD = 2000;
+/**
+ * The marked query chain a verb belongs to — the code between the enclosing statement boundary
+ * (the nearest preceding `;`/`{`) and the statement's terminating `;`. The PUBLIC-READ visibility
+ * predicate + composition-select checks bind to THIS expression, not a loose line window, so a
+ * `publishedOnly(` / `'published'` in a NEIGHBOURING statement can never launder a predicate-less
+ * marked read (the P3 window hole). Comments are already stripped from `code`.
+ * @param {string} code stripped-comment source · @param {number} idx the verb match's index.
+ */
+const markedStatementOf = (code, idx) => {
+  const start = Math.max(code.lastIndexOf(';', idx), code.lastIndexOf('{', idx)) + 1;
+  const semi = code.indexOf(';', idx);
+  const end = semi === -1 ? Math.min(idx + CHAIN_LOOKAHEAD, code.length) : semi;
+  return code.slice(start, end);
+};
 
 const isAuthLookupFile = (path) =>
   /(^|\/)auth\//.test(path) || /(auth|token)[\w-]*-repo\.[mc]?tsx?$/.test(path);
@@ -77,12 +114,19 @@ export default {
         const to = Math.min(codeLines.length, lineNo + WINDOW);
         const codeWindow = codeLines.slice(from, to).join('\n');
         const origWindow = origLines.slice(from, to).join('\n');
+        // The PUBLIC-READ MARKER is looked for in a slightly wider window (it can sit above a long
+        // column object). The predicate + composition-select are NOT read here — they bind to the
+        // marked statement (markedStatementOf), so a neighbour's `publishedOnly(` cannot launder.
+        const pFrom = Math.max(0, lineNo - 1 - PUBLIC_READ_WINDOW);
+        const pTo = Math.min(codeLines.length, lineNo + PUBLIC_READ_WINDOW);
+        const pOrigWindow = origLines.slice(pFrom, pTo).join('\n');
         return {
           hasScope: SCOPE_SIGNAL_RE.test(codeWindow),
           hasExemptComment: /SYS-01-EXEMPT/.test(origWindow),
           hasAuthLookupComment: AUTH_LOOKUP_RE.test(origWindow),
           hasAggregateComment: COMMUNITY_AGGREGATE_RE.test(origWindow),
           hasAggregateCall: AGGREGATE_CALL_RE.test(codeWindow),
+          hasPublicReadComment: PUBLIC_READ_RE.test(pOrigWindow),
         };
       };
 
@@ -123,7 +167,27 @@ export default {
         // An anonymous cross-user AGGREGATE read (CAT-09/OQ-126): reads-only + count() required.
         const hasCommunityAggregate =
           READ_VERBS.has(verb) && w.hasAggregateComment && w.hasAggregateCall;
-        if (!w.hasScope && !hasExempt && !hasAuthLookup && !hasCommunityAggregate) {
+        // A cross-user PUBLIC read (OQ-122): reads-only + an explicit `'published'` visibility predicate.
+        // The predicate + composition-select are read from the MARKED STATEMENT itself (not a loose line
+        // window) so a neighbouring query's `publishedOnly(` / `'published'` can never launder a
+        // predicate-less marked read (the P3 window hole). Only computed for a marked read verb.
+        const marksPublicRead = READ_VERBS.has(verb) && w.hasPublicReadComment;
+        const statement = marksPublicRead ? markedStatementOf(code, idx) : '';
+        const hasPublishedPredicate = marksPublicRead && PUBLISHED_PREDICATE_RE.test(statement);
+        const selectsComposition = marksPublicRead && COMPOSITION_SELECT_RE.test(statement);
+        const hasPublicRead = marksPublicRead && hasPublishedPredicate;
+        // The composition-exclusion guarantee: a PUBLIC read that selects `composition` is NEVER
+        // exempt — the private layers must not cross to another principal (CARD-15 / 0066 §2). Flag it
+        // explicitly (a clear message) and skip the generic check (one violation, not two).
+        if (hasPublicRead && selectsComposition) {
+          violations.push({
+            file: file.path,
+            line: lineNo,
+            message: `// SYS-01-PUBLIC-READ selects "composition" — a cross-user public read must never expose the private composition (OQ-122/CARD-15). Select the flattened image columns only (toPublicShape allowlist).`,
+          });
+          continue;
+        }
+        if (!w.hasScope && !hasExempt && !hasAuthLookup && !hasCommunityAggregate && !hasPublicRead) {
           const kind = READ_VERBS.has(verb) ? 'read' : verb === 'insert' || verb === 'into' ? 'upserted' : 'modified';
           violations.push({
             file: file.path,

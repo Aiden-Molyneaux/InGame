@@ -130,3 +130,72 @@ export const ANONYMIZED_AUTHOR: AnonymizedAuthor = {
   username: '[deleted]',
   deleted: true,
 };
+
+// ── CAT-07 Contributor profile (GET /users/:id/contributions) — M5 P3 goes-live ────────────────────
+// The pride/read surface (api-contract 0.28). Two privacy-gated shapes (PROF-03): friend/self carries
+// the card/game set-pieces; non-friend carries the honest aggregate `stats` + `standing` only. The
+// stats stop honest-zeroing the moment adoptions exist (decision 0072/0073). CAT-10 percentile
+// `standing` is threshold-gated (PROF-07) and NULL below the cohort floor — M5 ships it null (the
+// cohort ranking rides the M7 achievements/percentile engine). VIEW-ALL sub-lists stay contract-only.
+
+/** The honest contributor aggregates (CAT-07). Live over real data — no honest-zeroing post-adoption. */
+export const contributorStatsSchema = z
+  .object({
+    gamesAdded: z.number().int().nonnegative(), // CAT-05 catalog entries created
+    cardsDesigned: z.number().int().nonnegative(), // published designs (public creations)
+    totalAdoptions: z.number().int().nonnegative(), // adoptions across all their published cards (CARD-05)
+    totalReached: z.number().int().nonnegative(), // collections reach across their added games (CAT-09)
+  })
+  .strict();
+export type ContributorStats = z.infer<typeof contributorStatsSchema>;
+
+/** One most-/top-adopted published card teaser (CARD-05). `card` = the flattened public render. */
+export const contributorCardSchema = z
+  .object({
+    cardId: z.string().uuid(),
+    gameId: z.string().uuid(),
+    gameTitle: z.string(),
+    adoptionCount: z.number().int().nonnegative(),
+    card: z
+      .object({
+        id: z.string().uuid(),
+        name: z.string(),
+        imageUrl: z.string().nullable(),
+        thumbUrl: z.string().nullable(),
+        isPremium: z.boolean(),
+      })
+      .strict(),
+  })
+  .strict();
+export type ContributorCard = z.infer<typeof contributorCardSchema>;
+
+/** One top-reach added game (CAT-09). */
+export const contributorGameSchema = z
+  .object({
+    gameId: z.string().uuid(),
+    title: z.string(),
+    collectionsCount: z.number().int().nonnegative(),
+  })
+  .strict();
+export type ContributorGame = z.infer<typeof contributorGameSchema>;
+
+export const contributionsResponseSchema = z
+  .object({
+    user: z
+      .object({
+        id: z.string().uuid(),
+        username: z.string(),
+        avatarUrl: z.string().url().nullable(),
+        memberSince: z.string(),
+      })
+      .strict(),
+    stats: contributorStatsSchema,
+    /** CAT-10 percentile standing vs the contributor cohort — NULL below the PROF-07 floor (M5: null). */
+    standing: z.null(),
+    /** Friend/self only (PROF-03) — omitted on the non-friend/limited shape. */
+    signatureCard: contributorCardSchema.nullable().optional(),
+    topCards: z.array(contributorCardSchema).optional(),
+    topGames: z.array(contributorGameSchema).optional(),
+  })
+  .strict();
+export type ContributionsResponse = z.infer<typeof contributionsResponseSchema>;

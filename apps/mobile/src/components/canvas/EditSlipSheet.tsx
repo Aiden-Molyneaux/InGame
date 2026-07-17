@@ -67,7 +67,7 @@ export function EditSlipSheet({
   // controls in a plain ScrollView. Otherwise keep the PulledSheet drawer (nothing else changes).
   const wrap = (title: string, children: ReactNode) =>
     inline ? (
-      <ScrollView style={styles.inlineScroll} contentContainerStyle={styles.inlineBody} keyboardShouldPersistTaps="handled" scrollEnabled={scrollEnabled}>
+      <ScrollView style={styles.inlineScroll} contentContainerStyle={styles.inlineBody} keyboardShouldPersistTaps="handled" scrollEnabled={scrollEnabled} showsVerticalScrollIndicator={false}>
         <ScrollLockContext.Provider value={scrollLockApi}>{children}</ScrollLockContext.Provider>
       </ScrollView>
     ) : (

@@ -4,6 +4,7 @@ import {
   uuid,
   text,
   integer,
+  bigserial,
   boolean,
   timestamp,
   date,
@@ -426,6 +427,13 @@ export const cardDesigns = pgTable(
     imageUrl: text('image_url'),
     thumbUrl: text('thumb_url'),
     isPremium: boolean('is_premium').notNull().default(false),
+    // CARD-13/decision 0072 (M5 P3) — the DENORMALIZED premium component ids this card carries, set at
+    // PUBLISH (from the composition's premium cosmetic refs, after the reconcile gate proved the
+    // DESIGNER owns them all). Empty until publish + empty in real data (roster all-free until P10).
+    // The gallery's personalized `priceForYou` and adopt's component-acquire read THIS — so no
+    // cross-user read of the private `composition` is ever needed (the OQ-122 composition-exclusion
+    // guarantee holds for the whole publish/adopt/gallery surface).
+    premiumComponentIds: text('premium_component_ids').array().notNull().default([]),
     // CARD-24a copy-on-write (decision 0067): editing a committed card spins a draft COPY that
     // points here at its origin. NULL for from-scratch drafts. ON DELETE SET NULL — if the origin
     // is deleted the copy degrades to a standalone draft, never a broken ref (belt-and-braces).
@@ -513,6 +521,196 @@ export const deviceLooks = pgTable(
     userIdx: index('device_looks_user_idx').on(table.userId),
   }),
 );
+
+/**
+ * `wallets` — the ECON-07 currency balance (one per user). USER-OWNED (owner key = `user_id`, UNIQUE
+ * so the lazy get-or-create UPSERTs; NOT on the F32 manifest — rule-2 fails closed). Lazy-materialized
+ * on the first wallet-touching mutation (decision 0072/0074: the 10-PX `starting_grant` row is written in
+ * the same transaction, ECON-02). `balance` is always derivable from `currency_ledger` (the reconcile
+ * invariant, ECON-07) and MAY go negative to the SYS-04 refund floor (ECON-09). Never written raw —
+ * every change funnels through the ledger service (SELECT … FOR UPDATE + one ledger row per delta).
+ */
+export const wallets = pgTable('wallets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  balance: integer('balance').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * `currency_ledger` — the ECON-07 append-only earn/spend history (auditability + the user-facing
+ * ledger). USER-OWNED (owner key = `user_id`; NOT on the F32 manifest — rule-2 fails closed).
+ * APPEND-ONLY: the codebase exposes NO update/delete path — every economic effect is a NEW row, and
+ * `sum(delta) == wallets.balance` is the standing reconcile invariant (ECON-07).
+ *  - `reason` — the pinned enum (decision 0073; shared `LEDGER_REASONS`), validated in the service.
+ *  - `refType`/`refId` — nullable polymorphic context (`refId` is TEXT so it holds a uuid card id, a
+ *    text cosmetic roster id (0063), or an external receipt id). Not a DB FK (polymorphic).
+ *  - `periodKey` — period-scoped idempotency key: the daily bonus stamps the UTC-day (`YYYY-MM-DD`)
+ *    so a partial-unique index makes a second same-day claim impossible even under the F36 race.
+ */
+export const currencyLedger = pgTable(
+  'currency_ledger',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    // Monotonic insertion order — the stable newest-first key. `created_at` is `now()` (transaction
+    // time), so rows written in ONE transaction (the first-touch grant + a claim, or P3's multi-row
+    // adopt) share a timestamp; `seq` breaks the tie deterministically by insertion order.
+    seq: bigserial('seq', { mode: 'number' }).notNull(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    delta: integer('delta').notNull(),
+    reason: text('reason').notNull(),
+    refType: text('ref_type'),
+    refId: text('ref_id'),
+    periodKey: text('period_key'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    // Newest-first paginated reads (ECON-07) — ordered by the monotonic seq (the wallet history view).
+    userSeqIdx: index('currency_ledger_user_seq_idx').on(table.userId, table.seq),
+    // Period-scoped idempotency (ECON-02): one row per (user, reason, period) among period-stamped
+    // rows — the daily-claim race backstop behind the wallet-row FOR UPDATE lock.
+    userReasonPeriodIdx: uniqueIndex('currency_ledger_user_reason_period_idx')
+      .on(table.userId, table.reason, table.periodKey)
+      .where(sql`period_key IS NOT NULL`),
+  }),
+);
+
+/**
+ * `store_products` — the IAP product catalog (currency packs, ECON-10). GLOBAL (on the F32 manifest —
+ * product definitions, not per-user state). Seeded from the decision 0072 pricing sheet by P10.
+ *  - `productId` — the store SKU (`px_pack_starter` / `px_pack_010` …), UNIQUE; matches App Store
+ *    Connect / RevenueCat product ids.
+ *  - `oneTime` — the ECON-10 Starter Pack (once/account, enforced server-side by P2, not here).
+ */
+export const storeProducts = pgTable('store_products', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  productId: text('product_id').notNull().unique(),
+  pixels: integer('pixels').notNull(),
+  oneTime: boolean('one_time').notNull().default(false),
+  active: boolean('active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * `iap_receipts` — validated IAP receipts (ECON-06, P2's grant-idempotency substrate). USER-OWNED
+ * (owner key = `user_id`; NOT on the F32 manifest — rule-2 fails closed). `receiptId` is UNIQUE so a
+ * replayed receipt can never double-grant (the ECON-06 invariant). Built now (P1 migration); the
+ * validation/grant path that writes it is P2.
+ */
+export const iapReceipts = pgTable(
+  'iap_receipts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    platform: text('platform').notNull(), // 'ios' | 'android'
+    receiptId: text('receipt_id').notNull().unique(),
+    productId: text('product_id').notNull(),
+    pixelsGranted: integer('pixels_granted').notNull(),
+    raw: jsonb('raw').notNull().$type<Record<string, unknown>>(),
+    validatedAt: timestamp('validated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    userIdx: index('iap_receipts_user_idx').on(table.userId),
+  }),
+);
+
+/**
+ * `card_adoptions` — the CARD-04 adoption grant (M5 P3 / the §1 spike substrate; the separate grants
+ * table 0066 §3 promised — grants deliberately do NOT live on `card_designs`). USER-OWNED (owner key =
+ * `adopter_id`; NOT on the F32 manifest — rule-2 fails closed). One row per (adopter, cardDesign) — the
+ * unique pair backs `ALREADY_ADOPTED` idempotency (OQ-101) and decides the F36 parallel-adopt race.
+ *  - `currencyPaid` — the PX the adopter paid for the card's premium components (decision 0072); 0 on
+ *    the free path (no premium / all owned) — the whole M5 §1 spike surface.
+ *  - The card's public adoption count is DERIVED (`count(card_adoptions)` per card, an anonymous
+ *    cross-user aggregate — SYS-01-COMMUNITY-AGGREGATE), never a denormalized counter, so the adopter
+ *    never writes the card owner's row (a cross-owner write the SYS-01 scope-lint would rightly refuse).
+ *  - `revokedAt` (M5 F-2b, migration 0012) — the UN-ADOPT soft flag (CARD-14/20: deleting an adopted
+ *    card removes only the caller's copy, "no effect on the adoption count"). A revoked row vanishes
+ *    from the adopter's OWN surfaces (switcher/rider/equip/share) but STAYS in the derived count +
+ *    the designer's clout (count = all-time adoptions — the honest reading of the count-unaffected
+ *    clause). Re-adopting REACTIVATES the row (clears the flag; the acquire re-runs, charging only
+ *    components no longer owned — normally 0, entitlements persist). Rows are never hard-deleted.
+ */
+export const cardAdoptions = pgTable(
+  'card_adoptions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    adopterId: uuid('adopter_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    cardDesignId: uuid('card_design_id')
+      .notNull()
+      .references(() => cardDesigns.id, { onDelete: 'cascade' }),
+    gameId: uuid('game_id')
+      .notNull()
+      .references(() => games.id),
+    currencyPaid: integer('currency_paid').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }), // null = active grant (M5 F-2b un-adopt)
+  },
+  (table) => ({
+    adopterCardIdx: uniqueIndex('card_adoptions_adopter_card_idx').on(
+      table.adopterId,
+      table.cardDesignId,
+    ),
+    cardIdx: index('card_adoptions_card_idx').on(table.cardDesignId),
+    adopterIdx: index('card_adoptions_adopter_idx').on(table.adopterId),
+  }),
+);
+
+/**
+ * `user_entitlements` — the COSM-03 account-wide cosmetic ownership grant (M5 P4, decision 0072/0073).
+ * USER-OWNED (owner key = `user_id`; NOT on the F32 manifest — rule-2 fails closed; `cosmetic_items` IS
+ * on that manifest — the GLOBAL catalog definition table P10 seeds — this table is the per-user grant,
+ * a different concern). One row per (user, cosmeticId) — the unique pair backs idempotent acquire
+ * (a re-acquire of an owned item is a no-op) and decides the F36 parallel-acquire race under the
+ * wallet-row lock (P1's single serialization point — acquireComponents locks the wallet FIRST, so a
+ * second concurrent acquire for the same actor/item queues behind it and re-reads "already owned").
+ *  - `cosmeticId` — TEXT (not a FK — the `cosmetic_items` catalog table doesn't exist yet; P10 seeds
+ *    the real roster). Matches the roster item id (COSM-01) once P10 formalizes it.
+ *  - `source` — `purchase` (Store BUY / adopt's component acquire) · `earned` (ACH-04, M7) ·
+ *    `operator_grant` (ECON-11 service-layer op). Never updated in place — a clawback DELETEs the row
+ *    (the v2 exception to ECON-09's "not clawed back").
+ */
+export const userEntitlements = pgTable(
+  'user_entitlements',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    cosmeticId: text('cosmetic_id').notNull(),
+    source: text('source').notNull(), // 'purchase' | 'earned' | 'operator_grant'
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    userCosmeticIdx: uniqueIndex('user_entitlements_user_cosmetic_idx').on(
+      table.userId,
+      table.cosmeticId,
+    ),
+    userIdx: index('user_entitlements_user_idx').on(table.userId),
+  }),
+);
+
+export type UserEntitlementRow = typeof userEntitlements.$inferSelect;
+export type NewUserEntitlementRow = typeof userEntitlements.$inferInsert;
+
+export type WalletRow = typeof wallets.$inferSelect;
+export type CurrencyLedgerRow = typeof currencyLedger.$inferSelect;
+export type NewCurrencyLedgerRow = typeof currencyLedger.$inferInsert;
+export type StoreProductRow = typeof storeProducts.$inferSelect;
+export type IapReceiptRow = typeof iapReceipts.$inferSelect;
+export type CardAdoptionRow = typeof cardAdoptions.$inferSelect;
+export type NewCardAdoptionRow = typeof cardAdoptions.$inferInsert;
 
 export type UserRow = typeof users.$inferSelect;
 export type NewUserRow = typeof users.$inferInsert;
