@@ -7,7 +7,6 @@ import type {
   ShowcaseAchievement,
 } from '@ingame/shared';
 import { themedStyles, useTheme, withAlpha } from '../../theme';
-import { ScreenButton } from '../ScreenButton';
 import { PulledSheet } from '../PulledSheet';
 import { tierColor } from './tier';
 import { glyphForKey, MYSTERY_GLYPH, type GlyphPaths } from './achievementGlyphs';
@@ -87,8 +86,9 @@ export function AchievementSheet({
 
           {detail.kind === 'earned' ? <RewardBlock heading="REWARD" reward={detail.achievement.reward} earned /> : null}
           {detail.kind === 'progress' ? <RewardBlock heading="PRIZE" reward={detail.achievement.reward} earned={false} /> : null}
-
-          <ScreenButton label="Done" variant="secondary" onPress={onClose} />
+          {/* No DONE key (owner walk-1) — the sheet grammar's own dismissal (scrim tap / grab handle /
+              hardware back via PulledSheet) is the exit. The CelebrationMoment's CONTINUE is a different
+              surface and keeps its board-drawn key. */}
         </View>
       ) : null}
     </PulledSheet>

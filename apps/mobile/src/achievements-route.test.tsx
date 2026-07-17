@@ -129,6 +129,10 @@ describe('P11 self achievements route — the state matrix', () => {
     // appears in that section, so assert ≥1 rather than exactly one.
     expect(screen.getByText('REWARD')).toBeTruthy();
     expect(screen.getAllByText('+50 PIXELS').length).toBeGreaterThan(0);
+    // walk-1 — NO DONE key in the achievement drawer: the sheet grammar dismisses (scrim tap below).
+    expect(screen.queryByText('DONE')).toBeNull();
+    fireEvent.press(screen.getByLabelText('Close')); // the PulledSheet scrim
+    expect(screen.queryByText('REWARD')).toBeNull(); // the sheet closed
   });
 
   it('D3 — the locked ??? sheet is SEALED (no name / criterion / reward leaks)', () => {
