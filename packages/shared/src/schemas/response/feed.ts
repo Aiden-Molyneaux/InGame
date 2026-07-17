@@ -35,8 +35,11 @@ export const feedObjectSchema = z
     card: z
       .object({
         id: z.string(),
-        imageUrl: z.string().url().nullable(),
-        thumbUrl: z.string().url().nullable(),
+        // Plain strings, NOT .url() — the server emits RELATIVE /media/… paths (the local-disk storage
+        // impl; R2/CDN may absolutize later). Matches the codebase-standard card typing
+        // (galleryCardSchema et al.); .url() was the C1 outlier that killed the Friends-tab feed parse.
+        imageUrl: z.string().nullable(),
+        thumbUrl: z.string().nullable(),
       })
       .strict()
       .optional(),
@@ -60,7 +63,9 @@ export const feedItemSchema = z
       .object({
         userId: z.string().uuid(),
         username: z.string(),
-        avatarUrl: z.string().url().nullable(),
+        // Plain string, NOT .url() (C1) — avatar urls may be relative /media/… paths like every other
+        // served asset; matches the sibling person-summary typing.
+        avatarUrl: z.string().nullable(),
       })
       .strict(),
     type: feedItemTypeSchema,

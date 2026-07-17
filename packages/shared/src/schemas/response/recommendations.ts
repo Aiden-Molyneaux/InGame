@@ -14,8 +14,11 @@ import { z } from 'zod';
 export const recommendationCardSchema = z
   .object({
     id: z.string(), // a card_design uuid, or the literal 'default'
-    imageUrl: z.string().url().nullable(),
-    thumbUrl: z.string().url().nullable(),
+    // Plain strings, NOT .url() — the server emits RELATIVE /media/… paths (local-disk storage; R2/CDN
+    // may absolutize later). Matches the codebase-standard card typing (galleryCardSchema et al.); the
+    // .url() outliers were the C1 seam-parse bug class (would break RecRows the moment a rec carries a thumb).
+    imageUrl: z.string().nullable(),
+    thumbUrl: z.string().nullable(),
     isCustom: z.boolean(),
   })
   .strict();
