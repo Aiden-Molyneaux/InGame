@@ -123,6 +123,16 @@ export async function assembleSelfShape(row: UserRow, exec?: Executor): Promise<
 
   // The expanded favouriteGame / nowPlaying pins (M3 — the P2 PINNED FAVOURITE unblock, WTP-03).
   // M4 (0066): the pin's card rider resolves the entry's EQUIPPED design (CARD-07/18).
+  // M6 walk-fix (the F-19 payload-side class): the rider resolves through the SAME origin-union
+  // resolver the collection items use (`equippedCardsByGameId` — own designs carry composition +
+  // imageUrl/thumbUrl; ADOPTED grants carry the flattened image only). The M3-era `findOwnedDesign`
+  // path resolved an adopted equipped pin to NULL → the default stub — the owner-walk NOW PLAYING
+  // default-card bug. One resolver, no re-derivation (the C4 friend side shares the same discipline
+  // via friendCardFromRow).
+  const pinGameIds = [...new Set([row.favouriteGameId, row.nowPlayingGameId])].filter(
+    (id): id is string => id !== null,
+  );
+  const pinCards = await equippedCardsByGameId(row.id, pinGameIds, exec);
   const expand = async (gameId: string | null): Promise<SelfGameExpansion | null> => {
     if (!gameId) return null;
     const [game] = exec
@@ -130,17 +140,12 @@ export async function assembleSelfShape(row: UserRow, exec?: Executor): Promise<
       : await catalogRepo.gamesByIds([gameId]);
     if (!game) return null; // soft-deleted from the catalog → honest null
     const entry = entries.find((e) => e.gameId === gameId);
-    const design = entry?.activeCardDesignId
-      ? exec
-        ? await cardRepo.findOwnedDesign(row.id, entry.activeCardDesignId, exec)
-        : await cardRepo.findOwnedDesign(row.id, entry.activeCardDesignId)
-      : null;
     return {
       gameId,
       ...(entry ? { entryId: entry.id } : {}),
       title: game.name,
       hours: entry?.hours ?? 0,
-      card: toCardRider(design),
+      card: pinCards.get(gameId) ?? toCardRider(null),
     };
   };
 

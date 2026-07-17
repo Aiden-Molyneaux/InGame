@@ -375,6 +375,51 @@ describe('CAT-07: contributions VIEW-ALL cursors + bio/game-thumb gaps', () => {
   });
 });
 
+describe('WTP-03 · PROF-01 · F-19 (walk-fix): the /me pin expansions carry the M5 flattened card fields', () => {
+  it('a pinned ADOPTED equipped card arrives with imageUrl (flattened-only — no foreign composition)', async () => {
+    const designer = await seedUser();
+    const me = await seedUser();
+    const game = await seedGame(designer.token, 'Adopted Pin RPG');
+    const cardId = await publishCard(designer.token, game.id, 21);
+    const entryId = await addToCollection(me.token, game.id, 9);
+    const adopt = await request(app).post(`/api/cards/${cardId}/adopt`).set(authed(me.token));
+    expect(adopt.status).toBe(200);
+    await equip(me.token, entryId, cardId);
+    // Pin the game BOTH ways — nowPlaying and favouriteGame ride the same expansion (parity).
+    await request(app).put('/api/me/now-playing').set(authed(me.token)).send({ gameId: game.id });
+    await request(app).patch('/api/me').set(authed(me.token)).send({ favouriteGameId: game.id });
+
+    const res = await request(app).get('/api/me').set(authed(me.token));
+    expect(res.status).toBe(200);
+    for (const pin of [res.body.nowPlaying, res.body.favouriteGame]) {
+      expect(pin).toMatchObject({ gameId: game.id, hours: 9 });
+      // The M5 flattened image rides the pin (the owner-walk bug: this was the default stub).
+      expect(pin.card.id).toBe(cardId);
+      expect(typeof pin.card.imageUrl).toBe('string');
+      expect(pin.card.isCustom).toBe(true);
+      // A FOREIGN (adopted) design never leaks its composition (OQ-122).
+      expect('composition' in pin.card).toBe(false);
+    }
+  });
+
+  it('a pinned OWN private card arrives with composition (+ null imageUrl — the owner renders live)', async () => {
+    const me = await seedUser();
+    const game = await seedGame(me.token, 'Private Pin RPG');
+    const entryId = await addToCollection(me.token, game.id, 3);
+    // Draft → save-private (no flatten until publish → imageUrl stays null; composition rides, owner-only).
+    const draft = await request(app).post('/api/cards').set(authed(me.token)).send({ gameId: game.id, composition: closedComp(22) });
+    const saved = await request(app).post(`/api/cards/${draft.body.id}/save-private`).set(authed(me.token));
+    expect(saved.status).toBe(200);
+    await equip(me.token, entryId, draft.body.id);
+    await request(app).put('/api/me/now-playing').set(authed(me.token)).send({ gameId: game.id });
+
+    const res = await request(app).get('/api/me').set(authed(me.token));
+    expect(res.body.nowPlaying.card.id).toBe(draft.body.id);
+    expect(res.body.nowPlaying.card.composition).toBeDefined(); // own design — renders live
+    expect(res.body.nowPlaying.card.imageUrl).toBeNull(); // private — no flatten yet
+  });
+});
+
 describe('CARD-22 · OQ-146: the backfill snapshots labels for pre-M6 published cards (idempotent)', () => {
   it('backfillEquippedLabels populates empty labels from the composition, then no-ops on a re-run', async () => {
     const { getDb } = await import('../../src/db/client');

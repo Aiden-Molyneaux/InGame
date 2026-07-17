@@ -36,6 +36,14 @@ export type SelfStats = z.infer<typeof selfStatsSchema>;
  * The expanded favouriteGame / nowPlaying object (PROF-01/05, WTP-03; M3 — unblocks the PINNED
  * FAVOURITE set-piece). `entryId` is absent when the pinned game isn't on the caller's shelf;
  * `card` = the CARD-18 stub pre-M4.
+ *
+ * M6 walk-fix — the F-19/F-20 payload-side class: the pin's `card` resolves through the SAME
+ * origin-union resolver the collection items use, so it carries the M5 FLATTENED fields the shape
+ * always admitted (`collectionCardSchema.imageUrl/thumbUrl`, nullable) — an OWN design rides
+ * `composition` (+ imageUrl once published), an ADOPTED equipped design rides the flattened image
+ * ONLY (never the foreign composition, OQ-122). The client's EntryCard consumes imageUrl/composition
+ * as-is; a pin serialized WITHOUT them read as the default face (the owner-walk NOW PLAYING bug) —
+ * never hand-render a card face from partial fields (F-20).
  */
 export const selfGameExpansionSchema = z
   .object({
