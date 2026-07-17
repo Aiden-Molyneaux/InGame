@@ -4,7 +4,7 @@ import type {
   TrendingCardsResponse,
   OkResponse,
 } from '@ingame/shared';
-import { gameGalleryResponseSchema, adoptResponseSchema } from '@ingame/shared';
+import { gameGalleryResponseSchema, adoptResponseSchema, trendingCardsResponseSchema } from '@ingame/shared';
 import { api } from './api';
 
 // P8 community endpoints (M5 · decision 0072/0073 · api-contract 0.60/0.61). These are INJECTED into the
@@ -57,6 +57,9 @@ const communityApi = api
       // rail renders it today — the AdoptCardSheet is reusable for it — see gallery-manifest GAP).
       getTrendingCards: build.query<TrendingCardsResponse, void>({
         query: () => '/discover/trending-cards',
+        // P10 — parse at the seam now that the Discover surface consumes it (was untyped-raw when only the
+        // data layer existed). Non-commerce: counts, never prices.
+        transformResponse: (raw): TrendingCardsResponse => trendingCardsResponseSchema.parse(raw),
         providesTags: ['TrendingCards'],
       }),
 

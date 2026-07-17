@@ -4,6 +4,8 @@ import Svg, { Path, Rect } from 'react-native-svg';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import type { CreateReportRequest } from '../../src/store/reportApi';
 import { IdentityBlock } from '../../src/components/IdentityBlock';
+import { EntryCard } from '../../src/components/EntryCard';
+import { RankChip } from '../../src/components/RankChip';
 import { ScreenButton } from '../../src/components/ScreenButton';
 import { TertiaryLink } from '../../src/components/TertiaryLink';
 import { RelationshipAction } from '../../src/components/social/RelationshipAction';
@@ -133,11 +135,40 @@ export default function UserProfile() {
             />
           </View>
 
-          {/* the rest of the board (STATS / TOP-3 / DEVICE / ACHIEVEMENTS) needs the P5/P6 profile-read
-              widening — served EXPECTED-empty, never faked (manifest GAP-1/2/4). */}
+          {/* COL-13 (decision 0050 §C) — the friend Top-3 set-pieces + VIEW TOP 10 door. The friend/full
+              read now serves top10 (P5 live). A card tap → their Collection TOP view FOCUSED on that game;
+              VIEW TOP 10 → their Collection TOP view. Empty top10 → the door is absent. */}
+          {data.top10.length > 0 ? (
+            <View style={styles.section}>
+              <View style={styles.sectionRow}>
+                <Text style={styles.sectionHead}>TOP 3</Text>
+                <TertiaryLink
+                  label="View top 10"
+                  onPress={() => router.push({ pathname: `/user/${data.id}/collection`, params: { view: 'top' } })}
+                />
+              </View>
+              <View style={styles.top3}>
+                {data.top10.slice(0, 3).map((g) => (
+                  <Pressable
+                    key={g.gameId}
+                    style={styles.topSeat}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Open ${g.title} in ${data.username}'s Top 10`}
+                    onPress={() => router.push({ pathname: `/user/${data.id}/collection`, params: { view: 'top', focus: g.gameId } })}
+                  >
+                    <EntryCard title={g.title} card={{ imageUrl: g.card.imageUrl }} size="cell" />
+                    <RankChip rank={g.rank} />
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          ) : null}
+
+          {/* the rest of the board (STATS / DEVICE / ACHIEVEMENTS) needs the P5/P6 profile-read widening —
+              served EXPECTED-empty, never faked (manifest GAP-1/2/4). */}
           <View style={styles.expected}>
             <Text style={styles.expectedText}>
-              Their stats, Top 10, device, and achievements arrive with the rest of the profile read.
+              Their stats, device, and achievements arrive with the rest of the profile read.
             </Text>
           </View>
         </>
@@ -257,6 +288,11 @@ const useStyles = themedStyles((t) => ({
 
   counts: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
   doors: { gap: t.space.md },
+  section: { gap: t.space.md },
+  sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  sectionHead: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.dim, letterSpacing: 1.5 },
+  top3: { flexDirection: 'row', gap: t.space.lg, justifyContent: 'flex-start' },
+  topSeat: { gap: t.space.sm, alignItems: 'center' },
   expected: {
     borderWidth: 1,
     borderColor: t.scr.hairline,

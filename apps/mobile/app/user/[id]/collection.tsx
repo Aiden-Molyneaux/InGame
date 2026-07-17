@@ -4,6 +4,7 @@ import Svg, { Path, Circle } from 'react-native-svg';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import type { FriendCollectionItem } from '@ingame/shared';
 import { EntryCard } from '../../../src/components/EntryCard';
+import { FriendTopView } from '../../../src/components/collection/TopCurated';
 import { TertiaryLink } from '../../../src/components/TertiaryLink';
 import { ScreenButton } from '../../../src/components/ScreenButton';
 import { PulledSheet } from '../../../src/components/PulledSheet';
@@ -21,14 +22,16 @@ import { useGetUserQuery, useGetUserCollectionQuery, isFriendProfile } from '../
 // flip-back) — it shares the VOCABULARY (EntryCard face, tools-bar chrome, section grammar) as a thin
 // read-only parallel. An entry tap → the SOC-11 entry detail. The friend TOP view is EXPECTED(P5).
 
-type FriendView = 'shelf' | 'grid' | 'list';
+type FriendView = 'shelf' | 'grid' | 'list' | 'top';
 type SortKey = 'az' | 'hours' | 'ownedSince';
-const VIEW_ORDER: FriendView[] = ['shelf', 'grid', 'list'];
+const VIEW_ORDER: FriendView[] = ['shelf', 'grid', 'list', 'top'];
 const SORT_LABEL: Record<SortKey, string> = { az: 'A–Z', hours: 'HOURS', ownedSince: 'OWNED SINCE' };
 const SORT_ORDER: SortKey[] = ['az', 'hours', 'ownedSince'];
 
 export default function FriendCollection() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  // COL-13 (decision 0050) — a friend's Profile VIEW TOP 10 / Top-3 tap deep-links here with `?view=top`
+  // (+ `focus=gameId` for the tapped card).
+  const { id, view: viewParam, focus } = useLocalSearchParams<{ id: string; view?: string; focus?: string }>();
   const router = useRouter();
   const styles = useStyles();
   const t = useTheme();
@@ -36,7 +39,7 @@ export default function FriendCollection() {
   // Hooks ALL unconditional (F-16).
   const { data: profile } = useGetUserQuery(id ?? '', { skip: !id });
   const { data, isLoading, isError, error, refetch } = useGetUserCollectionQuery(id ?? '', { skip: !id });
-  const [view, setView] = useState<FriendView>('shelf');
+  const [view, setView] = useState<FriendView>(viewParam === 'top' ? 'top' : 'shelf');
   const [q, setQ] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('az');
   const [sortAsc, setSortAsc] = useState(true);
@@ -92,11 +95,15 @@ export default function FriendCollection() {
   const hero = items.find((i) => i.nowPlaying) ?? null;
   const openEntry = (gameId: string) => router.push(`/user/${id}/entry/${gameId}`);
   const filterActive = q.trim() !== '' || statusFilter.size > 0;
+  // COL-13 — the friend's curated Top-10 rides the friend/full profile read (friendProfile.top10). The
+  // read-only TOP view-mode consumes it; hours/status for the #1 headliner sub join from the collection.
+  const top10 = profile && isFriendProfile(profile) ? (profile.top10 ?? []) : [];
+  const friendItems = items.map((i) => ({ gameId: i.gameId, hours: i.hours, status: i.status }));
 
   return (
     <Frame title={username ? `Collection — ${username}` : 'Collection'} onBack={() => router.back()}>
-      {/* their Now Playing hero — full stats, NO log-hours (you can't log their time) */}
-      {hero ? (
+      {/* their Now Playing hero — full stats, NO log-hours (you can't log their time). Hidden in TOP. */}
+      {hero && view !== 'top' ? (
         <Pressable
           style={styles.hero}
           accessibilityRole="button"
@@ -135,34 +142,44 @@ export default function FriendCollection() {
             </Pressable>
           </View>
 
-          {/* inline scoped search */}
-          <View style={styles.searchRow}>
-            <SearchIcon color={t.scr.faint} />
-            <SearchField value={q} onChange={setQ} placeholder={`Search ${username}'s games`} />
-            {q ? (
-              <Pressable accessibilityLabel="Clear search" onPress={() => setQ('')} hitSlop={8}>
-                <Text style={styles.clear}>✕</Text>
-              </Pressable>
-            ) : null}
-          </View>
-
-          {filtered.length === 0 ? (
-            <View style={styles.noResults}>
-              <Text style={styles.noResultsText}>No games match.</Text>
-              {filterActive ? (
-                <TertiaryLink label="Clear filters" chevron="none" onPress={() => { setQ(''); setStatusFilter(new Set()); }} />
-              ) : null}
-            </View>
-          ) : view === 'list' ? (
-            <FriendListView items={filtered} onOpen={openEntry} />
-          ) : view === 'grid' ? (
-            <FriendGridView items={filtered} onOpen={openEntry} />
+          {view === 'top' ? (
+            // COL-13 — the friend read-only TOP (decision 0050); reads friendProfile.top10 (P5 live now).
+            <FriendTopView
+              entries={top10}
+              username={username}
+              friendItems={friendItems}
+              focusGameId={focus}
+              onOpenGame={openEntry}
+            />
           ) : (
-            <FriendShelfView items={filtered} onOpen={openEntry} />
-          )}
+            <>
+              {/* inline scoped search */}
+              <View style={styles.searchRow}>
+                <SearchIcon color={t.scr.faint} />
+                <SearchField value={q} onChange={setQ} placeholder={`Search ${username}'s games`} />
+                {q ? (
+                  <Pressable accessibilityLabel="Clear search" onPress={() => setQ('')} hitSlop={8}>
+                    <Text style={styles.clear}>✕</Text>
+                  </Pressable>
+                ) : null}
+              </View>
 
-          {/* the friend TOP view is EXPECTED(P5) — the curated top10 read isn't served (AS-4) */}
-          <Text style={styles.topNote}>{username}&apos;s Top 10 arrives with the profile read.</Text>
+              {filtered.length === 0 ? (
+                <View style={styles.noResults}>
+                  <Text style={styles.noResultsText}>No games match.</Text>
+                  {filterActive ? (
+                    <TertiaryLink label="Clear filters" chevron="none" onPress={() => { setQ(''); setStatusFilter(new Set()); }} />
+                  ) : null}
+                </View>
+              ) : view === 'list' ? (
+                <FriendListView items={filtered} onOpen={openEntry} />
+              ) : view === 'grid' ? (
+                <FriendGridView items={filtered} onOpen={openEntry} />
+              ) : (
+                <FriendShelfView items={filtered} onOpen={openEntry} />
+              )}
+            </>
+          )}
         </>
       )}
 

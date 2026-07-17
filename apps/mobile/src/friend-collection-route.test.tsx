@@ -107,10 +107,20 @@ describe('P9 friend-collection route — read-only (COL-10/11)', () => {
     expect(mockPush).toHaveBeenCalledWith('/user/friend-1111-1111-1111-111111111111/entry/g1');
   });
 
-  it('the friend TOP view is EXPECTED(P5) — a quiet note, not a faked curation', () => {
+  it('the friend TOP view is LIVE (P10 · COL-13) — read-only curated Top-10, no ARRANGE', () => {
+    // the friend's inline top10 rides the friend/full profile read (P5 live).
+    mockProfile = { data: { username: 'riko', friendsCount: 14, top10: [{ rank: 1, gameId: 'g1', title: 'Game 1', card: { imageUrl: null } }] } };
     set({ data: FULL });
     render(wrap(<FriendCollection />));
-    expect(screen.getByText(/Top 10 arrives with the profile read/)).toBeTruthy();
+    // cycle the view keycap shelf → grid → list → top
+    const viewChip = () => screen.getByLabelText(/^View:/);
+    fireEvent.press(viewChip());
+    fireEvent.press(viewChip());
+    fireEvent.press(viewChip());
+    expect(screen.getByText(/READ-ONLY · RIKO'S CURATED TOP 10/i)).toBeTruthy();
+    // the stale EXPECTED placeholder is gone; no ARRANGE affordance on a friend's TOP
+    expect(screen.queryByText(/Top 10 arrives with the profile read/)).toBeNull();
+    expect(screen.queryByLabelText('Add to Top 10')).toBeNull();
   });
 
   it('404 → the terminal Unavailable', () => {

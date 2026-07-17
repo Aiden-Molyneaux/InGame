@@ -13,7 +13,7 @@ import { TertiaryLink } from '../../src/components/TertiaryLink';
 import { theme, themedStyles, useTheme } from '../../src/theme';
 import { SHELL_NAMES, SCREEN_THEME_NAMES, resolveShellId, resolveScreenThemeId } from '../../src/theme/palettes';
 import { deviceStripCopy } from '../../src/components/device/deviceCopy';
-import { useGetMeQuery, useGetCollectionQuery, useGetDeviceQuery, useGetWalletQuery } from '../../src/store/api';
+import { useGetMeQuery, useGetDeviceQuery, useGetWalletQuery } from '../../src/store/api';
 import { useAppDispatch } from '../../src/store/hooks';
 import { setCollectionView } from '../../src/store/prefsSlice';
 import { logoutTeardown } from '../../src/store';
@@ -28,7 +28,6 @@ export default function Profile() {
   const dispatch = useAppDispatch();
   const t = useTheme();
   const { data: me, isLoading, isError, refetch } = useGetMeQuery();
-  const { data: collection } = useGetCollectionQuery();
   const { data: device } = useGetDeviceQuery();
   // F-1 fix 7 — the persistent PX counter rides the Profile header too (ECON-07 entry point).
   const { data: wallet } = useGetWalletQuery();
@@ -43,6 +42,12 @@ export default function Profile() {
     // The VIEW TOP 10 door (PROF-05/decision 0050) → the Collection TOP view-mode (COL-13).
     dispatch(setCollectionView('top'));
     router.push('/(tabs)/collection');
+  }
+  function openTopFocused(gameId: string) {
+    // The Top-3 card-tap door (decision 0050 §C) → the Collection TOP view, FOCUSED on that game (NOT the
+    // Game page — self taps funnel into the curated view, one home).
+    dispatch(setCollectionView('top'));
+    router.push({ pathname: '/(tabs)/collection', params: { focus: gameId } });
   }
 
   if (isLoading) {
@@ -65,8 +70,9 @@ export default function Profile() {
     );
   }
 
-  // D3 — the Top-3 teaser is hours-derived over the real shelf until the curated store lands (M4).
-  const top3 = [...(collection?.items ?? [])].sort((a, b) => b.hours - a.hours).slice(0, 3);
+  // COL-13 (decision 0050) — the Top-3 teaser is now the top three of the CURATED Top-10 (me.top10),
+  // not the hours-derived placeholder. Empty until the owner curates → the "rank them" nudge.
+  const top3 = me.top10.slice(0, 3);
 
   return (
     <View style={styles.screen}>
@@ -151,24 +157,24 @@ export default function Profile() {
         <Section title="Top 3" action={<TertiaryLink label="View top 10" onPress={openTopView} />}>
           {top3.length > 0 ? (
             <View style={styles.top3}>
-              {top3.map((g, i) => (
+              {top3.map((g) => (
                 <Pressable
-                  key={g.entryId}
+                  key={g.gameId}
                   style={styles.topSeat}
                   accessibilityRole="button"
-                  accessibilityLabel={`Open ${g.title}`}
-                  onPress={() => router.push(`/game/${g.gameId}`)}
+                  accessibilityLabel={`Open ${g.title} in your Top 10`}
+                  onPress={() => openTopFocused(g.gameId)}
                 >
                   {/* EntryCard owns the composition-vs-flattened branch (round-2 bug 9): an equipped
                       ADOPTED card has no composition, only a flattened image — the wrapper can't drop it,
                       so the Top-3 can't regress to the default placeholder for adopted cards. */}
                   <EntryCard title={g.title} card={g.card} size="cell" />
-                  <RankChip rank={i + 1} />
+                  <RankChip rank={g.rank} />
                 </Pressable>
               ))}
             </View>
           ) : (
-            <Text style={styles.emptyLine}>Your most-played games land here.</Text>
+            <Text style={styles.emptyLine}>Your curated Top 3 lands here — rank them in your Collection.</Text>
           )}
         </Section>
 

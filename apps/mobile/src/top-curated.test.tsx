@@ -1,0 +1,129 @@
+import React from 'react';
+import { render as rtlRender, screen, fireEvent } from '@testing-library/react-native';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
+import type { CollectionItem, FriendTopTenEntry } from '@ingame/shared';
+import prefsReducer from './store/prefsSlice';
+
+// useTheme reads redux (prefs.themeId/shellId) — every render needs a Provider.
+const render = (ui: React.ReactElement) => {
+  const store = configureStore({ reducer: { prefs: prefsReducer } });
+  return rtlRender(<Provider store={store}>{ui}</Provider>);
+};
+
+// P10 — the COL-13 curated Top-10 view-mode (components/collection/TopCurated). SELF read + ARRANGE +
+// CardPicker (cap-10 LIST_FULL); FRIEND read-only. listsApi hooks are mocked (no store needed).
+
+const CARD = { imageUrl: null, thumbUrl: null };
+let mockLists: { data?: unknown; isLoading: boolean } = { data: undefined, isLoading: false };
+const mockAdd = jest.fn(() => ({ unwrap: () => Promise.resolve({}) }));
+const mockRemove = jest.fn(() => ({ unwrap: () => Promise.resolve({}) }));
+const mockRerank = jest.fn(() => ({ unwrap: () => Promise.resolve({}) }));
+
+jest.mock('./store/listsApi', () => ({
+  TOP10_LIST_ID: 'top10',
+  useGetListsQuery: () => mockLists,
+  useAddListItemMutation: () => [mockAdd, { isLoading: false }],
+  useRemoveListItemMutation: () => [mockRemove, { isLoading: false }],
+  useRerankListMutation: () => [mockRerank, { isLoading: false }],
+}));
+jest.mock('./components/EntryCard', () => ({
+  EntryCard: ({ title }: { title: string }) => {
+    const { Text } = require('react-native');
+    return <Text>{`CARD:${title}`}</Text>;
+  },
+}));
+
+import { SelfTopView, FriendTopView } from './components/collection/TopCurated';
+
+const CI = (n: number): CollectionItem =>
+  ({
+    entryId: `e${n}`,
+    gameId: `g${n}`,
+    title: `Game ${n}`,
+    developer: 'Studio',
+    publisher: 'Pub',
+    releaseYear: 2014,
+    genres: [],
+    hours: 100 + n,
+    status: 'playing',
+    ownedSince: '2020-01-01',
+    addedAt: '2020-01-01T00:00:00.000Z',
+    nowPlaying: false,
+    card: CARD,
+  }) as unknown as CollectionItem;
+
+const listWith = (gameIds: string[]) => ({
+  data: [{ id: 'top10', kind: 'top10', items: gameIds.map((g, i) => ({ gameId: g, rank: i + 1, card: CARD })) }],
+  isLoading: false,
+});
+
+const COLLECTION = [CI(1), CI(2), CI(3), CI(4), CI(5)];
+
+beforeEach(() => {
+  mockAdd.mockClear();
+  mockRemove.mockClear();
+  mockRerank.mockClear();
+});
+
+describe('COL-13: SelfTopView (read)', () => {
+  it('renders the curated rank rows, titles joined from the collection cache', () => {
+    mockLists = listWith(['g1', 'g2', 'g3']);
+    render(<SelfTopView collectionItems={COLLECTION} arranging={false} onExitArrange={() => {}} onOpenGame={() => {}} />);
+    expect(screen.getByText('YOUR #1')).toBeTruthy();
+    expect(screen.getByText('CARD:Game 1')).toBeTruthy();
+    expect(screen.getByText('CARD:Game 3')).toBeTruthy();
+  });
+
+  it('empty top10 shows the ghost + "rank your favourites" nudge (not a hours fallback)', () => {
+    mockLists = listWith([]);
+    render(<SelfTopView collectionItems={COLLECTION} arranging={false} onExitArrange={() => {}} onOpenGame={() => {}} />);
+    expect(screen.getByText('RANK YOUR FAVOURITES')).toBeTruthy();
+  });
+});
+
+describe('COL-13: SelfTopView (ARRANGE + CardPicker)', () => {
+  it('arrange mode shows the drag rows + the add-seat, and the picker adds from your collection', () => {
+    mockLists = listWith(['g1', 'g2']);
+    render(<SelfTopView collectionItems={COLLECTION} arranging onExitArrange={() => {}} onOpenGame={() => {}} />);
+    // the DONE bar + seat count
+    expect(screen.getByText('2 / 10 SEATED')).toBeTruthy();
+    // open the CardPicker via the + seat
+    fireEvent.press(screen.getByLabelText('Add to Top 10'));
+    // an unseated collection game (g3) is addable in the picker
+    fireEvent.press(screen.getByLabelText('Add Game 3'));
+    expect(mockAdd).toHaveBeenCalledWith({ gameId: 'g3' });
+  });
+
+  it('removing a seated card calls DELETE …/items/:gameId', () => {
+    mockLists = listWith(['g1', 'g2']);
+    render(<SelfTopView collectionItems={COLLECTION} arranging onExitArrange={() => {}} onOpenGame={() => {}} />);
+    fireEvent.press(screen.getByLabelText('Remove Game 1'));
+    expect(mockRemove).toHaveBeenCalledWith({ gameId: 'g1' });
+  });
+
+  it('at cap-10 the add-seat is replaced by the LIST_FULL state', () => {
+    mockLists = listWith(['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'g9', 'g10']);
+    render(<SelfTopView collectionItems={COLLECTION} arranging onExitArrange={() => {}} onOpenGame={() => {}} />);
+    expect(screen.queryByLabelText('Add to Top 10')).toBeNull();
+    expect(screen.getByText(/Top 10 is full/i)).toBeTruthy();
+  });
+});
+
+describe('COL-13: FriendTopView (read-only)', () => {
+  const ENTRIES: FriendTopTenEntry[] = [
+    { rank: 1, gameId: 'g1', title: 'Resident Evil', card: { imageUrl: null } as never },
+    { rank: 2, gameId: 'g2', title: 'Hades', card: { imageUrl: null } as never },
+  ];
+  it('renders the friend ranked Top-10 + the read-only bar (no ARRANGE)', () => {
+    render(<FriendTopView entries={ENTRIES} username="riko" onOpenGame={() => {}} />);
+    expect(screen.getByText('CARD:Resident Evil')).toBeTruthy();
+    expect(screen.getByText(/READ-ONLY · RIKO'S CURATED TOP 10/i)).toBeTruthy();
+    expect(screen.queryByLabelText('Add to Top 10')).toBeNull();
+  });
+
+  it('empty friend top10 shows the quiet note', () => {
+    render(<FriendTopView entries={[]} username="riko" onOpenGame={() => {}} />);
+    expect(screen.getByText(/hasn't curated a Top 10 yet/i)).toBeTruthy();
+  });
+});

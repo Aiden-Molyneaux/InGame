@@ -27,10 +27,13 @@ const LABELS: Record<string, { label: string; accent?: NavTab['accent'] }> = {
 
 // The built tab routes (the group `(tabs)` is not part of the URL). STORE (§P6, M5) is a top-level
 // route (`/store`) — the app's permanent commerce door, gold keycap — reached from any tab.
-const ROUTES: Record<string, '/(tabs)/collection' | '/(tabs)/profile' | '/(tabs)/friends' | '/store'> = {
+const ROUTES: Record<string, '/(tabs)/collection' | '/(tabs)/profile' | '/(tabs)/friends' | '/(tabs)/discover' | '/store'> = {
   collection: '/(tabs)/collection',
   profile: '/(tabs)/profile',
   friends: '/(tabs)/friends',
+  // P10 — DISCOVER goes LIVE (design-spec §2.7 — the keycap is active on every Discover artboard). The
+  // 5th routable tab (peer of COLLECTION/PROFILE/FRIENDS; STORE stays the top-level commerce door).
+  discover: '/(tabs)/discover',
   store: '/store',
 };
 
@@ -69,8 +72,11 @@ export function ShellNav({ bottomInset = 0 }: { bottomInset?: number }) {
   // The Store (`/store`, §P6) — its own destination; Top Up + Wallet are in-screen sub-views (the STORE
   // keycap stays active throughout, the device-editor FlowTakeover precedent).
   const onStore = pathname.startsWith('/store');
-  const locked = !(onCollection || onProfile || onStore || onFriends); // sign-in, index redirect, splash
-  const activeKey = onStore ? 'store' : onFriends ? 'friends' : onProfile ? 'profile' : 'collection';
+  // DISCOVER (`/discover`, P10 §0.8) — the WTP screen; the two rooms (UP NEXT ↔ DISCOVER) are an
+  // in-screen SectionSwitch, not routes, so the keycap stays active across the toggle.
+  const onDiscover = pathname.startsWith('/discover');
+  const locked = !(onCollection || onProfile || onStore || onFriends || onDiscover); // sign-in, index redirect, splash
+  const activeKey = onStore ? 'store' : onDiscover ? 'discover' : onFriends ? 'friends' : onProfile ? 'profile' : 'collection';
 
   const tabs: NavTab[] = ORDER.map((key) => ({
     key,

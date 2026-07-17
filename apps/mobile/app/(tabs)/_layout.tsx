@@ -20,6 +20,8 @@ export default function TabsLayout() {
       <Tabs.Screen name="collection" />
       <Tabs.Screen name="profile" />
       <Tabs.Screen name="friends" />
+      {/* P10 — DISCOVER goes live (the 5th nav key; §2.7). State-preserving like the others. */}
+      <Tabs.Screen name="discover" />
     </Tabs>
   );
 }

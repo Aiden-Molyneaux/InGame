@@ -196,7 +196,19 @@ function SearchMode({
           <View style={styles.noneHook}>
             <TertiaryLink label={`None of these — create “${trimmed}”`} onPress={onNoneOfThese} />
           </View>
-        ) : null}
+        ) : (
+          // CAT-12 FRIENDS-ARE-PLAYING rail (0076 §0.8 · decision 0062) — pre-query context. The
+          // `/catalog/friends-active` endpoint is NOT live yet (404 — only `friends-who-own` is on the
+          // catalog router), so the rail renders an honest EXPECTED-empty with the cite, NEVER faked. It
+          // hard-needs the P1 friend graph + a server route; ranked by `friendsHaveCount` when it lands.
+          <View style={styles.friendsRail}>
+            <Text style={styles.railHead}>FRIENDS ARE PLAYING</Text>
+            <Text style={styles.friendsExpected}>
+              See what your friends are adding here soon — the friends-active catalog feed lands with the
+              server’s CAT-12 route.
+            </Text>
+          </View>
+        )}
       </ScrollView>
 
       {/* bottom-docked search (OQ-035) — rises above the keyboard within the frame (S4-d, R0-2) */}
@@ -428,6 +440,8 @@ const useStyles = themedStyles((t) => ({
   returnLink: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 1 },
   body: { padding: t.space.lg, gap: t.space.lg },
   railHead: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
+  friendsRail: { gap: t.space.sm, marginTop: t.space.xl, borderTopWidth: 1, borderTopColor: t.scr.hairline, paddingTop: t.space.lg },
+  friendsExpected: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.3, lineHeight: 14 },
   // N4 — the focused game's details are centered (owner, 2026-07-04).
   meta: { gap: 3, alignItems: 'center' },
   metaTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5, textAlign: 'center' },

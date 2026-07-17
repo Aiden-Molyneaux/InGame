@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, Pressable, BackHandler, Keyboard, Platform } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import type { CollectionItem, CollectionStatus, GenreView } from '@ingame/shared';
 import { ScreenHead } from '../../src/components/ScreenHead';
 import { EntryCard } from '../../src/components/EntryCard';
 import { FlipCard } from '../../src/components/collection/FlipCard';
+import { SelfTopView } from '../../src/components/collection/TopCurated';
 import { Coachmark } from '../../src/components/Coachmark';
 import { ScreenButton } from '../../src/components/ScreenButton';
 import { ToolButton } from '../../src/components/ToolButton';
@@ -137,6 +138,8 @@ const catalogLine = (i: CollectionItem) =>
 
 export default function Collection() {
   const router = useRouter();
+  // COL-13 — a Top-3/VIEW-TOP-10 door can deep-link into the TOP view FOCUSED on a game (decision 0050 §C).
+  const params = useLocalSearchParams<{ focus?: string }>();
   const dispatch = useAppDispatch();
   const view = useAppSelector((s) => s.prefs.collectionView);
   const col12CoachmarkSeen = useAppSelector((s) => s.prefs.col12CoachmarkSeen);
@@ -162,6 +165,8 @@ export default function Collection() {
   // (owner ruling 2026-07-12: many-flipped, not one-at-a-time); cleared on a view-switch (the effect
   // below) and on blur (the useFocusEffect cleanup). Shelf + grid only — dense-list/top still NAVIGATE.
   const [flippedIds, setFlippedIds] = useState<Set<string>>(new Set());
+  // COL-13 — the TOP view ARRANGE toggle (drag re-rank + CardPicker). Cleared on any view-switch.
+  const [topArranging, setTopArranging] = useState(false);
 
   const items = useMemo(() => data?.items ?? [], [data]);
   const hero = items.find((i) => i.nowPlaying) ?? null;
@@ -206,6 +211,7 @@ export default function Collection() {
   // drawer's set-view, since both dispatch setCollectionView → `view` changes.
   useEffect(() => {
     setFlippedIds((prev) => (prev.size === 0 ? prev : new Set()));
+    setTopArranging(false); // leaving TOP (or any view cycle) exits ARRANGE
   }, [view]);
 
   // COL-12 — a card tap toggles its flip (owner: many-flipped); the first flip retires the coachmark.
@@ -350,7 +356,14 @@ export default function Collection() {
         ) : view === 'list' ? (
           <ListView items={filtered} />
         ) : view === 'top' ? (
-          <TopView items={filtered} />
+          // COL-13 — the curated Top-10 over the FULL shelf (curation is independent of sort/filter).
+          <SelfTopView
+            collectionItems={items}
+            arranging={topArranging}
+            onExitArrange={() => setTopArranging(false)}
+            focusGameId={params.focus}
+            onOpenGame={openGame}
+          />
         ) : view === 'grid' ? (
           <GridView items={filtered} flippedIds={flippedIds} onToggle={toggleFlip} onNavigate={openGame} />
         ) : (
@@ -416,8 +429,20 @@ export default function Collection() {
             onLongPress={() => setDrawerOpen(true)}
           />
           <View style={styles.spacer} />
-          {/* R2 (2a) — the '+' glyph is 12 to match the tools-bar glyphs (FilterIcon etc.); button base size. */}
-          <ScreenButton label="Add" variant="add" icon={<PlusIcon size={12} />} onPress={() => router.push('/add-game')} />
+          {view === 'top' ? (
+            // COL-13 — in TOP, the trailing keycap is ARRANGE (enter edit) / DONE (commit + exit); the gold
+            // ADD is absent here (curation is non-commerce — 0069). Only when the shelf can seat a Top-10.
+            data.collectionTotal > 0 ? (
+              <ScreenButton
+                label={topArranging ? 'Done' : 'Arrange'}
+                variant="action-alt"
+                onPress={() => setTopArranging((v) => !v)}
+              />
+            ) : null
+          ) : (
+            /* R2 (2a) — the '+' glyph is 12 to match the tools-bar glyphs (FilterIcon etc.); button base size. */
+            <ScreenButton label="Add" variant="add" icon={<PlusIcon size={12} />} onPress={() => router.push('/add-game')} />
+          )}
         </View>
       )}
 
@@ -602,39 +627,8 @@ function ListView({ items }: { items: CollectionItem[] }) {
   );
 }
 
-// TOP (D3) — read-only, hours-derived placeholder for the curated Top-10 (COL-13 curation rides
-// M4). The #1 rank marker is scr.accent ORANGE — never gold (C6/F-02).
-function TopView({ items }: { items: CollectionItem[] }) {
-  const router = useRouter(); // CARD-23 NAVIGATE (gate-5 A.3 — every card face opens its game)
-  const styles = useStyles();
-  const top = [...items].sort((a, b) => b.hours - a.hours).slice(0, 10);
-  return (
-    <View style={styles.list}>
-      {top.map((i, idx) => (
-        <Pressable
-          key={i.entryId}
-          style={[styles.topRow, idx === 0 && styles.topRowFirst]}
-          accessibilityRole="button"
-          accessibilityLabel={`Open ${i.title}`}
-          onPress={() => router.push(`/game/${i.gameId}`)}
-        >
-          <Text style={[styles.rank, idx === 0 && styles.rankFirst]}>#{idx + 1}</Text>
-          <EntryCard
-            title={i.title}
-            card={i.card}
-            size={idx === 0 ? 'cell' : 'mini'}
-          />
-          <View style={styles.rowMeta}>
-            <Text style={styles.rowTitle} numberOfLines={1}>
-              {i.title}
-            </Text>
-            <Text style={styles.rowSub}>{i.hours} HRS</Text>
-          </View>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
+// TOP (COL-13) is now the curated Top-10 view-mode — see SelfTopView in components/collection/TopCurated.tsx
+// (the hours-sorted placeholder that lived here was retired at M6 P10 when /me/lists went live).
 
 function EmptyShelf({ onAdd }: { onAdd: () => void }) {
   const styles = useStyles();
