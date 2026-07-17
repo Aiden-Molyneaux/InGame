@@ -26,6 +26,11 @@
   revoked-adoption count semantics under deleter-cascade; orphaned share-image files; orphaned blocks.
   Nothing reachable today (no deletion endpoint exists — deferred M8 work, not yet resolved). [behavior]
   **M8** (gate G-N, road-to-market §11)
+  **→ POSTURE RULED (decision 0076 §0.3, 2026-07-16, M6-entry; implementation stays M8):** deletion
+  flips status, never DELETEs the row · `authorShapeFor` must be wired into the four attribution
+  read paths · PII kept-set = keep financial rows (ledger/receipts), anonymize the user row · the
+  M6 beta ships without in-app deletion (5.1.1(v) binds at submission; support-channel path in the
+  beta welcome note). Stays OPEN as the M8/G-N implementation checklist.
 - ~~OQ-144~~ **RESOLVED (2026-07-10, decision 0070 — owner ruling "adapt the hue").** The fixed-brand
   on-screen colours become THEMED tokens that carry a light-theme-legible value: **`scr.key`** (secondary/
   keycap face — cream on dark, WHITE + a `scr.dim` border on light), **`scr.value`** (F-02 gold — bright
@@ -50,12 +55,16 @@
   alongside the DEV-03 zone/bounds validation) so a composition can't shingle the plastic. The board
   doesn't draw a cap; the owner may want a different number (or none + rely on zone area). (device-
   manifest D4·5, 2026-07-10) [behavior]
+  **→ RESOLVED (decision 0076 §0.12, 2026-07-16, M6-entry):** the shipped ~6-per-zone cap RATIFIED
+  (SYS-04-tunable) → product-spec 0.60 DEV-03.
 - OQ-141: **copy-on-write copy-POST idempotency (a rare create-retry edge).** `ensureEditableCopy` POSTs a draft copy of a committed card; on a failure it retries on the next edit. If the FIRST POST succeeded server-side but its RESPONSE was lost (network drop), the retry mints a **second** copy of the same origin. Shared with every non-idempotent create — the `creatingRef`/`copyingRef` guards cover double-taps, not lost-response retries. Consider an idempotency key on `POST /cards` (or a client dedup keyed on `derivedFromCardId` + no-saved-copy-yet). Low-frequency, non-data-loss (the original stays pristine); defer with the M5 substrate work. (murr m1, §3.4 device-walk 2026-07-08) [behavior]
   **→ RESOLVED (decision 0073, 2026-07-12, M5-entry §0.10):** a cheap idempotency guard rides M5 P3 (duplicate
   copy-POST with same derivedFromCardId + unchanged composition hash returns the existing draft).
 - OQ-140: **canvas compositions saveable as presets (like style-presets).** The owner (gate-5 §3.4 walk) wants to save a whole **composition** as a reusable preset, mirroring CARD-24b `style_presets` — a payload extension carrying the full vector composition + save/apply entry points + naming + a cap. **Deferred to M5** (rides the publish/gallery + preset-scale substrate); not built at M4. (owner, §3.4 Canvas acceptance walk 2026-07-08; decision 0067 §8) [behavior]
   **→ DEFERRED ⟨stretch⟩ (decision 0073, 2026-07-12, M5-entry §0.10):** rides the publish substrate only if the
   day has room; otherwise M6-entry re-triage.
+  **→ RE-TRIAGED (decision 0076 §0.12, 2026-07-16, M6-entry):** ⟨stretch⟩ again — builds in M6 only
+  if the window has room; otherwise M7-entry re-triage.
 - ~~OQ-139~~ **RESOLVED (2026-07-08, decision 0067 §2 — owner ruling CR-21).** Copy-on-write for committed-card edits: editing an existing **private** card spins a **draft copy** (`card_designs.derived_from_card_id → origin`) on the **first edit**; autosave targets the copy; **KEEP** commits copy→origin (stable id + equip pointer) + deletes the copy, **SAVE AS NEW** forks, **✕** deletes the copy, a **crash** leaves the copy as a resumable **DRAFT** (original pristine). Closes the resume-then-crash overwrite window (the D.23 lineage). Specced: product-spec CARD-24a (0.53) + api-contract (0.54 — `POST /cards` `derivedFromCardId?`, additive nullable FK `ON DELETE SET NULL`). *Orig:* **editing an existing card autosaves in place — a crash before the ✕-revert overwrites the original.** (owner, §3.4 Canvas acceptance walk 2026-07-08) [behavior]
 - OQ-138: **the skia-canvas budget — browsers evict WebGL contexts past ~16 per page.** Found building §3.4: one `<Canvas>` per slip pane / glyph cell lost 17 of 33 contexts and blanked the press bed; the Canvas surface now draws multi-cell previews through single-context strip builders (`buildCellStrip`/`buildBaseStrip`, ≤5 contexts at cap-30). The same ceiling waits for ANY surface that mounts many composed `CardFace`s at once — Collection GRID with a shelf of custom cards, the M5 community gallery, CardFan at scale. Needs an app-wide render-budget stance at M5 entry (shared-surface strips / flatten-to-image for lists — the CARD-15 imageUrl half solves the read side). (raised building M4 §3.4 Canvas, 2026-07-06) [behavior]
   **→ RESOLVED for M5 (decision 0073, 2026-07-12, M5-entry §0.10):** app-wide stance — galleries/lists consume
@@ -67,6 +76,9 @@
 - OQ-136: **pick-a-card joins the ADD-GAME flow.** Gate-5 ruling C.10 made the blank default IMPLICIT (never listed/counted as a card); the owner's stated model: "when a game is added it either takes the card the user selected while adding (part of the add-game process) or the implicit blank default." The add-time card pick (browse bases/community at add-time?) is a new ADD-GAME step — scope it with the M5 gallery/adopt batch (it needs card sources beyond the user's own designs to be meaningful). (owner, gate-5 walk 2026-07-06) [behavior]
   **→ DEFERRED ⟨stretch⟩ (decision 0073, 2026-07-12, M5-entry §0.10):** builds in M5 only if the day has room;
   otherwise re-triage at M6 entry.
+  **→ RE-TRIAGED (decision 0076 §0.12, 2026-07-16, M6-entry):** deferred to the **onboarding era**
+  (AUTH-06 — the add-time card pick wants new-user context + a populated community gallery; lands
+  with the onboarding batch near public launch, decision 0062's slot).
 - ~~OQ-135~~ **RESOLVED (2026-07-06, owner gate-5 ruling D.22: "a plate is required").** The name always renders: `none` leaves the nameplate roster (decision 0063 §4 amended); every composition carries a plate (min SLAB); legacy `shape:'none'` documents render as SLAB. Built same-day (roster + buildCard coercion + EquipReadout). *Orig:* **nameplate shape NONE renders a card face with no title at all — should the CARD-01 name guarantee survive it?** Decision 0063 §4 sanctioned a `none` plate shape, yet the styler board hints "THE NAME ALWAYS RENDERS (CURATED SHAPES)" (`styler-states.html:907`) and CARD-01 leans legibility-first. (raised by parvati reviewing §3.2 Styler, 2026-07-06) [undecided → behavior]
 - ~~OQ-133~~ **RESOLVED (2026-07-05, decision 0066 — owner default confirmed: built at §3.2).** The card substrate (`card_designs` + `style_presets` tables · `POST/PATCH/DELETE /cards` · `save-private` · `GET /me/cards` · `GET /me/collection/:entryId/cards` · the `/me/style-presets` CRUD · `activeCardDesignId` on the collection PATCH) is implemented with the Styler build; the §3.1 switcher goes fully live with it. *Orig:* **the CARD-24 CARDS-switcher substrate is specced-but-NOT-coded — build it at §3.1 now, or ride the Styler (§3.2)?** Decision 0062 §8 + the M4 brief say the Game-page CARDS switcher "rides CARD-24's `/me/style-presets` + `GET /me/collection/:entryId/cards`" and that these "already exist (api-contract 0.51)" — but they exist **only in the contract doc**. The server has **no** `card_designs` / `style_presets` / `platforms` tables, **no** `GET /me/collection/:entryId/cards`, **no** `activeCardDesignId`/`platformIds` on `PATCH /me/collection/:entryId`, and **no** `/cards/*` mutations. Decision **0058 §7** deferred `activeCardDesignId`+`platformIds` "to M4 **with their substrates**" — that backend build has **not** happened (§3.1 is the *first* M4 surface). And user cards are only *created* in the Styler (§3.2, `POST /cards/:id/save-private`), so at §3.1 there are **no real cards to switch among**. **Interim taken by this build (recorded ASSUMPTION):** the CARDS switcher renders the one **CARD-18 default card** (client-derived from `entry.card`, no new endpoint) + the **DESIGN-NEW** tile; multi-card **SELECT / SET-AS-MAIN (`activeCardDesignId`) / DELETE (`/cards/:id`) / EDIT-IN-STYLER** and the **community gallery + adopt** are marked `EXPECTED(card-pipeline · Styler §3.2 / M5)` in the manifest. Catalog facts for the M4 owned states come from the **collection entry**, not the unbuilt `GET /catalog/games/:id`. **Owner ruling needed at the first-article stop:** build the `card_designs` + switcher-feed backend foundation now (pulls Styler-era backend into §3.1), or let it ride §3.2 as this interim assumes? (raised building M4 §3.1 Game-page shell, 2026-07-05) [behavior]
 - ~~OQ-134~~ **RESOLVED (2026-07-05, decision 0066 / api-contract 0.53 — owner default confirmed).** `notes` + `rating` join the `/me/collection` item (owner-only serializer; the friend subset still excludes them per contract). The Game-page dossier reads back what it writes. *Orig:* **the `CollectionItem` response carries no `notes` / `rating` — the Game-page dossier can't READ them back.** `GET /me/collection`'s `collectionItemSchema` (packages/shared `response/collection.ts`) returns `hours · percentComplete · status · ownedSince · nowPlaying` but **not** `notes` or `rating`, while `PATCH /me/collection/:entryId` *accepts* both (write-only). There is no single-entry `GET`. So the Game-page PLAY dossier can't display the saved NOTES (board draws it, `:490`) and the EDIT NOTES field can't pre-fill; RATING is already board-marked PENDING (OQ-058). **Interim:** hours/%/status/ownedSince round-trip fully; NOTES is a write-only EDIT field (blank start), its readout marked `EXPECTED`; RATING stays PENDING. **Owner/spec ruling:** add `notes` (COL-05) + `rating` (COL-03, if OQ-058 unblocks) to the `CollectionItem` response (they exist in the DB row, just aren't serialized) so the dossier reads what the user wrote — a small serializer + api-contract bump. (raised building M4 §3.1 Game-page shell, 2026-07-05) [behavior]
@@ -251,6 +263,11 @@
   triggers and rewards. Dedicated brainstorm when the engine is built (ACH-*). [behavior/content]
   **Steering (decision 0015):** creation milestones — first card created / first publish / adoption
   milestones, with cosmetic rewards — must be on that brainstorm's list (closes the create→earn loop).
+  **→ STARTER SET RULED (decisions 0076 §0.4 + 0077, 2026-07-16 — ACH pulled M7→M6):** the launch
+  content = 12 milestones + 6 eggs (picks in 0077; the 0015 steering honored — FIRST PRINT / FIRST
+  ADOPTION / HOUSE STYLE land the create→earn loop; prestige keys only off non-self-inflatable
+  signals). Stays OPEN as the standing content channel: the beta egg-recommendation loop + the
+  pre-launch content pass keep feeding the seed (new defs ship without a release, ACH-01).
 - OQ-056 → **RESOLVED (decision 0062, 2026-07-05):** formalized as **+CARD-24** (style presets & named save-targets) + the **`style_presets`** entity (product-spec 0.49) + **`/me/style-presets`** CRUD (api-contract 0.51); the customizations gallery is covered by existing routes (`/me/cards` shelf + `/me/collection/:entryId/cards` switcher — no new gallery routes); the preset cap = **30** (owner-set 2026-07-05, SYS-04-tunable). *Orig:* **Modular card saving — explicit named saves + reusable style presets + the customizations
   gallery.** Owner ruling (2026-06-13, brainstormed; chose "parts + presets" over full
   style×canvas decomposition and over anxiety-fix-only). The **card stays the atomic
@@ -394,9 +411,15 @@
   EMAIL no idempotency. Throttle + neutral copy + resend cap. (L012; AUTH-08/11, MOD-07) [behavior] M2
 - OQ-096: **Invite + share/deep links have no TTL/cap/signature** (no "link expired" state). TTL + cap + signature
   for invite AND share links. (L013; SOC-07/10, extends OQ-073) [behavior] M6
+  **→ RESOLVED for the invite half (decision 0076 §0.6, 2026-07-16, M6-entry):** signed opaque token ·
+  TTL 7d · ≤5 active/user · multi-redemption within TTL · `invites:create` 5/day; beta-window links =
+  in-app QR + a tokenized static-landing URL (universal links stay §10-parked). **The share-link
+  TTL/signature half → M8** (CARD-21 is image-only until then).
 - OQ-097: **Adopt / Up-Next uncapped** — bulk-adopt loop undefended. Length cap + adopt confirm. (L014; WTP, ECON-03) [behavior] M5/M6
   **→ RESOLVED for the adopt half (decision 0073, 2026-07-12, M5-entry §0.7):** `cards:adopt` rate bucket
   30/min + 200/day; adopt idempotent via 409 ALREADY_ADOPTED. The WTP/Up-Next list-length cap remains open → M6.
+  **→ RESOLVED for the WTP half (decision 0076 §0.7, 2026-07-16, M6-entry):** queue capped at 50
+  (SYS-04-tunable) → 409 `LIST_FULL`. OQ-097 fully closed.
 - OQ-098: **Offline-gated write forms lose their draft** on scrim-dismiss/reconnect (report note, add-game). Persist +
   restore local draft. (L042; SYS-10) [behavior] M3/M7
 - OQ-099: **No "view my reports" / status surface** after a report submits. Reporter status surface. (L043; MOD-01/02) [behavior] M7
@@ -652,3 +675,7 @@
   (premium refs + names + prices + owned — the owner's walk ask, contract 0.67); the full free-slot
   readout is deferred. Decide the denormalization at **M6 entry**. (F-9 build review, 2026-07-14; the read-class constraint = decision 0073 §0.1/OQ-122)
   [behavior] M6-entry
+  **→ RESOLVED (decision 0076 §0.2, 2026-07-16, M6-entry):** publish-time label denormalization —
+  an additive migration snapshots the display-label set beside `premium_component_ids` at publish
+  (+ backfill); the full CARD-22 readout goes cross-user-computable with no composition read.
+  Lands M6 P2 (api-contract 0.69).

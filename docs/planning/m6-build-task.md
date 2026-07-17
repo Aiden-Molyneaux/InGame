@@ -67,10 +67,13 @@ engine builds against fixtures) — P1–P7 may start the moment §0.1–0.3 + 0
 | **0.11** | **Beta mechanics (decision 0071 mechanics — the exit gate's shape)** | Cohort = **5–20, majority iOS, 2–4 Android** (owner, 2026-07-15). **Alpha = beta's first step:** the close-friends wave (~3–5) onto **TestFlight internal** as soon as the first EAS build exists — *before* M6 code completes (they alpha the M5 product; social lands under them). Then the external TestFlight group for the full cohort (Apple **Beta App Review** on the first external build — days of lead, submit early); Android riders join via **Play internal** when Google clears (§6). Feedback channel = the **group chat** (push is M7 — group-chat nudges are the accepted return mechanism for the beta window). At the exit sitting the owner records the **safety-rail acceptance** (report ✓ *now in-scope* · block ✓ · delete trails M8) per the roadmap M6 row. **The Google 12-tester quota (provisioning #9) needs recruiting beyond the cohort — owner lane, start now.** | §5 beta gate |
 | **0.12** | **Deferred-carryover ruling table** (accounted, not forgotten) | **OQ-136** pick-a-card in Add-Game → re-triage (recommend: defer to the onboarding era — it wants new-user context). **OQ-140** composition presets → ⟨stretch⟩ again, only if the window has room. **OQ-142** sticker-zone cap → ratify the shipped ~6/zone (async nod). **Worn-premium-shell entitlement gate** (the P7/P8 🎨) → recommend: gate at M6 (a one-line server check rides P14's contract bump) or explicitly bless the carry-over. **Store INDEX aisle-count honesty** (the remaining 🎨) → a P10-lane copy fix if unresolved. **OQ-100's** hour-inference half stays M7. **OQ-143** (§1.1 token-mapping footnote) → a 5-min doc errand, ride any design-spec touch. | — |
 
-**Exit §0:** rulings recorded in **decision 0076** + `m6-entry-decision-log.md` (the 0073 log
-pattern) · product-spec/api-contract bumps for 0.1/0.2/0.5/0.6/0.7 · open-questions swept
-(OQ-096/097-half/145/146 + the 0.12 set cite 0076) · `/health` 🟢 · **then the §1 spike is the first
-build act.**
+**Exit §0: ✅ GATE CLOSED 2026-07-16** (owner: "I'll take your recommendations" — all twelve ruled
+as recommended) — recorded in **decisions 0076 + 0077** (the §0.4 content picks) +
+[`m6-entry-decision-log.md`](m6-entry-decision-log.md) · product-spec **0.60** · api-contract
+**0.69** · open-questions swept (OQ-096-invite-half · OQ-097-closed · OQ-142 · OQ-146 resolved;
+OQ-145-posture · OQ-004 · OQ-136 · OQ-140 annotated) · `/health` re-run at the close commit ·
+**the §1 spike is the first build act (launched at gate close).** Still owed from the owner lane:
+the R2/hosting sitting · the EAS first build · the B7 production-target nod (rides P16).
 
 ---
 
