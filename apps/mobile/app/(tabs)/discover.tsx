@@ -12,6 +12,7 @@ import { EntryCard } from '../../src/components/EntryCard';
 import { TertiaryLink } from '../../src/components/TertiaryLink';
 import { QueueRow, RecRow, TrendRow, NowPlayingPin } from '../../src/components/wtp/rows';
 import { DragRankList } from '../../src/components/wtp/DragRankList';
+import { ScrollLockContext, useScrollLockHost } from '../../src/components/ScrollLock';
 import { reorder } from '../../src/components/wtp/reorder';
 import { theme, themedStyles } from '../../src/theme';
 import {
@@ -42,6 +43,9 @@ export default function Discover() {
   const [overflowId, setOverflowId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [capError, setCapError] = useState(false);
+  // walk-4 — the ScrollLock HOST seam (the shipped touch-held-control rule): a queue-reorder drag
+  // freezes this scroll for the gesture's duration.
+  const { scrollEnabled: dragScrollEnabled, api: scrollLockApi } = useScrollLockHost();
 
   const { data: queue, isLoading: qLoading } = useGetQueueQuery();
   const { data: collection } = useGetCollectionQuery();
@@ -105,7 +109,8 @@ export default function Discover() {
         <ScreenHead title={room === 'upnext' ? 'Up Next' : 'Discover'} />
       </View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false} scrollEnabled={dragScrollEnabled}>
+        <ScrollLockContext.Provider value={scrollLockApi}>
         {room === 'upnext' ? (
           <>
             {/* NOW PLAYING pin (WTP-03) */}
@@ -136,12 +141,19 @@ export default function Discover() {
                   <TertiaryLink label={arranging ? 'Done' : 'Reorder'} chevron="none" onPress={() => setArranging((v) => !v)} dim />
                 </View>
                 {arranging ? (
+                  // walk-3 — the slot height must EXCEED the row's natural height (thumb card 67 +
+                  // padding/borders ≈ 77) plus a visible gap, or fixed-height rows overlap. 88 = row
+                  // ~80 + the house md(8) rhythm; dragSlot pads the gap inside each fixed slot.
                   <DragRankList
                     data={items}
                     keyOf={(i) => i.itemId}
-                    rowHeight={60}
+                    rowHeight={88}
                     onReorder={onReorder}
-                    renderRow={(item, index) => <QueueRow item={item} rank={index + 1} arranging />}
+                    renderRow={(item, index) => (
+                      <View style={styles.dragSlot}>
+                        <QueueRow item={item} rank={index + 1} arranging />
+                      </View>
+                    )}
                   />
                 ) : (
                   <View style={styles.rows}>
@@ -196,6 +208,7 @@ export default function Discover() {
             </View>
           </>
         )}
+        </ScrollLockContext.Provider>
       </ScrollView>
 
       {/* walk-2 — the bottom room dock is the SHARED SectionDock (OQ-063/0030 one-grammar: the same
@@ -362,6 +375,8 @@ const useStyles = themedStyles((t) => ({
   secTitle: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.dim, letterSpacing: 1.5 },
   secCount: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 1 },
   rows: { gap: t.space.sm },
+  // walk-3 — the gap INSIDE a fixed drag slot (rowHeight includes it; content centers above it).
+  dragSlot: { flex: 1, justifyContent: 'center', marginBottom: t.space.md },
   quiet: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.faint, letterSpacing: 0.3 },
 
   capError: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 0.5 },

@@ -1,12 +1,20 @@
 import { useRef, useState, type ReactNode } from 'react';
 import { Animated, PanResponder, View, type ViewStyle } from 'react-native';
 import { themedStyles } from '../../theme';
+import { useScrollLock } from '../ScrollLock';
 import { indexFromDrag } from './reorder';
 
 // DragRankList (manifest A4) — the shared FIXED-ROW-HEIGHT drag-to-reorder list backing the Top-10 ARRANGE
 // re-rank and the queue reorder. Fixed row height makes the drag translation → destination index pure
 // arithmetic (indexFromDrag) — no async row measuring. The lifted row follows the finger (Animated
 // translateY); an orange drop-line marks the destination (board P2); the reorder commits on release.
+//
+// walk-4 — the SHIPPED touch-held-control scroll lock (ScrollLock, design-spec 0.54 round 3: "a
+// touch-held control must LOCK its host scroll for the gesture's duration — without it the page pans
+// under an active drag and the control fights the scroll"; the canvas TransformDrawer/ColorPicker
+// mechanism, counted + context-based so the host ScrollView needs only its `scrollEnabled` seam). A
+// drag acquires the lock at grant and releases on drop/terminate; the HOST screen (collection ·
+// discover) wires `useScrollLockHost()` onto its ScrollView. Outside any host the context is a no-op.
 //
 // The gesture is owned by each row's GRIP (a long-press-drag handle) — a plain tap on the row body still
 // works (the responder only claims the gesture once the finger moves on the grip). Rows are otherwise
@@ -33,6 +41,7 @@ export function DragRankList<T>({
   style,
 }: DragRankListProps<T>) {
   const styles = useStyles();
+  const { lock, unlock } = useScrollLock(); // walk-4 — freeze the host scroll for the drag's duration
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
 
@@ -53,11 +62,13 @@ export function DragRankList<T>({
               disabled={disabled}
               dragging={dragging}
               onStart={() => {
+                lock(); // walk-4 — the host ScrollView freezes so the drag doesn't fight the scroll
                 setDragIndex(index);
                 setDropIndex(index);
               }}
               onMove={(dy) => setDropIndex(indexFromDrag(index, dy, rowHeight, data.length))}
               onEnd={(dy) => {
+                unlock(); // release + terminate both route here — one grant, one release (counted)
                 const to = indexFromDrag(index, dy, rowHeight, data.length);
                 setDragIndex(null);
                 setDropIndex(null);

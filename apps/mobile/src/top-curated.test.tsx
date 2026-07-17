@@ -34,7 +34,7 @@ jest.mock('./components/EntryCard', () => ({
   },
 }));
 
-import { SelfTopView, FriendTopView, TopTenCardPicker } from './components/collection/TopCurated';
+import { SelfTopView, FriendTopView, TopTenCardPicker, rankAccentFor } from './components/collection/TopCurated';
 
 const CI = (n: number): CollectionItem =>
   ({
@@ -90,7 +90,8 @@ describe('COL-13: SelfTopView (ARRANGE)', () => {
     render(<SelfTopView collectionItems={COLLECTION} arranging onExitArrange={() => {}} onOpenPicker={onOpenPicker} onOpenGame={() => {}} />);
     // the DONE bar + seat count
     expect(screen.getByText('2 / 10 SEATED')).toBeTruthy();
-    fireEvent.press(screen.getByLabelText('Add to Top 10'));
+    // walk-5b — the add-seat is a STANDARD ScreenButton (orange /primary), not the one-off affordance
+    fireEvent.press(screen.getByText('+ ADD FROM COLLECTION · SEAT 3'));
     expect(onOpenPicker).toHaveBeenCalled();
     // the sheet itself is NOT rendered by SelfTopView (it mounts at the screen root — F-15)
     expect(screen.queryByText(/SEARCH YOUR COLLECTION|Add to Top · Seat/i)).toBeNull();
@@ -106,8 +107,18 @@ describe('COL-13: SelfTopView (ARRANGE)', () => {
   it('at cap-10 the add-seat is replaced by the LIST_FULL state', () => {
     mockLists = listWith(['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'g9', 'g10']);
     render(<SelfTopView collectionItems={COLLECTION} arranging onExitArrange={() => {}} onOpenPicker={() => {}} onOpenGame={() => {}} />);
-    expect(screen.queryByLabelText('Add to Top 10')).toBeNull();
+    expect(screen.queryByText(/ADD FROM COLLECTION · SEAT/)).toBeNull();
     expect(screen.getByText(/Top 10 is full/i)).toBeTruthy();
+  });
+});
+
+describe('COL-13 walk-6: rank accents (owner ruling 2026-07-17 — catalog RankChip/first restored)', () => {
+  it('maps 1→gold · 2/3→silver · 4+→orange accent', () => {
+    expect(rankAccentFor(1)).toBe('gold');
+    expect(rankAccentFor(2)).toBe('silver');
+    expect(rankAccentFor(3)).toBe('silver');
+    expect(rankAccentFor(4)).toBe('accent');
+    expect(rankAccentFor(10)).toBe('accent');
   });
 });
 
@@ -152,7 +163,7 @@ describe('COL-13: FriendTopView (read-only)', () => {
     render(<FriendTopView entries={ENTRIES} username="riko" onOpenGame={() => {}} />);
     expect(screen.getByText('CARD:Resident Evil')).toBeTruthy();
     expect(screen.getByText(/READ-ONLY · RIKO'S CURATED TOP 10/i)).toBeTruthy();
-    expect(screen.queryByLabelText('Add to Top 10')).toBeNull();
+    expect(screen.queryByText(/ADD FROM COLLECTION/)).toBeNull();
   });
 
   it('empty friend top10 shows the quiet note', () => {

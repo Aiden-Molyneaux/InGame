@@ -13,6 +13,7 @@ import { ToolButton } from '../../src/components/ToolButton';
 import { SearchField } from '../../src/components/SearchField';
 import { PulledSheet } from '../../src/components/PulledSheet';
 import { useSheetLocked } from '../../src/components/SheetLock';
+import { ScrollLockContext, useScrollLockHost } from '../../src/components/ScrollLock';
 import { TextField } from '../../src/components/TextField';
 import { GenreTag } from '../../src/components/GenreTag';
 import { CurrencyCounter } from '../../src/components/commerce';
@@ -149,6 +150,10 @@ export default function Collection() {
   const { data: wallet } = useGetWalletQuery();
   const styles = useStyles();
   const bgLocked = useSheetLocked(); // C2 (F-13) — freeze the shelf scroll while the sort/filter drawer is open
+  // walk-4 — the ScrollLock HOST seam (design-spec 0.54 round 3, the shipped touch-held-control rule):
+  // a TOP-arrange drag (DragRankList) acquires the lock via context, freezing this scroll for the
+  // gesture's duration so the drag doesn't fight the pan.
+  const { scrollEnabled: dragScrollEnabled, api: scrollLockApi } = useScrollLockHost();
 
   // ONE shared query state between the in-place search and the drawer (OQ-034).
   const [q, setQ] = useState('');
@@ -339,7 +344,8 @@ export default function Collection() {
           }
         />
       </View>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} scrollEnabled={!bgLocked}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} scrollEnabled={!bgLocked && dragScrollEnabled}>
+        <ScrollLockContext.Provider value={scrollLockApi}>
         {/* In-place search: the query live-filters the CURRENT view + a RESULTS header (board :661). */}
         {searchOpen && q.trim() !== '' && data.collectionTotal > 0 ? (
           <Text style={styles.resultsHead}>RESULTS — TITLE · DEVELOPER · PUBLISHER</Text>
@@ -375,6 +381,7 @@ export default function Collection() {
         ) : (
           <ShelfView items={filtered} flippedIds={flippedIds} onToggle={toggleFlip} onNavigate={openGame} />
         )}
+        </ScrollLockContext.Provider>
       </ScrollView>
 
       {/* The ToolsBar (§2.1 · OQ-034): keycaps ACT · long-press opens the drawer. Tapping Search MORPHS
@@ -436,13 +443,15 @@ export default function Collection() {
           />
           <View style={styles.spacer} />
           {view === 'top' ? (
-            // COL-13 — in TOP, the trailing keycap is ARRANGE (enter edit) / DONE (commit + exit); the gold
-            // ADD is absent here (curation is non-commerce — 0069). Only when the shelf can seat a Top-10.
-            data.collectionTotal > 0 ? (
+            // COL-13 — in TOP, the trailing keycap is ARRANGE (enter edit); the gold ADD is absent here
+            // (curation is non-commerce — 0069). walk-5a: while ARRANGING the keycap HIDES — the ONE
+            // exit is the tv-bar's DONE inside the view (the board's drawn placement; the arrange
+            // artboard replaces the tools row with the tv-bar, so a second Done here doubled it).
+            data.collectionTotal > 0 && !topArranging ? (
               <ScreenButton
-                label={topArranging ? 'Done' : 'Arrange'}
+                label="Arrange"
                 variant="action-alt"
-                onPress={() => setTopArranging((v) => !v)}
+                onPress={() => setTopArranging(true)}
               />
             ) : null
           ) : (

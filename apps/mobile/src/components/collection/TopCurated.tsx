@@ -2,11 +2,9 @@ import { useMemo, useState } from 'react';
 import { View, Text, Pressable, ActivityIndicator } from 'react-native';
 import type { CollectionItem, FriendTopTenEntry } from '@ingame/shared';
 import { EntryCard, type EntryCardData } from '../EntryCard';
-import { RankChip } from '../RankChip';
 import { ScreenButton } from '../ScreenButton';
 import { PulledSheet } from '../PulledSheet';
 import { SearchField } from '../SearchField';
-import { TertiaryLink } from '../TertiaryLink';
 import { DragRankList } from '../wtp/DragRankList';
 import { Grip } from '../wtp/rows';
 import { reorder } from '../wtp/reorder';
@@ -22,9 +20,16 @@ import {
 
 // TopCurated (component-map §12 SlotFrame/RankSlot/CardPicker) — the COL-13 Collection TOP view-mode
 // (decisions 0049/0050). SELF = read + ARRANGE (drag re-rank + CardPicker, cap-10 LIST_FULL); FRIEND =
-// read-only ranked Top-10. The #1 marker is scr.accent ORANGE, never gold (C6/F-02). Titles/hours are
-// joined from the collection cache for the SELF read (the /me/lists items carry no title — manifest A2);
-// the FRIEND entries already carry title/card (friendTopTenEntry).
+// read-only ranked Top-10. Titles/hours are joined from the collection cache for the SELF read (the
+// /me/lists items carry no title — manifest A2); the FRIEND entries already carry title/card.
+//
+// walk-6 — READ-mode rank accents (OWNER RULING 2026-07-17): #1 = GOLD · #2/#3 = bright SILVER ·
+// #4–10 = orange accent. This AMENDS the board's deliberate orange-#1: the board's divergence from the
+// catalog's gold `RankChip/first` specimen was pending owner ratification, and the owner has now ruled
+// GOLD #1 — restoring the catalog specimen. The silver is a NEW accent value with no existing theme
+// token (checked src/theme — only gold/cream/navy/accent families exist): defined below as RANK_SILVER,
+// flagged TOKEN-CANDIDATE for the design-spec ripple (the decision-0078 pass). Rank numerals/chips
+// ONLY — the cards themselves are untouched; ARRANGE mode keeps its neutral numerals.
 //
 // P10 walk-1 (the F-15 in-scroll-overlay class): the CardPicker sheet must NOT render inside this
 // component — SelfTopView is mounted INSIDE collection.tsx's ScrollView, and a PulledSheet inside a
@@ -35,6 +40,19 @@ import {
 // mounts OUTSIDE its ScrollView; SelfTopView only signals `onOpenPicker`.
 
 const TOP_CAP = 10;
+// walk-3 — the ARRANGE drag-slot height: the row's natural height (thumb card 67 + padding/borders
+// ≈ 77) + the house md(8) gap. Fixed-slot math (indexFromDrag) keys on THIS value.
+const ARRANGE_ROW_H = 88;
+
+// walk-6 (owner ruling 2026-07-17) — a bright cool silver for the #2/#3 rank chips. TOKEN-CANDIDATE:
+// no silver/bright-grey exists in src/theme (palettes carry gold/cream/navy/accent families only) —
+// promote to a named theme token in the design-spec ripple (decision-0078 pass).
+const RANK_SILVER = '#cfd8e3';
+
+/** walk-6 — the read-mode rank-accent classifier (pure, tested): 1 → gold · 2/3 → silver · 4+ → accent. */
+export function rankAccentFor(rank: number): 'gold' | 'silver' | 'accent' {
+  return rank === 1 ? 'gold' : rank <= 3 ? 'silver' : 'accent';
+}
 
 /** One normalized rank row the scaffold renders (self-joined or friend-native). */
 type TopRow = { gameId: string; rank: number; title: string; card: EntryCardData; sub?: string };
@@ -68,7 +86,8 @@ function TopScaffold({
       >
         <View style={styles.heroCard}>
           <EntryCard title={headliner!.title} card={headliner!.card} size="grid" width={120} height={168} />
-          <View style={styles.rankBadgeFirst}><Text style={styles.rankBadgeFirstText}>1</Text></View>
+          {/* walk-6 — #1 is GOLD (the catalog RankChip/first specimen, owner-restored 2026-07-17) */}
+          <View style={[styles.rankBadgeFirst, styles.rankGold]}><Text style={[styles.rankBadgeFirstText, styles.rankGoldText]}>1</Text></View>
         </View>
         <View style={styles.heroMeta}>
           <Text style={styles.heroEyebrow}>YOUR #1</Text>
@@ -88,7 +107,10 @@ function TopScaffold({
           >
             <View style={styles.cellCard}>
               <EntryCard title={r.title} card={r.card} size="cell" />
-              <View style={styles.rankBadge}><Text style={styles.rankBadgeText}>{r.rank}</Text></View>
+              {/* walk-6 — #2/#3 silver · #4–10 orange (rank chips only, owner ruling 2026-07-17) */}
+              <View style={[styles.rankBadge, rankAccentFor(r.rank) === 'silver' ? styles.rankSilver : styles.rankAccent]}>
+                <Text style={[styles.rankBadgeText, rankAccentFor(r.rank) === 'silver' ? styles.rankSilverText : styles.rankAccentText]}>{r.rank}</Text>
+              </View>
             </View>
           </Pressable>
         ))}
@@ -160,10 +182,12 @@ export function SelfTopView({
       <View style={styles.wrap}>
         <Text style={styles.sub}>ARRANGING — drag a card to re-rank; tap a + seat to add from your collection.</Text>
         {rows.length > 0 ? (
+          // walk-3 — slot height must exceed the row's natural height (thumb 67 + padding/borders ≈ 77)
+          // + the house gap, or fixed slots overlap ("practically overlapping", owner walk).
           <DragRankList
             data={rows}
             keyOf={(r) => r.gameId}
-            rowHeight={64}
+            rowHeight={ARRANGE_ROW_H}
             onReorder={onReorder}
             renderRow={(r) => (
               <View style={styles.arrangeRow}>
@@ -182,12 +206,16 @@ export function SelfTopView({
           />
         ) : null}
         {/* + ADD seat (absent when full — the LIST_FULL state). The sheet it raises is mounted by the
-            SCREEN outside the ScrollView (TopTenCardPicker — F-15 / PulledSheet contract). */}
+            SCREEN outside the ScrollView (TopTenCardPicker — F-15 / PulledSheet contract).
+            walk-5b — a STANDARD ScreenButton orange /primary (0069: prominent non-acquisitive; TOP is
+            non-commerce so orange, NOT gold) — the one-off dashed affordance is retired. */}
         {rows.length < TOP_CAP ? (
-          <Pressable style={styles.addSeat} accessibilityRole="button" accessibilityLabel="Add to Top 10" onPress={onOpenPicker}>
-            <Text style={styles.addSeatPlus}>+</Text>
-            <Text style={styles.addSeatLabel}>ADD FROM YOUR COLLECTION · SEAT {rows.length + 1}</Text>
-          </Pressable>
+          <ScreenButton
+            label={`+ Add from collection · seat ${rows.length + 1}`}
+            variant="primary"
+            block
+            onPress={onOpenPicker}
+          />
         ) : (
           <Text style={styles.full}>Top 10 is full — remove one to add another.</Text>
         )}
@@ -365,21 +393,28 @@ const useStyles = themedStyles((t) => ({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.lg, justifyContent: 'flex-start' },
   cell: { position: 'relative' },
   cellCard: { position: 'relative' },
-  rankBadge: { position: 'absolute', top: 4, left: 4, minWidth: 16, height: 16, paddingHorizontal: 3, backgroundColor: t.scr.faint, alignItems: 'center', justifyContent: 'center' },
-  rankBadgeText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.bg },
-  rankBadgeFirst: { position: 'absolute', top: 4, left: 4, minWidth: 18, height: 18, paddingHorizontal: 3, backgroundColor: t.scr.accent, alignItems: 'center', justifyContent: 'center' },
-  rankBadgeFirstText: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.accentInk },
+  rankBadge: { position: 'absolute', top: 4, left: 4, minWidth: 16, height: 16, paddingHorizontal: 3, alignItems: 'center', justifyContent: 'center' },
+  rankBadgeText: { fontFamily: t.font.screenBold, fontSize: t.type.micro },
+  rankBadgeFirst: { position: 'absolute', top: 4, left: 4, minWidth: 18, height: 18, paddingHorizontal: 3, alignItems: 'center', justifyContent: 'center' },
+  rankBadgeFirstText: { fontFamily: t.font.screenBold, fontSize: t.type.body },
+  // walk-6 rank accents (owner ruling 2026-07-17): #1 gold (catalog RankChip/first restored) · #2/#3
+  // bright silver (RANK_SILVER, TOKEN-CANDIDATE) · #4–10 orange accent. Chips only, never the cards.
+  rankGold: { backgroundColor: t.brand.gold },
+  rankGoldText: { color: t.brand.goldInk },
+  rankSilver: { backgroundColor: RANK_SILVER },
+  rankSilverText: { color: t.brand.navy },
+  rankAccent: { backgroundColor: t.scr.accent },
+  rankAccentText: { color: t.scr.accentInk },
 
   // ARRANGE
-  arrangeRow: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: t.space.md, backgroundColor: t.scr.panel, borderWidth: 1, borderColor: t.scr.hairline, paddingHorizontal: t.space.md, paddingVertical: t.space.sm },
+  // walk-3 — marginBottom carves the house md(8) gap INSIDE the fixed ARRANGE_ROW_H slot (rows were
+  // "practically overlapping": the natural row height exceeded the old 64px slot).
+  arrangeRow: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: t.space.md, backgroundColor: t.scr.panel, borderWidth: 1, borderColor: t.scr.hairline, paddingHorizontal: t.space.md, paddingVertical: t.space.sm, marginBottom: t.space.md },
   arrangeRank: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.dim, width: 16, textAlign: 'center' },
   arrangeMeta: { flex: 1, gap: 1, minWidth: 0 },
   arrangeTitle: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 0.5 },
   arrangeSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
   remove: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5 },
-  addSeat: { flexDirection: 'row', alignItems: 'center', gap: t.space.md, borderWidth: 1, borderColor: t.scr.faint, borderStyle: 'dashed', paddingHorizontal: t.space.lg, paddingVertical: t.space.md },
-  addSeatPlus: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.faint },
-  addSeatLabel: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
   full: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, textAlign: 'center', paddingVertical: t.space.md },
   doneBar: { flexDirection: 'row', alignItems: 'center', gap: t.space.md, borderTopWidth: 1, borderTopColor: t.scr.hairline, paddingTop: t.space.md },
   seated: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },

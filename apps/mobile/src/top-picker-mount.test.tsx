@@ -98,7 +98,7 @@ function renderTop() {
 
 function openPicker() {
   fireEvent.press(screen.getByText('ARRANGE')); // enter ARRANGE (the tools-bar keycap in TOP)
-  fireEvent.press(screen.getByLabelText('Add to Top 10')); // the + seat raises the picker
+  fireEvent.press(screen.getByText('+ ADD FROM COLLECTION · SEAT 1')); // the add-seat (walk-5b ScreenButton) raises the picker
 }
 
 describe('COL-13 walk-1: the CardPicker sheet mounts at the SCREEN ROOT (F-15 no-renest guard)', () => {
@@ -122,5 +122,14 @@ describe('COL-13 walk-1: the CardPicker sheet mounts at the SCREEN ROOT (F-15 no
     openPicker();
     const cells = screen.getAllByLabelText(/^(Add|Remove) Game \d$/);
     expect(cells).toHaveLength(mockItems.length);
+  });
+
+  it('walk-5a: ARRANGE mode shows exactly ONE Done (the tv-bar; the tools keycap hides)', () => {
+    renderTop();
+    fireEvent.press(screen.getByText('ARRANGE'));
+    // the ONE exit = the tv-bar DONE at the board's drawn placement; the tools-bar ARRANGE keycap is
+    // gone while arranging (it doubled as a second Done before this fix).
+    expect(screen.getAllByText('DONE')).toHaveLength(1);
+    expect(screen.queryByText('ARRANGE')).toBeNull();
   });
 });
