@@ -62,8 +62,9 @@ export async function findPendingBetween(
 /**
  * SOC-08 (decision 0076 §0.7) — the SYS-04 re-request cooldown expiry blocking the actor from
  * re-requesting `targetId`, or null when clear. Scoped to the actor's OWN prior request (`from` = actor)
- * that was DECLINED with a still-future `cooldownUntil`. Only a DECLINE stamps the cooldown (a voluntary
- * cancel does not penalize the requester — the rate bucket handles cancel-resend loops). Actor-scoped.
+ * that was DECLINED or CANCELLED with a still-future `cooldownUntil` (SOC-08 verbatim: re-requesting
+ * after a decline/cancel is cooldown-limited — the UX question of a softer cancel window is OQ-147).
+ * Actor-scoped; the other party is never throttled by the actor's stamp.
  */
 export async function cooldownUntilFor(
   actorId: string,
@@ -140,18 +141,22 @@ export async function declinePendingReturning(
 }
 
 /**
- * SOC-08 — ATOMICALLY CANCEL the OUTGOING request `requestId` IFF sent FROM the actor and pending. No
- * cooldown stamp (a voluntary withdrawal doesn't penalize the requester). Returns the row or null.
+ * SOC-08 — ATOMICALLY CANCEL the OUTGOING request `requestId` IFF sent FROM the actor and pending.
+ * Stamps the SYS-04 `cooldownUntil` exactly like decline (SOC-08 verbatim: re-requesting after a
+ * decline/CANCEL is cooldown-limited) — the CANCELLER's own re-request is throttled; the addressee is
+ * unaffected (cooldownUntilFor scopes to the actor's own `from` rows). The accidental-cancel UX
+ * question is OQ-147. Returns the row or null (unknown / not-yours / already-terminal → the collapse).
  */
 export async function cancelOutgoingReturning(
   actorId: string,
   requestId: string,
+  cooldownUntil: Date,
   exec: Executor = getDb(),
 ): Promise<FriendRequestRow | null> {
   const actor = asActor(actorId);
   const rows = await exec
     .update(friendRequests)
-    .set({ status: 'cancelled', updatedAt: new Date() })
+    .set({ status: 'cancelled', cooldownUntil, updatedAt: new Date() })
     .where(
       and(
         eq(friendRequests.id, requestId),

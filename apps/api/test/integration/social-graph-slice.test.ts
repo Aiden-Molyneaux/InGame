@@ -217,7 +217,7 @@ describe('SOC-08: cancel (outgoing) + unfriend (silent)', () => {
     expect(await reqStatuses(reqId)).toEqual(['cancelled']);
   });
 
-  it('a cancel does NOT stamp a cooldown — the requester may re-request immediately', async () => {
+  it('a cancel stamps the cooldown EXACTLY like decline (SOC-08 verbatim; OQ-147 owns the UX question) — re-request inside the window → 409 REQUEST_COOLDOWN', async () => {
     const { setRequestCooldownDaysForTest } = await import('../../src/config/social');
     setRequestCooldownDaysForTest(7);
     const a = await seedUser();
@@ -225,8 +225,16 @@ describe('SOC-08: cancel (outgoing) + unfriend (silent)', () => {
     await request(app).post('/api/friends/requests').set(authed(a.token)).send({ toUserId: b.id });
     const reqId = await pendingRequestId(a.id, b.id);
     await request(app).delete(`/api/friends/requests/${reqId}`).set(authed(a.token));
+
+    // Decline-parity: the cancelled row carries the same SYS-04 cooldown stamp a decline would.
     const retry = await request(app).post('/api/friends/requests').set(authed(a.token)).send({ toUserId: b.id });
-    expect(retry.status).toBe(201);
+    expect(retry.status).toBe(409);
+    expect(retry.body.error.code).toBe('REQUEST_COOLDOWN');
+    expect(typeof retry.body.error.cooldownUntil).toBe('string');
+
+    // The cooldown is the CANCELLER's — the addressee is unaffected and may request the canceller freely.
+    const other = await request(app).post('/api/friends/requests').set(authed(b.token)).send({ toUserId: a.id });
+    expect(other.status).toBe(201);
   });
 
   it('DELETE /me/friends/:userId unfriends (hard-delete of the bond); a non-friend unfriend collapses to 404', async () => {

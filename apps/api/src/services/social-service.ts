@@ -202,13 +202,20 @@ export const declineFriendRequest = mutation(
 
 /**
  * @mutation — DELETE /friends/requests/:id (SOC-08). Cancel an OUTGOING request (only the requester, via
- * `cancelOutgoingReturning` scoping to `fromUserId` = actor). No cooldown stamp. Unknown / not-yours /
- * already-terminal collapse to the generic NotFound.
+ * `cancelOutgoingReturning` scoping to `fromUserId` = actor). Stamps the SYS-04 cooldown EXACTLY like
+ * decline (SOC-08 verbatim: "re-requesting after a decline/cancel is cooldown-limited") — the canceller's
+ * own re-request is throttled, the addressee unaffected; the accidental-cancel UX question is OQ-147.
+ * Unknown / not-yours / already-terminal collapse to the generic NotFound.
  */
 export const cancelFriendRequest = mutation(
   { name: 'social.cancelFriendRequest', specIds: ['SOC-08', 'SYS-01', 'SYS-07'] },
   async (ctx, actorId, requestId: string): Promise<void> => {
-    const req = await friendRequestRepo.cancelOutgoingReturning(actorId, requestId, ctx.tx);
+    const req = await friendRequestRepo.cancelOutgoingReturning(
+      actorId,
+      requestId,
+      requestCooldownUntil(),
+      ctx.tx,
+    );
     if (!req) throw new NotFoundError('Request not found.');
     await ctx.emit({
       eventType: 'friend.request_cancelled',

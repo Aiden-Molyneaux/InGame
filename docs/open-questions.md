@@ -679,3 +679,4 @@
   an additive migration snapshots the display-label set beside `premium_component_ids` at publish
   (+ backfill); the full CARD-22 readout goes cross-user-computable with no composition read.
   Lands M6 P2 (api-contract 0.69).
+- OQ-147: **Should voluntary request-CANCEL share decline's 7-day re-request cooldown?** SOC-08 says cooldown after "decline/cancel" and the M6 P1 build conforms — but an accidental cancel now locks the sender out for 7 days (the friends:request bucket already throttles cancel-resend pestering at 10/hr). Options: keep as specced · cancel exempt · a shorter cancel-specific window (SYS-04). (P1 build review, M6 2026-07-16; decision 0076 era) [behavior] M6
