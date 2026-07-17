@@ -1,9 +1,13 @@
+import type { Executor } from '../db/client';
 import { mutation } from '../db/mutation';
+import { acquireActorLock } from '../db/locks';
 import { isForeignKeyViolation, isUniqueViolation } from '../db/pg-errors';
 import { requestCooldownUntil } from '../config/social';
 import * as relationshipRepo from '../repositories/relationship-repo';
 import * as friendRequestRepo from '../repositories/friend-request-repo';
 import * as friendReadRepo from '../repositories/friend-read-repo';
+import * as profileRepo from '../repositories/profile-repo';
+import * as suspensionRepo from '../repositories/suspension-repo';
 import type {
   BlocksListResponse,
   FriendRequestsResponse,
@@ -22,6 +26,34 @@ import {
 // write is actor-scoped (the actor is the authenticated principal ONLY, never body-supplied). The
 // friend-request lifecycle is the SOC-08 state machine: pending → accepted (bond) | declined (silent +
 // cooldown) | cancelled (silent). A block SEVERS the relationship both directions (SOC-09).
+//
+// F36 — THE CANONICAL-PAIR ADVISORY LOCK (§4 audit HIGH finding): every mutation that can create or
+// destroy the pair's bond (block · accept · create-with-auto-accept · unfriend) first takes a pg
+// advisory XACT lock on the CANONICAL pair key (lexicographic LEAST:GREATEST of the two user ids), so
+// those transactions SERIALIZE per pair. Without it, an accept-tx's uncommitted bond was invisible to
+// a concurrent block-tx's severance delete under READ COMMITTED — leaving a live friendship BEHIND a
+// block (the blocked party kept seeing the blocker through every friendScoped surface). The lock
+// releases at commit/rollback automatically (locks.ts).
+
+/** The canonical (direction-agnostic) pair lock key — same key whichever party acts. */
+function pairKey(a: string, b: string): string {
+  return a < b ? `${a}:${b}` : `${b}:${a}`;
+}
+
+/**
+ * MOD-09 non-disclosure collapse for a TARGET account: unknown / soft-deleted (AUTH-07) / actively
+ * suspended all throw the SAME generic NotFound a stranger's probe gets — a social write must not be a
+ * suspension/deletion oracle where GET /users/:id already collapses (§4 audit MED/LOW findings; the
+ * recommendation-service assertVisibleTarget pattern). The block check stays separate (create-request
+ * includes it; block itself must stay idempotent against an already-blocked target).
+ */
+async function assertTargetAccount(targetId: string, exec: Executor): Promise<void> {
+  const target = await profileRepo.getOwnProfile(targetId, exec);
+  if (!target || target.deletedAt) throw new NotFoundError('User not found.'); // unknown / AUTH-07
+  if (await suspensionRepo.getActiveSuspension(targetId, exec)) {
+    throw new NotFoundError('User not found.'); // MOD-09
+  }
+}
 
 // ── SOC-09 block/unblock ──────────────────────────────────────────────────────────────────────────
 
@@ -34,11 +66,24 @@ const blockUserWrite = mutation(
         { path: 'userId', message: 'Pick another user to block.' },
       ]);
     }
+    // F36 (§4 audit HIGH) — serialize against a concurrent accept/create/unfriend on this pair, so the
+    // severance below can never miss an uncommitted bond.
+    await acquireActorLock(ctx.tx, 'social:pair', pairKey(actorId, blockedId));
+    // §4 audit LOW — the MOD-09 collapse applies to block too: blocking a suspended/deleted target 404s
+    // exactly like an unknown id (non-disclosure). TENSION, deliberately resolved this way: a user who
+    // wants to block someone who then got suspended now gets a 404 instead of a working block — but the
+    // target is already invisible everywhere (the /users/:id collapse), so nothing needs blocking, and
+    // disclosing "this account exists but is suspended" is the worse trade (MOD-09 wins the edge).
+    await assertTargetAccount(blockedId, ctx.tx);
     const created = await relationshipRepo.insertBlock(actorId, blockedId, ctx.tx);
-    // SOC-09 — a block SEVERS the relationship BOTH directions: drop the accepted bond + cancel any
-    // pending request (either direction), in this same transaction. Idempotent (no rows ⇒ no-op).
-    await relationshipRepo.deleteFriendshipBetween(actorId, blockedId, ctx.tx);
+    // SOC-09 — a block SEVERS the relationship BOTH directions: cancel any pending request + drop the
+    // accepted bond (either direction), in this same transaction. Idempotent (no rows ⇒ no-op).
+    // ORDER (audit belt+braces): the pending-cancel runs BEFORE the bond-delete — in the audited
+    // interleaving the cancel's row-lock wait on an in-flight accept lets the accept commit first, so
+    // the subsequent delete then SEES the committed bond (the pair lock above already prevents the
+    // race outright; this ordering alone was proven to fix the specific interleaving).
     await friendRequestRepo.cancelPendingBetween(actorId, blockedId, ctx.tx);
+    await relationshipRepo.deleteFriendshipBetween(actorId, blockedId, ctx.tx);
     if (created) {
       await ctx.emit({
         eventType: 'social.user_blocked',
@@ -88,9 +133,15 @@ const createFriendRequestWrite = mutation(
   { name: 'social.createFriendRequest', specIds: ['SOC-01', 'SOC-08', 'SYS-01', 'SYS-07'] },
   async (ctx, actorId, toUserId: string): Promise<void> => {
     if (toUserId === actorId) throw new SelfTargetError();
+    // F36 (§4 audit HIGH) — the auto-accept path below creates a bond, so this tx serializes on the
+    // canonical pair key against a concurrent block/accept/unfriend.
+    await acquireActorLock(ctx.tx, 'social:pair', pairKey(actorId, toUserId));
     if (await relationshipRepo.isBlockedBetween(actorId, toUserId, ctx.tx)) {
       throw new NotFoundError('User not found.'); // SOC-09 non-disclosure (either direction)
     }
+    // §4 audit MED — a suspended/deleted/unknown target collapses to the SAME generic 404 GET /users/:id
+    // returns; a 201 here was a MOD-09 suspension/deletion oracle (and left a pending row on a tombstone).
+    await assertTargetAccount(toUserId, ctx.tx);
     if ((await relationshipRepo.getRelationship(actorId, toUserId, ctx.tx)) === 'friend') {
       throw new AlreadyFriendsError();
     }
@@ -159,8 +210,14 @@ function friendAddedEvent(requesterId: string, addresseeId: string, requestId: s
 const acceptFriendRequestWrite = mutation(
   { name: 'social.acceptFriendRequest', specIds: ['SOC-01', 'SOC-08', 'SYS-01', 'SYS-07'] },
   async (ctx, actorId, requestId: string): Promise<void> => {
+    // Pre-look (read-only) to learn the pair → take the canonical-pair lock (§4 audit HIGH: a bond
+    // insert must never interleave with a block-tx's severance) → then the ATOMIC accept re-verifies
+    // pending-ness under the lock (a block that got the lock first cancelled the request → 404 here).
+    const look = await friendRequestRepo.findAcceptableRequest(actorId, requestId, ctx.tx);
+    if (!look) throw new NotFoundError('Request not found.');
+    await acquireActorLock(ctx.tx, 'social:pair', pairKey(actorId, look.fromUserId));
     const req = await friendRequestRepo.acceptPendingReturning(actorId, requestId, ctx.tx);
-    if (!req) throw new NotFoundError('Request not found.'); // win-once under a concurrent decline/cancel
+    if (!req) throw new NotFoundError('Request not found.'); // win-once under a concurrent block/decline/cancel
     await relationshipRepo.insertFriendship(req.fromUserId, actorId, ctx.tx);
     await ctx.emit(friendAddedEvent(req.fromUserId, actorId, requestId));
   },
@@ -234,6 +291,8 @@ export const cancelFriendRequest = mutation(
 export const unfriend = mutation(
   { name: 'social.unfriend', specIds: ['SOC-08', 'SYS-01', 'SYS-07'] },
   async (ctx, actorId, otherId: string): Promise<void> => {
+    // F36 (§4 audit HIGH) — bond destruction serializes on the canonical pair key like block/accept.
+    await acquireActorLock(ctx.tx, 'social:pair', pairKey(actorId, otherId));
     const removed = await relationshipRepo.deleteFriendshipBetween(actorId, otherId, ctx.tx);
     if (!removed) throw new NotFoundError('User not found.'); // not friends → the generic collapse
     await ctx.emit({

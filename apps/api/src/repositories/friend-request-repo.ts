@@ -89,6 +89,33 @@ export async function cooldownUntilFor(
 }
 
 /**
+ * SOC-08 / SYS-07 — the pending request `requestId` the ACTOR is entitled to ACCEPT (addressed TO the
+ * actor, still pending), or null. A READ-ONLY pre-look the accept path uses to learn the pair BEFORE
+ * taking the canonical-pair advisory lock (§4 audit HIGH — the lock key needs both ids); the atomic
+ * `acceptPendingReturning` below re-verifies pending-ness under the lock, so this read racing a
+ * concurrent block/cancel is safe (the loser's conditional update returns 0 rows).
+ */
+export async function findAcceptableRequest(
+  actorId: string,
+  requestId: string,
+  exec: Executor = getDb(),
+): Promise<FriendRequestRow | null> {
+  const actor = asActor(actorId);
+  const rows = await exec
+    .select()
+    .from(friendRequests)
+    .where(
+      and(
+        eq(friendRequests.id, requestId),
+        eq(friendRequests.toUserId, actor.actorId),
+        eq(friendRequests.status, 'pending'),
+      ),
+    )
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+/**
  * SOC-08 / SYS-07 — ATOMICALLY accept the request `requestId` IFF it is addressed TO the actor and still
  * pending. The `WHERE status = 'pending'` predicate + RETURNING makes the transition win-once under a
  * concurrent decline/cancel: exactly one of them flips the row; the losers get 0 rows back. Returns the

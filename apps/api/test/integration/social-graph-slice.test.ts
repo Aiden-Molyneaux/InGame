@@ -30,6 +30,11 @@ async function seedUser(over: Record<string, unknown> = {}) {
 function authed(token: string) {
   return { Authorization: `Bearer ${token}` };
 }
+async function seedSuspension(subjectId: string) {
+  const { getDb } = await import('../../src/db/client');
+  const { userSuspensions } = await import('../../src/db/schema');
+  await getDb().insert(userSuspensions).values({ subjectId, reason: 'abuse' });
+}
 async function pendingRequestId(fromUserId: string, toUserId: string): Promise<string> {
   const { getDb } = await import('../../src/db/client');
   const { friendRequests } = await import('../../src/db/schema');
@@ -322,6 +327,32 @@ describe('F36: one-bond-per-pair + pending-pair concurrency guards', () => {
     expect(await pendingRowCount(a.id, b.id)).toBe(1);
   });
 
+  it('(d) concurrent accept + block → the block invariant holds: NO bond survives behind the block (§4 audit HIGH)', async () => {
+    // The audited race: the accept-tx's uncommitted bond was invisible to the block-tx's severance
+    // delete under READ COMMITTED → an accepted friendship coexisted with the block. The canonical-pair
+    // advisory lock serializes the two; whichever order they land, the terminal state is identical:
+    // the block exists and ZERO bonds survive. Three rounds for interleaving confidence.
+    for (let round = 0; round < 3; round++) {
+      const a = await seedUser();
+      const b = await seedUser();
+      await request(app).post('/api/friends/requests').set(authed(a.token)).send({ toUserId: b.id });
+      const reqId = await pendingRequestId(a.id, b.id);
+      await Promise.all([
+        request(app).post(`/api/friends/requests/${reqId}/accept`).set(authed(b.token)),
+        request(app).post('/api/me/blocks').set(authed(a.token)).send({ userId: b.id }),
+      ]);
+      // The invariant: the block landed AND no live friendship hides behind it.
+      const blocks = await request(app).get('/api/me/blocks').set(authed(a.token));
+      expect(blocks.body.blocks.map((x: { userId: string }) => x.userId)).toContain(b.id);
+      expect(await friendshipCount(a.id, b.id)).toBe(0);
+      // Neither party sees the other any more — the friendScoped surfaces are clean both directions.
+      expect((await request(app).get(`/api/users/${b.id}`).set(authed(a.token))).status).toBe(404);
+      expect((await request(app).get(`/api/users/${a.id}`).set(authed(b.token))).status).toBe(404);
+      const roster = await request(app).get('/api/me/friends').set(authed(b.token));
+      expect(roster.body.friends).toHaveLength(0);
+    }
+  });
+
   it('the canonical one-bond index rejects a reverse-direction duplicate accepted bond', async () => {
     const { getDb } = await import('../../src/db/client');
     const { friendships } = await import('../../src/db/schema');
@@ -333,6 +364,49 @@ describe('F36: one-bond-per-pair + pending-pair concurrency guards', () => {
       getDb().insert(friendships).values({ requesterId: b.id, addresseeId: a.id, status: 'accepted' }),
     ).rejects.toThrow();
     expect(await friendshipCount(a.id, b.id)).toBe(1);
+  });
+});
+
+describe('MOD-09: social writes are not a suspension/deletion oracle (§4 audit MED/LOW — the collapse)', () => {
+  it('POST /friends/requests to a suspended / deleted / unknown target → byte-identical 404s', async () => {
+    const actor = await seedUser();
+    const suspended = await seedUser();
+    await seedSuspension(suspended.id);
+    const deleted = await seedUser({ deletedAt: new Date() });
+    const unknownId = randomUUID();
+
+    const responses = await Promise.all(
+      [suspended.id, deleted.id, unknownId].map((id) =>
+        request(app).post('/api/friends/requests').set(authed(actor.token)).send({ toUserId: id }),
+      ),
+    );
+    for (const r of responses) {
+      expect(r.status).toBe(404);
+      expect(r.body).toEqual(responses[0]!.body); // indistinguishable — no state disclosure
+    }
+    // No dangling pending row landed against a tombstone.
+    expect(await pendingRowCount(actor.id, suspended.id)).toBe(0);
+    expect(await pendingRowCount(actor.id, deleted.id)).toBe(0);
+  });
+
+  it('POST /me/blocks against a suspended / deleted / unknown target → byte-identical 404s (parity)', async () => {
+    const actor = await seedUser();
+    const suspended = await seedUser();
+    await seedSuspension(suspended.id);
+    const deleted = await seedUser({ deletedAt: new Date() });
+    const unknownId = randomUUID();
+
+    const responses = await Promise.all(
+      [suspended.id, deleted.id, unknownId].map((id) =>
+        request(app).post('/api/me/blocks').set(authed(actor.token)).send({ userId: id }),
+      ),
+    );
+    for (const r of responses) {
+      expect(r.status).toBe(404);
+      expect(r.body).toEqual(responses[0]!.body);
+    }
+    const blocks = await request(app).get('/api/me/blocks').set(authed(actor.token));
+    expect(blocks.body.blocks).toHaveLength(0); // nothing landed
   });
 });
 
