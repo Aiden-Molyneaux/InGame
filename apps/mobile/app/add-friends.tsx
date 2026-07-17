@@ -91,7 +91,6 @@ export default function AddFriends() {
                   person={p}
                   onProfile={(id) => router.push(`/user/${id}`)}
                   onRespondRequests={() => router.push('/friend-requests')}
-                  onSent={(name) => setToast(`Request sent to ${name}`)}
                   onError={(m) => setToast(m)}
                   onManageBlocks={() => router.push('/settings/blocked')}
                 />

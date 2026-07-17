@@ -22,7 +22,6 @@ export function PersonRow({
   person,
   onProfile,
   onRespondRequests,
-  onSent,
   onError,
   onManageBlocks,
 }: {
@@ -31,8 +30,6 @@ export function PersonRow({
   onProfile: (userId: string) => void;
   /** incoming row → the requests inbox (accept/decline need the requestId, not on this shape). */
   onRespondRequests: () => void;
-  /** ADD succeeded → the container raises the sent Toast. */
-  onSent: (username: string) => void;
   /** a non-recoverable ADD failure → the container raises the error Toast. */
   onError?: (message: string) => void;
   /** blocked row → Settings › Blocked. */
@@ -51,8 +48,10 @@ export function PersonRow({
   async function onAdd() {
     try {
       await createRequest(person.userId).unwrap();
+      // Walk-2 (owner ruling 2026-07-17): NO success toast on request-send — the row flipping to
+      // REQUESTED is the sole confirmation. Supersedes the find-add board's drawn sent-confirm Toast;
+      // the design-spec ripple rides decision 0078. Failures still surface (onError below).
       setLocal('sent');
-      onSent(person.username);
     } catch (e) {
       const code = (e as ReqError)?.data?.error?.code;
       if (code === 'REQUEST_COOLDOWN') {

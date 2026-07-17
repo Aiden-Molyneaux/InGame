@@ -36,8 +36,10 @@ export default function InviteLanding() {
     if (!data) return;
     try {
       await createRequest(data.prefilledRequest.toUserId).unwrap();
+      // Walk-2 (owner ruling 2026-07-17): NO success toast on request-send — the landing flipping to
+      // its REQUEST SENT state is the sole confirmation. Supersedes the board's sent-confirm Toast;
+      // the design-spec ripple rides decision 0078. Failures still toast (below).
       setSent(true);
-      setToast(`Request sent to ${data.sender.username}`);
     } catch (e) {
       const code = (e as { data?: { error?: { code?: string } } })?.data?.error?.code;
       if (code === 'ALREADY_FRIENDS' || code === 'REQUEST_PENDING') setSent(true);

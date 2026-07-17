@@ -26,7 +26,6 @@ function renderRow(p: PersonSearchResult, cb: Partial<React.ComponentProps<typeo
         person={p}
         onProfile={cb.onProfile ?? jest.fn()}
         onRespondRequests={cb.onRespondRequests ?? jest.fn()}
-        onSent={cb.onSent ?? jest.fn()}
         onError={cb.onError ?? jest.fn()}
         onManageBlocks={cb.onManageBlocks ?? jest.fn()}
       />,
@@ -64,13 +63,11 @@ describe('PersonRow — the SOC-07 relationship spine', () => {
     expect(onRespond).toHaveBeenCalled();
   });
 
-  it('none → ADD fires the live write; on success flips to REQUESTED + raises the sent Toast', async () => {
-    const onSent = jest.fn();
-    renderRow(person('none'), { onSent });
+  it('none → ADD fires the live write; on success the REQUESTED state-flip is the SOLE signal (walk-2: no success toast)', async () => {
+    renderRow(person('none'));
     fireEvent.press(screen.getByLabelText('Add riptide'));
     await waitFor(() => expect(mockTrigger).toHaveBeenCalledWith('u-1'));
-    await waitFor(() => expect(onSent).toHaveBeenCalledWith('riptide'));
-    expect(screen.getByText('REQUESTED')).toBeTruthy();
+    await waitFor(() => expect(screen.getByText('REQUESTED')).toBeTruthy());
   });
 
   it('409 REQUEST_COOLDOWN → flips to the disabled cooldown reason (no crash)', async () => {
