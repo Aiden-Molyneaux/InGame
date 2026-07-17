@@ -137,7 +137,9 @@ export default function Discover() {
             ) : (
               <View style={styles.section}>
                 <View style={styles.secHead}>
-                  <Text style={styles.secTitle}>QUEUE · {items.length}{arranging ? ' — REORDERING' : ' — DRAG TO REORDER'}</Text>
+                  {/* walk-7 — the DRAG TO REORDER hint renders ONLY in reorder mode (read mode = the
+                      bare count; the hint outside the mode misled the owner's walk). */}
+                  <Text style={styles.secTitle}>QUEUE · {items.length}{arranging ? ' — DRAG TO REORDER' : ''}</Text>
                   <TertiaryLink label={arranging ? 'Done' : 'Reorder'} chevron="none" onPress={() => setArranging((v) => !v)} dim />
                 </View>
                 {arranging ? (
@@ -169,8 +171,10 @@ export default function Discover() {
                   </View>
                 )}
                 <View style={styles.addFrom}>
-                  {/* the one blessed gold — ADD FROM COLLECTION (the owner's "you control it by adding") */}
-                  <ScreenButton label="+ Add from collection" variant="add" block onPress={() => { setCapError(false); setPickerOpen(true); }} />
+                  {/* walk-9 — a STANDARD ScreenButton orange /primary (the same 0069 ruling as the TOP
+                      add-seat: prominent non-acquisitive; the queue is non-commerce, so orange NOT gold
+                      — the earlier gold carve-out reading is superseded by the owner's walk). */}
+                  <ScreenButton label="+ Add from collection" variant="primary" block onPress={() => { setCapError(false); setPickerOpen(true); }} />
                 </View>
               </View>
             )}
@@ -251,7 +255,8 @@ function EmptyQueue({ onAdd }: { onAdd: () => void }) {
       <Text style={styles.inviteEyebrow}>NOTHING QUEUED</Text>
       <Text style={styles.inviteTitle}>QUEUE&apos;S EMPTY</Text>
       <Text style={styles.inviteSub}>Line up what to play next — pull a few games straight from your collection.</Text>
-      <ScreenButton label="+ Add from collection" variant="add" onPress={onAdd} />
+      {/* walk-9 — orange /primary (0069), matching the populated queue's add control */}
+      <ScreenButton label="+ Add from collection" variant="primary" onPress={onAdd} />
     </View>
   );
 }
@@ -289,7 +294,13 @@ function LogHoursSheet({ item, onClose }: { item: CollectionItem | null; onClose
   );
 }
 
-// the queue-row overflow: PIN AS NOW PLAYING (WTP-03 hand-off) · REMOVE.
+// walk-10 — the queue-row overflow in the GAME PAGE's Game-Options drawer grammar (the owner: "kinda
+// like the Game Options drawer"): a PulledSheet of REAL ScreenButton rows — /secondary per action,
+// /destructive for removal — exactly as app/game/[id].tsx's ⋯ overflow renders (its "Game options"
+// sheet: secondary now-playing/report + destructive remove). Same mount rules (a screen-root sibling,
+// the walk-1 lesson — already honored below). No bespoke menu rows. NOTE: queue-remove skips the 0040
+// ConfirmSheet the game page uses for ITS destructive row — that remove destroys play stats; dropping
+// a queue row is trivially reversible (re-add from the picker), so the confirm isn't applicable.
 function QueueOverflowSheet({
   item,
   onClose,
@@ -301,15 +312,10 @@ function QueueOverflowSheet({
   onPin: () => void;
   onRemove: () => void;
 }) {
-  const styles = useStyles();
   return (
     <PulledSheet visible={item !== null} onClose={onClose} title={item?.title ?? ''}>
-      <Pressable style={styles.action} accessibilityRole="button" onPress={onPin}>
-        <Text style={styles.actionText}>PIN AS NOW PLAYING</Text>
-      </Pressable>
-      <Pressable style={styles.action} accessibilityRole="button" onPress={onRemove}>
-        <Text style={styles.actionTextDanger}>REMOVE FROM QUEUE</Text>
-      </Pressable>
+      <ScreenButton label="Pin as now playing" variant="secondary" onPress={onPin} block />
+      <ScreenButton label="Remove from queue" variant="destructive" onPress={onRemove} block />
     </PulledSheet>
   );
 }
@@ -396,9 +402,6 @@ const useStyles = themedStyles((t) => ({
 
   // sheets
   sheetHead: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5, marginBottom: t.space.sm },
-  action: { paddingVertical: t.space.md, borderTopWidth: 1, borderTopColor: t.scr.hairline },
-  actionText: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 1 },
-  actionTextDanger: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.accent, letterSpacing: 1 },
   pickerGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.md, marginTop: t.space.md },
   pcell: { position: 'relative' },
   queued: { position: 'absolute', top: 3, right: 3, zIndex: 2, width: 18, height: 18, borderRadius: 9, backgroundColor: t.scr.accent, alignItems: 'center', justifyContent: 'center' },

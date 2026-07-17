@@ -73,16 +73,17 @@ export function QueueRow({
         <Text style={styles.qtitle} numberOfLines={1}>{item.title.toUpperCase()}</Text>
         {sub ? <Text style={styles.qsub} numberOfLines={2}>{sub}</Text> : null}
       </View>
-      {onOverflow && !arranging ? (
-        <Pressable accessibilityRole="button" accessibilityLabel={`${item.title} options`} onPress={onOverflow} hitSlop={8}>
-          <Text style={styles.ovf}>⋯</Text>
-        </Pressable>
-      ) : null}
+      {/* walk-8 — the source indicator FIRST, the ⋯ overflow at the row's RIGHT EDGE (owner walk). */}
       <View style={item.owned ? styles.tagSrc : styles.tagWish}>
         <Text style={item.owned ? styles.tagSrcText : styles.tagWishText}>
           {item.owned ? 'IN COLLECTION' : '★ WISHLIST'}
         </Text>
       </View>
+      {onOverflow && !arranging ? (
+        <Pressable accessibilityRole="button" accessibilityLabel={`${item.title} options`} onPress={onOverflow} hitSlop={8}>
+          <Text style={styles.ovf}>⋯</Text>
+        </Pressable>
+      ) : null}
     </Pressable>
   );
 }

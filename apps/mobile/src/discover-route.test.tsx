@@ -153,6 +153,75 @@ describe('SOC-05: FROM FRIENDS recs', () => {
   });
 });
 
+// walk-8/10 structural helpers — flatten a rendered subtree's text leaves in order; walk ancestors for
+// a ScrollView (composite 'ScrollView' or host 'RCTScrollView'), the walk-1 no-renest pattern.
+type TestNode = { parent: TestNode | null; type: unknown; children?: unknown[] };
+function flattenText(node: unknown, out: string[] = []): string[] {
+  if (typeof node === 'string') out.push(node);
+  else if (node && typeof node === 'object') {
+    for (const child of ((node as { children?: unknown[] }).children ?? [])) flattenText(child, out);
+  }
+  return out;
+}
+function hasScrollViewAncestor(node: TestNode): boolean {
+  let p: TestNode | null = node.parent;
+  while (p) {
+    const ty = p.type as { displayName?: string; name?: string } | string;
+    const name = typeof ty === 'string' ? ty : (ty?.displayName ?? ty?.name ?? '');
+    if (/ScrollView/.test(String(name))) return true;
+    p = p.parent;
+  }
+  return false;
+}
+
+describe('WTP-01 walk-7..10: UP NEXT refinements', () => {
+  const QUEUED = {
+    data: { items: [QITEM({ itemId: 'q1', gameId: 'g1', title: 'Hades', owned: true, source: 'collection' })] },
+    isLoading: false,
+  };
+
+  it('walk-7: the DRAG TO REORDER hint renders ONLY in reorder mode', () => {
+    mockQueue = QUEUED;
+    render();
+    // read mode — bare count, no hint
+    expect(screen.queryByText(/DRAG TO REORDER/)).toBeNull();
+    fireEvent.press(screen.getByText('REORDER'));
+    // reorder mode — the hint appears on the section title
+    expect(screen.getByText(/QUEUE · 1 — DRAG TO REORDER/)).toBeTruthy();
+    fireEvent.press(screen.getByText('DONE'));
+    expect(screen.queryByText(/DRAG TO REORDER/)).toBeNull();
+  });
+
+  it("walk-8: the ⋯ overflow sits to the RIGHT of the IN COLLECTION indicator", () => {
+    mockQueue = QUEUED;
+    const tree = render();
+    const texts = flattenText(tree.toJSON());
+    const tagIdx = texts.indexOf('IN COLLECTION');
+    const ovfIdx = texts.indexOf('⋯');
+    expect(tagIdx).toBeGreaterThanOrEqual(0);
+    expect(ovfIdx).toBeGreaterThanOrEqual(0);
+    expect(tagIdx).toBeLessThan(ovfIdx); // indicator first, ⋯ at the row's right edge
+  });
+
+  it('walk-10: the ⋯ opens the Game-Options-drawer grammar (ScreenButton rows, screen-root sheet)', async () => {
+    mockQueue = QUEUED;
+    render();
+    fireEvent.press(screen.getByLabelText('Hades options'));
+    // real ScreenButton rows (the game-page grammar: /secondary action + /destructive removal)
+    expect(screen.getByText('PIN AS NOW PLAYING')).toBeTruthy();
+    expect(screen.getByText('REMOVE FROM QUEUE')).toBeTruthy();
+    // the sheet mounts OUTSIDE the screen scroll (walk-1 no-renest): its title node (above the sheet's
+    // own internal body-scroll) has no ScrollView ancestor — while the in-scroll queue-row title does.
+    const titles = screen.getAllByText('HADES');
+    expect(titles.some((n) => !hasScrollViewAncestor(n as unknown as TestNode))).toBe(true);
+    expect(titles.some((n) => hasScrollViewAncestor(n as unknown as TestNode))).toBe(true);
+    // the actions wire through: REMOVE calls the queue delete (await the async close — no act() bleed)
+    fireEvent.press(screen.getByText('REMOVE FROM QUEUE'));
+    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith('q1'));
+    await waitFor(() => expect(screen.queryByText('REMOVE FROM QUEUE')).toBeNull()); // the sheet closed
+  });
+});
+
 describe('DISC-04: DISCOVER room', () => {
   it('toggling to DISCOVER shows the trending rail + the UPCOMING EXPECTED-empty (no notify toggle)', () => {
     mockTrending = { data: { items: [TREND] } };
