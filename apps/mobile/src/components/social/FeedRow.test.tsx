@@ -74,6 +74,32 @@ describe('FeedRow — SOC-06 type-copy matrix + aggregation', () => {
     expect(screen.queryByText(/^\+/)).toBeNull();
   });
 
+  it('walk-3 regression — two peeked cards for the SAME game render without a React duplicate-key error', () => {
+    const errSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      render(
+        wrap(
+          <FeedRow
+            item={item('published_card', {
+              aggregateCount: 2,
+              objects: [
+                { gameId: 'g1', title: 'Hades', card: { id: 'card-1', imageUrl: null, thumbUrl: null } },
+                { gameId: 'g1', title: 'Hades', card: { id: 'card-2', imageUrl: null, thumbUrl: null } },
+              ],
+            })}
+            onActorPress={jest.fn()}
+            onObjectPress={jest.fn()}
+          />,
+        ),
+      );
+      expect(screen.getAllByText('CARD:Hades')).toHaveLength(2);
+      const dupKey = errSpy.mock.calls.find((c) => String(c[0]).includes('same key'));
+      expect(dupKey).toBeUndefined();
+    } finally {
+      errSpy.mockRestore();
+    }
+  });
+
   it('actor tap → onActorPress(actorId); a peeked card tap → onObjectPress(gameId)', () => {
     const onActor = jest.fn();
     const onObject = jest.fn();

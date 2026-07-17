@@ -85,9 +85,13 @@ export function FeedRow({
           </View>
         ) : item.objects.length ? (
           <View style={styles.peek}>
+            {/* walk-3 — the peek key carries the INDEX: keying on gameId alone collided when one
+                aggregate peeks two cards for the SAME game (e.g. an actor publishes twice for one
+                title in a window) → React's duplicate-key error on Friends focus. The ≤3 peek array
+                is server-ordered and never reordered client-side, so the index is stable. */}
             {item.objects.slice(0, 3).map((o, i) => (
               <Pressable
-                key={`${item.feedItemId}:${o.gameId ?? i}`}
+                key={`${item.feedItemId}:${o.card?.id ?? o.gameId ?? 'obj'}:${i}`}
                 accessibilityRole="button"
                 accessibilityLabel={o.title ?? 'game'}
                 disabled={!o.gameId}

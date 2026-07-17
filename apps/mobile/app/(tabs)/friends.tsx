@@ -12,7 +12,7 @@ import { FeedRow } from '../../src/components/social/FeedRow';
 import { HeaderKey } from '../../src/components/social/HeaderKey';
 import { themedStyles, useTheme } from '../../src/theme';
 import { useGetFriendsQuery, useGetFriendRequestsQuery } from '../../src/store/friendApi';
-import { useLazyGetFeedQuery } from '../../src/store/feedApi';
+import { useLazyGetFeedQuery, mergeFeedPages } from '../../src/store/feedApi';
 
 // The FRIENDS tab (P8 · first article · friends-states "Feed-first" §3.3). The SOC-06 aggregated feed IS
 // the landing; everything else is a peek or a jump-off: the requests banner (pending fast-path → the hub),
@@ -43,7 +43,9 @@ export default function Friends() {
       try {
         const page = await fetchFeed(undefined).unwrap();
         if (!live) return;
-        setFeedItems(page.items);
+        // walk-3 — page 1 RESETS the list; every fold dedupes by feedItemId (mergeFeedPages) so no
+        // refetch/overlap pattern can double-render an item (the React duplicate-key class).
+        setFeedItems(mergeFeedPages([], page.items, true));
         setCursor(page.nextCursor);
       } catch {
         if (live) setFeedError(true);
@@ -58,7 +60,7 @@ export default function Friends() {
     if (!cursor) return;
     try {
       const page = await fetchFeed(cursor).unwrap();
-      setFeedItems((prev) => [...prev, ...page.items]);
+      setFeedItems((prev) => mergeFeedPages(prev, page.items, false)); // dedupe on append (walk-3)
       setCursor(page.nextCursor);
     } catch {
       setFeedError(true);
