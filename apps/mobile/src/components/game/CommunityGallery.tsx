@@ -84,20 +84,22 @@ function GalleryCell({
   const a11y = card.byViewer
     ? `${card.name} by you, adopted ${card.adoptionCount} times`
     : `${card.name} by ${card.designer.username}, ${card.adopted ? 'already adopted' : free ? 'free' : `${card.priceForYou} pixels`} to adopt, adopted ${card.adoptionCount} times`;
+  // P13 (E8a) / parvati F3 — the cell is a plain View of SIBLING Pressables, never a Pressable inside a
+  // Pressable: RN-web routes a nested press to the OUTER responder (the credit tap opened the adopt
+  // sheet; jest couldn't catch it — fireEvent targets the inner node in isolation). The art (and the
+  // foot, kept tappable) inspect; the credit line routes to the contributor profile. No nesting = no
+  // responder-order subtleties on either platform.
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={a11y}
-      style={styles.cell}
-    >
-      <FlatCardImage title={card.name} imageUrl={card.thumbUrl ?? card.imageUrl} size="cell" />
-      {/* P13 (E8a) — the DESIGNED-BY credit routes to the contributor profile (a nested Pressable so
-          the card body still opens the adopt sheet). "BY YOU" routes to your own contributor profile. */}
+    <View style={styles.cell}>
+      <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={a11y}>
+        <FlatCardImage title={card.name} imageUrl={card.thumbUrl ?? card.imageUrl} size="cell" />
+      </Pressable>
+      {/* the DESIGNED-BY credit → the contributor profile; "BY YOU" routes to your own. */}
       <Pressable
         onPress={onViewDesigner}
         accessibilityRole="button"
         accessibilityLabel={`View ${card.byViewer ? 'your' : `${card.designer.username}'s`} contributions`}
+        hitSlop={4}
       >
         <Text style={styles.credit} numberOfLines={1}>
           {card.byViewer ? (
@@ -109,7 +111,9 @@ function GalleryCell({
           )}
         </Text>
       </Pressable>
-      <View style={styles.foot}>
+      {/* the foot stays an inspect surface (it always was) — its own sibling Pressable, hidden from the
+          SR (the art Pressable carries the full a11y sentence; this would be a duplicate announcement). */}
+      <Pressable onPress={onPress} accessible={false} style={styles.foot}>
         {/* provenance wins over price: an already-adopted card (or your own) never shows a buy price. */}
         {card.byViewer || card.adopted ? (
           <View style={styles.tag}>
@@ -123,8 +127,8 @@ function GalleryCell({
           <PriceChip pixels={card.priceForYou} />
         )}
         <AdoptCount count={card.adoptionCount} />
-      </View>
-    </Pressable>
+      </Pressable>
+    </View>
   );
 }
 

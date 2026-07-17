@@ -27,9 +27,10 @@ import { useGetContributionsQuery } from '../../src/store/contributorApi';
 // P13 — Contributor profile (E8a · CAT-07 · design board contributor-states.html). The designer-tap
 // destination: a person's "My Contributions" pride surface in the Profile grammar — IdentityBlock →
 // boxless STATS (+ gold PctPill standing, CAT-10, threshold-gated) → SIGNATURE CARD hero → CARDS
-// DESIGNED /cell grid + GAMES ADDED rows, each with a VIEW ALL local view. Reached FROM a profile, so
-// the NavBand stays PROFILE-active (ShellNav: `/contributor` falls under the collection/other bucket —
-// see the note below). CLIENT-ONLY: the base endpoint is live since M5 P3; the VIEW-ALL cursor
+// DESIGNED /cell grid + GAMES ADDED rows, each with a VIEW ALL local view. Reached FROM a profile —
+// the NavBand renders PROFILE-active (ShellNav's onProfile predicate includes `/contributor`; parvati
+// F2 fix — it originally fell through to `locked`). CLIENT-ONLY: the base endpoint is live since M5 P3;
+// the VIEW-ALL cursor
 // sub-lists are drawn-not-built, so VIEW ALL renders over this base top-N payload (P2 server tail
 // EXPECTED). All card faces are FLATTENED (EntryCard, never a hand-rolled imageUrl fallback — F-20).
 export default function ContributorProfile() {

@@ -227,6 +227,30 @@ id `9a59e193-…`). Live endpoint (curl, fresh token) returns a **populated self
 today (the Profile EDIT/tools row is M7). Self contributor is reachable by direct route / the gallery
 "BY YOU" tap. Adding a Profile contributions entry is Profile-tools scope (M7), not P13 — left untouched.
 
-**Self-reachability note:** the self-Profile (`(tabs)/profile.tsx`) has **no VIEW CONTRIBUTIONS link**
-today (the Profile EDIT/tools row is M7). Self contributor is reachable by direct route / the gallery
-"BY YOU" tap. Adding a Profile contributions entry is Profile-tools scope (M7), not P13 — left untouched.
+---
+
+## Parvati fix-round (F2 + F3, 2026-07-17)
+
+**F2 — NavBand PROFILE-active on `/contributor` — FIXED + LIVE-VERIFIED.** `ShellNav.tsx` onProfile
+predicate now includes `pathname.startsWith('/contributor')` (it previously matched nothing →
+`locked`). Live on :8082: `/contributor/[id]` renders the NavBand unlocked, full-colour, **PROFILE
+pip lit** (screenshot ss_9963zt1mc). *Correction:* the original screen comment here claimed the
+NavBand "stays PROFILE-active" — that was factually wrong pre-fix (it rendered LOCKED); the comment
+now describes the fix.
+
+**F3 — gallery BY-credit un-nested — FIXED (structural), live tap-through blocked by an env 500.**
+The cell is now a plain View of **sibling** Pressables (art→inspect · credit→route · foot→inspect,
+`CommunityGallery.tsx`) — no Pressable-inside-Pressable anywhere, so RN-web's outer-responder
+interception (parvati's live finding) has nothing to intercept; the AdoptCardSheet credit (already a
+standalone Pressable, the form parvati verified fine) was rebound from block→route with block kept on
+the ⋯ overflow. Jest adds a **structural guard** that is RED on the old nesting (no ancestor of the
+credit may carry the cell's a11y label) + both-direction handler assertions (credit routes ∧ never
+inspects; art inspects ∧ never routes). **Live tap-through could not be completed this run:** mid-walk
+the concurrent server lane's schema edit (`card_designs.equipped_labels`, migration 0014, §0.2) landed
+in the API before the dev-DB migration was applied → **`POST /auth/login` itself 500s**
+(DrizzleQueryError `column "equipped_labels" does not exist`, `.devstack/api.log`) — the same
+missing-dev-DB-migration class as parvati's F1, server-lane-owned. The F2 verification above proves
+the served bundle contains this fix-round's code. **Owed: one credit-tap walk (gallery BY-credit →
+URL flips to `/contributor/…`, sheet stays closed) once the server lane applies 0014** — the
+structural mechanism parvati identified is eliminated, but the on-web behavioural confirmation should
+be re-run (parvati or the next lane) when login recovers.

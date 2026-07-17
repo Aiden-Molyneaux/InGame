@@ -83,20 +83,36 @@ describe('CommunityGallery (§9)', () => {
     expect(screen.queryByText('3')).toBeNull();
   });
 
-  it('taps a cell → onInspect with that card', () => {
+  it('taps the card art → onInspect with that card (and never routes)', () => {
     const onInspect = jest.fn();
-    mockUseGallery.mockReturnValue({ data: { items: [PRICED_CARD] }, isLoading: false, isError: false });
-    render(wrap(<CommunityGallery gameId="g1" onInspect={onInspect} onDesignACard={jest.fn()} onViewDesigner={jest.fn()} />));
-    fireEvent.press(screen.getByLabelText(/Rival Cut by rival_curator/i));
-    expect(onInspect).toHaveBeenCalledWith(PRICED_CARD);
-  });
-
-  it('P13 (E8a) — tapping the DESIGNED-BY credit → onViewDesigner with the designer id', () => {
     const onViewDesigner = jest.fn();
     mockUseGallery.mockReturnValue({ data: { items: [PRICED_CARD] }, isLoading: false, isError: false });
-    render(wrap(<CommunityGallery gameId="g1" onInspect={jest.fn()} onDesignACard={jest.fn()} onViewDesigner={onViewDesigner} />));
-    fireEvent.press(screen.getByLabelText(/View rival_curator's contributions/i));
+    render(wrap(<CommunityGallery gameId="g1" onInspect={onInspect} onDesignACard={jest.fn()} onViewDesigner={onViewDesigner} />));
+    fireEvent.press(screen.getByLabelText(/Rival Cut by rival_curator/i));
+    expect(onInspect).toHaveBeenCalledWith(PRICED_CARD);
+    expect(onViewDesigner).not.toHaveBeenCalled();
+  });
+
+  it('P13 (E8a) / parvati F3 — the credit is a SIBLING Pressable (never nested): a credit tap routes, never inspects', () => {
+    const onInspect = jest.fn();
+    const onViewDesigner = jest.fn();
+    mockUseGallery.mockReturnValue({ data: { items: [PRICED_CARD] }, isLoading: false, isError: false });
+    render(wrap(<CommunityGallery gameId="g1" onInspect={onInspect} onDesignACard={jest.fn()} onViewDesigner={onViewDesigner} />));
+
+    // structural guard (the F3 web bug class): the credit must NOT be a descendant of the inspect
+    // Pressable (the cell-labeled one) — a nested press is routed to the OUTER responder on RN-web,
+    // swallowing the route. Encoded directly: no ancestor of the credit carries the cell a11y label.
+    const credit = screen.getByLabelText(/View rival_curator's contributions/i);
+    const cellLabel = /Rival Cut by rival_curator/i;
+    type Node = { props?: { accessibilityLabel?: string; 'aria-label'?: string }; parent: Node | null };
+    for (let node = (credit as unknown as Node).parent; node; node = node.parent) {
+      const label = node.props?.accessibilityLabel ?? node.props?.['aria-label'] ?? '';
+      expect(label).not.toMatch(cellLabel);
+    }
+
+    fireEvent.press(credit);
     expect(onViewDesigner).toHaveBeenCalledWith(PRICED_CARD.designer.userId);
+    expect(onInspect).not.toHaveBeenCalled();
   });
 
   it('empty → the contributor-hook SectionEmpty door', () => {

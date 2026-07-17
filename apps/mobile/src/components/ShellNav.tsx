@@ -46,8 +46,13 @@ export function ShellNav({ bottomInset = 0 }: { bottomInset?: number }) {
     pathname.startsWith('/game') ||
     pathname.startsWith('/styler');
   // The Device editor (`/device`, §3.5) is a FlowTakeover OF Profile (board: NavBand untouched, PROFILE
-  // keycap active) — the nav stays live, it is NOT locked.
-  const onProfile = pathname.startsWith('/profile') || pathname.startsWith('/device');
+  // keycap active) — the nav stays live, it is NOT locked. The Contributor profile (`/contributor/:id`,
+  // P13 §4.9) is reached FROM a profile and its board draws PROFILE-active on every state (parvati F2 —
+  // it previously fell through to `locked`).
+  const onProfile =
+    pathname.startsWith('/profile') ||
+    pathname.startsWith('/device') ||
+    pathname.startsWith('/contributor');
   // The Store (`/store`, §P6) — its own destination; Top Up + Wallet are in-screen sub-views (the STORE
   // keycap stays active throughout, the device-editor FlowTakeover precedent).
   const onStore = pathname.startsWith('/store');
