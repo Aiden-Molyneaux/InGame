@@ -1,5 +1,5 @@
 import { View, Text } from 'react-native';
-import type { CollectionCard } from '@ingame/shared';
+import type { CollectionCard, EquippedReadout as EquippedLabels } from '@ingame/shared';
 import { themedStyles } from '../../theme';
 import { FRAMES } from '../../styler/roster';
 import type { CardComposition } from '../../render/composition';
@@ -56,14 +56,51 @@ const frameLabel = (frame: CardComposition['frame']): string => {
   return hit?.name ?? label(frame.kind, 'CLEAN');
 };
 
+// CARD-22 cross-user (P9 · OQ-146) — the friend/gallery readout arrives as PRE-COMPUTED display labels
+// (`equipped`), denormalized at publish, never the composition (OQ-122 — a viewer never gets the layers).
+// Every slot is optional; an absent slot (or an empty `{}` from a pre-M6 card the backfill missed) is
+// simply omitted. When every slot is absent this renders NOTHING (a quiet no-readout — CARD-22 "render
+// only when present"), never a crash. The `equipped` branch takes precedence when supplied.
+const CROSS_SLOTS: Array<[keyof EquippedLabels, string]> = [
+  ['base', 'BASE'],
+  ['frame', 'FRAME'],
+  ['effect', 'EFFECT'],
+  ['finish', 'FINISH'],
+  ['nameplate', 'PLATE'],
+  ['font', 'FONT'],
+];
+
 export function EquipReadout({
   card,
   composition,
+  equipped,
 }: {
   /** Optional when a composition is given (the BaseRail readout) — only consulted for the default/no-parse branches. */
   card?: CollectionCard;
   composition?: CardComposition | null;
+  /** CARD-22 cross-user — pre-computed display labels (friend/gallery card). Takes precedence when given. */
+  equipped?: EquippedLabels;
 }) {
+  const styles = useStyles();
+  // Cross-user path — render the present labels verbatim (already display strings); nothing if all absent.
+  if (equipped) {
+    const crossChips = CROSS_SLOTS.flatMap(([slot, k]) => {
+      const v = equipped[slot];
+      return v ? [[k, v.toUpperCase()] as [string, string]] : [];
+    });
+    if (crossChips.length === 0) return null;
+    return (
+      <View style={styles.wrap}>
+        {crossChips.map(([k, v]) => (
+          <View key={k} style={styles.chip}>
+            <Text style={styles.chipText}>
+              {k} · <Text style={styles.chipVal}>{v}</Text>
+            </Text>
+          </View>
+        ))}
+      </View>
+    );
+  }
   const chips: Array<[string, string]> = composition
     ? [
         ['FRAME', frameLabel(composition.frame)],
@@ -81,7 +118,6 @@ export function EquipReadout({
           ['FINISH', 'NONE'],
           ['NAMEPLATE', 'STANDARD'],
         ];
-  const styles = useStyles();
   return (
     <View style={styles.wrap}>
       {chips.map(([k, v]) => (

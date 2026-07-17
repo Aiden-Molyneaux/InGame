@@ -53,11 +53,17 @@ export function ShellNav({ bottomInset = 0 }: { bottomInset?: number }) {
     pathname.startsWith('/profile') ||
     pathname.startsWith('/device') ||
     pathname.startsWith('/contributor');
+  // The friend-view cluster (P9 §4.6/§2.2) — the other-user Profile (`/user/:id`), its Collection
+  // (`/user/:id/collection`), the SOC-11 entry detail (`/user/:id/entry/:gameId`), and Compare
+  // (`/compare/:friendId`) all belong to the FRIENDS cluster: their boards draw FRIENDS-active. FRIENDS
+  // is not a routable tab yet (P8), so its keycap stays inert — but the pip lights to place these screens
+  // in their home cluster (manifest AS-2). The nav is NOT locked (that's pre-auth only).
+  const onFriends = pathname.startsWith('/user') || pathname.startsWith('/compare');
   // The Store (`/store`, §P6) — its own destination; Top Up + Wallet are in-screen sub-views (the STORE
   // keycap stays active throughout, the device-editor FlowTakeover precedent).
   const onStore = pathname.startsWith('/store');
-  const locked = !(onCollection || onProfile || onStore); // sign-in, index redirect, splash
-  const activeKey = onStore ? 'store' : onProfile ? 'profile' : 'collection';
+  const locked = !(onCollection || onProfile || onStore || onFriends); // sign-in, index redirect, splash
+  const activeKey = onStore ? 'store' : onFriends ? 'friends' : onProfile ? 'profile' : 'collection';
 
   const tabs: NavTab[] = ORDER.map((key) => ({
     key,

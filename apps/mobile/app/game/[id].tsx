@@ -36,6 +36,8 @@ import {
   useBlockUserMutation,
 } from '../../src/store/communityApi';
 import { useSubmitReportMutation, type CreateReportRequest } from '../../src/store/reportApi';
+import { useGetFriendsWhoOwnQuery } from '../../src/store/friendApi';
+import { Avatar } from '../../src/components/Avatar';
 import { useAppSelector } from '../../src/store/hooks';
 
 // Game page hub shell (§3.1 · design-spec §2.4b / §4.2) — the CARD-23 NAVIGATE target + the
@@ -329,10 +331,16 @@ export default function GamePage() {
             </>
           ) : (
             <View style={styles.about}>
+              {/* P9 (CAT-09c) — the friends-who-own named list goes live (rows → their profile). The rest
+                  of ABOUT (catalog facts · chips · PresenceStats · suggest-edit) still needs the aggregate
+                  game-detail read (unbuilt) — EXPECTED(later). */}
+              <FriendsWhoOwnSection
+                gameId={entry.gameId}
+                onOpenUser={(userId) => router.push(`/user/${userId}`)}
+              />
               <Text style={styles.aboutTitle}>ABOUT</Text>
               <Text style={styles.aboutSub}>
-                Catalog facts · community presence · friends-who-own arrive in M5 (needs the game-detail
-                read + CAT-09).
+                Catalog facts · community presence · suggest-edit arrive with the game-detail read (CAT-06/09).
               </Text>
             </View>
           )}
@@ -481,6 +489,42 @@ function factsLine(entry: CollectionItem): string {
     .toUpperCase();
 }
 
+// FriendsWhoOwn (P9 · CAT-09c) — the ABOUT-tab named list of friends who own this game (GET /catalog/
+// games/:id/friends-who-own). Friend-gated + block-filtered server-side; PROF-03 hours-gating (a friend
+// who hides hours has `hours` absent → the row omits the stat). A row → their profile (`/user/:id`).
+function FriendsWhoOwnSection({ gameId, onOpenUser }: { gameId: string; onOpenUser: (userId: string) => void }) {
+  const styles = useStyles();
+  const { data, isLoading } = useGetFriendsWhoOwnQuery(gameId);
+  if (isLoading) return null; // the ABOUT tab already carries its own copy; a quiet no-op while loading
+  const rows = data?.friendsWhoOwn ?? [];
+  return (
+    <View style={styles.fwoBlock}>
+      <Text style={styles.fwoHead}>FRIENDS WHO OWN IT — {data?.count ?? 0}</Text>
+      {rows.length === 0 ? (
+        <Text style={styles.fwoEmpty}>None of your friends own this yet.</Text>
+      ) : (
+        <View style={styles.fwoList}>
+          {rows.map((r) => (
+            <Pressable
+              key={r.userId}
+              accessibilityRole="button"
+              accessibilityLabel={`Open ${r.username}'s profile`}
+              onPress={() => onOpenUser(r.userId)}
+              style={({ pressed }) => [styles.fwoRow, pressed && styles.fwoRowPressed]}
+            >
+              <Avatar username={r.username} avatarUrl={r.avatarUrl} size={30} />
+              <Text style={styles.fwoName} numberOfLines={1}>{r.username.toUpperCase()}</Text>
+              <View style={styles.fwoSpacer} />
+              {r.hours !== undefined ? <Text style={styles.fwoHours}>{r.hours.toLocaleString('en-US')} HRS</Text> : null}
+              <Text style={styles.fwoChev}>›</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
 // ── the shared frame for the lifecycle/edge states (header + return, no data yet) ──────────────────
 function Frame({ children, onBack }: { children: ReactNode; onBack: () => void }) {
   const styles = useStyles();
@@ -578,9 +622,20 @@ const useStyles = themedStyles((t) => ({
   },
   actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.md },
   mini: { paddingVertical: t.space.md, paddingHorizontal: t.space.lg },
-  about: { padding: t.space.lg, backgroundColor: t.scr.panel, borderWidth: 1, borderColor: t.scr.hairline, gap: t.space.sm },
+  about: { padding: t.space.lg, backgroundColor: t.scr.panel, borderWidth: 1, borderColor: t.scr.hairline, gap: t.space.md },
   aboutTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
   aboutSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, lineHeight: 16 },
+  // P9 — friends-who-own (CAT-09c)
+  fwoBlock: { gap: t.space.sm },
+  fwoHead: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 2 },
+  fwoEmpty: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.3 },
+  fwoList: { gap: t.space.sm },
+  fwoRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.md, paddingVertical: t.space.sm },
+  fwoRowPressed: { opacity: 0.7 },
+  fwoName: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 0.5, flexShrink: 1 },
+  fwoSpacer: { flex: 1 },
+  fwoHours: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
+  fwoChev: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.faint },
   notOwned: { alignItems: 'center', gap: t.space.md, paddingVertical: t.space.xxl },
   notOwnedTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
   notOwnedSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, textAlign: 'center', lineHeight: 16 },
