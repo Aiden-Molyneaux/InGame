@@ -372,3 +372,7 @@ device chrome (owner overrides his overspill caution) · D7 preview ends on edit
 "Saved Live" · cart Cancel on own line · Profile device-editor entry affordance · E3 HOLD-to-adopt
 · gallery marks YOUR OWN cards + ADOPTED ones · E8 quick-press block + self-tap affordance · F1
 chip FONT sizes unified · app-wide: never show vertical scrollbars.
+
+---
+
+**M5 SIGNED by the owner 2026-07-15** — store + card sharing accepted; close-out committed; P2b/G-J carry.

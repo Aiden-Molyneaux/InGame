@@ -133,3 +133,72 @@ The web lane proved structure/data; these are the **feel** gates reserved for th
 *(Workflow lesson, doctor-nick: the foreground P/Invoke no longer holds on this box — the MCP Chrome window lived
 whole-hidden and CDP `captureScreenshot` timed out on animated RN-web/skia surfaces; the whole P7/P8 walk ran off the
 a11y tree + `get_page_text` + live DB reads. The device walk is the visual gate for these five items.)*
+
+---
+
+## Addendum — the owner walk rounds (F-12…F-21, 2026-07-14/15)
+
+The five ⛔ device gates above were the ones only the owner could judge. He judged them across **three
+live device walks** — the taste-and-feel pass the web lane structurally can't run. This addendum closes the
+receipt: the arc, the fixes, and the sign-off.
+
+**The arc.** Round 1 (the full acceptance suite, 2026-07-14) surfaced the **E3 blocker cluster** and the
+Buy-Experience Unification ruling → four fix waves (**F-8…F-11**, already banked in the F-2/F-3 tail). Round 2
+(2026-07-15, suite rev 2 — *"massive improvement"*) passed clean across §A/B/C/D/E/F and left **9 bugs + 13
+rulings**. Round 3 (2026-07-15, final walk) was the last taste pass over the fixed build. The **F-12…F-21**
+fixes below cleared rounds 2–3; the walk **passed 2026-07-15**.
+
+- **F-12 — round-2 bugs** (`48c7f10`) — the 9-bug sweep: the cwd-dependent server-flatten font path (ALL
+  render text silently dropped — renders regenerated full 672×939) · adopted-card resolution on shelf/hero ·
+  publish→gallery invalidation · AcquireBeat dead-DONE self-dismiss · off-store share via file download
+  (Blob-in-redux killed) + name-as-message · resetPrefs-on-logout (preview leak/crash) · PulledSheet
+  elevation 24 (native ribbon bleed) · imageUrl threaded to Top-3/favourite/now-playing.
+- **F-13 — round-2 rulings** (`f18453c`) — unified gold **HOLD TO PAY** (all-caps, 0069 `$` override) ·
+  SheetLock scroll-lock · StoreThemePreview (store sheets repaint device chrome, C7) · preview-ends-on-blur +
+  cart-clear · Saved-Live dropped · KeepBar CANCEL own line · profile EDIT keycap · HOLD-to-adopt free path ·
+  gallery BY-YOU/ADOPTED tags (contract 0.68) · quick-press block + self-affordance · header chip fonts
+  unified (11) · app-wide scrollbar sweep.
+- **F-14 — the title-lock** (`a234bb5`) — the nameplate title is **system-guaranteed to be the game title**
+  (owner ruling): `withGameTitle()` forces it at the server flatten / share render / reflatten, the styler
+  write-path normalizes the live draft to `entry.title`, the TITLE tab stays font+ink only (no text editor —
+  it never existed). Seed titles fixed, renders regenerated. CARD-11 clarified, product-spec 0.59.
+- **F-15 — theme/shell drawer layout** (`295adea`) — identity row to sheet top (above the preview),
+  PreviewStrip demoted to a passive status banner (no overlap with EXIT), PulledSheet `paddingBottom` xxl
+  (buy-bar breathing room), CosmeticSheet lifted to the Header overlay so the scrim covers the store header.
+- **F-16 — the logout crash** (`00d75f0`) — a **rules-of-hooks violation** in DeviceEditor (two
+  `useAnnounceOnChange` after the `isLoading/isError` early returns): on logout `resetApiState()` flips the
+  still-mounted-but-blurred editor back to loading → re-renders down the early-return branch with 2 fewer
+  hooks → React crashes the tree → the subsequent `router.replace` throws "navigate before Root Layout
+  mounted" (error 2 was fallout from error 1). Fix: all hooks unconditional, early returns below them. Also
+  resolves the A1 sign-in flicker. (Followed by a hook-lint guard on `app/**` `220dd5f` then all client code
+  `8697af3`.)
+- **F-17 — the post-logout flicker** (`dcab961`) — a **tokenless-401 guard** in `baseQueryWithReauth` kills
+  the self-perpetuating teardown→refetch→401→teardown loop: `resetApiState` refetched every still-mounted
+  blurred route's queries tokenless → each 401 re-ran the FULL teardown + replace, unbounded. Proven loop
+  numbers: **1259 calls / 419 navs / 4s pre-fix vs 6 calls / 1 nav post-fix**. A tokenless 401 now surfaces
+  as a plain error; live-session 401s keep the OQ-123 refresh/teardown path. RED/GREEN regression test.
+- **F-18 — card silhouette scale-invariance** (`7abe57c`) — the stepped-corner unit was fixed-px (6), so the
+  3×-DPR flatten rendered ~7× finer steps than live cards at cell size (the "different corners" + perceived
+  aspect mismatch — measured: no real stretch). `cardStepUnit(w)=w*6/224` now shared by both render engines +
+  the animated clip + GameCard/StatsBack; renders regenerated 8/8; scale-invariant tests.
+- **F-19 — adopted cards showed default in List/Top-10** (`6a448a2`) — three CardFace call sites (now-playing
+  hero, List strips, Top-10 rows) rendered composition-only without `imageUrl`, so adopted (flattened-only)
+  cards fell back to default; threaded `imageUrl` like FlipCard/CardSwitcher already do. App-wide sweep
+  confirmed these were the last unguarded call sites.
+- **F-20 — chunky pixel-steps + the EntryCard class-kill** (`80d35d3`) — `CARD_STEP_RATIO` 6/112 (10.7% notch
+  scaling through every size incl. hero; non-self-intersection tested; renders regenerated 8/8) **and** the
+  `EntryCard` wrapper that **kills the F-8/F-12/F-19 adopted-card fallback class at its root** (8 call sites
+  migrated — collection hero/list/top-10, FlipCard, profile ×3, DualFaceHero, CardDetailSheet), so no future
+  call site can drop `imageUrl` and re-open the class.
+- **F-21 — the buy-drawer restyle** (`14a99df`) — owner rulings 1–6: stepped-corner `HoldFillButton` (SVG
+  clip-path gold sweep inside the notched silhouette) · unboxed free-standing buy key · sheet price as gold
+  TEXT + glyph (chip retired from sheets) · prominent YOU-HAVE balance line · KeepBar CANCEL removed (escape
+  paths verified — re-pick reverts, editor blur clears cart) · was→now MiniDevice pair removed (SWITCHED
+  readout survives). Plus the theme-preview declutter (`dd25d7d` round-4) and owner copy trims (`f8e499b`,
+  `4e26df2`, `33d2b11`).
+
+**Owner sign-off — walk PASSED 2026-07-15.** The store + card-sharing loop is accepted on device; the five
+⛔ feel-gates (hold-to-buy · PrintRitual motion · reduce-motion · native share · Styler ReconcileSheet funded
+path) are cleared. Final suite counts at `m5` head: **348 mobile · 186 unit · 276 integration**. The only
+open items carry on provisioning (P2b + G-J + the manual sandbox pass — see `economy-receipt.md` ⛔ and
+`m5-build-task.md` §8).
