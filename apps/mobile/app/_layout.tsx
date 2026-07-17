@@ -24,6 +24,7 @@ import { loadTokens } from '../src/auth/tokenStore';
 import { useGetDeviceQuery } from '../src/store/api';
 import { setShellId, setThemeId, setStickerComposition } from '../src/store/prefsSlice';
 import { DeviceShell } from '../src/components/DeviceShell';
+import { CelebrationHost } from '../src/components/achievements/CelebrationHost';
 import { StoreThemePreviewProvider } from '../src/components/StoreThemePreview';
 import { SheetLockProvider } from '../src/components/SheetLock';
 import { BreakoutProvider } from '../src/components/BreakoutContext';
@@ -135,6 +136,10 @@ export default function RootLayout() {
                 <StoreThemePreviewProvider>
                   <DeviceShell>
                     <ThemedStack />
+                    {/* ACH-06 — the in-app unlock celebration overlays the screen area from the root
+                        (an absolute-fill sibling of the routed Stack inside the DeviceShell screen
+                        slot), so an unlock celebrates app-wide. Renders null when nothing's pending. */}
+                    <CelebrationHost />
                   </DeviceShell>
                 </StoreThemePreviewProvider>
               </DeviceStickerProvider>

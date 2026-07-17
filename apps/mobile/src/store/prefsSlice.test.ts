@@ -16,6 +16,7 @@ const state = (over: Partial<PrefsState> = {}): PrefsState => ({
   themeId: DEFAULT_THEME_ID,
   stickerComposition: EMPTY,
   col12CoachmarkSeen: false,
+  lastSeenUnlockCount: null,
   ...over,
 });
 
@@ -29,6 +30,7 @@ describe('prefsSlice', () => {
       themeId: DEFAULT_THEME_ID,
       stickerComposition: EMPTY,
       col12CoachmarkSeen: false,
+      lastSeenUnlockCount: null,
     });
   });
 

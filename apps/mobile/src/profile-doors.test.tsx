@@ -27,6 +27,7 @@ jest.mock('./store/api', () => ({
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush, replace: jest.fn(), navigate: jest.fn() }),
 }));
+jest.mock('./store/achievementsApi', () => ({ useGetMyAchievementsQuery: () => ({ data: undefined }) }));
 jest.mock('./store', () => ({ logoutTeardown: jest.fn() }));
 jest.mock('./components/EntryCard', () => ({
   EntryCard: ({ title }: { title: string }) => {

@@ -29,6 +29,13 @@ export interface PrefsState {
   // autoMergeLevel1 gives an older/first-time blob the `false` default → the hint shows once). No on-face
   // indicator (owner directive) — this coachmark is the only discoverability affordance.
   col12CoachmarkSeen: boolean;
+  // ACH-06 (P11 · ARCH-A4) — the last-observed achievement UNLOCK count (earned + secretsFound). The
+  // CelebrationHost compares `/me/achievements` on each refetch against this to fire the in-app
+  // celebration for a NEW unlock. `null` = not-yet-observed → the FIRST read baselines SILENTLY (a
+  // fresh login must never re-celebrate the user's existing achievements). Persisted here so the
+  // baseline survives app restarts; PURGED on logout with the rest of the slice (per-user-namespace),
+  // so the next account re-baselines. The M7 push half replaces this detection (ASSUMPTION-1).
+  lastSeenUnlockCount: number | null;
 }
 
 const initialState: PrefsState = {
@@ -37,6 +44,7 @@ const initialState: PrefsState = {
   themeId: DEFAULT_THEME_ID,
   stickerComposition: { version: STICKER_COMPOSITION_VERSION, stickers: [] },
   col12CoachmarkSeen: false,
+  lastSeenUnlockCount: null,
 };
 
 const prefsSlice = createSlice({
@@ -59,6 +67,10 @@ const prefsSlice = createSlice({
     setCol12CoachmarkSeen(state, action: PayloadAction<boolean>) {
       state.col12CoachmarkSeen = action.payload;
     },
+    // ACH-06 — record the observed unlock count after baselining or after a celebration is consumed.
+    setLastSeenUnlockCount(state, action: PayloadAction<number>) {
+      state.lastSeenUnlockCount = action.payload;
+    },
     // F20 logout — reset the whole slice to defaults IN MEMORY. `persistor.purge()` only clears the
     // async STORAGE; without this the live in-memory prefs survived logout, so an ACTIVE device-editor
     // preview (a premium shell/theme dispatched to `shellId`/`themeId`) bled straight through to the
@@ -76,6 +88,7 @@ export const {
   setThemeId,
   setStickerComposition,
   setCol12CoachmarkSeen,
+  setLastSeenUnlockCount,
   resetPrefs,
 } = prefsSlice.actions;
 export default prefsSlice.reducer;

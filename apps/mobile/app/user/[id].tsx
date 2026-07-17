@@ -15,6 +15,7 @@ import { LoadError } from '../../src/components/lifecycle/LoadError';
 import { Unavailable } from '../../src/components/lifecycle/Unavailable';
 import { themedStyles, useTheme } from '../../src/theme';
 import { useGetUserQuery, isFriendProfile } from '../../src/store/friendApi';
+import { useGetUserAchievementsQuery } from '../../src/store/achievementsApi';
 import { useSubmitReportMutation } from '../../src/store/reportApi';
 import { useBlockUserMutation } from '../../src/store/communityApi';
 
@@ -32,6 +33,9 @@ export default function UserProfile() {
 
   // Hooks ALL unconditional (F-16) — early returns sit below.
   const { data, isLoading, isError, error, refetch } = useGetUserQuery(id ?? '', { skip: !id });
+  // ACH-05 — the friend achievements teaser (earned-only / honest-count-locked, PROF-03). Reads
+  // /users/:id/achievements; the strip routes into the friend trophy case (P3/P4).
+  const { data: ach } = useGetUserAchievementsQuery(id ?? '', { skip: !id });
   const [submitReport, reportState] = useSubmitReportMutation();
   const [blockUser, blockState] = useBlockUserMutation();
   const [reportOpen, setReportOpen] = useState(false);
@@ -164,11 +168,30 @@ export default function UserProfile() {
             </View>
           ) : null}
 
-          {/* the rest of the board (STATS / DEVICE / ACHIEVEMENTS) needs the P5/P6 profile-read widening —
-              served EXPECTED-empty, never faked (manifest GAP-1/2/4). */}
+          {/* ACHIEVEMENTS teaser (ACH-05 · P11) — the earned count off /users/:id/achievements, a door
+              into their trophy case (P3 earned-only / P4 privacy-limited). Replaces the old EXPECTED
+              note for achievements (now live). */}
+          <View style={styles.section}>
+            <View style={styles.sectionRow}>
+              <Text style={styles.sectionHead}>ACHIEVEMENTS</Text>
+              <TertiaryLink label="View all" onPress={() => router.push(`/user/${data.id}/achievements`)} />
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`View ${data.username}'s achievements`}
+              onPress={() => router.push(`/user/${data.id}/achievements`)}
+              style={({ pressed }) => [styles.achRow, pressed && { opacity: 0.82 }]}
+            >
+              <Text style={styles.achCount}>{ach ? `${fmt(ach.summary.earned)} EARNED` : '—'}</Text>
+              <Text style={styles.chev}>›</Text>
+            </Pressable>
+          </View>
+
+          {/* the remaining board sections (STATS / DEVICE) need the P5/P6 profile-read widening — served
+              EXPECTED-empty, never faked (manifest GAP-1/2). */}
           <View style={styles.expected}>
             <Text style={styles.expectedText}>
-              Their stats, device, and achievements arrive with the rest of the profile read.
+              Their stats and device arrive with the rest of the profile read.
             </Text>
           </View>
         </>
@@ -300,6 +323,9 @@ const useStyles = themedStyles((t) => ({
     padding: t.space.lg,
   },
   expectedText: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.3, lineHeight: 14 },
+  achRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: t.scr.panel, padding: t.space.lg },
+  achCount: { flex: 1, fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5 },
+  chev: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.faint },
 
   lockWell: {
     borderWidth: 1,

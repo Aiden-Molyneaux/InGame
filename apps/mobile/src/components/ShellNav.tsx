@@ -53,10 +53,15 @@ export function ShellNav({ bottomInset = 0 }: { bottomInset?: number }) {
   // keycap active) — the nav stays live, it is NOT locked. The Contributor profile (`/contributor/:id`,
   // P13 §4.9) is reached FROM a profile and its board draws PROFILE-active on every state (parvati F2 —
   // it previously fell through to `locked`).
+  // The self Achievements trophy case (`/achievements`, P11 §4.10) is a Profile sub-surface (the board
+  // draws PROFILE-active on every state; reached from the self-Profile teaser). The FRIEND achievements
+  // view is `/user/:id/achievements` and rides the /user cluster (FRIENDS-active, below) — consistent
+  // with the friend profile/collection it's reached from.
   const onProfile =
     pathname.startsWith('/profile') ||
     pathname.startsWith('/device') ||
-    pathname.startsWith('/contributor');
+    pathname.startsWith('/contributor') ||
+    pathname.startsWith('/achievements');
   // The FRIENDS cluster (P8 §3.3 + P9 §4.6/§2.2) — the FRIENDS tab itself (`/friends`), the Find/Add hub
   // + its sub-flows (`/add-friends`, `/invite-friends`, `/friend-requests`, the SOC-10 `/invite/:token`
   // landing), and the friend-view cluster (`/user/:id` + its Collection/entry, `/compare/:friendId`) all

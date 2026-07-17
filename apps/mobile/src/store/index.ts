@@ -1,4 +1,5 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
+import { setupListeners } from '@reduxjs/toolkit/query';
 import {
   persistStore,
   persistReducer,
@@ -36,6 +37,13 @@ export const store = configureStore({
 });
 
 export const persistor = persistStore(store);
+
+// setupListeners enables `refetchOnFocus` / `refetchOnReconnect` for the queries that opt in (today
+// only the ACH-06 CelebrationHost's /me/achievements subscription — ARCH-A4). It hooks AppState focus +
+// NetInfo reconnect, NOT a timer: returning to the app or reconnecting re-reads /me/achievements so a
+// new unlock is detected as a refetch-delta — poll-FREE (owner directive). Other queries are unaffected
+// (they don't set refetchOnFocus, so the default stays off).
+setupListeners(store.dispatch);
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

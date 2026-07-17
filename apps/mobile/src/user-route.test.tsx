@@ -25,6 +25,7 @@ jest.mock('./store/friendApi', () => ({
   useCreateFriendRequestMutation: () => [mockFriendReq, { isLoading: false }],
   isFriendProfile: (p: { friendsCount?: number }) => 'friendsCount' in p,
 }));
+jest.mock('./store/achievementsApi', () => ({ useGetUserAchievementsQuery: () => ({ data: { summary: { earned: 0 }, earned: [] } }) }));
 jest.mock('./store/reportApi', () => ({ useSubmitReportMutation: () => [jest.fn(), { isLoading: false }] }));
 jest.mock('./store/communityApi', () => ({ useBlockUserMutation: () => [jest.fn(), { isLoading: false }] }));
 jest.mock('expo-router', () => ({

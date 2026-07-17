@@ -14,6 +14,7 @@ import { theme, themedStyles, useTheme } from '../../src/theme';
 import { SHELL_NAMES, SCREEN_THEME_NAMES, resolveShellId, resolveScreenThemeId } from '../../src/theme/palettes';
 import { deviceStripCopy } from '../../src/components/device/deviceCopy';
 import { useGetMeQuery, useGetDeviceQuery, useGetWalletQuery } from '../../src/store/api';
+import { useGetMyAchievementsQuery } from '../../src/store/achievementsApi';
 import { useAppDispatch } from '../../src/store/hooks';
 import { setCollectionView } from '../../src/store/prefsSlice';
 import { logoutTeardown } from '../../src/store';
@@ -31,6 +32,9 @@ export default function Profile() {
   const { data: device } = useGetDeviceQuery();
   // F-1 fix 7 — the persistent PX counter rides the Profile header too (ECON-07 entry point).
   const { data: wallet } = useGetWalletQuery();
+  // ACH-05 — the Profile achievements teaser. /me carries no teaser (GAP-1), so the earned count reads
+  // off /me/achievements `summary` (a bounded query); the row routes into the trophy case.
+  const { data: achievements } = useGetMyAchievementsQuery();
   const styles = useStyles();
 
   async function signOut() {
@@ -123,6 +127,26 @@ export default function Profile() {
             <Stat value={me.stats.adoptionsReceived} label="Adoptions" />
             <Stat value={me.stats.friends} label="Friends" />
           </View>
+        </Section>
+
+        {/* ACHIEVEMENTS teaser (ACH-05) — the earned count, a door into the trophy case (P11). */}
+        <Section title="Achievements" action={<TertiaryLink label="View all" onPress={() => router.push('/achievements')} />}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="View your achievements"
+            onPress={() => router.push('/achievements')}
+            style={({ pressed }) => [styles.achRow, pressed && styles.devRowPressed]}
+          >
+            <View style={styles.achMeta}>
+              <Text style={styles.achCount}>{achievements ? achievements.summary.earned : 0} EARNED</Text>
+              {achievements && achievements.summary.secretsFound > 0 ? (
+                <Text style={styles.achSub}>{achievements.summary.secretsFound} SECRETS FOUND</Text>
+              ) : (
+                <Text style={styles.achSub}>YOUR TROPHY CASE</Text>
+              )}
+            </View>
+            <Text style={styles.chev}>›</Text>
+          </Pressable>
         </Section>
 
         {/* PINNED FAVOURITE (PROF-01/05 — P2, real as of M3; VIEW GAME rides the Game page, M-later) */}
@@ -344,4 +368,10 @@ const useStyles = themedStyles((t) => ({
   devEditText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.brand.navy, letterSpacing: 1 },
   devTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5 },
   devSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
+  // ACH-05 teaser row (mirrors the device-row affordance).
+  achRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: t.scr.panel, padding: t.space.lg },
+  achMeta: { flex: 1, gap: 2 },
+  achCount: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5 },
+  achSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
+  chev: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.faint },
 }));
