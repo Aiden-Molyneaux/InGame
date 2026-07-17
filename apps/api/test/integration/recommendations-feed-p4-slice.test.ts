@@ -422,6 +422,65 @@ describe('SOC-06 / OQ-071: the aggregated activity feed', () => {
   });
 });
 
+// ── the F-19 walk fix: game-type peeks carry the actor's DISPLAYED card ──────────────────────────────
+describe('SOC-06 (F-19 walk fix): feed game peeks resolve the actor’s DISPLAYED card (own OR adopted)', () => {
+  it('an ADOPTED-equipped entry → the added_games peek carries the adopted card’s imageUrl (the bug path)', async () => {
+    const v = await seedUser();
+    const f = await seedUser();
+    const designer = await seedUser();
+    await befriend(v.id, f.id);
+    const game = await seedGame(designer.token, 'Adopted Peek RPG');
+    const cardId = await publishCard(designer.token, game, 5);
+    // F adds the game (the REAL entry_added event), adopts the designer's card, equips it.
+    const add = await request(app).post('/api/me/collection').set(authed(f.token)).send({ gameId: game });
+    const entryId = add.body.entryId as string;
+    const adopt = await request(app).post(`/api/cards/${cardId}/adopt`).set(authed(f.token));
+    expect(adopt.status).toBe(200);
+    const equip = await request(app).patch(`/api/me/collection/${entryId}`).set(authed(f.token)).send({ activeCardDesignId: cardId });
+    expect(equip.status).toBe(200);
+
+    const feed = await request(app).get('/api/me/feed').set(authed(v.token));
+    const added = feed.body.items.find((i: { type: string }) => i.type === 'added_games');
+    expect(added).toBeDefined();
+    expect(added.objects[0].card).toBeDefined();
+    expect(added.objects[0].card.id).toBe(cardId);
+    expect(added.objects[0].card.imageUrl).toBeTruthy(); // the F-19 bug path: was undefined → client default
+    expect('composition' in added.objects[0].card).toBe(false); // OQ-122 — flattened only
+  });
+
+  it('an OWN-equipped published card → the peek carries its flattened imageUrl (never composition)', async () => {
+    const v = await seedUser();
+    const f = await seedUser();
+    await befriend(v.id, f.id);
+    const game = await seedGame(f.token, 'Own Peek RPG');
+    const cardId = await publishCard(f.token, game, 6);
+    const add = await request(app).post('/api/me/collection').set(authed(f.token)).send({ gameId: game });
+    const equip = await request(app).patch(`/api/me/collection/${add.body.entryId}`).set(authed(f.token)).send({ activeCardDesignId: cardId });
+    expect(equip.status).toBe(200);
+
+    const feed = await request(app).get('/api/me/feed').set(authed(v.token));
+    const added = feed.body.items.find((i: { type: string }) => i.type === 'added_games');
+    expect(added.objects[0].card).toBeDefined();
+    expect(added.objects[0].card.id).toBe(cardId);
+    expect(added.objects[0].card.imageUrl).toBeTruthy();
+    expect('composition' in added.objects[0].card).toBe(false);
+  });
+
+  it('no equipped card + no published cards for the game → the peek carries NO card (client default stub)', async () => {
+    const v = await seedUser();
+    const f = await seedUser();
+    await befriend(v.id, f.id);
+    const game = await seedGame(f.token, 'Bare Peek RPG');
+    await request(app).post('/api/me/collection').set(authed(f.token)).send({ gameId: game });
+
+    const feed = await request(app).get('/api/me/feed').set(authed(v.token));
+    const added = feed.body.items.find((i: { type: string }) => i.type === 'added_games');
+    expect(added).toBeDefined();
+    expect(added.objects[0].card).toBeUndefined(); // truly nothing → default only then
+    expect(added.objects[0].title).toBe('Bare Peek RPG');
+  });
+});
+
 // ── the widened collection.entry_updated payload (P4 design #4) ───────────────────────────────────────
 describe('SOC-06 (P4 design #4): collection.entry_updated carries {status} ONLY on a status flip', () => {
   it('a status change emits status + gameId; a stat-only change emits neither', async () => {

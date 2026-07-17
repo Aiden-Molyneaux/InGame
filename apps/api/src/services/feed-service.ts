@@ -4,6 +4,7 @@ import * as feedRepo from '../repositories/feed-repo';
 import type { FriendEventRow } from '../repositories/feed-repo';
 import * as catalogRepo from '../repositories/catalog-repo';
 import * as cardRepo from '../repositories/card-repo';
+import * as friendReadRepo from '../repositories/friend-read-repo';
 
 // SOC-06 aggregated friend-activity feed (M6 P4, OQ-071). Computed at REQUEST TIME from the ACH-08
 // `domain_events` outbox over the actor's ACCEPTED friends (feed-repo, the SYS-01-FRIEND-READ class).
@@ -203,15 +204,54 @@ export async function getFeed(actorId: string, cursor?: string): Promise<FeedRes
   // ── Resolve object peeks (≤3 per item), batch-wise, flattened only ──────────────────────────────────
   const gameIds = new Set<string>();
   const cardIds = new Set<string>();
+  // The game-type peeks (added/beat/completed) show the EVENT ACTOR's DISPLAYED card for that game —
+  // group the wanted (friend-actor → gameIds) so one friend-shelf read per distinct actor resolves them.
+  const gameRefsByActor = new Map<string, Set<string>>();
   for (const b of pageBuckets) {
     for (const ref of b.refs.slice(0, 3)) {
       if (ref.gameId) gameIds.add(ref.gameId);
       if (ref.cardId) cardIds.add(ref.cardId);
+      if (ref.gameId && !ref.cardId && !ref.achievementId) {
+        let set = gameRefsByActor.get(b.actorId);
+        if (!set) gameRefsByActor.set(b.actorId, (set = new Set()));
+        set.add(ref.gameId);
+      }
     }
   }
-  const [games, cardPeeks] = await Promise.all([
+
+  // The F-19 walk fix (3e54633 parity): a game-type peek renders the ACTOR'S DISPLAYED card — their
+  // equipped design, OWN or ADOPTED — resolved through the P2 FRIEND-READ machinery
+  // (friendReadRepo.listFriendCollection → FRIEND_ENTRY_COLUMNS: flattened columns ONLY, never
+  // composition — the OQ-122 invariant; the viewer is an accepted friend of every feed actor by
+  // construction, so the friendScoped gate passes). NOT equippedCardsByGameId — that is the OWNER-side
+  // resolver (own designs carry composition) and must never feed a cross-user wire. An equipped design
+  // without a flattened artifact yet (own private, imageUrl null) falls through to the representative
+  // fallback — a peek needs pixels. One shelf read per distinct friend on the page (≤20 at beta scale).
+  const displayedCardByActorGame = new Map<string, { id: string; imageUrl: string | null; thumbUrl: string | null }>();
+  for (const [friendId, wantedGames] of gameRefsByActor) {
+    const shelf = await friendReadRepo.listFriendCollection(actorId, friendId);
+    for (const row of shelf) {
+      if (wantedGames.has(row.game.id) && row.cardId && row.cardImageUrl) {
+        displayedCardByActorGame.set(`${friendId}:${row.game.id}`, {
+          id: row.cardId,
+          imageUrl: row.cardImageUrl,
+          thumbUrl: row.cardThumbUrl,
+        });
+      }
+    }
+  }
+  // Fallback for games whose actor has no displayed card (unequipped / no artifact / entry gone): a
+  // representative PUBLISHED card for the game; truly nothing → no card (the client's default stub).
+  const fallbackGameIds = new Set<string>();
+  for (const [friendId, wantedGames] of gameRefsByActor) {
+    for (const g of wantedGames) {
+      if (!displayedCardByActorGame.has(`${friendId}:${g}`)) fallbackGameIds.add(g);
+    }
+  }
+  const [games, cardPeeks, repCards] = await Promise.all([
     catalogRepo.gamesByIds([...gameIds]),
     cardRepo.publishedPeeksByIds([...cardIds]),
+    cardRepo.representativeCardsByGames([...fallbackGameIds]),
   ]);
   const titleByGame = new Map(games.map((g) => [g.id, g.name]));
 
@@ -224,6 +264,15 @@ export async function getFeed(actorId: string, cursor?: string): Promise<FeedRes
         obj.gameId = ref.gameId;
         const title = titleByGame.get(ref.gameId);
         if (title !== undefined) obj.title = title;
+      }
+      // Game-type peek card (F-19 walk fix): the actor's DISPLAYED card (own OR adopted, flattened) →
+      // a representative published card for the game → nothing (client default). Flattened-only always.
+      if (ref.gameId && !ref.cardId && !ref.achievementId) {
+        const displayed =
+          displayedCardByActorGame.get(`${b.actorId}:${ref.gameId}`) ?? repCards.get(ref.gameId);
+        if (displayed) {
+          obj.card = { id: displayed.id, imageUrl: displayed.imageUrl, thumbUrl: displayed.thumbUrl };
+        }
       }
       if (ref.cardId) {
         const peek = cardPeeks.get(ref.cardId);

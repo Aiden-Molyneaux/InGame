@@ -10,9 +10,12 @@ import { Avatar } from '../../src/components/Avatar';
 import { Skeleton, LoadError } from '../../src/components/lifecycle';
 import { FeedRow } from '../../src/components/social/FeedRow';
 import { HeaderKey } from '../../src/components/social/HeaderKey';
+import { achievementDetailFor } from '../../src/components/social/achievementFeedDetail';
+import { AchievementSheet, type AchievementDetail } from '../../src/components/achievements/AchievementSheet';
 import { themedStyles, useTheme } from '../../src/theme';
 import { useGetFriendsQuery, useGetFriendRequestsQuery } from '../../src/store/friendApi';
 import { useLazyGetFeedQuery, mergeFeedPages } from '../../src/store/feedApi';
+import { useGetAchievementDefsQuery } from '../../src/store/achievementsApi';
 
 // The FRIENDS tab (P8 · first article · friends-states "Feed-first" §3.3). The SOC-06 aggregated feed IS
 // the landing; everything else is a peek or a jump-off: the requests banner (pending fast-path → the hub),
@@ -27,6 +30,9 @@ export default function Friends() {
   const { data: friends, isLoading: friendsLoading, isError: friendsError, refetch: refetchFriends } = useGetFriendsQuery();
   const { data: requests } = useGetFriendRequestsQuery();
   const [fetchFeed, feedState] = useLazyGetFeedQuery();
+  // walk-4 — the PUBLIC defs read (caller-masked secrets) backs the achievement-tap detail sheet.
+  const { data: achievementDefs } = useGetAchievementDefsQuery();
+  const [achDetail, setAchDetail] = useState<AchievementDetail | null>(null);
 
   // Feed pages accumulate in component state (the wallet-ledger precedent — simpler + correct vs an RTK
   // merge). First page on mount; "load more" appends the next cursor's page.
@@ -153,6 +159,11 @@ export default function Friends() {
                     item={item}
                     onActorPress={(id) => router.push(`/user/${id}`)}
                     onObjectPress={(gameId) => router.push(`/game/${gameId}`)}
+                    // walk-4 — a def-backed detail (earned form; masked secret → SEALED, OQ-148);
+                    // defs-not-loaded / unknown id → null → the tap no-ops (never a wrong sheet).
+                    onAchievementPress={(achievementId) =>
+                      setAchDetail(achievementDetailFor(achievementDefs?.achievements, achievementId, item.occurredAt))
+                    }
                   />
                 ))}
 
@@ -170,6 +181,11 @@ export default function Friends() {
           </>
         )}
       </ScrollView>
+
+      {/* walk-4 — the achievement detail sheet, mounted at the SCREEN ROOT (a sibling of the scroll,
+          never inside it — the walk-1 in-scroll lesson). Earned form for visible defs; a masked secret
+          renders the SEALED ??? variant (OQ-148 — the tap path reveals nothing the defs read masked). */}
+      <AchievementSheet detail={achDetail} onClose={() => setAchDetail(null)} />
     </View>
   );
 }

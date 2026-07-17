@@ -34,10 +34,13 @@ export function FeedRow({
   item,
   onActorPress,
   onObjectPress,
+  onAchievementPress,
 }: {
   item: FeedItem;
   onActorPress: (userId: string) => void;
   onObjectPress: (gameId: string) => void;
+  /** walk-4 — an unlocked_achievement peek tap → the AchievementSheet (the screen owns the sheet). */
+  onAchievementPress?: (achievementId: string | undefined) => void;
 }) {
   const t = useTheme();
   const styles = useStyles();
@@ -70,7 +73,15 @@ export function FeedRow({
 
         {isAchv ? (
           <View style={styles.peek}>
-            <View style={styles.achv}>
+            {/* walk-4 — the achievement tile is TAPPABLE: opens the P11 AchievementSheet (earned detail;
+                a masked secret opens SEALED, OQ-148). The screen owns the sheet + the def lookup. */}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`${firstLabel ?? 'Achievement'} details`}
+              onPress={() => onAchievementPress?.(item.objects[0]?.achievementId)}
+              disabled={!onAchievementPress}
+              style={styles.achv}
+            >
               <Svg width={16} height={16} viewBox="0 0 24 24">
                 <Path
                   d="M7 4h10v4a5 5 0 0 1-10 0V4z M7 5H4v2a3 3 0 0 0 3 3 M17 5h3v2a3 3 0 0 1-3 3 M9 18h6 M10 14v4 M14 14v4"
@@ -81,7 +92,7 @@ export function FeedRow({
                   strokeLinejoin="round"
                 />
               </Svg>
-            </View>
+            </Pressable>
           </View>
         ) : item.objects.length ? (
           <View style={styles.peek}>

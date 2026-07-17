@@ -74,6 +74,22 @@ describe('FeedRow — SOC-06 type-copy matrix + aggregation', () => {
     expect(screen.queryByText(/^\+/)).toBeNull();
   });
 
+  it('walk-4 — the achievement tile is a labelled button; tap fires onAchievementPress with the achievementId', () => {
+    const onAch = jest.fn();
+    render(
+      wrap(
+        <FeedRow
+          item={item('unlocked_achievement', { aggregateCount: 1, objects: [{ achievementId: 'ach-1', label: 'Shelf Life' }] })}
+          onActorPress={jest.fn()}
+          onObjectPress={jest.fn()}
+          onAchievementPress={onAch}
+        />,
+      ),
+    );
+    fireEvent.press(screen.getByLabelText('Shelf Life details'));
+    expect(onAch).toHaveBeenCalledWith('ach-1');
+  });
+
   it('walk-3 regression — two peeked cards for the SAME game render without a React duplicate-key error', () => {
     const errSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     try {
