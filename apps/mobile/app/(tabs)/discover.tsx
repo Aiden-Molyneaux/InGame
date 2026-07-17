@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import type { CollectionItem } from '@ingame/shared';
 import { ScreenHead } from '../../src/components/ScreenHead';
 import { ScreenButton } from '../../src/components/ScreenButton';
-import { SectionSwitch } from '../../src/components/SectionSwitch';
+import { DiscoverRoomDock, type DiscoverRoom } from '../../src/components/wtp/DiscoverRoomDock';
 import { PulledSheet } from '../../src/components/PulledSheet';
 import { TextField } from '../../src/components/TextField';
 import { SearchField } from '../../src/components/SearchField';
@@ -26,11 +26,12 @@ import { useGetCollectionQuery, useUpdateEntryMutation, useSetNowPlayingMutation
 
 // P10 — the Discover screen (§0.8 slice · discover-states.html "Two rooms"). The DISCOVER nav keycap goes
 // LIVE this packet (ShellNav/_layout — the 5th routable tab; design-spec §2.7). Two rooms under a bottom-
-// docked SegmentedKeycap/pair (SectionSwitch): UP NEXT (full — the WTP-01/02/03 queue + recs) ↔ DISCOVER
+// docked shared SectionDock (walk-2 · OQ-063 one-grammar — the Game dock / Device rail component,
+// consumed via the DiscoverRoomDock thin adapter): UP NEXT (full — the WTP-01/02/03 queue + recs) ↔ DISCOVER
 // (browse slice — trending live; upcoming EXPECTED, endpoint 404; NO notify-me toggle, M7). Non-commerce:
 // counts, never PIXELS — the one blessed gold is ADD FROM COLLECTION (the 2026-06-23 audit carve-out).
 
-type Room = 'upnext' | 'discover';
+type Room = DiscoverRoom;
 
 export default function Discover() {
   const router = useRouter();
@@ -197,14 +198,11 @@ export default function Discover() {
         )}
       </ScrollView>
 
-      {/* the bottom-docked SegmentedKeycap/pair (UP NEXT ↔ DISCOVER) — design-spec §2.7 */}
-      <View style={styles.segFoot}>
-        <SectionSwitch<Room>
-          options={[{ value: 'upnext', label: 'Up Next' }, { value: 'discover', label: 'Discover' }]}
-          value={room}
-          onChange={(r) => { setRoom(r); setArranging(false); }}
-        />
-      </View>
+      {/* walk-2 — the bottom room dock is the SHARED SectionDock (OQ-063/0030 one-grammar: the same
+          component as the Game page's PLAY·CARDS·ABOUT dock + the Device editor's rail), consumed via
+          the DiscoverRoomDock thin adapter exactly as game/[id].tsx mounts GameTabDock — directly below
+          the ScrollView. The hand-rolled segmented pair is retired. */}
+      <DiscoverRoomDock value={room} onChange={(r) => { setRoom(r); setArranging(false); }} />
 
       <LogHoursSheet item={logHoursItem} onClose={() => setLogHoursId(null)} />
       <QueueOverflowSheet
@@ -372,9 +370,6 @@ const useStyles = themedStyles((t) => ({
 
   expected: { borderWidth: 1, borderColor: t.scr.hairline, backgroundColor: t.scr.panel, padding: t.space.lg },
   expectedText: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.3, lineHeight: 14 },
-
-  // seg-foot (bottom dock)
-  segFoot: { flexDirection: 'row', justifyContent: 'center', paddingVertical: t.space.md, borderTopWidth: 1, borderTopColor: t.scr.hairline, backgroundColor: t.scr.bg },
 
   // empty queue invite
   invite: { alignItems: 'center', gap: t.space.md, paddingVertical: t.space.xl },
