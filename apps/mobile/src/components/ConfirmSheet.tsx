@@ -32,7 +32,13 @@ export function ConfirmSheet({
    * decision-0040 grammar. `purchase` = the acquisitive GOLD voice (F-02) for a BUY confirm (the mock
    * IAP sheet · the OQ-046 non-hold buy path), which must never read as destructive-red.
    */
-  tone?: 'destructive' | 'purchase';
+  /**
+   * P12 (decision 0040 · settings-states S7b) — the CALM accent confirm for a session-ending but
+   * REVERSIBLE action (sign-out) or a restorative one (unblock): the standard accent `ScreenButton`,
+   * never the alert-red. The board draws sign-out with the accent seal + accent confirm, deliberately
+   * NOT red — the red `/destructive` stays reserved for genuinely destructive ops (delete, remove).
+   */
+  tone?: 'destructive' | 'purchase' | 'primary';
   /**
    * M5 F-9 (G2) — the mock PAY on packs holds-to-activate with a FILLING sweep, so a dollar confirm
    * speaks the same hold grammar as every PX spend. The button fills gold over a hold; reduce-motion
@@ -53,7 +59,7 @@ export function ConfirmSheet({
         ) : (
           <ScreenButton
             label={busy ? '…' : confirmLabel}
-            variant={tone === 'purchase' ? 'add' : 'destructive'}
+            variant={tone === 'purchase' ? 'add' : tone === 'primary' ? 'primary' : 'destructive'}
             onPress={onConfirm}
             disabled={busy}
             block

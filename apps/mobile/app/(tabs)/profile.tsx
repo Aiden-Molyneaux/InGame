@@ -1,4 +1,5 @@
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { IdentityBlock } from '../../src/components/IdentityBlock';
 import { ScreenHead } from '../../src/components/ScreenHead';
@@ -9,7 +10,7 @@ import { MiniDevice } from '../../src/components/MiniDevice';
 import { RankChip } from '../../src/components/RankChip';
 import { CurrencyCounter } from '../../src/components/commerce';
 import { TertiaryLink } from '../../src/components/TertiaryLink';
-import { theme, themedStyles } from '../../src/theme';
+import { theme, themedStyles, useTheme } from '../../src/theme';
 import { SHELL_NAMES, SCREEN_THEME_NAMES, resolveShellId, resolveScreenThemeId } from '../../src/theme/palettes';
 import { deviceStripCopy } from '../../src/components/device/deviceCopy';
 import { useGetMeQuery, useGetCollectionQuery, useGetDeviceQuery, useGetWalletQuery } from '../../src/store/api';
@@ -25,6 +26,7 @@ import { logoutTeardown } from '../../src/store';
 export default function Profile() {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const t = useTheme();
   const { data: me, isLoading, isError, refetch } = useGetMeQuery();
   const { data: collection } = useGetCollectionQuery();
   const { data: device } = useGetDeviceQuery();
@@ -74,10 +76,23 @@ export default function Profile() {
         <ScreenHead
           title="Profile"
           trailing={
-            <CurrencyCounter
-              balance={wallet?.balance ?? 0}
-              onPress={() => router.push({ pathname: '/store', params: { view: 'wallet' } })}
-            />
+            <View style={styles.headTools}>
+              <CurrencyCounter
+                balance={wallet?.balance ?? 0}
+                onPress={() => router.push({ pathname: '/store', params: { view: 'wallet' } })}
+              />
+              {/* P12 (0076 §0.10) — the Profile header's door into Settings (the board's reach pattern;
+                  the M7 EDIT/SHARE tools stay deferred — only the Settings gear opens now). */}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Settings"
+                onPress={() => router.push('/settings')}
+                hitSlop={8}
+                style={({ pressed }) => [styles.gear, pressed && styles.gearPressed]}
+              >
+                <SettingsGear color={t.scr.ink} />
+              </Pressable>
+            </View>
           }
         />
       </View>
@@ -214,9 +229,25 @@ export default function Profile() {
           })()}
         </Section>
 
-        <ScreenButton label="Sign out" variant="secondary" onPress={signOut} block />
+        {/* P12 — SIGN OUT relocated to Settings (0076 §0.10 — one home). The header gear opens Settings,
+            where sign-out (+ blocked list · legal) now lives. */}
       </ScrollView>
     </View>
+  );
+}
+
+// The header gear — the door into Settings (0076 §0.10).
+function SettingsGear({ color }: { color: string }) {
+  return (
+    <Svg width={20} height={20} viewBox="0 0 24 24">
+      <Circle cx={12} cy={12} r={3.2} fill="none" stroke={color} strokeWidth={1.8} />
+      <Path
+        d="M12 2.6v2.4M12 19v2.4M21.4 12H19M5 12H2.6M18.7 5.3l-1.7 1.7M7 17l-1.7 1.7M18.7 18.7L17 17M7 7L5.3 5.3"
+        stroke={color}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+      />
+    </Svg>
   );
 }
 
@@ -261,6 +292,9 @@ const useStyles = themedStyles((t) => ({
   body: { padding: t.space.lg, gap: t.space.xl },
   errTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.accent, letterSpacing: 1 },
   errSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, textAlign: 'center', lineHeight: 16, paddingHorizontal: t.space.xl },
+  headTools: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
+  gear: { padding: t.space.xs },
+  gearPressed: { opacity: 0.6 },
   section: { gap: t.space.md },
   sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   sectionHead: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.dim, letterSpacing: 1.5 },

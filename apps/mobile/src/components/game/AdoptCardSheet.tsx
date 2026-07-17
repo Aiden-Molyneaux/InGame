@@ -43,6 +43,7 @@ export function AdoptCardSheet({
   onTopUp,
   onShare,
   onBlock,
+  onReport,
   onViewContributor,
   shareBusy = false,
 }: {
@@ -61,6 +62,9 @@ export function AdoptCardSheet({
   onShare: () => void;
   /** Open the destructive block confirm for this card's designer (container-owned; the ⋯ overflow). */
   onBlock: () => void;
+  /** P12 (MOD-01) — report this published card. When set, the ⋯ overflow becomes a REPORT / BLOCK menu;
+   *  when absent, ⋯ opens the block confirm directly (back-compat). */
+  onReport?: () => void;
   /** P13 (E8a) — tapping the DESIGNED-BY credit routes to that contributor's profile (container closes
    *  the sheet then navigates). Block stays on the ⋯ overflow. */
   onViewContributor: (userId: string) => void;
@@ -72,6 +76,7 @@ export function AdoptCardSheet({
   const [outcome, setOutcome] = useState<Exclude<AdoptOutcome, { ok: true }> | null>(null);
   const [adopted, setAdopted] = useState(false); // G5 — the in-place success settle
   const [beat, setBeat] = useState(false); // G6 — the AcquireBeat celebration (self-dismissing)
+  const [menuOpen, setMenuOpen] = useState(false); // P12 — the ⋯ REPORT/BLOCK overflow menu
 
   // Reset the transient state whenever a new card is inspected (or the sheet closes).
   useEffect(() => {
@@ -79,6 +84,7 @@ export function AdoptCardSheet({
     setOutcome(null);
     setAdopted(false);
     setBeat(false);
+    setMenuOpen(false);
   }, [card?.id, visible]);
 
   if (!card) return null;
@@ -143,14 +149,43 @@ export function AdoptCardSheet({
           {card.byViewer ? null : (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`Block ${card.designer.username}`}
-              onPress={onBlock}
+              accessibilityLabel={onReport ? `Report or block ${card.designer.username}` : `Block ${card.designer.username}`}
+              onPress={() => (onReport ? setMenuOpen((v) => !v) : onBlock())}
               hitSlop={8}
             >
               <Text style={styles.ovf}>⋯</Text>
             </Pressable>
           )}
         </View>
+
+        {/* P12 — the ⋯ overflow menu: REPORT this card (MOD-01) / BLOCK designer (SOC-09). Inline so the
+            sheet keeps its single-drawer grammar (no stacked overlays). */}
+        {menuOpen && onReport && !card.byViewer ? (
+          <View style={styles.ovfMenu}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Report this card"
+              onPress={() => {
+                setMenuOpen(false);
+                onReport();
+              }}
+              style={({ pressed }) => [styles.ovfItem, pressed && styles.ovfItemPressed]}
+            >
+              <Text style={styles.ovfItemText}>⚑ REPORT THIS CARD</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Block ${card.designer.username}`}
+              onPress={() => {
+                setMenuOpen(false);
+                onBlock();
+              }}
+              style={({ pressed }) => [styles.ovfItem, styles.ovfItemDivided, pressed && styles.ovfItemPressed]}
+            >
+              <Text style={[styles.ovfItemText, styles.ovfItemDanger]}>⊘ BLOCK DESIGNER</Text>
+            </Pressable>
+          </View>
+        ) : null}
 
         {adopted ? (
           // G5 — the in-place success settle (the KeepBeat/SaveAsNewBeat grammar): a ✓ strip where the
@@ -300,6 +335,13 @@ const useStyles = themedStyles((t) => ({
   // F-13 E8 — your own credit reads in the gold authorship voice ("YOU").
   creditYou: { fontFamily: t.font.screenBold, color: t.brand.gold, letterSpacing: 0.5 },
   ovf: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.dim, marginTop: -6 },
+  // P12 — the ⋯ overflow menu (REPORT / BLOCK)
+  ovfMenu: { marginTop: t.space.sm, borderWidth: 1, borderColor: t.scr.hairline, backgroundColor: t.scr.panelHi },
+  ovfItem: { paddingHorizontal: t.space.lg, paddingVertical: t.space.md },
+  ovfItemDivided: { borderTopWidth: 1, borderTopColor: t.scr.hairline },
+  ovfItemPressed: { opacity: 0.7 },
+  ovfItemText: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 0.8 },
+  ovfItemDanger: { color: t.brand.alert },
   // ── the component list (reconcile anatomy) ──
   componentBlock: { marginTop: t.space.md, gap: t.space.sm },
   compHead: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },

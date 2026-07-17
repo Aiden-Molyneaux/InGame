@@ -10,6 +10,7 @@ import { CardSwitcher } from '../../src/components/game/CardSwitcher';
 import { CardDetailSheet } from '../../src/components/game/CardDetailSheet';
 import { CommunityGallery } from '../../src/components/game/CommunityGallery';
 import { AdoptCardSheet, type AdoptOutcome } from '../../src/components/game/AdoptCardSheet';
+import { ReportSheet, type ReportTarget, type ReportActionOutcome } from '../../src/components/report/ReportSheet';
 import { GameTabDock, type GameSection } from '../../src/components/game/GameTabDock';
 import { ConfirmSheet } from '../../src/components/ConfirmSheet';
 import { PulledSheet } from '../../src/components/PulledSheet';
@@ -34,6 +35,7 @@ import {
   useAdoptCardMutation,
   useBlockUserMutation,
 } from '../../src/store/communityApi';
+import { useSubmitReportMutation, type CreateReportRequest } from '../../src/store/reportApi';
 import { useAppSelector } from '../../src/store/hooks';
 
 // Game page hub shell (§3.1 · design-spec §2.4b / §4.2) — the CARD-23 NAVIGATE target + the
@@ -76,6 +78,9 @@ export default function GamePage() {
   const [inspectCard, setInspectCard] = useState<GalleryCardView | null>(null); // the community card in the adopt sheet
   const [blockCard, setBlockCard] = useState<GalleryCardView | null>(null); // the SOC-09-light block confirm
   const [toast, setToast] = useState<{ message: string; tone: 'success' | 'error' } | null>(null);
+  // P12 — the MOD-01 ReportSheet target (card = the community card ⋯ menu · game = the overflow REPORT row).
+  const [reportTarget, setReportTarget] = useState<ReportTarget | null>(null);
+  const [submitReport, reportState] = useSubmitReportMutation();
 
   const [removeEntry, removeState] = useRemoveEntryMutation();
   const [setNowPlaying] = useSetNowPlayingMutation();
@@ -203,6 +208,19 @@ export default function GamePage() {
       setToast({ tone: 'error', message: `Couldn't block ${designer} right now. Please try again.` });
     }
     setBlockCard(null);
+  }
+
+  // ── P12 report (MOD-01) — SEAM(P7): POST /reports 404s until the server capture lands. Map the RTK
+  // error surface to the ReportSheet's outcome (offline vs a genuine failure → the B3 Toast). ───────────
+  async function onSubmitReport(req: CreateReportRequest): Promise<ReportActionOutcome> {
+    try {
+      await submitReport(req).unwrap();
+      return 'ok';
+    } catch (e) {
+      const err = e as { status?: unknown };
+      if (err?.status === 'FETCH_ERROR' || err?.status === 'TIMEOUT_ERROR') return 'offline';
+      return 'error';
+    }
   }
 
   // ── P8 share (CARD-21) — fetch the branded PNG (authenticated) and present it (web opens/saves;
@@ -349,6 +367,15 @@ export default function GamePage() {
           block
         />
         <ScreenButton
+          label="Report this game"
+          variant="secondary"
+          onPress={() => {
+            setOverflowOpen(false);
+            setReportTarget({ type: 'game', id: entry.gameId, name: entry.title });
+          }}
+          block
+        />
+        <ScreenButton
           label="Remove from collection"
           variant="destructive"
           onPress={() => {
@@ -404,6 +431,13 @@ export default function GamePage() {
         onBlock={() => {
           if (inspectCard) setBlockCard(inspectCard);
         }}
+        onReport={() => {
+          if (inspectCard) {
+            const c = inspectCard;
+            setInspectCard(null); // close the adopt sheet before raising the report drawer (one drawer)
+            setReportTarget({ type: 'card', id: c.id, name: c.name });
+          }
+        }}
         onViewContributor={(userId) => {
           setInspectCard(null); // close the sheet before navigating (PulledSheet contract)
           router.push(`/contributor/${userId}`);
@@ -420,6 +454,17 @@ export default function GamePage() {
         busy={blockState.isLoading}
         onConfirm={() => void doBlock()}
         onClose={() => setBlockCard(null)}
+      />
+
+      {/* P12 — the MOD-01 ReportSheet (card + game targets on this page; user targets ride P8/P9). SEAM(P7):
+          the submit 404s until the server capture lands — a failure surfaces the B3 Toast, safe to retry. */}
+      <ReportSheet
+        visible={reportTarget !== null}
+        target={reportTarget}
+        onClose={() => setReportTarget(null)}
+        onSubmit={onSubmitReport}
+        submitting={reportState.isLoading}
+        onError={(message) => setToast({ tone: 'error', message })}
       />
 
       {toast ? (

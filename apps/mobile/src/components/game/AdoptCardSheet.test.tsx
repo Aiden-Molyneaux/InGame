@@ -192,4 +192,28 @@ describe('AdoptCardSheet (P8 · SOC-11 · M5 F-9 E1 — the styler-buy anatomy)'
     fireEvent.press(share);
     expect(onShare).toHaveBeenCalledTimes(1);
   });
+
+  // P12 — the ⋯ overflow. Back-compat: no onReport → ⋯ opens the block confirm directly.
+  it('P12 — without onReport the ⋯ fires onBlock directly (back-compat)', () => {
+    const onBlock = jest.fn();
+    renderSheet({ onBlock });
+    fireEvent.press(screen.getByText('⋯'));
+    expect(onBlock).toHaveBeenCalledTimes(1);
+    expect(screen.queryByLabelText('Report this card')).toBeNull(); // no menu
+  });
+
+  // P12 — with onReport the ⋯ opens the REPORT / BLOCK menu; each item routes to its handler.
+  it('P12 — with onReport the ⋯ opens a REPORT / BLOCK menu', () => {
+    const onReport = jest.fn();
+    const onBlock = jest.fn();
+    renderSheet({ onReport, onBlock });
+    fireEvent.press(screen.getByText('⋯'));
+    expect(onBlock).not.toHaveBeenCalled(); // ⋯ no longer blocks directly — it opens the menu
+    fireEvent.press(screen.getByLabelText('Report this card'));
+    expect(onReport).toHaveBeenCalledTimes(1);
+    // re-open and take the block path
+    fireEvent.press(screen.getByText('⋯'));
+    fireEvent.press(screen.getByLabelText('Block rival_curator'));
+    expect(onBlock).toHaveBeenCalledTimes(1);
+  });
 });
