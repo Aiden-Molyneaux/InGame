@@ -210,10 +210,20 @@ describe('PROF-05 · F06 (C4): the friend/full /users/:id carries stats + device
     await request(app).put('/api/me/now-playing').set(authed(target.token)).send({ gameId: game.id });
     await request(app).patch('/api/me/device').set(authed(target.token)).send({ screenThemeId: 'paper' });
 
+    // The friend ADOPTS the target's card — proves adoptionsReceived is REAL (un-zeroed, C4 follow-up).
+    const adopt = await request(app).post(`/api/cards/${cardId}/adopt`).set(authed(friend.token));
+    expect(adopt.status).toBe(200);
+
     const res = await request(app).get(`/api/users/${target.id}`).set(authed(friend.token));
     expect(res.status).toBe(200);
-    // stats — the PROF-04 six-pack computed against the TARGET (the same statsOf the self shape runs).
-    expect(res.body.stats).toMatchObject({ games: 1, hours: 25, friends: 1, cardsDesigned: 1 });
+    // stats — the PROF-04 six-pack computed against the TARGET (the same statsOf the self shape runs);
+    // adoptionsReceived carries the REAL CARD-05 clout (the stale M5 honest-zero retired).
+    expect(res.body.stats).toMatchObject({ games: 1, hours: 25, friends: 1, cardsDesigned: 1, adoptionsReceived: 1 });
+    // Parity by construction — the target's OWN /me stats show the same real count.
+    const self = await request(app).get('/api/me').set(authed(target.token));
+    expect(self.body.stats.adoptionsReceived).toBe(1);
+    // F-16/0055 — the friend shape does NOT expose the target's privacy value (ruled drop, landed C4).
+    expect('privacy' in res.body).toBe(false);
     // device — DEV-02/04 (decision 0012): the wire name is `shellId`.
     expect(res.body.device).toMatchObject({ shellId: 'teal', screenThemeId: 'paper' });
     expect(res.body.device.stickerComposition).toMatchObject({ version: 1 });

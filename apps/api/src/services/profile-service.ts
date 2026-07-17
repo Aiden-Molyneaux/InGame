@@ -51,7 +51,12 @@ export function usernameNextChangeAt(row: UserRow): string | null {
 /** PROF-04 stats derived from the real shelf; completionPct per decision 0058. EXPORTED (M6 C4) so the
  *  friend/full `/users/:id` shape computes the SAME six-pack against the TARGET — parity by construction
  *  (one computation, two callers; the friend-visible aggregates the contract draws, PROF-05). */
-export function statsOf(entries: CollectionEntryRow[], friends: number, cardsDesigned: number): SelfStats {
+export function statsOf(
+  entries: CollectionEntryRow[],
+  friends: number,
+  cardsDesigned: number,
+  adoptionsReceived: number,
+): SelfStats {
   const nonWishlist = entries.filter((e) => e.status !== 'wishlist');
   const done = nonWishlist.filter((e) => e.status === 'beaten' || e.status === 'completed');
   return {
@@ -60,7 +65,7 @@ export function statsOf(entries: CollectionEntryRow[], friends: number, cardsDes
     completionPct:
       nonWishlist.length === 0 ? 0 : Math.round((100 * done.length) / nonWishlist.length),
     cardsDesigned, // REAL as of M4 (card_designs, decision 0066) — finished designs, not drafts
-    adoptionsReceived: 0, // honest zero — adoptions are M5
+    adoptionsReceived, // REAL as of M5 (card_adoptions — totalAdoptionsForOwner; un-zeroed M6 C4 follow-up)
     friends,
   };
 }
@@ -111,6 +116,10 @@ export async function assembleSelfShape(row: UserRow, exec?: Executor): Promise<
   const cardsDesigned = exec
     ? await cardRepo.countOwnedDesigns(row.id, exec)
     : await cardRepo.countOwnedDesigns(row.id);
+  // CARD-05 clout — the LIFETIME adoptions across the user's cards (real since M5; un-zeroed M6 C4).
+  const adoptionsReceived = exec
+    ? await cardRepo.totalAdoptionsForOwner(row.id, exec)
+    : await cardRepo.totalAdoptionsForOwner(row.id);
 
   // The expanded favouriteGame / nowPlaying pins (M3 — the P2 PINNED FAVOURITE unblock, WTP-03).
   // M4 (0066): the pin's card rider resolves the entry's EQUIPPED design (CARD-07/18).
@@ -138,7 +147,7 @@ export async function assembleSelfShape(row: UserRow, exec?: Executor): Promise<
   return toSelfShape(row, {
     gamertags: gamertagRows.map(toGamertagView),
     usernameNextChangeAt: usernameNextChangeAt(row),
-    stats: statsOf(entries, friends, cardsDesigned),
+    stats: statsOf(entries, friends, cardsDesigned, adoptionsReceived),
     favouriteGame: await expand(row.favouriteGameId),
     nowPlaying: await expand(row.nowPlayingGameId),
     top10: await resolveTopTen(row.id, exec),

@@ -168,7 +168,8 @@ export type PublicProfile = z.infer<typeof publicProfileSchema>;
 export const friendProfileSchema = publicProfileSchema
   .extend({
     bio: z.string(),
-    privacy: privacySchema,
+    // NO `privacy` — F-16 / decision 0055 (api-contract /users/:id row): "neither shape exposes the
+    // target's own privacy value" — the shipped serializer's stray field, dropped M6 C4 follow-up.
     favouriteGenreIds: z.array(z.string().uuid()),
     gamertags: z.array(gamertagViewSchema),
     friendsCount: z.number().int().nonnegative(),

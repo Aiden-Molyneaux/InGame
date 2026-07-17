@@ -60,7 +60,7 @@ describe('F06: read-path privacy serializer (relationship matrix)', () => {
     }
   });
 
-  it('friend (full) shape adds exactly bio + privacy + top10 + the C4 trio (stats/device/nowPlaying)', () => {
+  it('friend (full) shape adds exactly bio + top10 + the C4 trio (stats/device/nowPlaying) — NO privacy (F-16/0055)', () => {
     const out = toFriendShape(makeUser(), {
       relationship: 'friend',
       mutualFriendsCount: 5,
@@ -80,6 +80,9 @@ describe('F06: read-path privacy serializer (relationship matrix)', () => {
     expect(out.device).toMatchObject({ shellId: 'teal', screenThemeId: 'midnight' }); // C4 — DEV-02/04
     expect(out.nowPlaying).toBeNull(); // C4 — WTP-03 (no pin)
     expect('email' in out).toBe(false);
+    // F-16 / decision 0055 — neither cross-user shape exposes the target's own `privacy` value (the
+    // ruled-never-implemented drop, landed with the C4 follow-up).
+    expect('privacy' in out).toBe(false);
     // F06 — the LIMITED shape must NOT gain the C4 trio (the strict publicProfileSchema proves it).
     const limited = toPublicShape(makeUser(), { relationship: 'none', mutualFriendsCount: 0 });
     expect('stats' in limited).toBe(false);

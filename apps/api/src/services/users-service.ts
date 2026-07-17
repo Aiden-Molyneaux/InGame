@@ -125,10 +125,11 @@ export async function getUserProfile(
     const shelfRows = isSelf
       ? await ownCollectionAsFriendRows(actorId)
       : await friendReadRepo.listFriendCollection(actorId, targetId);
-    const [gamertags, friendsCount, cardsDesigned, deviceFacets] = await Promise.all([
+    const [gamertags, friendsCount, cardsDesigned, adoptionsReceived, deviceFacets] = await Promise.all([
       profileService.listGamertags(targetId),
       relationshipRepo.countFriends(targetId),
       cardRepo.countOwnedDesigns(targetId),
+      cardRepo.totalAdoptionsForOwner(targetId), // CARD-05 clout — real since M5 (un-zeroed M6 C4)
       deviceService.facetsForUser(targetId),
     ]);
     return toFriendShape(friendRow, {
@@ -140,7 +141,7 @@ export async function getUserProfile(
       // M6 C4 — PROF-04 six-pack: the SAME statsOf computation the self shape runs, against the
       // TARGET's entries (friend-visible aggregates — hours/games already cross via compare/collection).
       // PROF-07 percentiles stay absent (threshold-gated; the percentile engine rides M7).
-      stats: profileService.statsOf(shelfRows.map((r) => r.entry), friendsCount, cardsDesigned),
+      stats: profileService.statsOf(shelfRows.map((r) => r.entry), friendsCount, cardsDesigned, adoptionsReceived),
       // M6 C4 — DEV-02/04 THEIR-DEVICE (decision 0012): `shellId` is the contract's wire name.
       device: {
         shellId: deviceFacets.activeShellId,

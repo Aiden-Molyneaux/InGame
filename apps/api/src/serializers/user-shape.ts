@@ -121,12 +121,13 @@ export function toPublicShape(row: UserRow, ctx: OtherPrincipalContext): PublicP
   return base;
 }
 
-/** Friend / full shape (PROF-05) — the public allowlist plus the friend-visible additions. */
+/** Friend / full shape (PROF-05) — the public allowlist plus the friend-visible additions. NO `privacy`:
+ *  F-16 / decision 0055 — neither cross-user shape exposes the target's own privacy value (the stray
+ *  field the contract ruled dropped-in-code; implemented M6 C4 follow-up). */
 export function toFriendShape(row: UserRow, ctx: FriendContext): FriendProfile {
   return {
     ...toPublicShape(row, ctx),
     bio: row.bio,
-    privacy: row.privacy as Privacy,
     favouriteGenreIds: row.favouriteGenreIds,
     gamertags: ctx.gamertags,
     friendsCount: ctx.friendsCount,
