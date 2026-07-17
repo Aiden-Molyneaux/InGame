@@ -57,11 +57,15 @@ export function ShellNav({ bottomInset = 0 }: { bottomInset?: number }) {
   // draws PROFILE-active on every state; reached from the self-Profile teaser). The FRIEND achievements
   // view is `/user/:id/achievements` and rides the /user cluster (FRIENDS-active, below) — consistent
   // with the friend profile/collection it's reached from.
+  // Settings (`/settings` + `/settings/blocked`, P12 §0.10) is a Profile sub-surface — reached from the
+  // Profile header gear; the board draws PROFILE-active with the NavBand live (parvati C2 — the same
+  // fell-through-to-`locked` class as contributor/F2).
   const onProfile =
     pathname.startsWith('/profile') ||
     pathname.startsWith('/device') ||
     pathname.startsWith('/contributor') ||
-    pathname.startsWith('/achievements');
+    pathname.startsWith('/achievements') ||
+    pathname.startsWith('/settings');
   // The FRIENDS cluster (P8 §3.3 + P9 §4.6/§2.2) — the FRIENDS tab itself (`/friends`), the Find/Add hub
   // + its sub-flows (`/add-friends`, `/invite-friends`, `/friend-requests`, the SOC-10 `/invite/:token`
   // landing), and the friend-view cluster (`/user/:id` + its Collection/entry, `/compare/:friendId`) all

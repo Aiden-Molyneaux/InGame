@@ -263,6 +263,14 @@ ABSENT, not disabled** (0076 §0.10). Cited:
   + render with mocked data) + typecheck + lint. **parvati should run the live walk once the server lane
   settles** (API stops restarting).
 
+## Parvati fix-round (consolidated walk)
+
+- **C2 🚩 FIXED** — `/settings` + `/settings/blocked` matched no ShellNav predicate → fell through to
+  `locked=true` (NavBand inert; the P13-F2 class). `pathname.startsWith('/settings')` added to the
+  `onProfile` predicate (Settings is a Profile sub-surface — reached from the Profile header gear;
+  PROFILE-active, keycaps live). New `ShellNav.test.tsx` pins both routes PROFILE-active + unlocked
+  (plus the F2 contributor case and the pre-auth locked case, so the fall-through class stays guarded).
+
 ## Open flags for the orchestrator / parvati
 - GAP-R1 — local report schemas (swap to shared when P7 lands).
 - SEAM(P7) — POST /reports 404s live; the exact reason-code enum I coded against is above (align P7).
