@@ -124,12 +124,17 @@ describe('COL-13 walk-1: the CardPicker sheet mounts at the SCREEN ROOT (F-15 no
     expect(cells).toHaveLength(mockItems.length);
   });
 
-  it('walk-5a: ARRANGE mode shows exactly ONE Done (the tv-bar; the tools keycap hides)', () => {
+  it('walk-5c: ARRANGE shows exactly ONE Done, ON THE TOOLS BAR (owner placement ruling); tv-bar = status only', () => {
     renderTop();
     fireEvent.press(screen.getByText('ARRANGE'));
-    // the ONE exit = the tv-bar DONE at the board's drawn placement; the tools-bar ARRANGE keycap is
-    // gone while arranging (it doubled as a second Done before this fix).
-    expect(screen.getAllByText('DONE')).toHaveLength(1);
-    expect(screen.queryByText('ARRANGE')).toBeNull();
+    // exactly one DONE on screen — the tools-bar keycap (ARRANGE ↔ DONE toggle)…
+    const dones = screen.getAllByText('DONE');
+    expect(dones).toHaveLength(1);
+    // …and it lives on the TOOLS BAR (outside the scroll), not in the in-scroll tv-bar: the tools row
+    // is a ScrollView SIBLING, so the one DONE must have NO ScrollView ancestor.
+    expect(hasScrollViewAncestor(dones[0] as unknown as TestNode)).toBe(false);
+    // the tv-bar keeps the pure status readout (in-scroll), with no button beside it.
+    expect(hasScrollViewAncestor(screen.getByText('0 / 10 SEATED') as unknown as TestNode)).toBe(true);
+    expect(screen.queryByText('ARRANGE')).toBeNull(); // the keycap now READS DONE (one control, toggled)
   });
 });

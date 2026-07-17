@@ -123,14 +123,12 @@ function TopScaffold({
 export function SelfTopView({
   collectionItems,
   arranging,
-  onExitArrange,
   onOpenPicker,
   focusGameId,
   onOpenGame,
 }: {
   collectionItems: CollectionItem[];
   arranging: boolean;
-  onExitArrange: () => void;
   /** Raise the CardPicker — the sheet itself (TopTenCardPicker) is mounted by the SCREEN at its root,
    *  never here (this component lives inside the Collection ScrollView; PulledSheet contract / F-15). */
   onOpenPicker: () => void;
@@ -219,10 +217,10 @@ export function SelfTopView({
         ) : (
           <Text style={styles.full}>Top 10 is full — remove one to add another.</Text>
         )}
+        {/* walk-5c (owner placement ruling) — the tv-bar is a PURE status readout; the one DONE lives
+            on the tools bar (the ARRANGE ↔ DONE keycap, collection.tsx). */}
         <View style={styles.doneBar}>
           <Text style={styles.seated}>{rows.length} / {TOP_CAP} SEATED</Text>
-          <View style={styles.spacer} />
-          <ScreenButton label="Done" variant="action-alt" onPress={onExitArrange} />
         </View>
       </View>
     );
@@ -416,9 +414,8 @@ const useStyles = themedStyles((t) => ({
   arrangeSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
   remove: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5 },
   full: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, textAlign: 'center', paddingVertical: t.space.md },
-  doneBar: { flexDirection: 'row', alignItems: 'center', gap: t.space.md, borderTopWidth: 1, borderTopColor: t.scr.hairline, paddingTop: t.space.md },
+  doneBar: { flexDirection: 'row', alignItems: 'center', borderTopWidth: 1, borderTopColor: t.scr.hairline, paddingTop: t.space.md },
   seated: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
-  spacer: { flex: 1 },
 
   // friend read-only bar
   roBar: { borderTopWidth: 1, borderTopColor: t.scr.hairline, paddingTop: t.space.md, alignItems: 'center' },

@@ -371,7 +371,7 @@ export default function Collection() {
           <SelfTopView
             collectionItems={items}
             arranging={topArranging}
-            onExitArrange={() => setTopArranging(false)}
+           
             onOpenPicker={() => setTopPickerOpen(true)}
             focusGameId={params.focus}
             onOpenGame={openGame}
@@ -443,15 +443,16 @@ export default function Collection() {
           />
           <View style={styles.spacer} />
           {view === 'top' ? (
-            // COL-13 — in TOP, the trailing keycap is ARRANGE (enter edit); the gold ADD is absent here
-            // (curation is non-commerce — 0069). walk-5a: while ARRANGING the keycap HIDES — the ONE
-            // exit is the tv-bar's DONE inside the view (the board's drawn placement; the arrange
-            // artboard replaces the tools row with the tv-bar, so a second Done here doubled it).
-            data.collectionTotal > 0 && !topArranging ? (
+            // COL-13 — in TOP, the trailing keycap is ARRANGE (enter edit) ↔ DONE (commit + exit); the
+            // gold ADD is absent here (curation is non-commerce — 0069). walk-5c (owner placement
+            // ruling): the ONE DONE lives HERE on the tools bar — the tv-bar inside the view is a pure
+            // "N / 10 SEATED" status readout, no button (reverses walk-5a's keep, which had picked the
+            // tv-bar copy; there is still exactly one DONE on screen).
+            data.collectionTotal > 0 ? (
               <ScreenButton
-                label="Arrange"
+                label={topArranging ? 'Done' : 'Arrange'}
                 variant="action-alt"
-                onPress={() => setTopArranging(true)}
+                onPress={() => setTopArranging((v) => !v)}
               />
             ) : null
           ) : (
