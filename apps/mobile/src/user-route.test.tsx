@@ -47,6 +47,7 @@ const FRIEND: FriendProfile = {
   favouriteGenreIds: [],
   gamertags: [],
   friendsCount: 14,
+  top10: [], // P8: absorbs the concurrent P5 server-track FriendProfile.top10 addition (keeps typecheck green)
 };
 
 const LIMITED: PublicProfile = {

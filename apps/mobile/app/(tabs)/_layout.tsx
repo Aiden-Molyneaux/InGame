@@ -19,6 +19,7 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="collection" />
       <Tabs.Screen name="profile" />
+      <Tabs.Screen name="friends" />
     </Tabs>
   );
 }

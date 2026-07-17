@@ -27,9 +27,10 @@ const LABELS: Record<string, { label: string; accent?: NavTab['accent'] }> = {
 
 // The built tab routes (the group `(tabs)` is not part of the URL). STORE (§P6, M5) is a top-level
 // route (`/store`) — the app's permanent commerce door, gold keycap — reached from any tab.
-const ROUTES: Record<string, '/(tabs)/collection' | '/(tabs)/profile' | '/store'> = {
+const ROUTES: Record<string, '/(tabs)/collection' | '/(tabs)/profile' | '/(tabs)/friends' | '/store'> = {
   collection: '/(tabs)/collection',
   profile: '/(tabs)/profile',
+  friends: '/(tabs)/friends',
   store: '/store',
 };
 
@@ -53,12 +54,18 @@ export function ShellNav({ bottomInset = 0 }: { bottomInset?: number }) {
     pathname.startsWith('/profile') ||
     pathname.startsWith('/device') ||
     pathname.startsWith('/contributor');
-  // The friend-view cluster (P9 §4.6/§2.2) — the other-user Profile (`/user/:id`), its Collection
-  // (`/user/:id/collection`), the SOC-11 entry detail (`/user/:id/entry/:gameId`), and Compare
-  // (`/compare/:friendId`) all belong to the FRIENDS cluster: their boards draw FRIENDS-active. FRIENDS
-  // is not a routable tab yet (P8), so its keycap stays inert — but the pip lights to place these screens
-  // in their home cluster (manifest AS-2). The nav is NOT locked (that's pre-auth only).
-  const onFriends = pathname.startsWith('/user') || pathname.startsWith('/compare');
+  // The FRIENDS cluster (P8 §3.3 + P9 §4.6/§2.2) — the FRIENDS tab itself (`/friends`), the Find/Add hub
+  // + its sub-flows (`/add-friends`, `/invite-friends`, `/friend-requests`, the SOC-10 `/invite/:token`
+  // landing), and the friend-view cluster (`/user/:id` + its Collection/entry, `/compare/:friendId`) all
+  // belong here: their boards draw FRIENDS-active. FRIENDS is NOW a routable tab (P8) — the keycap is
+  // active and navigates. The nav is NOT locked (that's pre-auth only).
+  const onFriends =
+    pathname.startsWith('/friends') || // /friends (tab) + /friends-roster
+    pathname.startsWith('/friend-requests') ||
+    pathname.startsWith('/add-friends') ||
+    pathname.startsWith('/invite') || // /invite-friends + /invite/:token
+    pathname.startsWith('/user') ||
+    pathname.startsWith('/compare');
   // The Store (`/store`, §P6) — its own destination; Top Up + Wallet are in-screen sub-views (the STORE
   // keycap stays active throughout, the device-editor FlowTakeover precedent).
   const onStore = pathname.startsWith('/store');
