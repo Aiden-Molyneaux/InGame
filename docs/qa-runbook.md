@@ -118,6 +118,24 @@ under Promoted.
 
 ---
 
+## Heavy agent file-churn corrupts WATCHING Metros (new dirs/files land under a running packager)
+- **Symptom:** two variants, one cause. (a) NEW directories created while Metro runs → imports from
+  them 500 the bundle ("web bundle — bundle request errored (status 500)" in doctor; M6 P12 hit it
+  with `src/components/report/`). (b) Sustained multi-agent churn (many files + commits under BOTH
+  watching Metros) → the phone lane red-screens with a Metro-INTERNAL crash: `Cannot read properties
+  of undefined (reading 'get')` at `metro/src/node-haste/DependencyGraph.js` `getOrCreateMap` — the
+  incremental haste/dependency map itself is corrupted, not the app code (typecheck/jest green).
+- **Diagnosis:** Metro's file-map watcher doesn't reliably absorb new directories or rapid bursts;
+  its on-disk caches (`%TMP%\metro-cache`, `%TMP%\metro-file-map-*`, `node_modules/.cache/metro*`)
+  persist the corruption across a plain restart.
+- **Fix:** a CACHE-CLEARED restart of the affected lane(s). Phone lane (:8081, owner-run):
+  `Ctrl+C` → re-run the usual start with `-c` (e.g. `npx expo start -c --port 8081`). Agent lane
+  (:8082): `node scripts/dev-stack.mjs down` → delete `%TMP%\metro-cache` + `%TMP%\metro-file-map-*`
+  + `node_modules/.cache/metro*` → `up` → doctor green. Expect one cold bundle per lane.
+  **Prevention during owner walks:** batch fix-round commits; expect this after any multi-agent
+  build burst and pre-emptively `-c` restart before a device session.
+- **Verified:** 2026-07-17 (both lanes healed; doctor green board) · **Hits:** 2
+
 ## Promoted (owned by `doctor` — run `node scripts/dev-stack.mjs doctor`)
 
 - Postgres container down → `doctor` **db :5432** check.
