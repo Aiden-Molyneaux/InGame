@@ -21,8 +21,9 @@ B1 NEAT FREAK · B3 RENAISSANCE · B4 PATRON OF THE ARTS · B6 NIGHT SHIFT ·
 *(B5/B2 cut per the sheet's trim.)*
 
 ## Rulings the sheet's §C asked for
-1. **Names + PX values = as sheeted** (set total ≈ 34 PX — sized against the 0074 economy;
-   G-K async covers later tuning).
+1. **Names + PX values = as sheeted** (set total = **49 PX** — milestones 35 + eggs 14; the "≈34"
+   figure in this record's first draft was a summary-arithmetic error, caught at the P6 build; the
+   per-item values the owner ratified stand. Sized against the 0074 economy; G-K async covers tuning).
 2. **B7's target game:** the seed slot ships as **config** (`entityTarget: gameId`); the dev-seed
    points it at a seed-catalog game so the mechanism is testable end-to-end. **The production
    target is picked at beta-content deploy** (the catalog is community-built — the pick must be
