@@ -80,7 +80,12 @@ function mapEvent(e: FriendEventRow): MappedEvent | null {
       return { ...base, type: 'published_card', ref: { cardId: e.entityId, gameId } };
     }
     case 'achievement.unlocked': {
-      const label = typeof p.label === 'string' ? p.label : typeof p.title === 'string' ? p.title : undefined;
+      // OQ-148 (§4 privacy-audit ruling, M6 default — conservative): a SECRET-tier unlock must NOT name
+      // the egg in friends' feeds (it would spoil the `???` for those who haven't found it). The P6
+      // engine stamps `kind` on the payload; mask a secret's label, keep a standard/prestige name.
+      const isSecret = p.kind === 'secret';
+      const named = typeof p.label === 'string' ? p.label : typeof p.title === 'string' ? p.title : undefined;
+      const label = isSecret ? 'a secret achievement' : named;
       return { ...base, type: 'unlocked_achievement', ref: { achievementId: e.entityId, label } };
     }
     default:

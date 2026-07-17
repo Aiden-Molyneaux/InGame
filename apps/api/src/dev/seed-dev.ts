@@ -1,5 +1,6 @@
 import { assertDisposableDb } from '../db/destructive-guard';
 import { closeDb } from '../db/client';
+import { seedAchievementDefinitions } from '../config/achievements';
 import * as authRepo from '../repositories/auth-repo';
 import * as storeRepo from '../repositories/store-repo';
 import * as authService from '../services/auth-service';
@@ -150,6 +151,12 @@ async function main(): Promise<void> {
   await ensureDemoDevice(userId); // M5 F-2 — an HONEST worn combo (free shell + an OWNED premium theme)
 
   await ensureRivalWorld(gameIds.get('Hollow Knight')); // M5 P10 — a second designer, a real published card
+
+  // M6 P6c — the ACH starter content (decision 0077). Idempotent upsert; B7 STRAWBERRY HUNTER's
+  // entity-target points at a seed game so the ACH-07 mechanism is demo-able end-to-end (the PRODUCTION
+  // target is owner-picked at the P16 sitting, 0077 §2). Seeding emits NO events → fires no unlocks.
+  const achCount = await seedAchievementDefinitions(gameIds.get('Celeste'));
+  console.log(`seed-dev: achievement definitions ready — ${achCount} defs (B7 target: Celeste · idempotent)`);
 
   const shelf = await collectionService.listCollection(userId);
   console.log(

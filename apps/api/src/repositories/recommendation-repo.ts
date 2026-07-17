@@ -107,6 +107,25 @@ export async function findRecipientRec(
   return rows[0] ?? null;
 }
 
+/**
+ * M6 P6 (B8 THE REGIFTER — the dual-actor egg) — the DISTINCT recommenders who recommended `gameId` TO
+ * `recipientId` (any lifecycle state — a dismissed rec still counts: the friend DID recommend it). Scoped
+ * to the RECIPIENT (`to_user_id` = the actor who just added the game, SYS-01 — reading their OWN inbox);
+ * the engine credits each returned recommender. Returns the sender ids only (no note/PII, F18).
+ */
+export async function recommendersOfGameToRecipient(
+  recipientId: string,
+  gameId: string,
+  exec: Executor = getDb(),
+): Promise<string[]> {
+  const actor = asActor(recipientId);
+  const rows = await exec
+    .select({ fromUserId: recommendations.fromUserId })
+    .from(recommendations)
+    .where(ownedBy(actor, recommendations.toUserId, eq(recommendations.gameId, gameId)));
+  return [...new Set(rows.map((r) => r.fromUserId))];
+}
+
 /** One rec's attribution (WTP-02 `recommendedBy`/`note` thread) + the sender's soft-delete state
  *  (AUTH-07 — the queue-service degrades a deleted sender to the anonymized author shape). */
 export interface RecAttribution {

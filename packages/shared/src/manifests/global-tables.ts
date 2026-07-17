@@ -17,8 +17,10 @@ export const GLOBAL_TABLES = [
   'cosmetic_packs',
   // Store catalog (product definitions, not per-user receipts/wallets)
   'store_products',
-  // Achievement definitions (not per-user progress)
-  'achievements',
+  // Achievement DEFINITIONS (M6 P6 — the SYS-04-seeded starter content, decision 0077). GLOBAL
+  // content every user reads the same (like games/cosmetics); the PER-USER progress lives in the
+  // user-owned `user_achievements` (owner key = user_id → fails closed, scoped by asActor).
+  'achievement_definitions',
 ] as const;
 
 export type GlobalTable = (typeof GLOBAL_TABLES)[number];

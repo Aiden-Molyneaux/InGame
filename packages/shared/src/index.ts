@@ -42,6 +42,7 @@ export * from './schemas/response/invite';
 export * from './schemas/response/compare';
 export * from './schemas/response/queue';
 export * from './schemas/response/lists';
+export * from './schemas/response/achievements';
 export * from './schemas/composition';
 export * from './schemas/device';
 export * from './catalog/dedup';

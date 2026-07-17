@@ -85,6 +85,13 @@ export const DOMAIN_EVENT_TYPES = [
   'list.item_added', // SOC-04 — POST /me/lists/:id/items: a game joined the Top-10. Payload = { kind, gameId }.
   'list.item_removed', // SOC-04 — DELETE /me/lists/:id/items/:gameId. Payload = { kind, gameId }.
   'list.reranked', // SOC-04/COL-07 — PATCH /me/lists/:id (the ARRANGE re-rank). Payload = { kind, count }.
+  // M6 P6 achievements engine (decision 0076 §0.4 / 0077 — ACH-01/02/04/06). Append at the END.
+  'achievement.unlocked', // ACH-02/06 — a definition's criterion was met for a user (idempotent, once per user).
+  // Actor = the CREDITED user (so the P4 feed renders "X unlocked …"); entityRef.id = the achievementId;
+  // payload = { key, tier, label } (label = the def name — the feed renders WITHOUT a definitions join,
+  // F18 — the label is a public achievement name, never a private field). Emitted by the engine's own
+  // unlock tx (NOT the @mutation seam), so it never re-enters the post-commit evaluator (no recursion —
+  // and no definition keys off achievement.unlocked anyway).
 ] as const;
 
 export type DomainEventType = (typeof DOMAIN_EVENT_TYPES)[number];

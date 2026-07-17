@@ -948,6 +948,73 @@ export const listItems = pgTable(
   }),
 );
 
+/**
+ * `achievement_definitions` — the ACH-01 data-driven achievement/egg definitions (M6 P6). GLOBAL
+ * content (on the F32 manifest as `achievement_definitions`): every user reads the SAME defs, like
+ * `games`/`cosmetic_items`. Landed by the SYS-04-style SEED (decision 0077 — 12 milestones + 6 eggs),
+ * NOT by migration (content ≠ schema) — the migration creates the empty table; `seedAchievementDefinitions`
+ * fills it idempotently (a new egg = a seed edit + deploy, no app release, ACH-01).
+ *  - `key` — the stable seed identity (unique) the seeder upserts on (`a1_first_print`, …).
+ *  - `criterion` (jsonb) — the `AchievementCriterion` discriminated union the engine evaluates.
+ *  - `tier ∈ prestige|standard|secret` (ACH-09 presentation) · `kind ∈ milestone|secret` (ACH-03 visibility).
+ *  - `reward` (jsonb) — `{ badge, pixels?, cosmetic? }` (ACH-04).
+ *  - `active` — a killable/tunable flag (SYS-04); the engine + reads only ever consider active defs.
+ */
+export const achievementDefinitions = pgTable(
+  'achievement_definitions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    key: text('key').notNull().unique(),
+    name: text('name').notNull(),
+    description: text('description').notNull(),
+    criterion: jsonb('criterion').notNull().$type<Record<string, unknown>>(),
+    tier: text('tier').notNull(), // 'prestige' | 'standard' | 'secret' (ACH-09)
+    kind: text('kind').notNull(), // 'milestone' | 'secret' (ACH-03)
+    reward: jsonb('reward').notNull().$type<Record<string, unknown>>(),
+    active: boolean('active').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    activeIdx: index('achievement_definitions_active_idx').on(table.active),
+  }),
+);
+
+/**
+ * `user_achievements` — per-user unlocks (M6 P6). USER-OWNED (owner key = `user_id`; NOT on the F32
+ * manifest — rule-2 fails closed, scoped by `asActor`). The **`unique(user_id, achievement_id)`** index
+ * is the ACH-02 idempotency backstop: `ON CONFLICT DO NOTHING` on insert makes a replayed event / a
+ * parallel threshold-cross (F36) grant AT MOST ONE row — and the reward (badge + PX + entitlement) is
+ * granted in the SAME tx ONLY when THIS insert created the row (the `returning()` is empty on conflict),
+ * so the reward can never double-pay.
+ *  - `progressSnapshot` (jsonb, nullable) — the `{ current, target }` at unlock time (audit/celebration).
+ */
+export const userAchievements = pgTable(
+  'user_achievements',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    achievementId: uuid('achievement_id')
+      .notNull()
+      .references(() => achievementDefinitions.id, { onDelete: 'cascade' }),
+    unlockedAt: timestamp('unlocked_at', { withTimezone: true }).notNull().defaultNow(),
+    progressSnapshot: jsonb('progress_snapshot').$type<Record<string, unknown>>(),
+  },
+  (table) => ({
+    userAchievementIdx: uniqueIndex('user_achievements_user_achievement_idx').on(
+      table.userId,
+      table.achievementId,
+    ),
+    userIdx: index('user_achievements_user_idx').on(table.userId),
+  }),
+);
+
+export type AchievementDefinitionRow = typeof achievementDefinitions.$inferSelect;
+export type NewAchievementDefinitionRow = typeof achievementDefinitions.$inferInsert;
+export type UserAchievementRow = typeof userAchievements.$inferSelect;
+export type NewUserAchievementRow = typeof userAchievements.$inferInsert;
+
 export type QueueItemRow = typeof queueItems.$inferSelect;
 export type NewQueueItemRow = typeof queueItems.$inferInsert;
 export type ListRow = typeof lists.$inferSelect;

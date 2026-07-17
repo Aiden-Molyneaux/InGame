@@ -19,6 +19,8 @@ import { iapRoutes } from './routes/iap-routes';
 import { cosmeticRoutes } from './routes/cosmetic-routes';
 import { queueRoutes } from './routes/queue-routes';
 import { listRoutes } from './routes/list-routes';
+import { achievementRoutes } from './routes/achievement-routes';
+import { wireAchievementsEngine } from './achievements/engine';
 import { mediaRoot, MEDIA_URL_PREFIX, PUBLIC_MEDIA_PREFIXES } from './storage';
 import { join } from 'node:path';
 
@@ -26,6 +28,9 @@ import { join } from 'node:path';
 // registered LAST so every thrown AppError / ZodError is mapped to the fixed envelope.
 export function createApp(): Express {
   const app = express();
+  // M6 P6 — register the ACH-02 post-commit evaluator so a mutation's committed events unlock
+  // achievements in-process (idempotent; a no-op until definitions are seeded). See achievements/engine.
+  wireAchievementsEngine();
   // The raw request bytes are captured on parse so the M5 P2 IAP webhook can verify the RevenueCat
   // signature over them BEFORE trusting the parsed JSON (the RC/HMAC seam; the mock verifies the static
   // Authorization header). Harmless for every other route — a small buffer reference, no behavior change.
@@ -73,6 +78,7 @@ export function createApp(): Express {
       ...cosmeticRoutes,
       ...queueRoutes,
       ...listRoutes,
+      ...achievementRoutes,
     ]),
   );
 

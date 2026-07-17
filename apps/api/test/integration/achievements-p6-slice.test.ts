@@ -1,0 +1,532 @@
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import request from 'supertest';
+import { randomUUID } from 'node:crypto';
+import { and, eq } from 'drizzle-orm';
+import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
+import type { Express } from 'express';
+import { COMPOSITION_SCHEMA_VERSION } from '@ingame/shared';
+
+// M6 P6 — the achievements engine (ACH-01/02/03/04/09) + the 0077 starter seed. The §5 invariant list
+// IS this failing-test list (test-first): unlock on threshold-cross · replay → no second unlock · F36
+// parallel cross → one unlock/one reward · reward tx atomicity (poison → nothing persists) ·
+// farm-resistance (distinct counting) · NO unlock at seed time (+ count-from-genesis) · secret masking
+// on every read (F06 masked key-set) · the three /achievements reads · friend showcase earned-only +
+// non-friend honest count + blocked unavailable + SYS-07 (authz:get_user_achievements) · dual_actor
+// credits the recommender · received_count credits the designer (ECON-05 milestone half) · entity-target
+// fires only on the target · achievement.unlocked feeds the P4 feed (+ OQ-148 secret masking).
+// Tags: ACH-01, ACH-02, ACH-03, ACH-04, ACH-09, ECON-05, SOC-06, SOC-09, MOD-09, F06, F36, SYS-07, OQ-148.
+
+let container: StartedPostgreSqlContainer;
+let app: Express;
+
+function authed(token: string) {
+  return { Authorization: `Bearer ${token}` };
+}
+async function seedUser(over: Record<string, unknown> = {}) {
+  const { getDb } = await import('../../src/db/client');
+  const { users } = await import('../../src/db/schema');
+  const { signAccessToken } = await import('../../src/auth/tokens');
+  const id = randomUUID();
+  const username = `user_${id.slice(0, 8)}`;
+  await getDb().insert(users).values({ id, username, email: `${username}@example.com`, bio: 'bio', ...over });
+  return { id, username, token: await signAccessToken(id) };
+}
+async function befriend(aId: string, bId: string) {
+  const { getDb } = await import('../../src/db/client');
+  const { friendships } = await import('../../src/db/schema');
+  await getDb().insert(friendships).values({ requesterId: aId, addresseeId: bId, status: 'accepted' });
+}
+async function seedGame(token: string, name: string): Promise<string> {
+  const { getDb } = await import('../../src/db/client');
+  const { genres } = await import('../../src/db/schema');
+  const g = await getDb().select().from(genres).limit(1);
+  const res = await request(app).post('/api/catalog/games').set(authed(token)).send({ name, genreIds: [g[0]!.id] });
+  if (res.status !== 201) throw new Error(`seedGame failed: ${res.status} ${JSON.stringify(res.body)}`);
+  return res.body.id as string;
+}
+function comp(seed: number) {
+  const elements: Array<Record<string, unknown>> = [];
+  for (let i = 0; i < 3; i++) {
+    elements.push({ type: 'rect', x: 0.5, y: 0.1 + (i + seed * 0.01) * 0.07, w: 0.4, h: 0.05, fill: '#e8c14a' });
+  }
+  return { schemaVersion: COMPOSITION_SCHEMA_VERSION, base: { gradient: ['#241a4d', '#0e0b1e'] }, elements };
+}
+/** Publish a fresh FREE card (no premium components → adopts free). Returns the cardId. */
+async function publishCard(token: string, gameId: string, seed: number): Promise<string> {
+  const draft = await request(app).post('/api/cards').set(authed(token)).send({ gameId, composition: comp(seed) });
+  if (draft.status !== 201) throw new Error(`draft failed: ${draft.status} ${JSON.stringify(draft.body)}`);
+  const cardId = draft.body.id as string;
+  const pub = await request(app).post(`/api/cards/${cardId}/publish`).set(authed(token));
+  if (pub.status !== 200) throw new Error(`publish failed: ${pub.status} ${JSON.stringify(pub.body)}`);
+  return cardId;
+}
+async function addGame(token: string, gameId: string): Promise<string> {
+  const res = await request(app).post('/api/me/collection').set(authed(token)).send({ gameId });
+  if (res.status !== 201 && res.status !== 200) throw new Error(`addGame failed: ${res.status} ${JSON.stringify(res.body)}`);
+  return res.body.entryId as string;
+}
+async function setStatus(token: string, entryId: string, status: string) {
+  const res = await request(app).patch(`/api/me/collection/${entryId}`).set(authed(token)).send({ status });
+  if (res.status !== 200) throw new Error(`setStatus failed: ${res.status} ${JSON.stringify(res.body)}`);
+}
+async function adopt(token: string, cardId: string) {
+  const res = await request(app).post(`/api/cards/${cardId}/adopt`).set(authed(token));
+  if (res.status !== 200) throw new Error(`adopt failed: ${res.status} ${JSON.stringify(res.body)}`);
+  return res.body;
+}
+const meAch = (token: string) => request(app).get('/api/me/achievements').set(authed(token));
+const defs = (token: string) => request(app).get('/api/achievements').set(authed(token));
+const userAch = (token: string, id: string) => request(app).get(`/api/users/${id}/achievements`).set(authed(token));
+const ledger = (token: string) => request(app).get('/api/me/wallet/ledger').set(authed(token));
+
+async function seedReal(b7Target?: string) {
+  const { seedAchievementDefinitions } = await import('../../src/config/achievements');
+  return seedAchievementDefinitions(b7Target);
+}
+async function upsertDef(def: {
+  key: string;
+  name: string;
+  description?: string;
+  criterion: Record<string, unknown>;
+  tier: string;
+  kind: string;
+  reward: Record<string, unknown>;
+  active?: boolean;
+}) {
+  const { upsertDefinition } = await import('../../src/repositories/achievement-repo');
+  await upsertDefinition({ description: 'fixture', ...def });
+}
+async function unlockRowCount(userId: string, key: string): Promise<number> {
+  const { getDb } = await import('../../src/db/client');
+  const { userAchievements, achievementDefinitions } = await import('../../src/db/schema');
+  const rows = await getDb()
+    .select({ id: userAchievements.id })
+    .from(userAchievements)
+    .innerJoin(achievementDefinitions, eq(achievementDefinitions.id, userAchievements.achievementId))
+    .where(and(eq(userAchievements.userId, userId), eq(achievementDefinitions.key, key)));
+  return rows.length;
+}
+async function defId(key: string): Promise<string> {
+  const { getDb } = await import('../../src/db/client');
+  const { achievementDefinitions } = await import('../../src/db/schema');
+  const rows = await getDb().select({ id: achievementDefinitions.id }).from(achievementDefinitions).where(eq(achievementDefinitions.key, key));
+  return rows[0]!.id;
+}
+async function pendingRequestId(fromId: string, toId: string): Promise<string> {
+  const { getDb } = await import('../../src/db/client');
+  const { friendRequests } = await import('../../src/db/schema');
+  const rows = await getDb()
+    .select({ id: friendRequests.id })
+    .from(friendRequests)
+    .where(and(eq(friendRequests.fromUserId, fromId), eq(friendRequests.toUserId, toId)));
+  return rows[0]!.id;
+}
+/** Ledger entries that are a milestone reward for a SPECIFIC achievement key (robust to other unlocks). */
+async function milestoneEntriesFor(token: string, key: string) {
+  const id = await defId(key);
+  const led = await ledger(token);
+  return (led.body.items as Array<{ type: string; refType: string | null; refId: string | null; delta: number }>).filter(
+    (e) => e.type === 'milestone' && e.refType === 'achievement' && e.refId === id,
+  );
+}
+
+beforeAll(async () => {
+  container = await new PostgreSqlContainer('postgres:16-alpine').start();
+  process.env.DATABASE_URL = container.getConnectionUri();
+  process.env.DISPOSABLE_DB = '1';
+  process.env.JWT_SIGNING_SECRET = 'test-signing-secret-at-least-16-chars-long';
+  const { runMigrations } = await import('../../src/db/migrate');
+  await runMigrations();
+  const { createApp } = await import('../../src/app');
+  app = createApp(); // wires the ACH post-commit engine
+}, 120_000);
+
+afterAll(async () => {
+  const { closeDb } = await import('../../src/db/client');
+  await closeDb();
+  if (container) await container.stop();
+});
+
+beforeEach(async () => {
+  const { resetDb } = await import('../../src/db/reset');
+  await resetDb();
+  const { resetRateLimitStore } = await import('../../src/http/rateLimit');
+  resetRateLimitStore();
+});
+
+const MASKED_KEYS = ['id', 'kind', 'locked', 'tier'].sort();
+
+// ── ACH-02 — unlock on threshold-cross + idempotent replay ────────────────────────────────────────────
+describe('ACH-02: unlock fires on threshold-cross', () => {
+  it('A1 FIRST PRINT unlocks on the first publish → earned + the milestone PX lands', async () => {
+    await seedReal();
+    const a = await seedUser();
+    const game = await seedGame(a.token, 'Pub RPG'); // NB: this unlocks A9 CONTRIBUTOR (game_created ≥1)
+
+    // Before the publish, A1 is NOT earned (it needs a publish).
+    const before = await meAch(a.token);
+    expect(before.body.earned.map((e: { key: string }) => e.key)).not.toContain('a1_first_print');
+
+    await publishCard(a.token, game, 1);
+
+    const after = await meAch(a.token);
+    const earnedKeys = after.body.earned.map((e: { key: string }) => e.key);
+    expect(earnedKeys).toContain('a1_first_print');
+    const a1 = after.body.earned.find((e: { key: string }) => e.key === 'a1_first_print');
+    expect(a1.unlockedAt).toBeTruthy();
+    // ECON-04 — reward = badge + PX via the `milestone` ledger reason (refType 'achievement', refId = def).
+    const a1px = await milestoneEntriesFor(a.token, 'a1_first_print');
+    expect(a1px).toHaveLength(1);
+    expect(a1px[0]!.delta).toBe(2);
+  });
+
+  it('replaying the SAME event does not unlock a second time (idempotent — the unique index backstop)', async () => {
+    await seedReal();
+    const a = await seedUser();
+    const game = await seedGame(a.token, 'Replay RPG');
+    const cardId = await publishCard(a.token, game, 1);
+    expect(await unlockRowCount(a.id, 'a1_first_print')).toBe(1);
+
+    // Replay the exact card.published event through the engine directly.
+    const { evaluateEmittedEvents } = await import('../../src/achievements/engine');
+    await evaluateEmittedEvents([
+      { eventType: 'card.published', actorId: a.id, entityId: cardId, payload: { gameId: game }, occurredAt: new Date() },
+    ]);
+    expect(await unlockRowCount(a.id, 'a1_first_print')).toBe(1); // still ONE row
+    // And still exactly ONE a1 milestone PX row (no double-pay).
+    expect(await milestoneEntriesFor(a.token, 'a1_first_print')).toHaveLength(1);
+  });
+});
+
+// ── F36 — concurrency: parallel threshold-cross → one unlock, one reward ──────────────────────────────
+describe('F36: parallel threshold-crossing → exactly one unlock + one reward', () => {
+  it('two parallel evaluations of the same crossing event → one row, one PX grant', async () => {
+    const a = await seedUser();
+    const game = await seedGame(a.token, 'Race RPG');
+    // Publish BEFORE seeding the def, so the request-time engine sees no def (count=1, not yet unlocked).
+    const cardId = await publishCard(a.token, game, 1);
+    await upsertDef({
+      key: 'fx_race',
+      name: 'Race',
+      criterion: { kind: 'event_count', events: ['card.published'], threshold: 1, unit: 'cards' },
+      tier: 'standard',
+      kind: 'milestone',
+      reward: { badge: true, pixels: 3 },
+    });
+    const { evaluateEmittedEvents } = await import('../../src/achievements/engine');
+    const evt = { eventType: 'card.published' as const, actorId: a.id, entityId: cardId, payload: { gameId: game }, occurredAt: new Date() };
+    await Promise.all([evaluateEmittedEvents([evt]), evaluateEmittedEvents([evt]), evaluateEmittedEvents([evt])]);
+
+    expect(await unlockRowCount(a.id, 'fx_race')).toBe(1);
+    const milestones = await milestoneEntriesFor(a.token, 'fx_race');
+    expect(milestones).toHaveLength(1);
+    expect(milestones[0]!.delta).toBe(3);
+  });
+});
+
+// ── ACH-04 — reward transaction atomicity (all-or-nothing) ────────────────────────────────────────────
+describe('ACH-04: reward tx is atomic (poison the grant → no badge, no PX)', () => {
+  it('a def whose PX reward is invalid rolls the WHOLE unlock back — no user_achievements row, no ledger row', async () => {
+    const a = await seedUser();
+    const game = await seedGame(a.token, 'Poison RPG');
+    await upsertDef({
+      key: 'fx_poison',
+      name: 'Poison',
+      criterion: { kind: 'event_count', events: ['card.published'], threshold: 1, unit: 'cards' },
+      tier: 'standard',
+      kind: 'milestone',
+      reward: { badge: true, pixels: 2.5 }, // non-integer → credit() throws → the unlock tx rolls back
+    });
+    await publishCard(a.token, game, 1); // publish succeeds; the unlock+reward tx fails atomically
+
+    expect(await unlockRowCount(a.id, 'fx_poison')).toBe(0); // no badge
+    const led = await ledger(a.token);
+    const milestones = led.body.items.filter((e: { type: string }) => e.type === 'milestone');
+    expect(milestones).toHaveLength(0); // no PX
+    const me = await meAch(a.token);
+    expect(me.body.earned.map((e: { key: string }) => e.key)).not.toContain('fx_poison');
+  });
+});
+
+// ── ACH-02 — farm resistance (distinct counting) ──────────────────────────────────────────────────────
+describe('ACH-02: repeatable actions cannot re-trigger (distinct counting)', () => {
+  it('A12-style distinct-entity counting: re-marking the same entry beaten does not inflate the count', async () => {
+    await upsertDef({
+      key: 'fx_beaten',
+      name: 'Beaten',
+      criterion: { kind: 'event_count_distinct', events: ['collection.entry_updated'], distinctBy: 'entity', threshold: 2, unit: 'games', where: { payloadEquals: { status: 'beaten' } } },
+      tier: 'standard',
+      kind: 'milestone',
+      reward: { badge: true },
+    });
+    const a = await seedUser();
+    const g1 = await seedGame(a.token, 'Beat One');
+    const g2 = await seedGame(a.token, 'Beat Two');
+    const e1 = await addGame(a.token, g1);
+    const e2 = await addGame(a.token, g2);
+
+    await setStatus(a.token, e1, 'beaten'); // distinct beaten entries = 1
+    await setStatus(a.token, e1, 'playing');
+    await setStatus(a.token, e1, 'beaten'); // still distinct = 1 (same entry) → NOT unlocked
+    expect(await unlockRowCount(a.id, 'fx_beaten')).toBe(0);
+
+    await setStatus(a.token, e2, 'beaten'); // distinct = 2 → unlock
+    expect(await unlockRowCount(a.id, 'fx_beaten')).toBe(1);
+  });
+});
+
+// ── ACH-08 — NO back-granting at seed time + count-from-genesis ───────────────────────────────────────
+describe('ACH-08: no unlock at seed time; counters count history (count-from-genesis)', () => {
+  it('history that predates the seed does NOT auto-grant; the next LIVE event unlocks with history counted', async () => {
+    const { resetRateLimitStore } = await import('../../src/http/rateLimit');
+    const a = await seedUser();
+    const game = await seedGame(a.token, 'Genesis RPG');
+    // 5 publishes BEFORE any definitions exist → the engine finds no defs, grants nothing. (The publish
+    // bucket is 3/10min — reset it between publishes so this test can cross A2's threshold of 5.)
+    for (let i = 0; i < 5; i++) {
+      resetRateLimitStore();
+      await publishCard(a.token, game, i + 1);
+    }
+
+    await seedReal(); // seeding definitions emits NO events → still nothing unlocked
+    const atSeed = await meAch(a.token);
+    expect(atSeed.body.earned).toHaveLength(0); // NO back-grant, even though A2 (≥5) is already satisfiable
+    // count-from-genesis: A2's progress reflects the 5 historical publishes (a2 has target 5).
+    const a2Progress = atSeed.body.inProgress.find((p: { key: string }) => p.key === 'a2_press_operator');
+    expect(a2Progress.progress.current).toBe(5);
+
+    // The 6th publish is a LIVE event → A1 (≥1) AND A2 (≥5) both unlock now (history counted).
+    resetRateLimitStore();
+    await publishCard(a.token, game, 6);
+    const after = await meAch(a.token);
+    const earned = after.body.earned.map((e: { key: string }) => e.key);
+    expect(earned).toContain('a1_first_print');
+    expect(earned).toContain('a2_press_operator');
+  });
+});
+
+// ── ACH-03/09 — secret masking on every read ──────────────────────────────────────────────────────────
+describe('ACH-03: secret masking on GET /achievements + reveal on unlock', () => {
+  it('an unearned secret is masked to the ??? slot (F06 exact key-set); a milestone is full', async () => {
+    await seedReal();
+    const a = await seedUser();
+    const res = await defs(a.token);
+    expect(res.status).toBe(200);
+    const list = res.body.achievements as Array<Record<string, unknown>>;
+
+    const b1 = list.find((d) => d.id && d.locked); // any masked secret
+    expect(b1).toBeTruthy();
+    expect(Object.keys(b1!).sort()).toEqual(MASKED_KEYS);
+    expect(b1!.kind).toBe('secret');
+    expect(b1!.tier).toBe('secret');
+    // NO milestone def is ever masked (they carry name/criterion/reward).
+    const a1 = list.find((d) => d.key === 'a1_first_print') as Record<string, unknown> | undefined;
+    expect(a1).toBeTruthy();
+    expect(a1!.name).toBe('First Print');
+    expect(a1!.criterion).toBeTruthy();
+  });
+
+  it('once the caller unlocks a secret, GET /achievements reveals it (their own only)', async () => {
+    await seedReal();
+    const a = await seedUser();
+    // B1 NEAT FREAK — reorder the collection 10 times. Seed 2 games so reorder has a permutation.
+    const g1 = await seedGame(a.token, 'R1');
+    const g2 = await seedGame(a.token, 'R2');
+    const e1 = await addGame(a.token, g1);
+    const e2 = await addGame(a.token, g2);
+    for (let i = 0; i < 10; i++) {
+      const order = i % 2 === 0 ? [e2, e1] : [e1, e2];
+      const r = await request(app).patch('/api/me/collection/reorder').set(authed(a.token)).send({ orderedEntryIds: order });
+      expect(r.status).toBe(200);
+    }
+    const res = await defs(a.token);
+    const b1 = (res.body.achievements as Array<Record<string, unknown>>).find((d) => d.key === 'b1_neat_freak');
+    expect(b1).toBeTruthy(); // now REVEALED (unlocked), no longer masked
+    expect(b1!.name).toBe('Neat Freak');
+    const me = await meAch(a.token);
+    expect(me.body.secrets.found.map((s: { key: string }) => s.key)).toContain('b1_neat_freak');
+    expect(me.body.summary.secretsFound).toBeGreaterThanOrEqual(1);
+  });
+});
+
+// ── ECON-05 / ACH-04 — received_count credits the DESIGNER; A7 credits the adopter ────────────────────
+describe('ECON-05: adoption milestones credit the designer (the milestone half lands)', () => {
+  it('B adopts A\'s card → A13 (designer, prestige, +5 PX) for A AND A7 (adopter) for B', async () => {
+    await seedReal();
+    const a = await seedUser();
+    const b = await seedUser();
+    const game = await seedGame(a.token, 'Adopt RPG');
+    const cardId = await publishCard(a.token, game, 1);
+    await adopt(b.token, cardId);
+
+    // Designer A earns A13 FIRST ADOPTION (prestige) — ECON-05's milestone half.
+    const aMe = await meAch(a.token);
+    const a13 = aMe.body.earned.find((e: { key: string; tier: string }) => e.key === 'a13_first_adoption');
+    expect(a13).toBeTruthy();
+    expect(a13.tier).toBe('prestige');
+    const a13px = await milestoneEntriesFor(a.token, 'a13_first_adoption');
+    expect(a13px).toHaveLength(1);
+    expect(a13px[0]!.delta).toBe(5); // +5 PX milestone reward
+
+    // Adopter B earns A7 GOOD TASTE (the actor-credited side of the SAME card.adopted event).
+    const bMe = await meAch(b.token);
+    expect(bMe.body.earned.map((e: { key: string }) => e.key)).toContain('a7_good_taste');
+  });
+});
+
+// ── participant_count — both parties of friend.added ──────────────────────────────────────────────────
+describe('ACH-02: participant_count credits BOTH friends', () => {
+  it('accepting a request unlocks A5 PLAYER TWO for BOTH the requester and the accepter', async () => {
+    await seedReal();
+    const a = await seedUser();
+    const b = await seedUser();
+    const reqRes = await request(app).post('/api/friends/requests').set(authed(a.token)).send({ toUserId: b.id });
+    expect(reqRes.status).toBe(201);
+    const requestId = await pendingRequestId(a.id, b.id);
+    const accept = await request(app).post(`/api/friends/requests/${requestId}/accept`).set(authed(b.token));
+    expect(accept.status).toBe(200);
+
+    expect((await meAch(a.token)).body.earned.map((e: { key: string }) => e.key)).toContain('a5_player_two');
+    expect((await meAch(b.token)).body.earned.map((e: { key: string }) => e.key)).toContain('a5_player_two');
+  });
+});
+
+// ── ACH-07 — entity-target fires ONLY on the target ───────────────────────────────────────────────────
+describe('ACH-07: entity-target egg fires only for the configured game', () => {
+  it('B7 STRAWBERRY HUNTER unlocks on the target game and NOT on another', async () => {
+    const a = await seedUser();
+    const target = await seedGame(a.token, 'The Target');
+    const other = await seedGame(a.token, 'Not It');
+    await seedReal(target); // B7 configured + ACTIVE with the target
+
+    await addGame(a.token, other); // wrong game → no B7
+    expect(await unlockRowCount(a.id, 'b7_strawberry_hunter')).toBe(0);
+    await addGame(a.token, target); // the target → B7
+    expect(await unlockRowCount(a.id, 'b7_strawberry_hunter')).toBe(1);
+  });
+
+  it('B7 seeded WITHOUT a target is inactive (absent from GET /achievements, never fires)', async () => {
+    const a = await seedUser();
+    await seedReal(); // no target → B7 inactive
+    const list = (await defs(a.token)).body.achievements as Array<Record<string, unknown>>;
+    // Every secret is masked, so we cannot see keys; assert via the engine: adding any game never unlocks b7.
+    const g = await seedGame(a.token, 'Whatever');
+    await addGame(a.token, g);
+    expect(await unlockRowCount(a.id, 'b7_strawberry_hunter')).toBe(0);
+    // Active secrets total excludes the inactive B7 (only 5 active secrets are seeded).
+    const me = await meAch(a.token);
+    expect(me.body.summary.secretsTotal).toBe(5);
+    void list;
+  });
+});
+
+// ── dual_actor — B8 credits the recommender ───────────────────────────────────────────────────────────
+describe('ACH-02: dual_actor (B8 THE REGIFTER) credits the recommender', () => {
+  it('A recommends a game to B; B adds it → B8 unlocks for the RECOMMENDER (A), not the adder', async () => {
+    await seedReal();
+    const a = await seedUser();
+    const b = await seedUser();
+    await befriend(a.id, b.id);
+    const game = await seedGame(a.token, 'Regift RPG');
+    const rec = await request(app).post('/api/recommendations').set(authed(a.token)).send({ toUserId: b.id, gameId: game });
+    expect(rec.status).toBe(201);
+
+    await addGame(b.token, game); // B adds the recommended game
+
+    expect(await unlockRowCount(a.id, 'b8_the_regifter')).toBe(1); // recommender A credited
+    expect(await unlockRowCount(b.id, 'b8_the_regifter')).toBe(0); // the adder is NOT credited
+  });
+});
+
+// ── GET /users/:id/achievements — showcase gating (SOC-09 / MOD-09 / SYS-07) ─────────────────────────
+describe('ACH-05 / SOC-09: the friend showcase read', () => {
+  it('a FRIEND sees the earned-only showcase (F06 shape); a non-friend gets the honest count only', async () => {
+    await seedReal();
+    const owner = await seedUser();
+    const friend = await seedUser();
+    const stranger = await seedUser();
+    await befriend(owner.id, friend.id);
+    const game = await seedGame(owner.token, 'Showcase RPG');
+    await publishCard(owner.token, game, 1); // owner earns A1
+
+    const friendView = await userAch(friend.token, owner.id);
+    expect(friendView.status).toBe(200);
+    expect(friendView.body.summary.earned).toBeGreaterThanOrEqual(1);
+    expect(Array.isArray(friendView.body.earned)).toBe(true);
+    expect(Object.keys(friendView.body.earned[0]).sort()).toEqual(['id', 'key', 'name', 'tier', 'unlockedAt'].sort());
+    expect('inProgress' in friendView.body).toBe(false); // earned-only — no in-progress leak
+    expect('locked' in friendView.body).toBe(false);
+
+    const strangerView = await userAch(stranger.token, owner.id);
+    expect(strangerView.status).toBe(200);
+    expect(strangerView.body.locked).toBe(true);
+    expect(strangerView.body.summary.earned).toBeGreaterThanOrEqual(1); // honest headline count
+    expect('earned' in strangerView.body && Array.isArray(strangerView.body.earned)).toBe(false);
+  });
+
+  it('a friend sees an unlocked SECRET as a plain earned row; the locked-secret count NEVER leaks', async () => {
+    await seedReal();
+    const owner = await seedUser();
+    const friend = await seedUser();
+    await befriend(owner.id, friend.id);
+    // owner unlocks B1 (a secret) by reordering 10x.
+    const g1 = await seedGame(owner.token, 'S1');
+    const g2 = await seedGame(owner.token, 'S2');
+    const e1 = await addGame(owner.token, g1);
+    const e2 = await addGame(owner.token, g2);
+    for (let i = 0; i < 10; i++) {
+      await request(app).patch('/api/me/collection/reorder').set(authed(owner.token)).send({ orderedEntryIds: i % 2 ? [e1, e2] : [e2, e1] });
+    }
+    const friendView = await userAch(friend.token, owner.id);
+    const secretRow = friendView.body.earned.find((e: { key: string }) => e.key === 'b1_neat_freak');
+    expect(secretRow).toBeTruthy(); // the unlocked secret shows as an earned row
+    expect(secretRow.tier).toBe('secret');
+    // No locked-secret existence anywhere on the wire.
+    expect(JSON.stringify(friendView.body)).not.toContain('lockedCount');
+    expect('secrets' in friendView.body).toBe(false);
+  });
+
+  it('authz:get_user_achievements — a BLOCKED actorB gets the generic 404 (indistinguishable, MOD-09)', async () => {
+    await seedReal();
+    const owner = await seedUser();
+    const actorB = await seedUser();
+    // owner blocks actorB → the read collapses to the generic unavailable 404 (SOC-09 both directions).
+    const block = await request(app).post('/api/me/blocks').set(authed(owner.token)).send({ userId: actorB.id });
+    expect([200, 201]).toContain(block.status);
+    const res = await userAch(actorB.token, owner.id);
+    expect(res.status).toBe(404);
+    // Unauthenticated actorB → 401 (SYS-07).
+    const unauth = await request(app).get(`/api/users/${owner.id}/achievements`);
+    expect(unauth.status).toBe(401);
+  });
+});
+
+// ── SOC-06 / OQ-148 — achievement.unlocked feeds the P4 feed, secret label masked ─────────────────────
+describe('SOC-06 / OQ-148: unlocks render in the friend feed; secret labels masked', () => {
+  it('a standard unlock is NAMED in a friend\'s feed; a secret unlock is MASKED', async () => {
+    await seedReal();
+    const owner = await seedUser();
+    const friend = await seedUser();
+    await befriend(owner.id, friend.id);
+
+    // Standard: publish → A1 unlock (named "First Print").
+    const game = await seedGame(owner.token, 'Feed RPG');
+    await publishCard(owner.token, game, 1);
+    // Secret: reorder 10x → B1 unlock (masked).
+    const g1 = await seedGame(owner.token, 'F1');
+    const g2 = await seedGame(owner.token, 'F2');
+    const e1 = await addGame(owner.token, g1);
+    const e2 = await addGame(owner.token, g2);
+    for (let i = 0; i < 10; i++) {
+      await request(app).patch('/api/me/collection/reorder').set(authed(owner.token)).send({ orderedEntryIds: i % 2 ? [e1, e2] : [e2, e1] });
+    }
+
+    const feed = await request(app).get('/api/me/feed').set(authed(friend.token));
+    expect(feed.status).toBe(200);
+    const achItems = feed.body.items.filter((i: { type: string }) => i.type === 'unlocked_achievement');
+    const labels = achItems.flatMap((i: { objects: Array<{ label?: string }> }) => i.objects.map((o) => o.label));
+    expect(labels).toContain('First Print'); // standard → named
+    expect(labels).toContain('a secret achievement'); // secret → masked (OQ-148)
+    expect(labels).not.toContain('Neat Freak'); // the egg name never leaks in the feed
+  });
+});

@@ -1,6 +1,7 @@
 import { getDb, type Tx } from './client';
 import { emitOnCommit } from '../events/emitOnCommit';
 import { insertAuditRow } from '../repositories/audit-repo';
+import { runPostCommitHooks, type EmittedEvent } from '../events/post-commit';
 import type { DomainEventType } from '@ingame/shared';
 
 // F43 — the `@mutation` seam. ONE recognized seam that the authz-test, outbox-emit, and MOD-10
@@ -51,10 +52,22 @@ export function mutation<Args extends unknown[], R>(
   void meta; // retained for traceability + audit keying
   return async (actorId: string, ...args: Args) => {
     const db = getDb();
-    return db.transaction(async (tx) => {
+    // Events emitted DURING this mutation's tx are captured so the ACH-02 post-commit evaluator can run
+    // against them AFTER the tx commits (in-process, not a polling drain — see events/post-commit.ts).
+    const emitted: EmittedEvent[] = [];
+    const result = await db.transaction(async (tx) => {
       const ctx: MutationContext = {
         tx,
-        emit: (args2) => emitOnCommit(tx, { ...args2, actorId }),
+        emit: async (args2) => {
+          await emitOnCommit(tx, { ...args2, actorId });
+          emitted.push({
+            eventType: args2.eventType,
+            actorId,
+            entityId: args2.entityRef.id,
+            payload: args2.payload ?? {},
+            occurredAt: new Date(),
+          });
+        },
         audit: (a) =>
           insertAuditRow(tx, {
             actorId,
@@ -66,5 +79,9 @@ export function mutation<Args extends unknown[], R>(
       };
       return body(ctx, actorId, ...args);
     });
+    // POST-COMMIT: the tx has durably committed; evaluate achievements off the emitted events. This is
+    // best-effort (failures are logged, never rethrown) so it can never fail the committed mutation.
+    await runPostCommitHooks(emitted);
+    return result;
   };
 }

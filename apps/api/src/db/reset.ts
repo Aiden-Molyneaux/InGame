@@ -11,9 +11,13 @@ export async function resetDb(): Promise<void> {
   const db = getDb();
   // TRUNCATE the parent `users` + the append-only logs; CASCADE clears every child table that FKs
   // users (auth_identities, refresh_tokens, auth_tokens, gamertags, friendships, user_blocks,
-  // user_suspensions). admin_audit_log + domain_events carry no FK, so they are named explicitly.
+  // user_suspensions, user_achievements). admin_audit_log + domain_events carry no FK, so they are
+  // named explicitly. `achievement_definitions` is GLOBAL content (no user FK — survives the CASCADE
+  // like `genres`), but the ACH seed is per-test fixture data (P6 slices seed exactly the defs they
+  // exercise), so it is truncated explicitly for clean per-test isolation (the CASCADE clears the
+  // dependent user_achievements first).
   await db.execute(
-    sql`TRUNCATE TABLE users, admin_audit_log, domain_events RESTART IDENTITY CASCADE`,
+    sql`TRUNCATE TABLE users, admin_audit_log, domain_events, achievement_definitions RESTART IDENTITY CASCADE`,
   );
 }
 
