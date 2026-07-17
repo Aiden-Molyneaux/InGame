@@ -10,8 +10,8 @@
 > step**. Filed **2026-07-16** by the Fable-5 orchestrator session.
 >
 > Owner: Aiden · Execution: **Claude Code** (Fable-5 orchestrator + delegated builder agents) ·
-> Branch: **`m6`**, cut from `m5` head `4a9b937` (PR #12 `m5`→`main` was **open** at filing; when its
-> squash lands, merge `origin/main` into `m6` the `4a9b937` way — content identical, m6 supersedes) ·
+> Branch: **`m6`**, cut from `m5` head (PR #12 `m5`→`main` was open at filing; its squash `73dd884`
+> landed 2026-07-16 and is reconcile-merged in `be952ba` — content identical, m6 supersedes main) ·
 > Depends on: M5 signed (owner walk PASSED 2026-07-15) · M1-P **partial** (Apple+RC ✓ · Google Play
 > percolating · R2/hosting/EAS owed — §6).
 >
