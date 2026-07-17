@@ -44,3 +44,38 @@ export async function acceptFriendRequest(req: Request, res: Response): Promise<
   await socialService.acceptFriendRequest(actorOf(req), parsed.data);
   res.json({ ok: true });
 }
+
+export async function declineFriendRequest(req: Request, res: Response): Promise<void> {
+  const parsed = uuidSchema.safeParse(req.params.id);
+  if (!parsed.success) throw new NotFoundError('Request not found.');
+  await socialService.declineFriendRequest(actorOf(req), parsed.data);
+  res.json({ ok: true });
+}
+
+export async function cancelFriendRequest(req: Request, res: Response): Promise<void> {
+  const parsed = uuidSchema.safeParse(req.params.id);
+  if (!parsed.success) throw new NotFoundError('Request not found.');
+  await socialService.cancelFriendRequest(actorOf(req), parsed.data);
+  res.json({ ok: true });
+}
+
+// DELETE /me/friends/:userId — unfriend (silent to target). The `:userId` is the friend to drop.
+export async function unfriend(req: Request, res: Response): Promise<void> {
+  const parsed = uuidSchema.safeParse(req.params.userId);
+  if (!parsed.success) throw new NotFoundError('User not found.');
+  await socialService.unfriend(actorOf(req), parsed.data);
+  res.json({ ok: true });
+}
+
+// GET /me/friends · /me/friends/requests · /me/blocks — the actor's OWN social-graph reads (self-scoped).
+export async function getFriends(req: Request, res: Response): Promise<void> {
+  res.json(await socialService.listFriends(actorOf(req)));
+}
+
+export async function getFriendRequests(req: Request, res: Response): Promise<void> {
+  res.json(await socialService.listFriendRequests(actorOf(req)));
+}
+
+export async function getBlocks(req: Request, res: Response): Promise<void> {
+  res.json(await socialService.listBlocks(actorOf(req)));
+}

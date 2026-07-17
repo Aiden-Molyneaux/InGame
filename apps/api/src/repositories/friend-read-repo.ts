@@ -1,4 +1,4 @@
-import { and, eq, or, getTableColumns, type SQL } from 'drizzle-orm';
+import { and, asc, eq, isNull, or, getTableColumns, type SQL } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { getDb, type Executor } from '../db/client';
 import { friendships, users, type UserRow } from '../db/schema';
@@ -49,4 +49,33 @@ export async function friendScopedProfile(
     .where(eq(users.id, targetId))
     .limit(1);
   return rows[0] ?? null;
+}
+
+/** A friend summary (public allowlist) for GET /me/friends. */
+export interface FriendSummary {
+  userId: string;
+  username: string;
+  avatarUrl: string | null;
+}
+
+/**
+ * GET /me/friends (SOC-01) — the actor's ACCEPTED-friends roster (public summaries). SYS-01-FRIEND-READ:
+ * every joined `users` row is bound to the actor by an ACCEPTED friendship (the `friendScoped` predicate
+ * is present in THIS marked statement — strip it and the read leaks the whole user table). The friend is
+ * whichever side of the bond is NOT the actor. Deleted friends are excluded (OQ-145 collapse). The
+ * payload is the public allowlist (id/username/avatar) — no friend-private field crosses here.
+ */
+export async function listFriendSummaries(
+  actorId: string,
+  exec: Executor = getDb(),
+): Promise<FriendSummary[]> {
+  // SYS-01-FRIEND-READ — the accepted-friendship predicate (friendScoped) IS the scope; the friend is
+  // the far side of the bond. Public allowlist only (username/avatar).
+  const rows = await exec
+    .select({ userId: users.id, username: users.username, avatarUrl: users.avatarUrl })
+    .from(users)
+    .innerJoin(friendships, friendScoped(actorId, users.id))
+    .where(isNull(users.deletedAt))
+    .orderBy(asc(users.username));
+  return rows;
 }

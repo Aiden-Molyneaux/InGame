@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX "friend_requests_pending_pair_idx" ON "friend_requests" USING btree (LEAST("from_user_id", "to_user_id"),GREATEST("from_user_id", "to_user_id")) WHERE status = 'pending';--> statement-breakpoint
+CREATE UNIQUE INDEX "friendships_canonical_accepted_idx" ON "friendships" USING btree (LEAST("requester_id", "addressee_id"),GREATEST("requester_id", "addressee_id")) WHERE status = 'accepted';

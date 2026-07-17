@@ -19,7 +19,14 @@ import {
   saveAvatarDraft,
   publishAvatar,
 } from '../controllers/me-controller';
-import { postBlock, deleteBlock } from '../controllers/social-controller';
+import {
+  postBlock,
+  deleteBlock,
+  unfriend,
+  getFriends,
+  getFriendRequests,
+  getBlocks,
+} from '../controllers/social-controller';
 
 // The `/me` route inventory (DATA, not regex-scraped — F30). `mutates` is explicit; every mutating
 // route declares its standing SYS-07 authz test id (paired by the rule-4 inventory-diff lint against a
@@ -114,5 +121,42 @@ export const meRoutes: RouteDef[] = [
     authzTest: 'authz:block_delete',
     specIds: ['SOC-09', 'SYS-01', 'SYS-07'],
     handler: [resolvePrincipal, asyncHandler(deleteBlock)],
+  }),
+
+  // SOC-01/08 the actor's OWN social-graph reads (self-scoped; not cross-principal — public summaries of
+  // the actor's own friends/requests/blocks). GET /me/blocks is the Settings BLOCKED page (MOD-09
+  // lone-exception affordance).
+  defineRoute({
+    method: 'get',
+    path: '/me/friends',
+    mutates: false,
+    crossPrincipal: false,
+    specIds: ['SOC-01', 'SYS-01'],
+    handler: [resolvePrincipal, asyncHandler(getFriends)],
+  }),
+  defineRoute({
+    method: 'get',
+    path: '/me/friends/requests',
+    mutates: false,
+    crossPrincipal: false,
+    specIds: ['SOC-08', 'SYS-01'],
+    handler: [resolvePrincipal, asyncHandler(getFriendRequests)],
+  }),
+  defineRoute({
+    method: 'get',
+    path: '/me/blocks',
+    mutates: false,
+    crossPrincipal: false,
+    specIds: ['SOC-09', 'MOD-09', 'SYS-01'],
+    handler: [resolvePrincipal, asyncHandler(getBlocks)],
+  }),
+  // SOC-08 unfriend (decision 0010 — silent to the target). The `:userId` is the friend to drop.
+  defineRoute({
+    method: 'delete',
+    path: '/me/friends/:userId',
+    mutates: true,
+    authzTest: 'authz:unfriend',
+    specIds: ['SOC-08', 'SYS-01', 'SYS-07'],
+    handler: [resolvePrincipal, asyncHandler(unfriend)],
   }),
 ];

@@ -50,6 +50,11 @@ const DEFAULTS: Record<string, RateLimitRule> = {
   // purchase/restore is infrequent; 10/min covers a restore-all burst. The webhook is server-to-server
   // (signature-gated, not IP-keyed) and is NOT rate-limited here.
   'iap:validate': { limit: 10, windowMs: 60_000 },
+  // M6 P1 friend requests (decision 0076 §0.7 — SOC-08). Stacked pair per the `cards:publish`
+  // precedent: a per-HOUR cap AND a per-day cap (both mounted as middlewares — both must pass). Sending
+  // requests is a deliberate, social act; the cooldown handles re-request spam, these cap fan-out abuse.
+  'friends:request': { limit: 10, windowMs: 60 * 60_000 },
+  'friends:request:daily': { limit: 30, windowMs: 24 * 60 * 60_000 },
 };
 
 const overrides = new Map<string, RateLimitRule>();

@@ -66,7 +66,13 @@ export const DOMAIN_EVENT_TYPES = [
   'card.adoption_revoked', // CARD-14 — the adopter removed their copy (soft-revoke; all-time count unchanged).
   // M6 §1 friend-fabric spike (decision 0076 §0.1 — friend_requests + friendships). Append at the END.
   'friend.request_created', // SOC-08 — POST /friends/requests (a pending request opened).
-  'friend.added', // SOC-01 — a request accepted → the accepted friendship formed (the P4 feed + P6 engine consume this).
+  'friend.added', // SOC-01 — a request accepted → the accepted friendship formed. Payload carries BOTH
+  // party ids ({ requesterId, addresseeId, requestId }) so an actor-scoped consumer (P4 feed · P6
+  // achievements) can credit BOTH parties off the single accept event — neither side "adds" in isolation.
+  // M6 P1 SOC-08 lifecycle (decision 0076 §0.7 — decline/cancel/unfriend). Append at the END.
+  'friend.request_declined', // SOC-08 — POST /friends/requests/:id/decline (silent; stamps the SYS-04 cooldown).
+  'friend.request_cancelled', // SOC-08 — DELETE /friends/requests/:id (the requester withdrew an outgoing request).
+  'friend.removed', // SOC-08 — DELETE /me/friends/:userId (unfriend; silent to the target, decision 0010).
 ] as const;
 
 export type DomainEventType = (typeof DOMAIN_EVENT_TYPES)[number];

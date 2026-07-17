@@ -1,8 +1,8 @@
-import { and, eq, inArray, or } from 'drizzle-orm';
+import { and, desc, eq, inArray, or } from 'drizzle-orm';
 import type { Relationship } from '@ingame/shared';
 import { getDb, type Executor } from '../db/client';
 import { asActor, ownedBy } from '../db/scoped';
-import { friendRequests, friendships, userBlocks, type FriendshipRow } from '../db/schema';
+import { friendRequests, friendships, userBlocks, users, type FriendshipRow } from '../db/schema';
 
 // Read-only relationship / block substrate for the GET /users/:id privacy engine (SOC-01/09; PROF-03).
 // M2 builds these READS + seed helpers ONLY — the friend request/accept + block/unblock ENDPOINTS are
@@ -87,15 +87,21 @@ export async function insertFriendship(
 
 /**
  * SOC-09 — on BLOCK, sever the ACCEPTED friendship between the pair, either direction. Scoped to the
- * actor (the blocker) as one party. Idempotent (no bond ⇒ no-op).
+ * actor (the blocker) as one party. Idempotent (no bond ⇒ no-op). Returns whether a bond was removed.
+ *
+ * BLESSING (decision 0076 §0.3 — reviewer-nodded): a block-severance HARD-DELETES the friendship row.
+ * This is CORRECT and DISTINCT from the OQ-145 account-deletion status-flip posture (which keeps rows
+ * and flips status): SOC-09 severs an INTERPERSONAL relationship — there is no adopter/attribution
+ * value to preserve in a friendship edge (unlike a card design's authorship), so the edge simply ceases
+ * to exist. Unfriend (below) uses the SAME hard-delete for the same reason.
  */
 export async function deleteFriendshipBetween(
   actorId: string,
   otherId: string,
   exec: Executor = getDb(),
-): Promise<void> {
+): Promise<boolean> {
   const actor = asActor(actorId);
-  await exec
+  const rows = await exec
     .delete(friendships)
     .where(
       and(
@@ -104,7 +110,43 @@ export async function deleteFriendshipBetween(
           and(eq(friendships.requesterId, otherId), eq(friendships.addresseeId, actor.actorId)),
         ),
       ),
-    );
+    )
+    .returning({ id: friendships.id });
+  return rows.length > 0;
+}
+
+/** A blocked-user summary for the Settings blocked-list (GET /me/blocks) — public allowlist + blockedAt. */
+export interface BlockedSummary {
+  userId: string;
+  username: string;
+  avatarUrl: string | null;
+  blockedAt: Date;
+}
+
+/**
+ * SOC-09 / MOD-09 — the actor's OWN blocked-list (the Settings BLOCKED page — the lone-exception
+ * affordance where a block IS disclosed, to the blocker themselves). Scoped to the actor's block rows
+ * (`blockerId` = actor via ownedBy); the `users` join hydrates the blocked user's public summary
+ * in-window under that scope. Only the actor's OUTGOING blocks appear (a block they RECEIVED is not
+ * theirs to see — MOD-09 non-disclosure holds the other direction).
+ */
+export async function listBlockedSummaries(
+  actorId: string,
+  exec: Executor = getDb(),
+): Promise<BlockedSummary[]> {
+  const actor = asActor(actorId);
+  const rows = await exec
+    .select({
+      userId: users.id,
+      username: users.username,
+      avatarUrl: users.avatarUrl,
+      blockedAt: userBlocks.createdAt,
+    })
+    .from(userBlocks)
+    .innerJoin(users, eq(users.id, userBlocks.blockedId))
+    .where(ownedBy(actor, userBlocks.blockerId))
+    .orderBy(desc(userBlocks.createdAt));
+  return rows;
 }
 
 /** SOC-09 — a block in EITHER direction (drives the GET /users/:id "unavailable" collapse). */

@@ -46,6 +46,9 @@ export const ERROR_CODES = [
   'SELF_TARGET', // 409 — friend/recommend/report yourself (POST /friends/requests {toUserId} === actor)
   'ALREADY_FRIENDS', // 409 — POST /friends/requests refused: an accepted friendship already binds the pair
   'REQUEST_PENDING', // 409 — POST /friends/requests refused: a pending request already exists between the pair
+  // M6 P1 social-graph core (decision 0076 §0.7) — the F-17 additive path (the code lands as its
+  // endpoint builds). NOT_FRIENDS · LIST_FULL · INVITE_* stay reserved for P2–P5 (not emitted here).
+  'REQUEST_COOLDOWN', // 409 — POST /friends/requests refused inside the SYS-04 re-request cooldown; carries { cooldownUntil }
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];
@@ -85,6 +88,11 @@ export interface ApiErrorBody {
     reason?: string;
     /** `ACCOUNT_SUSPENDED` only (MOD-09) — the suspension end (ISO-8601 UTC) or null (indefinite). */
     until?: string | null;
+    /**
+     * `REQUEST_COOLDOWN` only (SOC-08, decision 0076 §0.7) — when a re-request to someone who
+     * declined/cancelled becomes allowed again (ISO-8601 UTC). Drives the client's cooldown microcopy.
+     */
+    cooldownUntil?: string;
     /** `VALIDATION_ERROR` only (B1, api-contract 0.32/0.46) — sanitized per-field detail. */
     details?: ValidationDetail[];
     /** `DUPLICATE_SUSPECTED` only (CAT-03, api-contract 0.47) — best-first dedup candidates. */

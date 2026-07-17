@@ -301,6 +301,22 @@ export class RequestPendingError extends AppError {
   }
 }
 
+/**
+ * SOC-08 (decision 0076 §0.7) — POST /friends/requests refused: the actor is inside the SYS-04
+ * re-request cooldown after this person declined (or the actor cancelled) a prior request. 409 (the
+ * CONFLICT family); carries `{ cooldownUntil }` (ISO-8601 UTC) so the client can render the cooldown
+ * microcopy. The decline is silent, so the cooldown is the sole re-request backpressure.
+ */
+export class RequestCooldownError extends AppError {
+  readonly code = 'REQUEST_COOLDOWN';
+  readonly httpStatus = 409;
+  readonly cooldownUntil: string;
+  constructor(cooldownUntil: string, message = 'You can’t send this person a request just yet.') {
+    super(message);
+    this.cooldownUntil = cooldownUntil;
+  }
+}
+
 /** SERVER_ERROR carries a GENERIC body downstream — the middleware never serializes this message. */
 export class ServerError extends AppError {
   readonly code = 'SERVER_ERROR';

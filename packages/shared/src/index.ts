@@ -33,6 +33,7 @@ export * from './schemas/response/collection';
 export * from './schemas/response/cards';
 export * from './schemas/response/device';
 export * from './schemas/response/economy';
+export * from './schemas/response/social';
 export * from './schemas/composition';
 export * from './schemas/device';
 export * from './catalog/dedup';

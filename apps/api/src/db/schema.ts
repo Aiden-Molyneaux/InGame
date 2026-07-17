@@ -171,11 +171,20 @@ export const gamertags = pgTable(
 );
 
 /**
- * `friendships` — the minimal READ substrate GET /users/:id needs to resolve `relationship` +
- * friend-vs-non-friend privacy shapes + mutual-friends count (PROF-03/05, SOC-01). M2 builds the
- * table + read resolvers + seed helpers ONLY — the friend request/accept/decline ENDPOINTS are SOC/M6
- * (not built here). USER-OWNED. `status ∈ pending|accepted`; a pending row's requester→addressee
- * direction drives `outgoing`/`incoming`.
+ * `friendships` — the ACCEPTED-bond store (SOC-01). The read substrate GET /users/:id needs to resolve
+ * `relationship` + friend-vs-non-friend privacy shapes + mutual-friends count (PROF-03/05); M6 P1 owns
+ * the write side (accept forms the bond; block/unfriend sever it). The PENDING lifecycle lives in
+ * `friend_requests` (the M6 split) — a row here is `status = 'accepted'`. USER-OWNED. `requesterId`
+ * keeps the directional origin (who accepted whom) but the bond itself is UNDIRECTED — hence the
+ * canonical one-bond-per-pair guard below.
+ *
+ * ONE-BOND-PER-PAIR (decision 0076 §0.1, M6 P1): `friendships_canonical_accepted_idx` is a UNIQUE
+ * FUNCTIONAL index on `(LEAST(requester_id, addressee_id), GREATEST(...))` filtered to accepted rows —
+ * so at most ONE accepted bond exists per pair REGARDLESS of which direction accepted it. It is the
+ * F36 backstop for reciprocal accepts (A accepts B→A while B accepts A→B): the second insert hits this
+ * index and raises unique_violation, which the service swallows gracefully (one bond survives). The
+ * older directional `friendships_pair_idx` stays (it forbids a same-direction duplicate); the new
+ * functional index adds the reverse-direction guard the M2 substrate lacked.
  */
 export const friendships = pgTable(
   'friendships',
@@ -187,11 +196,15 @@ export const friendships = pgTable(
     addresseeId: uuid('addressee_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    status: text('status').notNull(), // 'pending' | 'accepted'
+    status: text('status').notNull(), // 'accepted' (the M6 split — pending lives in friend_requests)
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
     pairIdx: uniqueIndex('friendships_pair_idx').on(table.requesterId, table.addresseeId),
+    // ONE-BOND-PER-PAIR — direction-agnostic uniqueness for accepted bonds (decision 0076 §0.1, F36).
+    canonicalAcceptedIdx: uniqueIndex('friendships_canonical_accepted_idx')
+      .on(sql`LEAST(${table.requesterId}, ${table.addresseeId})`, sql`GREATEST(${table.requesterId}, ${table.addresseeId})`)
+      .where(sql`status = 'accepted'`),
     requesterIdx: index('friendships_requester_idx').on(table.requesterId),
     addresseeIdx: index('friendships_addressee_idx').on(table.addresseeId),
   }),
@@ -202,9 +215,18 @@ export const friendships = pgTable(
  * every read is actor-scoped — the actor is `from` OR `to`). `status ∈ pending|accepted|declined|
  * cancelled`; a PENDING row is the live request that drives `outgoing`/`incoming` (getRelationship reads
  * pending direction from HERE, accepted bonds from `friendships`). `cooldownUntil` is the SOC-08
- * re-request cooldown stamp (set on decline; NOT enforced in the spike — P1 wires enforcement + the
- * partial-unique-on-pending F36 race guard + mutual-pending auto-accept). Accepting a request writes the
- * `accepted` bond into `friendships` (the accepted store all the M2/M5 readers already consume).
+ * re-request cooldown stamp (set on decline OR cancel; enforced at create by the service, config/social.ts).
+ * Accepting a request writes the `accepted` bond into `friendships` (the accepted store all the M2/M5
+ * readers already consume).
+ *
+ * PENDING-PAIR UNIQUENESS (decision 0076 §0.1, M6 P1 — the F36 double-POST guard):
+ * `friend_requests_pending_pair_idx` is a PARTIAL UNIQUE FUNCTIONAL index on
+ * `(LEAST(from_user_id, to_user_id), GREATEST(...)) WHERE status = 'pending'` — so AT MOST ONE pending
+ * request can exist between a pair in EITHER direction. The spike's service-layer `findPendingBetween`
+ * pre-check was not concurrency-safe (two parallel POSTs both saw no pending, both inserted); this index
+ * is the backstop — the second insert raises unique_violation, which the service resolves to either
+ * REQUEST_PENDING (same-direction double-POST) or the mutual-pending auto-accept (reverse-direction).
+ * A declined/cancelled row is NOT pending, so a post-cooldown re-request inserts a fresh pending row.
  */
 export const friendRequests = pgTable(
   'friend_requests',
@@ -217,13 +239,17 @@ export const friendRequests = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     status: text('status').notNull().default('pending'), // pending | accepted | declined | cancelled
-    cooldownUntil: timestamp('cooldown_until', { withTimezone: true }), // SOC-08 (stamped on decline; unenforced in the spike)
+    cooldownUntil: timestamp('cooldown_until', { withTimezone: true }), // SOC-08 (stamped on decline/cancel; enforced at create)
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
     fromToIdx: index('friend_requests_from_to_idx').on(table.fromUserId, table.toUserId),
     toIdx: index('friend_requests_to_idx').on(table.toUserId),
+    // The F36 double-POST guard — one pending request per pair, direction-agnostic (decision 0076 §0.1).
+    pendingPairIdx: uniqueIndex('friend_requests_pending_pair_idx')
+      .on(sql`LEAST(${table.fromUserId}, ${table.toUserId})`, sql`GREATEST(${table.fromUserId}, ${table.toUserId})`)
+      .where(sql`status = 'pending'`),
   }),
 );
 

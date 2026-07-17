@@ -14,6 +14,7 @@ import { captureException } from '../observability/sentry';
 interface EnvelopeExtras {
   reason?: string;
   until?: string | null;
+  cooldownUntil?: string;
   details?: ValidationDetail[];
   suggestions?: DedupSuggestion[];
   shortBy?: number;
@@ -31,6 +32,7 @@ function send(
   const body: ApiErrorBody = { error: { code, message } };
   if (typeof extra.reason === 'string') body.error.reason = extra.reason;
   if (extra.until !== undefined) body.error.until = extra.until;
+  if (typeof extra.cooldownUntil === 'string') body.error.cooldownUntil = extra.cooldownUntil;
   if (extra.details && extra.details.length > 0) body.error.details = extra.details;
   if (extra.suggestions) body.error.suggestions = extra.suggestions;
   if (typeof extra.shortBy === 'number') body.error.shortBy = extra.shortBy;
@@ -44,6 +46,7 @@ function extrasOf(err: AppError): EnvelopeExtras {
   const e = err as {
     reason?: string;
     until?: string | null;
+    cooldownUntil?: string;
     details?: ValidationDetail[];
     suggestions?: DedupSuggestion[];
     shortBy?: number;
@@ -53,6 +56,7 @@ function extrasOf(err: AppError): EnvelopeExtras {
   const out: EnvelopeExtras = {};
   if (typeof e.reason === 'string') out.reason = e.reason;
   if (e.until !== undefined) out.until = e.until;
+  if (typeof e.cooldownUntil === 'string') out.cooldownUntil = e.cooldownUntil;
   if (Array.isArray(e.details)) out.details = e.details;
   if (Array.isArray(e.suggestions)) out.suggestions = e.suggestions;
   if (typeof e.shortBy === 'number') out.shortBy = e.shortBy;
