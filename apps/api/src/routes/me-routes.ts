@@ -26,6 +26,7 @@ import {
   getFriends,
   getFriendRequests,
   getBlocks,
+  getCompare,
 } from '../controllers/social-controller';
 
 // The `/me` route inventory (DATA, not regex-scraped — F30). `mutates` is explicit; every mutating
@@ -149,6 +150,18 @@ export const meRoutes: RouteDef[] = [
     crossPrincipal: false,
     specIds: ['SOC-09', 'MOD-09', 'SYS-01'],
     handler: [resolvePrincipal, asyncHandler(getBlocks)],
+  }),
+  // GET /me/compare/:friendId (SOC-03) — the collection face-off against a friend. Cross-principal:
+  // returns the friend's hours/games/cards. A KNOWN non-friend → 409 NOT_FRIENDS; a blocked / suspended
+  // / deleted / unknown target collapses to the generic 404 (MOD-09). Its authz test hits it as actor-B.
+  defineRoute({
+    method: 'get',
+    path: '/me/compare/:friendId',
+    mutates: false,
+    crossPrincipal: true,
+    authzTest: 'authz:get_compare',
+    specIds: ['SOC-03', 'PROF-03', 'SOC-09', 'MOD-09', 'CARD-22', 'SYS-07'],
+    handler: [resolvePrincipal, asyncHandler(getCompare)],
   }),
   // SOC-08 unfriend (decision 0010 — silent to the target). The `:userId` is the friend to drop.
   defineRoute({

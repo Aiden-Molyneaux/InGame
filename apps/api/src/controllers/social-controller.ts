@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { BlockUserRequest, CreateFriendRequest } from '@ingame/shared';
 import { AuthFailedError, NotFoundError } from '../errors/AppError';
 import * as socialService from '../services/social-service';
+import * as usersService from '../services/users-service';
 
 const uuidSchema = z.string().uuid();
 
@@ -78,4 +79,10 @@ export async function getFriendRequests(req: Request, res: Response): Promise<vo
 
 export async function getBlocks(req: Request, res: Response): Promise<void> {
   res.json(await socialService.listBlocks(actorOf(req)));
+}
+
+// GET /me/compare/:friendId (SOC-03) — the collection face-off. The friend gate (NOT_FRIENDS), the
+// non-disclosure collapse, and the PROF-03 omission all live in the service.
+export async function getCompare(req: Request, res: Response): Promise<void> {
+  res.json(await usersService.getCompare(actorOf(req), req.params.friendId ?? ''));
 }

@@ -19,3 +19,30 @@ export async function getContributions(req: Request, res: Response): Promise<voi
   const shape = await usersService.getContributions(principal.userId, req.params.id ?? '');
   res.json(shape);
 }
+
+// GET /users/:id/collection (COL-10/11) — the friend-view shelf. The friend gate + non-disclosure
+// collapse + the F06 friend-visible allowlist all live in the service.
+export async function getUserCollection(req: Request, res: Response): Promise<void> {
+  const principal = req.principal;
+  if (!principal) throw new AuthFailedError();
+  const shape = await usersService.getFriendCollection(principal.userId, req.params.id ?? '');
+  res.json(shape);
+}
+
+// GET /users/:id/contributions/cards?cursor= (CAT-07 VIEW ALL cards) — friend-only, cursor-paginated.
+export async function getContributionsCards(req: Request, res: Response): Promise<void> {
+  const principal = req.principal;
+  if (!principal) throw new AuthFailedError();
+  const cursor = typeof req.query.cursor === 'string' ? req.query.cursor : undefined;
+  const shape = await usersService.getContributionsCards(principal.userId, req.params.id ?? '', cursor);
+  res.json(shape);
+}
+
+// GET /users/:id/contributions/games?cursor= (CAT-07 VIEW ALL games) — friend-only, cursor-paginated.
+export async function getContributionsGames(req: Request, res: Response): Promise<void> {
+  const principal = req.principal;
+  if (!principal) throw new AuthFailedError();
+  const cursor = typeof req.query.cursor === 'string' ? req.query.cursor : undefined;
+  const shape = await usersService.getContributionsGames(principal.userId, req.params.id ?? '', cursor);
+  res.json(shape);
+}

@@ -10,6 +10,7 @@ import {
   type CreateCardRequest,
   type EntryCard,
   type EntryCardsResponse,
+  type EquippedReadout,
   type GalleryCardView,
   type GameGalleryResponse,
   type MyCardsResponse,
@@ -42,6 +43,7 @@ import {
   ValidationError,
 } from '../errors/AppError';
 import { compositeShareImage, flattenComposition, withGameTitle } from '../render/flatten';
+import { deriveEquippedLabels } from '../render/equipped-labels';
 import { getStorage, type StorageProvider } from '../storage';
 import {
   collectCosmeticRefs,
@@ -105,6 +107,19 @@ export function toCardRider(design: CardDesignRow | null): CollectionCard {
  * (OQ-122/CARD-15/0066 §2) — so no `composition` key rides this shape. `isCustom` stays true (it's a
  * custom face, just not the caller's own layers).
  */
+/**
+ * CARD-22 (OQ-146) — the equipped readout for a cross-user card, from the DENORMALIZED `equipped_labels`
+ * snapshot (NEVER the composition — the OQ-122 exclusion). `undefined` when the snapshot is empty (a
+ * pre-M6 published card the backfill missed) so the shape's optional `equipped` is simply absent rather
+ * than an empty object — the client degrades to no-readout.
+ */
+function equippedOrUndefined(
+  labels: Record<string, string> | null | undefined,
+): EquippedReadout | undefined {
+  if (!labels || Object.keys(labels).length === 0) return undefined;
+  return labels as EquippedReadout;
+}
+
 export function toAdoptedCardRider(adopted: AdoptedDesignRow): CollectionCard {
   return {
     id: adopted.id,
@@ -396,6 +411,7 @@ function toAdoptedEntryCard(row: AdoptedDesignRow): AdoptedEntryCard {
     thumbUrl: row.thumbUrl,
     isPremium: row.isPremium,
     components: resolveComponents(row.premiumComponentIds, ownedAll),
+    equipped: equippedOrUndefined(row.equippedLabels), // CARD-22 readout (OQ-146; never composition)
     designer: { userId: row.designerId, username: row.designerUsername },
   };
 }
@@ -499,6 +515,7 @@ function toGalleryShape(
     adoptionCount,
     priceForYou,
     components: resolveComponents(row.premiumComponentIds, ownedByCaller),
+    equipped: equippedOrUndefined(row.equippedLabels), // CARD-22 readout (OQ-146; never composition)
     designer: { userId: row.designerId, username: row.designerUsername },
     // M5 F-13 E4 — provenance tags for the gallery cell (both from data already in hand).
     byViewer: row.designerId === actorId,
@@ -557,6 +574,11 @@ export async function publishCard(actorId: string, cardId: string): Promise<Card
     throw new DuplicateCompositionError(); // 2. CARD-19 global hash-dedup → DUPLICATE_COMPOSITION (no leak)
   }
   const premiumIds = await assertPremiumReconciled(actorId, composition); // 3. CARD-13 (pre-tx read)
+  // CARD-22 / OQ-146 (decision 0076 §0.2) — snapshot the equipped-readout display labels AFTER the
+  // reconcile, from the same pre-tx composition (a pure derivation, no lock). Written INTO the publish
+  // tx beside the premium refs, so the CARD-22 readout is computable cross-user without ever reading
+  // this composition again (the OQ-122 exclusion holds downstream).
+  const equippedLabels = deriveEquippedLabels(composition);
 
   // ── Flatten OUTSIDE the tx (the spike's flag), then store the full + thumb PNGs ───────────────────
   // CARD-11 (owner ruling 2026-07-15): the nameplate title text is ALWAYS the game title (system-
@@ -578,6 +600,7 @@ export async function publishCard(actorId: string, cardId: string): Promise<Card
       imageUrl,
       thumbUrl,
       premiumComponentIds: premiumIds,
+      equippedLabels,
       compositionHash: current.compositionHash,
     });
   } catch (err) {
@@ -598,6 +621,7 @@ const publishWrite = mutation(
       imageUrl: string;
       thumbUrl: string;
       premiumComponentIds: string[];
+      equippedLabels: Record<string, string>;
       compositionHash: string;
     },
   ): Promise<CardDesignView> => {
@@ -623,6 +647,7 @@ const publishWrite = mutation(
         imageUrl: fields.imageUrl,
         thumbUrl: fields.thumbUrl,
         premiumComponentIds: fields.premiumComponentIds,
+        equippedLabels: fields.equippedLabels,
       },
       ctx.tx,
     );

@@ -490,6 +490,17 @@ export const cardDesigns = pgTable(
     // cross-user read of the private `composition` is ever needed (the OQ-122 composition-exclusion
     // guarantee holds for the whole publish/adopt/gallery surface).
     premiumComponentIds: text('premium_component_ids').array().notNull().default([]),
+    // CARD-22 / OQ-146 (decision 0076 §0.2, M6 P2) — the DENORMALIZED equipped-readout DISPLAY LABELS
+    // ({ base?, frame?, effect?, finish?, nameplate?, font? }, ALL slots incl. free), snapshotted at
+    // PUBLISH from the composition (after the CARD-13 reconcile). This is what makes the CARD-22 readout
+    // computable CROSS-USER (gallery · adopted switcher · friend collection · compare) WITHOUT ever
+    // reading the private `composition` (the OQ-122 exclusion holds — the same denormalization seam as
+    // `premium_component_ids`). Empty `{}` until publish; backfilled for existing published cards by the
+    // tested src/db/backfill-equipped-labels.ts (mirrors the 0015 worn-premium-reset pattern).
+    equippedLabels: jsonb('equipped_labels')
+      .notNull()
+      .$type<Record<string, string>>()
+      .default({}),
     // CARD-24a copy-on-write (decision 0067): editing a committed card spins a draft COPY that
     // points here at its origin. NULL for from-scratch drafts. ON DELETE SET NULL — if the origin
     // is deleted the copy degrades to a standalone draft, never a broken ref (belt-and-braces).

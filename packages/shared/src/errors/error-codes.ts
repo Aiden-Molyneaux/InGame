@@ -47,8 +47,13 @@ export const ERROR_CODES = [
   'ALREADY_FRIENDS', // 409 — POST /friends/requests refused: an accepted friendship already binds the pair
   'REQUEST_PENDING', // 409 — POST /friends/requests refused: a pending request already exists between the pair
   // M6 P1 social-graph core (decision 0076 §0.7) — the F-17 additive path (the code lands as its
-  // endpoint builds). NOT_FRIENDS · LIST_FULL · INVITE_* stay reserved for P2–P5 (not emitted here).
+  // endpoint builds). LIST_FULL · INVITE_* stay reserved for P3–P5 (not emitted here).
   'REQUEST_COOLDOWN', // 409 — POST /friends/requests refused inside the SYS-04 re-request cooldown; carries { cooldownUntil }
+  // M6 P2 friend-view read fabric (decision 0076 §0.7) — the F-17 additive path (lands as its
+  // endpoint builds). GET /me/compare/:friendId against a non-friend is refused: comparing is a
+  // friend-only action (SOC-03). A blocked/suspended/deleted/unknown target still COLLAPSES to the
+  // generic unavailable (404, MOD-09) — NOT_FRIENDS is emitted ONLY for a KNOWN, visible non-friend.
+  'NOT_FRIENDS', // 409 — GET /me/compare/:friendId (and other friend-only reads) against a non-friend (SOC-03)
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];

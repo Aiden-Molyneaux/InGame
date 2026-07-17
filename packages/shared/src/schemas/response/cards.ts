@@ -29,6 +29,28 @@ export const cardComponentSchema = z
   .strict();
 export type CardComponentView = z.infer<typeof cardComponentSchema>;
 
+/**
+ * CARD-22 equipped readout (viewer-facing card metadata) — a card's per-slot DISPLAY LABELS, incl. the
+ * FREE slots (base · frame · effect · finish · nameplate · font). Display METADATA only, NEVER the
+ * editable composition (CARD-15 / OQ-122 — viewers get the flattened image + these labels, never the
+ * layers). Computed at PUBLISH from the composition and DENORMALIZED beside `premium_component_ids`
+ * (decision 0076 §0.2 / OQ-146), so it is readable cross-user without ever touching the private
+ * composition. Every slot is optional — a slot the card doesn't set (or a legacy/pre-roster document)
+ * is simply absent. Empty `{}` for a card whose labels were never snapshotted (a pre-M6 published card
+ * the backfill missed) — the client degrades to no-readout, never a crash.
+ */
+export const equippedReadoutSchema = z
+  .object({
+    base: z.string().optional(), // "GRADIENT" | "SOLID" — the base fill type
+    frame: z.string().optional(),
+    effect: z.string().optional(),
+    finish: z.string().optional(),
+    nameplate: z.string().optional(),
+    font: z.string().optional(),
+  })
+  .strict();
+export type EquippedReadout = z.infer<typeof equippedReadoutSchema>;
+
 /** One of MY designs (the CARD-24a document): /me/cards · /me/collection/:entryId/cards items. */
 export const cardDesignSchema = z
   .object({
@@ -83,6 +105,9 @@ export const adoptedEntryCardSchema = z
     // a switcher inspect can read them the same way the gallery does. From the denormalized premium refs,
     // never the composition (OQ-122).
     components: z.array(cardComponentSchema),
+    // CARD-22 (OQ-146 / 0.69) — the equipped per-slot readout (incl. FREE slots), from the DENORMALIZED
+    // publish-time label snapshot (never the composition). Absent on a pre-M6 card the backfill missed.
+    equipped: equippedReadoutSchema.optional(),
     designer: z.object({ userId: z.string().uuid(), username: z.string() }).strict(),
     // NO `composition` — the flattened image is the only cross-user artifact (OQ-122).
   })
@@ -137,6 +162,9 @@ export const galleryCardSchema = z
     adoptionCount: z.number().int().nonnegative(),
     priceForYou: z.number().int().nonnegative(), // personalized missing-components sum (0072)
     components: z.array(cardComponentSchema), // M5 F-9 E2 — the premium refs, resolved + owned per-caller
+    // CARD-22 (OQ-146 / 0.69) — the equipped per-slot readout (incl. FREE slots), from the DENORMALIZED
+    // publish-time label snapshot (never the composition). The 0.67 drawn-not-built caveat retires.
+    equipped: equippedReadoutSchema.optional(),
     designer: z.object({ userId: z.string().uuid(), username: z.string() }).strict(),
     // M5 F-13 E4 (owner round-2) — cheap per-caller provenance so the gallery cell can tag the caller's
     // OWN published cards ("BY YOU") and the ones they've ALREADY ADOPTED ("ADOPTED"). Both derive from

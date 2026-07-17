@@ -346,3 +346,60 @@ export function isPremiumComposition(composition: unknown): boolean {
     return tier !== undefined && tier !== null;
   });
 }
+
+// ── CARD-22 equipped-readout label support (M6 P2 — OQ-146 / decision 0076 §0.2) ─────────────────────
+// The DISPLAY LABEL for each equipped slot (free + premium), resolved from the FULL catalog. For
+// EFFECT / FINISH / NAMEPLATE / FONT the composition kind/shape/fontId IS the catalog id one-for-one
+// (the file banner's contract), so a `(type, id)` lookup resolves the roster name directly — the
+// effect/finish `none` collision is disambiguated by `type` (effect NONE vs finish STANDARD). FRAMES
+// are the one exception (kind+color, never the id) — resolved via the full FRAME_ROSTER below.
+
+/** The full-catalog name index by `${type}:${id}` — the CARD-22 label source (free + premium). */
+const CATALOG_NAME_BY_TYPE_ID = new Map<string, string>(
+  COSMETIC_CATALOG.map((e) => [`${e.type}:${e.id}`, e.name]),
+);
+
+/** The roster display name for a `(type, id)` cosmetic — free OR premium — or `undefined` if unknown. */
+export function lookupCatalogName(type: CosmeticType, id: string): string | undefined {
+  return CATALOG_NAME_BY_TYPE_ID.get(`${type}:${id}`);
+}
+
+// The FULL frame roster (kind+color → id) mirroring apps/mobile/src/styler/roster.ts FRAMES — the one
+// closed attribute whose composition (kind, color) is NOT the roster id (PREMIUM_FRAMES above is the
+// premium-only subset for `collectCosmeticRefs`; this is the complete free+premium set the CARD-22
+// label needs). Kept in step with roster.ts. `clean` (kind null / no frame) is intentionally omitted —
+// a composition with no `frame` reads as CLEAN below.
+const FRAME_ROSTER: ReadonlyArray<{ id: string; kind: string; color: string }> = [
+  { id: 'thin-line', kind: 'thin-line', color: '#c9c5e6' },
+  { id: 'double-line', kind: 'double-line', color: '#9b97c0' },
+  { id: 'ticket-notch', kind: 'ticket-notch', color: '#f3ecd9' },
+  { id: 'thin-gold', kind: 'thin-line', color: '#e8c14a' },
+  { id: 'lime', kind: 'thin-line', color: '#a9e34b' },
+  { id: 'bubblegum', kind: 'thin-line', color: '#e85ad0' },
+  { id: 'chrome', kind: 'double-line', color: '#d8d5ec' },
+  { id: 'stub', kind: 'ticket-notch', color: '#ff9f43' },
+  { id: 'ornate-gold', kind: 'ornate', color: '#e8c14a' },
+  { id: 'ember-glow', kind: 'glow', color: '#ff5a5a' },
+  { id: 'plasma', kind: 'glow', color: '#5ad0ff' },
+  { id: 'holo-foil', kind: 'foil', color: '#e85ad0' },
+  { id: 'marquee', kind: 'marquee', color: '#e8c14a' },
+];
+
+/**
+ * The CARD-22 display label for a composition `frame` closed attribute (free or premium). NO `frame`
+ * object → "CLEAN" (the default face / no border). A frame that IS present but carries no explicit
+ * `kind` defaults to `thin-line` (the renderer's documented default — a kindless legacy/spike frame
+ * still draws a thin border in its `color`). An exact (kind, color) match → that roster name; a
+ * recolored variant → the first roster frame of that kind (its base name); an unknown kind → the
+ * upper-cased kind (degrade, never a crash).
+ */
+export function frameLabelFor(frame: Record<string, unknown> | undefined): string {
+  if (!frame || typeof frame !== 'object') return 'CLEAN';
+  const kind = typeof frame.kind === 'string' ? frame.kind : 'thin-line';
+  const color = typeof frame.color === 'string' ? frame.color.toLowerCase() : '';
+  const ofKind = FRAME_ROSTER.filter((f) => f.kind === kind);
+  const exact = ofKind.find((f) => f.color.toLowerCase() === color);
+  const id = (exact ?? ofKind[0])?.id;
+  if (!id) return kind.toUpperCase().replace(/-/g, ' ');
+  return lookupCatalogName('frame', id) ?? kind.toUpperCase().replace(/-/g, ' ');
+}

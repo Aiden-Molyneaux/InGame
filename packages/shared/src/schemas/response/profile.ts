@@ -169,15 +169,41 @@ export const contributorCardSchema = z
   .strict();
 export type ContributorCard = z.infer<typeof contributorCardSchema>;
 
-/** One top-reach added game (CAT-09). */
+/** One top-reach added game (CAT-09). `card` (parvati board gap, P2 additive) — a flattened thumb of a
+ *  representative published card for the game, drawn on the contributor board's GAMES ADDED rows when
+ *  present; absent when the game has no published card. Never `composition` (OQ-122 — flattened only). */
 export const contributorGameSchema = z
   .object({
     gameId: z.string().uuid(),
     title: z.string(),
     collectionsCount: z.number().int().nonnegative(),
+    card: z
+      .object({ imageUrl: z.string().nullable(), thumbUrl: z.string().nullable() })
+      .strict()
+      .optional(),
   })
   .strict();
 export type ContributorGame = z.infer<typeof contributorGameSchema>;
+
+/** GET /users/:id/contributions/cards?cursor= — the VIEW ALL cards list (CAT-07), cursor-paginated,
+ *  friend-only (PROF-03). Items are the same `contributorCard` teasers, sorted by adoption. */
+export const contributionsCardsPageSchema = z
+  .object({
+    items: z.array(contributorCardSchema),
+    nextCursor: z.string().nullable(),
+  })
+  .strict();
+export type ContributionsCardsPage = z.infer<typeof contributionsCardsPageSchema>;
+
+/** GET /users/:id/contributions/games?cursor= — the VIEW ALL games list (CAT-07/CAT-09), cursor-
+ *  paginated, friend-only (PROF-03). Items are the same `contributorGame` rows, sorted by reach. */
+export const contributionsGamesPageSchema = z
+  .object({
+    items: z.array(contributorGameSchema),
+    nextCursor: z.string().nullable(),
+  })
+  .strict();
+export type ContributionsGamesPage = z.infer<typeof contributionsGamesPageSchema>;
 
 /**
  * CAT-10 percentile standing vs the contributor cohort (api-contract §Catalog) — each axis
@@ -204,6 +230,9 @@ export const contributionsResponseSchema = z
         username: z.string(),
         avatarUrl: z.string().url().nullable(),
         memberSince: z.string(),
+        // `bio` (parvati board gap, P2 additive) — the contributor board's IdentityBlock draws it;
+        // FRIEND/FULL shape ONLY (absent on the non-friend/limited shape, PROF-03). Friend-gated.
+        bio: z.string().optional(),
       })
       .strict(),
     stats: contributorStatsSchema,

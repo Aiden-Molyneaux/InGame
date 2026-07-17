@@ -122,6 +122,8 @@ export interface AdoptedDesignRow {
   name: string;
   /** DENORMALIZED premium refs (M5 F-9 E2) — feeds the switcher's `components` readout; NOT composition. */
   premiumComponentIds: string[];
+  /** DENORMALIZED CARD-22 equipped-readout labels (OQ-146 / 0076 §0.2) — never the composition. */
+  equippedLabels: Record<string, string>;
   designerId: string;
   designerUsername: string;
 }
@@ -138,6 +140,8 @@ const ADOPTED_COLUMNS = {
   name: cardDesigns.name,
   // M5 F-9 E2 — the DENORMALIZED premium refs (never `composition`; the OQ-122 discipline holds).
   premiumComponentIds: cardDesigns.premiumComponentIds,
+  // CARD-22 (OQ-146) — the DENORMALIZED equipped labels (never `composition`; OQ-122 holds).
+  equippedLabels: cardDesigns.equippedLabels,
   designerId: cardDesigns.ownerId,
   designerUsername: users.username,
 } as const;

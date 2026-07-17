@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { collectionStatusSchema } from '../common';
 import { genreViewSchema } from './catalog';
+import { equippedReadoutSchema } from './cards';
 
 // RESPONSE/VIEW schemas for the collection (api-contract 0.17/0.48) — the F06 serializer side of
 // the split. The client's shelf/LIST/TOP + profile stats bind to these via z.infer (F31).
@@ -76,6 +77,70 @@ export const collectionResponseSchema = z
   .strict();
 
 export type CollectionResponse = z.infer<typeof collectionResponseSchema>;
+
+// ── COL-10/11 · SOC-11 — the friend-view collection (GET /users/:id/collection; api-contract 0.20/0.24) ──
+// A READ-ONLY, PRIVACY-GATED subset of the owner's shelf (COL-10). The friend-visible field set MINUS
+// every owner-only field (COL-04 platforms · COL-05 notes · rating · addedAt · percentComplete — the
+// friend back shows hours/status/ownedSince + the card's designer only, decision 0026/0021). Served
+// through the SYS-01-FRIEND-READ class (an accepted-friendship predicate) + the F06 allowlist — the
+// serializer PHYSICALLY cannot emit a personal field (it is not on the shape). The single-entry SOC-11
+// detail the Game-page friend view needs is ONE of these items (the contract has no dedicated
+// single-entry path — it composes client-side from this item + canonical /catalog/games/:id).
+
+/**
+ * The friend-view card rider (CARD-07/22) — FLATTENED image + attribution + the CARD-22 equipped
+ * readout, NEVER the private `composition` (OQ-122/CARD-15: a cross-user viewer gets the flattened
+ * image + display labels, never the layers). The default-face stub carries neither `equipped` nor
+ * `designer` (there is no custom design to attribute or read).
+ */
+export const friendCollectionCardSchema = z
+  .object({
+    id: z.string(),
+    imageUrl: z.string().nullable(),
+    thumbUrl: z.string().nullable(),
+    isCustom: z.boolean(),
+    isPremium: z.boolean(),
+    name: z.string().optional(), // custom designs only
+    equipped: equippedReadoutSchema.optional(), // CARD-22 — the per-slot readout (OQ-146 denormalization)
+    designer: z.object({ userId: z.string().uuid(), username: z.string() }).strict().optional(), // CARD-01
+    // NO `composition` — the friend gets the flattened image + equipped labels, never the layers.
+  })
+  .strict();
+export type FriendCollectionCard = z.infer<typeof friendCollectionCardSchema>;
+
+/**
+ * One friend-view collection item (COL-10). The `/me/collection` shelf fields MINUS the owner-only set:
+ * NO `notes`/`rating` (COL-04/05) · NO `addedAt` (the M6 build-note in api-contract 0.50) · NO
+ * `percentComplete` (the friend back omits it, decision 0026). `card` is the flattened friend rider.
+ */
+export const friendCollectionItemSchema = z
+  .object({
+    entryId: z.string().uuid(),
+    gameId: z.string().uuid(),
+    title: z.string(),
+    developer: z.string().nullable(),
+    publisher: z.string().nullable(),
+    releaseYear: z.number().int().nullable(),
+    genres: z.array(genreViewSchema),
+    hours: z.number().int().nonnegative(),
+    status: collectionStatusSchema,
+    ownedSince: z.string().nullable(), // YYYY-MM-DD (COL-03 date acquired — friend-visible, decision 0021)
+    nowPlaying: z.boolean(), // the ▶ NOW tag (WTP-03) for their hero
+    card: friendCollectionCardSchema,
+  })
+  .strict();
+export type FriendCollectionItem = z.infer<typeof friendCollectionItemSchema>;
+
+/** GET /users/:id/collection — the friend-view shelf (COL-10/11). Same envelope as /me/collection. */
+export const friendCollectionResponseSchema = z
+  .object({
+    items: z.array(friendCollectionItemSchema),
+    nextCursor: z.string().nullable(),
+    total: z.number().int().nonnegative(),
+    collectionTotal: z.number().int().nonnegative(),
+  })
+  .strict();
+export type FriendCollectionResponse = z.infer<typeof friendCollectionResponseSchema>;
 
 export const okResponseSchema = z.object({ ok: z.literal(true) }).strict();
 export type OkResponse = z.infer<typeof okResponseSchema>;

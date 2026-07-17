@@ -29,3 +29,9 @@ export async function createGame(req: Request, res: Response): Promise<void> {
   const item = await catalogService.createGame(actorOf(req), req.validated as CreateGameRequest);
   res.status(201).json(item);
 }
+
+// GET /catalog/games/:id/friends-who-own (CAT-09c) — the Game-page named friends-who-own list. The
+// friend gate + PROF-03 hours-gating live in the service (rooted at the actor's friend set).
+export async function getFriendsWhoOwn(req: Request, res: Response): Promise<void> {
+  res.json(await catalogService.friendsWhoOwn(actorOf(req), req.params.id ?? ''));
+}

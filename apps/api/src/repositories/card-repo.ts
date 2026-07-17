@@ -189,6 +189,8 @@ export interface PublishedDesignRow {
   isPremium: boolean;
   /** The DENORMALIZED premium component ids (decision 0072) — feeds personalized pricing + adopt. */
   premiumComponentIds: string[];
+  /** The DENORMALIZED CARD-22 equipped-readout labels (OQ-146 / 0076 §0.2) — never the composition. */
+  equippedLabels: Record<string, string>;
   designerId: string;
   designerUsername: string;
 }
@@ -207,6 +209,7 @@ const PUBLIC_COLUMNS = {
   thumbUrl: cardDesigns.thumbUrl,
   isPremium: cardDesigns.isPremium,
   premiumComponentIds: cardDesigns.premiumComponentIds,
+  equippedLabels: cardDesigns.equippedLabels, // CARD-22 denormalized labels (OQ-146; never composition)
   designerId: users.id,
   designerUsername: users.username,
 } as const;
@@ -292,7 +295,12 @@ export async function designNamesByIds(
 export async function markPublished(
   actorId: string,
   designId: string,
-  fields: { imageUrl: string; thumbUrl: string; premiumComponentIds: string[] },
+  fields: {
+    imageUrl: string;
+    thumbUrl: string;
+    premiumComponentIds: string[];
+    equippedLabels: Record<string, string>;
+  },
   exec: Executor = getDb(),
 ): Promise<CardDesignRow | null> {
   const actor = asActor(actorId);
@@ -303,6 +311,7 @@ export async function markPublished(
       imageUrl: fields.imageUrl,
       thumbUrl: fields.thumbUrl,
       premiumComponentIds: fields.premiumComponentIds,
+      equippedLabels: fields.equippedLabels, // CARD-22 label snapshot (OQ-146 / 0076 §0.2)
       updatedAt: new Date(),
     })
     .where(

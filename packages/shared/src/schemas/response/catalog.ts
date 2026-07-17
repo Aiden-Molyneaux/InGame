@@ -45,3 +45,29 @@ export type CatalogListResponse = z.infer<typeof catalogListResponseSchema>;
 
 export const genresResponseSchema = z.object({ items: z.array(genreViewSchema) }).strict();
 export type GenresResponse = z.infer<typeof genresResponseSchema>;
+
+// ── CAT-09c — the Game-page friends-who-own named list (decision 0036; api-contract row /catalog/games/:id) ──
+// The named list of the VIEWER's friends who own a game + their hours. PROF-03-gated (hours present only
+// where exposed — at M6 a friend always exposes hours to a friend; the `hours?` optionality is the seam
+// for a future per-facet privacy setting). Blocked friends are ABSENT (SOC-09 severs the friendship, so
+// they are not in the friend set). `count` is the friends-have-it count (CAT-09b) — shown alone when no
+// named friend is visible. SEAM: the contract draws this as a `friendsWhoOwn` FIELD on GET /catalog/
+// games/:id; that aggregate game-detail endpoint is not built yet, so P2 serves it as the focused route
+// GET /catalog/games/:id/friends-who-own (flagged to the orchestrator — folds into game-detail when it lands).
+export const friendWhoOwnsSchema = z
+  .object({
+    userId: z.string().uuid(),
+    username: z.string(),
+    avatarUrl: z.string().url().nullable(),
+    hours: z.number().int().nonnegative().optional(), // PROF-03-gated (present when the friend exposes it)
+  })
+  .strict();
+export type FriendWhoOwns = z.infer<typeof friendWhoOwnsSchema>;
+
+export const friendsWhoOwnResponseSchema = z
+  .object({
+    friendsWhoOwn: z.array(friendWhoOwnsSchema),
+    count: z.number().int().nonnegative(), // the friends-have-it count (CAT-09b) — the count-only fallback
+  })
+  .strict();
+export type FriendsWhoOwnResponse = z.infer<typeof friendsWhoOwnResponseSchema>;

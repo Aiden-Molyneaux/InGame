@@ -113,6 +113,13 @@
       "when": 1784258957373,
       "tag": "0015_worn_premium_reset",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1784261327675,
+      "tag": "0016_giant_rawhide_kid",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "card_designs" ADD COLUMN "equipped_labels" jsonb DEFAULT '{}'::jsonb NOT NULL;

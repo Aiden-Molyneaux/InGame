@@ -317,6 +317,20 @@ export class RequestCooldownError extends AppError {
   }
 }
 
+/**
+ * SOC-03 (decision 0076 §0.7) — a friend-only read (GET /me/compare/:friendId) refused because the
+ * target is NOT an accepted friend. 409 (the CONFLICT family). Emitted ONLY for a KNOWN, visible
+ * non-friend — a blocked / suspended / deleted / unknown target collapses to the generic NotFound
+ * FIRST (MOD-09 non-disclosure), so NOT_FRIENDS never becomes a presence oracle.
+ */
+export class NotFriendsError extends AppError {
+  readonly code = 'NOT_FRIENDS';
+  readonly httpStatus = 409;
+  constructor(message = 'You can only compare with a friend.') {
+    super(message);
+  }
+}
+
 /** SERVER_ERROR carries a GENERIC body downstream — the middleware never serializes this message. */
 export class ServerError extends AppError {
   readonly code = 'SERVER_ERROR';

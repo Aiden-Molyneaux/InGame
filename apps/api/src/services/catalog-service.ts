@@ -2,6 +2,7 @@ import type {
   CatalogItem,
   CreateGameRequest,
   DedupSuggestion,
+  FriendsWhoOwnResponse,
   GenreView,
 } from '@ingame/shared';
 import { normalizeTitle, rankDedupCandidates, type DedupHit } from '@ingame/shared';
@@ -11,7 +12,11 @@ import { isUniqueViolation } from '../db/pg-errors';
 import * as catalogRepo from '../repositories/catalog-repo';
 import * as collectionRepo from '../repositories/collection-repo';
 import * as profileRepo from '../repositories/profile-repo';
-import { DuplicateSuspectedError, ValidationError } from '../errors/AppError';
+import * as friendReadRepo from '../repositories/friend-read-repo';
+import * as relationshipRepo from '../repositories/relationship-repo';
+import { DuplicateSuspectedError, NotFoundError, ValidationError } from '../errors/AppError';
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 import { screenText } from '../moderation/screen';
 import type { GameRow } from '../db/schema';
 import type { LiveGameSlim } from '../repositories/catalog-repo';
@@ -129,6 +134,34 @@ export async function popular(actorId: string): Promise<{ items: CatalogItem[] }
   const byId = new Map(rows.map((r) => [r.id, r]));
   const ordered = topIds.map((id) => byId.get(id)).filter((r): r is GameRow => Boolean(r));
   return { items: await assembleItems(actorId, ordered) };
+}
+
+/**
+ * CAT-09c — GET /catalog/games/:id/friends-who-own: the VIEWER's accepted friends who own the game +
+ * their hours (PROF-03-gated). Rooted at the actor's friend set (friendReadRepo.friendsWhoOwnGame uses
+ * the SYS-01-FRIEND-READ friendScoped gate), so a blocked friend is absent by construction (a block
+ * severs the friendship — SOC-09). An unknown game → 404 (it isn't in the catalog). `count` is the named
+ * list length (at M6 every visible friend who owns it is named — the count-only fallback is the PROF-03
+ * seam for a future per-facet hours-privacy setting). SEAM: the contract draws this on GET /catalog/
+ * games/:id (the aggregate game-detail endpoint, not yet built) — served here as a focused route.
+ */
+export async function friendsWhoOwn(actorId: string, gameId: string): Promise<FriendsWhoOwnResponse> {
+  if (!UUID_RE.test(gameId)) throw new NotFoundError('Game not found.');
+  const [game] = await catalogRepo.gamesByIds([gameId]);
+  if (!game) throw new NotFoundError('Game not found.');
+  const rows = await friendReadRepo.friendsWhoOwnGame(actorId, gameId);
+  // SOC-09 defense-in-depth — a block hides the person even if a stray accepted-friendship row survived
+  // (in prod a block severs the bond, so friendScoped already excludes them; this is the belt-and-braces
+  // the SOC-09 sweep asks for — blocked-either-direction is filtered regardless of the friendship state).
+  const blocked = await relationshipRepo.listBlockedIds(actorId, rows.map((r) => r.userId));
+  const visible = blocked.size === 0 ? rows : rows.filter((r) => !blocked.has(r.userId));
+  const friendsWhoOwn = visible.map((r) => ({
+    userId: r.userId,
+    username: r.username,
+    avatarUrl: r.avatarUrl,
+    hours: r.hours, // PROF-03: exposed to a friend at M6 (the per-facet hide toggle is a future seam)
+  }));
+  return { friendsWhoOwn, count: friendsWhoOwn.length };
 }
 
 function screenedField(path: string, value: string | undefined): void {
