@@ -92,6 +92,10 @@ export const DOMAIN_EVENT_TYPES = [
   // F18 — the label is a public achievement name, never a private field). Emitted by the engine's own
   // unlock tx (NOT the @mutation seam), so it never re-enters the post-commit evaluator (no recursion —
   // and no definition keys off achievement.unlocked anyway).
+  // M6 P7 report capture (decision 0076 §0.5 — the `reports` table; MOD-01). Append at the END.
+  'report.filed', // MOD-01 — POST /reports. Payload = { reportId, targetType } ONLY (never the reason,
+  // targetId, or details text — the moderation queue (M7) reads those off the row itself; the event
+  // spine stays minimal/PII-light, F18).
 ] as const;
 
 export type DomainEventType = (typeof DOMAIN_EVENT_TYPES)[number];

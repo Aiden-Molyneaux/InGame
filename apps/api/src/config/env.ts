@@ -50,6 +50,13 @@ export interface ApiEnv {
    * works in dev without config; production injects the real domain from the host secret store (SYS-03).
    */
   inviteLinkBase: string;
+  /**
+   * AUTH-01 (decision 0076 §0.9) — the SYS-04 kill-switch for the HIBP breach check on register +
+   * password-reset-confirm. Defaults ON (`true`); set `BREACH_CHECK_ENABLED=false` to skip the
+   * network call entirely (e.g. the provider is unreachable / rate-limiting us) — a manual off-ramp
+   * alongside the check's own fail-open behavior on timeout/5xx/network error.
+   */
+  breachCheckEnabled: boolean;
 }
 
 function num(value: string | undefined, fallback: number): number {
@@ -103,5 +110,7 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): ApiEnv {
     // SOC-10 — the invite-link base (no trailing slash needed; the service joins with '/'). The P15
     // landing owns the real route; this placeholder keeps the seam functional in dev/test.
     inviteLinkBase: (source.INVITE_LINK_BASE ?? 'https://ingame.app/i').replace(/\/+$/, ''),
+    // AUTH-01 (decision 0076 §0.9) — default ON; only the literal string 'false' turns it off.
+    breachCheckEnabled: (source.BREACH_CHECK_ENABLED ?? 'true').toLowerCase() !== 'false',
   };
 }

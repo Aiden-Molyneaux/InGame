@@ -28,6 +28,8 @@ import type { LiveGameSlim } from '../repositories/catalog-repo';
 
 const SEARCH_LIMIT = 20; // capped, no paging (0.47 — search-as-you-type, like the rails)
 const POPULAR_LIMIT = 12; // CAT-09/decision 0019 — capped ~12, no paging
+const UPCOMING_LIMIT = 12; // CAT-08 (M6 P7) — capped ~12, no paging, mirrors the popular-rail posture
+const FRIENDS_ACTIVE_LIMIT = 12; // CAT-12 (M6 P7, decision 0036) — capped ~12, no paging
 // Search RECALL is deliberately looser than the create WARN (D5's 0.5): finding "Elden Ring" from
 // "eldn rig" is the point of CAT-01+CAT-03 riding search; a candidate list over-including is
 // harmless, a create over-refusing is not. A G-K-listed lever like the warn threshold.
@@ -133,6 +135,45 @@ export async function popular(actorId: string): Promise<{ items: CatalogItem[] }
   const rows = await catalogRepo.gamesByIds(topIds);
   const byId = new Map(rows.map((r) => [r.id, r]));
   const ordered = topIds.map((id) => byId.get(id)).filter((r): r is GameRow => Boolean(r));
+  return { items: await assembleItems(actorId, ordered) };
+}
+
+/**
+ * CAT-08 — GET /catalog/upcoming (M6 P7): LIVE-catalog entries with a FUTURE releaseDate, soonest
+ * first, capped ~12, no paging — mirrors `popular()`'s shape/limit posture (the actual sibling in
+ * code; the api-contract-drawn `/catalog/new-releases` sibling this endpoint was briefed against is
+ * NOT YET BUILT anywhere in the API — flagged to the orchestrator as a planning/reality drift, not
+ * this packet's to fix). The notify-me fields (DISC-01/NOTIF-01) are OMITTED at M6 by design (0076
+ * §0.8: "notify-me toggles defer to M7, inert without push") — this serves the plain search-result
+ * shape only.
+ */
+export async function upcoming(actorId: string): Promise<{ items: CatalogItem[] }> {
+  const today = new Date().toISOString().slice(0, 10); // stable UTC yyyy-mm-dd boundary
+  const rows = await catalogRepo.upcomingLive(today, UPCOMING_LIMIT);
+  return { items: await assembleItems(actorId, rows) };
+}
+
+/**
+ * CAT-12 — GET /catalog/friends-active (M6 P7, decision 0036/0076 §0.8): the "FRIENDS ARE PLAYING"
+ * Add-Game rail — catalog entries the actor's accepted friends own that the actor does NOT, ranked by
+ * `friendsHaveCount` desc (ties broken by name, the `popular()` tie-break), capped ~12. Blocked friends
+ * are severed by construction (`friendsActiveGameCounts` rides `friendScoped`, and a block severs the
+ * friendship both directions — SOC-09 needs no special-casing here). `assembleItems` re-derives the
+ * final `friendsHaveCount` per item from the SAME friend cohort (collectionRepo.friendsHaveCountByGame)
+ * so the served count always matches the rest of the search-result shape.
+ */
+export async function friendsActive(actorId: string): Promise<{ items: CatalogItem[] }> {
+  const counts = await friendReadRepo.friendsActiveGameCounts(actorId);
+  if (counts.size === 0) return { items: [] };
+  const candidateIds = [...counts.keys()];
+  const [owned, rows] = await Promise.all([
+    collectionRepo.ownedGameIdSet(actorId, candidateIds),
+    catalogRepo.gamesByIds(candidateIds),
+  ]);
+  const ordered = rows
+    .filter((g) => !owned.has(g.id))
+    .sort((a, b) => (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0) || a.name.localeCompare(b.name))
+    .slice(0, FRIENDS_ACTIVE_LIMIT);
   return { items: await assembleItems(actorId, ordered) };
 }
 

@@ -46,6 +46,19 @@ async function createGame(
   return request(app).post('/api/catalog/games').set(authed(token)).send(body);
 }
 
+async function addToCollection(token: string, gameId: string) {
+  const res = await request(app).post('/api/me/collection').set(authed(token)).send({ gameId });
+  if (res.status !== 201) throw new Error(`addToCollection failed: ${res.status}`);
+  return res.body as { entryId: string };
+}
+
+/** A direct accepted friendship (faster than the request flow; the lifecycle is P1's suite). */
+async function befriend(aId: string, bId: string) {
+  const { getDb } = await import('../../src/db/client');
+  const { friendships } = await import('../../src/db/schema');
+  await getDb().insert(friendships).values({ requesterId: aId, addresseeId: bId, status: 'accepted' });
+}
+
 beforeAll(async () => {
   container = await new PostgreSqlContainer('postgres:16-alpine').start();
   process.env.DATABASE_URL = container.getConnectionUri();
@@ -297,6 +310,125 @@ describe('CAT-09: GET /catalog/popular — the suggestion rail', () => {
     expect(Array.isArray(res.body.items)).toBe(true);
     expect(res.body.items.length).toBeGreaterThan(0);
     expect(res.body.items[0].name).toBe('Hollow Knight');
+  });
+});
+
+describe('CAT-08 (M6 P7): GET /catalog/upcoming — future-releaseDate entries', () => {
+  it('returns only FUTURE-dated entries, ordered releaseDate ASC (soonest first)', async () => {
+    const a = await registerUser();
+    const rpg = await genreIdByName(a.token, 'RPG');
+    // dedupOverride: true — these fixture names are deliberately near-duplicate-shaped (CAT-03 would
+    // otherwise 409-warn on the shared "… Future Game"/"… Game" wording); unrelated to this test.
+    await createGame(a.token, { name: 'Far Future Game', genreIds: [rpg], releaseDate: '2099-12-31', dedupOverride: true });
+    await createGame(a.token, { name: 'Near Future Game', genreIds: [rpg], releaseDate: '2099-01-01', dedupOverride: true });
+    await createGame(a.token, { name: 'Already Released Game', genreIds: [rpg], releaseDate: '2020-01-01', dedupOverride: true });
+
+    const res = await request(app).get('/api/catalog/upcoming').set(authed(a.token));
+    expect(res.status).toBe(200);
+    const names = res.body.items.map((i: { name: string }) => i.name);
+    expect(names).toEqual(['Near Future Game', 'Far Future Game']); // ASC by releaseDate
+    expect(names).not.toContain('Already Released Game');
+  });
+
+  it("the BOUNDARY — a game releasing TODAY is NOT upcoming (it has already released)", async () => {
+    const a = await registerUser();
+    const rpg = await genreIdByName(a.token, 'RPG');
+    const today = new Date().toISOString().slice(0, 10);
+    await createGame(a.token, { name: 'Releases Today', genreIds: [rpg], releaseDate: today, dedupOverride: true });
+    await createGame(a.token, { name: 'Releases Tomorrow', genreIds: [rpg], releaseDate: '2099-06-15', dedupOverride: true });
+
+    const res = await request(app).get('/api/catalog/upcoming').set(authed(a.token));
+    expect(res.status).toBe(200);
+    const names = res.body.items.map((i: { name: string }) => i.name);
+    expect(names).not.toContain('Releases Today');
+    expect(names).toContain('Releases Tomorrow');
+  });
+
+  it('a game with no releaseDate at all is never "upcoming"', async () => {
+    const a = await registerUser();
+    const rpg = await genreIdByName(a.token, 'RPG');
+    await createGame(a.token, { name: 'No Date Game', genreIds: [rpg] });
+    const res = await request(app).get('/api/catalog/upcoming').set(authed(a.token));
+    expect(res.status).toBe(200);
+    expect(res.body.items.map((i: { name: string }) => i.name)).not.toContain('No Date Game');
+  });
+});
+
+describe('CAT-12 (M6 P7): GET /catalog/friends-active — the FRIENDS ARE PLAYING rail', () => {
+  it("returns games the caller's FRIEND owns that the caller does NOT — ranked by friendsHaveCount desc", async () => {
+    const a = await registerUser();
+    const b = await registerUser();
+    await befriend(a.id, b.id);
+    const rpg = await genreIdByName(a.token, 'RPG');
+    const sharedByOne = (await createGame(b.token, { name: 'Friend Only Game', genreIds: [rpg] })).body;
+    await addToCollection(b.token, sharedByOne.id);
+
+    const res = await request(app).get('/api/catalog/friends-active').set(authed(a.token));
+    expect(res.status).toBe(200);
+    const names = res.body.items.map((i: { name: string }) => i.name);
+    expect(names).toContain('Friend Only Game');
+    const item = res.body.items.find((i: { name: string }) => i.name === 'Friend Only Game');
+    expect(item.friendsHaveCount).toBe(1);
+  });
+
+  it("EXCLUDES a game the caller already owns (the caller-lacks filter)", async () => {
+    const a = await registerUser();
+    const b = await registerUser();
+    await befriend(a.id, b.id);
+    const rpg = await genreIdByName(a.token, 'RPG');
+    const sharedGame = (await createGame(b.token, { name: 'Already Mine Game', genreIds: [rpg] })).body;
+    await addToCollection(b.token, sharedGame.id);
+    await addToCollection(a.token, sharedGame.id); // the CALLER already owns it too
+
+    const res = await request(app).get('/api/catalog/friends-active').set(authed(a.token));
+    expect(res.status).toBe(200);
+    expect(res.body.items.map((i: { name: string }) => i.name)).not.toContain('Already Mine Game');
+  });
+
+  it('ranks by friendsHaveCount DESC — a game two friends own outranks one only one owns', async () => {
+    const a = await registerUser();
+    const b = await registerUser();
+    const c = await registerUser();
+    await befriend(a.id, b.id);
+    await befriend(a.id, c.id);
+    const rpg = await genreIdByName(a.token, 'RPG');
+    const popularAmongFriends = (await createGame(b.token, { name: 'Two Friends Game', genreIds: [rpg] })).body;
+    const lessPopular = (await createGame(b.token, { name: 'One Friend Game', genreIds: [rpg] })).body;
+    await addToCollection(b.token, popularAmongFriends.id);
+    await addToCollection(c.token, popularAmongFriends.id);
+    await addToCollection(b.token, lessPopular.id);
+
+    const res = await request(app).get('/api/catalog/friends-active').set(authed(a.token));
+    const names = res.body.items.map((i: { name: string }) => i.name);
+    const twoIdx = names.indexOf('Two Friends Game');
+    const oneIdx = names.indexOf('One Friend Game');
+    expect(twoIdx).toBeGreaterThanOrEqual(0);
+    expect(oneIdx).toBeGreaterThan(twoIdx); // the 2-friend game ranks ABOVE the 1-friend game
+  });
+
+  it('SOC-09: a BLOCKED former friend’s owned games are severed by construction (friendScoped excludes them)', async () => {
+    const a = await registerUser();
+    const b = await registerUser();
+    await befriend(a.id, b.id);
+    const rpg = await genreIdByName(a.token, 'RPG');
+    const blockedGame = (await createGame(b.token, { name: 'Blocked Friend Game', genreIds: [rpg] })).body;
+    await addToCollection(b.token, blockedGame.id);
+
+    // Confirm it's visible BEFORE the block, then block severs the friendship (SOC-09).
+    const before = await request(app).get('/api/catalog/friends-active').set(authed(a.token));
+    expect(before.body.items.map((i: { name: string }) => i.name)).toContain('Blocked Friend Game');
+
+    await request(app).post('/api/me/blocks').set(authed(a.token)).send({ userId: b.id });
+
+    const after = await request(app).get('/api/catalog/friends-active').set(authed(a.token));
+    expect(after.body.items.map((i: { name: string }) => i.name)).not.toContain('Blocked Friend Game');
+  });
+
+  it('a caller with no friends → { items: [] }', async () => {
+    const a = await registerUser();
+    const res = await request(app).get('/api/catalog/friends-active').set(authed(a.token));
+    expect(res.status).toBe(200);
+    expect(res.body.items).toEqual([]);
   });
 });
 

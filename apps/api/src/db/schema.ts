@@ -1015,6 +1015,37 @@ export type NewAchievementDefinitionRow = typeof achievementDefinitions.$inferIn
 export type UserAchievementRow = typeof userAchievements.$inferSelect;
 export type NewUserAchievementRow = typeof userAchievements.$inferInsert;
 
+/**
+ * `reports` — MOD-01 report capture (M6 P7, decision 0076 §0.5). USER-OWNED (owner key = `reporter_id`).
+ * CAPTURE-ONLY at M6: no hide/queue write lands here (M7 owns the console read + the MOD-02/03/04
+ * writes). Deliberately NO foreign key on `target_id` — a report's target spans three different
+ * tables (`card_designs`/`games`/`users`, keyed by `target_type`), and this endpoint is designed to
+ * accept a report against an unknown/invisible target exactly like a real one (never an existence
+ * oracle, see report-service.ts) — an FK would 500/constrain on precisely the case this table must
+ * swallow silently. `reason` is the MOD-01 PINNED enum (validated per-target-type at the zod boundary,
+ * packages/shared); `details` is moderator-facing free text (nullable; required by zod where the
+ * reason demands specifics). `status` starts `'open'` — M7's console is the only future writer of it.
+ */
+export const reports = pgTable(
+  'reports',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    reporterId: uuid('reporter_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    targetType: text('target_type').notNull(), // 'card' | 'game' | 'user' (MOD-01)
+    targetId: uuid('target_id').notNull(), // NO FK — polymorphic target, capture-only (see above)
+    reason: text('reason').notNull(), // the MOD-01 PINNED per-target reason (zod-validated)
+    details: text('details'), // moderator-facing only; required where MOD-01 demands specifics
+    status: text('status').notNull().default('open'), // M7's console transitions this
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    reporterIdx: index('reports_reporter_idx').on(table.reporterId),
+    targetIdx: index('reports_target_idx').on(table.targetType, table.targetId),
+  }),
+);
+
 export type QueueItemRow = typeof queueItems.$inferSelect;
 export type NewQueueItemRow = typeof queueItems.$inferInsert;
 export type ListRow = typeof lists.$inferSelect;
@@ -1058,3 +1089,6 @@ export type DeviceLookRow = typeof deviceLooks.$inferSelect;
 export type GameGenreRow = typeof gameGenres.$inferSelect;
 export type CollectionEntryRow = typeof collectionEntries.$inferSelect;
 export type NewCollectionEntryRow = typeof collectionEntries.$inferInsert;
+
+export type ReportRow = typeof reports.$inferSelect;
+export type NewReportRow = typeof reports.$inferInsert;

@@ -11,6 +11,7 @@ import {
 import { mutation } from '../db/mutation';
 import type { Executor } from '../db/client';
 import { isUniqueViolation } from '../db/pg-errors';
+import { acquireActorLock } from '../db/locks';
 import * as collectionRepo from '../repositories/collection-repo';
 import * as catalogRepo from '../repositories/catalog-repo';
 import * as profileRepo from '../repositories/profile-repo';
@@ -355,10 +356,21 @@ export const removeEntry = mutation(
   },
 );
 
-/** @mutation — PATCH /me/collection/reorder (COL-07): a FULL permutation of the actor's shelf. */
+/**
+ * @mutation — PATCH /me/collection/reorder (COL-07): a FULL permutation of the actor's shelf. F36 — a
+ * per-actor advisory lock serializes concurrent reorders. This is the SAME structural gap
+ * queue-service.reorder (WTP-01) found and fixed first: `setPositions` issues N sequential row
+ * UPDATEs in the CALLER-CHOSEN order, so two concurrent reorders with DIFFERENT target orderings can
+ * acquire the same rows' locks in opposite sequences — a classic Postgres DEADLOCK, which Postgres
+ * resolves by aborting one transaction with an UNCAUGHT `deadlock_detected` (a raw 500). Flagged as a
+ * latent gap when queue-service.reorder was built (its own comment names this exact function as the
+ * unfixed sibling); this packet (M6 P7, COL-07 rider) replicates that fix here: the lock makes
+ * concurrent reorders fully serial (one whole ordering wins, never an interleave).
+ */
 export const reorder = mutation(
   { name: 'collection.reorder', specIds: ['COL-07', 'SYS-01', 'SYS-02'] },
   async (ctx, actorId, input: ReorderCollectionRequest): Promise<void> => {
+    await acquireActorLock(ctx.tx, 'collection:reorder', actorId);
     const ownedIds = await collectionRepo.listOwnedEntryIds(actorId, ctx.tx);
     const provided = new Set(input.orderedEntryIds);
     const isPermutation =

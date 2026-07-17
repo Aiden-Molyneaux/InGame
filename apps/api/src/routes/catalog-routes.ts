@@ -8,6 +8,8 @@ import {
   getGenres,
   searchCatalog,
   getPopular,
+  getUpcoming,
+  getFriendsActive,
   createGame,
   getFriendsWhoOwn,
 } from '../controllers/catalog-controller';
@@ -40,6 +42,29 @@ export const catalogRoutes: RouteDef[] = [
     crossPrincipal: false,
     specIds: ['CAT-09'],
     handler: [resolvePrincipal, asyncHandler(getPopular)],
+  }),
+  // GET /catalog/upcoming (CAT-08, M6 P7) — the search-result shape, future releaseDate only; the
+  // DISC-01/NOTIF-01 notify fields are M7 (0076 §0.8). No other principal's row data crosses (the
+  // aggregate CAT-09 counts + own-it flag only) — crossPrincipal:false, mirrors /catalog/popular.
+  defineRoute({
+    method: 'get',
+    path: '/catalog/upcoming',
+    mutates: false,
+    crossPrincipal: false,
+    specIds: ['CAT-08'],
+    handler: [resolvePrincipal, asyncHandler(getUpcoming)],
+  }),
+  // GET /catalog/friends-active (CAT-12, M6 P7, decision 0036/0076 §0.8) — the FRIENDS ARE PLAYING
+  // Add-Game rail. Rooted at the CALLER's own accepted-friend set (like /catalog/games/:id/
+  // friends-who-own above) — only aggregate friendsHaveCount + game rows cross, never a friend's
+  // identity, so this is kept crossPrincipal:false, consistent with that sibling route.
+  defineRoute({
+    method: 'get',
+    path: '/catalog/friends-active',
+    mutates: false,
+    crossPrincipal: false,
+    specIds: ['CAT-12', 'PROF-03', 'SOC-09'],
+    handler: [resolvePrincipal, asyncHandler(getFriendsActive)],
   }),
   // GET /catalog/games/:id/friends-who-own (CAT-09c) — the Game-page named friends-who-own list. Rooted
   // at the CALLER's own accepted-friend set (the friend-visible subset they are already entitled to, like

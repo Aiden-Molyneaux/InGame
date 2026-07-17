@@ -16,6 +16,10 @@ export default defineWorkspace([
         'tools/**/*.test.ts',
         'tools/**/*.test.mjs',
       ],
+      // AUTH-01 (decision 0076 §0.9) — the breach-check kill-switch, OFF here: breach-check.test.ts
+      // exercises checkPasswordBreached directly (with an injected fetchImpl per case) and flips this
+      // per-test where it needs to; nothing else in `unit` touches the network either way.
+      env: { BREACH_CHECK_ENABLED: 'false' },
     },
   },
   {
@@ -29,6 +33,13 @@ export default defineWorkspace([
       // One shared PG container across the integration files; the race/concurrency assertions fire
       // N parallel requests WITHIN a test, so file-level parallelism is unnecessary.
       fileParallelism: false,
+      // AUTH-01 (decision 0076 §0.9) — the SYS-04 kill-switch, OFF for the whole integration suite:
+      // every existing test's registerUser()/reset-confirm call would otherwise fire a REAL network
+      // request to the HIBP range API on every run (slow, flaky offline, and the packet brief is
+      // explicit that the real endpoint is never hit in tests). The breach-check module itself is unit
+      // -tested in isolation (apps/api/src/auth/breach-check.test.ts) with an injected fetchImpl —
+      // this flag only keeps the REST of the suite from depending on live network access.
+      env: { BREACH_CHECK_ENABLED: 'false' },
     },
   },
 ]);

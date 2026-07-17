@@ -181,8 +181,8 @@ export const removeItem = mutation(
  * DEADLOCK (A holds item1+item2 waiting on item3; B holds item3 waiting on item2), which Postgres
  * resolves by aborting one transaction with an UNCAUGHT `deadlock_detected` (a raw 500). The lock
  * makes concurrent reorders fully serial (one whole ordering wins, never an interleave) — discovered
- * writing this packet's F36 test; the sibling `collection-service.reorder` (COL-07) has the SAME
- * latent structural gap, unfixed here (out of this packet's scope — flagged for a follow-up).
+ * writing this packet's F36 test; the sibling `collection-service.reorder` (COL-07) had the SAME
+ * latent structural gap (flagged here as a follow-up) — fixed by M6 P7, which replicates this exact lock.
  */
 export const reorder = mutation(
   { name: 'queue.reorder', specIds: ['WTP-01', 'SYS-01', 'SYS-02'] },

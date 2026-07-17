@@ -148,6 +148,13 @@
       "when": 1784272499953,
       "tag": "0020_tranquil_giant_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1784276147877,
+      "tag": "0021_secret_skin",
+      "breakpoints": true
     }
   ]
 }

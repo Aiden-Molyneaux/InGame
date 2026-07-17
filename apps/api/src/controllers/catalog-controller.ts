@@ -25,6 +25,16 @@ export async function getPopular(req: Request, res: Response): Promise<void> {
   res.json(await catalogService.popular(actorOf(req)));
 }
 
+// GET /catalog/upcoming (CAT-08, M6 P7).
+export async function getUpcoming(req: Request, res: Response): Promise<void> {
+  res.json(await catalogService.upcoming(actorOf(req)));
+}
+
+// GET /catalog/friends-active (CAT-12, M6 P7).
+export async function getFriendsActive(req: Request, res: Response): Promise<void> {
+  res.json(await catalogService.friendsActive(actorOf(req)));
+}
+
 export async function createGame(req: Request, res: Response): Promise<void> {
   const item = await catalogService.createGame(actorOf(req), req.validated as CreateGameRequest);
   res.status(201).json(item);

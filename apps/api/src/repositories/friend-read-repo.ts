@@ -212,6 +212,33 @@ export interface FriendCohortTotals {
  * appears (LEFT JOIN → 0/0). Blocked users are absent by construction (a block severs the friendship,
  * so friendScoped finds no accepted bond — SOC-09). Deleted friends excluded (OQ-145 collapse).
  */
+// ── P7 — the CAT-12 "FRIENDS ARE PLAYING" candidate pool (Add Game rail) ─────────────────────────────
+
+/**
+ * CAT-12 (M6 P7, decision 0036/0076 §0.8) — per-game counts of how many of the ACTOR's accepted
+ * friends own each game, over the actor's WHOLE friend cohort (unlike collectionRepo.
+ * friendsHaveCountByGame, which is scoped to a caller-given `gameIds` set — SYS-01-COMMUNITY-AGGREGATE
+ * — this is the FRIEND-READ class: it reads a friend's owned-games rows directly rather than an
+ * aggregate over an already-known set). Only `{ gameId, count }` crosses this boundary (never a
+ * friend's identity) — but the underlying join is still a cross-user ROW read gated by an accepted
+ * friendship (0076 §0.1), so it belongs here, not the aggregate helper. The service (catalog-service.
+ * friendsActive) excludes the actor's own games, ranks by count desc, and caps ~12.
+ */
+export async function friendsActiveGameCounts(
+  actorId: string,
+  exec: Executor = getDb(),
+): Promise<Map<string, number>> {
+  // SYS-01-FRIEND-READ — friendScoped binds actor↔each collection_entries owner (an accepted friend);
+  // only { gameId, count } crosses (never the friend's identity/row). Strip friendScoped → every
+  // user's owned-games list leaks, not just the actor's friends'.
+  const rows = await exec
+    .select({ gameId: collectionEntries.gameId, n: count() })
+    .from(collectionEntries)
+    .innerJoin(friendships, friendScoped(actorId, collectionEntries.userId))
+    .groupBy(collectionEntries.gameId);
+  return new Map(rows.map((r) => [r.gameId, Number(r.n)]));
+}
+
 export async function friendCohortTotals(
   actorId: string,
   exec: Executor = getDb(),

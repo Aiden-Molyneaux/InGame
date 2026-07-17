@@ -348,6 +348,40 @@ describe('COL-07: PATCH /me/collection/reorder — the manual order', () => {
     const shelf = await getCollection(a.token);
     expect(shelf.body.items.map((i: { entryId: string }) => i.entryId)).toEqual([e1, e2]);
   });
+
+  it('F36 (M6 P7): concurrent full-permutation reorders → both succeed serially, one consistent final order, no deadlock', async () => {
+    // The queue-service.reorder precedent (WTP-01, decision 0076): `setPositions` issues N sequential
+    // row UPDATEs in the caller-chosen order, so two concurrent reorders with DIFFERENT target
+    // orderings can lock the same rows in opposite sequences — a Postgres deadlock (uncaught
+    // `deadlock_detected`, a raw 500) absent a per-actor advisory lock serializing the critical
+    // section. This proves the collection-service.reorder fix (acquireActorLock('collection:reorder')).
+    const a = await registerUser();
+    // dedupOverride: true — these fixture names are deliberately near-duplicate-shaped (shared
+    // "Reorder Race …" wording would otherwise 409 on CAT-03's near-dup guard); unrelated to this test.
+    const g1 = await seedGame(a.token, 'Reorder Race First', { dedupOverride: true });
+    const g2 = await seedGame(a.token, 'Reorder Race Second', { dedupOverride: true });
+    const g3 = await seedGame(a.token, 'Reorder Race Third', { dedupOverride: true });
+    const e1 = (await addEntry(a.token, g1.id)).body.entryId;
+    const e2 = (await addEntry(a.token, g2.id)).body.entryId;
+    const e3 = (await addEntry(a.token, g3.id)).body.entryId;
+
+    const orderA = [e1, e2, e3];
+    const orderB = [e3, e2, e1];
+    const [rA, rB] = await Promise.all([
+      request(app).patch('/api/me/collection/reorder').set(authed(a.token)).send({ orderedEntryIds: orderA }),
+      request(app).patch('/api/me/collection/reorder').set(authed(a.token)).send({ orderedEntryIds: orderB }),
+    ]);
+    // Neither call may fail with a raw 500 (the deadlock signature) — both resolve (one may in
+    // principle lose a benign race to the other's exact final state, but never crash uncaught).
+    expect(rA.status).toBe(200);
+    expect(rB.status).toBe(200);
+
+    const shelf = await getCollection(a.token);
+    const finalOrder = shelf.body.items.map((i: { entryId: string }) => i.entryId);
+    // The final order is ONE of the two whole orderings that was submitted — never an interleave —
+    // and it's still exactly the actor's 3 entries (no duplicate/missing rows).
+    expect([orderA, orderB]).toContainEqual(finalOrder);
+  });
 });
 
 describe('WTP-03: PUT /me/now-playing — the single pin', () => {

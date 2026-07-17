@@ -21,6 +21,7 @@ import * as suspensionRepo from '../repositories/suspension-repo';
 import * as profileRepo from '../repositories/profile-repo';
 import { isUniqueViolation } from '../db/pg-errors';
 import { argon2Hasher } from '../auth/password';
+import { checkPasswordBreached } from '../auth/breach-check';
 import { signAccessToken, generateOpaqueToken, hashOpaqueToken } from '../auth/tokens';
 import { stubAppleVerifier, type AppleTokenVerifier } from '../auth/apple-verifier';
 import { stubEmailer } from '../auth/email';
@@ -61,6 +62,26 @@ function suspended(s: UserSuspensionRow): AccountSuspendedError {
   return new AccountSuspendedError(s.reason, s.endsAt ? s.endsAt.toISOString() : null);
 }
 
+/**
+ * AUTH-01 (decision 0076 §0.9) — the HIBP k-anonymity breach check, shared by register + the
+ * password-reset confirm (the two paths that set a password on record). Runs BEFORE the slow argon2
+ * hash (fail fast on a known-breached password) and BEFORE any transaction opens (a network call must
+ * never hold a tx). FAIL-OPEN by construction (checkPasswordBreached never throws — a skipped check
+ * resolves `breached: false`), so this never blocks register/reset on a provider outage. A genuine hit
+ * surfaces the SAME field-targeted 422 shape the sibling register rejections use (email_taken /
+ * username_taken) — a named `reason` + a `path: 'password'` detail (api-contract B1).
+ */
+async function assertPasswordNotBreached(password: string): Promise<void> {
+  const result = await checkPasswordBreached(password);
+  if (result.breached) {
+    throw new ValidationError(
+      'That password has appeared in a known data breach — please choose a different one.',
+      'password_breached',
+      [{ path: 'password', message: 'That password has appeared in a known data breach.' }],
+    );
+  }
+}
+
 // ── AUTH-01 register ────────────────────────────────────────────────────────────────────────────
 export async function register(input: RegisterRequest): Promise<AuthSession> {
   const email = input.email.toLowerCase();
@@ -69,6 +90,8 @@ export async function register(input: RegisterRequest): Promise<AuthSession> {
       { path: 'username', message: 'That username isn’t allowed.' },
     ]);
   }
+  // AUTH-01 (decision 0076 §0.9) — the HIBP breach check, before the slow hash + before any tx.
+  await assertPasswordNotBreached(input.password);
   // Hash BEFORE opening the transaction (argon2 is deliberately slow — never hold a tx during it).
   const passwordHash = await argon2Hasher.hash(input.password);
 
@@ -241,6 +264,9 @@ export async function requestPasswordReset(input: PasswordResetRequest): Promise
 
 export async function confirmPasswordReset(input: PasswordResetConfirm): Promise<void> {
   const tokenHash = hashOpaqueToken(input.token);
+  // AUTH-01 (decision 0076 §0.9) — same breach check as register (a reset IS setting a new password;
+  // api-contract has no separate "change password" endpoint at M6, so this IS the "password change" path).
+  await assertPasswordNotBreached(input.password);
   const passwordHash = await argon2Hasher.hash(input.password); // before the tx
   await withTransaction(async (tx) => {
     const row = await authTokenRepo.findByHash(tokenHash, tx);

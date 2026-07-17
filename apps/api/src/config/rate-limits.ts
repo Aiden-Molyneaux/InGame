@@ -77,6 +77,10 @@ const DEFAULTS: Record<string, RateLimitRule> = {
   // (60/min — ample for a real drag-reorder/add burst; the only way past it is a scripted client).
   'queue:write': { limit: 60, windowMs: 60_000 },
   'lists:write': { limit: 60, windowMs: 60_000 },
+  // M6 P7 report capture (decision 0076 §0.7 — MOD-01). The reporter-cap half of OQ-093 (dedupe stays
+  // M7). 10/day is ample for a real user filing several genuine reports; a scripted flooder is the
+  // only way past it.
+  'reports:create': { limit: 10, windowMs: 24 * 60 * 60_000 },
 };
 
 const overrides = new Map<string, RateLimitRule>();
