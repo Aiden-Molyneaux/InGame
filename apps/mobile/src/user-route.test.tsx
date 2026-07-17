@@ -32,9 +32,19 @@ jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush, back: mockBack, replace: jest.fn(), navigate: jest.fn() }),
   useLocalSearchParams: () => ({ id: 'friend-1111-1111-1111-111111111111' }),
 }));
+// Stub EntryCard (the Top-3 seats + the NOW PLAYING thumb) — skip the CardFace render; this suite
+// tests the screen's shape/state logic, not the card face (EntryCard has its own test).
+jest.mock('./components/EntryCard', () => ({
+  EntryCard: ({ title }: { title: string }) => {
+    const { Text } = require('react-native');
+    return <Text>{`CARD:${title}`}</Text>;
+  },
+}));
 
 import UserProfile from '../app/user/[id]';
 
+// P9 fix-round — `privacy` DROPPED (F-16/0055: neither cross-user shape exposes the target's privacy
+// value; 735f9b3) + the C4 trio added (stats · device · nowPlaying, 5db4fe2). Realistic values.
 const FRIEND: FriendProfile = {
   id: 'friend-1111-1111-1111-111111111111',
   username: 'riko',
@@ -44,11 +54,30 @@ const FRIEND: FriendProfile = {
   relationship: 'friend',
   staff: true,
   bio: 'Survival-horror cartographer.',
-  privacy: 'friends',
   favouriteGenreIds: [],
   gamertags: [],
   friendsCount: 14,
   top10: [], // P8: absorbs the concurrent P5 server-track FriendProfile.top10 addition (keeps typecheck green)
+  stats: { games: 86, hours: 2400, completionPct: 71, cardsDesigned: 31, adoptionsReceived: 412, friends: 14 },
+  device: {
+    shellId: 'grape', // the C4 wire name (`shellId`, NOT /me/device's `activeShellId`)
+    screenThemeId: 'midnight',
+    stickerComposition: { version: 1, stickers: [] },
+  },
+  nowPlaying: {
+    gameId: 'g-np-1',
+    title: 'Resident Evil',
+    hours: 24,
+    card: { id: 'c-np', imageUrl: null, thumbUrl: null, isCustom: false, isPremium: false },
+  },
+};
+
+// The null-trio variant — the schema keeps all three nullable; each row must render NOTHING, quietly.
+const FRIEND_NULL_TRIO: FriendProfile = {
+  ...FRIEND,
+  stats: null,
+  device: null,
+  nowPlaying: null,
 };
 
 const LIMITED: PublicProfile = {
@@ -104,6 +133,47 @@ describe('P9 friend-profile route — the shape matrix', () => {
     render(wrap(<UserProfile />));
     fireEvent.press(screen.getByText('COMPARE HOURS'));
     expect(mockPush).toHaveBeenCalledWith('/compare/friend-1111-1111-1111-111111111111');
+  });
+
+  it('C4 trio — STATS tiles render the six-pack (percentile chips absent, M7)', () => {
+    set({ data: FRIEND });
+    render(wrap(<UserProfile />));
+    expect(screen.getByText('STATS')).toBeTruthy();
+    expect(screen.getByText('86')).toBeTruthy(); // games
+    expect(screen.getByText('2,400h')).toBeTruthy(); // hours
+    expect(screen.getByText('71%')).toBeTruthy(); // completion
+    expect(screen.getByText('412')).toBeTruthy(); // adoptionsReceived (real, un-zeroed — 735f9b3)
+    expect(screen.queryByText(/TOP \d+%/)).toBeNull(); // PROF-07 chips absent, not faked
+  });
+
+  it('C4 trio — THEIR DEVICE renders the {shell · theme} readout (read-only; no EDIT, toggle EXPECTED)', () => {
+    set({ data: FRIEND });
+    render(wrap(<UserProfile />));
+    expect(screen.getByText('THEIR DEVICE')).toBeTruthy();
+    expect(screen.getByText('POCKET · GRAPE')).toBeTruthy(); // wire `shellId` resolved
+    expect(screen.getByText('MIDNIGHT SCREEN')).toBeTruthy(); // 0 stickers → no sticker segment
+    expect(screen.queryByText('EDIT')).toBeNull(); // their device is not editable
+    expect(screen.queryByText('VIEW IN THEIRS')).toBeNull(); // the 0012 chrome toggle — EXPECTED, not half-built
+  });
+
+  it('C4 trio — NOW PLAYING renders the pin (thumb + title + hours) and taps into the SOC-11 detail', () => {
+    set({ data: FRIEND });
+    render(wrap(<UserProfile />));
+    expect(screen.getByText('NOW PLAYING')).toBeTruthy();
+    expect(screen.getByText('RESIDENT EVIL')).toBeTruthy();
+    expect(screen.getByText('24 HRS LOGGED')).toBeTruthy();
+    fireEvent.press(screen.getByLabelText('Open Resident Evil'));
+    expect(mockPush).toHaveBeenCalledWith('/user/friend-1111-1111-1111-111111111111/entry/g-np-1');
+  });
+
+  it('C4 trio — a null trio renders NOTHING for all three rows, quietly (null-guards)', () => {
+    set({ data: FRIEND_NULL_TRIO });
+    render(wrap(<UserProfile />));
+    expect(screen.queryByText('STATS')).toBeNull();
+    expect(screen.queryByText('THEIR DEVICE')).toBeNull();
+    expect(screen.queryByText('NOW PLAYING')).toBeNull();
+    // the rest of the friend view is untouched
+    expect(screen.getByText('VIEW COLLECTION')).toBeTruthy();
   });
 
   it('limited (non-friend) → FRIENDS ONLY lock-well + ADD FRIEND; no doors', () => {

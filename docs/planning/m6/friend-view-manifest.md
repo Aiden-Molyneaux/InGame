@@ -38,10 +38,12 @@
 | VIEW COLLECTION door | board tools `VIEW COLLECTION` | **OWED** | friend-only → `/user/[id]/collection`. Absent on the limited shape. |
 | COMPARE action | board tools `COMPARE` | **OWED** | friend-only → `/compare/[id]`. Absent on the limited shape. |
 | staff badge | board `STAFF` roletag | **OWED** | generic STAFF via IdentityBlock `staff` (PROF-09 — tier never disclosed). |
-| stats (games/hours/completion/cards/adoptions) | board STATS 6-tile | **EXPECTED(P5/P6)** | `/users/:id` does NOT yet serve the stat block / percentiles (P5 pending). Rendered as a single quiet "Their full stats, top games, device & achievements arrive with the rest of the profile read" note — NOT faked. Only friendsCount/mutualFriendsCount (which ARE served) render, in the identity sub-line. |
-| Top-3 / VIEW TOP 10 | board TOP 3 | **EXPECTED(P5)** | top10 not served → absent w/ the consolidated cite. |
-| achievements teaser | board ACHIEVEMENTS row | **EXPECTED(P6)** | not served → absent. |
-| device row + "view in theirs" | board THEIR DEVICE + toggle (decision 0012) | **EXPECTED(P5/P6)** | `/users/:id` device payload not served → absent; the chrome-toggle can't re-theme without it. |
+| stats (games/hours/completion/cards/adoptions/friends) | board STATS 6-tile | **BUILT (fix-round)** | the C4 `stats` payload (5db4fe2) → the self-profile tile grammar (panel cells, boxless StatTile). PROF-07 percentile chips stay ABSENT (M7 ranking engine — omitted, not faked). Null-guarded. |
+| Top-3 / VIEW TOP 10 | board TOP 3 | **BUILT (P5+P10 lanes)** | `top10` now on the friend shape; the Top-3 seats + VIEW TOP 10 door render (tap → their Collection TOP focused). |
+| achievements teaser | board ACHIEVEMENTS row | **BUILT (P11 lane)** | earned-count row off `/users/:id/achievements` → their trophy case. |
+| device row | board THEIR DEVICE (decision 0012) | **BUILT (fix-round)** | the C4 `device` payload → MiniDevice thumb + the {shell · theme · stickers} `deviceStripCopy` readout. **Wire name is `shellId`** (NOT /me/device's `activeShellId`). Read-only — no EDIT keycap. Null-guarded. |
+| "view in their device" chrome toggle | board VIEW IN THEIRS (decision 0012) | **EXPECTED** | decision 0012 makes the toggle a chrome TAKEOVER: it re-skins the whole DeviceShell (shell + screen theme + an exit-band "VIEWING IN {NAME}'S DEVICE · EXIT ✕") and CARRIES OVER into their Collection — cross-screen override state with an explicit exit affordance, clearly more than a row+toggle. Per the fix-round ruling: the readout row is built honestly; the takeover is not half-built. The data (shellId/screenThemeId/stickerComposition) is now served, so the takeover is purely a client lift when scheduled (the root ThemeOverrideContext/StoreThemePreview subtree-override machinery is the natural seam). |
+| now-playing row | board NOW PLAYING strip | **BUILT (fix-round)** | the C4 `nowPlaying` payload (flattened card, no entryId) → EntryCard thumb + title + hours; tap → the SOC-11 entry detail. Null (no pin) → absent, quietly. |
 | privacy-limited (non-friend) | profile "Privacy-limited" | **OWED** | identity (avatar/name/member-since/mutuals) + a FRIENDS-ONLY lock-well + **ADD FRIEND** (the one action) + Report/Block in ⋯. No VIEW COLLECTION / COMPARE. |
 | unavailable (blocked/suspended/deleted/unknown) | profile "unavailable" | **OWED** | the ONE generic `Unavailable` (MOD-09) on a `404`. No RETRY. |
 | your-own-block "UNBLOCK" | profile "unavailable — your own block" | **GAP/EXPECTED** | the server collapses blocked to the SAME generic 404 (MOD-09 non-disclosure) — the client cannot distinguish "you blocked them" from "suspended" from `/users/:id` alone. The UNBLOCK affordance lives in **Settings → Blocked** (P12, built). Cross-referencing `/me/blocks` to special-case this one state is deferred (noted). |
@@ -82,16 +84,16 @@
 | catalog facts / presence / suggest-edit | M5 ABOUT rest | **EXPECTED(later)** | the aggregate game-detail read (facts/chips/PresenceStats/suggest-edit) is not built (needs the game-detail endpoint) — the existing ABOUT placeholder note stays for those; only friendsWhoOwn goes live now. |
 
 ## ASSUMPTIONS
-- **AS-1** — the friend-profile STATS block: since `/users/:id` serves no stat payload at M6, the 6-tile board block is rendered as a single consolidated EXPECTED note rather than 6 empty tiles or faked zeros. Cheaper to read, honest, and self-corrects when P5 widens the shape.
+- **AS-1 — SUPERSEDED (P9 fix-round, 2026-07-17).** The C4 server commits (5db4fe2 + 735f9b3) widened the friend/full shape with the trio (`stats` · `device` · `nowPlaying`, all nullable) and DROPPED the stray `privacy` field (F-16/0055). The consolidated EXPECTED note is retired; the three board rows render live (null-guarded). The only remaining absence on the stats block is the PROF-07 percentile chips (M7) — a one-line residual note stands in. |
 - **AS-2** — `/user/[id]` + `/compare/[friendId]` render the **FRIENDS** nav pip active (per the compare + friend boards). FRIENDS is not yet a routable tab (P8) so the keycap stays inert; the pip lights to place the screen in its cluster. Collection/Profile/Store keys still navigate.
 - **AS-3** — the SOC-11 single-game compare fragment uses `percentComplete` from MY entry only (the friend shape omits theirs, decision 0026) — the "DONE" axis shows "— " on their side, matching the M7 board (`68% vs —`).
 - **AS-4** — the friend-collection TOP view is a **view-mode stub** (EXPECTED P5), not the hours-sorted placeholder the owner TOP once used — faking a curation cross-user would misrepresent their choices.
 
 ## GAPs (server / later)
-- **GAP-1 (P5)** — `/users/:id` friend/full shape does not yet carry stats/percentiles/top10/device/now-playing/achievements-teaser. Friend profile renders those EXPECTED. Where: `apps/api` users serializer + `friendProfileSchema`.
-- **GAP-2 (P6)** — achievements teaser + showcase (ACH-05) not served → EXPECTED on the profile.
+- **GAP-1 — CLOSED (fix-round).** The friend/full shape now carries stats/top10/device/nowPlaying (5db4fe2); rendered. Percentile chips remain M7 (the ranking engine).
+- **GAP-2 — CLOSED (P11 lane).** The achievements teaser reads `/users/:id/achievements` and renders.
 - **GAP-3 (P8)** — the `incoming` relationship's ACCEPT lives in the Friends-tab requests inbox (P8). The friend profile only shows an incoming-hint, not an accept button (the transition target `requestId` isn't on `/users/:id`). Where: P8 `app/(tabs)` friends + `RequestRow`.
-- **GAP-4 (decision 0012)** — "view in their device" chrome toggle needs the friend device payload (not served, GAP-1) → EXPECTED on both profile + collection.
+- **GAP-4 (decision 0012)** — the "view in their device" chrome toggle: the DATA half is now closed (the C4 `device` payload); the TAKEOVER half (DeviceShell re-skin + exit-band + Collection carry-over) stays EXPECTED — see the toggle row above for the ruling + the ThemeOverrideContext seam.
 - **GAP-5 (MOD-09)** — the "you blocked them → UNBLOCK" profile variant can't be distinguished from the generic unavailable via `/users/:id` alone; the unblock affordance is in Settings→Blocked (P12). Optional future: cross-ref `/me/blocks`.
 
 ## BOOT (browser :8082, real taps — the runbook lessons)

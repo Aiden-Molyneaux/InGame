@@ -2,12 +2,17 @@ import { useRef, useState, type ReactNode } from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import type { FriendProfile } from '@ingame/shared';
 import type { CreateReportRequest } from '../../src/store/reportApi';
 import { IdentityBlock } from '../../src/components/IdentityBlock';
 import { EntryCard } from '../../src/components/EntryCard';
 import { RankChip } from '../../src/components/RankChip';
 import { ScreenButton } from '../../src/components/ScreenButton';
+import { StatTile } from '../../src/components/StatTile';
+import { MiniDevice } from '../../src/components/MiniDevice';
 import { TertiaryLink } from '../../src/components/TertiaryLink';
+import { SHELL_NAMES, SCREEN_THEME_NAMES, resolveShellId, resolveScreenThemeId } from '../../src/theme/palettes';
+import { deviceStripCopy } from '../../src/components/device/deviceCopy';
 import { RelationshipAction } from '../../src/components/social/RelationshipAction';
 import { ReportSheet, type ReportActionOutcome, type ReportTarget } from '../../src/components/report/ReportSheet';
 import { Skeleton } from '../../src/components/lifecycle/Skeleton';
@@ -23,9 +28,10 @@ import { useBlockUserMutation } from '../../src/store/communityApi';
 // social read of a person: identity + relationship action (LIVE ADD FRIEND) + the doors into their world
 // (VIEW COLLECTION · COMPARE) + safety in the ⋯ overflow (Report/Block — the P12-EXPECTED user-report
 // entry point, now wired). Two shapes off `/users/:id` (ARCH A1): friend/full vs non-friend/limited; a
-// blocked/suspended/deleted/unknown target → the ONE generic Unavailable (MOD-09). The board's STATS /
-// TOP-3 / DEVICE / ACHIEVEMENTS sections need the P5/P6 profile-read widening (not served yet) — rendered
-// as a single honest EXPECTED note, never faked (manifest GAP-1/2/4). Nav pip: FRIENDS (board grammar).
+// blocked/suspended/deleted/unknown target → the ONE generic Unavailable (MOD-09). FULL board coverage as
+// of the P9 fix-round: STATS six-pack + THEIR-DEVICE readout + NOW-PLAYING (the C4 trio, null-guarded) +
+// TOP-3 door (P5 top10) + ACHIEVEMENTS teaser (P11). Still absent, honestly: PROF-07 percentile chips
+// (M7) + the decision-0012 chrome TOGGLE (a takeover, not a row control — manifest). Nav pip: FRIENDS.
 export default function UserProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -139,6 +145,19 @@ export default function UserProfile() {
             />
           </View>
 
+          {/* THEIR DEVICE (DEV-02/04 · decision 0012 · P9 fix-round) — the {shell · theme · stickers}
+              readout off the C4 `device` payload (wire name `shellId`, not /me/device's `activeShellId`).
+              Read-only: their device isn't editable, so no EDIT keycap (the self-profile's affordance).
+              The "view in their device" chrome TOGGLE stays EXPECTED — decision 0012 makes it a chrome
+              TAKEOVER (re-skins the whole DeviceShell + an exit-band + carries over into their Collection),
+              which is more than a row+toggle; render the readout honestly, don't half-build the takeover. */}
+          <FriendDeviceRow device={data.device} />
+
+          {/* STATS (PROF-04 six-pack for the target · P9 fix-round) — the self-profile tile grammar over
+              the C4 `stats` payload. PROF-07 percentile chips stay ABSENT (threshold-gated; the cohort/
+              percentile engine rides M7 — omitted, not faked). */}
+          <FriendStats stats={data.stats} />
+
           {/* COL-13 (decision 0050 §C) — the friend Top-3 set-pieces + VIEW TOP 10 door. The friend/full
               read now serves top10 (P5 live). A card tap → their Collection TOP view FOCUSED on that game;
               VIEW TOP 10 → their Collection TOP view. Empty top10 → the door is absent. */}
@@ -168,6 +187,10 @@ export default function UserProfile() {
             </View>
           ) : null}
 
+          {/* NOW PLAYING (WTP-03 · P9 fix-round) — the friend's pin off the C4 `nowPlaying` payload
+              (flattened card, no entryId). Tap → the SOC-11 entry detail. Null (no pin) → absent. */}
+          <FriendNowPlaying nowPlaying={data.nowPlaying} onOpen={(gameId) => router.push(`/user/${data.id}/entry/${gameId}`)} />
+
           {/* ACHIEVEMENTS teaser (ACH-05 · P11) — the earned count off /users/:id/achievements, a door
               into their trophy case (P3 earned-only / P4 privacy-limited). Replaces the old EXPECTED
               note for achievements (now live). */}
@@ -187,13 +210,9 @@ export default function UserProfile() {
             </Pressable>
           </View>
 
-          {/* the remaining board sections (STATS / DEVICE) need the P5/P6 profile-read widening — served
-              EXPECTED-empty, never faked (manifest GAP-1/2). */}
-          <View style={styles.expected}>
-            <Text style={styles.expectedText}>
-              Their stats and device arrive with the rest of the profile read.
-            </Text>
-          </View>
+          {/* AS-1 RETIRED (P9 fix-round) — stats/device/nowPlaying are served + rendered above. The one
+              remaining absence: PROF-07 percentile chips on the stat tiles (the M7 ranking engine). */}
+          <Text style={styles.residual}>Percentile standings arrive with a later update.</Text>
         </>
       ) : (
         // non-friend / limited (PROF-03): the FRIENDS-ONLY lock-well. ADD FRIEND is the RelationshipAction
@@ -242,6 +261,89 @@ function LockWell({ username }: { username: string }) {
         {username} shares their collection, stats, Top 10 and Now Playing with friends. Send a request to
         see them.
       </Text>
+    </View>
+  );
+}
+
+// ── the C4 trio (P9 fix-round) — each NULL-GUARDED: a null payload renders nothing, quietly ─────────
+
+// THEIR DEVICE — the MiniDevice thumb + the {shell · theme · stickers} readout (the self-profile strip
+// grammar, read-only). The chrome toggle is EXPECTED (decision 0012 — a takeover, not a row control).
+function FriendDeviceRow({ device }: { device: FriendProfile['device'] }) {
+  const styles = useStyles();
+  if (!device) return null;
+  const shell = resolveShellId(device.shellId); // wire name `shellId` (C4), not /me/device's `activeShellId`
+  const theme = resolveScreenThemeId(device.screenThemeId);
+  const copy = deviceStripCopy(SHELL_NAMES[shell], SCREEN_THEME_NAMES[theme], device.stickerComposition.stickers.length);
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionHead}>THEIR DEVICE</Text>
+      <View style={styles.devRow}>
+        <MiniDevice shellId={shell} themeId={theme} />
+        <View style={styles.devMeta}>
+          <Text style={styles.devTitle}>{copy.title}</Text>
+          <Text style={styles.devSub}>{copy.sub}</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+// STATS — the PROF-04 six-pack in the self-profile tile grammar (panel cells, boxless StatTile).
+// Percentile chips (PROF-07) are absent from the payload → absent here (M7, omitted not faked).
+function FriendStats({ stats }: { stats: FriendProfile['stats'] }) {
+  const styles = useStyles();
+  if (!stats) return null;
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionHead}>STATS</Text>
+      <View style={styles.stats}>
+        <StatCell value={stats.games} label="Games" />
+        <StatCell value={`${fmt(stats.hours)}h`} label="Hours" />
+        <StatCell value={`${stats.completionPct}%`} label="Complete" />
+        <StatCell value={stats.cardsDesigned} label="Cards" />
+        <StatCell value={stats.adoptionsReceived} label="Adoptions" />
+        <StatCell value={stats.friends} label="Friends" />
+      </View>
+    </View>
+  );
+}
+
+function StatCell({ value, label }: { value: string | number; label: string }) {
+  const styles = useStyles();
+  return (
+    <View style={styles.statCell}>
+      <StatTile value={value} label={label} />
+    </View>
+  );
+}
+
+// NOW PLAYING — their pin (flattened card; no entryId on the wire). Tap → the SOC-11 entry detail.
+function FriendNowPlaying({
+  nowPlaying,
+  onOpen,
+}: {
+  nowPlaying: FriendProfile['nowPlaying'];
+  onOpen: (gameId: string) => void;
+}) {
+  const styles = useStyles();
+  if (!nowPlaying) return null;
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionHead}>NOW PLAYING</Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Open ${nowPlaying.title}`}
+        onPress={() => onOpen(nowPlaying.gameId)}
+        style={({ pressed }) => [styles.nowRow, pressed && { opacity: 0.82 }]}
+      >
+        <EntryCard title={nowPlaying.title} card={{ imageUrl: nowPlaying.card.imageUrl }} size="cell" nowPlaying />
+        <View style={styles.nowMeta}>
+          <Text style={styles.nowTitle} numberOfLines={1}>{nowPlaying.title.toUpperCase()}</Text>
+          <Text style={styles.nowSub}>{fmt(nowPlaying.hours)} HRS LOGGED</Text>
+        </View>
+        <Text style={styles.chev}>›</Text>
+      </Pressable>
     </View>
   );
 }
@@ -316,13 +418,31 @@ const useStyles = themedStyles((t) => ({
   sectionHead: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.dim, letterSpacing: 1.5 },
   top3: { flexDirection: 'row', gap: t.space.lg, justifyContent: 'flex-start' },
   topSeat: { gap: t.space.sm, alignItems: 'center' },
-  expected: {
-    borderWidth: 1,
-    borderColor: t.scr.hairline,
+  // P9 fix-round — the C4 trio (the self-profile grammars, read-only)
+  stats: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.md },
+  statCell: {
+    flexBasis: '31%',
+    flexGrow: 1,
+    alignItems: 'center',
+    backgroundColor: t.scr.panel,
+    paddingVertical: t.space.md,
+    paddingHorizontal: t.space.sm,
+  },
+  devRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: t.space.lg,
     backgroundColor: t.scr.panel,
     padding: t.space.lg,
   },
-  expectedText: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.3, lineHeight: 14 },
+  devMeta: { flex: 1, gap: 2 },
+  devTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5 },
+  devSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
+  nowRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.lg, backgroundColor: t.scr.panel, padding: t.space.lg },
+  nowMeta: { flex: 1, gap: 2 },
+  nowTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5 },
+  nowSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 1 },
+  residual: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.3, textAlign: 'center' },
   achRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: t.scr.panel, padding: t.space.lg },
   achCount: { flex: 1, fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5 },
   chev: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.faint },
