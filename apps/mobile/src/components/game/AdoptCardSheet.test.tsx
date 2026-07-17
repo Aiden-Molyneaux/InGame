@@ -41,6 +41,7 @@ function renderSheet(over: Partial<React.ComponentProps<typeof AdoptCardSheet>> 
     onTopUp: jest.fn(),
     onShare: jest.fn(),
     onBlock: jest.fn(),
+    onViewContributor: jest.fn(),
     ...over,
   };
   render(wrap(<AdoptCardSheet {...props} />));
@@ -164,12 +165,15 @@ describe('AdoptCardSheet (P8 · SOC-11 · M5 F-9 E1 — the styler-buy anatomy)'
     expect(onBlock).toHaveBeenCalledTimes(1);
   });
 
-  it('F-13 E8 — a QUICK tap on the designer credit opens block (no long-press)', () => {
+  it('P13 (E8a) — tapping the designer credit routes to their contributor profile (block moved to ⋯)', () => {
+    const onViewContributor = jest.fn();
     const onBlock = jest.fn();
-    renderSheet({ onBlock });
-    // the credit itself is now a quick-press block affordance
+    renderSheet({ onViewContributor, onBlock });
+    // the credit itself now opens the contributor profile (the app-wide designer-tap convention);
+    // block stays on the ⋯ overflow.
     fireEvent.press(screen.getByLabelText('Designed by rival_curator'));
-    expect(onBlock).toHaveBeenCalled();
+    expect(onViewContributor).toHaveBeenCalledWith(PRICED.designer.userId);
+    expect(onBlock).not.toHaveBeenCalled();
   });
 
   it('F-13 E8 — your OWN card reads "BY YOU", offers NO block on yourself (self-tap)', () => {

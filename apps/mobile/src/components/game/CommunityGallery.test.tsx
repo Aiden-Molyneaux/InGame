@@ -50,7 +50,7 @@ describe('CommunityGallery (§9)', () => {
 
   it('renders the roster with personalized chips (FREE at 0, PX otherwise) and adoption counts', () => {
     mockUseGallery.mockReturnValue({ data: { items: [FREE_CARD, PRICED_CARD] }, isLoading: false, isError: false });
-    render(wrap(<CommunityGallery gameId="g1" onInspect={jest.fn()} onDesignACard={jest.fn()} />));
+    render(wrap(<CommunityGallery gameId="g1" onInspect={jest.fn()} onDesignACard={jest.fn()} onViewDesigner={jest.fn()} />));
 
     expect(screen.getByText('COMMUNITY CARDS — 2')).toBeTruthy();
     // free card → FREE chip; priced card → the PX value on the PriceChip
@@ -66,7 +66,7 @@ describe('CommunityGallery (§9)', () => {
   it('F-13 E4 — marks the caller\'s OWN card "BY YOU" + "YOURS" (no price, no designer name)', () => {
     const mine: GalleryCardView = { ...PRICED_CARD, byViewer: true };
     mockUseGallery.mockReturnValue({ data: { items: [mine] }, isLoading: false, isError: false });
-    render(wrap(<CommunityGallery gameId="g1" onInspect={jest.fn()} onDesignACard={jest.fn()} />));
+    render(wrap(<CommunityGallery gameId="g1" onInspect={jest.fn()} onDesignACard={jest.fn()} onViewDesigner={jest.fn()} />));
     expect(screen.getByText('BY YOU')).toBeTruthy();
     expect(screen.getByText('YOURS')).toBeTruthy();
     // provenance wins over price — no PriceChip / FREE chip on your own card
@@ -77,7 +77,7 @@ describe('CommunityGallery (§9)', () => {
   it('F-13 E4 — marks an ALREADY-ADOPTED card "ADOPTED" in place of a price', () => {
     const mineAdopted: GalleryCardView = { ...PRICED_CARD, adopted: true };
     mockUseGallery.mockReturnValue({ data: { items: [mineAdopted] }, isLoading: false, isError: false });
-    render(wrap(<CommunityGallery gameId="g1" onInspect={jest.fn()} onDesignACard={jest.fn()} />));
+    render(wrap(<CommunityGallery gameId="g1" onInspect={jest.fn()} onDesignACard={jest.fn()} onViewDesigner={jest.fn()} />));
     expect(screen.getByText('ADOPTED')).toBeTruthy();
     // the buy price is replaced by the ADOPTED tag (only the adoption count remains numeric)
     expect(screen.queryByText('3')).toBeNull();
@@ -86,15 +86,23 @@ describe('CommunityGallery (§9)', () => {
   it('taps a cell → onInspect with that card', () => {
     const onInspect = jest.fn();
     mockUseGallery.mockReturnValue({ data: { items: [PRICED_CARD] }, isLoading: false, isError: false });
-    render(wrap(<CommunityGallery gameId="g1" onInspect={onInspect} onDesignACard={jest.fn()} />));
+    render(wrap(<CommunityGallery gameId="g1" onInspect={onInspect} onDesignACard={jest.fn()} onViewDesigner={jest.fn()} />));
     fireEvent.press(screen.getByLabelText(/Rival Cut by rival_curator/i));
     expect(onInspect).toHaveBeenCalledWith(PRICED_CARD);
+  });
+
+  it('P13 (E8a) — tapping the DESIGNED-BY credit → onViewDesigner with the designer id', () => {
+    const onViewDesigner = jest.fn();
+    mockUseGallery.mockReturnValue({ data: { items: [PRICED_CARD] }, isLoading: false, isError: false });
+    render(wrap(<CommunityGallery gameId="g1" onInspect={jest.fn()} onDesignACard={jest.fn()} onViewDesigner={onViewDesigner} />));
+    fireEvent.press(screen.getByLabelText(/View rival_curator's contributions/i));
+    expect(onViewDesigner).toHaveBeenCalledWith(PRICED_CARD.designer.userId);
   });
 
   it('empty → the contributor-hook SectionEmpty door', () => {
     const onDesign = jest.fn();
     mockUseGallery.mockReturnValue({ data: { items: [] }, isLoading: false, isError: false });
-    render(wrap(<CommunityGallery gameId="g1" onInspect={jest.fn()} onDesignACard={onDesign} />));
+    render(wrap(<CommunityGallery gameId="g1" onInspect={jest.fn()} onDesignACard={onDesign} onViewDesigner={jest.fn()} />));
     expect(screen.getByText('NO COMMUNITY CARDS YET')).toBeTruthy();
     fireEvent.press(screen.getByText('DESIGN A CARD'));
     expect(onDesign).toHaveBeenCalledTimes(1);
@@ -103,7 +111,7 @@ describe('CommunityGallery (§9)', () => {
   it('error → an inline LoadError with RETRY', () => {
     const refetch = jest.fn();
     mockUseGallery.mockReturnValue({ data: undefined, isLoading: false, isError: true, refetch });
-    render(wrap(<CommunityGallery gameId="g1" onInspect={jest.fn()} onDesignACard={jest.fn()} />));
+    render(wrap(<CommunityGallery gameId="g1" onInspect={jest.fn()} onDesignACard={jest.fn()} onViewDesigner={jest.fn()} />));
     // LoadError uppercases its title; the message stays as-is.
     expect(screen.getByText(/your own cards above are unaffected/)).toBeTruthy();
   });

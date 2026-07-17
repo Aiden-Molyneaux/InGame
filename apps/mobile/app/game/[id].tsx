@@ -306,6 +306,7 @@ export default function GamePage() {
                 gameId={entry.gameId}
                 onInspect={setInspectCard}
                 onDesignACard={() => router.push(`/styler/${entry.gameId}`)}
+                onViewDesigner={(userId) => router.push(`/contributor/${userId}`)}
               />
             </>
           ) : (
@@ -402,6 +403,10 @@ export default function GamePage() {
         }}
         onBlock={() => {
           if (inspectCard) setBlockCard(inspectCard);
+        }}
+        onViewContributor={(userId) => {
+          setInspectCard(null); // close the sheet before navigating (PulledSheet contract)
+          router.push(`/contributor/${userId}`);
         }}
         shareBusy={shareBusy}
       />

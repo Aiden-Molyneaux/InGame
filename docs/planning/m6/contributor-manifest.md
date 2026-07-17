@@ -191,12 +191,41 @@ Shared change (NOT apps/api): widen `standing` in `profile.ts` to `contributorSt
 
 ---
 
-## BOOT check
-_(filled after build + `dev-stack up` + :8082 web verification)_
+## BOOT check (2026-07-16, :8082 web lane)
 
-- [ ] navigate to a contributor via a gallery `BY {designer}` tap
-- [ ] self view via own id (direct nav — self has no contributions link on Profile yet; see below)
-- [ ] states observed / screenshots
+Stack `status` → `{db,api,metro} up, ready`. Logged in `demo@ingame.app` (user `demo_curator_m3`,
+id `9a59e193-…`). Live endpoint (curl, fresh token) returns a **populated self shape** —
+`stats {gamesAdded:17, cardsDesigned:3, totalAdoptions:1, totalReached:22}`, `standing: null`,
+`signatureCard` (Destiny 2), `topCards[3]`, `topGames` — so the P1 data path is real and correct.
+
+- **[✓] The route renders + registers.** Direct nav to `/contributor/9a59e193-…` loaded the screen
+  chrome correctly: `CONTRIBUTIONS` header, `‹ RETURN TO PROFILE` back-seam, the NavBand, and — because
+  the query 401'd (see below) — the **L2 LoadError** (SIGNAL LOST + orange RETRY) inside the frame. The
+  new `app/contributor/[id].tsx` route + `contributorApi` module resolved on the standing Metro (the
+  screen mounted; the query fired to the correct host).
+- **[✓] The screen hits the right endpoint with the right shape.** Network showed
+  `GET http://localhost:4000/api/users/9a59e193-…/contributions` (correct host per the web api.ts
+  localhost rule).
+- **[⚠ ENV, not P13] The query returned 401 app-wide.** Both `/api/me` AND `/contributions` 401'd, and
+  the **long-shipped `/collection` screen (M3) renders the identical SIGNAL LOST** — a global
+  browser-session **stale-token quirk** (a hard URL navigation reloads the app and re-bootstraps auth
+  from secure-store before the freshly-logged-in token flushes; the reauth-refresh didn't recover it in
+  this session, and RETRY didn't either). This is the documented RN-web session friction
+  (doctor-nick / qa-runbook · the M3-R2 "freeze" lineage), NOT a P13 bug — P13 behaves identically to
+  the built-in screen. **Data-render (P1 hero/grid/rows) was NOT visually confirmed in-browser** because
+  every authenticated read 401'd; the render is instead covered by the 10 green route tests
+  (P1/P2/P2b/P3b/P4/VIEW-ALL/404/L2 all assert real render output) + the curl-verified live payload.
+  Per the mission's ~15-min browser-friction cap, I stopped the browser lane here and fell back to jest.
+- **Self-reachability:** as noted below, the self-Profile has no VIEW-CONTRIBUTIONS link yet — self was
+  reached by direct route (which forces the reload/token quirk). The designer-tap **in-app** path
+  (gallery `BY …` → client-side push, no reload, fresh in-memory token) is the intended real entry and
+  would dodge the quirk, but requires a game with community cards in the demo shelf — not pursued
+  further within the time cap. Recommend the owner/parvati walk confirms the data render on device
+  (where the token quirk doesn't bite) — the endpoint + shape + route + wiring are all proven.
+
+**Self-reachability note:** the self-Profile (`(tabs)/profile.tsx`) has **no VIEW CONTRIBUTIONS link**
+today (the Profile EDIT/tools row is M7). Self contributor is reachable by direct route / the gallery
+"BY YOU" tap. Adding a Profile contributions entry is Profile-tools scope (M7), not P13 — left untouched.
 
 **Self-reachability note:** the self-Profile (`(tabs)/profile.tsx`) has **no VIEW CONTRIBUTIONS link**
 today (the Profile EDIT/tools row is M7). Self contributor is reachable by direct route / the gallery

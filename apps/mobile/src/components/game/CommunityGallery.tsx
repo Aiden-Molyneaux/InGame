@@ -18,11 +18,14 @@ export function CommunityGallery({
   gameId,
   onInspect,
   onDesignACard,
+  onViewDesigner,
 }: {
   gameId: string;
   onInspect: (card: GalleryCardView) => void;
   /** The contributor-hook empty door — routes to the Styler for this game. */
   onDesignACard: () => void;
+  /** P13 (E8a) — tapping the DESIGNED-BY credit routes to that contributor's profile. */
+  onViewDesigner: (userId: string) => void;
 }) {
   const styles = useStyles();
   const { data, isLoading, isError, refetch } = useGetGameGalleryQuery(gameId);
@@ -51,7 +54,12 @@ export function CommunityGallery({
       ) : (
         <View style={styles.grid}>
           {items.map((card) => (
-            <GalleryCell key={card.id} card={card} onPress={() => onInspect(card)} />
+            <GalleryCell
+              key={card.id}
+              card={card}
+              onPress={() => onInspect(card)}
+              onViewDesigner={() => onViewDesigner(card.designer.userId)}
+            />
           ))}
         </View>
       )}
@@ -62,7 +70,15 @@ export function CommunityGallery({
 // One gallery cell — flattened thumb + BY «designer» + a foot: price (or FREE / a provenance tag) +
 // AdoptCount. F-13 E4 (owner round-2): the caller's OWN published cards read "BY YOU", and cards the
 // caller has already ADOPTED wear an "ADOPTED" tag in place of a price (they already hold the grant).
-function GalleryCell({ card, onPress }: { card: GalleryCardView; onPress: () => void }) {
+function GalleryCell({
+  card,
+  onPress,
+  onViewDesigner,
+}: {
+  card: GalleryCardView;
+  onPress: () => void;
+  onViewDesigner: () => void;
+}) {
   const styles = useStyles();
   const free = card.priceForYou <= 0;
   const a11y = card.byViewer
@@ -76,15 +92,23 @@ function GalleryCell({ card, onPress }: { card: GalleryCardView; onPress: () => 
       style={styles.cell}
     >
       <FlatCardImage title={card.name} imageUrl={card.thumbUrl ?? card.imageUrl} size="cell" />
-      <Text style={styles.credit} numberOfLines={1}>
-        {card.byViewer ? (
-          <Text style={styles.creditYou}>BY YOU</Text>
-        ) : (
-          <>
-            BY <Text style={styles.creditName}>{card.designer.username.toUpperCase()}</Text>
-          </>
-        )}
-      </Text>
+      {/* P13 (E8a) — the DESIGNED-BY credit routes to the contributor profile (a nested Pressable so
+          the card body still opens the adopt sheet). "BY YOU" routes to your own contributor profile. */}
+      <Pressable
+        onPress={onViewDesigner}
+        accessibilityRole="button"
+        accessibilityLabel={`View ${card.byViewer ? 'your' : `${card.designer.username}'s`} contributions`}
+      >
+        <Text style={styles.credit} numberOfLines={1}>
+          {card.byViewer ? (
+            <Text style={styles.creditYou}>BY YOU</Text>
+          ) : (
+            <>
+              BY <Text style={styles.creditName}>{card.designer.username.toUpperCase()}</Text>
+            </>
+          )}
+        </Text>
+      </Pressable>
       <View style={styles.foot}>
         {/* provenance wins over price: an already-adopted card (or your own) never shows a buy price. */}
         {card.byViewer || card.adopted ? (

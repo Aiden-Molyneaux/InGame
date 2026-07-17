@@ -179,6 +179,23 @@ export const contributorGameSchema = z
   .strict();
 export type ContributorGame = z.infer<typeof contributorGameSchema>;
 
+/**
+ * CAT-10 percentile standing vs the contributor cohort (api-contract §Catalog) — each axis
+ * threshold-gated (PROF-07), the axis omitted below its floor. `percentile` = the top-N percentile
+ * (25 ⇒ "TOP 25%"). Additive widening (0.69 → this P13 build): the field was `z.null()` while the
+ * cohort ranking was unbuilt; the server still emits `standing: null` at M6 (the ranking rides the M7
+ * percentile engine), so `null` remains valid — this only lets the P13 client render `PctPill`s the
+ * moment CAT-10 computes them server-side. No server change; `null` still parses.
+ */
+export const contributorStandingSchema = z
+  .object({
+    byAdoptions: z.object({ percentile: z.number().int().min(0).max(100) }).strict().optional(),
+    byGames: z.object({ percentile: z.number().int().min(0).max(100) }).strict().optional(),
+    byReach: z.object({ percentile: z.number().int().min(0).max(100) }).strict().optional(),
+  })
+  .strict();
+export type ContributorStanding = z.infer<typeof contributorStandingSchema>;
+
 export const contributionsResponseSchema = z
   .object({
     user: z
@@ -190,8 +207,8 @@ export const contributionsResponseSchema = z
       })
       .strict(),
     stats: contributorStatsSchema,
-    /** CAT-10 percentile standing vs the contributor cohort — NULL below the PROF-07 floor (M5: null). */
-    standing: z.null(),
+    /** CAT-10 percentile standing vs the contributor cohort — NULL below the PROF-07 floor (M6: null). */
+    standing: contributorStandingSchema.nullable(),
     /** Friend/self only (PROF-03) — omitted on the non-friend/limited shape. */
     signatureCard: contributorCardSchema.nullable().optional(),
     topCards: z.array(contributorCardSchema).optional(),

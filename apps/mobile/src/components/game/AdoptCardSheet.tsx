@@ -43,6 +43,7 @@ export function AdoptCardSheet({
   onTopUp,
   onShare,
   onBlock,
+  onViewContributor,
   shareBusy = false,
 }: {
   card: GalleryCardView | null;
@@ -58,8 +59,11 @@ export function AdoptCardSheet({
   onAdopted: (result: AdoptResponse, card: GalleryCardView) => void;
   onTopUp: () => void;
   onShare: () => void;
-  /** Open the destructive block confirm for this card's designer (container-owned). */
+  /** Open the destructive block confirm for this card's designer (container-owned; the ⋯ overflow). */
   onBlock: () => void;
+  /** P13 (E8a) — tapping the DESIGNED-BY credit routes to that contributor's profile (container closes
+   *  the sheet then navigates). Block stays on the ⋯ overflow. */
+  onViewContributor: (userId: string) => void;
   shareBusy?: boolean;
 }) {
   const styles = useStyles();
@@ -111,16 +115,17 @@ export function AdoptCardSheet({
           <FlatCardImage title={card.name} imageUrl={card.imageUrl ?? card.thumbUrl} size="pick" />
         </View>
 
-        {/* F-13 E8 (owner round-2) — the block affordance is now a QUICK press (the ⋯ + the credit tap),
-            never a hidden long-press; and tapping YOUR OWN credit reads "THIS IS YOU" with NO block
-            offered on yourself (byViewer). onBlock opens the block CONFIRM at the screen root (not an
-            immediate block), so a quick tap is safe. */}
+        {/* P13 (E8a) — the DESIGNED-BY credit now routes to the contributor profile (the app-wide
+            designer-tap convention). Tapping YOUR OWN credit routes to your own contributions. Block
+            moved to the ⋯ overflow (still a quick press, opens the block CONFIRM at the screen root). */}
         <View style={styles.creditRow}>
           <Pressable
-            onPress={card.byViewer ? undefined : onBlock}
-            accessibilityRole={card.byViewer ? 'text' : 'button'}
+            onPress={() => onViewContributor(card.designer.userId)}
+            accessibilityRole="button"
             accessibilityLabel={card.byViewer ? 'Designed by you' : `Designed by ${card.designer.username}`}
-            accessibilityHint={card.byViewer ? undefined : `Block ${card.designer.username}`}
+            accessibilityHint={
+              card.byViewer ? 'View your contributions' : `View ${card.designer.username}'s contributions`
+            }
             style={styles.creditPress}
           >
             {card.byViewer ? (
