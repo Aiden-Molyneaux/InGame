@@ -69,3 +69,41 @@ export function resetInviteConfigForTest(): void {
   inviteTtlDays = INVITE_TTL_DAYS;
   inviteMaxActive = INVITE_MAX_ACTIVE;
 }
+
+// ── SOC-05 recommendation-note length + SOC-06 feed aggregation window (M6 P4 — SYS-04-tunable) ──────
+
+/**
+ * SOC-05 recommendation-note max length (M6 P4). SYS-02 pins per-field maxlengths (username 3–20 · bio
+ * ≤140 · collection notes ≤500 · report/feedback ≤1000); a rec note has NO enumerated number in the
+ * contract, so it takes the ≤500 "short personal note" tier (matching collection notes — a rec note is a
+ * one-line "you should play this!", not a letter). Server-configurable WITHOUT an app release (SYS-04).
+ * The note is UNSCREENED at M6 (MOD-07 text-screening rides M7 — accepted for the trusted beta, recorded).
+ */
+export const RECOMMENDATION_NOTE_MAX = 500;
+
+/**
+ * SOC-06 feed aggregation window (M6 P4, decision #4). Friend activity is aggregated by actor+type into
+ * FIXED wall-clock UTC buckets of this width — one feed item per (actor, type, window). Fixed (not
+ * sliding) buckets make each item's identity `(actor, type, windowStart)` IMMUTABLE, which is what makes
+ * the keyset cursor stable under concurrent inserts (a new event only bumps an existing bucket's
+ * `aggregateCount`; it never moves the item's sort key). 6h is low-noise without collapsing a whole day's
+ * distinct sessions. Server-configurable (SYS-04).
+ */
+export const FEED_WINDOW_MS = 6 * 60 * 60 * 1000;
+
+let feedWindowMs = FEED_WINDOW_MS;
+
+/** The active feed aggregation-window width (read at build time so a test override takes effect). */
+export function feedWindowMsValue(): number {
+  return feedWindowMs;
+}
+
+/** Test-only: shrink/lengthen the feed window so an aggregation-boundary test can assert cheaply. */
+export function setFeedWindowMsForTest(ms: number): void {
+  feedWindowMs = ms;
+}
+
+/** Test-only: restore the SYS-04 launch-seed feed window between test cases. */
+export function resetFeedWindowForTest(): void {
+  feedWindowMs = FEED_WINDOW_MS;
+}

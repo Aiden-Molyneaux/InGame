@@ -243,6 +243,65 @@ export async function findPublishedDesignById(
   return rows[0] ?? null;
 }
 
+/** A thin FLATTENED card peek (id + flattened urls) — the SOC-05 rec / SOC-06 feed card, never composition. */
+export interface PublicCardPeek {
+  id: string;
+  gameId: string;
+  imageUrl: string | null;
+  thumbUrl: string | null;
+}
+
+/**
+ * M6 P4 (SOC-06) — resolve a SET of PUBLISHED cards by id → flattened peeks (the feed's `published_card`
+ * object refs). Published-only (a card later unpublished simply drops out — never a private composition).
+ * Batch-wise, flattened only.
+ */
+export async function publishedPeeksByIds(
+  cardIds: string[],
+  exec: Executor = getDb(),
+): Promise<Map<string, PublicCardPeek>> {
+  if (cardIds.length === 0) return new Map();
+  // SYS-01-PUBLIC-READ — cross-user feed peek: published cards only, flattened urls, never composition.
+  const rows = await exec
+    .select({
+      id: cardDesigns.id,
+      gameId: cardDesigns.gameId,
+      imageUrl: cardDesigns.imageUrl,
+      thumbUrl: cardDesigns.thumbUrl,
+    })
+    .from(cardDesigns)
+    .where(publishedOnly(inArray(cardDesigns.id, cardIds)));
+  return new Map(rows.map((r) => [r.id, r]));
+}
+
+/**
+ * M6 P4 (SOC-05) — a REPRESENTATIVE published card per game → the rec inbox's `game.card` peek (CARD-07/18:
+ * a card always resolves). The NEWEST published card for each game (updatedAt desc) is a stable, cheap
+ * pick that needs no adoption-count join; a game with no published cards is simply absent from the map
+ * (the service falls back to the DEFAULT face). Flattened urls only, never composition.
+ */
+export async function representativeCardsByGames(
+  gameIds: string[],
+  exec: Executor = getDb(),
+): Promise<Map<string, PublicCardPeek>> {
+  if (gameIds.length === 0) return new Map();
+  // SYS-01-PUBLIC-READ — cross-user rep card: published cards only, flattened urls, never composition.
+  const rows = await exec
+    .select({
+      id: cardDesigns.id,
+      gameId: cardDesigns.gameId,
+      imageUrl: cardDesigns.imageUrl,
+      thumbUrl: cardDesigns.thumbUrl,
+    })
+    .from(cardDesigns)
+    .where(publishedOnly(inArray(cardDesigns.gameId, gameIds)))
+    .orderBy(desc(cardDesigns.updatedAt));
+  // First row per game wins (newest, given the desc order) — a stable representative peek.
+  const byGame = new Map<string, PublicCardPeek>();
+  for (const r of rows) if (!byGame.has(r.gameId)) byGame.set(r.gameId, r);
+  return byGame;
+}
+
 /**
  * The public adoption count per card (decision 0072: `AdoptCount` is public by design). An anonymous
  * cross-user AGGREGATE of the user-owned `card_adoptions` — never a row read, never a per-owner

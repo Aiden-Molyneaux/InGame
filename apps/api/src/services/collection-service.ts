@@ -266,10 +266,18 @@ export const updateEntry = mutation(
       throw new ValidationError('Provide at least one field to update.', 'empty_update');
     }
     const entry = (await collectionRepo.updateOwnedEntry(actorId, entryId, fields, ctx.tx)) ?? current;
+    // F18: the payload carries the changed field-set (names) + non-sensitive CONTEXT the SOC-06 feed
+    // needs — `gameId` (always; the entry's game, already carried by entry_added) and, ONLY when status
+    // is among the changed fields, the NEW `status` VALUE (P4 design #4 — additive, F18-compatible since a
+    // collection status is not sensitive; the feed's beat_game/completed_game types key off it, and its
+    // ABSENCE is the trivia-exclusion signal — a stat-only edit carries no `status`). No private field
+    // value (hours/notes/rating/percentComplete) ever crosses.
+    const updatedPayload: Record<string, unknown> = { fields: changed, gameId: entry.gameId };
+    if (changed.includes('status') && input.status !== undefined) updatedPayload.status = input.status;
     await ctx.emit({
       eventType: 'collection.entry_updated',
       entityRef: { type: 'collection_entry', id: entryId },
-      payload: { fields: changed }, // the changed field-set, never the values (F18)
+      payload: updatedPayload,
     });
     if (changed.includes('activeCardDesignId')) {
       await ctx.emit({

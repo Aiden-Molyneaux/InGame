@@ -62,6 +62,10 @@ const DEFAULTS: Record<string, RateLimitRule> = {
   // People-search — 30/min (the §0.7 seed). A generous editing/typing budget; the only way past it is
   // a scripted enumeration client (which exact-match already starves — no prefix crawl).
   'users:search': { limit: 30, windowMs: 60_000 },
+  // M6 P4 recommendations (decision 0076 §0.7 — SOC-05; SYS-05/G-K async, tunable). Recommending a game
+  // to a friend is a deliberate social act — 20/day (the §0.7 seed). Keyed by (bucket, actor-IP) like
+  // every other bucket. GET /me/recommendations + GET /me/feed are self-scoped reads (not bucketed here).
+  'recommendations:create': { limit: 20, windowMs: 24 * 60 * 60_000 },
   // Invite RESOLVE (SYS-05 — NOT in the §0.7 seed; builder's pick, flagged for G-K). The resolve is an
   // UNAUTHENTICATED, IP-keyed bearer read (a fresh install may hit it), so it needs its own IP throttle
   // against token-guessing/enumeration. 30/min per IP mirrors the search budget: ample for a human

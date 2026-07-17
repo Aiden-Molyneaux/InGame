@@ -75,6 +75,9 @@ export const DOMAIN_EVENT_TYPES = [
   'friend.removed', // SOC-08 — DELETE /me/friends/:userId (unfriend; silent to the target, decision 0010).
   // M6 P3 find + invite (decision 0076 §0.6 — invite_tokens; the AUTH-LOOKUP bearer read class). Append at the END.
   'invite.created', // SOC-10 — POST /me/invites minted a share/QR invite token (create-new-invalidates-oldest may revoke an older one). Payload = { inviteId } only (never the token/hash — a bearer credential stays out of the event spine, F18).
+  // M6 P4 recommendations (decision 0076 §0.7 — the recommendations table; SOC-05). Append at the END.
+  'recommendation.sent', // SOC-05 — POST /recommendations: a friend recommended a game (lands in the recipient's rec inbox, NOT auto-queued). Payload = { toUserId, gameId } (ids only — the note is UNSCREENED user text, kept out of the event spine, F18/MOD-07).
+  'recommendation.dismissed', // SOC-05 — DELETE /me/recommendations/:recId: the recipient soft-dismissed an inbox rec. Payload = {} (a private inbox touch; ids only via entityRef).
 ] as const;
 
 export type DomainEventType = (typeof DOMAIN_EVENT_TYPES)[number];

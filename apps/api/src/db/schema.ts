@@ -182,6 +182,48 @@ export const inviteTokens = pgTable(
 );
 
 /**
+ * `recommendations` — SOC-05 friend game-recommendations (M6 P4). A friend recommends a game to another
+ * friend; it lands in the recipient's rec inbox (GET /me/recommendations — the Discover FROM-FRIENDS
+ * section), NOT auto-queued (contract 0.21). USER-OWNED (both parties; every read is actor-scoped — the
+ * recipient reads `to_user_id` = actor). `note` is a short freeform message (SYS-02 ≤500, SYS-04-tunable);
+ * MOD-07 screening of the note is DEFERRED to M7 (accepted UNSCREENED for the trusted beta — recorded in
+ * the §0.5 / MOD-07 note). Dismiss is SOFT (`dismissed_at` stamped) — the row stays as history.
+ *
+ * LIVE-UNIQUENESS (P4 design decision #1): a PARTIAL unique index on (from, to, game) filtered to
+ * NON-DISMISSED rows (`recommendations_live_unique_idx`). Rationale: at most ONE live rec per
+ * (sender, recipient, game) — a spam-duplicate can't stack in the inbox — BUT re-recommending after the
+ * recipient DISMISSES works (the dismissed row leaves the partial index, so a fresh POST inserts a new
+ * live row). Mirrors the `friendships_canonical_accepted_idx` partial-unique precedent (M6 P1). The index
+ * is also the F36 backstop for a parallel double-POST (the second insert conflicts → idempotent no-op).
+ */
+export const recommendations = pgTable(
+  'recommendations',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    fromUserId: uuid('from_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    toUserId: uuid('to_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    gameId: uuid('game_id')
+      .notNull()
+      .references(() => games.id),
+    note: text('note'), // SOC-05 short freeform (≤500, SYS-04); UNSCREENED at M6 (MOD-07 → M7)
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    dismissedAt: timestamp('dismissed_at', { withTimezone: true }), // NULL = live inbox row; set on dismiss
+  },
+  (table) => ({
+    // P4 design #1 — one LIVE (non-dismissed) rec per (from,to,game); re-recommend after dismiss works.
+    liveUniqueIdx: uniqueIndex('recommendations_live_unique_idx')
+      .on(table.fromUserId, table.toUserId, table.gameId)
+      .where(sql`dismissed_at IS NULL`),
+    toIdx: index('recommendations_to_idx').on(table.toUserId),
+    fromIdx: index('recommendations_from_idx').on(table.fromUserId),
+  }),
+);
+
+/**
  * `gamertags` — per-platform handles managed from the Profile (PROF-02). One handle per
  * (user, platform). USER-OWNED (owner key = `user_id`).
  */
@@ -817,6 +859,8 @@ export type AuthIdentityRow = typeof authIdentities.$inferSelect;
 export type RefreshTokenRow = typeof refreshTokens.$inferSelect;
 export type AuthTokenRow = typeof authTokens.$inferSelect;
 export type InviteTokenRow = typeof inviteTokens.$inferSelect;
+export type RecommendationRow = typeof recommendations.$inferSelect;
+export type NewRecommendationRow = typeof recommendations.$inferInsert;
 export type GamertagRow = typeof gamertags.$inferSelect;
 export type FriendshipRow = typeof friendships.$inferSelect;
 export type FriendRequestRow = typeof friendRequests.$inferSelect;

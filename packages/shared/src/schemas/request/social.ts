@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { usernameSchema } from './profile';
+import { boundedText } from '../sanitize';
 
 // REQUEST/INPUT schemas for social actions (SOC-09). The actor is the authenticated principal ONLY —
 // `.strict()` refuses any smuggled actor id. `userId` here is the TARGET of the action (who to block),
@@ -51,3 +52,29 @@ export type UserSearchQuery = z.infer<typeof userSearchQuerySchema>;
 export const INVITE_TOKEN_RE = /^[A-Za-z0-9_-]+$/;
 export const inviteTokenParamSchema = z.string().min(16).max(512).regex(INVITE_TOKEN_RE);
 export type InviteTokenParam = z.infer<typeof inviteTokenParamSchema>;
+
+/**
+ * POST /recommendations body: { toUserId, gameId, note? } — recommend a game to a FRIEND (SOC-05). The
+ * actor (recommender) is the authenticated principal ONLY (`.strict()` refuses a smuggled actor id);
+ * `toUserId`/`gameId` are legitimately body-supplied (they are not the actor). `note` is an OPTIONAL
+ * short freeform message, SYS-02-bounded (≤500 — the "short personal note" tier, matching collection
+ * notes; SYS-04-tunable) and control-char-stripped (SYS-02 sanitize); it is UNSCREENED at M6 (MOD-07 text
+ * screening rides M7 — accepted for the trusted beta, recorded). Server-side refusals (SELF_TARGET ·
+ * NOT_FRIENDS · the MOD-09 block collapse · unknown game) live in the service. Note-length over the cap
+ * → 422 (SYS-02) here at the boundary.
+ */
+export const RECOMMENDATION_NOTE_MAX_LEN = 500;
+export const createRecommendationSchema = z
+  .object({
+    toUserId: z.string().uuid(),
+    gameId: z.string().uuid(),
+    // SYS-02: NFC-normalized + control/bidi/zero-width-stripped + trimmed + length-bounded (the shared
+    // free-text helper, same as bio/notes). Over the cap → 422. A '' / whitespace-only note sanitizes to
+    // '' → normalized to `undefined` (no empty-string note ever persists). UNSCREENED at M6 (MOD-07 → M7).
+    note: boundedText(RECOMMENDATION_NOTE_MAX_LEN)
+      .optional()
+      .transform((v) => (v ? v : undefined)),
+  })
+  .strict();
+
+export type CreateRecommendationRequest = z.infer<typeof createRecommendationSchema>;
