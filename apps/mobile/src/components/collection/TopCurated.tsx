@@ -25,6 +25,14 @@ import {
 // read-only ranked Top-10. The #1 marker is scr.accent ORANGE, never gold (C6/F-02). Titles/hours are
 // joined from the collection cache for the SELF read (the /me/lists items carry no title — manifest A2);
 // the FRIEND entries already carry title/card (friendTopTenEntry).
+//
+// P10 walk-1 (the F-15 in-scroll-overlay class): the CardPicker sheet must NOT render inside this
+// component — SelfTopView is mounted INSIDE collection.tsx's ScrollView, and a PulledSheet inside a
+// scroll subtree anchors its absolute-fill to the scroll CONTENT (top-pinned, wrong size, results
+// clipped — the owner-walk bug). Per the PulledSheet contract ("mount at the SCREEN ROOT, a sibling of
+// the scroll") and the shipped pattern (game/[id].tsx CardDetailSheet/AdoptCardSheet · store.tsx
+// ItemSheet/C2), the picker is exported as the standalone `TopTenCardPicker` which collection.tsx
+// mounts OUTSIDE its ScrollView; SelfTopView only signals `onOpenPicker`.
 
 const TOP_CAP = 10;
 
@@ -94,12 +102,16 @@ export function SelfTopView({
   collectionItems,
   arranging,
   onExitArrange,
+  onOpenPicker,
   focusGameId,
   onOpenGame,
 }: {
   collectionItems: CollectionItem[];
   arranging: boolean;
   onExitArrange: () => void;
+  /** Raise the CardPicker — the sheet itself (TopTenCardPicker) is mounted by the SCREEN at its root,
+   *  never here (this component lives inside the Collection ScrollView; PulledSheet contract / F-15). */
+  onOpenPicker: () => void;
   focusGameId?: string;
   onOpenGame: (gameId: string) => void;
 }) {
@@ -107,10 +119,7 @@ export function SelfTopView({
   const t = useTheme();
   const { data: lists, isLoading } = useGetListsQuery();
   const [rerank] = useRerankListMutation();
-  const [addItem, addState] = useAddListItemMutation();
   const [removeItem] = useRemoveListItemMutation();
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const [capError, setCapError] = useState(false);
 
   // the game→collection-item map (title/hours/status) for the title join (A2).
   const byGame = useMemo(() => {
@@ -120,7 +129,6 @@ export function SelfTopView({
   }, [collectionItems]);
 
   const top = lists?.find((l) => l.id === TOP10_LIST_ID) ?? lists?.[0];
-  const seatedIds = useMemo(() => (top?.items ?? []).map((i) => i.gameId), [top]);
 
   const rows: TopRow[] = useMemo(() => {
     const items = [...(top?.items ?? [])].sort((a, b) => a.rank - b.rank);
@@ -173,9 +181,10 @@ export function SelfTopView({
             )}
           />
         ) : null}
-        {/* + ADD seat (absent when full — the LIST_FULL state) */}
+        {/* + ADD seat (absent when full — the LIST_FULL state). The sheet it raises is mounted by the
+            SCREEN outside the ScrollView (TopTenCardPicker — F-15 / PulledSheet contract). */}
         {rows.length < TOP_CAP ? (
-          <Pressable style={styles.addSeat} accessibilityRole="button" accessibilityLabel="Add to Top 10" onPress={() => { setCapError(false); setPickerOpen(true); }}>
+          <Pressable style={styles.addSeat} accessibilityRole="button" accessibilityLabel="Add to Top 10" onPress={onOpenPicker}>
             <Text style={styles.addSeatPlus}>+</Text>
             <Text style={styles.addSeatLabel}>ADD FROM YOUR COLLECTION · SEAT {rows.length + 1}</Text>
           </Pressable>
@@ -187,27 +196,6 @@ export function SelfTopView({
           <View style={styles.spacer} />
           <ScreenButton label="Done" variant="action-alt" onPress={onExitArrange} />
         </View>
-
-        <CardPicker
-          visible={pickerOpen}
-          onClose={() => setPickerOpen(false)}
-          seatNumber={rows.length + 1}
-          collectionItems={collectionItems}
-          seatedIds={seatedIds}
-          adding={addState.isLoading}
-          capError={capError}
-          onAdd={async (gameId) => {
-            try {
-              await addItem({ gameId }).unwrap();
-            } catch (e) {
-              // cap-10 → 409 LIST_FULL (the reachable refusal). 422 not_in_collection can't happen via the
-              // picker (it sources your collection, A3) but is swept up by the same quiet error.
-              const code = (e as { data?: { error?: { code?: string } } })?.data?.error?.code;
-              if (code === 'LIST_FULL') setCapError(true);
-            }
-          }}
-          onRemove={(gameId) => void removeItem({ gameId })}
-        />
       </View>
     );
   }
@@ -280,30 +268,42 @@ export function FriendTopView({
 }
 
 // ── the CardPicker sheet (membership — search your collection · ✓ add/remove) ─────────────────────────
-function CardPicker({
+// EXPORTED + SELF-CONTAINED (walk-1 fix): the SCREEN mounts this OUTSIDE its ScrollView (a screen-root
+// sibling — the PulledSheet contract; the game/[id] CardDetailSheet / store ItemSheet pattern, F-15). It
+// owns its own lists read (seated ids off the same RTK cache) + the add/remove writes + the LIST_FULL
+// refusal state, so SelfTopView (inside the scroll) only signals open/close.
+export function TopTenCardPicker({
   visible,
   onClose,
-  seatNumber,
   collectionItems,
-  seatedIds,
-  adding,
-  capError,
-  onAdd,
-  onRemove,
 }: {
   visible: boolean;
   onClose: () => void;
-  seatNumber: number;
   collectionItems: CollectionItem[];
-  seatedIds: string[];
-  adding: boolean;
-  capError: boolean;
-  onAdd: (gameId: string) => void;
-  onRemove: (gameId: string) => void;
 }) {
   const styles = useStyles();
   const [q, setQ] = useState('');
-  const seated = useMemo(() => new Set(seatedIds), [seatedIds]);
+  const [capError, setCapError] = useState(false);
+  const { data: lists } = useGetListsQuery();
+  const [addItem, addState] = useAddListItemMutation();
+  const [removeItem] = useRemoveListItemMutation();
+  const top = lists?.find((l) => l.id === TOP10_LIST_ID) ?? lists?.[0];
+  const seated = useMemo(() => new Set((top?.items ?? []).map((i) => i.gameId)), [top]);
+  const seatNumber = Math.min((top?.items.length ?? 0) + 1, TOP_CAP);
+  const adding = addState.isLoading;
+
+  async function onAdd(gameId: string) {
+    try {
+      await addItem({ gameId }).unwrap();
+      setCapError(false);
+    } catch (e) {
+      // cap-10 → 409 LIST_FULL (the reachable refusal). 422 not_in_collection can't happen via the
+      // picker (it sources your collection, A3) but is swept up by the same quiet error.
+      const code = (e as { data?: { error?: { code?: string } } })?.data?.error?.code;
+      if (code === 'LIST_FULL') setCapError(true);
+    }
+  }
+  const onRemove = (gameId: string) => void removeItem({ gameId });
   const results = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return collectionItems.filter((i) => (needle ? i.title.toLowerCase().includes(needle) : true));

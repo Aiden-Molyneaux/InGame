@@ -34,7 +34,7 @@ jest.mock('./components/EntryCard', () => ({
   },
 }));
 
-import { SelfTopView, FriendTopView } from './components/collection/TopCurated';
+import { SelfTopView, FriendTopView, TopTenCardPicker } from './components/collection/TopCurated';
 
 const CI = (n: number): CollectionItem =>
   ({
@@ -62,6 +62,7 @@ const COLLECTION = [CI(1), CI(2), CI(3), CI(4), CI(5)];
 
 beforeEach(() => {
   mockAdd.mockClear();
+  mockAdd.mockImplementation(() => ({ unwrap: () => Promise.resolve({}) }));
   mockRemove.mockClear();
   mockRerank.mockClear();
 });
@@ -69,7 +70,7 @@ beforeEach(() => {
 describe('COL-13: SelfTopView (read)', () => {
   it('renders the curated rank rows, titles joined from the collection cache', () => {
     mockLists = listWith(['g1', 'g2', 'g3']);
-    render(<SelfTopView collectionItems={COLLECTION} arranging={false} onExitArrange={() => {}} onOpenGame={() => {}} />);
+    render(<SelfTopView collectionItems={COLLECTION} arranging={false} onExitArrange={() => {}} onOpenPicker={() => {}} onOpenGame={() => {}} />);
     expect(screen.getByText('YOUR #1')).toBeTruthy();
     expect(screen.getByText('CARD:Game 1')).toBeTruthy();
     expect(screen.getByText('CARD:Game 3')).toBeTruthy();
@@ -77,36 +78,68 @@ describe('COL-13: SelfTopView (read)', () => {
 
   it('empty top10 shows the ghost + "rank your favourites" nudge (not a hours fallback)', () => {
     mockLists = listWith([]);
-    render(<SelfTopView collectionItems={COLLECTION} arranging={false} onExitArrange={() => {}} onOpenGame={() => {}} />);
+    render(<SelfTopView collectionItems={COLLECTION} arranging={false} onExitArrange={() => {}} onOpenPicker={() => {}} onOpenGame={() => {}} />);
     expect(screen.getByText('RANK YOUR FAVOURITES')).toBeTruthy();
   });
 });
 
-describe('COL-13: SelfTopView (ARRANGE + CardPicker)', () => {
-  it('arrange mode shows the drag rows + the add-seat, and the picker adds from your collection', () => {
+describe('COL-13: SelfTopView (ARRANGE)', () => {
+  it('the + seat RAISES the screen-mounted picker (walk-1 — the sheet never renders in here)', () => {
     mockLists = listWith(['g1', 'g2']);
-    render(<SelfTopView collectionItems={COLLECTION} arranging onExitArrange={() => {}} onOpenGame={() => {}} />);
+    const onOpenPicker = jest.fn();
+    render(<SelfTopView collectionItems={COLLECTION} arranging onExitArrange={() => {}} onOpenPicker={onOpenPicker} onOpenGame={() => {}} />);
     // the DONE bar + seat count
     expect(screen.getByText('2 / 10 SEATED')).toBeTruthy();
-    // open the CardPicker via the + seat
     fireEvent.press(screen.getByLabelText('Add to Top 10'));
-    // an unseated collection game (g3) is addable in the picker
-    fireEvent.press(screen.getByLabelText('Add Game 3'));
-    expect(mockAdd).toHaveBeenCalledWith({ gameId: 'g3' });
+    expect(onOpenPicker).toHaveBeenCalled();
+    // the sheet itself is NOT rendered by SelfTopView (it mounts at the screen root — F-15)
+    expect(screen.queryByText(/SEARCH YOUR COLLECTION|Add to Top · Seat/i)).toBeNull();
   });
 
   it('removing a seated card calls DELETE …/items/:gameId', () => {
     mockLists = listWith(['g1', 'g2']);
-    render(<SelfTopView collectionItems={COLLECTION} arranging onExitArrange={() => {}} onOpenGame={() => {}} />);
+    render(<SelfTopView collectionItems={COLLECTION} arranging onExitArrange={() => {}} onOpenPicker={() => {}} onOpenGame={() => {}} />);
     fireEvent.press(screen.getByLabelText('Remove Game 1'));
     expect(mockRemove).toHaveBeenCalledWith({ gameId: 'g1' });
   });
 
   it('at cap-10 the add-seat is replaced by the LIST_FULL state', () => {
     mockLists = listWith(['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'g9', 'g10']);
-    render(<SelfTopView collectionItems={COLLECTION} arranging onExitArrange={() => {}} onOpenGame={() => {}} />);
+    render(<SelfTopView collectionItems={COLLECTION} arranging onExitArrange={() => {}} onOpenPicker={() => {}} onOpenGame={() => {}} />);
     expect(screen.queryByLabelText('Add to Top 10')).toBeNull();
     expect(screen.getByText(/Top 10 is full/i)).toBeTruthy();
+  });
+});
+
+describe('COL-13: TopTenCardPicker (the screen-root sheet)', () => {
+  it('renders EVERY collection item as a pickable cell (the walk-1 "empty drawer" regression)', () => {
+    mockLists = listWith(['g1']);
+    render(<TopTenCardPicker visible onClose={() => {}} collectionItems={COLLECTION} />);
+    // N collection items → N picker cells (seated ones toggle to Remove)
+    const cells = screen.getAllByLabelText(/^(Add|Remove) Game \d$/);
+    expect(cells).toHaveLength(COLLECTION.length);
+  });
+
+  it('adds an unseated collection game', () => {
+    mockLists = listWith(['g1', 'g2']);
+    render(<TopTenCardPicker visible onClose={() => {}} collectionItems={COLLECTION} />);
+    fireEvent.press(screen.getByLabelText('Add Game 3'));
+    expect(mockAdd).toHaveBeenCalledWith({ gameId: 'g3' });
+  });
+
+  it('a seated game toggles to remove (✓)', () => {
+    mockLists = listWith(['g1', 'g2']);
+    render(<TopTenCardPicker visible onClose={() => {}} collectionItems={COLLECTION} />);
+    fireEvent.press(screen.getByLabelText('Remove Game 1'));
+    expect(mockRemove).toHaveBeenCalledWith({ gameId: 'g1' });
+  });
+
+  it('a LIST_FULL refusal surfaces the cap-10 state', async () => {
+    mockLists = listWith(['g1']);
+    mockAdd.mockImplementation(() => ({ unwrap: () => Promise.reject({ data: { error: { code: 'LIST_FULL' } } }) }) as never);
+    render(<TopTenCardPicker visible onClose={() => {}} collectionItems={COLLECTION} />);
+    fireEvent.press(screen.getByLabelText('Add Game 3'));
+    expect(await screen.findByText(/Top 10 is full — remove one first/i)).toBeTruthy();
   });
 });
 

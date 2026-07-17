@@ -6,7 +6,7 @@ import type { CollectionItem, CollectionStatus, GenreView } from '@ingame/shared
 import { ScreenHead } from '../../src/components/ScreenHead';
 import { EntryCard } from '../../src/components/EntryCard';
 import { FlipCard } from '../../src/components/collection/FlipCard';
-import { SelfTopView } from '../../src/components/collection/TopCurated';
+import { SelfTopView, TopTenCardPicker } from '../../src/components/collection/TopCurated';
 import { Coachmark } from '../../src/components/Coachmark';
 import { ScreenButton } from '../../src/components/ScreenButton';
 import { ToolButton } from '../../src/components/ToolButton';
@@ -167,6 +167,10 @@ export default function Collection() {
   const [flippedIds, setFlippedIds] = useState<Set<string>>(new Set());
   // COL-13 — the TOP view ARRANGE toggle (drag re-rank + CardPicker). Cleared on any view-switch.
   const [topArranging, setTopArranging] = useState(false);
+  // walk-1 — the CardPicker SHEET state lives at the SCREEN so the sheet mounts OUTSIDE the ScrollView
+  // (PulledSheet contract / F-15: an absolute-fill overlay inside a scroll anchors to the scroll CONTENT
+  // — top-pinned, wrong size, clipped results). SelfTopView (in-scroll) only requests open.
+  const [topPickerOpen, setTopPickerOpen] = useState(false);
 
   const items = useMemo(() => data?.items ?? [], [data]);
   const hero = items.find((i) => i.nowPlaying) ?? null;
@@ -212,6 +216,7 @@ export default function Collection() {
   useEffect(() => {
     setFlippedIds((prev) => (prev.size === 0 ? prev : new Set()));
     setTopArranging(false); // leaving TOP (or any view cycle) exits ARRANGE
+    setTopPickerOpen(false); // …and drops the picker sheet with it
   }, [view]);
 
   // COL-12 — a card tap toggles its flip (owner: many-flipped); the first flip retires the coachmark.
@@ -361,6 +366,7 @@ export default function Collection() {
             collectionItems={items}
             arranging={topArranging}
             onExitArrange={() => setTopArranging(false)}
+            onOpenPicker={() => setTopPickerOpen(true)}
             focusGameId={params.focus}
             onOpenGame={openGame}
           />
@@ -465,6 +471,15 @@ export default function Collection() {
       />
 
       <LogHoursSheet item={logHoursItem} onClose={() => setLogHoursId(null)} />
+
+      {/* walk-1 — the TOP CardPicker mounts HERE, a SCREEN-ROOT sibling of the ScrollView (PulledSheet
+          contract; the game/[id] CardDetailSheet / store ItemSheet pattern). Inside the scroll it
+          anchored to the scroll content: top-pinned, wrong size, results clipped (F-15 class). */}
+      <TopTenCardPicker
+        visible={topPickerOpen}
+        onClose={() => setTopPickerOpen(false)}
+        collectionItems={items}
+      />
     </View>
   );
 }
