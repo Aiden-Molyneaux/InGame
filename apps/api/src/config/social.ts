@@ -26,3 +26,46 @@ export function setRequestCooldownDaysForTest(days: number): void {
 export function resetRequestCooldownForTest(): void {
   requestCooldownDays = REQUEST_COOLDOWN_DAYS;
 }
+
+// ── SOC-10 invite-token mechanics (decision 0076 §0.6 — SYS-04-tunable, G-K posture) ────────────────
+
+/**
+ * SOC-10 invite TTL (decision 0076 §0.6). A minted invite token is valid for 7 days; a resolve after
+ * this expiry returns INVITE_EXPIRED. Server-configurable WITHOUT an app release (SYS-04).
+ */
+export const INVITE_TTL_DAYS = 7;
+
+/**
+ * SOC-10 active-invite cap (decision 0076 §0.6). At most 5 ACTIVE (unrevoked, unexpired) invite tokens
+ * per user; minting a 6th REVOKES the oldest active one (create-new-invalidates-oldest). Owner-tunable.
+ */
+export const INVITE_MAX_ACTIVE = 5;
+
+let inviteTtlDays = INVITE_TTL_DAYS;
+let inviteMaxActive = INVITE_MAX_ACTIVE;
+
+/** The TTL expiry stamp for an invite minted `now` (SYS-04 window applied). */
+export function inviteExpiresAt(now: Date = new Date()): Date {
+  return new Date(now.getTime() + inviteTtlDays * 24 * 60 * 60 * 1000);
+}
+
+/** The current active-invite cap (read at mint time so a test override takes effect). */
+export function inviteMaxActiveCount(): number {
+  return inviteMaxActive;
+}
+
+/** Test-only: shrink the invite TTL so an expiry-boundary test can assert cheaply. */
+export function setInviteTtlDaysForTest(days: number): void {
+  inviteTtlDays = days;
+}
+
+/** Test-only: shrink the active cap so a cap-rotation test needn't mint the full launch-seed count. */
+export function setInviteMaxActiveForTest(count: number): void {
+  inviteMaxActive = count;
+}
+
+/** Test-only: restore the SYS-04 launch-seed invite mechanics between test cases. */
+export function resetInviteConfigForTest(): void {
+  inviteTtlDays = INVITE_TTL_DAYS;
+  inviteMaxActive = INVITE_MAX_ACTIVE;
+}

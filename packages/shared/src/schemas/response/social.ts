@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { relationshipSchema } from '../common';
+import { relationshipSchema, searchRelationshipSchema } from '../common';
 
 // RESPONSE/VIEW schemas for the SOC-08 social-graph read surfaces (GET /me/friends ·
 // /me/friends/requests · /me/blocks). Owned by the F06 privacy serializer (the sanctioned divergence
@@ -77,3 +77,29 @@ export const blocksListResponseSchema = z
   })
   .strict();
 export type BlocksListResponse = z.infer<typeof blocksListResponseSchema>;
+
+/**
+ * GET /users/search?username= (SOC-07) → the PersonRow result. The public allowlist (id/username/
+ * avatar) + the SEARCH relationship (the 6-value `searchRelationshipSchema` — see common.ts: base four
+ * plus `cooldown`/`blocked`). `cooldownUntil` (ISO-8601 UTC) is present ONLY when `relationship` is
+ * `cooldown` (drives the disabled-ADD microcopy). SELF is excluded from results (the contract enumerates
+ * no `self` value); a blocked-either-direction user is INVISIBLE (never in results — `blocked` exists for
+ * the shared component's completeness only). Exact-match → at most ONE row (usernames are unique).
+ */
+export const personSearchResultSchema = z
+  .object({
+    userId: z.string().uuid(),
+    username: z.string(),
+    avatarUrl: z.string().url().nullable(),
+    relationship: searchRelationshipSchema,
+    cooldownUntil: z.string().optional(),
+  })
+  .strict();
+export type PersonSearchResult = z.infer<typeof personSearchResultSchema>;
+
+export const userSearchResponseSchema = z
+  .object({
+    results: z.array(personSearchResultSchema),
+  })
+  .strict();
+export type UserSearchResponse = z.infer<typeof userSearchResponseSchema>;

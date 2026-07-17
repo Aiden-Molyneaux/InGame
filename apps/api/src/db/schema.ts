@@ -150,6 +150,38 @@ export const authTokens = pgTable(
 );
 
 /**
+ * `invite_tokens` — SOC-10 share/QR invite tokens (M6 P3; decision 0076 §0.6). A token is a BEARER
+ * credential (an unguessable server-random ≥32-byte secret rendered base64url) — so ONLY its SHA-256
+ * HASH is stored here, never the token itself (the refresh-token / auth-token precedent). The plaintext
+ * is returned to the minter ONCE by POST /me/invites; GET /invites/:token resolves it on the AUTH-LOOKUP
+ * read class (lookup-by-hash, pre-actor). USER-OWNED (owner key = `user_id`).
+ *
+ * MECHANICS (decision 0076 §0.6): TTL 7 days (`expires_at`) · ≤5 ACTIVE per user (create-new-
+ * invalidates-oldest → `revoked_at` stamped on the surplus, serialized per-user by an advisory lock so
+ * parallel mints can't overshoot the cap) · MULTI-REDEMPTION within TTL (the resolve is a READ — a token
+ * is never consumed, so a party QR survives many scans). "Active" = `revoked_at IS NULL AND expires_at >
+ * now`. The unique index on `token_hash` is the collision backstop (a 256-bit random never collides in
+ * practice; the DB guarantees it).
+ */
+export const inviteTokens = pgTable(
+  'invite_tokens',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tokenHash: text('token_hash').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }), // NULL = live; set on create-new-invalidates-oldest
+  },
+  (table) => ({
+    tokenHashIdx: uniqueIndex('invite_tokens_token_hash_idx').on(table.tokenHash),
+    userIdx: index('invite_tokens_user_idx').on(table.userId),
+  }),
+);
+
+/**
  * `gamertags` — per-platform handles managed from the Profile (PROF-02). One handle per
  * (user, platform). USER-OWNED (owner key = `user_id`).
  */
@@ -784,6 +816,7 @@ export type NewUserRow = typeof users.$inferInsert;
 export type AuthIdentityRow = typeof authIdentities.$inferSelect;
 export type RefreshTokenRow = typeof refreshTokens.$inferSelect;
 export type AuthTokenRow = typeof authTokens.$inferSelect;
+export type InviteTokenRow = typeof inviteTokens.$inferSelect;
 export type GamertagRow = typeof gamertags.$inferSelect;
 export type FriendshipRow = typeof friendships.$inferSelect;
 export type FriendRequestRow = typeof friendRequests.$inferSelect;

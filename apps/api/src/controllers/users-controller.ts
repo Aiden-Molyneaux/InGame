@@ -46,3 +46,13 @@ export async function getContributionsGames(req: Request, res: Response): Promis
   const shape = await usersService.getContributionsGames(principal.userId, req.params.id ?? '', cursor);
   res.json(shape);
 }
+
+// GET /users/search?username= (SOC-07) — exact-match people search. The VIEWER is the authenticated
+// principal (SYS-01; unauth → 401). The self-exclusion, the block/suspended/deleted invisibility, and the
+// relationship (incl. the SOC-08 cooldown) all live in the service; a malformed query → an empty result.
+export async function getUserSearch(req: Request, res: Response): Promise<void> {
+  const principal = req.principal;
+  if (!principal) throw new AuthFailedError();
+  const shape = await usersService.searchUsers(principal.userId, req.query.username);
+  res.json(shape);
+}

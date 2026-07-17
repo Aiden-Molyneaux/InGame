@@ -11,11 +11,17 @@ import type {
   FriendCollectionResponse,
   FriendProfile,
   GenreView,
+  PersonSearchResult,
   PublicProfile,
+  SearchRelationship,
+  UserSearchResponse,
 } from '@ingame/shared';
+import { userSearchQuerySchema } from '@ingame/shared';
 import * as profileRepo from '../repositories/profile-repo';
 import * as relationshipRepo from '../repositories/relationship-repo';
 import * as friendReadRepo from '../repositories/friend-read-repo';
+import * as authRepo from '../repositories/auth-repo';
+import * as friendRequestRepo from '../repositories/friend-request-repo';
 import * as suspensionRepo from '../repositories/suspension-repo';
 import * as cardRepo from '../repositories/card-repo';
 import * as catalogRepo from '../repositories/catalog-repo';
@@ -213,6 +219,54 @@ function toContributorCard(row: TrendingDesignRow, adoptionCount: number): Contr
       isPremium: row.isPremium,
     },
   };
+}
+
+// ── P3 — GET /users/search?username= (SOC-07) ────────────────────────────────────────────────────────
+
+/**
+ * GET /users/search?username= (SOC-07) — EXACT-match people search (no fuzzy/prefix at M6). Returns at
+ * most ONE PersonRow (usernames are unique). The exact-username → user resolution reuses the ONE
+ * lint-legal exact-username read in the codebase (`auth-repo.findByUsername`, the AUTH-LOOKUP
+ * case-insensitive lookup) — see the seam note in the receipt; there is no separate people-search read
+ * class at M6.
+ *
+ * VISIBILITY (AUTH-11 anti-enumeration posture): SELF is excluded (the contract enumerates no `self`
+ * value); a deleted / suspended user is invisible; a user blocked EITHER direction is invisible (mutual
+ * invisibility, SOC-09) — all of these simply produce an EMPTY result set, indistinguishable from
+ * "no such username", so search is never a presence/block oracle. A syntactically-impossible query
+ * (fails `usernameSchema`) matches nobody → empty (not a 422 — an impossible handle isn't an error).
+ *
+ * RELATIONSHIP: the 6-value search enum. A pending request → `outgoing`/`incoming`; an accepted bond →
+ * `friend`; otherwise, an OPEN SOC-08 re-request cooldown → `cooldown` (+ `cooldownUntil`); else `none`.
+ * (`blocked` never surfaces — a blocked user is already invisible above; the value exists for the shared
+ * component only.)
+ */
+export async function searchUsers(actorId: string, rawUsername: unknown): Promise<UserSearchResponse> {
+  const parsed = userSearchQuerySchema.safeParse({ username: rawUsername });
+  if (!parsed.success) return { results: [] }; // an impossible handle matches nobody (no grammar oracle)
+
+  const target = await authRepo.findByUsername(parsed.data.username);
+  if (!target || target.deletedAt) return { results: [] }; // unknown / gone
+  if (target.id === actorId) return { results: [] }; // SELF excluded (no `self` value in the enum)
+  if (await suspensionRepo.getActiveSuspension(target.id)) return { results: [] }; // MOD-09 invisible
+  if (await relationshipRepo.isBlockedBetween(actorId, target.id)) return { results: [] }; // SOC-09 both dirs
+
+  const relationship = await relationshipRepo.getRelationship(actorId, target.id);
+  const row: PersonSearchResult = {
+    userId: target.id,
+    username: target.username,
+    avatarUrl: target.avatarUrl,
+    relationship: relationship as SearchRelationship,
+  };
+  // Only a `none` relation can be shadowed by an open cooldown (a pending/accepted relation wins).
+  if (relationship === 'none') {
+    const cooldownUntil = await friendRequestRepo.cooldownUntilFor(actorId, target.id, new Date());
+    if (cooldownUntil) {
+      row.relationship = 'cooldown';
+      row.cooldownUntil = cooldownUntil.toISOString();
+    }
+  }
+  return { results: [row] };
 }
 
 // ── P2 — GET /users/:id/collection (COL-10/11 · SOC-11) ──────────────────────────────────────────────

@@ -54,6 +54,15 @@ export const ERROR_CODES = [
   // friend-only action (SOC-03). A blocked/suspended/deleted/unknown target still COLLAPSES to the
   // generic unavailable (404, MOD-09) — NOT_FRIENDS is emitted ONLY for a KNOWN, visible non-friend.
   'NOT_FRIENDS', // 409 — GET /me/compare/:friendId (and other friend-only reads) against a non-friend (SOC-03)
+  // M6 P3 find + invite (decision 0076 §0.6/§0.7) — the SOC-10 invite-resolve refusals, F-17 additive
+  // path (they land as GET /invites/:token builds). BOTH are 409 (the CONFLICT family) and DELIBERATELY
+  // INDISTINGUISHABLE from each other's siblings by construction: an unknown / revoked / malformed token
+  // ALL return INVITE_INVALID (never-existed ≡ revoked — no oracle), and a resolve blocked-either-direction
+  // with the sender ALSO collapses to INVITE_INVALID (the block is never revealed, MOD-09). INVITE_EXPIRED
+  // is the ONE distinguishable case (a token that DID exist and simply timed out — no presence leak, since
+  // a stranger cannot forge a real-but-expired token). Neither carries any sender detail on the refusal.
+  'INVITE_INVALID', // 409 — GET /invites/:token: unknown / revoked / malformed / blocked-sender (indistinguishable)
+  'INVITE_EXPIRED', // 409 — GET /invites/:token: the token existed but its TTL (7d) lapsed
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];

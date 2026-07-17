@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { usernameSchema } from './profile';
 
 // REQUEST/INPUT schemas for social actions (SOC-09). The actor is the authenticated principal ONLY —
 // `.strict()` refuses any smuggled actor id. `userId` here is the TARGET of the action (who to block),
@@ -25,3 +26,28 @@ export const createFriendRequestSchema = z
   .strict();
 
 export type CreateFriendRequest = z.infer<typeof createFriendRequestSchema>;
+
+/**
+ * GET /users/search?username= query (SOC-07). EXACT-match people search — the `username` is validated
+ * against the SAME `usernameSchema` the rest of the surface uses (a query that can't be a valid username
+ * matches NObody, so the service returns an empty result set rather than a 422 — an impossible handle is
+ * not an error, and refusing it would leak the username grammar as an oracle). No fuzzy/prefix at M6.
+ */
+export const userSearchQuerySchema = z
+  .object({
+    username: usernameSchema,
+  })
+  .strict();
+
+export type UserSearchQuery = z.infer<typeof userSearchQuerySchema>;
+
+/**
+ * GET /invites/:token — the DEFENSIVE token-param guard (SOC-10; decision 0076 §0.6). The token is a
+ * server-random ≥32-byte secret rendered base64url, so a legitimate token is `[A-Za-z0-9_-]` and ~43
+ * chars. This bounds length + charset BEFORE the value is hashed/looked up (never trust a path param);
+ * a value that fails this is treated EXACTLY like an unknown token → INVITE_INVALID (no 422, no oracle —
+ * malformed ≡ never-existed). The bounds are generous (16..512) so a longer future token still parses.
+ */
+export const INVITE_TOKEN_RE = /^[A-Za-z0-9_-]+$/;
+export const inviteTokenParamSchema = z.string().min(16).max(512).regex(INVITE_TOKEN_RE);
+export type InviteTokenParam = z.infer<typeof inviteTokenParamSchema>;

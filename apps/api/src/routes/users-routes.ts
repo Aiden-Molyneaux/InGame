@@ -1,12 +1,14 @@
 import { defineRoute, type RouteDef } from '../http/defineRoute';
 import { asyncHandler } from '../http/asyncHandler';
 import { resolvePrincipal } from '../auth/principal';
+import { rateLimit } from '../http/rateLimit';
 import {
   getUser,
   getContributions,
   getUserCollection,
   getContributionsCards,
   getContributionsGames,
+  getUserSearch,
 } from '../controllers/users-controller';
 
 // GET /users/:id — the FIRST target-id route (G-D). `crossPrincipal: true` marks it as returning
@@ -14,6 +16,18 @@ import {
 // it as actor-B and asserts a 4xx (the collapse) AND the limited SHAPE (F06/SYS-07) — the read-path
 // guard M1 could not yet write.
 export const usersRoutes: RouteDef[] = [
+  // GET /users/search?username= (SOC-07) — MUST precede `/users/:id` (else Express matches "search" as an
+  // :id). Cross-principal: returns OTHER principals' public summaries (id/username/avatar) + relationship;
+  // its authz test hits it UNAUTHENTICATED (actor-B with no session) asserting 401. `users:search` bucket.
+  defineRoute({
+    method: 'get',
+    path: '/users/search',
+    mutates: false,
+    crossPrincipal: true,
+    authzTest: 'authz:user_search',
+    specIds: ['SOC-07', 'AUTH-11', 'SOC-09', 'SYS-01', 'SYS-05', 'SYS-07'],
+    handler: [resolvePrincipal, rateLimit('users:search'), asyncHandler(getUserSearch)],
+  }),
   defineRoute({
     method: 'get',
     path: '/users/:id',

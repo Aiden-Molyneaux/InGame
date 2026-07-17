@@ -55,6 +55,19 @@ const DEFAULTS: Record<string, RateLimitRule> = {
   // requests is a deliberate, social act; the cooldown handles re-request spam, these cap fan-out abuse.
   'friends:request': { limit: 10, windowMs: 60 * 60_000 },
   'friends:request:daily': { limit: 30, windowMs: 24 * 60 * 60_000 },
+  // M6 P3 find + invite (decision 0076 §0.6/§0.7 — SOC-07/10; SYS-05/G-K async, all tunable).
+  // Minting an invite is a deliberate, infrequent share act — 5/day (the §0.7 seed). Keyed by
+  // (bucket, actor-IP) like every other bucket.
+  'invites:create': { limit: 5, windowMs: 24 * 60 * 60_000 },
+  // People-search — 30/min (the §0.7 seed). A generous editing/typing budget; the only way past it is
+  // a scripted enumeration client (which exact-match already starves — no prefix crawl).
+  'users:search': { limit: 30, windowMs: 60_000 },
+  // Invite RESOLVE (SYS-05 — NOT in the §0.7 seed; builder's pick, flagged for G-K). The resolve is an
+  // UNAUTHENTICATED, IP-keyed bearer read (a fresh install may hit it), so it needs its own IP throttle
+  // against token-guessing/enumeration. 30/min per IP mirrors the search budget: ample for a human
+  // scanning a QR (one hit) or tapping a link (one hit), tight against a brute-force scanner. The token
+  // is 256-bit random so guessing is infeasible regardless; this caps the attempt RATE as defence-in-depth.
+  'invites:resolve': { limit: 30, windowMs: 60_000 },
 };
 
 const overrides = new Map<string, RateLimitRule>();

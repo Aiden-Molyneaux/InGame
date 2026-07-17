@@ -7,6 +7,7 @@ import { meRoutes } from './routes/me-routes';
 import { authRoutes } from './routes/auth-routes';
 import { usersRoutes } from './routes/users-routes';
 import { friendsRoutes } from './routes/friends-routes';
+import { inviteRoutes } from './routes/invite-routes';
 import { catalogRoutes } from './routes/catalog-routes';
 import { collectionRoutes } from './routes/collection-routes';
 import { cardRoutes } from './routes/card-routes';
@@ -57,6 +58,7 @@ export function createApp(): Express {
       ...meRoutes,
       ...usersRoutes,
       ...friendsRoutes,
+      ...inviteRoutes,
       ...catalogRoutes,
       ...collectionRoutes,
       ...cardRoutes,

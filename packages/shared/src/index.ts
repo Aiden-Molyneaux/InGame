@@ -34,6 +34,7 @@ export * from './schemas/response/cards';
 export * from './schemas/response/device';
 export * from './schemas/response/economy';
 export * from './schemas/response/social';
+export * from './schemas/response/invite';
 export * from './schemas/response/compare';
 export * from './schemas/composition';
 export * from './schemas/device';

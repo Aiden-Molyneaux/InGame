@@ -331,6 +331,35 @@ export class NotFriendsError extends AppError {
   }
 }
 
+/**
+ * SOC-10 (decision 0076 §0.6) — GET /invites/:token refused: the token is unknown / revoked / malformed,
+ * OR the resolver is blocked-either-direction with the sender. 409 (the CONFLICT family). DELIBERATELY
+ * INDISTINGUISHABLE across all those causes (never-existed ≡ revoked ≡ malformed ≡ blocked-sender) — no
+ * presence oracle, and the block is never revealed (MOD-09). Carries NOTHING (no sender detail leaks on a
+ * refusal). The byte-identical body is asserted by a standing test.
+ */
+export class InviteInvalidError extends AppError {
+  readonly code = 'INVITE_INVALID';
+  readonly httpStatus = 409;
+  constructor(message = 'This invite link is not valid.') {
+    super(message);
+  }
+}
+
+/**
+ * SOC-10 (decision 0076 §0.6) — GET /invites/:token refused: the token DID exist but its TTL (7 days)
+ * lapsed. 409 (the CONFLICT family). Distinguishable from INVITE_INVALID is SAFE — a stranger cannot
+ * forge a real-but-expired token, so this leaks no presence (only the holder of a once-valid token sees
+ * it). Carries nothing.
+ */
+export class InviteExpiredError extends AppError {
+  readonly code = 'INVITE_EXPIRED';
+  readonly httpStatus = 409;
+  constructor(message = 'This invite link has expired.') {
+    super(message);
+  }
+}
+
 /** SERVER_ERROR carries a GENERIC body downstream — the middleware never serializes this message. */
 export class ServerError extends AppError {
   readonly code = 'SERVER_ERROR';

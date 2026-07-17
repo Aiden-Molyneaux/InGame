@@ -20,6 +20,24 @@ export const adminTierSchema = z.number().int().min(1).max(4);
 export const relationshipSchema = z.enum(['none', 'outgoing', 'incoming', 'friend']);
 export type Relationship = z.infer<typeof relationshipSchema>;
 
+/**
+ * SOC-07 — the SEARCH-surface relationship enum (api-contract 0.23/0.44/0.69). It is the base
+ * `relationshipSchema` PLUS two search-surface-only extras (F-13): `cooldown` (the SOC-08 re-request
+ * window is still open with this person — the PersonRow carries a `cooldownUntil` and disables ADD)
+ * and `blocked` (present ONLY for the shared PersonRow component's completeness — a blocked user is
+ * mutually INVISIBLE in results, so this value never actually surfaces from `/users/search`, OQ-072).
+ * The canonical spelling stays `friend` (matching `relationshipSchema` + `/users/:id`).
+ */
+export const searchRelationshipSchema = z.enum([
+  'none',
+  'outgoing',
+  'incoming',
+  'friend',
+  'blocked',
+  'cooldown',
+]);
+export type SearchRelationship = z.infer<typeof searchRelationshipSchema>;
+
 /** PROF-02 controlled platform list for gamertags. */
 export const platformSchema = z.enum(['pc', 'playstation', 'xbox', 'nintendo']);
 export type Platform = z.infer<typeof platformSchema>;

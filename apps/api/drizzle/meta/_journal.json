@@ -120,6 +120,13 @@
       "when": 1784261327675,
       "tag": "0016_giant_rawhide_kid",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1784265056500,
+      "tag": "0017_parched_kinsey_walden",
+      "breakpoints": true
     }
   ]
 }

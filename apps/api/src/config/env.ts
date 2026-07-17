@@ -43,6 +43,13 @@ export interface ApiEnv {
    * (REVENUECAT_SECRET_API_KEY, real entitlement re-sync) stays a P2b concern, unread here.
    */
   revenueCatWebhookAuth: string;
+  /**
+   * SOC-10 (decision 0076 §0.6) — the base URL the minted invite token is appended to (POST /me/invites
+   * returns `${INVITE_LINK_BASE}/${token}`). The P15 static landing OWNS this route (a tokenized URL →
+   * TestFlight while in beta; store-listing routing lands M8). Defaults to a placeholder so the seam
+   * works in dev without config; production injects the real domain from the host secret store (SYS-03).
+   */
+  inviteLinkBase: string;
 }
 
 function num(value: string | undefined, fallback: number): number {
@@ -93,5 +100,8 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): ApiEnv {
       .filter(Boolean),
     iapProvider: resolveIapProvider(nodeEnv, source.IAP_PROVIDER),
     revenueCatWebhookAuth: source.REVENUECAT_WEBHOOK_AUTH ?? '',
+    // SOC-10 — the invite-link base (no trailing slash needed; the service joins with '/'). The P15
+    // landing owns the real route; this placeholder keeps the seam functional in dev/test.
+    inviteLinkBase: (source.INVITE_LINK_BASE ?? 'https://ingame.app/i').replace(/\/+$/, ''),
   };
 }

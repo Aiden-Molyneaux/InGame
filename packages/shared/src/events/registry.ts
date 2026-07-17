@@ -73,6 +73,8 @@ export const DOMAIN_EVENT_TYPES = [
   'friend.request_declined', // SOC-08 — POST /friends/requests/:id/decline (silent; stamps the SYS-04 cooldown).
   'friend.request_cancelled', // SOC-08 — DELETE /friends/requests/:id (the requester withdrew an outgoing request).
   'friend.removed', // SOC-08 — DELETE /me/friends/:userId (unfriend; silent to the target, decision 0010).
+  // M6 P3 find + invite (decision 0076 §0.6 — invite_tokens; the AUTH-LOOKUP bearer read class). Append at the END.
+  'invite.created', // SOC-10 — POST /me/invites minted a share/QR invite token (create-new-invalidates-oldest may revoke an older one). Payload = { inviteId } only (never the token/hash — a bearer credential stays out of the event spine, F18).
 ] as const;
 
 export type DomainEventType = (typeof DOMAIN_EVENT_TYPES)[number];
