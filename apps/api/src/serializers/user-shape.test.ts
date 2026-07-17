@@ -60,19 +60,31 @@ describe('F06: read-path privacy serializer (relationship matrix)', () => {
     }
   });
 
-  it('friend (full) shape adds exactly bio + privacy + top10', () => {
+  it('friend (full) shape adds exactly bio + privacy + top10 + the C4 trio (stats/device/nowPlaying)', () => {
     const out = toFriendShape(makeUser(), {
       relationship: 'friend',
       mutualFriendsCount: 5,
       friendsCount: 12,
       gamertags: [],
       top10: [],
+      // M6 C4 — the PROF-05 board rows (stats six-pack · THEIR-DEVICE · nowPlaying pin).
+      stats: { games: 2, hours: 40, completionPct: 50, cardsDesigned: 1, adoptionsReceived: 0, friends: 12 },
+      device: { shellId: 'teal', screenThemeId: 'midnight', stickerComposition: { version: 1, stickers: [] } },
+      nowPlaying: null,
     });
     expect(friendProfileSchema.parse(out)).toEqual(out);
     expect(out.bio).toBe('collector of trophies');
     expect(out.friendsCount).toBe(12);
     expect(out.top10).toEqual([]);
+    expect(out.stats).toMatchObject({ games: 2, hours: 40 }); // C4 — PROF-04 six-pack on the friend shape
+    expect(out.device).toMatchObject({ shellId: 'teal', screenThemeId: 'midnight' }); // C4 — DEV-02/04
+    expect(out.nowPlaying).toBeNull(); // C4 — WTP-03 (no pin)
     expect('email' in out).toBe(false);
+    // F06 — the LIMITED shape must NOT gain the C4 trio (the strict publicProfileSchema proves it).
+    const limited = toPublicShape(makeUser(), { relationship: 'none', mutualFriendsCount: 0 });
+    expect('stats' in limited).toBe(false);
+    expect('device' in limited).toBe(false);
+    expect('nowPlaying' in limited).toBe(false);
   });
 
   it('exposes only a GENERIC staff badge publicly (PROF-09 — tier not disclosed)', () => {

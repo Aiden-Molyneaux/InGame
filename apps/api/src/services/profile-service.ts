@@ -48,8 +48,10 @@ export function usernameNextChangeAt(row: UserRow): string | null {
   return next > Date.now() ? new Date(next).toISOString() : null;
 }
 
-/** PROF-04 stats derived from the real shelf; completionPct per decision 0058. */
-function statsOf(entries: CollectionEntryRow[], friends: number, cardsDesigned: number): SelfStats {
+/** PROF-04 stats derived from the real shelf; completionPct per decision 0058. EXPORTED (M6 C4) so the
+ *  friend/full `/users/:id` shape computes the SAME six-pack against the TARGET — parity by construction
+ *  (one computation, two callers; the friend-visible aggregates the contract draws, PROF-05). */
+export function statsOf(entries: CollectionEntryRow[], friends: number, cardsDesigned: number): SelfStats {
   const nonWishlist = entries.filter((e) => e.status !== 'wishlist');
   const done = nonWishlist.filter((e) => e.status === 'beaten' || e.status === 'completed');
   return {

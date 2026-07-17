@@ -1,6 +1,8 @@
 import {
   ANONYMIZED_AUTHOR,
   type AnonymizedAuthor,
+  type FriendDevice,
+  type FriendGameExpansion,
   type FriendProfile,
   type FriendTopTenEntry,
   type GamertagView,
@@ -93,6 +95,13 @@ export interface FriendContext extends OtherPrincipalContext {
   gamertags: GamertagView[];
   /** SOC-04 (M6 P5) — the target's Top-10, FLATTENED (never `composition`, OQ-122). */
   top10: FriendTopTenEntry[];
+  /** PROF-04/05 (M6 C4) — the target's six-pack (the SAME statsOf computation the self shape runs).
+   *  PROF-07 percentile chips stay absent (threshold-gated; the percentile engine rides M7). */
+  stats: SelfStats;
+  /** DEV-02/04 (M6 C4, decision 0012) — the THEIR-DEVICE payload (`shellId` is the wire name). */
+  device: FriendDevice;
+  /** WTP-03 (M6 C4) — the target's Now-Playing pin (flattened card), or null. */
+  nowPlaying: FriendGameExpansion | null;
 }
 
 /** Non-friend / limited public shape (PROF-03) — nothing beyond this allowlist leaks. */
@@ -122,6 +131,9 @@ export function toFriendShape(row: UserRow, ctx: FriendContext): FriendProfile {
     gamertags: ctx.gamertags,
     friendsCount: ctx.friendsCount,
     top10: ctx.top10,
+    stats: ctx.stats, // M6 C4 — PROF-04 six-pack (friend-visible aggregates, PROF-05)
+    device: ctx.device, // M6 C4 — DEV-02/04 THEIR-DEVICE (decision 0012)
+    nowPlaying: ctx.nowPlaying, // M6 C4 — WTP-03 pin (flattened card)
   };
 }
 

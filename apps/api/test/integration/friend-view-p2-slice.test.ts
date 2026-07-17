@@ -198,6 +198,55 @@ describe('COL-10/11 · F06: GET /users/:id/collection — the friend subset (no 
   });
 });
 
+describe('PROF-05 · F06 (C4): the friend/full /users/:id carries stats + device + nowPlaying; the limited shape does NOT', () => {
+  it('a FRIEND sees the six-pack stats, the THEIR-DEVICE payload, and the nowPlaying pin (flattened card)', async () => {
+    const target = await seedUser();
+    const friend = await seedUser();
+    await makeFriends(target, friend);
+    const game = await seedGame(target.token, 'C4 Pinned Game');
+    const entryId = await addToCollection(target.token, game.id, 25);
+    const cardId = await publishCard(target.token, game.id, 7);
+    await equip(target.token, entryId, cardId);
+    await request(app).put('/api/me/now-playing').set(authed(target.token)).send({ gameId: game.id });
+    await request(app).patch('/api/me/device').set(authed(target.token)).send({ screenThemeId: 'paper' });
+
+    const res = await request(app).get(`/api/users/${target.id}`).set(authed(friend.token));
+    expect(res.status).toBe(200);
+    // stats — the PROF-04 six-pack computed against the TARGET (the same statsOf the self shape runs).
+    expect(res.body.stats).toMatchObject({ games: 1, hours: 25, friends: 1, cardsDesigned: 1 });
+    // device — DEV-02/04 (decision 0012): the wire name is `shellId`.
+    expect(res.body.device).toMatchObject({ shellId: 'teal', screenThemeId: 'paper' });
+    expect(res.body.device.stickerComposition).toMatchObject({ version: 1 });
+    // nowPlaying — WTP-03: the pin expanded with their hours + the FLATTENED card (never composition).
+    expect(res.body.nowPlaying).toMatchObject({ gameId: game.id, title: 'C4 Pinned Game', hours: 25 });
+    expect(res.body.nowPlaying.card.equipped).toEqual(EXPECTED_EQUIPPED);
+    expect('composition' in res.body.nowPlaying.card).toBe(false);
+  });
+
+  it('F06 — the LIMITED (non-friend) shape stays EXACTLY without the C4 trio', async () => {
+    const target = await seedUser();
+    const stranger = await seedUser();
+    const res = await request(app).get(`/api/users/${target.id}`).set(authed(stranger.token));
+    expect(res.status).toBe(200);
+    expect(Object.keys(res.body).sort()).toEqual(
+      ['id', 'username', 'avatarUrl', 'memberSince', 'mutualFriendsCount', 'relationship'].sort(),
+    );
+    for (const leak of ['stats', 'device', 'nowPlaying', 'top10', 'bio']) {
+      expect(leak in res.body).toBe(false);
+    }
+  });
+
+  it('a friend with NO device row and NO pin gets the free-default device + nowPlaying null', async () => {
+    const target = await seedUser();
+    const friend = await seedUser();
+    await makeFriends(target, friend);
+    const res = await request(app).get(`/api/users/${target.id}`).set(authed(friend.token));
+    expect(res.body.device).toMatchObject({ shellId: 'teal', screenThemeId: 'midnight' });
+    expect(res.body.nowPlaying).toBeNull();
+    expect(res.body.stats).toMatchObject({ games: 0, hours: 0, friends: 1 });
+  });
+});
+
 describe('SOC-03 · F06: GET /me/compare/:friendId — the face-off', () => {
   it('two friends compare — totals face-off, shared-set matchup, leaderboard with isMe', async () => {
     const me = await seedUser();

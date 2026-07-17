@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { privacySchema, roleSchema, adminTierSchema, relationshipSchema } from '../common';
 import { gamertagViewSchema } from './gamertag';
 import { collectionCardSchema, friendCollectionCardSchema } from './collection';
+import { stickerCompositionSchema } from '../device';
 
 // RESPONSE/VIEW schemas — owned by the F06 privacy serializer (decision 0051/F06/F23, the sanctioned
 // divergence from the request half). Each is an ALLOWLIST of fields per the PROF-03 privacy state:
@@ -78,6 +79,36 @@ export const friendTopTenEntrySchema = z
 export type FriendTopTenEntry = z.infer<typeof friendTopTenEntrySchema>;
 
 /**
+ * DEV-02/04 (decision 0012, M6 C4) — the friend's device payload on the friend/full `/users/:id` shape
+ * (the THEIR-DEVICE row + the "view in their device" chrome toggle). The contract names the shell field
+ * `shellId` (the wire name; the owner-side `/me/device` uses `activeShellId`). Cosmetic-only — no
+ * private data rides a device config.
+ */
+export const friendDeviceSchema = z
+  .object({
+    shellId: z.string(),
+    screenThemeId: z.string(),
+    stickerComposition: stickerCompositionSchema,
+  })
+  .strict();
+export type FriendDevice = z.infer<typeof friendDeviceSchema>;
+
+/**
+ * WTP-03 (M6 C4) — the friend's Now-Playing pin, expanded like the self shape's `nowPlaying` but with
+ * the FLATTENED friend-view card (never `composition` — OQ-122/CARD-15, the P2 friend-collection card
+ * resolution). Null when the friend has no pin (or the pinned game left their shelf).
+ */
+export const friendGameExpansionSchema = z
+  .object({
+    gameId: z.string().uuid(),
+    title: z.string(),
+    hours: z.number().int().nonnegative(),
+    card: friendCollectionCardSchema,
+  })
+  .strict();
+export type FriendGameExpansion = z.infer<typeof friendGameExpansionSchema>;
+
+/**
  * GET /me self-view. `avatarUrl: null` ⇒ the default monogram (PROF-08). The self-view is the only
  * shape exposing `role` + `adminTier` (PROF-09 — tier is private), `usernamePending` (AUTH-09, the
  * SIWA completion gate), and `emailVerified` (AUTH-08, the Settings resend banner). M3 adds the
@@ -142,6 +173,16 @@ export const friendProfileSchema = publicProfileSchema
     gamertags: z.array(gamertagViewSchema),
     friendsCount: z.number().int().nonnegative(),
     top10: z.array(friendTopTenEntrySchema),
+    // ── M6 C4 (the PROF-05 board rows the P2 report deferred — parvati walk-round) ─────────────────
+    // All three NULL-TOLERANT (nullable) so the client's existing parse keeps working before its own
+    // fix-round; the server always serves stats + device (real values) and nowPlaying-or-null.
+    /** PROF-04 six-pack for the TARGET (the same computation the self shape runs). PROF-07 percentile
+     *  chips stay ABSENT (threshold-gated; the cohort/percentile engine rides M7 — omitted, not faked). */
+    stats: selfStatsSchema.nullable(),
+    /** DEV-02/04 — the THEIR-DEVICE payload (decision 0012). */
+    device: friendDeviceSchema.nullable(),
+    /** WTP-03 — the friend's Now-Playing pin (flattened card), or null. */
+    nowPlaying: friendGameExpansionSchema.nullable(),
   })
   .strict();
 export type FriendProfile = z.infer<typeof friendProfileSchema>;

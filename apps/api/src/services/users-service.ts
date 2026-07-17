@@ -9,6 +9,7 @@ import type {
   FriendCollectionCard,
   FriendCollectionItem,
   FriendCollectionResponse,
+  FriendGameExpansion,
   FriendProfile,
   FriendTopTenEntry,
   GenreView,
@@ -30,6 +31,7 @@ import * as collectionRepo from '../repositories/collection-repo';
 import * as adoptionRepo from '../repositories/adoption-repo';
 import * as listRepo from '../repositories/list-repo';
 import * as profileService from './profile-service';
+import * as deviceService from './device-service';
 import { toPublicShape, toFriendShape } from '../serializers/user-shape';
 import { ForbiddenError, NotFoundError, NotFriendsError } from '../errors/AppError';
 import { deriveEquippedLabels } from '../render/equipped-labels';
@@ -117,14 +119,61 @@ export async function getUserProfile(
   // the full shape and the G-D field-diff / lint tests both go RED.
   const friendRow = isSelf ? target : await friendReadRepo.friendScopedProfile(actorId, targetId);
   if (friendRow) {
-    const [gamertags, friendsCount, top10] = await Promise.all([
+    // The target's shelf, fetched ONCE through the friend-view resolution (self reads its own rows;
+    // a friend goes through the SYS-01-FRIEND-READ class) — top10 cards, the stats six-pack, and the
+    // nowPlaying expansion all derive from it (M6 C4: one read, three PROF-05 board rows).
+    const shelfRows = isSelf
+      ? await ownCollectionAsFriendRows(actorId)
+      : await friendReadRepo.listFriendCollection(actorId, targetId);
+    const [gamertags, friendsCount, cardsDesigned, deviceFacets] = await Promise.all([
       profileService.listGamertags(targetId),
       relationshipRepo.countFriends(targetId),
-      resolveFriendTopTen(actorId, targetId),
+      cardRepo.countOwnedDesigns(targetId),
+      deviceService.facetsForUser(targetId),
     ]);
-    return toFriendShape(friendRow, { relationship, mutualFriendsCount, friendsCount, gamertags, top10 });
+    return toFriendShape(friendRow, {
+      relationship,
+      mutualFriendsCount,
+      friendsCount,
+      gamertags,
+      top10: await resolveFriendTopTen(targetId, shelfRows),
+      // M6 C4 — PROF-04 six-pack: the SAME statsOf computation the self shape runs, against the
+      // TARGET's entries (friend-visible aggregates — hours/games already cross via compare/collection).
+      // PROF-07 percentiles stay absent (threshold-gated; the percentile engine rides M7).
+      stats: profileService.statsOf(shelfRows.map((r) => r.entry), friendsCount, cardsDesigned),
+      // M6 C4 — DEV-02/04 THEIR-DEVICE (decision 0012): `shellId` is the contract's wire name.
+      device: {
+        shellId: deviceFacets.activeShellId,
+        screenThemeId: deviceFacets.screenThemeId,
+        stickerComposition: deviceFacets.stickerComposition,
+      },
+      // M6 C4 — WTP-03: the target's pin expanded from their shelf (flattened card, P2 resolution).
+      nowPlaying: resolveFriendNowPlaying(friendRow.nowPlayingGameId, shelfRows),
+    });
   }
   return toPublicShape(target, { relationship, mutualFriendsCount });
+}
+
+/**
+ * WTP-03 (M6 C4) — the target's Now-Playing pin as a friend-view expansion: title + their hours + the
+ * FLATTENED card, all from the already-fetched shelf rows. Null when there is no pin OR the pinned game
+ * is no longer on their shelf (a dangling pin shows a friend nothing — the pin write-path requires the
+ * game be on the shelf, so this only happens after a remove; the self shape keeps a 0-hour catalog
+ * fallback, a deliberate self-vs-friend divergence flagged in the C4 report).
+ */
+function resolveFriendNowPlaying(
+  nowPlayingGameId: string | null,
+  shelfRows: FriendCollectionEntryRow[],
+): FriendGameExpansion | null {
+  if (!nowPlayingGameId) return null;
+  const row = shelfRows.find((r) => r.game.id === nowPlayingGameId);
+  if (!row) return null;
+  return {
+    gameId: row.game.id,
+    title: row.game.name,
+    hours: row.entry.hours,
+    card: friendCardFromRow(row),
+  };
 }
 
 /**
@@ -133,12 +182,19 @@ export async function getUserProfile(
  * Only reachable from the friend/full branch above (self OR an accepted friend), so no extra gate is
  * needed here — the caller already resolved friendship.
  */
-async function resolveFriendTopTen(actorId: string, targetId: string): Promise<FriendTopTenEntry[]> {
+async function resolveFriendTopTen(
+  targetId: string,
+  shelfRows: FriendCollectionEntryRow[],
+): Promise<FriendTopTenEntry[]> {
   const list = await listRepo.findListByUser(targetId, 'top10');
   if (!list) return [];
   const rows = await listRepo.listItemsForList(targetId, list.id);
   if (rows.length === 0) return [];
-  const cardsByGame = await friendEquippedCardsByGameId(actorId, targetId, rows.map((r) => r.game.id));
+  // The flattened card riders come from the ALREADY-FETCHED shelf rows (self OR friend-read resolved
+  // by the caller) — the SAME resolution `getFriendCollection` uses, so top10 never diverges (M6 C4:
+  // the shelf is fetched once and shared with the stats/nowPlaying rows).
+  const cardsByGame = new Map<string, FriendCollectionCard>();
+  for (const r of shelfRows) cardsByGame.set(r.game.id, friendCardFromRow(r));
   const defaultCard: FriendCollectionCard = { id: 'default', imageUrl: null, thumbUrl: null, isCustom: false, isPremium: false };
   return rows.map((r) => ({
     rank: r.item.rank,
@@ -146,28 +202,6 @@ async function resolveFriendTopTen(actorId: string, targetId: string): Promise<F
     title: r.game.name,
     card: cardsByGame.get(r.game.id) ?? defaultCard,
   }));
-}
-
-/** Bulk-resolve the TARGET's flattened card riders for a set of THEIR OWN games (the top10 substrate).
- *  Self reads its own rows directly (`ownCollectionAsFriendRows`); anyone else goes through the
- *  FRIEND-READ class (`friendReadRepo.listFriendCollection`) — the SAME branch `getFriendCollection`
- *  uses, so the top10 card resolution never diverges from the collection one. */
-async function friendEquippedCardsByGameId(
-  actorId: string,
-  targetId: string,
-  gameIds: string[],
-): Promise<Map<string, FriendCollectionCard>> {
-  if (gameIds.length === 0) return new Map();
-  const rows =
-    actorId === targetId
-      ? await ownCollectionAsFriendRows(actorId)
-      : await friendReadRepo.listFriendCollection(actorId, targetId);
-  const wanted = new Set(gameIds);
-  const map = new Map<string, FriendCollectionCard>();
-  for (const r of rows) {
-    if (wanted.has(r.game.id)) map.set(r.game.id, friendCardFromRow(r));
-  }
-  return map;
 }
 
 /**

@@ -123,6 +123,18 @@ export async function getDevice(actorId: string): Promise<DeviceResponse> {
   return facetsOf(row);
 }
 
+/**
+ * M6 C4 (DEV-02/04, decision 0012) — the THREE FACETS for ANY user (the friend/full `/users/:id`
+ * `device` payload — the THEIR-DEVICE row). Same defaults rule as getDevice (no row → the free
+ * defaults, never creates one). The read is scope-to-owner keyed by the TARGET (the listGamertags
+ * precedent — the row fetch rides the scoped helper; exposure is the caller's friend-gated serializer,
+ * F06). A device is cosmetic-only — no private data rides it.
+ */
+export async function facetsForUser(userId: string): Promise<deviceRepo.DeviceFacets> {
+  const row = await deviceRepo.findConfig(userId);
+  return facetsOf(row);
+}
+
 /** @mutation — PATCH /me/device (ARCH 3): validate + upsert the named facets; ≥1 present (rule-5). */
 export const patchDevice = mutation(
   { name: 'device.patch', specIds: ['DEV-01', 'DEV-02', 'DEV-03', 'DEV-04', 'COSM-03', 'SYS-01', 'SYS-02'] },
