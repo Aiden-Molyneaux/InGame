@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
-import Svg, { Path, Rect, Circle } from 'react-native-svg';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import type { FriendRequestItem } from '@ingame/shared';
 import { ScreenHead } from '../src/components/ScreenHead';
@@ -114,22 +114,16 @@ export default function AddFriends() {
         ) : (
           <>
             <Text style={styles.secTitle}>FIND SOMEONE</Text>
-            <View style={styles.inviteKeys}>
-              <ScreenButton
-                label="Invite link"
-                variant="secondary"
-                onPress={() => router.push('/invite-friends')}
-                icon={<InviteGlyph color={t.brand.navy} />}
-                style={styles.keyBtn}
-              />
-              <ScreenButton
-                label="QR code"
-                variant="secondary"
-                onPress={() => router.push('/invite-friends')}
-                icon={<QrGlyph color={t.brand.navy} />}
-                style={styles.keyBtn}
-              />
-            </View>
+            {/* walk-1 (owner ruling): ONE entry into the invite page — link + QR both live there, so two
+                buttons to the same destination was noise. Combined label: INVITE A FRIEND (copy pick,
+                flagged in the report — the board draws the pre-merge two-affordance row). */}
+            <ScreenButton
+              label="Invite a friend"
+              variant="secondary"
+              onPress={() => router.push('/invite-friends')}
+              icon={<InviteGlyph color={t.brand.navy} />}
+              block
+            />
 
             <View style={styles.secRow}>
               <Text style={styles.secTitle}>
@@ -186,17 +180,6 @@ function InviteGlyph({ color }: { color: string }) {
     </Svg>
   );
 }
-function QrGlyph({ color }: { color: string }) {
-  return (
-    <Svg width={13} height={13} viewBox="0 0 24 24">
-      <Rect x={3} y={3} width={7} height={7} fill="none" stroke={color} strokeWidth={2} />
-      <Rect x={14} y={3} width={7} height={7} fill="none" stroke={color} strokeWidth={2} />
-      <Rect x={3} y={14} width={7} height={7} fill="none" stroke={color} strokeWidth={2} />
-      <Path d="M14 14h3v3M20 17v4M17 20h0" stroke={color} strokeWidth={2} strokeLinecap="round" fill="none" />
-    </Svg>
-  );
-}
-
 const useStyles = themedStyles((t) => ({
   screen: { flex: 1, backgroundColor: t.scr.bg },
   flex: { flex: 1 },
@@ -206,8 +189,6 @@ const useStyles = themedStyles((t) => ({
   secTitle: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 2, marginTop: t.space.lg, marginBottom: t.space.md },
   secRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   searchHint: { fontFamily: t.font.screenSemi, fontSize: t.type.body, color: t.scr.dim, marginTop: t.space.lg },
-  inviteKeys: { flexDirection: 'row', gap: t.space.md },
-  keyBtn: { flex: 1 },
   emptyReq: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, lineHeight: 14, marginTop: t.space.sm },
 
   // no-results invite bridge
