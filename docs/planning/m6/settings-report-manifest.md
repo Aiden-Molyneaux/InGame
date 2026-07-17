@@ -239,6 +239,30 @@ ABSENT, not disabled** (0076 §0.10). Cited:
    details validation (dormant→armed) → CANCEL out. **Do NOT submit live** (POST /reports 404s until P7).
 4. Sign-out ConfirmSheet raises (calm), CANCEL backs out (do not actually sign out mid-BOOT).
 
+## BOOT outcome (2026-07-17, :8082)
+
+- **App BOOTS with all P12 code** — sign-in renders, the DeviceShell + 5-key NavBand render, login
+  succeeds (`/collection`), tab nav works (via the accessibility-tree ref; screen-coordinate taps on the
+  shell nav were unreliable — the known web pushState-desync, review-notes). ✅
+- **BUG CAUGHT + FIXED by the BOOT check:** `app/settings/blocked.test.tsx` (committed in the build
+  commit) **broke the entire web route tree** — expo-router scans `app/**` for ROUTES and treated the
+  test file as one; its `@testing-library`/jest imports don't resolve in the app bundle → the route-tree
+  build failed → the dev server served `_error.bundle` (the LogBox overlay, which itself crashes on web:
+  `useLogs … reading 'map'`) → a **blank app for every route**. Relocated to `src/screens/blocked.test.tsx`
+  (commit `491fa5c`). **Lesson: no `*.test.tsx` under `app/` — ever.** (Also hit the standing new-`src/`-
+  directory Metro trap for `src/components/report/` — a Metro restart with cache-clear resolved it.)
+- **Interactive walk of Settings → BLOCKED → ReportSheet: OWED** — blocked by the **shared dev-API
+  restart storm**: the concurrent server lane restarted the API **416 times** tonight (`.devstack/api.log`
+  "Restarting" count; the login 500 was `column "equipped_labels" does not exist` — the server's P2
+  migration 0016 in-flight), so **browser reads intermittently 500** (collection + profile both showed
+  "SIGNAL LOST"; `/me` refetch kept hitting restart windows). `curl` confirms the endpoints are healthy in
+  stable gaps (`GET /me` 200 · `/me/blocks` 200 · `/me/collection` 200), so this is an **environment
+  condition, not P12 code**. Per the packet's fallback ("if still down after ~15 min, fall back to jest +
+  record the BOOT items as owed, with the api.log evidence line"), the live walk is recorded owed. The
+  Settings shell, BLOCKED page (all states), and ReportSheet matrix are **verified via jest** (they mount
+  + render with mocked data) + typecheck + lint. **parvati should run the live walk once the server lane
+  settles** (API stops restarting).
+
 ## Open flags for the orchestrator / parvati
 - GAP-R1 — local report schemas (swap to shared when P7 lands).
 - SEAM(P7) — POST /reports 404s live; the exact reason-code enum I coded against is above (align P7).
