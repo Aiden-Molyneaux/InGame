@@ -9,7 +9,7 @@ import { useTheme } from './theme';
 import { SCREEN_THEMES } from './theme/palettes';
 
 // walk2 regression (store theme-preview leak) — the app-wide store preview override (F-13 C7) has ONE
-// clearer coupled to the item-sheet's openItem→null transition; a glitched close that strands the sheet
+// clearer coupled to the item-sheet's openItem->null transition; a glitched close that strands the sheet
 // open, or a blurred-but-still-mounted /store (expo-router keeps routes mounted), leaves the previewed
 // theme (Berry) painting the WHOLE app while redux prefs + the server device stay Midnight — the exact
 // desync the owner saw (app Berry, "My Device" Midnight). The fix adds a screen-scoped useFocusEffect
@@ -17,29 +17,26 @@ import { SCREEN_THEMES } from './theme/palettes';
 //
 // This drives the REAL Store screen and the STRANDED-SHEET path: a provider-level setter forces the
 // preview to Berry and NEVER clears it (standing in for a sheet whose own openItem-null clearer never
-// fires), so ONLY Store's blur/unmount backstop can revert it. It is RED on current main (no backstop →
-// Berry stays after blur) and GREEN with the fix. Meaningful, high-risk surface (an economy-adjacent
-// cosmetic leak across the whole app), not a trivial test (testing-strategy meaningful-tests-first).
+// fires), so ONLY Store's blur/unmount backstop can revert it. RED on main (no backstop), GREEN with fix.
 //
-// expo-router is mocked (the device-route.test precedent): Store also calls useLocalSearchParams, which
-// needs expo-router's own context — a bare @react-navigation navigator can't satisfy it — so a real
-// navigator is impractical here. Instead a controllable useFocusEffect faithfully models react-nav's
-// focus/blur contract: it runs the effect on FOCUS (mount) and its returned cleanup on BLUR (manual
-// fire) or UNMOUNT (React cleanup). On main, Store never registers a focus effect, so the registry stays
-// empty and a blur is a no-op — which is precisely why the leak reproduces there. `mock`-prefixed so
-// jest's hoisted factory may reference it.
-const mockFocusReg: { effects: Array<{ cleanup: void | (() => void) }> } = { effects: [] };
+// Plain-JS-in-TSX (no TS type syntax): this file's jest.mock('expo-router') factory references the
+// module-scope `mockFocusReg`, which trips babel's TS parse for the whole file — the logic needs no types.
+// expo-router is mocked with a controllable useFocusEffect that models react-navigation's focus/blur
+// contract: it runs the effect on FOCUS (mount) and its returned cleanup on BLUR (manual) or UNMOUNT.
+// `mock`-prefixed so jest's hoisted factory may reference it.
+const mockFocusReg = { effects: [] };
 
 jest.mock('expo-router', () => {
   const RReact = require('react');
   return {
     useLocalSearchParams: () => ({}),
-    useFocusEffect: (cb: () => void | (() => void)) => {
+    useFocusEffect: (cb) => {
       RReact.useEffect(() => {
-        const entry: { cleanup: void | (() => void) } = { cleanup: cb() };
+        const result = cb();
+        const entry = { cleanup: typeof result === 'function' ? result : undefined };
         mockFocusReg.effects.push(entry);
         return () => {
-          if (typeof entry.cleanup === 'function') entry.cleanup();
+          if (entry.cleanup) entry.cleanup();
           const i = mockFocusReg.effects.indexOf(entry);
           if (i >= 0) mockFocusReg.effects.splice(i, 1);
         };
@@ -64,8 +61,8 @@ jest.mock('./store/api', () => ({
 
 import Store from '../app/store';
 
-/** Fire a navigator "blur" — run every registered focus cleanup WITHOUT unmounting (expo-router keeps
- *  the route mounted while blurred; this is the stranded-mounted case). */
+// Fire a navigator "blur" — run every registered focus cleanup WITHOUT unmounting (expo-router keeps the
+// route mounted while blurred; the stranded-mounted case).
 function fireBlur() {
   mockFocusReg.effects.forEach((e) => {
     if (typeof e.cleanup === 'function') e.cleanup();
@@ -73,15 +70,15 @@ function fireBlur() {
   });
 }
 
-/** Reads the app-wide RESOLVED theme (through useTheme, the exact leak surface) and reports its id. */
+// Reads the app-wide RESOLVED theme (through useTheme, the exact leak surface) and reports its id.
 function Probe() {
   const { scr } = useTheme();
   const id = scr === SCREEN_THEMES.berry ? 'berry' : scr === SCREEN_THEMES.midnight ? 'midnight' : 'other';
   return <Text>{`THEME:${id}`}</Text>;
 }
 
-/** Forces the store preview to Berry once and NEVER clears it — the stranded preview whose sheet-owned
- *  clearer never fires. Mounted at provider level (outside the screen) so it survives the screen's blur. */
+// Forces the store preview to Berry once and NEVER clears it — the stranded preview whose sheet-owned
+// clearer never fires. Mounted at provider level (outside the screen) so it survives the screen's blur.
 function StrandedBerryPreview() {
   const { setPreview } = useStorePreview();
   React.useEffect(() => {
@@ -94,7 +91,7 @@ function makeStore() {
   return configureStore({ reducer: { prefs: prefsReducer } });
 }
 
-function Harness({ showStore }: { showStore: boolean }) {
+function Harness({ showStore }) {
   return (
     <Provider store={makeStore()}>
       <StoreThemePreviewProvider>
@@ -116,7 +113,7 @@ describe('Store — theme-preview teardown backstop (walk2 leak fix)', () => {
     // (a) preview is live app-wide (the legitimate F-13 C7 behaviour is preserved).
     expect(screen.getByText('THEME:berry')).toBeTruthy();
 
-    // (b) leave /store WITHOUT the sheet ever committing openItem→null (the glitched/stranded close):
+    // (b) leave /store WITHOUT the sheet ever committing openItem->null (the glitched/stranded close):
     // only the blur backstop can revert the override. On main this is a no-op and Berry stays (RED).
     act(() => fireBlur());
     expect(screen.getByText('THEME:midnight')).toBeTruthy();
