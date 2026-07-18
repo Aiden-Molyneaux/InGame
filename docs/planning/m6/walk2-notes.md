@@ -104,6 +104,14 @@
   The client is pre-widened and renders the name the moment it lands (honest COMMUNITY fallback
   meanwhile). Feed thumbs needed NO server half — every list payload already carries thumbUrl.
 
+- ⬜ W-C9 **Collection MY-ORDER arrange was never client-built** (found via W-A8's b1 audit;
+  orchestrator-verified — zero client calls to `PATCH /me/collection/reorder`): the COL-07 manual
+  reorder exists server-side (contract 0.48/OQ-031) with no client gesture. Decide: build the
+  arrange UI (the TOP-arrange DragRankList pattern now exists to reuse) or defer to M7 with a cite.
+  MEANWHILE: **b1 NEAT FREAK's criterion is unreachable** — re-point its seed to a reachable signal
+  (queue reorder / lists re-rank both emit) via the SYS-04 config, or hold it inactive until W-C9
+  lands. 0078 decides.
+
 ## WAVE D — design-think BEFORE build (the owner asked for deeper thought)
 - ⬜ W-D1 **The adaptive Game page consolidation** — ONE Game page across three postures: OWN entry
   (full PLAY/CARDS/ABOUT) · FRIEND's entry (their PLAY read-only + ABOUT + community CARDS +
