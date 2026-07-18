@@ -41,6 +41,23 @@
 - ⬜ W-A7 **Device sticker edit-mode never confirms** — placing stickers stays editable until
   On-shell-preview; leaving the editor keeps editable stickers. Make set/confirm explicit (the
   KEEP grammar). ⚖ flow ruling implied — record the built shape in 0078.
+- ✅ W-A8 (7c5dd3e) 🔧 **Celebration didn't fire until an APP RESTART** (owner completed SHELF
+  STARTER, nothing appeared) — the P11 ASSUMPTION-1 refetch-delta only re-read `/me/achievements` on
+  focus/reconnect. Fix: the UNLOCK-TRIGGERING client mutations now invalidate the `MeAchievements`
+  tag (declarative `invalidatesTags` — the CommunityCards cross-slice precedent; no onQueryStarted
+  helper, no blanket chatter), so the CelebrationHost's delta check runs within ~a second of the
+  action. Mapped sites: `addToCollection` (a3 + b8-recipient add) · `updateEntry` (a12) ·
+  `publishCard` (a1/a2/b3) · `claimDailyBonus` (a10/b6) · `createGame` (a9) — api.ts ·
+  `adoptCard` (a7/b4, adopter half) — communityApi · `acceptFriendRequest` + `createFriendRequest`
+  (a5/a6 — mutual-pending auto-accept counts) — friendApi · `addQueueItem` friend_rec branch (b8
+  recipient half) — queueApi. Host delta logic untouched. **RESIDUALS (recorded, accepted):**
+  other-ACTOR unlocks (a13/a14 adoptions-received · a15 reach · b8's RECOMMENDER credit · the
+  requester's a5/a6 on accept) still wait for focus/reconnect/read — only push (M7) closes those;
+  and **b1 neat_freak is client-unreachable at M6** — no client mutation calls
+  `PATCH /me/collection/reorder` (the TOP arrange writes `/me/lists`, a different event), so its
+  `collection.reordered` counter never increments from the app (a server/seed question, not a
+  client tag). Jest: `achievementsInvalidation.test.ts` (one representative per touched slice + a
+  no-chatter negative).
 
 ## WAVE B — visual/layout rulings (client-only)
 - ⬜ W-B1 ⚖ **Header alignment audit** — page headers must match Collection/Profile positioning
