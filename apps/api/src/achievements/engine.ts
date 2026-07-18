@@ -6,7 +6,7 @@ import { logger } from '../observability/logger';
 import * as achievementRepo from '../repositories/achievement-repo';
 import * as entitlementRepo from '../repositories/entitlement-repo';
 import { credit } from '../services/economy/ledger-service';
-import { evaluateEvent, triggerEventsOf } from './criteria';
+import { computeProgress, evaluateEvent, targetOf, triggerEventsOf } from './criteria';
 import type { AchievementDefinitionRow } from '../db/schema';
 
 // The achievements trigger engine (M6 P6, ACH-02/04). Invoked POST-COMMIT from the @mutation seam (via
@@ -118,6 +118,64 @@ async function unlock(
     });
     return true;
   });
+}
+
+// ── Reconcile-on-read (decision 0078 — the OQ-151 REVERSAL, owner walk 2026-07-17) ──────────────────
+// The post-commit evaluator is AT-MOST-ONCE: an API restart between a mutation's commit and its
+// evaluation DROPS the pass (it happened live — the owner's publishes landed during fix-round restarts
+// and unlocked nothing), and count-from-genesis leaves pre-engine history satisfied-but-unfired
+// ("FIRST PRINT 3/1" reads as BRICKED). "Self-heals on the next event" proved too weak in practice, so
+// the trophy-case READ is the healing point: GET /me/achievements reconciles the CALLER's COUNT-family
+// criteria against history before serving.
+//
+// KINDS BOUNDARY: only the count family reconciles (event_count · event_count_distinct ·
+// received_count · aggregate_reach · participant_count) — their criteria are stateless functions of
+// history, so "satisfied now" is well-defined at any read. The MATCH / WINDOW / DUAL kinds stay
+// live-event-only: a moment-in-time egg (the B6 03:00 claim, the B7 target add, B8's rec-then-add)
+// asserts a condition AT its trigger instant — there is no meaningful "is it satisfied now?" to ask at
+// read time (window_count additionally scopes to the trigger event's UTC day, which a later read can't
+// reconstruct honestly). A dropped match-kind evaluation remains the accepted at-most-once gap.
+//
+// SEEDS/DEPLOYS STILL NEVER UNLOCK: nothing here runs at migration/seed time — only a USER's OWN read
+// triggers their reconcile (bounded per-user work, beta-scale; the no-unlock-at-seed test stands).
+
+const RECONCILABLE_KINDS = new Set([
+  'event_count',
+  'event_count_distinct',
+  'received_count',
+  'aggregate_reach',
+  'participant_count',
+]);
+
+/**
+ * Idempotently unlock every ACTIVE count-family definition the user has ALREADY satisfied, through the
+ * SAME atomic path the live evaluator uses (badge + PX + entitlement + the achievement.unlocked event,
+ * one tx per unlock — rule-05 emissions ride the shared `unlock`). Safe under F36 (two parallel reads
+ * race into the unique(userId, achievementId) index → one row, one reward) and safe to call on every
+ * read (already-unlocked defs short-circuit). Returns the newly-unlocked keys (observability/tests).
+ */
+export async function reconcileUserAchievements(userId: string): Promise<string[]> {
+  const defs = await achievementRepo.listActiveDefinitions();
+  if (defs.length === 0) return [];
+  const unlocked = await achievementRepo.unlockedAchievementIds(userId);
+  const newlyUnlocked: string[] = [];
+  for (const def of defs) {
+    if (unlocked.has(def.id)) continue;
+    const criterion = criterionOf(def);
+    if (!RECONCILABLE_KINDS.has(criterion.kind)) continue; // match/window/dual — live-event-only
+    const target = targetOf(criterion);
+    if (target === null) continue;
+    try {
+      const current = await computeProgress(userId, criterion);
+      if (current < target) continue;
+      const created = await unlock(def, userId, { current, target });
+      if (created) newlyUnlocked.push(def.key);
+    } catch (err) {
+      // Best-effort per def — a failed reconcile never fails the read; the next read retries it.
+      logger.error({ err, defKey: def.key, userId }, 'achievement reconcile-on-read failed (retries next read)');
+    }
+  }
+  return newlyUnlocked;
 }
 
 /** Wire the engine into the post-commit seam (called by the app factory + the dev entrypoint). */

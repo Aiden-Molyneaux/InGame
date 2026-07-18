@@ -55,6 +55,9 @@
   it for beta warmth) · "READY — one more to go" copy. (P11 GAP-4, M6 2026-07-17) [behavior] M6
   **→ RULED (owner, 2026-07-17 morning: "I think it looks fine" — decision 0078 pending): ACCEPT** —
   count-from-genesis stands as built; self-heals with use.
+  **→ REVERSED (owner, 2026-07-17 walk — decision 0078): FIX via reconcile-on-read** — satisfied
+  count-criteria unlock (full reward path) when /me/achievements is read; the at-most-once evaluator
+  gap self-heals at the trophy case; match/window/dual eggs stay live-event-only.
 - OQ-148: **Should a friend's feed name an unlocked SECRET achievement?** ACH-05 shows earned secrets on the profile (name visible to friends), and SOC-06 lists achievement unlocks as feed events — but a named secret in the feed spoils the egg for friends who haven't found it. M6 ships the conservative default (the feed masks secret-tier labels → "found a secret achievement", implemented with P6); the owner may prefer naming them. (§4 audit, M6 2026-07-17) [behavior] M6
   **→ RULED (owner, 2026-07-17 morning batch — decision 0078 pending): KEEP THE MASK — and WIDEN it:**
   friends' achievement pages must ALSO mask secrets (an earned secret renders count-only/masked on

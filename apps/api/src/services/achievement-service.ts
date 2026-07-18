@@ -18,6 +18,7 @@ import * as relationshipRepo from '../repositories/relationship-repo';
 import * as suspensionRepo from '../repositories/suspension-repo';
 import { NotFoundError } from '../errors/AppError';
 import { computeProgress, targetOf, unitOf } from '../achievements/criteria';
+import { reconcileUserAchievements } from '../achievements/engine';
 import type { AchievementDefinitionRow, UserAchievementRow } from '../db/schema';
 
 // The achievements READ surface (M6 P6 — api-contract §Achievements 0.36). Three privacy-aware reads:
@@ -70,6 +71,13 @@ export async function getDefinitions(actorId: string): Promise<AchievementDefVie
  * match/dual criterion has no bar and never appears here).
  */
 export async function getMyAchievements(actorId: string): Promise<MeAchievementsResponse> {
+  // RECONCILE-ON-READ (decision 0078 — OQ-151 reversed at the owner walk): a READ endpoint deliberately
+  // triggering the mutation-path reconcile. The trophy case is the natural healing point for the
+  // at-most-once evaluator gap + pre-genesis satisfied counters — each unlock runs the engine's normal
+  // atomic tx (badge + PX + entitlement + achievement.unlocked emission, rule-05 satisfied), idempotent
+  // under the unique index, bounded to the CALLER's own defs (beta-scale per-user work). The read below
+  // then assembles from the healed state — a satisfied counter can never render as in-progress again.
+  await reconcileUserAchievements(actorId);
   const defs = await achievementRepo.listActiveDefinitions();
   const unlocks = await achievementRepo.listUnlocks(actorId);
   const unlockedAt = new Map<string, Date>(unlocks.map((u: UserAchievementRow) => [u.achievementId, u.unlockedAt]));

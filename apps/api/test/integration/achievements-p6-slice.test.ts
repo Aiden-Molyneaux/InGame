@@ -129,6 +129,30 @@ async function milestoneEntriesFor(token: string, key: string) {
     (e) => e.type === 'milestone' && e.refType === 'achievement' && e.refId === id,
   );
 }
+/** Insert a raw domain_events row DIRECTLY (the dropped-evaluation simulation: the outbox row committed
+ *  but the at-most-once post-commit pass never ran — e.g. an API restart mid-round). */
+async function insertEvent(
+  actorId: string,
+  eventType: string,
+  payload: Record<string, unknown>,
+  occurredAt = new Date(),
+  entityId = randomUUID(),
+) {
+  const { getDb } = await import('../../src/db/client');
+  const { domainEvents } = await import('../../src/db/schema');
+  await getDb().insert(domainEvents).values({ eventType, eventVersion: 1, occurredAt, actorId, entityType: 'x', entityId, payload });
+}
+/** The user's achievement.unlocked event rows for a given def key (proves the reconcile EMITS). */
+async function unlockedEventCount(actorId: string, key: string): Promise<number> {
+  const { getDb } = await import('../../src/db/client');
+  const { domainEvents } = await import('../../src/db/schema');
+  const id = await defId(key);
+  const rows = await getDb()
+    .select({ id: domainEvents.id })
+    .from(domainEvents)
+    .where(and(eq(domainEvents.actorId, actorId), eq(domainEvents.eventType, 'achievement.unlocked'), eq(domainEvents.entityId, id)));
+  return rows.length;
+}
 
 beforeAll(async () => {
   container = await new PostgreSqlContainer('postgres:16-alpine').start();
@@ -275,9 +299,9 @@ describe('ACH-02: repeatable actions cannot re-trigger (distinct counting)', () 
   });
 });
 
-// ── ACH-08 — NO back-granting at seed time + count-from-genesis ───────────────────────────────────────
-describe('ACH-08: no unlock at seed time; counters count history (count-from-genesis)', () => {
-  it('history that predates the seed does NOT auto-grant; the next LIVE event unlocks with history counted', async () => {
+// ── ACH-08 — NO unlock at seed/deploy time + count-from-genesis healed at the READ (decision 0078) ────
+describe('ACH-08: seeds never unlock; pre-genesis satisfied counters unlock at the FIRST READ', () => {
+  it('history that predates the seed does NOT auto-grant at seed time; the first /me/achievements read reconciles it', async () => {
     const { resetRateLimitStore } = await import('../../src/http/rateLimit');
     const a = await seedUser();
     const game = await seedGame(a.token, 'Genesis RPG');
@@ -288,20 +312,23 @@ describe('ACH-08: no unlock at seed time; counters count history (count-from-gen
       await publishCard(a.token, game, i + 1);
     }
 
-    await seedReal(); // seeding definitions emits NO events → still nothing unlocked
-    const atSeed = await meAch(a.token);
-    expect(atSeed.body.earned).toHaveLength(0); // NO back-grant, even though A2 (≥5) is already satisfiable
-    // count-from-genesis: A2's progress reflects the 5 historical publishes (a2 has target 5).
-    const a2Progress = atSeed.body.inProgress.find((p: { key: string }) => p.key === 'a2_press_operator');
-    expect(a2Progress.progress.current).toBe(5);
+    // Seeding definitions emits NO events and runs NO reconcile → nothing unlocks AT the seed/deploy
+    // (asserted at the DB — a read would now reconcile, which is exactly the 0078 point).
+    await seedReal();
+    expect(await unlockRowCount(a.id, 'a1_first_print')).toBe(0);
+    expect(await unlockRowCount(a.id, 'a2_press_operator')).toBe(0);
 
-    // The 6th publish is a LIVE event → A1 (≥1) AND A2 (≥5) both unlock now (history counted).
-    resetRateLimitStore();
-    await publishCard(a.token, game, 6);
-    const after = await meAch(a.token);
-    const earned = after.body.earned.map((e: { key: string }) => e.key);
+    // The FIRST READ heals the satisfied counters (OQ-151 reversed — the "3/1 reads as bricked" class):
+    // A1 (≥1) and A2 (≥5) unlock via reconcile-on-read, full reward path, no new live event needed.
+    const first = await meAch(a.token);
+    const earned = first.body.earned.map((e: { key: string }) => e.key);
     expect(earned).toContain('a1_first_print');
     expect(earned).toContain('a2_press_operator');
+    // A satisfied counter never lingers in inProgress after the read.
+    expect(first.body.inProgress.map((p: { key: string }) => p.key)).not.toContain('a2_press_operator');
+    // And the rewards landed (the normal atomic path — one PX row each).
+    expect(await milestoneEntriesFor(a.token, 'a1_first_print')).toHaveLength(1);
+    expect(await milestoneEntriesFor(a.token, 'a2_press_operator')).toHaveLength(1);
   });
 });
 
@@ -528,5 +555,72 @@ describe('SOC-06 / OQ-148: unlocks render in the friend feed; secret labels mask
     expect(labels).toContain('First Print'); // standard → named
     expect(labels).toContain('a secret achievement'); // secret → masked (OQ-148)
     expect(labels).not.toContain('Neat Freak'); // the egg name never leaks in the feed
+  });
+});
+
+// ── Decision 0078 — reconcile-on-read (OQ-151 REVERSED at the owner walk) ─────────────────────────────
+describe('ACH-02 / decision 0078: reconcile-on-read heals dropped evaluations', () => {
+  it('a dropped evaluation (events committed, evaluator never ran) unlocks at the next read — full reward path + the unlocked event', async () => {
+    await seedReal();
+    const a = await seedUser();
+    // Simulate the owner's live incident: 10 collection.reordered outbox rows exist (each committed),
+    // but the post-commit pass was dropped every time (API restarts) → B1 NEAT FREAK never fired.
+    for (let i = 0; i < 10; i++) await insertEvent(a.id, 'collection.reordered', { count: 2 });
+    expect(await unlockRowCount(a.id, 'b1_neat_freak')).toBe(0);
+
+    const res = await meAch(a.token);
+    expect(res.status).toBe(200);
+    // The read healed it: unlocked + PX row + the achievement.unlocked event all landed (one atomic tx).
+    expect(await unlockRowCount(a.id, 'b1_neat_freak')).toBe(1);
+    expect(res.body.secrets.found.map((s: { key: string }) => s.key)).toContain('b1_neat_freak');
+    expect(await milestoneEntriesFor(a.token, 'b1_neat_freak')).toHaveLength(1);
+    expect(await unlockedEventCount(a.id, 'b1_neat_freak')).toBe(1); // rule-05 — the reconcile EMITS
+  });
+
+  it('an UNSATISFIED counter is untouched by the read (no unlock, no reward, still in progress)', async () => {
+    await seedReal();
+    const a = await seedUser();
+    for (let i = 0; i < 4; i++) await insertEvent(a.id, 'collection.reordered', { count: 2 }); // 4 < 10
+    const res = await meAch(a.token);
+    expect(res.status).toBe(200);
+    expect(await unlockRowCount(a.id, 'b1_neat_freak')).toBe(0);
+    expect(await milestoneEntriesFor(a.token, 'b1_neat_freak')).toHaveLength(0);
+  });
+
+  it('a MATCH-kind egg is NOT reconciled at read (live-event-only — the moment-in-time boundary)', async () => {
+    await seedReal();
+    const a = await seedUser();
+    // A daily claim AT 03:30 UTC sits in history (B6 NIGHT SHIFT would have matched live) — but the
+    // evaluation was dropped. A read must NOT retro-fire a moment-in-time egg (decision 0078 boundary).
+    await insertEvent(a.id, 'wallet.daily_claimed', { amount: 1 }, new Date(Date.UTC(2026, 6, 16, 3, 30, 0)));
+    const res = await meAch(a.token);
+    expect(res.status).toBe(200);
+    expect(await unlockRowCount(a.id, 'b6_night_shift')).toBe(0);
+    expect(res.body.summary.secretsFound).toBe(0);
+  });
+
+  it('F36: two PARALLEL reads on a satisfied counter → exactly ONE unlock + ONE reward', async () => {
+    await seedReal();
+    const a = await seedUser();
+    for (let i = 0; i < 10; i++) await insertEvent(a.id, 'collection.reordered', { count: 2 });
+
+    const [r1, r2] = await Promise.all([meAch(a.token), meAch(a.token)]);
+    expect(r1.status).toBe(200);
+    expect(r2.status).toBe(200);
+    expect(await unlockRowCount(a.id, 'b1_neat_freak')).toBe(1); // the unique index decides the race
+    expect(await milestoneEntriesFor(a.token, 'b1_neat_freak')).toHaveLength(1); // ONE reward
+    expect(await unlockedEventCount(a.id, 'b1_neat_freak')).toBe(1); // ONE emission
+  });
+
+  it('re-reading is idempotent — a healed unlock never re-grants', async () => {
+    await seedReal();
+    const a = await seedUser();
+    for (let i = 0; i < 10; i++) await insertEvent(a.id, 'collection.reordered', { count: 2 });
+    await meAch(a.token); // heals
+    await meAch(a.token); // re-read
+    await meAch(a.token); // and again
+    expect(await unlockRowCount(a.id, 'b1_neat_freak')).toBe(1);
+    expect(await milestoneEntriesFor(a.token, 'b1_neat_freak')).toHaveLength(1);
+    expect(await unlockedEventCount(a.id, 'b1_neat_freak')).toBe(1);
   });
 });
