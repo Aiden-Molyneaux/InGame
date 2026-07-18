@@ -119,44 +119,48 @@ export default function UserProfile() {
         gamertags={isFriend ? data.gamertags : undefined}
       />
 
-      {/* the identity trust line — friend count (friend shape only) + mutuals (both shapes) */}
-      <Text style={styles.counts}>
-        {isFriend ? `${fmt(data.friendsCount)} FRIENDS · ` : ''}
-        {fmt(data.mutualFriendsCount)} MUTUAL
-      </Text>
-
-      <RelationshipAction userId={data.id} relationship={data.relationship} />
+      {/* W-B10 rulings 2+3 (ASSUMPTION — owner may veto): ONE identity-foot row directly under the
+          profile details. LEFT = the relationship seat (the FRIEND tag / ADD FRIEND / REQUESTED /
+          incoming-hint — the board's chip grammar, "just under their profile details"); RIGHT = the
+          trust counts, mutuals RESEATED beside friendsCount ("14 FRIENDS · 3 MUTUAL", the board's
+          id-sub line). One row, no stacked crowding. */}
+      <View style={styles.idFoot} testID="identity-foot">
+        <RelationshipAction userId={data.id} relationship={data.relationship} />
+        <Text style={styles.counts}>
+          {isFriend ? `${fmt(data.friendsCount)} FRIENDS · ` : ''}
+          {fmt(data.mutualFriendsCount)} MUTUAL
+        </Text>
+      </View>
 
       {isFriend ? (
         <>
-          {/* the doors into their world (SOC-02 / decision 0050) — the primary is VIEW COLLECTION */}
-          <View style={styles.doors}>
-            <ScreenButton
-              label="View collection"
-              variant="primary"
-              onPress={() => router.push(`/user/${data.id}/collection`)}
-              block
-            />
-            <ScreenButton
-              label="Compare hours"
-              variant="action-alt"
-              onPress={() => router.push(`/compare/${data.id}`)}
-              block
-            />
-          </View>
-
-          {/* THEIR DEVICE (DEV-02/04 · decision 0012 · P9 fix-round) — the {shell · theme · stickers}
-              readout off the C4 `device` payload (wire name `shellId`, not /me/device's `activeShellId`).
-              Read-only: their device isn't editable, so no EDIT keycap (the self-profile's affordance).
-              The "view in their device" chrome TOGGLE stays EXPECTED — decision 0012 makes it a chrome
-              TAKEOVER (re-skins the whole DeviceShell + an exit-band + carries over into their Collection),
-              which is more than a row+toggle; render the readout honestly, don't half-build the takeover. */}
-          <FriendDeviceRow device={data.device} />
+          {/* W-B10 ruling 4 — SECTION ORDER mirrors the committed self profile.tsx at head
+              (identity → STATS → ACHIEVEMENTS → [pinned favourite: n/a, not on the friend shape] →
+              TOP 3 → NOW PLAYING → device), with the paired action row at the FOOT (the board's
+              bottom-tools seat). */}
 
           {/* STATS (PROF-04 six-pack for the target · P9 fix-round) — the self-profile tile grammar over
               the C4 `stats` payload. PROF-07 percentile chips stay ABSENT (threshold-gated; the cohort/
               percentile engine rides M7 — omitted, not faked). */}
           <FriendStats stats={data.stats} />
+
+          {/* ACHIEVEMENTS teaser (ACH-05 · P11) — the earned count off /users/:id/achievements, a door
+              into their trophy case. Seated after STATS per the self profile's head order (W-B10 r4). */}
+          <View style={styles.section}>
+            <View style={styles.sectionRow}>
+              <Text style={styles.sectionHead}>ACHIEVEMENTS</Text>
+              <TertiaryLink label="View all" onPress={() => router.push(`/user/${data.id}/achievements`)} />
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`View ${data.username}'s achievements`}
+              onPress={() => router.push(`/user/${data.id}/achievements`)}
+              style={({ pressed }) => [styles.achRow, pressed && { opacity: 0.82 }]}
+            >
+              <Text style={styles.achCount}>{ach ? `${fmt(ach.summary.earned)} EARNED` : '—'}</Text>
+              <Text style={styles.chev}>›</Text>
+            </Pressable>
+          </View>
 
           {/* COL-13 (decision 0050 §C) — the friend Top-3 set-pieces + VIEW TOP 10 door. The friend/full
               read now serves top10 (P5 live). A card tap → their Collection TOP view FOCUSED on that game;
@@ -191,28 +195,35 @@ export default function UserProfile() {
               (flattened card, no entryId). Tap → the SOC-11 entry detail. Null (no pin) → absent. */}
           <FriendNowPlaying nowPlaying={data.nowPlaying} onOpen={(gameId) => router.push(`/user/${data.id}/entry/${gameId}`)} />
 
-          {/* ACHIEVEMENTS teaser (ACH-05 · P11) — the earned count off /users/:id/achievements, a door
-              into their trophy case (P3 earned-only / P4 privacy-limited). Replaces the old EXPECTED
-              note for achievements (now live). */}
-          <View style={styles.section}>
-            <View style={styles.sectionRow}>
-              <Text style={styles.sectionHead}>ACHIEVEMENTS</Text>
-              <TertiaryLink label="View all" onPress={() => router.push(`/user/${data.id}/achievements`)} />
-            </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`View ${data.username}'s achievements`}
-              onPress={() => router.push(`/user/${data.id}/achievements`)}
-              style={({ pressed }) => [styles.achRow, pressed && { opacity: 0.82 }]}
-            >
-              <Text style={styles.achCount}>{ach ? `${fmt(ach.summary.earned)} EARNED` : '—'}</Text>
-              <Text style={styles.chev}>›</Text>
-            </Pressable>
-          </View>
+          {/* THEIR DEVICE (DEV-02/04 · decision 0012 · P9 fix-round) — the {shell · theme · stickers}
+              readout off the C4 `device` payload (wire name `shellId`, not /me/device's `activeShellId`).
+              Read-only: their device isn't editable, so no EDIT keycap. Seated last-content, mirroring
+              the self profile's MY DEVICE foot (W-B10 r4). The "view in their device" chrome TOGGLE stays
+              EXPECTED — decision 0012 makes it a chrome TAKEOVER (DeviceShell re-skin + exit-band +
+              Collection carry-over), more than a row+toggle; don't half-build the takeover. */}
+          <FriendDeviceRow device={data.device} />
 
           {/* AS-1 RETIRED (P9 fix-round) — stats/device/nowPlaying are served + rendered above. The one
               remaining absence: PROF-07 percentile chips on the stat tiles (the M7 ranking engine). */}
           <Text style={styles.residual}>Percentile standings arrive with a later update.</Text>
+
+          {/* W-B10 ruling 1 — the doors into their world (SOC-02 / decision 0050) as ONE ROW: paired
+              side-by-side keys (the board's paired-action grammar), seated at the FOOT — the on-screen
+              stand-in for the board's bottom tools bar. VIEW COLLECTION keeps the primary voice. */}
+          <View style={styles.doorRow} testID="door-row">
+            <ScreenButton
+              label="View collection"
+              variant="primary"
+              onPress={() => router.push(`/user/${data.id}/collection`)}
+              style={styles.doorKey}
+            />
+            <ScreenButton
+              label="Compare hours"
+              variant="action-alt"
+              onPress={() => router.push(`/compare/${data.id}`)}
+              style={styles.doorKey}
+            />
+          </View>
         </>
       ) : (
         // non-friend / limited (PROF-03): the FRIENDS-ONLY lock-well. ADD FRIEND is the RelationshipAction
@@ -412,7 +423,17 @@ const useStyles = themedStyles((t) => ({
   body: { paddingHorizontal: t.space.lg, paddingBottom: t.space.xxl, gap: t.space.lg },
 
   counts: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
-  doors: { gap: t.space.md },
+  // W-B10 r2+r3 — the identity-foot row: relationship seat left · trust counts right (one line).
+  idFoot: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: t.space.md,
+    marginTop: -t.space.sm, // tucks the foot up under the identity well (reads as its footer)
+  },
+  // W-B10 r1 — the paired action row (side-by-side keys, the board's paired-action grammar).
+  doorRow: { flexDirection: 'row', gap: t.space.md },
+  doorKey: { flex: 1 },
   section: { gap: t.space.md },
   sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   sectionHead: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.dim, letterSpacing: 1.5 },

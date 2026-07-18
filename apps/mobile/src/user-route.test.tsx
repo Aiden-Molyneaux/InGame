@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react-native';
+import { render, screen, fireEvent, within } from '@testing-library/react-native';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import type { PublicProfile, FriendProfile } from '@ingame/shared';
@@ -133,6 +133,36 @@ describe('P9 friend-profile route — the shape matrix', () => {
     render(wrap(<UserProfile />));
     fireEvent.press(screen.getByText('COMPARE HOURS'));
     expect(mockPush).toHaveBeenCalledWith('/compare/friend-1111-1111-1111-111111111111');
+  });
+
+  it('W-B10 r1 — VIEW COLLECTION + COMPARE HOURS render as ONE paired row (side-by-side keys)', () => {
+    set({ data: FRIEND });
+    render(wrap(<UserProfile />));
+    const row = screen.getByTestId('door-row');
+    // both keys live INSIDE the one row container…
+    expect(within(row).getByText('VIEW COLLECTION')).toBeTruthy();
+    expect(within(row).getByText('COMPARE HOURS')).toBeTruthy();
+    // …and the container is a flex ROW (the paired-action grammar, not a stack)
+    const flat = Object.assign({}, ...[row.props.style].flat(Infinity).filter(Boolean));
+    expect(flat.flexDirection).toBe('row');
+  });
+
+  it('W-B10 r2+r3 — the FRIEND tag + the mutuals count sit together in the identity-foot row', () => {
+    set({ data: FRIEND });
+    render(wrap(<UserProfile />));
+    const foot = screen.getByTestId('identity-foot');
+    expect(within(foot).getByText('FRIEND')).toBeTruthy(); // the relationship seat (r2)
+    expect(within(foot).getByText('14 FRIENDS · 3 MUTUAL')).toBeTruthy(); // mutuals beside friendsCount (r3)
+  });
+
+  it('W-B10 r4 — the section sequence mirrors the self profile at head (STATS → ACHIEVEMENTS → NOW PLAYING → THEIR DEVICE → doors)', () => {
+    set({ data: FRIEND });
+    render(wrap(<UserProfile />));
+    // getAllByText returns tree order — the sequence probe. (TOP 3 absent: fixture top10 is [].)
+    const seq = screen
+      .getAllByText(/^(STATS|ACHIEVEMENTS|TOP 3|NOW PLAYING|THEIR DEVICE|VIEW COLLECTION)$/)
+      .map((el) => (Array.isArray(el.props.children) ? el.props.children.join('') : el.props.children));
+    expect(seq).toEqual(['STATS', 'ACHIEVEMENTS', 'NOW PLAYING', 'THEIR DEVICE', 'VIEW COLLECTION']);
   });
 
   it('C4 trio — STATS tiles render the six-pack (percentile chips absent, M7)', () => {
