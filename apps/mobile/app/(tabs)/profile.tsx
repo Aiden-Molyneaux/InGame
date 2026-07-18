@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { useRouter } from 'expo-router';
+import type { PatchMeRequest, CreateGamertagRequest } from '@ingame/shared';
 import { IdentityBlock } from '../../src/components/IdentityBlock';
+import { EditableIdentity, type SaveOutcome } from '../../src/components/profile/EditableIdentity';
 import { ScreenHead, SCREEN_HEADER_PAD } from '../../src/components/ScreenHead';
 import { EntryCard } from '../../src/components/EntryCard';
 import { StatTile } from '../../src/components/StatTile';
@@ -15,7 +18,8 @@ import { theme, themedStyles } from '../../src/theme';
 import { SHELL_NAMES, SCREEN_THEME_NAMES, resolveShellId, resolveScreenThemeId } from '../../src/theme/palettes';
 import { deviceStripCopy } from '../../src/components/device/deviceCopy';
 import { STATUS_LABEL } from '../../src/constants/collection';
-import { useGetMeQuery, useGetCollectionQuery, useGetDeviceQuery, useGetWalletQuery } from '../../src/store/api';
+import { useGetMeQuery, useGetCollectionQuery, useGetDeviceQuery, useGetWalletQuery, useGetGenresQuery } from '../../src/store/api';
+import { usePatchMeMutation, useAddGamertagMutation, useRemoveGamertagMutation } from '../../src/store/profileApi';
 import { useGetMyAchievementsQuery } from '../../src/store/achievementsApi';
 import { useAppDispatch } from '../../src/store/hooks';
 import { setCollectionView } from '../../src/store/prefsSlice';
@@ -40,7 +44,37 @@ export default function Profile() {
   // ACH-05 — the Profile achievements teaser. /me carries no teaser (GAP-1), so the earned count reads
   // off /me/achievements `summary` (a bounded query); the row routes into the trophy case.
   const { data: achievements } = useGetMyAchievementsQuery();
+  // W-C4 — the Profile EDIT slice (in-place, per-field commit; OQ-034). The genre list feeds the chips.
+  const [editing, setEditing] = useState(false);
+  const { data: genres } = useGetGenresQuery();
+  const [patchMe] = usePatchMeMutation();
+  const [addGamertag] = useAddGamertagMutation();
+  const [removeGamertag] = useRemoveGamertagMutation();
   const styles = useStyles();
+
+  // Map an RTK mutation rejection to the editor's SaveOutcome: a VALIDATION_ERROR carries field-targeted
+  // `details` (api-contract 0.46 — MOD-07 screening / PROF-06 cooldown / uniqueness) → per-field errors.
+  function toOutcome(run: () => Promise<unknown>): Promise<SaveOutcome> {
+    return run().then(
+      () => ({ ok: true }),
+      (e: unknown) => {
+        const err = e as { data?: { error?: { code?: string; message?: string; details?: { path?: string; message: string }[] } } };
+        const detail = err?.data?.error;
+        const fieldErrors: Record<string, string> = {};
+        for (const d of detail?.details ?? []) if (d.path) fieldErrors[d.path] = d.message;
+        return { ok: false, fieldErrors, message: detail?.message };
+      },
+    );
+  }
+  const onPatchMe = (patch: PatchMeRequest) => toOutcome(() => patchMe(patch).unwrap());
+  const onAddGamertag = (req: CreateGamertagRequest) => toOutcome(() => addGamertag(req).unwrap());
+  const onRemoveGamertag = async (id: string) => {
+    try {
+      await removeGamertag(id).unwrap();
+    } catch {
+      /* a failed remove leaves the chip; the Me refetch reconciles */
+    }
+  };
 
   async function signOut() {
     await logoutTeardown(); // F20/F14 — purge persisted prefs + reset cache + clear secure-store tokens
@@ -96,9 +130,17 @@ export default function Profile() {
                 balance={wallet?.balance ?? 0}
                 onPress={() => router.push({ pathname: '/store', params: { view: 'wallet' } })}
               />
-              {/* P12 (0076 §0.10) — the Profile header's door into Settings (the board's reach pattern;
-                  the M7 EDIT/SHARE tools stay deferred). walk2 B11 — the gear rides the CREAM utility
-                  keycap (ToolButton — the 0069 secondary keycap voice), navy glyph, never hand-styled. */}
+              {/* W-C4 — the EDIT keycap (OQ-034 in-place edit doctrine: presses + lights, edits the
+                  identity in place, tap again to exit; per-field commit, no giant save). Cream ToolButton
+                  (0069 voice), `active` when editing. */}
+              <ToolButton
+                icon={<EditGlyph color={theme.brand.navy} />}
+                label={editing ? 'Done editing' : 'Edit profile'}
+                active={editing}
+                onPress={() => setEditing((v) => !v)}
+              />
+              {/* P12 (0076 §0.10) — the Profile header's door into Settings (the board's reach pattern).
+                  walk2 B11 — the gear rides the CREAM utility keycap (ToolButton — the 0069 voice). */}
               <ToolButton
                 icon={<SettingsGear color={theme.brand.navy} />}
                 label="Settings"
@@ -109,16 +151,26 @@ export default function Profile() {
         />
       </View>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-        {/* identity — the real /me self-shape */}
-        <IdentityBlock
-          username={me.username}
-          avatarUrl={me.avatarUrl}
-          role={me.role}
-          adminTier={me.adminTier}
-          memberSince={me.memberSince}
-          bio={me.bio}
-          gamertags={me.gamertags}
-        />
+        {/* identity — the real /me self-shape; EDIT mode swaps in the in-place editor (W-C4) */}
+        {editing ? (
+          <EditableIdentity
+            me={me}
+            genres={genres}
+            onPatchMe={onPatchMe}
+            onAddGamertag={onAddGamertag}
+            onRemoveGamertag={onRemoveGamertag}
+          />
+        ) : (
+          <IdentityBlock
+            username={me.username}
+            avatarUrl={me.avatarUrl}
+            role={me.role}
+            adminTier={me.adminTier}
+            memberSince={me.memberSince}
+            bio={me.bio}
+            gamertags={me.gamertags}
+          />
+        )}
 
         <Section title="Stats">
           <View style={styles.stats}>
@@ -146,6 +198,24 @@ export default function Profile() {
               ) : (
                 <Text style={styles.achSub}>YOUR TROPHY CASE</Text>
               )}
+            </View>
+            <Text style={styles.chev}>›</Text>
+          </Pressable>
+        </Section>
+
+        {/* MY CONTRIBUTIONS gateway (CAT-07 · profile-states :562) — walk2 C6: the self-door into the
+            (already-built P13) contributor screen. Its only entry today was a DESIGNED-BY tap; this is
+            the owner's front-door to their own designs + games added. Routes to /contributor/{me.id}. */}
+        <Section title="My Contributions">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="View your contributions"
+            onPress={() => router.push(`/contributor/${me.id}`)}
+            style={({ pressed }) => [styles.achRow, pressed && styles.devRowPressed]}
+          >
+            <View style={styles.achMeta}>
+              <Text style={styles.achCount}>{me.stats.cardsDesigned} CARDS DESIGNED</Text>
+              <Text style={styles.achSub}>YOUR DESIGNS &amp; GAMES ADDED</Text>
             </View>
             <Text style={styles.chev}>›</Text>
           </Pressable>
@@ -302,6 +372,15 @@ export default function Profile() {
             where sign-out (+ blocked list · legal) now lives. */}
       </ScrollView>
     </View>
+  );
+}
+
+// The EDIT pencil glyph — navy on the cream ToolButton cap (W-C4; the board's ✎ edit affordance).
+function EditGlyph({ color }: { color: string }) {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 12 12">
+      <Path d="M1.5 10.5v-2L8 2l2 2-6.5 6.5h-2z" fill="none" stroke={color} strokeWidth={1.4} strokeLinejoin="round" />
+    </Svg>
   );
 }
 

@@ -11,23 +11,32 @@ export function TextField({
   label,
   value,
   onChangeText,
+  onBlur,
   placeholder,
   secureTextEntry,
   autoCapitalize = 'none',
   keyboardType = 'default',
   error,
+  editable = true,
   labelRight,
+  multiline,
 }: {
   label: string;
   value: string;
   onChangeText: (v: string) => void;
+  /** W-C4 — the board's per-field "edits save as you go" (OQ-034): commit on blur. */
+  onBlur?: () => void;
   placeholder?: string;
   secureTextEntry?: boolean;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   keyboardType?: KeyboardTypeOptions;
   error?: string | null;
+  /** Disabled state (e.g. the PROF-06 username cooldown) — dims + blocks input. */
+  editable?: boolean;
   /** Optional accessory docked at the right of the label row (board `.flabel-row` — e.g. FORGOT?). */
   labelRight?: ReactNode;
+  /** Grow the input (the bio field). */
+  multiline?: boolean;
 }) {
   // S2-j — reveal toggles masking of the typed value (not the field). Only meaningful when secure.
   const [revealed, setRevealed] = useState(false);
@@ -45,11 +54,14 @@ export function TextField({
       ) : (
         <Text style={styles.label}>{label.toUpperCase()}</Text>
       )}
-      <View style={[styles.inputWrap, error ? styles.inputWrapError : null]}>
+      <View style={[styles.inputWrap, error ? styles.inputWrapError : null, !editable ? styles.inputWrapDisabled : null]}>
         <TextInput
-          style={styles.inputText}
+          style={[styles.inputText, multiline ? styles.inputMultiline : null]}
           value={value}
           onChangeText={onChangeText}
+          onBlur={onBlur}
+          editable={editable}
+          multiline={multiline}
           placeholder={placeholder}
           placeholderTextColor={t.scr.faint}
           secureTextEntry={masked}
@@ -99,6 +111,7 @@ const useStyles = themedStyles((t) => ({
     borderRadius: t.corner.screen, // F-07 square
   },
   inputWrapError: { borderWidth: 1, borderColor: t.brand.alert },
+  inputWrapDisabled: { opacity: 0.5 },
   inputText: {
     flex: 1,
     color: t.brand.navy,
@@ -106,6 +119,7 @@ const useStyles = themedStyles((t) => ({
     fontSize: t.type.title, // 15
     padding: 0, // padding lives on the wrapper — avoid the platform TextInput default doubling it
   },
+  inputMultiline: { minHeight: 48, textAlignVertical: 'top' },
   reveal: {
     fontFamily: t.font.screenBold, // board `.reveal` 700
     fontSize: t.type.micro, // 9

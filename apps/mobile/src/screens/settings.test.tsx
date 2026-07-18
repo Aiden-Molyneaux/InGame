@@ -9,11 +9,15 @@ import Settings from '../../app/settings';
 jest.mock('../a11y/useReducedMotion', () => ({ useReducedMotion: () => true }));
 jest.mock('expo-router', () => ({ useRouter: () => ({ back: jest.fn(), push: jest.fn(), replace: jest.fn() }) }));
 jest.mock('../store', () => ({ logoutTeardown: jest.fn() }));
+
+let mockPrivacy: 'friends' | 'public' = 'friends';
+const mockPatchMe = jest.fn(() => ({ unwrap: () => Promise.resolve({}) }));
 jest.mock('../store/api', () => ({
   useGetMeQuery: () => ({
-    data: { username: 'demo', emailVerified: true },
+    data: { username: 'demo', emailVerified: true, privacy: mockPrivacy },
   }),
 }));
+jest.mock('../store/profileApi', () => ({ usePatchMeMutation: () => [mockPatchMe, {}] }));
 jest.mock('../store/settingsApi', () => ({
   useGetBlocksQuery: () => ({ data: { blocks: [] } }),
 }));
@@ -38,5 +42,14 @@ describe('Settings shell (P12 §0.10 · walk2 B11)', () => {
     fireEvent.press(screen.getByText('SIGN OUT'));
     expect(screen.getByText('SIGN OUT?')).toBeTruthy(); // the ConfirmSheet title
     expect(screen.getByText(/Nothing is deleted/)).toBeTruthy();
+  });
+
+  it('W-C4/D-3 — the PROF-03 privacy Toggle patches /me {privacy} (friends↔public)', () => {
+    mockPrivacy = 'friends';
+    mockPatchMe.mockClear();
+    render(wrap(<Settings />));
+    // OFF (friends) → tapping the switch turns the profile public
+    fireEvent.press(screen.getByLabelText('Public profile'));
+    expect(mockPatchMe).toHaveBeenCalledWith({ privacy: 'public' });
   });
 });

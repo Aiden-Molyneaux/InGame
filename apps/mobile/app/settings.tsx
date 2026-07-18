@@ -7,8 +7,10 @@ import { ScreenHead, SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../src/component
 import { TertiaryLink } from '../src/components/TertiaryLink';
 import { ScreenButton } from '../src/components/ScreenButton';
 import { ConfirmSheet } from '../src/components/ConfirmSheet';
+import { Toggle } from '../src/components/Toggle';
 import { themedStyles, useTheme } from '../src/theme';
 import { useGetMeQuery } from '../src/store/api';
+import { usePatchMeMutation } from '../src/store/profileApi';
 import { useGetBlocksQuery } from '../src/store/settingsApi';
 import { logoutTeardown } from '../src/store';
 
@@ -22,7 +24,15 @@ export default function Settings() {
   const styles = useStyles();
   const { data: me } = useGetMeQuery();
   const { data: blocks } = useGetBlocksQuery();
+  const [patchMe] = usePatchMeMutation();
   const [signOutConfirm, setSignOutConfirm] = useState(false);
+
+  // W-C4 / D-3 — the PROF-03 privacy toggle lives HERE (the board places privacy in Settings, not in
+  // profile edit). ON = a public profile (widened non-friend view); OFF = friends-only (the default).
+  const isPublic = me?.privacy === 'public';
+  function setPrivacyPublic(v: boolean) {
+    void patchMe({ privacy: v ? 'public' : 'friends' });
+  }
 
   async function doSignOut() {
     await logoutTeardown(); // F20/F14 — purge persisted prefs + reset cache + clear secure-store tokens
@@ -61,6 +71,20 @@ export default function Settings() {
         {/* ── PRIVACY & SAFETY ── */}
         <Section title="Privacy & Safety">
           <Group>
+            {/* W-C4 / D-3 — the PROF-03 privacy Toggle (ASSUMPTION: labelled "Public profile" for a clear
+                ON=public mapping; the board's "LIMITED PUBLIC PROFILE" reads backwards against the enum). */}
+            <Row
+              icon={<EyeIcon />}
+              label="Public profile"
+              sub={isPublic ? 'Anyone can see your profile' : 'Only friends see your profile'}
+              trailing={
+                <Toggle
+                  value={isPublic}
+                  onValueChange={setPrivacyPublic}
+                  accessibilityLabel="Public profile"
+                />
+              }
+            />
             <Row
               icon={<BlockIcon />}
               label="Blocked users"
@@ -139,6 +163,7 @@ function Row({
   subTone,
   value,
   onPress,
+  trailing,
 }: {
   icon?: ReactNode;
   label: string;
@@ -146,6 +171,8 @@ function Row({
   subTone?: 'ok' | 'warn';
   value?: string;
   onPress?: () => void;
+  /** A trailing control (e.g. the privacy Toggle) — replaces the value/chevron affordance. */
+  trailing?: ReactNode;
 }) {
   const styles = useStyles();
   const inner = (
@@ -159,6 +186,7 @@ function Row({
           </Text>
         ) : null}
       </View>
+      {trailing ? <View style={styles.rtrail}>{trailing}</View> : null}
       {value ? <Text style={styles.rv}>{value}</Text> : null}
       {onPress ? <Text style={styles.chev}>›</Text> : null}
     </>
@@ -203,6 +231,12 @@ const BlockIcon = () => (
   <RicSvg>
     <Circle cx={7.5} cy={7.5} r={5.4} fill="none" stroke={S} strokeWidth={1.3} />
     <Path d="M3.7 3.7l7.6 7.6" stroke={S} strokeWidth={1.3} />
+  </RicSvg>
+);
+const EyeIcon = () => (
+  <RicSvg>
+    <Path d="M1.6 7.5S4 3.6 7.5 3.6 13.4 7.5 13.4 7.5 11 11.4 7.5 11.4 1.6 7.5 1.6 7.5z" fill="none" stroke={S} strokeWidth={1.3} />
+    <Circle cx={7.5} cy={7.5} r={2} fill="none" stroke={S} strokeWidth={1.3} />
   </RicSvg>
 );
 const DocIcon = () => (
@@ -250,6 +284,7 @@ const useStyles = themedStyles((t) => ({
   rsubOk: { color: t.brand.success },
   rsubWarn: { color: t.scr.accent },
   rv: { fontFamily: t.font.screenSemi, fontSize: t.type.body, color: t.scr.dim, letterSpacing: 0.5, textAlign: 'right', maxWidth: 160 },
+  rtrail: { marginLeft: 'auto' },
   chev: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.faint },
   footnote: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5, textAlign: 'center', lineHeight: 14, marginTop: t.space.sm },
 }));

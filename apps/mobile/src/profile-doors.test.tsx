@@ -27,11 +27,17 @@ jest.mock('./store/api', () => ({
   useGetCollectionQuery: () => mockCollection,
   useGetDeviceQuery: () => ({ data: undefined }),
   useGetWalletQuery: () => ({ data: { balance: 0 } }),
+  useGetGenresQuery: () => ({ data: { items: [] } }),
 }));
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush, replace: jest.fn(), navigate: jest.fn() }),
 }));
 jest.mock('./store/achievementsApi', () => ({ useGetMyAchievementsQuery: () => ({ data: undefined }) }));
+jest.mock('./store/profileApi', () => ({
+  usePatchMeMutation: () => [jest.fn(() => ({ unwrap: () => Promise.resolve({}) })), {}],
+  useAddGamertagMutation: () => [jest.fn(() => ({ unwrap: () => Promise.resolve({}) })), {}],
+  useRemoveGamertagMutation: () => [jest.fn(() => ({ unwrap: () => Promise.resolve({}) })), {}],
+}));
 jest.mock('./store', () => ({ logoutTeardown: jest.fn() }));
 jest.mock('./components/EntryCard', () => ({
   EntryCard: ({ title }: { title: string }) => {
@@ -181,5 +187,28 @@ describe('walk2 B11/B14: Settings gear keycap + the favourite hero', () => {
     renderProfile();
     expect(screen.getByText('120 HRS')).toBeTruthy(); // the /me hours, no status to speak
     expect(screen.queryByText(/FROMSOFTWARE/)).toBeNull();
+  });
+});
+
+describe('walk2 C4/C6: Profile EDIT mode + MY CONTRIBUTIONS door', () => {
+  it('C6 — MY CONTRIBUTIONS routes to the caller\'s own contributor screen', () => {
+    mockMe = { data: ME([]), isLoading: false, isError: false, refetch: jest.fn() };
+    renderProfile();
+    fireEvent.press(screen.getByLabelText('View your contributions'));
+    expect(mockPush).toHaveBeenCalledWith('/contributor/me-0000-0000-0000-000000000000');
+  });
+
+  it('C4 — the EDIT keycap toggles the in-place identity editor (OQ-034)', () => {
+    mockMe = { data: ME([]), isLoading: false, isError: false, refetch: jest.fn() };
+    renderProfile();
+    // not editing → the read-only identity (no username field)
+    expect(screen.queryByLabelText('Username')).toBeNull();
+    fireEvent.press(screen.getByLabelText('Edit profile'));
+    // editing → the EditableIdentity (username/bio fields present)
+    expect(screen.getByLabelText('Username')).toBeTruthy();
+    expect(screen.getByLabelText('Bio')).toBeTruthy();
+    // tap again to exit (the OQ-034 toggle)
+    fireEvent.press(screen.getByLabelText('Done editing'));
+    expect(screen.queryByLabelText('Username')).toBeNull();
   });
 });
