@@ -96,13 +96,21 @@
   F-02-consistent; it creates a card-bearing entry).
 - ⬜ W-B9 ⚖ **Game page DESIGN NEW back to ORANGE** — reverses the 0069 "DESIGN NEW = gold" ruling
   (owner, this walk). 0078 records the amendment.
-- ⬜ W-B10 ⚖ **Friend profile layout** — VIEW COLLECTION + COMPARE HOURS in one row · FRIEND tag
+- ✅ W-B10 ⚖ **Friend profile layout** — VIEW COLLECTION + COMPARE HOURS in one row · FRIEND tag
   repositioned (under the profile details) · mutual-friends count relocated · section order =
-  the self-Profile's order.
+  the self-Profile's order. **(`a5f8794`** — r1: one paired flex row at the FOOT, the board's
+  bottom-tools seat; r2+r3 ASSUMPTION: one identity-foot row — relationship seat LEFT · "14 FRIENDS
+  · 3 MUTUAL" RIGHT, owner may veto; r4: STATS → ACHIEVEMENTS → TOP 3 → NOW PLAYING → THEIR DEVICE,
+  mirroring profile.tsx at head, pinned-favourite n/a on the friend shape.)
 - ⬜ W-B11 ⚖ **Settings** — Sign Out at the bottom · gear on a white/cream key (the 0069 secondary
   voice) · legal screens opened FROM Settings keep the nav band ACTIVE (the locked state is
   pre-auth only).
-- ⬜ W-B12 ⚖ **Device editor: "EDITING YOUR DEVICE" / "SWITCHED" readouts removed.**
+- ✅ W-B12 (bba9774) ⚖ **Device editor: "EDITING YOUR DEVICE" / "SWITCHED" readouts removed.** Both
+  gone: the default EDITING line + the D2 SWITCHED beat readout (which had outlived the M5 F-21 r6
+  MiniDevice-pair removal). The readout row survives ONLY for the D5 on-shell preview + the live
+  PLACING transform line, else the space collapses. Orphans swept with it: the whole `switchBeat`
+  state machine (its lone consumer was the readout) + the `editReadoutSub`/`switchReadout` formatters
+  + their tests.
 - ⬜ W-B13 ⚖ **Profile: Settings gear on a white button** (folded into W-B11).
 - ⬜ W-B14 ⚖ **Pinned Favourite gets Hero-card treatment** with additional game details (compose per
   the Collection hero grammar).
