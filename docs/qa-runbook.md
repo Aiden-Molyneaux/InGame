@@ -136,6 +136,21 @@ under Promoted.
   build burst and pre-emptively `-c` restart before a device session.
 - **Verified:** 2026-07-17 (both lanes healed; doctor green board) · **Hits:** 2
 
+## Mobile jest MUST run via the workspace, never bare `npx jest` from the repo root
+- **Symptom:** `npx jest src/foo.test.tsx` from the repo root fails to PARSE a perfectly valid `.tsx`
+  test — cascading phantom errors: first a TS construct ("Missing initializer in const declaration" /
+  "Unexpected token, expected ',' " on an `as` cast), and once types are stripped, "Support for the
+  experimental syntax 'jsx' isn't currently enabled". The same file passes fine in the real suite.
+- **Diagnosis:** bare `npx jest` from `C:\personal\InGame` picks up a root/default babel config that
+  has NEITHER `@babel/preset-typescript` NOR JSX — the mobile package's `jest-expo` preset
+  (`apps/mobile/jest.config.js` + `babel-preset-expo`) is what enables both, and it only applies when
+  jest runs in the mobile workspace. The parse errors are an artifact of the wrong runner, not the test.
+- **Fix:** run mobile tests as **`npm -w @ingame/mobile test`** (optionally `-- <name-filter>` to scope,
+  e.g. `npm -w @ingame/mobile test -- store-preview-teardown`). Never `npx jest` from the root for
+  `apps/mobile/**`. (API tests are vitest: `npm run test:integration` / `test:unit`.)
+- **Verified:** 2026-07-18 (chased a phantom parse error through two needless test rewrites before
+  running it correctly — 2/2 green) · **Hits:** 1
+
 ## Promoted (owned by `doctor` — run `node scripts/dev-stack.mjs doctor`)
 
 - Postgres container down → `doctor` **db :5432** check.

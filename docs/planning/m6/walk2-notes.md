@@ -202,15 +202,27 @@ briefs for M7 get this line verbatim.
 
 ## ROUND 3 — post-Wave-B notes + the Wave-D nod (2026-07-18, Opus orchestrator)
 
-- 🔧 W-A9 **THE THEME-PREVIEW LEAK (owner: "figure this out before moving forward").** Store Berry
-  theme preview stuck app-wide after a glitchy drawer close; My-Device readout correctly still
-  Midnight (the desync). Orchestrator pre-diagnosis: `StoreThemePreviewProvider` is ROOT-mounted
-  (app/_layout.tsx wraps the whole app), and its ONLY teardown is the item-sheet's `useEffect`
-  cleanup (store.tsx ~700 `return ()=>setPreview({})`) — NO backstop when the store screen blurs, so
-  a skipped cleanup strands the override forever; the preview never writes prefs (correct → the
-  desync). **Running the `theme-leak-hunt` workflow** (3 investigators → diagnose → fix → adversarial
-  verify; the fix must make the leak IMPOSSIBLE via a store-screen blur backstop, mirror the A7
-  blur-flush, + check the device-editor preview for the same class). Client-only.
+- ✅ W-A9 (a5e4faf + 4980659, full suite 85/576) **THE THEME-PREVIEW LEAK — FIXED.** Root cause
+  (confirmed by the `theme-leak-hunt` workflow: 3 investigators → diagnose → fix → adversarial verify
+  GO): `StoreThemePreviewProvider` is ROOT-mounted (app/_layout.tsx), and the app-wide preview
+  override's ONLY teardown was the item-sheet's `openItem`-keyed `useEffect` cleanup — NO backstop
+  when the store screen blurs/unmounts. A glitched close that strands the sheet open (or a
+  blurred-but-still-mounted /store — expo-router keeps routes mounted) left the previewed theme (Berry)
+  painting the WHOLE app while prefs + the server device stayed Midnight (the desync = the confirming
+  signature; the preview NEVER writes prefs, so no persisted corruption). **Fix:** a screen-scoped
+  `useFocusEffect(useCallback(() => () => setPreview({}), [setPreview]))` in `Store()` — unconditional
+  teardown on BLUR/UNMOUNT, mirroring the device editor which ALREADY had this guard (the asymmetry WAS
+  the bug — device.tsx needed no change). The legitimate live preview is fully preserved (paints on
+  open, clears on clean close); the backstop is additive belt-and-braces. Regression test
+  (`store-preview-teardown.test.tsx`) drives the real Store + a stranded Berry preview → RED without the
+  backstop, GREEN with it. Client-only, hot-reloaded.
+- ⬜ W-A9b **(residual, owner's call — optional hardening)** the "store screen UNUSABLE" half of the
+  glitch: the workflow's best theory (medium confidence, not runtime-confirmed) is a PulledSheet
+  stranded open (invisible-but-mounted absolute-fill scrim keeps eating touches while `openItem` never
+  nulls). The W-A9 fix makes the LEAK impossible and the store RECOVERABLE (leave /store — the nav band
+  lives at DeviceShell root, outside the scrim, so blur clears Berry + returns you clean). If the owner
+  wants the drawer itself to never strand, that's a separate PulledSheet dismiss-hardening pass. Filed,
+  not urgent (the leak — the actual damage — is closed).
 - ⬜ W-B1b ⚖ **Header spacing must be INDEPENDENT of the trailing button** (Profile CurrencyCounter,
   Friends header key): the title shifts because a same-row button pushes it. The B1 shared
   `SCREEN_HEADER_PAD` fixed the outer inset, but the title's left position still varies with the
