@@ -7,7 +7,7 @@ import { ScreenHead, SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../src/component
 import { TertiaryLink } from '../src/components/TertiaryLink';
 import { ScreenButton } from '../src/components/ScreenButton';
 import { ConfirmSheet } from '../src/components/ConfirmSheet';
-import { Toggle } from '../src/components/Toggle';
+import { SectionSwitch } from '../src/components/SectionSwitch';
 import { themedStyles, useTheme } from '../src/theme';
 import { useGetMeQuery } from '../src/store/api';
 import { usePatchMeMutation } from '../src/store/profileApi';
@@ -27,11 +27,12 @@ export default function Settings() {
   const [patchMe] = usePatchMeMutation();
   const [signOutConfirm, setSignOutConfirm] = useState(false);
 
-  // W-C4 / D-3 — the PROF-03 privacy toggle lives HERE (the board places privacy in Settings, not in
-  // profile edit). ON = a public profile (widened non-friend view); OFF = friends-only (the default).
-  const isPublic = me?.privacy === 'public';
-  function setPrivacyPublic(v: boolean) {
-    void patchMe({ privacy: v ? 'public' : 'friends' });
+  // W-C4 / D-3 — the PROF-03 privacy control lives HERE (the board places privacy in Settings, not in
+  // profile edit). N6 (owner) — a labeled two-option SectionSwitch (FRIENDS ONLY | PUBLIC) replaces the
+  // ambiguous ON/OFF toggle: both states are named, the selected one lit (F-09), + an explicit sub-line.
+  const privacy = me?.privacy ?? 'friends';
+  function setPrivacy(v: 'friends' | 'public') {
+    if (v !== privacy) void patchMe({ privacy: v });
   }
 
   async function doSignOut() {
@@ -71,20 +72,31 @@ export default function Settings() {
         {/* ── PRIVACY & SAFETY ── */}
         <Section title="Privacy & Safety">
           <Group>
-            {/* W-C4 / D-3 — the PROF-03 privacy Toggle (ASSUMPTION: labelled "Public profile" for a clear
-                ON=public mapping; the board's "LIMITED PUBLIC PROFILE" reads backwards against the enum). */}
-            <Row
-              icon={<EyeIcon />}
-              label="Public profile"
-              sub={isPublic ? 'Anyone can see your profile' : 'Only friends see your profile'}
-              trailing={
-                <Toggle
-                  value={isPublic}
-                  onValueChange={setPrivacyPublic}
-                  accessibilityLabel="Public profile"
+            {/* N6 (owner) — the PROF-03 privacy control: a labeled two-option SectionSwitch, unambiguous
+                (both states named + the current-state meaning spelled out). */}
+            <View style={styles.privacyBlock}>
+              <View style={styles.privacyHead}>
+                <View style={styles.ric}><EyeIcon /></View>
+                <View style={styles.rlWrap}>
+                  <Text style={styles.rl}>WHO CAN SEE YOUR PROFILE</Text>
+                  <Text style={styles.rsub}>
+                    {privacy === 'public'
+                      ? 'PUBLIC — ANYONE CAN SEE YOUR LIMITED PROFILE'
+                      : 'FRIENDS ONLY — ONLY FRIENDS SEE YOUR PROFILE'}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.privacySwitch}>
+                <SectionSwitch
+                  options={[
+                    { value: 'friends', label: 'Friends only' },
+                    { value: 'public', label: 'Public' },
+                  ]}
+                  value={privacy}
+                  onChange={setPrivacy}
                 />
-              }
-            />
+              </View>
+            </View>
             <Row
               icon={<BlockIcon />}
               label="Blocked users"
@@ -285,6 +297,10 @@ const useStyles = themedStyles((t) => ({
   rsubWarn: { color: t.scr.accent },
   rv: { fontFamily: t.font.screenSemi, fontSize: t.type.body, color: t.scr.dim, letterSpacing: 0.5, textAlign: 'right', maxWidth: 160 },
   rtrail: { marginLeft: 'auto' },
+  // N6 — the privacy control block: the labelled head (icon + label + current-state sub) + the switch.
+  privacyBlock: { paddingHorizontal: t.space.lg, paddingVertical: t.space.lg, gap: t.space.md },
+  privacyHead: { flexDirection: 'row', alignItems: 'center', gap: t.space.lg },
+  privacySwitch: { paddingLeft: 30 + t.space.lg }, // align under the label (past the icon chip)
   chev: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.faint },
   footnote: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5, textAlign: 'center', lineHeight: 14, marginTop: t.space.sm },
 }));

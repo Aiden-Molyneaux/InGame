@@ -44,12 +44,16 @@ describe('Settings shell (P12 §0.10 · walk2 B11)', () => {
     expect(screen.getByText(/Nothing is deleted/)).toBeTruthy();
   });
 
-  it('W-C4/D-3 — the PROF-03 privacy Toggle patches /me {privacy} (friends↔public)', () => {
+  it('N6 — the PROF-03 privacy control is a labeled two-option switch; PUBLIC patches /me {privacy}', () => {
     mockPrivacy = 'friends';
     mockPatchMe.mockClear();
     render(wrap(<Settings />));
-    // OFF (friends) → tapping the switch turns the profile public
-    fireEvent.press(screen.getByLabelText('Public profile'));
+    // both states are NAMED (no ON/OFF ambiguity) + the current-state meaning is spelled out
+    expect(screen.getByText('FRIENDS ONLY')).toBeTruthy();
+    expect(screen.getByText('PUBLIC')).toBeTruthy();
+    expect(screen.getByText(/ONLY FRIENDS SEE YOUR PROFILE/)).toBeTruthy();
+    // picking PUBLIC widens the profile
+    fireEvent.press(screen.getByText('PUBLIC'));
     expect(mockPatchMe).toHaveBeenCalledWith({ privacy: 'public' });
   });
 });

@@ -214,7 +214,9 @@ export function EditableIdentity({
           autoCapitalize="none"
           error={gtErr}
         />
-        <ScreenButton label="Add gamertag" variant="secondary" onPress={() => void addGamertag()} disabled={gtHandle.trim().length === 0} block />
+        {/* N3 (owner) — the add-gamertag key is ORANGE /primary (0069 prominent non-acquisitive: an add
+            action, not the cream secondary voice). */}
+        <ScreenButton label="Add gamertag" variant="primary" onPress={() => void addGamertag()} disabled={gtHandle.trim().length === 0} block />
       </View>
     </View>
   );

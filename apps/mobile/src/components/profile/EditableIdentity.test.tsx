@@ -112,6 +112,13 @@ describe('EditableIdentity (W-C4 · in-place per-field commit)', () => {
     await waitFor(() => expect(onAddGamertag).toHaveBeenCalledWith({ platform: 'xbox', handle: 'demo_xbl' }));
   });
 
+  it('N3 (owner) — the ADD GAMERTAG key is orange /primary (not the cream secondary)', () => {
+    renderEditor();
+    const tree = JSON.stringify(screen.toJSON());
+    // the primary fill is the on-screen accent (#ff9f43 on Midnight); the cream secondary is #f5f1e4.
+    expect(tree).toContain('#ff9f43');
+  });
+
   it('avatar = the PROF-08 monogram + the ✎ "designer coming" note; NO server call (D-2)', () => {
     const onPatchMe = jest.fn<Promise<SaveOutcome>, unknown[]>().mockResolvedValue({ ok: true });
     renderEditor({ onPatchMe });

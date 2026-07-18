@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native';
-import Svg, { Path, Circle } from 'react-native-svg';
+import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import type { PatchMeRequest, CreateGamertagRequest } from '@ingame/shared';
 import { IdentityBlock } from '../../src/components/IdentityBlock';
@@ -384,17 +384,18 @@ function EditGlyph({ color }: { color: string }) {
   );
 }
 
-// The header gear glyph — navy on the cream ToolButton cap (walk2 B11 · 0069 keycap voice).
+// The header gear glyph — navy on the cream ToolButton cap (walk2 B11 · N4). A BOLD FILLED cog (not a
+// thin outline — the owner flagged the old one as light-mode): a solid navy body + 8 protruding teeth
+// (4 full-length rects rotated 45°) + a punched cream centre, matching the app's filled-glyph language
+// (nav keycaps are solid navy fills). `color` inks the cog; the centre hole wears the cream keycap face.
 function SettingsGear({ color }: { color: string }) {
   return (
-    <Svg width={16} height={16} viewBox="0 0 24 24">
-      <Circle cx={12} cy={12} r={3.2} fill="none" stroke={color} strokeWidth={1.8} />
-      <Path
-        d="M12 2.6v2.4M12 19v2.4M21.4 12H19M5 12H2.6M18.7 5.3l-1.7 1.7M7 17l-1.7 1.7M18.7 18.7L17 17M7 7L5.3 5.3"
-        stroke={color}
-        strokeWidth={1.8}
-        strokeLinecap="round"
-      />
+    <Svg width={17} height={17} viewBox="0 0 24 24">
+      {[0, 45, 90, 135].map((a) => (
+        <Rect key={a} x={10.3} y={1.6} width={3.4} height={20.8} rx={0.8} fill={color} transform={`rotate(${a} 12 12)`} />
+      ))}
+      <Circle cx={12} cy={12} r={7.2} fill={color} />
+      <Circle cx={12} cy={12} r={3} fill={theme.brand.cream} />
     </Svg>
   );
 }
