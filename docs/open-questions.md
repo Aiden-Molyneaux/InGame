@@ -31,8 +31,17 @@
   read paths · PII kept-set = keep financial rows (ledger/receipts), anonymize the user row · the
   M6 beta ships without in-app deletion (5.1.1(v) binds at submission; support-channel path in the
   beta welcome note). Stays OPEN as the M8/G-N implementation checklist.
+- OQ-152: **Fuzzy people-search read-class — overload `AUTH-LOOKUP` or mint `SYS-01-DIRECTORY-READ`?**
+  The M6 Wave C fuzzy `/users/search` (C1, SOC-07 amendment) reuses the `// SYS-01-AUTH-LOOKUP` marker
+  in `auth-repo.ts` for a case-insensitive substring read of the users table — the SAME class the exact
+  search already used, so the lint is green with zero edits and no scope was silently widened (the
+  payload is the same public PersonRow allowlist). BUT this stretches AUTH-LOOKUP's documented intent
+  (a pre-auth SINGLE-credential lookup) to an authenticated MULTI-ROW directory read. Owner/architecture
+  call: keep the overload, or mint a dedicated `SYS-01-DIRECTORY-READ` / public-presence read-class (a
+  guard-surface change). No behavior change either way. (C1 build + workflow review, M6 2026-07-18;
+  decision 0078 §3) [behavior] M6/M7-entry
 - OQ-147: **Should voluntary request-CANCEL share decline's 7-day re-request cooldown?** SOC-08 says cooldown after "decline/cancel" and the M6 P1 build conforms — but an accidental cancel now locks the sender out for 7 days (the friends:request bucket already throttles cancel-resend pestering at 10/hr). Options: keep as specced · cancel exempt · a shorter cancel-specific window (SYS-04). (P1 build review, M6 2026-07-16; decision 0076 era) [behavior] M6
-  **→ RULED (owner, 2026-07-17 morning batch — decision 0078 pending): CANCEL EXEMPT** — only decline
+  **→ RULED (owner, 2026-07-17 morning batch — decision 0078): CANCEL EXEMPT** — only decline
   cools down; SOC-08 spec edit + the server revert ride the post-walk fix round.
 - OQ-150: **CAT-11 `/catalog/new-releases` was never built** — drawn in api-contract 0.33 and pulled to
   M4 by decision 0062 ("the CAT-11 NEW-RELEASES rail lands on Add Game"), but grep confirms no server
@@ -40,7 +49,7 @@
   brief said "mirror new-releases", which turned out to be paper-only). The M4 Add-Game rail apparently
   shipped without it. A mechanical build (the `/catalog/popular` pattern now has THREE live siblings to
   mirror); slot it M7-entry or as an M6 tail. (P7 build, M6 2026-07-17) [behavior] M7-entry
-  **→ RULED (owner, 2026-07-17 morning batch — decision 0078 pending): BUILD NOW (M6 tail)** + the
+  **→ RULED (owner, 2026-07-17 morning batch — decision 0078, BUILT M6 Wave C `50fd467`): BUILD NOW (M6 tail)** + the
   owner asks the Add-Game rails question: he recalls THREE rows (a "recommended" first row, then
   releases) and asks whether TRENDING belongs — verify the add-game board's drawn rail set (popular ·
   new-releases · friends-active?) and report; a true recency-weighted trending-GAMES rail would be
@@ -53,13 +62,13 @@
   options: accept (self-heals with use — the beta cohort acts daily) · a one-time activation sweep that
   unlocks already-satisfied counters at deploy (contradicts the no-back-grant stance; owner may bless
   it for beta warmth) · "READY — one more to go" copy. (P11 GAP-4, M6 2026-07-17) [behavior] M6
-  **→ RULED (owner, 2026-07-17 morning: "I think it looks fine" — decision 0078 pending): ACCEPT** —
+  **→ RULED (owner, 2026-07-17 morning: "I think it looks fine" — decision 0078 — later REVERSED at the walk, see below): ACCEPT** —
   count-from-genesis stands as built; self-heals with use.
   **→ REVERSED (owner, 2026-07-17 walk — decision 0078): FIX via reconcile-on-read** — satisfied
   count-criteria unlock (full reward path) when /me/achievements is read; the at-most-once evaluator
   gap self-heals at the trophy case; match/window/dual eggs stay live-event-only.
 - OQ-148: **Should a friend's feed name an unlocked SECRET achievement?** ACH-05 shows earned secrets on the profile (name visible to friends), and SOC-06 lists achievement unlocks as feed events — but a named secret in the feed spoils the egg for friends who haven't found it. M6 ships the conservative default (the feed masks secret-tier labels → "found a secret achievement", implemented with P6); the owner may prefer naming them. (§4 audit, M6 2026-07-17) [behavior] M6
-  **→ RULED (owner, 2026-07-17 morning batch — decision 0078 pending): KEEP THE MASK — and WIDEN it:**
+  **→ RULED (owner, 2026-07-17 morning batch — decision 0078, IMPLEMENTED M6 Wave C server `edd9710` + client C3b): KEEP THE MASK — and WIDEN it:**
   friends' achievement pages must ALSO mask secrets (an earned secret renders count-only/masked on
   `/users/:id/achievements` — "you shouldn't be able to figure out secret achievements by looking at
   friends' pages"). ACH-05 spec edit + server+client changes ride the post-walk fix round.
@@ -112,6 +121,11 @@
   **→ RE-TRIAGED (decision 0076 §0.12, 2026-07-16, M6-entry):** deferred to the **onboarding era**
   (AUTH-06 — the add-time card pick wants new-user context + a populated community gallery; lands
   with the onboarding batch near public launch, decision 0062's slot).
+  **→ REOPENED AS A BUILD ITEM (owner, M6 walk-2 — decision 0078 §4, W-C10):** the owner rules the
+  Add-Game community-cards step IN for the beta — "during the Add-Game flow there is supposed to be a
+  step where the user is shown the Community Cards (or a subset) so they can adopt one." Rides the
+  W-D1 adaptive-Game-page build (the CATALOG-posture adopt path is the same seam; C5's game-detail
+  aggregate + the live gallery/adopt stack are the substrate). No longer onboarding-deferred.
 - ~~OQ-135~~ **RESOLVED (2026-07-06, owner gate-5 ruling D.22: "a plate is required").** The name always renders: `none` leaves the nameplate roster (decision 0063 §4 amended); every composition carries a plate (min SLAB); legacy `shape:'none'` documents render as SLAB. Built same-day (roster + buildCard coercion + EquipReadout). *Orig:* **nameplate shape NONE renders a card face with no title at all — should the CARD-01 name guarantee survive it?** Decision 0063 §4 sanctioned a `none` plate shape, yet the styler board hints "THE NAME ALWAYS RENDERS (CURATED SHAPES)" (`styler-states.html:907`) and CARD-01 leans legibility-first. (raised by parvati reviewing §3.2 Styler, 2026-07-06) [undecided → behavior]
 - ~~OQ-133~~ **RESOLVED (2026-07-05, decision 0066 — owner default confirmed: built at §3.2).** The card substrate (`card_designs` + `style_presets` tables · `POST/PATCH/DELETE /cards` · `save-private` · `GET /me/cards` · `GET /me/collection/:entryId/cards` · the `/me/style-presets` CRUD · `activeCardDesignId` on the collection PATCH) is implemented with the Styler build; the §3.1 switcher goes fully live with it. *Orig:* **the CARD-24 CARDS-switcher substrate is specced-but-NOT-coded — build it at §3.1 now, or ride the Styler (§3.2)?** Decision 0062 §8 + the M4 brief say the Game-page CARDS switcher "rides CARD-24's `/me/style-presets` + `GET /me/collection/:entryId/cards`" and that these "already exist (api-contract 0.51)" — but they exist **only in the contract doc**. The server has **no** `card_designs` / `style_presets` / `platforms` tables, **no** `GET /me/collection/:entryId/cards`, **no** `activeCardDesignId`/`platformIds` on `PATCH /me/collection/:entryId`, and **no** `/cards/*` mutations. Decision **0058 §7** deferred `activeCardDesignId`+`platformIds` "to M4 **with their substrates**" — that backend build has **not** happened (§3.1 is the *first* M4 surface). And user cards are only *created* in the Styler (§3.2, `POST /cards/:id/save-private`), so at §3.1 there are **no real cards to switch among**. **Interim taken by this build (recorded ASSUMPTION):** the CARDS switcher renders the one **CARD-18 default card** (client-derived from `entry.card`, no new endpoint) + the **DESIGN-NEW** tile; multi-card **SELECT / SET-AS-MAIN (`activeCardDesignId`) / DELETE (`/cards/:id`) / EDIT-IN-STYLER** and the **community gallery + adopt** are marked `EXPECTED(card-pipeline · Styler §3.2 / M5)` in the manifest. Catalog facts for the M4 owned states come from the **collection entry**, not the unbuilt `GET /catalog/games/:id`. **Owner ruling needed at the first-article stop:** build the `card_designs` + switcher-feed backend foundation now (pulls Styler-era backend into §3.1), or let it ride §3.2 as this interim assumes? (raised building M4 §3.1 Game-page shell, 2026-07-05) [behavior]
 - ~~OQ-134~~ **RESOLVED (2026-07-05, decision 0066 / api-contract 0.53 — owner default confirmed).** `notes` + `rating` join the `/me/collection` item (owner-only serializer; the friend subset still excludes them per contract). The Game-page dossier reads back what it writes. *Orig:* **the `CollectionItem` response carries no `notes` / `rating` — the Game-page dossier can't READ them back.** `GET /me/collection`'s `collectionItemSchema` (packages/shared `response/collection.ts`) returns `hours · percentComplete · status · ownedSince · nowPlaying` but **not** `notes` or `rating`, while `PATCH /me/collection/:entryId` *accepts* both (write-only). There is no single-entry `GET`. So the Game-page PLAY dossier can't display the saved NOTES (board draws it, `:490`) and the EDIT NOTES field can't pre-fill; RATING is already board-marked PENDING (OQ-058). **Interim:** hours/%/status/ownedSince round-trip fully; NOTES is a write-only EDIT field (blank start), its readout marked `EXPECTED`; RATING stays PENDING. **Owner/spec ruling:** add `notes` (COL-05) + `rating` (COL-03, if OQ-058 unblocks) to the `CollectionItem` response (they exist in the DB row, just aren't serialized) so the dossier reads what the user wrote — a small serializer + api-contract bump. (raised building M4 §3.1 Game-page shell, 2026-07-05) [behavior]
