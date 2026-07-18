@@ -351,3 +351,17 @@ briefs for M7 get this line verbatim.
   route to `/user/[id]` for ANY relationship (not just friends); the relationship action button is
   unchanged. `/user/[id]` (P9) already renders the non-friend LIMITED shape + ADD FRIEND (RelationshipAction)
   — verified handled, NO P9 edit needed. Jest: a `none`-relationship row tap routes to the profile.
+
+## SLEW RECONCILIATION (2026-07-18) — the owner re-checked the original 30 notes against HEAD
+`slew-reconcile` workflow (8 Fable agents, one per screen-group, verified against HEAD code — not the
+ledger's word): **30/30 addressed — 29 confirmed-in-code · 1 partial · 0 missing · 0 silently dropped.**
+- **#5 avatar (the sole partial) → OWNER RATIFIED DEFERRAL (2026-07-18):** gamertags edit live; avatar
+  editing stays **§10 / post-beta** (monogram + "✎ designer coming" note ships in the close-friends beta).
+  Confirms W-C4 D-2 in the M6 beta context — do NOT re-raise. A lightweight picker was offered + declined.
+- Walk-check caveats surfaced (all confirmed in code; owner's eye on-device): #1 unify direction (small
+  <96px plateless, cell 96px+ plated → Discover now plated) · #3 midnight-theme recessed-well contrast ·
+  #8 pin off-shelf degrade · #20 friend identity-foot row (builder interpretation, vetoable) · #22
+  friend-view Q2 swap + "—" cross-user % · #11 store sheet clean but Device/KeepBar preview banners
+  survive · #23 sticker blur-teardown.
+- Swept 3 stale comments the reconciliation caught (f39f015): cardArtist "server half owed" (W-C8 landed);
+  collection SHELF/LIST "▶ NOW" tags (removed W-B6).
