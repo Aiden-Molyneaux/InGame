@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { View, Text, StyleSheet, type LayoutChangeEvent, type ViewStyle } from 'react-native';
-import Svg, { Path, Line } from 'react-native-svg';
+import Svg, { Path, Rect, Defs, ClipPath } from 'react-native-svg';
 import { themedStyles, useTheme } from '../theme';
 import { cardStepUnit, steppedRectPath } from '../theme/steppedPath';
 import { PLATE_H_RATIO } from '../render/buildCard';
@@ -73,11 +73,18 @@ export function GameCard({
   // F-18 — the pixel-step scales with the drawn box so the default face matches the composed/flattened
   // silhouette at every size (was the fixed `dims.step`, which drifted from the proportional card render).
   const u = cardStepUnit(bw);
-  // walk2 W-A3 (CARD-18) — the default face's plate band uses the SAME geometry as designed cards:
-  // the shared PLATE_H_RATIO of the DRAWN height (buildCard's plated draw), not a fixed text+padding
-  // height — so a default card's plate sits and scales exactly like a designed card's at every size.
-  // (Was `dims.plate + 8`: a constant ~18px band that floated off the designed-plate line.)
+  // walk2 W-A3/A3b (CARD-18) — the default face's plate composes EXACTLY like buildCard's designed
+  // plate: band height = PLATE_H_RATIO of the drawn height, LIFTED off the bottom edge by the same
+  // formula ("a couple pixels", plateGroup), and CLIPPED to the stepped silhouette so the notched
+  // corners stay intact. The old render was a screen-bg-coloured strip pinned to the very bottom —
+  // against the screen background it read as an EXTERNAL title band hanging below the card, covering
+  // the frame's bottom edge + step (the owner's Hades screenshot). Same-hue dark fill so the band
+  // reads as part of the card, never a hole.
   const plateH = showPlate ? Math.round(bh * PLATE_H_RATIO) : 0;
+  const plateLift = showPlate ? Math.max(2, Math.round(bh * 0.012)) : 0;
+  // Unique per instance — many cards render per screen and RN-svg-web emits REAL svg defs; a shared
+  // id would cross-reference another card's differently-sized clip.
+  const clipId = useId();
 
   return (
     <View
@@ -111,13 +118,23 @@ export function GameCard({
           opacity={0.6}
         />
         {showPlate ? (
+          // A3b — the buildCard plate geometry: a full-width opaque band INSIDE the silhouette
+          // (clipped to the stepped outline, so the BR notch cuts the band exactly like the designed
+          // draw's Group clip), lifted `plateLift` off the bottom edge — never a strip pinned outside.
           <>
-            <Path
-              d={steppedRectPath(bw, plateH, u, { br: true })}
-              transform={`translate(0 ${bh - plateH})`}
-              fill={t.scr.bg}
+            <Defs>
+              <ClipPath id={clipId}>
+                <Path d={steppedRectPath(bw, bh, u)} />
+              </ClipPath>
+            </Defs>
+            <Rect
+              x={0}
+              y={bh - plateH - plateLift}
+              width={bw}
+              height={plateH}
+              fill={`hsl(${hue}, 45%, 15%)`}
+              clipPath={`url(#${clipId})`}
             />
-            <Line x1={0} y1={bh - plateH} x2={bw} y2={bh - plateH} stroke={t.scr.hairline} strokeWidth={1} />
           </>
         ) : null}
       </Svg>
@@ -131,7 +148,9 @@ export function GameCard({
       {/* C7/decision 0047 — /mini + /thumb carry NO in-face title (it would wrap sub-9px, F-06);
           the host names the game BESIDE the card (LIST/TOP rows do). a11y keeps the label. */}
       {showPlate ? (
-        <View style={[styles.plate, { height: plateH }]}>
+        // A3b — the label sits INSIDE the lifted band (bottom = plateLift, height = plateH), with the
+        // buildCard slab text inset (8% of W) so default and designed titles align.
+        <View style={[styles.plate, { height: plateH, bottom: plateLift, left: Math.round(bw * 0.08) }]}>
           <Text style={[styles.plateText, { fontSize: dims.plate ?? 9 }]} numberOfLines={1}>
             {title}
           </Text>
@@ -166,11 +185,9 @@ const useStyles = themedStyles((t) => ({
   },
   plate: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
+    right: t.space.sm,
     justifyContent: 'center',
-    paddingHorizontal: t.space.sm,
+    // left/bottom/height are computed inline (A3b — the buildCard band geometry: inset text, lifted band)
   },
   plateText: {
     fontFamily: t.font.screenSemi,
