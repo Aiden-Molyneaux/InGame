@@ -300,10 +300,16 @@ briefs for M7 get this line verbatim.
   BOLD FILLED cog (solid navy body r=7.2 + 8 protruding teeth as 4 full-length rects rotated 45° + a
   punched cream centre r=3), matching the app's filled-glyph language (nav keycaps are solid navy
   fills); was a thin 1.8-stroke outline. Cream keycap unchanged (W-B13 ruling).
-- 🔧 N5 (P8, a548ca) **Cross-device friend state doesn't propagate + a "half-aware" split** (request
+- ✅ N5 (P8, e4ab962) **Cross-device friend state doesn't propagate + a "half-aware" split** (request
   invisible until app reset; after accept, feed shows the friend but the Friends LIST + Requests don't).
-  Fix = refetch-on-focus + shared invalidation on the friends-list/requests/feed reads so foregrounding
-  coheres them without a reset. **RESIDUAL: true real-time (zero-interaction) = M7 PUSH** (accepted).
+  Fix: the three social reads (GET /me/friends · /me/friends/requests · /me/feed) now carry
+  `refetchOnFocus` + `refetchOnMountOrArgChange` AND share ONE `Social` invalidation family — a refetch
+  or any friend mutation (request/accept/decline/cancel/unfriend/block) re-reads list + requests + feed
+  TOGETHER (coherence). The tab feed's page-1 became a focus-refetching subscription (lazy only for
+  load-more; the walk-3 dedupe/reset discipline preserved); block (communityApi, off the family)
+  dispatches a `Social` invalidate for the same coherence. Jest: `socialCoherence.test.ts` — accept
+  re-fetches all three reads via the shared tag (real-store + stubbed fetch). **RESIDUAL: true real-time
+  (zero-interaction) = M7 PUSH** (accepted).
 - ✅ N6 (P12, 66cd26a) **Profile privacy toggle clarity** — replaced the ambiguous ON/OFF "Public
   profile" toggle with a **labeled two-option `SectionSwitch`** (FRIENDS ONLY | PUBLIC — both states
   named, the selected one lit F-09) under the header "WHO CAN SEE YOUR PROFILE", plus an explicit
@@ -311,5 +317,7 @@ briefs for M7 get this line verbatim.
   YOUR LIMITED PROFILE"). Patches `/me {privacy}`. **CONTROL/COPY CHOICE flagged for the owner:** a
   segmented switch (not a toggle) — zero ON/OFF ambiguity; the introduced `Toggle` component is now
   catalog-only (the M7 notifications page is its consumer, per the settings board).
-- 🔧 N7 (P8) **Can't open a non-friend's profile** — search PersonRow tap only routes when friends; make
-  it always route to /user/[id] (the limited non-friend profile + ADD FRIEND already exist server+P9).
+- ✅ N7 (P8, e4ab962) **Can't open a non-friend's profile** — the search PersonRow's avatar+name now
+  route to `/user/[id]` for ANY relationship (not just friends); the relationship action button is
+  unchanged. `/user/[id]` (P9) already renders the non-friend LIMITED shape + ADD FRIEND (RelationshipAction)
+  — verified handled, NO P9 edit needed. Jest: a `none`-relationship row tap routes to the profile.
