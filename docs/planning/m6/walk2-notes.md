@@ -119,18 +119,27 @@
   bottom-tools seat; r2+r3 ASSUMPTION: one identity-foot row — relationship seat LEFT · "14 FRIENDS
   · 3 MUTUAL" RIGHT, owner may veto; r4: STATS → ACHIEVEMENTS → TOP 3 → NOW PLAYING → THEIR DEVICE,
   mirroring profile.tsx at head, pinned-favourite n/a on the friend shape.)
-- ⬜ W-B11 ⚖ **Settings** — Sign Out at the bottom · gear on a white/cream key (the 0069 secondary
-  voice) · legal screens opened FROM Settings keep the nav band ACTIVE (the locked state is
-  pre-auth only).
+- ✅ W-B11 (c9acce2) ⚖ **Settings** — Sign Out at the bottom · gear on a white/cream key (the 0069
+  secondary voice) · legal screens opened FROM Settings keep the nav band ACTIVE (the locked state is
+  pre-auth only). Built: sign-out = the TERMINAL row (its own Group after ABOUT & LEGAL; the S7b calm
+  confirm unchanged) · the gear rides `ToolButton` (the icon-only cream utility keycap, navy glyph —
+  consumed, not hand-styled) · **legal-nav mechanism:** `/legal` is auth-AMBIENT (pre-auth
+  create-account links AND Settings → ABOUT & LEGAL), so ShellNav gates it on the LIVE auth token —
+  `pathname.startsWith('/legal') && authed` joins the PROFILE cluster; signed-out falls through to
+  `locked`, so the pre-auth lock cannot regress. Both directions jest-pinned (ShellNav.test).
 - ✅ W-B12 (bba9774) ⚖ **Device editor: "EDITING YOUR DEVICE" / "SWITCHED" readouts removed.** Both
   gone: the default EDITING line + the D2 SWITCHED beat readout (which had outlived the M5 F-21 r6
   MiniDevice-pair removal). The readout row survives ONLY for the D5 on-shell preview + the live
   PLACING transform line, else the space collapses. Orphans swept with it: the whole `switchBeat`
   state machine (its lone consumer was the readout) + the `editReadoutSub`/`switchReadout` formatters
   + their tests.
-- ⬜ W-B13 ⚖ **Profile: Settings gear on a white button** (folded into W-B11).
-- ⬜ W-B14 ⚖ **Pinned Favourite gets Hero-card treatment** with additional game details (compose per
-  the Collection hero grammar).
+- ✅ W-B13 (c9acce2) ⚖ **Profile: Settings gear on a white button** (folded into W-B11).
+- ✅ W-B14 (c9acce2) ⚖ **Pinned Favourite gets Hero-card treatment** with additional game details
+  (composed per the Collection hero grammar): the 138×193 hero-size EntryCard + the NowPlayingHero
+  meta column. **ASSUMPTION (owner's eye):** the detail lines are the decision-0061 pair verbatim —
+  stat-line `{hours} HRS · {STATUS}` + catalog line `DEVELOPER · YEAR · GENRE` — resolved from the
+  caller's collection entry (the /me expansion carries only title+hours); an off-shelf pin degrades
+  honestly to the /me hours line alone.
 
 ## WAVE C — behavior/server (HOLD until the device session pauses; contract/spec ripples via 0078)
 - ⬜ W-C1 ⚖ **Fuzzy people-search** — "Kyra" must find "KyraInGame": exact-match → prefix/substring
