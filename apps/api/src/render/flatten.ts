@@ -143,9 +143,35 @@ async function renderOne(w: number, h: number, composition: CardComposition): Pr
 }
 
 /**
+ * Decision 0047 (the nameplate-legibility ruling) — the THUMB variant renders PLATELESS. Small card
+ * thumbnails must not draw the nameplate/title (sub-9px = illegible; the boards' cross-sweep dropped
+ * the plate on /mini+/thumb sizes, including the Friends feed peek). The builder already owns the
+ * F-06 size-ladder plate-drop (`plated = W >= 96 && !!c.nameplate`, buildCard.ts) — the client's live
+ * mini/thumb renders take that branch in POINT space. The server thumb, however, renders at PHYSICAL
+ * pixels (288 = 96pt × 3 DPR, the F3 resolution pass) — numerically ≥ 96, so the W-half of the gate
+ * stopped firing and the plate got BAKED into thumb.png. Stripping the nameplate routes the render
+ * through the SAME `!!c.nameplate` half of the existing gate (plateH = 0, no plate group, elements
+ * full-height) — byte-for-byte the client's small-size code path, no new builder flag.
+ * full.png KEEPS the plate: CARD-11/F-14 — the title is system-guaranteed on the full render; the
+ * thumb drop is 0047's ruled size-ladder exception.
+ */
+export function withoutNameplate(composition: Record<string, unknown>): Record<string, unknown> {
+  if (!('nameplate' in composition)) return composition;
+  const { nameplate: _dropped, ...rest } = composition;
+  return rest;
+}
+
+/** The PLATELESS thumb render alone (decision 0047) — the regeneration backfill's unit of work. */
+export async function flattenThumb(composition: Record<string, unknown>): Promise<Buffer> {
+  const comp = withoutNameplate(composition) as unknown as CardComposition;
+  return renderOne(RENDER_SIZES.thumb.w, RENDER_SIZES.thumb.h, comp);
+}
+
+/**
  * Flatten a stored composition to the full + thumbnail PNG buffers the publish path stores. `composition`
  * is the `card_designs.composition` jsonb (boundary-validated at write time); it is the render-module's
  * `CardComposition` shape (the closed attributes ride the passthrough envelope, decision 0064).
+ * The thumb renders PLATELESS (decision 0047 — see `withoutNameplate`); the full keeps the CARD-11 title.
  */
 export async function flattenComposition(
   composition: Record<string, unknown>,
@@ -153,7 +179,7 @@ export async function flattenComposition(
   const comp = composition as unknown as CardComposition;
   const [full, thumb] = await Promise.all([
     renderOne(RENDER_SIZES.full.w, RENDER_SIZES.full.h, comp),
-    renderOne(RENDER_SIZES.thumb.w, RENDER_SIZES.thumb.h, comp),
+    flattenThumb(composition),
   ]);
   return { full, thumb };
 }

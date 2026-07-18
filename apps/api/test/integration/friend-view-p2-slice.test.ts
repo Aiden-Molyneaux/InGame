@@ -420,6 +420,73 @@ describe('WTP-03 · PROF-01 · F-19 (walk-fix): the /me pin expansions carry the
   });
 });
 
+describe('decision 0047 (walk): published thumbs are PLATELESS; the regeneration backfill is idempotent', () => {
+  it('a fresh publish stores a plateless thumb; regeneratePlatelessThumbs rewrites a stale plated one', async () => {
+    const { getStorage } = await import('../../src/storage');
+    const { flattenThumb, flattenComposition, RENDER_SIZES } = await import('../../src/render/flatten');
+    const { regeneratePlatelessThumbs } = await import('../../src/db/regenerate-thumbs');
+
+    const designer = await seedUser();
+    const game = await seedGame(designer.token, 'Plateless Thumb RPG');
+    const cardId = await publishCard(designer.token, game.id, 31);
+    const storage = getStorage();
+    const thumbKey = `cards/${cardId}/thumb.png`;
+
+    // The render is deterministic — the idempotency the backfill's re-run safety stands on.
+    const comp = closedComp(31) as unknown as Record<string, unknown>;
+    const plateless = await flattenThumb(comp);
+    expect((await flattenThumb(comp)).equals(plateless)).toBe(true);
+
+    // The fresh publish already stored the PLATELESS thumb (the fixed flatten path). The full render
+    // differs from it in MORE than size — a plated 288px render of the same composition also differs
+    // (the plate bakes visible bytes), proven via the pre-fix-style plated thumb below.
+    const stored = await storage.get(thumbKey);
+    expect(stored).not.toBeNull();
+    expect(stored!.equals(plateless)).toBe(true);
+
+    // Simulate a PRE-FIX (stale) thumb at the key: any different bytes prove the backfill overwrites.
+    // (The PLATE-presence half is proven structurally in render/thumb-plate.test.ts — here the concern
+    // is the regeneration mechanics: rewrite-in-place at the same key, idempotent.)
+    const { full: staleBytes } = await flattenComposition(comp);
+    expect(RENDER_SIZES.full.w).toBeGreaterThan(RENDER_SIZES.thumb.w); // sanity — stale bytes differ
+    await storage.put(thumbKey, staleBytes, 'image/png');
+    expect((await storage.get(thumbKey))!.equals(plateless)).toBe(false); // now stale
+
+    // The pre-regeneration wire URL (unbusted — the pre-fix client cache key).
+    const viewer = await seedUser();
+    const before = await request(app).get(`/api/games/${game.id}/cards`).set(authed(viewer.token));
+    const urlBefore = before.body.items[0].thumbUrl as string;
+    expect(urlBefore.includes('?')).toBe(false);
+
+    // The backfill re-renders ONLY the thumb at the SAME key → plateless again — and CACHE-BUSTS the
+    // stored thumb_url (?v=2): RN's Image cache is URL-keyed, so the content change must ride a new URL.
+    const first = await regeneratePlatelessThumbs();
+    expect(first.regenerated).toBeGreaterThanOrEqual(1);
+    expect(first.failed).toBe(0);
+    expect((await storage.get(thumbKey))!.equals(plateless)).toBe(true);
+
+    // The regenerated thumb URL on the WIRE differs from the pre-fix one (the cache-bust assertion).
+    const after = await request(app).get(`/api/games/${game.id}/cards`).set(authed(viewer.token));
+    const urlAfter = after.body.items[0].thumbUrl as string;
+    expect(urlAfter).toBe(`${urlBefore}?v=2`);
+    expect(urlAfter).not.toBe(urlBefore);
+
+    // The media route serves WITH the query param present (express.static is path-keyed — ?v=2 is free).
+    const media = await request(app).get(urlAfter);
+    expect(media.status).toBe(200);
+    expect(media.headers['content-type']).toContain('image/png');
+    expect(Buffer.from(media.body).equals(plateless)).toBe(true);
+
+    // Idempotent — a second run rewrites identical bytes AND never double-appends the buster.
+    const second = await regeneratePlatelessThumbs();
+    expect(second.scanned).toBe(first.scanned);
+    expect(second.failed).toBe(0);
+    expect((await storage.get(thumbKey))!.equals(plateless)).toBe(true);
+    const again = await request(app).get(`/api/games/${game.id}/cards`).set(authed(viewer.token));
+    expect(again.body.items[0].thumbUrl).toBe(urlAfter); // still exactly one ?v=2
+  });
+});
+
 describe('CARD-22 · OQ-146: the backfill snapshots labels for pre-M6 published cards (idempotent)', () => {
   it('backfillEquippedLabels populates empty labels from the composition, then no-ops on a re-run', async () => {
     const { getDb } = await import('../../src/db/client');
