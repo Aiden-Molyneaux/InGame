@@ -277,6 +277,25 @@ briefs for M7 get this line verbatim.
   moves Open→Resolved-for-M6 (0078). Rides the W-D1 Game-page build (the CATALOG adopt path is the
   same seam). **This is now a build item, not a stretch.**
 
+## WAVE D — game-page layout notes (2026-07-18); D-1..D-4 (all `5b26ae1`)
+- ✅ **D-1** ⚖ **FRIEND PLAY reuses the OWN dual-face** — a friend's game PLAY now shows THE FACE + a
+  stats BACK side-by-side, exactly like your OWN page. FriendGamePage's PLAY was rendering a lookalike;
+  it now renders the SHARED `DualFaceHero` (their card FACE + their `StatsBack`), read-only. `DualFaceHero`
+  + `StatsBack` gained friend-framing passthroughs (`faceLabel`/`statsTitle`/`statsLabel`/`faceA11yLabel`),
+  all defaulting to the OWN values → OwnGamePage byte-identical (NOT a fork — reuse). SOC-11 gating holds
+  by construction: `StatsBack` carries no notes/rating (the old inline "NOTES · RATING 🔒 PRIVATE" block
+  retired; the privacy note under the hero states it). `percent=null` (friend omits percentComplete, 0026);
+  the face-tap opens the adopt sheet when their card is adopt-able.
+- ✅ **D-2** ⚖ **Add-Game search CLOSED on entry** — the docked `SearchField` dropped `autoFocus`; entering
+  Add-Game shows the rail trio first and the keyboard opens only when the user taps the field.
+- ✅ **D-3** ⚖ **CATALOG ABOUT order** — `AboutTab` gained a `beforeFriends` slot; the NOT-IN-YOUR-COLLECTION
+  band (+ ADD CTA) moved off the top of the tab into it, so the order reads **info → not-in-collection →
+  friends-who-own**.
+- ✅ **D-4** ⚖ **Stepped-corner ADD TO COLLECTION** — the CATALOG ADD button carries the pixel-stepped
+  silhouette (ScreenButton `stepped`), kept ORANGE `/primary` (0069 — non-acquisitive, NOT gold). The
+  FRIEND ADD is stepped when it's the primary add; when an adopt-able card demotes it to the cream
+  secondary the step drops (the step is the orange-primary silhouette, never a cream one).
+
 ## ROUND 4 — Wave C review notes (2026-07-18, owner tested cross-device iPhone↔Android)
 - ✅ N1 (P2 server, dc05436) **Contributor REACHED is inflated** — "29 reached" with <29 users: summing
   per-game collection counts double-counts multi-game owners → fixed to COUNT(DISTINCT user) across the
