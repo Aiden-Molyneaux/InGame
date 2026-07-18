@@ -35,8 +35,15 @@
 - ⬜ W-B15 ⚖ **A less blank DEFAULT CARD visual** (owner todo) — the CARD-18 default face is a flat
   colour block; wants a visual treatment. Owner-taste design item (candidates → a small drafts pass
   or the pre-launch content pass; decide at the 0078 sitting).
-- ⬜ W-A5 **Styler premium cost hidden behind the item container** — the price must read at a glance
-  (an M5-era layering bug).
+- ✅ W-A4c (5f35ecb) **Celebration reward strip floated as a LIGHTER box on the A4b theme field**
+  (owner screenshot: "+2 PIXELS / ADDED TO YOUR WALLET" left-pinned in a pale panel). Fix: a
+  `recessed` RewardChip variant consumed only by the CelebrationMoment — (1) the strip's fill
+  derives DOWN from the live bg token, **`darken(scr.bg, 0.25)`** (a new `withAlpha`-sibling
+  token-math helper in `src/theme/index.ts`; `scr.panel` is the one-step-LIGHTER plane, so the
+  recessed read needs the inverse relationship — re-themes per DEV-04, never a literal), and
+  (2) the PixelsMark + text block centre as a group (the meta block drops its `flex:1` stretch;
+  row `justifyContent:'center'`). Panel/sheet RewardChip contexts keep the default fill. Jest:
+  the W-A4c assertion (bg === darken(bg-token, .25), ≠ scr.panel, centered) in celebration.test.
 - ⬜ W-A6 **Top-3 with 2 seats spreads to screen edges** — must render consecutively from the left.
 - ⬜ W-A7 **Device sticker edit-mode never confirms** — placing stickers stays editable until
   On-shell-preview; leaving the editor keeps editable stickers. Make set/confirm explicit (the
