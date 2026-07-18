@@ -29,12 +29,15 @@ export function StickerSteppers({
   sticker,
   mutate,
   commit,
+  onDone,
   onDelete,
   canReZone,
 }: {
   sticker: Sticker;
   mutate: (id: string, patch: Partial<StickerTransform>) => void;
   commit: () => void;
+  /** walk2 W-A7 — the explicit SET beat: commits the placement + ends the transform chrome (⚖ 0078). */
+  onDone: () => void;
   onDelete: () => void;
   /** the OTHER band has room — else the move 422s and wedges the pipeline (murr M1). */
   canReZone: boolean;
@@ -132,7 +135,14 @@ export function StickerSteppers({
           accessibilityLabel={canReZone ? `Move sticker to ${otherZone}` : `Cannot move — the ${otherZone} band is full`}
         />
       ) : null}
-      <ScreenButton label="Delete" variant="destructive" size="mini" onPress={onDelete} accessibilityLabel="Delete sticker" />
+      {/* W-A7 — DELETE beside the explicit SET/DONE key: DONE commits the placement and ends the
+          transform chrome (the visible half of the commit beat — tap-away is the quiet half; the
+          TransformDrawer close grammar, 0069 cream secondary). */}
+      <View style={styles.footRow}>
+        <ScreenButton label="Delete" variant="destructive" size="mini" onPress={onDelete} accessibilityLabel="Delete sticker" />
+        <View style={styles.flexSpacer} />
+        <ScreenButton label="✓ Set" variant="secondary" size="mini" onPress={onDone} accessibilityLabel="Set sticker — done editing" />
+      </View>
     </View>
   );
 }
@@ -213,6 +223,8 @@ function Arrow({
 const ARROW = 28;
 const useStyles = themedStyles((t) => ({
   wrap: { gap: t.space.md, paddingTop: t.space.sm },
+  footRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
+  flexSpacer: { flex: 1 },
   row: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
   label: { width: 66, fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
   body: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: t.space.sm + 1 },

@@ -429,16 +429,49 @@ export default function DeviceEditor() {
     [patchDevice, commitNow],
   );
 
-  // Publish the edit session to the shell's plastic bands while STICKERS is active + NOT previewing (D5
-  // hides the handles/zones by publishing null). Cleared on section change / preview / unmount.
+  // ── walk2 W-A7 — the explicit SET/CONFIRM beat (⚖ 0078 records this shape) ───────────────────────
+  // Placing/tapping a decal enters its transform state (TransformBox + steppers). It now EXITS through
+  // an explicit commit beat: tap-AWAY commits (the band layer's empty-tap already deselects — the
+  // editor-grammar low-friction default — and the editor body below now does too), a visible DONE key
+  // on the transform chrome commits for clarity, and BLURRING the screen auto-commits (below) so an
+  // editable state can never leave the editor. Commit = flush the pending PATCH + drop the selection
+  // (the data itself saves continuously through the ONE pipeline — the beat ends the CHROME, the
+  // TransformDrawer grammar's close). No confirm-sheet ceremony: stickers are free + reversible; the
+  // KEEP/acquire grammar stays premium-only.
+  const doneEditingSticker = useCallback(() => {
+    setSelectedStickerId(null);
+    commitNow();
+  }, [commitNow]);
+
+  // W-A7 blur auto-commit — leaving the Device editor (back/nav) commits the current placement and,
+  // via the `focusedRef` gate on the session publish below, UNPUBLISHES the edit session: expo-router
+  // keeps this screen MOUNTED while blurred, so before this gate the shell's plastic bands kept their
+  // edit chrome (zones/handles) on every OTHER screen — the owner's "leave with stickers still
+  // editable". A ref (not state) so the blur cleanup never depends on re-render timing.
+  const [focused, setFocused] = useState(true);
+  const doneRef = useRef(doneEditingSticker);
+  doneRef.current = doneEditingSticker;
+  useFocusEffect(
+    useCallback(() => {
+      setFocused(true);
+      return () => {
+        doneRef.current(); // commit the in-progress placement — never carry an editable state out
+        setFocused(false);
+      };
+    }, []),
+  );
+
+  // Publish the edit session to the shell's plastic bands while STICKERS is active + NOT previewing +
+  // FOCUSED (W-A7 — a blurred editor publishes nothing; D5 preview hides the handles/zones the same
+  // way). Cleared on section change / preview / blur / unmount.
   useEffect(() => {
-    if (section === 'stickers' && !previewing) {
+    if (focused && section === 'stickers' && !previewing) {
       setSession({ selectedId: selectedStickerId, select: setSelectedStickerId, mutate: mutateSticker, commit: commitNow });
     } else {
       setSession(null);
     }
     return () => setSession(null);
-  }, [section, previewing, selectedStickerId, mutateSticker, commitNow, setSession]);
+  }, [focused, section, previewing, selectedStickerId, mutateSticker, commitNow, setSession]);
 
   // ── LOOKS: apply · save · delete ─────────────────────────────────────────────────────────────────
   // Apply = the ONE pipeline (walk 5): the snapshot's three facets swap in one PATCH; the optimistic
@@ -730,7 +763,15 @@ export default function DeviceEditor() {
                 </View>
               </View>
             ) : (
-              <View style={styles.stickerBody}>
+              // W-A7 tap-away — a tap on the body's empty space (not captured by the tray/rail/stepper
+              // Pressables) commits the in-progress placement, mirroring the band layer's empty-tap
+              // deselect. Display wrapper only — hidden from the SR (the DONE key is the a11y path).
+              <Pressable
+                style={styles.stickerBody}
+                onPress={doneEditingSticker}
+                accessible={false}
+                importantForAccessibility="no"
+              >
                 <Text style={styles.secSub}>
                   Tap a decal to place it on the forehead plastic. The screen &amp; the nav keys stay clear.
                 </Text>
@@ -746,6 +787,7 @@ export default function DeviceEditor() {
                     sticker={selectedSticker}
                     mutate={mutateSticker}
                     commit={commitNow}
+                    onDone={doneEditingSticker}
                     onDelete={() => deleteSticker(selectedSticker.id)}
                     // guard the re-zone against the target zone's cap — else a move to a full band
                     // 422s and wedges the pipeline (murr M1). Only rendered while chin is enabled.
@@ -766,7 +808,7 @@ export default function DeviceEditor() {
                     }}
                   />
                 ) : null}
-              </View>
+              </Pressable>
             )}
           </>
         ) : (
