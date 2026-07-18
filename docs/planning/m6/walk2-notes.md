@@ -86,10 +86,27 @@
   (named offenders: Terms of Service, Friends; audit all routes).
 - ⬜ W-B2 ⚖ **"Return to X" spacing audit** — both gaps (header↔return, return↔content) consistent
   app-wide (named: Add-Game creation page; audit all).
-- ⬜ W-B3 ⚖ **Buy-bar height** — Hold-to-Pay/Buy proper height on Pixel + cosmetic purchases,
-  rippled to every buy surface.
-- ⬜ W-B4 ⚖ **Buy-page Cancel removed** (redundant; escape = sheet grammar).
-- ⬜ W-B5 ⚖ **Theme buy pages: the "PREVIEWING" yellow chip removed.**
+- ✅ W-B3 (f3be7b3) ⚖ **Buy-bar height** — the fix lands ONCE in `HoldFillButton` `base` (vertical
+  pad md/8 → **lg/12 + horizontal xl/16, the ScreenButton keycap grammar**) and ripples to every buy
+  surface by composition: BuyBar → ItemSheet · ReconcileSheet · KeepBar · AdoptCardSheet, plus the
+  ConfirmSheet PAY (Top-Up packs). No per-surface forks; a one-place jest asserts the padding tokens.
+- ✅ W-B4 (f3be7b3) ⚖ **Buy-page CANCELs removed** (the F-21 KeepBar precedent finished family-wide):
+  (1) BuyBar's reduce-motion two-step confirm drops its CANCEL key (single block CONFIRM; the
+  price/disabled self-reset was also FIXED — the old `if (disabled)` guard silently skipped the
+  price-change case, so a stale armed CONFIRM could survive a re-pick); (2) ConfirmSheet's Cancel now
+  renders only for the destructive/primary tones — the **purchase tone** (the store pack PAY + the
+  AdoptCardSheet free-path confirm) carries none. **Escape paths verified per surface:** ItemSheet /
+  ReconcileSheet / AdoptCardSheet / the purchase ConfirmSheets = the PulledSheet scrim · grab handle ·
+  hardware back (jest-asserted via the Close scrim); KeepBar = re-pick reverts / editor blur clears
+  (M5 F-21, unchanged); BuyBar's armed confirm additionally self-resets on any price/disabled change
+  (jest-asserted). The destructive/primary ConfirmSheet tones KEEP the 0040 CANCEL — safe-default
+  weight is core to that grammar and those aren't buy pages.
+- ✅ W-B5 (f3be7b3) ⚖ **Theme buy pages: the "PREVIEWING" yellow chip removed** — the store theme
+  sheet's repainted mock screen IS the preview; `PreviewStrip` retired entirely (usage + barrel
+  export + the component; a jest guard asserts the kit no longer exports it). *Note: the component
+  FILE's deletion physically rode the concurrent B12 commit `bba9774` — a shared-index sweep of this
+  packet's staged `git rm`; content correct, attribution noted.* The device editor's separate
+  `DevicePreviewStrip` (another agent's file) is untouched.
 - ⬜ W-B6 ⚖ **Collection: Now-Playing card renders in the Hero ONLY** (not repeated in list views).
 - ⬜ W-B7 ⚖ **Shelf view: per-entry chevron** (the List-view quick-entry into the Game page).
 - ⬜ W-B8 ⚖ **Add-Game "create this game" prompt = GOLD with pixel-stepped corners** (acquisitive,
