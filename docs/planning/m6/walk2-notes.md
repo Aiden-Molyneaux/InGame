@@ -44,6 +44,8 @@
   (2) the PixelsMark + text block centre as a group (the meta block drops its `flex:1` stretch;
   row `justifyContent:'center'`). Panel/sheet RewardChip contexts keep the default fill. Jest:
   the W-A4c assertion (bg === darken(bg-token, .25), ≠ scr.panel, centered) in celebration.test.
+- ⬜ W-A5 **Styler premium cost hidden behind the item container** — the price must read at a glance
+  (an M5-era layering bug). *(Restored — accidentally dropped by a builder's ledger edit.)*
 - ⬜ W-A6 **Top-3 with 2 seats spreads to screen edges** — must render consecutively from the left.
 - ⬜ W-A7 **Device sticker edit-mode never confirms** — placing stickers stays editable until
   On-shell-preview; leaving the editor keeps editable stickers. Make set/confirm explicit (the
