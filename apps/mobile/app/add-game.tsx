@@ -1,7 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import type { CatalogItem, CollectionItem, CollectionStatus, DedupSuggestion } from '@ingame/shared';
+import type {
+  CatalogItem,
+  CollectionItem,
+  CollectionStatus,
+  DedupSuggestion,
+  GalleryCardView,
+} from '@ingame/shared';
 import { GameCard } from '../src/components/GameCard';
 import { CardFan } from '../src/components/CardFan';
 import { ScreenButton } from '../src/components/ScreenButton';
@@ -10,6 +16,8 @@ import { KeyboardLift } from '../src/components/KeyboardLift';
 import { TextField } from '../src/components/TextField';
 import { GenreTag } from '../src/components/GenreTag';
 import { InlineBanner } from '../src/components/InlineBanner';
+import { CommunityGallery } from '../src/components/game/CommunityGallery';
+import { AdoptCardSheet, type AdoptOutcome } from '../src/components/game/AdoptCardSheet';
 
 import { COLLECTION_STATUSES, STATUS_LABEL } from '../src/constants/collection';
 import { theme, themedStyles } from '../src/theme';
@@ -17,6 +25,7 @@ import { HEADER_SEAM_GAP } from '../src/components/ScreenHead';
 import {
   useGetGenresQuery,
   useGetPopularQuery,
+  useGetWalletQuery,
   useLazySearchCatalogQuery,
   useCreateGameMutation,
   useAddToCollectionMutation,
@@ -24,14 +33,21 @@ import {
 } from '../src/store/api';
 // walk2 N2b — the CAT-11 / CAT-12 pre-query rails (own slice, never api.ts).
 import { useGetNewReleasesQuery, useGetFriendsActiveQuery } from '../src/store/catalogRailsApi';
+// W-D Wave D (OQ-136) — the community-cards ADOPT step reuses the M5 gallery + adopt seams.
+import { useGetGameGalleryQuery, useAdoptCardMutation } from '../src/store/communityApi';
 
 // ADD GAME (§2.4, the §4.3 boards) — a FlowTakeover entered from the Collection's gold ADD.
 // Search (CAT-01, bottom-docked field · never-blank POPULAR rail pre-query) → a tap-focused card
 // fan with the focused card's meta + CAT-09 presence line + CAT-05 credit + gold ADD → the COL-02
 // status beat. NONE OF THESE → create (CAT-02) with the CAT-03 InlineBanner dedup warn (409
 // suggestions · CREATE ANYWAY = dedupOverride; an exact match never overrides). Per-field 422
-// details render under their inputs (B1/W4). The M4 card step + the full celebration/report beats
-// ride their milestones.
+// details render under their inputs (B1/W4). The full celebration/report beats ride their milestones.
+//
+// W-D Wave D (OQ-136 / W-C10) — the card step LANDS: after the add creates the collection ENTRY, an
+// ADOPT step surfaces the game's community gallery so the user can adopt one card onto the fresh entry
+// (add-then-adopt: `adoptCard(cardId)` — the server resolves the caller's just-created entry for the
+// card's game, so no entryId plumbing), OR take the implicit blank default (SKIP). No community cards →
+// the step auto-advances (nothing to adopt). Then the COL-02 status beat, unchanged.
 
 const SEARCH_DEBOUNCE_MS = 350;
 
@@ -75,7 +91,7 @@ export default function AddGame() {
         </View>
 
         {added ? (
-          <StatusBeat item={added} onDone={() => router.back()} />
+          <AddedFlow item={added} onDone={() => router.back()} />
         ) : mode === 'create' ? (
           <CreateForm
             initialName={q}
@@ -310,6 +326,126 @@ function FocusedMeta({ item }: { item: CatalogItem }) {
   );
 }
 
+// ── the post-add flow (W-D Wave D) — the ADOPT step, then the COL-02 status beat ──────────────────
+// Sequenced AFTER the add resolves (the entry exists, so adopt targets it): adopt a community card →
+// SET A STATUS → Done. The adopt step is skipped in place when the game has no community cards.
+function AddedFlow({ item, onDone }: { item: CollectionItem; onDone: () => void }) {
+  const [stage, setStage] = useState<'adopt' | 'status'>('adopt');
+  const goStatus = useCallback(() => setStage('status'), []);
+  return stage === 'adopt' ? (
+    <AdoptStep item={item} onNext={goStatus} />
+  ) : (
+    <StatusBeat item={item} onDone={onDone} />
+  );
+}
+
+// ── the community-cards ADOPT step (OQ-136) ───────────────────────────────────────────────────────
+// The M5 AdoptCardSheet flow, reused verbatim onto the freshly-added entry. `adoptCard(cardId)` needs no
+// entryId — the server resolves the caller's entry for the card's game (the one the add just created),
+// so add-then-adopt sequences onto the new entry by construction. A game with NO community cards (empty
+// or errored gallery) has nothing to adopt → the step auto-advances (the implicit blank default). SKIP
+// takes the same blank default explicitly. Share/block/report are full-game-page concerns, not the add
+// flow — the sheet's secondary hooks are quiet no-ops here (adopt is the one action that matters).
+function AdoptStep({ item, onNext }: { item: CollectionItem; onNext: () => void }) {
+  const styles = useStyles();
+  const router = useRouter();
+  const { data: gallery, isLoading, isError } = useGetGameGalleryQuery(item.gameId);
+  const { data: wallet } = useGetWalletQuery();
+  const [adoptCard, adoptState] = useAdoptCardMutation();
+  const [inspectCard, setInspectCard] = useState<GalleryCardView | null>(null);
+  // a ref (not state) — the sheet's Done reads it in the same tick a fast adopt→Done could fire, and it
+  // never needs to re-render the step (adopt settles inside the sheet).
+  const didAdopt = useRef(false);
+  const advanced = useRef(false);
+
+  const cards = gallery?.items ?? [];
+  const noCards = !isLoading && (isError || cards.length === 0);
+
+  // No community cards → nothing to adopt: advance straight through (once — guarded against onNext
+  // identity churn and the brief loaded-empty frame).
+  useEffect(() => {
+    if (noCards && !advanced.current) {
+      advanced.current = true;
+      onNext();
+    }
+  }, [noCards, onNext]);
+
+  // Reuse the game-page adopt mapping (0072/0073): the container owns the RTK mutation; the sheet owns
+  // the confirm + result UX. Success settles IN PLACE (M5 G5) — its Done door advances the add flow.
+  async function onAdopt(): Promise<AdoptOutcome> {
+    if (!inspectCard) return { ok: false, code: 'ERROR' };
+    try {
+      const result = await adoptCard(inspectCard.id).unwrap();
+      return { ok: true, result };
+    } catch (e) {
+      const err = e as { status?: unknown; data?: { error?: { code?: string; shortBy?: number } } };
+      if (err?.status === 'FETCH_ERROR' || err?.status === 'TIMEOUT_ERROR') return { ok: false, code: 'OFFLINE' };
+      const code = err?.data?.error?.code;
+      if (code === 'INSUFFICIENT_BALANCE') return { ok: false, code: 'INSUFFICIENT_BALANCE', shortBy: err?.data?.error?.shortBy ?? 0 };
+      if (code === 'ALREADY_ADOPTED') return { ok: false, code: 'ALREADY_ADOPTED' };
+      if (code === 'NOT_PUBLISHED') return { ok: false, code: 'NOT_PUBLISHED' };
+      return { ok: false, code: 'ERROR' };
+    }
+  }
+
+  // Loading (or the one-frame no-cards gate before the effect advances) — a quiet spinner, no empty state.
+  if (isLoading || noCards) {
+    return (
+      <View style={[styles.body, styles.adoptGate]}>
+        <ActivityIndicator color={theme.brand.accent} />
+      </View>
+    );
+  }
+
+  return (
+    <>
+      <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+        <View style={styles.addedWrap}>
+          <GameCard title={item.title} size="grid" />
+          <Text style={styles.addedTitle}>ADDED TO YOUR SHELF</Text>
+        </View>
+        <Text style={styles.railHead}>ADOPT A CARD FOR IT?</Text>
+        <Text style={styles.adoptSub}>
+          The community has already designed cards for this game. Adopt one now, or keep the default and
+          style your own later.
+        </Text>
+        {/* the M5 community gallery (populated — the empty/error paths auto-advanced above) → adopt */}
+        <CommunityGallery
+          gameId={item.gameId}
+          onInspect={setInspectCard}
+          onDesignACard={() => router.push(`/styler/${item.gameId}`)}
+          onViewDesigner={(userId) => router.push(`/contributor/${userId}`)}
+        />
+        <ScreenButton label="Skip — keep the default card" variant="secondary" onPress={onNext} block />
+      </ScrollView>
+
+      {/* the adopt sheet — a screen-root sibling of the ScrollView (never in-scroll; PulledSheet docks
+          to the routed screen). Done after a successful adopt advances; a plain cancel just closes it. */}
+      <AdoptCardSheet
+        card={inspectCard}
+        visible={inspectCard !== null}
+        balance={wallet?.balance ?? 0}
+        onClose={() => {
+          setInspectCard(null);
+          if (didAdopt.current) onNext();
+        }}
+        onAdopt={onAdopt}
+        adopting={adoptState.isLoading}
+        onAdopted={() => {
+          didAdopt.current = true;
+        }}
+        onTopUp={() => router.push('/store?view=topup')}
+        onShare={() => {}}
+        onBlock={() => setInspectCard(null)}
+        onViewContributor={(userId) => {
+          setInspectCard(null);
+          router.push(`/contributor/${userId}`);
+        }}
+      />
+    </>
+  );
+}
+
 // ── the COL-02 status beat (chips OFF-card — no stamps on art) ────────────────────────────────────
 function StatusBeat({ item, onDone }: { item: CollectionItem; onDone: () => void }) {
   const styles = useStyles();
@@ -537,6 +673,9 @@ const useStyles = themedStyles((t) => ({
   },
   addedWrap: { alignItems: 'center', gap: t.space.lg, paddingVertical: t.space.lg },
   addedTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.brand.success, letterSpacing: 2 },
+  // W-D Wave D — the adopt step's quiet gate (loading / no-cards auto-skip) + its lead copy.
+  adoptGate: { alignItems: 'center', justifyContent: 'center', paddingVertical: t.space.xxl },
+  adoptSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, lineHeight: 16 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.md },
   field: { gap: t.space.xs },
   fieldLabel: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },

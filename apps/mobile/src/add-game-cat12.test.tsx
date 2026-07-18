@@ -30,6 +30,7 @@ const mockAdd = jest.fn(() => ({ unwrap: () => Promise.resolve({}) }));
 jest.mock('./store/api', () => ({
   useGetGenresQuery: () => ({ data: { items: [] } }),
   useGetPopularQuery: () => mockPopular,
+  useGetWalletQuery: () => ({ data: { balance: 0 } }),
   useLazySearchCatalogQuery: () => [jest.fn(), { isFetching: false, data: undefined }],
   useCreateGameMutation: () => [jest.fn(), { isLoading: false }],
   useAddToCollectionMutation: () => [mockAdd, { isLoading: false }],
@@ -38,6 +39,11 @@ jest.mock('./store/api', () => ({
 jest.mock('./store/catalogRailsApi', () => ({
   useGetNewReleasesQuery: () => mockNewReleases,
   useGetFriendsActiveQuery: () => mockFriendsActive,
+}));
+// W-D Wave D — add-game now imports the community gallery/adopt seams for the post-add ADOPT step.
+jest.mock('./store/communityApi', () => ({
+  useGetGameGalleryQuery: () => ({ data: { items: [] }, isLoading: false, isError: false }),
+  useAdoptCardMutation: () => [jest.fn(() => ({ unwrap: () => Promise.resolve({}) })), { isLoading: false }],
 }));
 jest.mock('expo-router', () => ({ useRouter: () => ({ push: jest.fn(), back: jest.fn(), replace: jest.fn() }) }));
 
