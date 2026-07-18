@@ -30,7 +30,8 @@ export default function AddFriends() {
   const [query, setQuery] = useState('');
   const [runSearch, searchState] = useLazySearchUsersQuery();
   const [searchedFor, setSearchedFor] = useState<string | null>(null);
-  const { data: requests } = useGetFriendRequestsQuery();
+  // walk2-N5 — refetch on foreground/tab-switch so cross-device request changes appear without a reset.
+  const { data: requests } = useGetFriendRequestsQuery(undefined, { refetchOnFocus: true, refetchOnMountOrArgChange: true });
   const [accept, acceptState] = useAcceptFriendRequestMutation();
   const [decline, declineState] = useDeclineFriendRequestMutation();
   const [toast, setToast] = useState<string | null>(null);

@@ -51,7 +51,7 @@ export function isFriendProfile(p: UserProfile): p is FriendProfile {
 export type RequestTransition = { requestId: string; userId: string };
 
 const friendApi = api
-  .enhanceEndpoints({ addTagTypes: ['User', 'FriendCollection', 'Friends', 'FriendRequests'] })
+  .enhanceEndpoints({ addTagTypes: ['User', 'FriendCollection', 'Friends', 'FriendRequests', 'Social'] })
   .injectEndpoints({
     endpoints: (build) => ({
       // GET /users/:id (PROF-03/05) — the friend/full vs non-friend/limited profile. Parsed at the seam
@@ -94,28 +94,30 @@ const friendApi = api
         // The profile chip re-reads (User) AND a new outgoing request appears in the inbox (FriendRequests).
         // A mutual-pending target auto-accepts → the roster gains a friend, so Friends re-reads too — and
         // that auto-accept emits friend.added (a5/a6), so MeAchievements re-reads too (W-A8).
+        // `Social` (walk2-N5) — the shared coherence tag re-reads the friends list + requests inbox +
+        // feed TOGETHER (a new outgoing appears; a mutual-pending target auto-accepts, ticking all three).
         invalidatesTags: (_res, _err, toUserId) => [
           { type: 'User', id: toUserId },
-          'FriendRequests',
-          'Friends',
+          'Social',
           'MeAchievements',
         ],
       }),
 
       // ── the P8 social-graph reads (SOC-01/08) ──────────────────────────────────────────────────
       // GET /me/friends — the accepted roster (each a PersonSummary, relationship='friend'). The rail on
-      // the tab + the ALL FRIENDS list both read this; parsed at the seam.
+      // the tab + the ALL FRIENDS list both read this; parsed at the seam. `Social` (walk2-N5) is the
+      // shared coherence family — a refetch-on-focus or any friend mutation re-reads it with its siblings.
       getFriends: build.query<FriendsListResponse, void>({
         query: () => '/me/friends',
         transformResponse: (raw): FriendsListResponse => friendsListResponseSchema.parse(raw),
-        providesTags: ['Friends'],
+        providesTags: ['Friends', 'Social'],
       }),
       // GET /me/friends/requests — pending, split incoming/outgoing (each carries requestId). Drives the
-      // banner count + the requests inbox.
+      // banner count + the requests inbox. Shares the `Social` coherence family (walk2-N5).
       getFriendRequests: build.query<FriendRequestsResponse, void>({
         query: () => '/me/friends/requests',
         transformResponse: (raw): FriendRequestsResponse => friendRequestsResponseSchema.parse(raw),
-        providesTags: ['FriendRequests'],
+        providesTags: ['FriendRequests', 'Social'],
       }),
       // GET /users/search?username= — exact-match people search (SOC-07). Lazy (fired on submit, not on
       // keystroke — usernames are exact, and users:search is rate-bucketed 30/min). Transient: no tag.
@@ -131,24 +133,24 @@ const friendApi = api
         query: ({ requestId }) => ({ url: `/friends/requests/${requestId}/accept`, method: 'POST', body: {} }),
         // MeAchievements (W-A8) — friend.added dual-credits BOTH parties (a5 player_two / a6 full_lobby);
         // this covers the ACCEPTER's celebration. The REQUESTER'S unlock is other-actor — focus/M7-push.
-        invalidatesTags: (_res, _err, { userId }) => ['Friends', 'FriendRequests', { type: 'User', id: userId }, 'MeAchievements'],
+        invalidatesTags: (_res, _err, { userId }) => ['Social', { type: 'User', id: userId }, 'MeAchievements'],
       }),
       // POST /friends/requests/:id/decline — SILENT (the sender is never told, SOC-08); the request leaves
       // the inbox + a cooldown starts (the profile re-reads as `none`/cooldown).
       declineFriendRequest: build.mutation<OkResponse, RequestTransition>({
         query: ({ requestId }) => ({ url: `/friends/requests/${requestId}/decline`, method: 'POST', body: {} }),
-        invalidatesTags: (_res, _err, { userId }) => ['FriendRequests', { type: 'User', id: userId }],
+        invalidatesTags: (_res, _err, { userId }) => ['Social', { type: 'User', id: userId }],
       }),
       // DELETE /friends/requests/:id — cancel your own sent request; the outgoing leaves the inbox.
       cancelFriendRequest: build.mutation<OkResponse, RequestTransition>({
         query: ({ requestId }) => ({ url: `/friends/requests/${requestId}`, method: 'DELETE' }),
-        invalidatesTags: (_res, _err, { userId }) => ['FriendRequests', { type: 'User', id: userId }],
+        invalidatesTags: (_res, _err, { userId }) => ['Social', { type: 'User', id: userId }],
       }),
       // DELETE /me/friends/:userId — unfriend, SILENT to the target (SOC-08 / decision 0010). The roster
       // drops them + the profile re-reads as `none`.
       unfriend: build.mutation<OkResponse, string>({
         query: (userId) => ({ url: `/me/friends/${userId}`, method: 'DELETE' }),
-        invalidatesTags: (_res, _err, userId) => ['Friends', { type: 'User', id: userId }],
+        invalidatesTags: (_res, _err, userId) => ['Social', { type: 'User', id: userId }],
       }),
     }),
   });

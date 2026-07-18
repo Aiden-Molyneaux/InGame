@@ -77,10 +77,19 @@ describe('PersonRow — the SOC-07 relationship spine', () => {
     await waitFor(() => expect(screen.getByText(/TRY AGAIN/)).toBeTruthy());
   });
 
-  it('friend row → tapping FRIENDS opens the profile', () => {
+  it('friend row → tapping the row opens the profile', () => {
     const onProfile = jest.fn();
     renderRow(person('friend'), { onProfile });
     fireEvent.press(screen.getByLabelText('riptide profile'));
     expect(onProfile).toHaveBeenCalledWith('u-1');
+  });
+
+  it('walk2-N7 — a NON-FRIEND (none) row also opens the profile (the limited profile hosts ADD FRIEND)', () => {
+    const onProfile = jest.fn();
+    renderRow(person('none'), { onProfile });
+    // the row (avatar+name) routes regardless of relationship; the ADD button stays separate
+    fireEvent.press(screen.getByLabelText('riptide profile'));
+    expect(onProfile).toHaveBeenCalledWith('u-1');
+    expect(screen.getByLabelText('Add riptide')).toBeTruthy();
   });
 });

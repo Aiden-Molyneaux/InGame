@@ -69,13 +69,24 @@ export function PersonRow({
 
   return (
     <View style={[styles.row, rel === 'blocked' && styles.dimmed]}>
-      <Avatar username={person.username} avatarUrl={person.avatarUrl} size={38} />
-      <View style={styles.meta}>
-        <Text style={[styles.name, rel === 'blocked' && styles.dimName]} numberOfLines={1}>
-          {person.username}
-        </Text>
-        <Text style={styles.sub}>{subFor(rel, cooldownUntil)}</Text>
-      </View>
+      {/* walk2-N7 — the avatar+name ALWAYS open the profile, regardless of relationship: the non-friend
+          LIMITED profile (P9) is the intended destination (it hosts ADD FRIEND). The relationship ACTION
+          button (right) is unchanged. */}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${person.username} profile`}
+        onPress={() => onProfile(person.userId)}
+        style={styles.tapTarget}
+        hitSlop={4}
+      >
+        <Avatar username={person.username} avatarUrl={person.avatarUrl} size={38} />
+        <View style={styles.meta}>
+          <Text style={[styles.name, rel === 'blocked' && styles.dimName]} numberOfLines={1}>
+            {person.username}
+          </Text>
+          <Text style={styles.sub}>{subFor(rel, cooldownUntil)}</Text>
+        </View>
+      </Pressable>
 
       <View style={styles.act}>
         {rel === 'none' ? (
@@ -102,18 +113,14 @@ export function PersonRow({
             <Text style={styles.go}>›</Text>
           </Pressable>
         ) : rel === 'friend' ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`${person.username} profile`}
-            onPress={() => onProfile(person.userId)}
-            style={styles.relmark}
-          >
+          // marker only — the row (avatar+name) owns the profile tap now (walk2-N7), so no duplicate target.
+          <View style={styles.relmark}>
             <Svg width={13} height={13} viewBox="0 0 24 24">
               <Path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke={t.scr.accent} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
             </Svg>
             <Text style={[styles.relText, styles.relFriend]}>FRIENDS</Text>
             <Text style={styles.go}>›</Text>
-          </Pressable>
+          </View>
         ) : rel === 'cooldown' ? (
           <View style={styles.cooldownWrap}>
             <Text style={styles.coolNote}>{cooldownRemaining(cooldownUntil) || 'ON COOLDOWN'}</Text>
@@ -158,6 +165,7 @@ const useStyles = themedStyles((t) => ({
     borderBottomColor: t.scr.hairline,
   },
   dimmed: { opacity: 0.5 },
+  tapTarget: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: t.space.lg },
   meta: { flex: 1, minWidth: 0, gap: 3 },
   name: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 0.3 },
   dimName: { color: t.scr.dim },

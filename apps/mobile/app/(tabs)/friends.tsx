@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { useRouter } from 'expo-router';
@@ -14,7 +14,7 @@ import { achievementDetailFor } from '../../src/components/social/achievementFee
 import { AchievementSheet, type AchievementDetail } from '../../src/components/achievements/AchievementSheet';
 import { themedStyles, useTheme } from '../../src/theme';
 import { useGetFriendsQuery, useGetFriendRequestsQuery } from '../../src/store/friendApi';
-import { useLazyGetFeedQuery, mergeFeedPages } from '../../src/store/feedApi';
+import { useGetFeedQuery, useLazyGetFeedQuery, mergeFeedPages } from '../../src/store/feedApi';
 import { useGetAchievementDefsQuery } from '../../src/store/achievementsApi';
 
 // The FRIENDS tab (P8 · first article · friends-states "Feed-first" §3.3). The SOC-06 aggregated feed IS
@@ -27,49 +27,44 @@ export default function Friends() {
   const t = useTheme();
   const styles = useStyles();
 
-  const { data: friends, isLoading: friendsLoading, isError: friendsError, refetch: refetchFriends } = useGetFriendsQuery();
-  const { data: requests } = useGetFriendRequestsQuery();
-  const [fetchFeed, feedState] = useLazyGetFeedQuery();
+  // walk2-N5 — foreground/tab-switch re-reads the social graph so a cross-device change (a request that
+  // arrived, an accept made elsewhere) appears WITHOUT an app reset. All three social reads share the
+  // `Social` invalidation family too, so a local friend mutation coheres list + requests + feed together.
+  const focusOpts = { refetchOnFocus: true, refetchOnMountOrArgChange: true } as const;
+  const { data: friends, isLoading: friendsLoading, isError: friendsError, refetch: refetchFriends } = useGetFriendsQuery(undefined, focusOpts);
+  const { data: requests } = useGetFriendRequestsQuery(undefined, focusOpts);
   // walk-4 — the PUBLIC defs read (caller-masked secrets) backs the achievement-tap detail sheet.
   const { data: achievementDefs } = useGetAchievementDefsQuery();
   const [achDetail, setAchDetail] = useState<AchievementDetail | null>(null);
 
-  // Feed pages accumulate in component state (the wallet-ledger precedent — simpler + correct vs an RTK
-  // merge). First page on mount; "load more" appends the next cursor's page.
-  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
+  // Feed page 1 is a SUBSCRIPTION (walk2-N5: refetchOnFocus + the shared `Social` tag), so it re-reads on
+  // foreground / friend-mutation; "load more" pages come from the lazy hook and accumulate as the tail.
+  const { data: page1, isFetching: page1Fetching, isError: page1Error, refetch: refetchFeed } = useGetFeedQuery(undefined, focusOpts);
+  const [fetchMore, moreState] = useLazyGetFeedQuery();
+  const [extraItems, setExtraItems] = useState<FeedItem[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
-  const [feedError, setFeedError] = useState(false);
+  const [moreError, setMoreError] = useState(false);
 
+  // Whenever page 1 (re)loads — initial, a focus refetch, or a `Social` invalidation — RESET the
+  // accumulated tail + re-seat the cursor (walk-3 discipline: a fresh page-1 head can strand the old tail).
   useEffect(() => {
-    let live = true;
-    setFeedItems([]);
-    setCursor(null);
-    setFeedError(false);
-    void (async () => {
-      try {
-        const page = await fetchFeed(undefined).unwrap();
-        if (!live) return;
-        // walk-3 — page 1 RESETS the list; every fold dedupes by feedItemId (mergeFeedPages) so no
-        // refetch/overlap pattern can double-render an item (the React duplicate-key class).
-        setFeedItems(mergeFeedPages([], page.items, true));
-        setCursor(page.nextCursor);
-      } catch {
-        if (live) setFeedError(true);
-      }
-    })();
-    return () => {
-      live = false;
-    };
-  }, [fetchFeed]);
+    setExtraItems([]);
+    setMoreError(false);
+    setCursor(page1?.nextCursor ?? null);
+  }, [page1]);
+
+  // The rendered feed = the fresh page-1 head + the deduped tail (mergeFeedPages: feedItemId-keyed, so no
+  // refetch/overlap can double-render — the walk-3 guard).
+  const feedItems = useMemo(() => mergeFeedPages(page1?.items ?? [], extraItems, false), [page1, extraItems]);
 
   async function loadMore() {
     if (!cursor) return;
     try {
-      const page = await fetchFeed(cursor).unwrap();
-      setFeedItems((prev) => mergeFeedPages(prev, page.items, false)); // dedupe on append (walk-3)
+      const page = await fetchMore(cursor).unwrap();
+      setExtraItems((prev) => mergeFeedPages(prev, page.items, false)); // dedupe on append (walk-3)
       setCursor(page.nextCursor);
     } catch {
-      setFeedError(true);
+      setMoreError(true);
     }
   }
 
@@ -106,8 +101,9 @@ export default function Friends() {
   }
 
   const noFriends = roster.length === 0;
-  const feedLoading = feedState.isLoading || feedState.isFetching;
-  const quiet = !noFriends && !feedLoading && feedItems.length <= 1 && !cursor;
+  const feedLoading = page1Fetching || moreState.isFetching;
+  const feedError = page1Error || moreError;
+  const quiet = !noFriends && !page1Fetching && feedItems.length <= 1 && !cursor;
 
   return (
     <View style={styles.screen}>
@@ -150,7 +146,7 @@ export default function Friends() {
             {feedLoading && feedItems.length === 0 ? (
               <Skeleton variant="text-lines" lines={3} />
             ) : feedError && feedItems.length === 0 ? (
-              <LoadError message="Couldn't load the activity feed." onRetry={() => void fetchFeed(undefined)} />
+              <LoadError message="Couldn't load the activity feed." onRetry={() => void refetchFeed()} />
             ) : (
               <>
                 {feedItems.map((item) => (

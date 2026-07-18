@@ -13,9 +13,10 @@ import { RecommendSheet } from '../src/components/social/RecommendSheet';
 import { HeaderKey } from '../src/components/social/HeaderKey';
 import { ReportSheet, type ReportActionOutcome, type ReportTarget } from '../src/components/report/ReportSheet';
 import { themedStyles } from '../src/theme';
-import { useGetFriendsQuery, useGetFriendRequestsQuery, useUnfriendMutation } from '../src/store/friendApi';
+import { useGetFriendsQuery, useGetFriendRequestsQuery, useUnfriendMutation, friendApi } from '../src/store/friendApi';
 import { useSubmitReportMutation } from '../src/store/reportApi';
 import { useBlockUserMutation } from '../src/store/communityApi';
+import { useAppDispatch } from '../src/store/hooks';
 
 // The ALL FRIENDS roster (P8 · friends-states P3/P6/P7/P8) — the full FriendRow list reached from the
 // tab's rail. Each row → their profile / COMPARE / the ⋮ actions sheet (VIEW · COMPARE · RECOMMEND ·
@@ -24,9 +25,12 @@ import { useBlockUserMutation } from '../src/store/communityApi';
 export default function FriendsRoster() {
   const router = useRouter();
   const styles = useStyles();
+  const dispatch = useAppDispatch();
 
-  const { data: friends, isLoading, isError, refetch } = useGetFriendsQuery();
-  const { data: requests } = useGetFriendRequestsQuery();
+  // walk2-N5 — refetch on foreground so an accept/unfriend/block from another device coheres here.
+  const focusOpts = { refetchOnFocus: true, refetchOnMountOrArgChange: true } as const;
+  const { data: friends, isLoading, isError, refetch } = useGetFriendsQuery(undefined, focusOpts);
+  const { data: requests } = useGetFriendRequestsQuery(undefined, focusOpts);
   const [unfriend, unfriendState] = useUnfriendMutation();
   const [blockUser, blockState] = useBlockUserMutation();
   const [submitReport, reportState] = useSubmitReportMutation();
@@ -60,7 +64,9 @@ export default function FriendsRoster() {
     try {
       await blockUser(blockTarget.userId).unwrap();
       setBlockTarget(null);
-      void refetch(); // block severs the bond server-side; re-read the roster (communityApi block ≠ Friends tag)
+      // walk2-N5 — block (a communityApi mutation, off the `Social` family) severs the bond + purges the
+      // pair from feed/requests server-side; invalidate `Social` so roster + requests + feed all cohere.
+      dispatch(friendApi.util.invalidateTags(['Social']));
       setToast(`Blocked ${name}`);
     } catch {
       setBlockTarget(null);
@@ -80,7 +86,7 @@ export default function FriendsRoster() {
     if (!report) return 'error';
     try {
       await blockUser(report.userId).unwrap();
-      void refetch();
+      dispatch(friendApi.util.invalidateTags(['Social'])); // walk2-N5 coherence (see doBlock)
       return 'ok';
     } catch (e) {
       const s = (e as { status?: unknown })?.status;

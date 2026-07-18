@@ -28,11 +28,16 @@ export function mergeFeedPages(prev: FeedItem[], page: FeedItem[], reset: boolea
 // on invalidation). INJECTED into the base slice from its own file (api.ts stays the server track's);
 // parsed at the seam (the executable contract). No tag — the feed is a read-through stream, not
 // mutation-invalidated by this surface (a friend.added elsewhere just shows on the next fetch).
-const feedApi = api.injectEndpoints({
+// walk2-N5 — the feed joins the shared `Social` invalidation family (the friend-graph coherence tag):
+// any local friend mutation (request/accept/decline/cancel/unfriend/block) invalidates `Social`, so the
+// friends list + requests inbox + THIS feed all re-read together — no more "the feed shows a friend the
+// list doesn't". `enhanceEndpoints` declares the tag (RTK dedupes with friendApi's declaration).
+const feedApi = api.enhanceEndpoints({ addTagTypes: ['Social'] }).injectEndpoints({
   endpoints: (build) => ({
     getFeed: build.query<FeedResponse, string | undefined>({
       query: (cursor) => (cursor ? `/me/feed?cursor=${encodeURIComponent(cursor)}` : '/me/feed'),
       transformResponse: (raw): FeedResponse => feedResponseSchema.parse(raw),
+      providesTags: ['Social'],
     }),
   }),
 });

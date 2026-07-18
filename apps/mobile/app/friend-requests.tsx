@@ -24,7 +24,11 @@ export default function FriendRequests() {
   const router = useRouter();
   const styles = useStyles();
 
-  const { data, isLoading, isError, refetch } = useGetFriendRequestsQuery();
+  // walk2-N5 — refetch on foreground so an incoming/accepted request from another device shows here.
+  const { data, isLoading, isError, refetch } = useGetFriendRequestsQuery(undefined, {
+    refetchOnFocus: true,
+    refetchOnMountOrArgChange: true,
+  });
   const [accept, acceptState] = useAcceptFriendRequestMutation();
   const [decline, declineState] = useDeclineFriendRequestMutation();
   const [cancel, cancelState] = useCancelFriendRequestMutation();
