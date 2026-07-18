@@ -235,8 +235,10 @@ export async function getContributions(
   // ── The honest aggregate stats (always present, both shapes) ──────────────────────────────────────
   const addedGames = await catalogRepo.listGamesAddedBy(targetId);
   const gameIds = addedGames.map((g) => g.id);
-  const collectionsCounts = await collectionRepo.collectionsCountByGame(gameIds);
-  const totalReached = [...collectionsCounts.values()].reduce((sum, n) => sum + n, 0);
+  // walk2 N1 — REACHED is the DEDUPED distinct-owner count across ALL the contributor's games, NOT the
+  // sum of per-game counts (which double-counted a user owning several of the games — the "29 REACHED"
+  // bug). See collectionRepo.distinctUsersReachedByGames for the CAT-10 self-inclusion reading.
+  const totalReached = await collectionRepo.distinctUsersReachedByGames(gameIds);
   const [cardsDesigned, totalAdoptions] = await Promise.all([
     cardRepo.countPublishedByOwner(targetId),
     cardRepo.totalAdoptionsForOwner(targetId),
@@ -266,7 +268,12 @@ export async function getContributions(
     .slice(0, CONTRIBUTOR_TOP_N)
     .map(({ row, adoptionCount }) => toContributorCard(row, adoptionCount));
   // The GAMES ADDED rows carry a representative published-card thumb (parvati board gap, P2 additive).
-  const thumbs = await gameThumbMap(targetId);
+  // Per-game collections counts (CAT-09a) rank the tiles — the PER-GAME count is correct here (each
+  // game's own reach); only the aggregate REACHED needed deduping (walk2 N1, above).
+  const [thumbs, collectionsCounts] = await Promise.all([
+    gameThumbMap(targetId),
+    collectionRepo.collectionsCountByGame(addedGames.map((g) => g.id)),
+  ]);
   const topGames = addedGames
     .map((g): ContributorGame => {
       const row: ContributorGame = { gameId: g.id, title: g.name, collectionsCount: collectionsCounts.get(g.id) ?? 0 };

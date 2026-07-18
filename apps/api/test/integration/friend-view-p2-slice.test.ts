@@ -350,6 +350,33 @@ describe('CAT-07: contributions VIEW-ALL cursors + bio/game-thumb gaps', () => {
     expect(games.body.items[0].card).toBeDefined(); // the parvati game-thumb gap
   });
 
+  it('CAT-10 (walk2 N1): REACHED is the DISTINCT-owner count across the contributor’s games (not the per-game sum)', async () => {
+    const contributor = await seedUser();
+    // Deliberately DISSIMILAR titles — near-identical ones trip the CAT-03 dedup warn (409).
+    const g1 = await seedGame(contributor.token, 'Morrowind Chronicles');
+    const g2 = await seedGame(contributor.token, 'Celeste Summit Dash');
+    // Three users each own BOTH games — a naive per-game SUM would count them 6×; the dedup → 3.
+    for (let i = 0; i < 3; i++) {
+      const u = await seedUser();
+      await addToCollection(u.token, g1.id);
+      await addToCollection(u.token, g2.id);
+    }
+    // A user owning NEITHER of the contributor's games does not count (owns an unrelated game only).
+    const outsider = await seedUser();
+    const unrelated = await seedGame(outsider.token, 'Unrelated Reach Game');
+    await addToCollection(outsider.token, unrelated.id);
+
+    const asSelf = await request(app).get(`/api/users/${contributor.id}/contributions`).set(authed(contributor.token));
+    expect(asSelf.status).toBe(200);
+    expect(asSelf.body.stats.totalReached).toBe(3); // DEDUPED — not 6
+
+    // CAT-10 self-inclusion reading: the contributor owning their OWN game counts (matches the per-game
+    // collectionsCount tiles, which include self) → 3 others + the contributor = 4.
+    await addToCollection(contributor.token, g1.id);
+    const after = await request(app).get(`/api/users/${contributor.id}/contributions`).set(authed(contributor.token));
+    expect(after.body.stats.totalReached).toBe(4);
+  });
+
   it('the base contributions carries bio on the FRIEND shape but NOT the non-friend/limited shape', async () => {
     const contributor = await seedUser({ bio: 'I make cards' });
     const friend = await seedUser();
