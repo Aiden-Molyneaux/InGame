@@ -10,7 +10,7 @@ import { KeyboardLift } from '../src/components/KeyboardLift';
 import { TextField } from '../src/components/TextField';
 import { GenreTag } from '../src/components/GenreTag';
 import { InlineBanner } from '../src/components/InlineBanner';
-import { TertiaryLink } from '../src/components/TertiaryLink';
+
 import { COLLECTION_STATUSES, STATUS_LABEL } from '../src/constants/collection';
 import { theme, themedStyles } from '../src/theme';
 import {
@@ -194,7 +194,12 @@ function SearchMode({
 
         {querying ? (
           <View style={styles.noneHook}>
-            <TertiaryLink label={`None of these — create “${trimmed}”`} onPress={onNoneOfThese} />
+            {/* walk2 B8 ⚖ (owner ruling 2026-07-17) — the create-this-game prompt is the F-02
+                ACQUISITIVE voice: GOLD with the pixel-stepped silhouette. ScreenButton/add IS that
+                grammar (gold fill + steppedRectPath corners) — consumed, not hand-drawn; the quiet
+                TertiaryLink it replaces undersold the catalog's be-first hook (CAT-02). */}
+            <Text style={styles.noneLead}>NONE OF THESE?</Text>
+            <ScreenButton label={`Create “${trimmed}”`} variant="add" onPress={onNoneOfThese} block />
           </View>
         ) : (
           // CAT-12 FRIENDS-ARE-PLAYING rail (0076 §0.8 · decision 0062) — pre-query context. The
@@ -450,7 +455,9 @@ const useStyles = themedStyles((t) => ({
   noneWrap: { gap: t.space.sm, padding: t.space.lg, backgroundColor: t.scr.panel },
   noneTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
   noneSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, lineHeight: 16 },
-  noneHook: { alignItems: 'center', paddingVertical: t.space.md },
+  noneHook: { alignItems: 'center', gap: t.space.md, paddingVertical: t.space.md },
+  // walk2 B8 — the quiet lead over the gold stepped create button (the be-first hook, CAT-02).
+  noneLead: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
   dock: {
     padding: t.space.lg,
     borderTopWidth: 1,

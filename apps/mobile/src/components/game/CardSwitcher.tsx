@@ -6,7 +6,7 @@ import { CardFace, parseComposition } from '../CardFace';
 import { FlatCardImage } from './FlatCardImage';
 import { ScreenButton } from '../ScreenButton';
 import { EquipReadout } from './EquipReadout';
-import { themedStyles, useTheme } from '../../theme';
+import { themedStyles, useTheme, withAlpha } from '../../theme';
 import { steppedRectPath } from '../../theme/steppedPath';
 import { useGetEntryCardsQuery, useUpdateEntryMutation } from '../../store/api';
 
@@ -183,7 +183,10 @@ export function CardSwitcher({
           );
         })}
 
-        {/* DESIGN NEW — gold dashed, card-creating (F-02) → the Styler (§3.2). */}
+        {/* DESIGN NEW — ORANGE dashed → the Styler (§3.2). walk2 B9 ⚖ (owner ruling 2026-07-17,
+            recorded by 0078): this REVERSES decision 0069's "DESIGN NEW = gold" — designing your own
+            card is creative, not acquisitive, so it wears the screen accent; gold stays the commerce/
+            acquisition voice (F-02). */}
         <Pressable
           style={styles.newTile}
           accessibilityRole="button"
@@ -326,11 +329,13 @@ const useStyles = themedStyles((t) => ({
     gap: t.space.sm,
     borderWidth: 1.5,
     borderStyle: 'dashed',
-    borderColor: t.scr.value, // F-02 gold, themed (0070/OQ-144 — deep gold on light themes so it reads)
-    backgroundColor: 'rgba(255,210,63,0.06)',
+    // walk2 B9 ⚖ — ORANGE (scr.accent): the 0069 "DESIGN NEW = gold" ruling REVERSED (owner
+    // 2026-07-17, 0078 records it); the tint follows the theme accent (0070/OQ-144).
+    borderColor: t.scr.accent,
+    backgroundColor: withAlpha(t.scr.accent, 0.08),
   },
-  newPlus: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.value },
-  newLabel: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.value, letterSpacing: 1 },
+  newPlus: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.accent },
+  newLabel: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 1 },
   emptyLine: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.faint, lineHeight: 16 },
   opts: {
     padding: t.space.lg,

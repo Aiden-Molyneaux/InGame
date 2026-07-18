@@ -582,6 +582,16 @@ function ShelfView({ items, flippedIds, onToggle, onNavigate }: { items: Collect
               <Text style={styles.heroTitle}>{i.title.toUpperCase()}</Text>
               <Text style={styles.heroCatalog}>{catalogLine(i)}</Text>
             </View>
+            {/* walk2 B7 ⚖ — the shelf row gains the List view's chevron (the quick-entry affordance →
+                the Game page); the card face keeps its flip. Same right-edge placement + style. */}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Open ${i.title}`}
+              onPress={() => onNavigate(i.gameId)}
+              hitSlop={10}
+            >
+              <Text style={styles.chev}>›</Text>
+            </Pressable>
           </View>
         ))}
       </View>
@@ -636,11 +646,9 @@ function ListView({ items }: { items: CollectionItem[] }) {
                 <Text style={styles.stripTitle} numberOfLines={1}>
                   {i.title.toUpperCase()}
                 </Text>
-                {i.nowPlaying ? (
-                  <View style={styles.nowInline}>
-                    <Text style={styles.nowInlineText}>▶ NOW</Text>
-                  </View>
-                ) : null}
+                {/* walk2 B6 ⚖ (owner ruling 2026-07-17, 0078) — the ▶ NOW inline tag is GONE from list
+                    rows: now-playing renders in the HERO ONLY; the entry stays as a plain row. The board
+                    drew the inline tag (collection-states :681) — the ruling supersedes it (0078 ripple). */}
               </View>
               <Text style={styles.rowSub}>{statLine(i)}</Text>
             </View>
@@ -962,9 +970,6 @@ const useStyles = themedStyles((t) => ({
   stripMeta: { flex: 1, gap: t.space.xs, minWidth: 0 },
   stripTitleRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
   stripTitle: { flexShrink: 1, fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
-  // ▶ NOW inline next to the title (board `.now-inline`) — the thumb is too small to wear a tag.
-  nowInline: { backgroundColor: t.scr.accent, paddingHorizontal: 4, paddingVertical: 1 },
-  nowInlineText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accentInk, letterSpacing: 0.5 },
   chev: { marginLeft: 'auto', fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.faint },
   list: { gap: t.space.md },
   rowMeta: { flex: 1, gap: 1 },

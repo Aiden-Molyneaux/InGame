@@ -169,8 +169,12 @@ export const FlipCard = memo(function FlipCard({
         style={[styles.face, frontStyle]}
       >
         {/* EntryCard owns the composition-vs-flattened branch, memoizing the parse on the raw rider so
-            the skia canvas' props never churn on a re-render (the round-4 canvas re-encode lesson). */}
-        <EntryCard title={item.title} card={item.card} size="grid" nowPlaying={item.nowPlaying} style={styles.fill} />
+            the skia canvas' props never churn on a re-render (the round-4 canvas re-encode lesson).
+            walk2 B6 ⚖ (owner ruling 2026-07-17, 0078) — NO now-playing chrome on view rows: the pin
+            renders in the Collection HERO ONLY; the entry rides shelf/grid as a plain card. The board
+            drew the on-card ▶ NOW tag on the pinned row (collection-states :571/:766) — the ruling
+            supersedes those draws (the 0078 board ripple carries it). */}
+        <EntryCard title={item.title} card={item.card} size="grid" style={styles.fill} />
       </Animated.View>
 
       {/* BACK — the CARD-01 stats back + the visible VIEW GAME keycap. `box-none` once SETTLED so a tap on
