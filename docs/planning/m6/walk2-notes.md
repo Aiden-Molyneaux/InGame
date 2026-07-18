@@ -281,10 +281,14 @@ briefs for M7 get this line verbatim.
 - 🔧 N1 (P2 server, ab9d805) **Contributor REACHED is inflated** — "29 reached" with <29 users: summing
   per-game collection counts double-counts multi-game owners → fix to COUNT(DISTINCT user) across the
   contributor's games (CAT-10). Server; API restart.
-- 🔧 N2b (P10, a3105e) **Add-Game rail trio wired live** — only POPULAR was live; NEW RELEASES missing +
-  FRIENDS-ARE-PLAYING a "soon" placeholder (endpoints 404 at build). C7/P7 built both — wire NEW RELEASES
-  (CAT-11) + FRIENDS-ACTIVE (CAT-12). **Answer to the owner: the RAILS (game rows) ship here now; the
-  community-CARDS adopt step is a SEPARATE feature = OQ-136/W-C10 = Wave D.**
+- ✅ N2b (P10, 94ef76b) **Add-Game rail trio wired live** — only POPULAR was live; NEW RELEASES missing +
+  FRIENDS-ARE-PLAYING a "soon" placeholder (endpoints 404 at build). C7/P7 built both — wired NEW RELEASES
+  (CAT-11) + FRIENDS-ACTIVE (CAT-12) via a new `catalogRailsApi` injectEndpoints slice (both return the
+  `/catalog/popular` shape — `CatalogListResponse`, curl-confirmed HTTP 200; friends-active ranked by
+  friendsHaveCount). Extracted `RailFan` (capped 12, own focus + shared addItem); FRIENDS shows the quiet
+  rail-empty (not a placeholder) when the caller has none; all rails hidden while querying. **Answer to
+  the owner: the RAILS (game rows) ship here now; the community-CARDS adopt step is a SEPARATE feature =
+  OQ-136/W-C10 = Wave D.** typecheck/lint/jest 87 suites·594 green.
 - ✅ N3 (P12, 66cd26a) **Add Gamertag button → orange** — `EditableIdentity` ADD GAMERTAG key is now
   `variant='primary'` (the on-screen accent/orange, 0069 prominent add), not the cream secondary.
 - ✅ N4 (P12, 66cd26a) **Settings gear glyph reads too light-mode** — the header `SettingsGear` is now a
