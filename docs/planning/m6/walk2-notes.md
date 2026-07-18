@@ -285,7 +285,7 @@ briefs for M7 get this line verbatim.
   NOT self-excluded** — CAT-07/CAT-09a say "how many USERS' collections contain the game" (no "others"
   wording) and the per-game tiles already include the contributor's own ownership, so REACHED counts a
   self-owning contributor too (internal consistency). Slice-tested (3 owners of 2 games → 3 not 6;
-  self-inclusion → 4). Server; API restart.
+  self-inclusion → 4). Server. **N1b (5a3d878): REACHED excludes SELF** (owner ruling — distinct OTHERS reached).
 - ✅ N2b (P10, 94ef76b) **Add-Game rail trio wired live** — only POPULAR was live; NEW RELEASES missing +
   FRIENDS-ARE-PLAYING a "soon" placeholder (endpoints 404 at build). C7/P7 built both — wired NEW RELEASES
   (CAT-11) + FRIENDS-ACTIVE (CAT-12) via a new `catalogRailsApi` injectEndpoints slice (both return the
