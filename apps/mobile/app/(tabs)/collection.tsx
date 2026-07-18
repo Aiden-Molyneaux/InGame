@@ -550,7 +550,8 @@ type FlipProps = {
 
 // SHELF (decision 0061 — the showcase / "flip through your binder"): a stack where EVERY entry gets
 // the hero treatment (full face + stat-line · title · catalog line). LOG HOURS stays hero-exclusive
-// (the NowPlayingHero above, rendered by the parent); ▶ NOW marks the pinned game in the stack.
+// (the NowPlayingHero above, rendered by the parent). Now-playing chrome is hero-only (W-B6) — the
+// stack rows carry no NOW tag.
 // COL-12: the card is now a FlipCard (tap → flip · long-press / VIEW GAME → the Game page); the meta
 // beside it stays display-only labels (the quick scan lives beside the full peek, board :1377).
 function ShelfView({ items, flippedIds, onToggle, onNavigate }: { items: CollectionItem[] } & FlipProps) {
@@ -624,7 +625,7 @@ function GridView({ items, flippedIds, onToggle, onNavigate }: { items: Collecti
   );
 }
 
-// LIST (management scan): dense strip rows — thumb + title (▶ NOW inline) + HRS · STATUS + chevron
+// LIST (management scan): dense strip rows — thumb + title + HRS · STATUS + chevron
 // → the Game page (the tap-target is M4). The always-visible per-row stats mode; hero above (parent).
 function ListView({ items }: { items: CollectionItem[] }) {
   const router = useRouter(); // CARD-23 NAVIGATE — the list row is the Game-page tap-target (M4 §3.1)
