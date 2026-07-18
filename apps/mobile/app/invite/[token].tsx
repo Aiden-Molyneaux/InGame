@@ -9,6 +9,7 @@ import { Avatar } from '../../src/components/Avatar';
 import { themedStyles, useTheme } from '../../src/theme';
 import { useResolveInviteQuery } from '../../src/store/inviteApi';
 import { useCreateFriendRequestMutation } from '../../src/store/friendApi';
+import { SCREEN_HEADER_PAD } from '../../src/components/ScreenHead';
 
 // InviteLanding (P8 · find-add board P5 · SOC-10) — the arrival from an opened invite link/QR. A
 // FlowTakeover (✕ close top-right, resolves into the sender's world), NOT a tab. GET /invites/:token
@@ -138,7 +139,7 @@ function subFor(rel: Relationship, sent: boolean): string {
 
 const useStyles = themedStyles((t) => ({
   screen: { flex: 1, backgroundColor: t.scr.bg },
-  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: t.space.xl, paddingTop: t.space.lg, paddingBottom: t.space.md },
+  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', ...SCREEN_HEADER_PAD }, // W-B1 — was xl-inset
   headTitle: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, letterSpacing: 2 },
   closeKey: { width: 28, height: 28, backgroundColor: t.scr.key, alignItems: 'center', justifyContent: 'center' },
   closeX: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.brand.navy },

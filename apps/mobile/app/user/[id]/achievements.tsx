@@ -15,6 +15,7 @@ import { byTierPrestigeFirst } from '../../../src/components/achievements/tier';
 import { themedStyles, useTheme } from '../../../src/theme';
 import { useGetUserQuery } from '../../../src/store/friendApi';
 import { useGetUserAchievementsQuery } from '../../../src/store/achievementsApi';
+import { SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../../../src/components/ScreenHead';
 
 // P11 — the friend Achievements view (PROF-05 · board P3/P4). Reached from the friend-Profile teaser.
 // Reads GET /users/:id/achievements: friend/self → EARNED-ONLY (no in-progress, no ??? leak); non-friend
@@ -212,9 +213,9 @@ function AchSkeletonFriend() {
 const useStyles = themedStyles((t) => ({
   flex: { flex: 1 },
   screen: { flex: 1, backgroundColor: t.scr.bg },
-  head: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: t.space.lg, paddingTop: t.space.lg, paddingBottom: t.space.sm },
+  head: { flexDirection: 'row', alignItems: 'center', ...SCREEN_HEADER_PAD }, // W-B1 — was bottom sm
   headTitle: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, letterSpacing: 1.5 },
-  retlink: { paddingHorizontal: t.space.lg, paddingBottom: t.space.md },
+  retlink: { ...RETURN_SEAM_PAD },
   body: { paddingHorizontal: t.space.lg, paddingBottom: t.space.xxl, gap: t.space.lg },
 
   section: { gap: t.space.md },

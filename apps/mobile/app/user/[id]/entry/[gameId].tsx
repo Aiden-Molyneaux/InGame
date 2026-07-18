@@ -15,6 +15,7 @@ import { themedStyles } from '../../../../src/theme';
 import { useGetCollectionQuery, useGetWalletQuery, useAddToCollectionMutation } from '../../../../src/store/api';
 import { useGetUserCollectionQuery } from '../../../../src/store/friendApi';
 import { useGetGameGalleryQuery, useAdoptCardMutation } from '../../../../src/store/communityApi';
+import { SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../../../../src/components/ScreenHead';
 
 // P9 — the SOC-11 entry detail (game-page M7 friend artboard, as a screen). A friend's game viewed via
 // THEIR entry: their card (flattened, EntryCard) + the CARD-22 equipped readout (when present) + the
@@ -281,9 +282,9 @@ function Frame({ title, backLabel, onBack, children }: { title: string; backLabe
 const useStyles = themedStyles((t) => ({
   flex: { flex: 1 },
   screen: { flex: 1, backgroundColor: t.scr.bg },
-  head: { paddingHorizontal: t.space.lg, paddingTop: t.space.lg, paddingBottom: t.space.sm },
+  head: { ...SCREEN_HEADER_PAD }, // W-B1 — was bottom sm
   headTitle: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, letterSpacing: 3 },
-  retlink: { paddingHorizontal: t.space.lg, paddingBottom: t.space.md },
+  retlink: { ...RETURN_SEAM_PAD },
   body: { paddingHorizontal: t.space.lg, paddingBottom: t.space.xxl, gap: t.space.lg },
 
   title: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, letterSpacing: 0.5 },

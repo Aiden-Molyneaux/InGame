@@ -3,7 +3,7 @@ import { View, Text, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import type { PersonSummary } from '@ingame/shared';
 import type { CreateReportRequest } from '../src/store/reportApi';
-import { ScreenHead } from '../src/components/ScreenHead';
+import { ScreenHead, SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../src/components/ScreenHead';
 import { TertiaryLink } from '../src/components/TertiaryLink';
 import { ConfirmSheet } from '../src/components/ConfirmSheet';
 import { Skeleton, LoadError, EmptyState, Toast } from '../src/components/lifecycle';
@@ -244,8 +244,9 @@ function Frame({
 const useStyles = themedStyles((t) => ({
   screen: { flex: 1, backgroundColor: t.scr.bg },
   flex: { flex: 1 },
-  pad: { paddingHorizontal: t.space.xl, paddingTop: t.space.lg },
-  retlink: { paddingHorizontal: t.space.xl, paddingBottom: t.space.sm },
+  // W-B1/B2 — the shared header/seam geometry (was xl-inset, no header bottom, sm seam bottom)
+  pad: { ...SCREEN_HEADER_PAD },
+  retlink: { ...RETURN_SEAM_PAD },
   body: { paddingHorizontal: t.space.xl, paddingBottom: t.space.xxl },
   count: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 2, marginBottom: t.space.md, marginTop: t.space.sm },
 }));

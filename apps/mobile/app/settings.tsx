@@ -3,7 +3,7 @@ import { View, Text, Pressable, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import Svg, { Path, Rect, Circle } from 'react-native-svg';
 import Constants from 'expo-constants';
-import { ScreenHead } from '../src/components/ScreenHead';
+import { ScreenHead, SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../src/components/ScreenHead';
 import { TertiaryLink } from '../src/components/TertiaryLink';
 import { ScreenButton } from '../src/components/ScreenButton';
 import { ConfirmSheet } from '../src/components/ConfirmSheet';
@@ -37,8 +37,11 @@ export default function Settings() {
       <View style={styles.pad}>
         <ScreenHead title="Settings" />
       </View>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+      {/* W-B2 — the return seam is a FIXED row (the app-wide seam grammar). */}
+      <View style={styles.retlink}>
         <TertiaryLink label="Return to profile" chevron="leading-back" onPress={() => router.back()} />
+      </View>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
 
         {/* ── ACCOUNT ── */}
         <Section title="Account">
@@ -222,9 +225,10 @@ const InfoIcon = () => (
 
 const useStyles = themedStyles((t) => ({
   screen: { flex: 1, backgroundColor: t.scr.bg },
-  pad: { paddingHorizontal: t.space.lg, paddingTop: t.space.lg, paddingBottom: t.space.md },
+  pad: { ...SCREEN_HEADER_PAD },
+  retlink: { ...RETURN_SEAM_PAD }, // W-B2
   scroll: { flex: 1 },
-  body: { padding: t.space.lg, gap: t.space.xl },
+  body: { paddingHorizontal: t.space.lg, paddingBottom: t.space.lg, gap: t.space.xl }, // W-B2 — top pad dropped (the seam row owns gap-2)
   section: { gap: t.space.md },
   sectionHead: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 2, marginLeft: t.space.xs },
   group: { backgroundColor: t.scr.panel, borderWidth: 1, borderColor: t.scr.hairline },

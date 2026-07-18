@@ -1,6 +1,27 @@
 import type { ReactNode } from 'react';
 import { View, Text } from 'react-native';
-import { themedStyles } from '../theme';
+import { theme, themedStyles } from '../theme';
+
+// ── walk2 W-B1/W-B2 — the ONE screen-header + return-seam geometry (owner audit rulings) ──────────
+// Reference = the Collection/Profile header band. Every routed screen's header WRAPPER spreads
+// SCREEN_HEADER_PAD, and every ‹ RETURN seam row spreads RETURN_SEAM_PAD, so the two audited gaps —
+// (header ↔ return link) = the header's paddingBottom, and (link ↔ content) = the seam's
+// paddingBottom — are one number app-wide. `theme.space` is static (spacing is not themed), so these
+// are safe as plain constants. A structural primitive was considered and declined: headers embed
+// varied chrome (trailing counters, ⋯ overflow keys, under-title seams), so shared CONSTANTS are the
+// honest single source of truth. src/screen-geometry.test.ts pins the values + consumption.
+export const SCREEN_HEADER_PAD = {
+  paddingHorizontal: theme.space.lg,
+  paddingTop: theme.space.lg,
+  paddingBottom: theme.space.md,
+} as const;
+export const RETURN_SEAM_PAD = {
+  paddingHorizontal: theme.space.lg,
+  paddingBottom: theme.space.md,
+} as const;
+/** The under-title seam (S2-b: the link INSIDE the header block — add-game/device/legal): the same
+ *  gap-1 as separate blocks, expressed as the fused block's row gap. */
+export const HEADER_SEAM_GAP = theme.space.md;
 
 // CountTag (component-map §5.4 — was CountKeycap) — a flat, DISPLAY-ONLY gold count (never pressable).
 // F-1 fix 7b: sized to match the CurrencyCounter keycap (same padding) so the two read as header

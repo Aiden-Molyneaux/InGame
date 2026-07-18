@@ -23,6 +23,7 @@ import { useGetUserQuery, isFriendProfile } from '../../src/store/friendApi';
 import { useGetUserAchievementsQuery } from '../../src/store/achievementsApi';
 import { useSubmitReportMutation } from '../../src/store/reportApi';
 import { useBlockUserMutation } from '../../src/store/communityApi';
+import { SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../../src/components/ScreenHead';
 
 // P9 — the friend / other-user Profile (PROF-05 friend-view · profile-states.html friend artboards). The
 // social read of a person: identity + relationship action (LIVE ADD FRIEND) + the doors into their world
@@ -412,14 +413,12 @@ const useStyles = themedStyles((t) => ({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: t.space.lg,
-    paddingTop: t.space.lg,
-    paddingBottom: t.space.sm,
+    ...SCREEN_HEADER_PAD, // W-B1 — was bottom sm
   },
   headTitle: { flex: 1, fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, letterSpacing: 1.5 },
   headTrailing: { paddingLeft: t.space.md },
   ovf: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.dim },
-  retlink: { paddingHorizontal: t.space.lg, paddingBottom: t.space.md },
+  retlink: { ...RETURN_SEAM_PAD },
   body: { paddingHorizontal: t.space.lg, paddingBottom: t.space.xxl, gap: t.space.lg },
 
   counts: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },

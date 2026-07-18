@@ -2,7 +2,7 @@ import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-nati
 import Svg, { Path, Circle } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { IdentityBlock } from '../../src/components/IdentityBlock';
-import { ScreenHead } from '../../src/components/ScreenHead';
+import { ScreenHead, SCREEN_HEADER_PAD } from '../../src/components/ScreenHead';
 import { EntryCard } from '../../src/components/EntryCard';
 import { StatTile } from '../../src/components/StatTile';
 import { ScreenButton } from '../../src/components/ScreenButton';
@@ -355,7 +355,7 @@ function Stat({ value, label }: { value: string | number; label: string }) {
 const useStyles = themedStyles((t) => ({
   screen: { flex: 1, backgroundColor: t.scr.bg },
   // S5-a — the fixed title-band wrapper (mirrors collection.tsx `pad`; horizontal pad aligns with body).
-  pad: { paddingHorizontal: t.space.lg, paddingTop: t.space.lg, paddingBottom: t.space.md },
+  pad: { ...SCREEN_HEADER_PAD }, // W-B1 — the reference geometry, now the shared constant
   scroll: { flex: 1 },
   center: { alignItems: 'center', justifyContent: 'center', gap: t.space.lg },
   body: { padding: t.space.lg, gap: t.space.xl },

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import type { CollectionItem } from '@ingame/shared';
-import { ScreenHead } from '../../src/components/ScreenHead';
+import { ScreenHead, SCREEN_HEADER_PAD } from '../../src/components/ScreenHead';
 import { ScreenButton } from '../../src/components/ScreenButton';
 import { DiscoverRoomDock, type DiscoverRoom } from '../../src/components/wtp/DiscoverRoomDock';
 import { PulledSheet } from '../../src/components/PulledSheet';
@@ -372,7 +372,7 @@ function AddFromCollectionSheet({
 
 const useStyles = themedStyles((t) => ({
   screen: { flex: 1, backgroundColor: t.scr.bg },
-  pad: { paddingHorizontal: t.space.lg, paddingTop: t.space.lg, paddingBottom: t.space.md },
+  pad: { ...SCREEN_HEADER_PAD },
   scroll: { flex: 1 },
   body: { padding: t.space.lg, gap: t.space.xl, paddingBottom: t.space.xxl },
 

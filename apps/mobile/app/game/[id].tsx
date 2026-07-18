@@ -40,6 +40,7 @@ import { useSubmitReportMutation, type CreateReportRequest } from '../../src/sto
 import { useGetFriendsWhoOwnQuery } from '../../src/store/friendApi';
 import { Avatar } from '../../src/components/Avatar';
 import { useAppSelector } from '../../src/store/hooks';
+import { SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../../src/components/ScreenHead';
 
 // Game page hub shell (§3.1 · design-spec §2.4b / §4.2) — the CARD-23 NAVIGATE target + the
 // M3-deferred per-game host. A root-level Stack screen inside the persistent DeviceShell (like
@@ -267,6 +268,10 @@ export default function GamePage() {
           </View>
         </View>
 
+        {/* W-B2 — the return seam is a FIXED row above the scroll (the app-wide seam grammar). */}
+        <View style={styles.retlink}>
+          <TertiaryLink label="Return to collection" chevron="leading-back" onPress={() => router.back()} />
+        </View>
         <ScrollView
           style={styles.flex}
           contentContainerStyle={styles.body}
@@ -275,8 +280,6 @@ export default function GamePage() {
           showsVerticalScrollIndicator={false}
           scrollEnabled={!bgLocked}
         >
-          <TertiaryLink label="Return to collection" chevron="leading-back" onPress={() => router.back()} />
-
           {section === 'play' ? (
             <>
               {/* title · facts · hero as one tight group (gate-5 B.5) */}
@@ -539,8 +542,10 @@ function Frame({ children, onBack }: { children: ReactNode; onBack: () => void }
             GAME
           </Text>
         </View>
-        <ScrollView style={styles.flex} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+        <View style={styles.retlink}>
           <TertiaryLink label="Return to collection" chevron="leading-back" onPress={onBack} />
+        </View>
+        <ScrollView style={styles.flex} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
           {children}
         </ScrollView>
       </View>
@@ -604,11 +609,10 @@ const useStyles = themedStyles((t) => ({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: t.space.lg,
-    paddingTop: t.space.lg,
-    paddingBottom: t.space.sm,
+    ...SCREEN_HEADER_PAD, // W-B1 — was bottom sm
   },
   title: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, letterSpacing: 1.5 },
+  retlink: { ...RETURN_SEAM_PAD }, // W-B2 — the shared seam geometry
   headRight: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
   nowTag: { backgroundColor: t.scr.accent, paddingHorizontal: t.space.md, paddingVertical: 3 },
   nowTagText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accentInk, letterSpacing: 0.5 },

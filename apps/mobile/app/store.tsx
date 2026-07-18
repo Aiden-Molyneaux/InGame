@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, View, Text } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import type { CosmeticListItem, LedgerEntry, StorePack } from '@ingame/shared';
-import { ScreenHead } from '../src/components/ScreenHead';
+import { ScreenHead, SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../src/components/ScreenHead';
 import { ScreenButton } from '../src/components/ScreenButton';
 import { ConfirmSheet } from '../src/components/ConfirmSheet';
 import { TertiaryLink } from '../src/components/TertiaryLink';
@@ -883,12 +883,11 @@ const useStyles = themedStyles((t) => ({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: t.space.lg,
-    paddingTop: t.space.lg,
+    ...SCREEN_HEADER_PAD, // W-B1 — was missing the reference paddingBottom
   },
   scroll: { paddingBottom: t.space.xl },
   body: { paddingHorizontal: t.space.lg, paddingVertical: t.space.md, gap: t.space.md },
-  returnRow: { paddingHorizontal: t.space.lg, paddingTop: t.space.sm },
+  returnRow: { ...RETURN_SEAM_PAD }, // W-B2 — was top sm / no bottom
   errWrap: { flex: 1, paddingTop: t.space.xxl },
   secTitle: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.dim, letterSpacing: 2, marginTop: t.space.sm },
   emptyNote: {

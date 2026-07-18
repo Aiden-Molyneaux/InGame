@@ -13,6 +13,7 @@ import { ComparePair } from '../../src/components/compare/ComparePair';
 import { FriendsLeaderboard } from '../../src/components/compare/FriendsLeaderboard';
 import { useGetMeQuery } from '../../src/store/api';
 import { useGetCompareQuery } from '../../src/store/compareApi';
+import { SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../../src/components/ScreenHead';
 
 // P9 — Compare (SOC-03 · compare-states.html · the marquee return-driver). The duel: a totals FaceOff
 // (who leads, by how much) → per-shared-game card-vs-card ComparePair matchups → the FriendsLeaderboard.
@@ -268,9 +269,9 @@ function Frame({
 const useStyles = themedStyles((t) => ({
   flex: { flex: 1 },
   screen: { flex: 1, backgroundColor: t.scr.bg },
-  head: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: t.space.lg, paddingTop: t.space.lg, paddingBottom: t.space.sm },
+  head: { flexDirection: 'row', alignItems: 'center', ...SCREEN_HEADER_PAD }, // W-B1 — was bottom sm
   headTitle: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, letterSpacing: 3 },
-  retlink: { paddingHorizontal: t.space.lg, paddingBottom: t.space.md },
+  retlink: { ...RETURN_SEAM_PAD },
   body: { paddingHorizontal: t.space.lg, paddingBottom: t.space.xxl, gap: t.space.lg },
 
   section: { gap: t.space.md },

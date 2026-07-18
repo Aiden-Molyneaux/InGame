@@ -3,7 +3,7 @@ import { View, Text, ScrollView, ActivityIndicator, Pressable, BackHandler, Keyb
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import type { CollectionItem, CollectionStatus, GenreView } from '@ingame/shared';
-import { ScreenHead } from '../../src/components/ScreenHead';
+import { ScreenHead, SCREEN_HEADER_PAD } from '../../src/components/ScreenHead';
 import { EntryCard } from '../../src/components/EntryCard';
 import { FlipCard } from '../../src/components/collection/FlipCard';
 import { SelfTopView, TopTenCardPicker } from '../../src/components/collection/TopCurated';
@@ -869,7 +869,7 @@ const useStyles = themedStyles((t) => ({
   center: { alignItems: 'center', justifyContent: 'center', gap: t.space.lg },
   errTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.accent, letterSpacing: 1 },
   errSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim },
-  pad: { paddingHorizontal: t.space.lg, paddingTop: t.space.lg, paddingBottom: t.space.md, gap: t.space.md },
+  pad: { ...SCREEN_HEADER_PAD, gap: t.space.md }, // W-B1 — the reference geometry, now the shared constant
   scroll: { flex: 1 },
   body: { padding: t.space.lg, gap: t.space.lg },
   // OQ-130 — filtered-to-zero "no results" beat.

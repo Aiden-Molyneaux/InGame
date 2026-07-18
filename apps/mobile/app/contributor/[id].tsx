@@ -23,6 +23,7 @@ import { SectionEmpty } from '../../src/components/lifecycle/SectionEmpty';
 import { themedStyles, useTheme } from '../../src/theme';
 import { useGetMeQuery } from '../../src/store/api';
 import { useGetContributionsQuery } from '../../src/store/contributorApi';
+import { SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../../src/components/ScreenHead';
 
 // P13 — Contributor profile (E8a · CAT-07 · design board contributor-states.html). The designer-tap
 // destination: a person's "My Contributions" pride surface in the Profile grammar — IdentityBlock →
@@ -554,12 +555,10 @@ const useStyles = themedStyles((t) => ({
   head: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: t.space.lg,
-    paddingTop: t.space.lg,
-    paddingBottom: t.space.sm,
+    ...SCREEN_HEADER_PAD, // W-B1 — was bottom sm
   },
   headTitle: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, letterSpacing: 1.5 },
-  retlink: { paddingHorizontal: t.space.lg, paddingBottom: t.space.md },
+  retlink: { ...RETURN_SEAM_PAD },
   body: { paddingHorizontal: t.space.lg, paddingBottom: t.space.xxl, gap: t.space.lg },
 
   section: { gap: t.space.md },

@@ -13,6 +13,7 @@ import { LoadError } from '../../../src/components/lifecycle/LoadError';
 import { Unavailable } from '../../../src/components/lifecycle/Unavailable';
 import { themedStyles, useTheme } from '../../../src/theme';
 import { useGetUserQuery, useGetUserCollectionQuery, isFriendProfile } from '../../../src/store/friendApi';
+import { SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../../../src/components/ScreenHead';
 
 // P9 — a friend's Collection (COL-10/11 · collection-states.html friend read-only boards). READ-ONLY,
 // privacy-gated: the friend-visible field set only (no notes/rating/platforms/percentComplete — they're
@@ -349,9 +350,9 @@ function Frame({ title, onBack, children }: { title: string; onBack: () => void;
 const useStyles = themedStyles((t) => ({
   flex: { flex: 1 },
   screen: { flex: 1, backgroundColor: t.scr.bg },
-  head: { paddingHorizontal: t.space.lg, paddingTop: t.space.lg, paddingBottom: t.space.sm },
+  head: { ...SCREEN_HEADER_PAD }, // W-B1 — was bottom sm
   headTitle: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, letterSpacing: 1.5 },
-  retlink: { paddingHorizontal: t.space.lg, paddingBottom: t.space.md },
+  retlink: { ...RETURN_SEAM_PAD },
   body: { paddingHorizontal: t.space.lg, paddingBottom: t.space.xxl, gap: t.space.lg },
 
   hero: { flexDirection: 'row', gap: t.space.lg, alignItems: 'center', backgroundColor: t.scr.panel, padding: t.space.lg },

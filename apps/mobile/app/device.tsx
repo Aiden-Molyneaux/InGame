@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, View, Text, ScrollView } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import type { DeviceResponse, LookResponse, PatchDeviceRequest, Sticker, StickerComposition } from '@ingame/shared';
-import { ScreenHead } from '../src/components/ScreenHead';
+import { ScreenHead, HEADER_SEAM_GAP } from '../src/components/ScreenHead';
 import { ScreenButton } from '../src/components/ScreenButton';
 import { TertiaryLink } from '../src/components/TertiaryLink';
 import { MiniDevice } from '../src/components/MiniDevice';
@@ -927,7 +927,7 @@ function errMsg(e: unknown, fallback: string): string {
 const useStyles = themedStyles((t) => ({
   flex: { flex: 1 },
   screen: { flex: 1, backgroundColor: t.scr.bg },
-  headPad: { paddingHorizontal: t.space.lg, paddingTop: t.space.lg, gap: t.space.xs },
+  headPad: { paddingHorizontal: t.space.lg, paddingTop: t.space.lg, gap: HEADER_SEAM_GAP, paddingBottom: t.space.md }, // W-B1/B2 — the fused under-title seam on the shared geometry (was gap xs, no bottom)
   headRow: { flexDirection: 'row', alignItems: 'center' },
   headSpacer: { flex: 1 },
   dim: { opacity: 0.4 },

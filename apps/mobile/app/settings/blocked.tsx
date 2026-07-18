@@ -3,7 +3,7 @@ import { View, Text, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import Svg, { Path, Circle } from 'react-native-svg';
 import type { BlockedPerson } from '@ingame/shared';
-import { ScreenHead } from '../../src/components/ScreenHead';
+import { ScreenHead, SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../../src/components/ScreenHead';
 import { TertiaryLink } from '../../src/components/TertiaryLink';
 import { ScreenButton } from '../../src/components/ScreenButton';
 import { ConfirmSheet } from '../../src/components/ConfirmSheet';
@@ -46,8 +46,11 @@ export default function Blocked() {
       <View style={styles.pad}>
         <ScreenHead title="Blocked" />
       </View>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+      {/* W-B2 — the return seam is a FIXED row (the app-wide seam grammar). */}
+      <View style={styles.retlink}>
         <TertiaryLink label="Return to settings" chevron="leading-back" onPress={() => router.back()} />
+      </View>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
 
         {/* the calm contract note (SOC-09 · MOD-09 — silent) */}
         <View style={styles.note}>
@@ -118,9 +121,10 @@ function formatBlockedAt(iso: string): string {
 
 const useStyles = themedStyles((t) => ({
   screen: { flex: 1, backgroundColor: t.scr.bg },
-  pad: { paddingHorizontal: t.space.lg, paddingTop: t.space.lg, paddingBottom: t.space.md },
+  pad: { ...SCREEN_HEADER_PAD },
+  retlink: { ...RETURN_SEAM_PAD }, // W-B2
   scroll: { flex: 1 },
-  body: { padding: t.space.lg, gap: t.space.lg },
+  body: { paddingHorizontal: t.space.lg, paddingBottom: t.space.lg, gap: t.space.lg }, // W-B2 — top pad dropped
   note: {
     flexDirection: 'row',
     alignItems: 'flex-start',

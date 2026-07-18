@@ -18,6 +18,7 @@ import { byTierPrestigeFirst } from '../src/components/achievements/tier';
 import { themedStyles } from '../src/theme';
 import { useGetMeQuery } from '../src/store/api';
 import { useGetMyAchievementsQuery } from '../src/store/achievementsApi';
+import { SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../src/components/ScreenHead';
 
 // P11 — the self Achievements trophy case (ACH-01..05/09 · board achievements-states.html · design-spec
 // §2.19). Reached from the self-Profile teaser (ACH-05). Reads GET /me/achievements (bounded — no
@@ -324,9 +325,9 @@ function AchievementsSkeleton() {
 const useStyles = themedStyles((t) => ({
   flex: { flex: 1 },
   screen: { flex: 1, backgroundColor: t.scr.bg },
-  head: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: t.space.lg, paddingTop: t.space.lg, paddingBottom: t.space.sm },
+  head: { flexDirection: 'row', alignItems: 'center', ...SCREEN_HEADER_PAD }, // W-B1 — was bottom sm
   headTitle: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, letterSpacing: 1.5 },
-  retlink: { paddingHorizontal: t.space.lg, paddingBottom: t.space.md },
+  retlink: { ...RETURN_SEAM_PAD },
   body: { paddingHorizontal: t.space.lg, paddingBottom: t.space.xxl, gap: t.space.lg },
 
   section: { gap: t.space.md },

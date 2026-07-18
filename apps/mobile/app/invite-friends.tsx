@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, Share, Platform } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useRouter } from 'expo-router';
-import { ScreenHead } from '../src/components/ScreenHead';
+import { ScreenHead, SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../src/components/ScreenHead';
 import { TertiaryLink } from '../src/components/TertiaryLink';
 import { ScreenButton } from '../src/components/ScreenButton';
 import { LoadError, Toast } from '../src/components/lifecycle';
@@ -109,8 +109,9 @@ export default function InviteFriends() {
 const useStyles = themedStyles((t) => ({
   screen: { flex: 1, backgroundColor: t.scr.bg },
   flex: { flex: 1 },
-  pad: { paddingHorizontal: t.space.xl, paddingTop: t.space.lg },
-  retlink: { paddingHorizontal: t.space.xl, paddingBottom: t.space.sm },
+  // W-B1/B2 — the shared header/seam geometry (was xl-inset, no header bottom, sm seam bottom)
+  pad: { ...SCREEN_HEADER_PAD },
+  retlink: { ...RETURN_SEAM_PAD },
   body: { paddingHorizontal: t.space.xl, paddingBottom: t.space.xxl },
   center: { paddingVertical: t.space.xxl, alignItems: 'center' },
   secTitle: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 2, marginTop: t.space.lg, marginBottom: t.space.md },

@@ -13,6 +13,7 @@ import { InlineBanner } from '../src/components/InlineBanner';
 
 import { COLLECTION_STATUSES, STATUS_LABEL } from '../src/constants/collection';
 import { theme, themedStyles } from '../src/theme';
+import { HEADER_SEAM_GAP } from '../src/components/ScreenHead';
 import {
   useGetGenresQuery,
   useGetPopularQuery,
@@ -433,17 +434,21 @@ const useStyles = themedStyles((t) => ({
   flex: { flex: 1 },
   screen: { flex: 1, backgroundColor: t.scr.bg },
   // N3 — no divider between the header and the POPULAR FIRST ADDS section (owner, 2026-07-04).
+  // W-B1/B2 — the S2-b under-title seam as ONE fused block on the shared geometry: title → the
+  // HEADER_SEAM_GAP (= the header's paddingBottom app-wide) → the RETURN link → seam bottom md.
+  // (Was: gap xs(2) + paddingVertical lg — an off-grid 2px gap-1 and a 12px gap-2.)
   flowHead: {
     alignItems: 'flex-start',
-    gap: t.space.xs,
+    gap: HEADER_SEAM_GAP,
     paddingHorizontal: t.space.lg,
-    paddingVertical: t.space.lg,
+    paddingTop: t.space.lg,
+    paddingBottom: t.space.md,
   },
   // N2 — same size as the Collection ScreenHead title (display 21, F-06).
   flowTitle: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, letterSpacing: 1 },
   // N5 — the RETURN link is orange (the on-screen accent).
   returnLink: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 1 },
-  body: { padding: t.space.lg, gap: t.space.lg },
+  body: { paddingHorizontal: t.space.lg, paddingBottom: t.space.lg, gap: t.space.lg }, // W-B2 — top pad dropped (the seam owns gap-2)
   railHead: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
   friendsRail: { gap: t.space.sm, marginTop: t.space.xl, borderTopWidth: 1, borderTopColor: t.scr.hairline, paddingTop: t.space.lg },
   friendsExpected: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.3, lineHeight: 14 },

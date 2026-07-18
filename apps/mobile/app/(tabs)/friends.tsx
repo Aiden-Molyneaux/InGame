@@ -3,7 +3,7 @@ import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-nati
 import Svg, { Path, Circle } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import type { FeedItem } from '@ingame/shared';
-import { ScreenHead } from '../../src/components/ScreenHead';
+import { ScreenHead, SCREEN_HEADER_PAD } from '../../src/components/ScreenHead';
 import { TertiaryLink } from '../../src/components/TertiaryLink';
 import { ScreenButton } from '../../src/components/ScreenButton';
 import { Avatar } from '../../src/components/Avatar';
@@ -254,7 +254,7 @@ function QuietNudge({ onFind }: { onFind: () => void }) {
 const useStyles = themedStyles((t) => ({
   screen: { flex: 1, backgroundColor: t.scr.bg },
   flex: { flex: 1 },
-  pad: { paddingHorizontal: t.space.xl, paddingTop: t.space.lg },
+  pad: { ...SCREEN_HEADER_PAD }, // W-B1 — was xl-inset with no bottom
   body: { paddingHorizontal: t.space.xl, paddingBottom: t.space.xxl },
 
   sec: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: t.space.xl, marginBottom: t.space.md },
