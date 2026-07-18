@@ -118,3 +118,14 @@ export function withAlpha(hex: string, alpha: number): string {
   const b = parseInt(h.slice(4, 6), 16);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
+
+// darken(hex, f) — a `#rrggbb` token darkened by fraction f (each channel × (1−f)). The withAlpha
+// sibling for the INSET direction: `scr.panel` is the theme's one-step-LIGHTER plane (F-09 flat,
+// never sunken), so a surface that must read RECESSED on the `scr.bg` field derives DOWN from the
+// live bg token instead (walk2 A4c — the celebration reward strip). Token math, never a literal —
+// it re-themes with the screen theme (subtly darker on dark themes, a gentle inset on light ones).
+export function darken(hex: string, f: number): string {
+  const h = hex.replace('#', '');
+  const ch = (i: number) => Math.round(parseInt(h.slice(i, i + 2), 16) * (1 - f));
+  return `rgb(${ch(0)}, ${ch(2)}, ${ch(4)})`;
+}

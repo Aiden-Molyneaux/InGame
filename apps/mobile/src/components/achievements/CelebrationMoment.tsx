@@ -124,7 +124,9 @@ export function CelebrationMoment({
       {chips.length > 0 ? (
         <View pointerEvents="none" style={styles.rewards}>
           {chips.map((c, i) => (
-            <RewardChip key={i} kind={c.kind} name={c.name} sub={c.sub} />
+            // recessed (walk2 A4c) — on the open theme field the strip sits as a dark inset well
+            // (darken(scr.bg)) with the mark + text centered as a group, never a floating lighter box.
+            <RewardChip key={i} kind={c.kind} name={c.name} sub={c.sub} recessed />
           ))}
         </View>
       ) : null}

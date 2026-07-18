@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 import Svg, { Rect } from 'react-native-svg';
-import { themedStyles, useTheme, withAlpha } from '../../theme';
+import { darken, themedStyles, useTheme, withAlpha } from '../../theme';
 import { PixelsMark } from '../commerce/PixelsMark';
 
 // RewardChip (component-map §13 · design-spec §1.5) — the ACH-04 payout readout: an icon + name +
@@ -12,21 +12,31 @@ import { PixelsMark } from '../commerce/PixelsMark';
 //   • cosmetic — an accent-outlined frame glyph + the EARN-ONLY tag.
 // The `sub` line adapts by context (earned = "UNLOCKED FOR YOUR CARDS" · in-progress prize = "UNLOCKS
 // AT …" · celebration = "ADDED TO YOUR WALLET"). Presentation only — the grant is server-side.
+// `recessed` (walk2 A4c, the CelebrationMoment strip): on the open scr.bg field the default
+// `scr.panel` fill (one step LIGHTER) reads as a floating box — the recessed variant derives DOWN
+// from the live bg token instead (`darken(scr.bg, 0.25)` — a subtle dark inset well, re-themes per
+// DEV-04) and centres the PixelsMark + text block as a group. Panel/sheet contexts keep the default.
 export type RewardChipKind = 'pixels' | 'cosmetic';
 
 export function RewardChip({
   kind,
   name,
   sub,
+  recessed = false,
 }: {
   kind: RewardChipKind;
   name: string;
   sub?: string;
+  /** the celebration-strip variant: dark inset well (darken(scr.bg, .25)) + centered content group. */
+  recessed?: boolean;
 }) {
   const t = useTheme();
   const styles = useStyles();
   return (
-    <View style={styles.chip}>
+    <View
+      testID="reward-chip"
+      style={[styles.chip, recessed && { backgroundColor: darken(t.scr.bg, 0.25), justifyContent: 'center' }]}
+    >
       {kind === 'pixels' ? (
         // the canonical currency glyph (walk-1) — no bordered well; the pixel-art gem carries itself.
         <View style={styles.pixIcon}>
@@ -40,7 +50,8 @@ export function RewardChip({
           </Svg>
         </View>
       )}
-      <View style={styles.meta}>
+      {/* recessed: the meta block hugs its content (no flex:1 stretch) so icon + text centre as a group */}
+      <View style={[styles.meta, recessed && { flex: 0 }]}>
         <Text style={styles.name} numberOfLines={1}>
           {name.toUpperCase()}
         </Text>

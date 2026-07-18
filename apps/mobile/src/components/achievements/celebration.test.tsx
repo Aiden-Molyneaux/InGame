@@ -7,6 +7,7 @@ import type { EarnedAchievement, MeAchievementsResponse } from '@ingame/shared';
 import authReducer, { setTokens } from '../../store/authSlice';
 import prefsReducer, { setLastSeenUnlockCount } from '../../store/prefsSlice';
 import { SCREEN_THEMES, DEFAULT_THEME_ID } from '../../theme/palettes';
+import { darken } from '../../theme';
 
 // P11 — the ACH-06 in-app celebration seam (ARCH-A4 / ASSUMPTION-1). Proves the poll-free refetch-DELTA
 // trigger: a first observation baselines SILENTLY, a later INCREASE fires the moment for the NEWEST
@@ -134,5 +135,22 @@ describe('CelebrationMoment — reduce-motion static variant', () => {
     const eyebrow = screen.getByText('ACHIEVEMENT UNLOCKED');
     const eyebrowStyle = StyleSheet.flatten(eyebrow.props.style) as { color?: string };
     expect(eyebrowStyle.color).toBe('#ffd23f'); // brand.gold (the F-02 PRESTIGE carve-out)
+  });
+
+  it('W-A4c — the reward strip is a DARK recessed well derived from the bg token, content centered', () => {
+    const store = configureStore({ reducer: { auth: authReducer, prefs: prefsReducer } });
+    render(
+      <Provider store={store}>
+        <CelebrationMoment achievement={ach('e1', 'GoldFoil', '2026-03-12T00:00:00Z', 'prestige')} onContinue={jest.fn()} />
+      </Provider>,
+    );
+    const chip = screen.getByTestId('reward-chip'); // the +50 PIXELS strip
+    const style = StyleSheet.flatten(chip.props.style) as { backgroundColor?: string; justifyContent?: string };
+    // token MATH on the live theme bg (darken(scr.bg, .25)) — darker than the field, never scr.panel
+    // (the one-step-LIGHTER plane that floated) and never a literal.
+    expect(style.backgroundColor).toBe(darken(SCREEN_THEMES[DEFAULT_THEME_ID].bg, 0.25));
+    expect(style.backgroundColor).not.toBe(SCREEN_THEMES[DEFAULT_THEME_ID].panel);
+    // the PixelsMark + text block centre as a group (left-pin retired)
+    expect(style.justifyContent).toBe('center');
   });
 });
