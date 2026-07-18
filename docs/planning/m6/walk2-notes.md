@@ -175,11 +175,11 @@
 >   on C5's game-detail aggregate (built now) + the owner's Wave-D nod (in).
 
 ## WAVE C items (contract/spec ripples via 0078)
-- ⬜ W-C1 ⚖ **Fuzzy people-search** — "Kyra" must find "KyraInGame": exact-match → prefix/substring
+- ✅ W-C1 (a49bf8c) ⚖ **Fuzzy people-search** — "Kyra" must find "KyraInGame": exact-match → prefix/substring
   (case-insensitive), same neutrality/rate posture. Contract row + server change + PersonRow states
   unchanged. (SOC-07 amendment → 0078.)
-- ⬜ W-C2 **OQ-147 code** — cancel-exempt revert (the morning ruling; spec edit rides 0078).
-- ⬜ W-C3 **OQ-148 widening** — friends' achievement pages mask secrets (server read + client).
+- ✅ W-C2 (a49bf8c) **OQ-147 code** — cancel-exempt revert (the morning ruling; spec edit rides 0078).
+- ✅ W-C3 (edd9710 server + 47d7a36 client C3b) **OQ-148 widening** — friends' achievement pages mask secrets (server read + client).
 - ✅ W-C4 (abff0c0 · manifest 8e6e77c) **Profile edit slice** — in-place per-field commit (OQ-034, no
   giant save): EDIT keycap → `EditableIdentity`. LIVE on the served seams: **username** (PROF-06
   cooldown off `usernameNextChangeAt` + MOD-07 screening 422 inline) · **bio** (140 counter) ·
@@ -190,19 +190,19 @@
   composition avatar editor + uploads are §10, EXPECTED · D-3 **privacy Toggle lives in SETTINGS**
   (both boards' IA — "privacy (Settings, PROF-03)"), `PATCH /me {privacy friends|public}`; labelled
   "Public profile" (ASSUMPTION — the board's "LIMITED PUBLIC PROFILE" reads backwards vs the enum).
-- ⬜ W-C5 **Game-detail aggregate + ABOUT** — build `GET /catalog/games/:id` (the P2-flagged hole;
+- ✅ W-C5 (50fd467 server; ABOUT client rides W-D1) **Game-detail aggregate + ABOUT** — build `GET /catalog/games/:id` (the P2-flagged hole;
   folds friendsWhoOwn per the contract row) + fill the ABOUT tab (canonical facts · genres ·
   studio/publisher · contributor credit · CAT-09 counts).
 - ✅ W-C6 (abff0c0) **Profile → MY CONTRIBUTIONS entry** — the self-door gateway on the Profile
   (`{cardsDesigned} CARDS DESIGNED` teaser) → `/contributor/{me.id}` (the P13 screen's missing front
   door; its only prior entry was a DESIGNED-BY tap).
-- ⬜ W-C7 **OQ-150 build** — /catalog/new-releases + the rails answer (owed from the morning).
-- ⬜ W-C8 **NARROWED by A1: `/me/collection` must emit the `designer {userId, username}` rider on
+- ✅ W-C7 (50fd467) **OQ-150 build** — /catalog/new-releases + the rails answer (owed from the morning).
+- ✅ W-C8 (edd9710) **NARROWED by A1: `/me/collection` must emit the `designer {userId, username}` rider on
   custom cards** (contract 0.50 prescribes it; the switcher + friend serializers already emit it).
   The client is pre-widened and renders the name the moment it lands (honest COMMUNITY fallback
   meanwhile). Feed thumbs needed NO server half — every list payload already carries thumbUrl.
 
-- ⬜ W-C9 **Collection MY-ORDER arrange was never client-built** (found via W-A8's b1 audit;
+- ✅ W-C9 (arrange→M7; b1→list.reranked edd9710) **Collection MY-ORDER arrange was never client-built** (found via W-A8's b1 audit;
   orchestrator-verified — zero client calls to `PATCH /me/collection/reorder`): the COL-07 manual
   reorder exists server-side (contract 0.48/OQ-031) with no client gesture. Decide: build the
   arrange UI (the TOP-arrange DragRankList pattern now exists to reuse) or defer to M7 with a cite.
