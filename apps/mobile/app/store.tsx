@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, View, Text } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import type { CosmeticListItem, LedgerEntry, StorePack } from '@ingame/shared';
 import { ScreenHead, SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../src/components/ScreenHead';
 import { ScreenButton } from '../src/components/ScreenButton';
@@ -91,6 +91,10 @@ export default function Store() {
   const [claimBonus, { isLoading: claiming }] = useClaimDailyBonusMutation();
   const [validateIap, { isLoading: buying }] = useValidateIapMutation();
 
+  // The app-wide theme-preview override (F-13 C7) is set by the item-sheet on open. Grab the setter at
+  // SCREEN scope so we can guarantee teardown on leaving /store (see the focus backstop below).
+  const { setPreview } = useStorePreview();
+
   const balance = wallet?.balance ?? 0;
 
   const flashTick = useCallback((amount: number) => {
@@ -118,6 +122,17 @@ export default function Store() {
     setLanded(null);
     setOpenItem(null);
   }, [k]);
+
+  // walk2 backstop — the app-wide theme preview (F-13 C7) must NEVER outlive the store screen. The
+  // item-sheet's openItem-keyed clearer (CosmeticSheet, ~L700) only reverts on a CLEAN close (openItem →
+  // null while the sheet stays mounted+focused); a glitched close that strands the sheet open, or a
+  // blurred-but-still-mounted /store (expo-router keeps routes mounted — the device.tsx precedent),
+  // would otherwise leave the previewed theme (e.g. Berry) painting the WHOLE app while prefs + the
+  // server device record stay Midnight (the desync: app Berry, "My Device" Midnight). Tie an
+  // unconditional teardown to the screen's focus lifecycle: on BLUR/UNMOUNT, clear the override. This is
+  // purely additive belt-and-braces — the live preview still paints on open and clears on a clean close.
+  // setPreview is a stable useMemo'd dispatcher, so the callback identity never changes.
+  useFocusEffect(useCallback(() => () => setPreview({}), [setPreview]));
 
   // A transient (network) failure = the app's one offline signal (no client NetInfo yet — the
   // device-editor precedent; ASSUMPTION recorded in the manifest). A 4xx is a real refusal, not offline.
