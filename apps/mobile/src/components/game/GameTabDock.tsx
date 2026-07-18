@@ -39,6 +39,16 @@ const ITEMS: SectionDockItem<GameSection>[] = [
   },
 ];
 
-export function GameTabDock({ value, onChange }: { value: GameSection; onChange: (v: GameSection) => void }) {
-  return <SectionDock items={ITEMS} value={value} onChange={onChange} />;
+export function GameTabDock({
+  value,
+  onChange,
+  lockPlay = false,
+}: {
+  value: GameSection;
+  onChange: (v: GameSection) => void;
+  /** W-D1 (CATALOG posture) — PLAY wears an inline padlock and isn't reachable until you own the game. */
+  lockPlay?: boolean;
+}) {
+  const items = lockPlay ? ITEMS.map((it) => (it.value === 'play' ? { ...it, locked: true } : it)) : ITEMS;
+  return <SectionDock items={items} value={value} onChange={onChange} />;
 }

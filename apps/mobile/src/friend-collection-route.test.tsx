@@ -99,12 +99,13 @@ describe('P9 friend-collection route — read-only (COL-10/11)', () => {
     expect(screen.getByText('COMPARE')).toBeTruthy();
   });
 
-  it('an entry tap → the SOC-11 entry detail', () => {
+  it('an entry tap → the adaptive Game page in FRIEND posture (?via — the SOC-11 content)', () => {
     set({ data: FULL });
     render(wrap(<FriendCollection />));
     // Game 1 is both the now-playing hero and a shelf row (same label, same route) — press the first.
+    // W-D1 — the friend-entry route retired; the row opens /game/[id]?via=<friend> (FRIEND posture).
     fireEvent.press(screen.getAllByLabelText('Open Game 1')[0]);
-    expect(mockPush).toHaveBeenCalledWith('/user/friend-1111-1111-1111-111111111111/entry/g1');
+    expect(mockPush).toHaveBeenCalledWith('/game/g1?via=friend-1111-1111-1111-111111111111');
   });
 
   it('the friend TOP view is LIVE (P10 · COL-13) — read-only curated Top-10, no ARRANGE', () => {

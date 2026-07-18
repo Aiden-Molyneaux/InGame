@@ -94,7 +94,8 @@ export default function FriendCollection() {
   }
 
   const hero = items.find((i) => i.nowPlaying) ?? null;
-  const openEntry = (gameId: string) => router.push(`/user/${id}/entry/${gameId}`);
+  // W-D1 — the friend-entry route retired; a friend's game opens the adaptive Game page in FRIEND posture.
+  const openEntry = (gameId: string) => router.push(`/game/${gameId}?via=${id}`);
   const filterActive = q.trim() !== '' || statusFilter.size > 0;
   // COL-13 — the friend's curated Top-10 rides the friend/full profile read (friendProfile.top10). The
   // read-only TOP view-mode consumes it; hours/status for the #1 headliner sub join from the collection.

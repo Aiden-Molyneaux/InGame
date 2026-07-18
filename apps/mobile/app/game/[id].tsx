@@ -10,6 +10,9 @@ import { PlayDossier } from '../../src/components/game/PlayDossier';
 import { CardSwitcher } from '../../src/components/game/CardSwitcher';
 import { CardDetailSheet } from '../../src/components/game/CardDetailSheet';
 import { CommunityGallery } from '../../src/components/game/CommunityGallery';
+import { AboutTab } from '../../src/components/game/AboutTab';
+import { FriendGamePage } from '../../src/components/game/FriendGamePage';
+import { CatalogGamePage } from '../../src/components/game/CatalogGamePage';
 import { AdoptCardSheet, type AdoptOutcome } from '../../src/components/game/AdoptCardSheet';
 import { ReportSheet, type ReportTarget, type ReportActionOutcome } from '../../src/components/report/ReportSheet';
 import { GameTabDock, type GameSection } from '../../src/components/game/GameTabDock';
@@ -37,35 +40,61 @@ import {
   useBlockUserMutation,
 } from '../../src/store/communityApi';
 import { useSubmitReportMutation, type CreateReportRequest } from '../../src/store/reportApi';
-import { useGetFriendsWhoOwnQuery } from '../../src/store/friendApi';
-import { Avatar } from '../../src/components/Avatar';
 import { useAppSelector } from '../../src/store/hooks';
 import { SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../../src/components/ScreenHead';
 
-// Game page hub shell (§3.1 · design-spec §2.4b / §4.2) — the CARD-23 NAVIGATE target + the
-// M3-deferred per-game host. A root-level Stack screen inside the persistent DeviceShell (like
-// add-game), NavBand stays COLLECTION-active (ShellNav). M4 scope: PLAY (dual-face hero + dossier),
-// EDIT-STATS (the dossier→form, COL-02/03/05 + WTP-03 now-playing + COL-01 remove), CARDS (the
-// switcher over your own cards — default-card-limited per OQ-133), CardDetail INSPECT (CARD-23), and
-// L1/L2 lifecycle. Owned states source catalog facts from the collection entry (GET /catalog/games/:id
-// is unbuilt); board-state M4 gallery/adopt + M5 ABOUT + M6/M7/M8 are EXPECTED. Route key = gameId.
+// GamePage — the W-D1 posture RESOLVER (§3.1 · design-spec §2.4b / §4.2). ONE route `/game/[id]` adapts
+// by DATA + one param (never separate routes), so every entry point resolves the same way and the page
+// upgrades in place (add from CATALOG → re-renders OWN at the same URL):
+//   • `?via=<friendUserId>` present   → FRIEND (a friend's shelf / compare / now-playing; Q2 FRIEND WINS
+//                                       even when you also own it — a VIEW YOUR COPY link swaps to OWN)
+//   • else an entry in /me/collection → OWN (today's full page — the CARD-23 NAVIGATE target, unchanged)
+//   • else                            → CATALOG (unowned, no friend context — ABOUT default, PLAY locked)
+// The collection read + L1/L2 lifecycle run BEFORE the posture branch (F-16 — every hook unconditional,
+// no early-return desync); each posture body is its OWN component owning its own hooks. OWN is held
+// byte-faithful (a refactor-around, not a rewrite) apart from its ABOUT tab going live (W-C5 fill).
 export default function GamePage() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, via } = useLocalSearchParams<{ id: string; via?: string }>();
   const router = useRouter();
   const { data, isLoading, isError, refetch } = useGetCollectionQuery();
+
+  // ── lifecycle (L1 · L2) — gated on /me/collection, the OWN check + the compare source ──────────────
+  if (isLoading) {
+    return (
+      <Frame onBack={() => router.back()}>
+        <GameSkeleton />
+      </Frame>
+    );
+  }
+  if (isError || !data) {
+    return (
+      <Frame onBack={() => router.back()}>
+        <GameLoadError onRetry={() => void refetch()} onBack={() => router.back()} />
+      </Frame>
+    );
+  }
+
+  const entry = data.items.find((it) => it.gameId === id);
+  // Q2 — `via` present AND `entry` exists → FRIEND WINS (you navigated to see THEIRS). VIEW YOUR COPY
+  // inside FriendGamePage drops `via` (router.replace) → this re-renders OWN at the same URL.
+  if (via) return <FriendGamePage gameId={id} via={via} myEntry={entry} />;
+  if (entry) return <OwnGamePage entry={entry} />;
+  return <CatalogGamePage gameId={id} />;
+}
+
+// ── OWN posture — today's full page (dual-face hero + dossier · switcher + community gallery · ABOUT) ──
+// entry is guaranteed defined (the resolver branch); every OWN hook lives HERE and runs unconditionally.
+function OwnGamePage({ entry }: { entry: CollectionItem }) {
+  const router = useRouter();
   // the wallet balance feeds the adopt sheet's BuyBar meta + its pre-emptive NOT-ENOUGH state (M5 F-9 G3).
   const { data: wallet } = useGetWalletQuery();
   const styles = useStyles();
   const bgLocked = useSheetLocked(); // C2 (F-13) — freeze the page scroll while the inspect/adopt sheet is open
 
-  const entry = useMemo<CollectionItem | undefined>(
-    () => data?.items.find((it) => it.gameId === id),
-    [data, id],
-  );
   // The equipped design renders LIVE from its composition (0066; null → the CARD-18 default face).
   const equippedComposition = useMemo(
-    () => parseComposition(entry?.card.composition),
-    [entry?.card.composition],
+    () => parseComposition(entry.card.composition),
+    [entry.card.composition],
   );
 
   const [section, setSection] = useState<GameSection>('play');
@@ -96,10 +125,10 @@ export default function GamePage() {
   const shareToken = useAppSelector((s) => s.auth.accessToken);
   const [shareBusy, setShareBusy] = useState(false);
 
-  // Reset per-game view state when the route param changes — expo-router RE-RENDERS (does not remount)
-  // a dynamic route on param change, so a mid-edit draft/section would bleed across games if a future
-  // surface ever adds game→game navigation. Not reachable at M4 (only the Collection push enters here),
-  // but cheap to guard now. (murr — latent cross-game state leak.)
+  // Reset per-game view state when the game changes — expo-router RE-RENDERS (does not remount) a dynamic
+  // route on param change, so a mid-edit draft/section would bleed across games if a future surface adds
+  // game→game navigation while STAYING in OWN posture (a posture change unmounts this component instead).
+  // Cheap to guard. (murr — latent cross-game state leak.)
   useEffect(() => {
     setSection('play');
     setInspectOpen(false);
@@ -110,50 +139,20 @@ export default function GamePage() {
     setInspectCard(null);
     setBlockCard(null);
     setToast(null);
-  }, [id]);
-
-  // ── lifecycle (L1 · L2) ────────────────────────────────────────────────────────────────────────
-  if (isLoading) {
-    return (
-      <Frame onBack={() => router.back()}>
-        <GameSkeleton />
-      </Frame>
-    );
-  }
-  if (isError || !data) {
-    return (
-      <Frame onBack={() => router.back()}>
-        <GameLoadError onRetry={() => void refetch()} onBack={() => router.back()} />
-      </Frame>
-    );
-  }
-  if (!entry) {
-    // Not in your collection → the neutral / not-owned Game page is board-state M6 (EXPECTED).
-    return (
-      <Frame onBack={() => router.back()}>
-        <View style={styles.notOwned}>
-          <Text style={styles.notOwnedTitle}>NOT IN YOUR COLLECTION</Text>
-          <Text style={styles.notOwnedSub}>
-            The not-owned Game page (catalog facts · ADD · friends-who-own) arrives in a later milestone.
-          </Text>
-          <TertiaryLink label="Return to collection" chevron="leading-back" onPress={() => router.back()} />
-        </View>
-      </Frame>
-    );
-  }
+  }, [entry.gameId]);
 
   // ── the resolved-entry screen (stats edit PER-ROW inside PlayDossier — gate-5 B.8) ─────────────
   async function toggleNowPlaying() {
     setOverflowOpen(false);
     try {
-      await setNowPlaying({ gameId: entry!.nowPlaying ? null : entry!.gameId }).unwrap();
+      await setNowPlaying({ gameId: entry.nowPlaying ? null : entry.gameId }).unwrap();
     } catch {
       /* invalidation refetches; a failure just leaves the pin unchanged */
     }
   }
   async function doRemove() {
     try {
-      await removeEntry(entry!.entryId).unwrap();
+      await removeEntry(entry.entryId).unwrap();
       router.back();
     } catch {
       setConfirmRemove(false);
@@ -336,19 +335,13 @@ export default function GamePage() {
               />
             </>
           ) : (
-            <View style={styles.about}>
-              {/* P9 (CAT-09c) — the friends-who-own named list goes live (rows → their profile). The rest
-                  of ABOUT (catalog facts · chips · PresenceStats · suggest-edit) still needs the aggregate
-                  game-detail read (unbuilt) — EXPECTED(later). */}
-              <FriendsWhoOwnSection
-                gameId={entry.gameId}
-                onOpenUser={(userId) => router.push(`/user/${userId}`)}
-              />
-              <Text style={styles.aboutTitle}>ABOUT</Text>
-              <Text style={styles.aboutSub}>
-                Catalog facts · community presence · suggest-edit arrive with the game-detail read (CAT-06/09).
-              </Text>
-            </View>
+            /* W-D1 / W-C5 — ABOUT now renders the game-detail fill (facts · genres · studio · CAT-05
+               contributor · CAT-09 presence · CAT-09c friends-who-own), shared with FRIEND + CATALOG. */
+            <AboutTab
+              gameId={entry.gameId}
+              onViewContributor={(userId) => router.push(`/contributor/${userId}`)}
+              onOpenUser={(userId) => router.push(`/user/${userId}`)}
+            />
           )}
         </ScrollView>
 
@@ -495,42 +488,6 @@ function factsLine(entry: CollectionItem): string {
     .toUpperCase();
 }
 
-// FriendsWhoOwn (P9 · CAT-09c) — the ABOUT-tab named list of friends who own this game (GET /catalog/
-// games/:id/friends-who-own). Friend-gated + block-filtered server-side; PROF-03 hours-gating (a friend
-// who hides hours has `hours` absent → the row omits the stat). A row → their profile (`/user/:id`).
-function FriendsWhoOwnSection({ gameId, onOpenUser }: { gameId: string; onOpenUser: (userId: string) => void }) {
-  const styles = useStyles();
-  const { data, isLoading } = useGetFriendsWhoOwnQuery(gameId);
-  if (isLoading) return null; // the ABOUT tab already carries its own copy; a quiet no-op while loading
-  const rows = data?.friendsWhoOwn ?? [];
-  return (
-    <View style={styles.fwoBlock}>
-      <Text style={styles.fwoHead}>FRIENDS WHO OWN IT — {data?.count ?? 0}</Text>
-      {rows.length === 0 ? (
-        <Text style={styles.fwoEmpty}>None of your friends own this yet.</Text>
-      ) : (
-        <View style={styles.fwoList}>
-          {rows.map((r) => (
-            <Pressable
-              key={r.userId}
-              accessibilityRole="button"
-              accessibilityLabel={`Open ${r.username}'s profile`}
-              onPress={() => onOpenUser(r.userId)}
-              style={({ pressed }) => [styles.fwoRow, pressed && styles.fwoRowPressed]}
-            >
-              <Avatar username={r.username} avatarUrl={r.avatarUrl} size={30} />
-              <Text style={styles.fwoName} numberOfLines={1}>{r.username.toUpperCase()}</Text>
-              <View style={styles.fwoSpacer} />
-              {r.hours !== undefined ? <Text style={styles.fwoHours}>{r.hours.toLocaleString('en-US')} HRS</Text> : null}
-              <Text style={styles.fwoChev}>›</Text>
-            </Pressable>
-          ))}
-        </View>
-      )}
-    </View>
-  );
-}
-
 // ── the shared frame for the lifecycle/edge states (header + return, no data yet) ──────────────────
 function Frame({ children, onBack }: { children: ReactNode; onBack: () => void }) {
   const styles = useStyles();
@@ -629,23 +586,6 @@ const useStyles = themedStyles((t) => ({
   },
   actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.md },
   mini: { paddingVertical: t.space.md, paddingHorizontal: t.space.lg },
-  about: { padding: t.space.lg, backgroundColor: t.scr.panel, borderWidth: 1, borderColor: t.scr.hairline, gap: t.space.md },
-  aboutTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
-  aboutSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, lineHeight: 16 },
-  // P9 — friends-who-own (CAT-09c)
-  fwoBlock: { gap: t.space.sm },
-  fwoHead: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 2 },
-  fwoEmpty: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.3 },
-  fwoList: { gap: t.space.sm },
-  fwoRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.md, paddingVertical: t.space.sm },
-  fwoRowPressed: { opacity: 0.7 },
-  fwoName: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 0.5, flexShrink: 1 },
-  fwoSpacer: { flex: 1 },
-  fwoHours: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
-  fwoChev: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.faint },
-  notOwned: { alignItems: 'center', gap: t.space.md, paddingVertical: t.space.xxl },
-  notOwnedTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
-  notOwnedSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, textAlign: 'center', lineHeight: 16 },
   // skeleton
   skBar: { backgroundColor: t.scr.panel },
   skDual: { flexDirection: 'row', justifyContent: 'center', gap: t.space.lg, paddingVertical: t.space.md },

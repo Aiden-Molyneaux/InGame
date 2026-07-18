@@ -87,11 +87,12 @@ describe('P9 Compare route — the SOC-03 postures', () => {
     expect(screen.getAllByText('YOU').length).toBeGreaterThanOrEqual(2);
   });
 
-  it('a card tap → their card opens the entry detail, yours the game page', () => {
+  it('a card tap → their card opens the game page in FRIEND posture (?via), yours the OWN game page', () => {
     set({ data: FULL });
     render(wrap(<Compare />));
+    // W-D1 — the friend-entry route retired; their card opens /game/[id]?via=<friend> (FRIEND posture).
     fireEvent.press(screen.getByLabelText('Open Destiny 2 — their card'));
-    expect(mockPush).toHaveBeenCalledWith('/user/friend-1111-1111-1111-111111111111/entry/g1');
+    expect(mockPush).toHaveBeenCalledWith('/game/g1?via=friend-1111-1111-1111-111111111111');
     fireEvent.press(screen.getByLabelText('Open Destiny 2 — your card'));
     expect(mockPush).toHaveBeenCalledWith('/game/g1');
   });

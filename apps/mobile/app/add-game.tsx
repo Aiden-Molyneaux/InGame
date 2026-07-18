@@ -280,6 +280,7 @@ function RailFan({
 
 function FocusedMeta({ item }: { item: CatalogItem }) {
   const styles = useStyles();
+  const router = useRouter();
   const year = item.releaseDate ? item.releaseDate.slice(0, 4) : null;
   const sub = [year, item.studio].filter(Boolean).join(' · ').toUpperCase();
   return (
@@ -294,6 +295,17 @@ function FocusedMeta({ item }: { item: CatalogItem }) {
         IN {item.collectionsCount} COLLECTION{item.collectionsCount === 1 ? '' : 'S'} ·{' '}
         {item.friendsHaveCount} FRIEND{item.friendsHaveCount === 1 ? '' : 'S'} HAVE IT
       </Text>
+      {/* W-D1 Q3 — the INSPECT affordance: see the ABOUT page + Community Cards before adding (the B7
+          shelf-chevron grammar). Resolves the adaptive Game page: CATALOG when unowned, OWN if owned. */}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Inspect ${item.name}`}
+        onPress={() => router.push(`/game/${item.id}`)}
+        hitSlop={8}
+        style={({ pressed }) => pressed && styles.metaInspectPressed}
+      >
+        <Text style={styles.metaInspect}>INSPECT ›</Text>
+      </Pressable>
     </View>
   );
 }
@@ -509,6 +521,8 @@ const useStyles = themedStyles((t) => ({
   metaTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5, textAlign: 'center' },
   metaSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, letterSpacing: 1 }, // R2 — inline year·studio (body/dim), baseline in the title line
   metaPresence: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 1, textAlign: 'center' },
+  metaInspect: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1, textAlign: 'center', marginTop: 2 },
+  metaInspectPressed: { opacity: 0.6 },
   noneWrap: { gap: t.space.sm, padding: t.space.lg, backgroundColor: t.scr.panel },
   noneTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
   noneSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, lineHeight: 16 },

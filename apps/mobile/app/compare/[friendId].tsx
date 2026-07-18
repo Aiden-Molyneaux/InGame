@@ -112,7 +112,7 @@ export default function Compare() {
                 key={g.gameId}
                 game={g}
                 onOpenYours={(gameId) => router.push(`/game/${gameId}`)}
-                onOpenTheirs={(gameId) => router.push(`/user/${friendId}/entry/${gameId}`)}
+                onOpenTheirs={(gameId) => router.push(`/game/${gameId}?via=${friendId}`)}
               />
             ))}
           </View>

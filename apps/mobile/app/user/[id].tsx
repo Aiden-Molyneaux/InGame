@@ -194,7 +194,7 @@ export default function UserProfile() {
 
           {/* NOW PLAYING (WTP-03 · P9 fix-round) — the friend's pin off the C4 `nowPlaying` payload
               (flattened card, no entryId). Tap → the SOC-11 entry detail. Null (no pin) → absent. */}
-          <FriendNowPlaying nowPlaying={data.nowPlaying} onOpen={(gameId) => router.push(`/user/${data.id}/entry/${gameId}`)} />
+          <FriendNowPlaying nowPlaying={data.nowPlaying} onOpen={(gameId) => router.push(`/game/${gameId}?via=${data.id}`)} />
 
           {/* THEIR DEVICE (DEV-02/04 · decision 0012 · P9 fix-round) — the {shell · theme · stickers}
               readout off the C4 `device` payload (wire name `shellId`, not /me/device's `activeShellId`).

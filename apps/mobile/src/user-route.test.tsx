@@ -193,7 +193,8 @@ describe('P9 friend-profile route — the shape matrix', () => {
     expect(screen.getByText('RESIDENT EVIL')).toBeTruthy();
     expect(screen.getByText('24 HRS LOGGED')).toBeTruthy();
     fireEvent.press(screen.getByLabelText('Open Resident Evil'));
-    expect(mockPush).toHaveBeenCalledWith('/user/friend-1111-1111-1111-111111111111/entry/g-np-1');
+    // W-D1 — the friend-entry route retired; NOW PLAYING opens /game/[id]?via=<friend> (FRIEND posture).
+    expect(mockPush).toHaveBeenCalledWith('/game/g-np-1?via=friend-1111-1111-1111-111111111111');
   });
 
   it('C4 trio — a null trio renders NOTHING for all three rows, quietly (null-guards)', () => {

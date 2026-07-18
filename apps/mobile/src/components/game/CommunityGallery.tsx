@@ -19,6 +19,7 @@ export function CommunityGallery({
   onInspect,
   onDesignACard,
   onViewDesigner,
+  canAdopt = true,
 }: {
   gameId: string;
   onInspect: (card: GalleryCardView) => void;
@@ -26,6 +27,14 @@ export function CommunityGallery({
   onDesignACard: () => void;
   /** P13 (E8a) — tapping the DESIGNED-BY credit routes to that contributor's profile. */
   onViewDesigner: (userId: string) => void;
+  /**
+   * W-D1 Q4 (AS-5, the load-bearing guard) — BROWSE-ONLY when false: the CATALOG posture cannot adopt a
+   * card for a game you don't own (adoption routes through Add-Game). The cell's inspect/adopt press is
+   * suppressed STRUCTURALLY (no `onInspect` wired → the AdoptCardSheet is never mountable here), so a
+   * careless reuse can't slip an adopt path into CATALOG. Faces + counts + the designer credit still
+   * render (browsing is allowed); only the adopt affordance is gone.
+   */
+  canAdopt?: boolean;
 }) {
   const styles = useStyles();
   const { data, isLoading, isError, refetch } = useGetGameGalleryQuery(gameId);
@@ -57,7 +66,7 @@ export function CommunityGallery({
             <GalleryCell
               key={card.id}
               card={card}
-              onPress={() => onInspect(card)}
+              onPress={canAdopt ? () => onInspect(card) : undefined}
               onViewDesigner={() => onViewDesigner(card.designer.userId)}
             />
           ))}
@@ -76,24 +85,35 @@ function GalleryCell({
   onViewDesigner,
 }: {
   card: GalleryCardView;
-  onPress: () => void;
+  /** The inspect/adopt press — UNDEFINED in browse-only mode (CATALOG, Q4): the art + foot render as
+      plain Views, so there is no adopt path at all (the sheet is never reachable). */
+  onPress?: () => void;
   onViewDesigner: () => void;
 }) {
   const styles = useStyles();
   const free = card.priceForYou <= 0;
-  const a11y = card.byViewer
-    ? `${card.name} by you, adopted ${card.adoptionCount} times`
-    : `${card.name} by ${card.designer.username}, ${card.adopted ? 'already adopted' : free ? 'free' : `${card.priceForYou} pixels`} to adopt, adopted ${card.adoptionCount} times`;
+  const a11y = !onPress
+    ? `${card.name} by ${card.byViewer ? 'you' : card.designer.username}, adopted ${card.adoptionCount} times`
+    : card.byViewer
+      ? `${card.name} by you, adopted ${card.adoptionCount} times`
+      : `${card.name} by ${card.designer.username}, ${card.adopted ? 'already adopted' : free ? 'free' : `${card.priceForYou} pixels`} to adopt, adopted ${card.adoptionCount} times`;
   // P13 (E8a) / parvati F3 — the cell is a plain View of SIBLING Pressables, never a Pressable inside a
   // Pressable: RN-web routes a nested press to the OUTER responder (the credit tap opened the adopt
   // sheet; jest couldn't catch it — fireEvent targets the inner node in isolation). The art (and the
   // foot, kept tappable) inspect; the credit line routes to the contributor profile. No nesting = no
   // responder-order subtleties on either platform.
+  // W-D1 Q4 — with no `onPress` (CATALOG browse-only) the art + foot are plain Views: no adopt affordance.
   return (
     <View style={styles.cell}>
-      <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={a11y}>
-        <FlatCardImage title={card.name} imageUrl={card.imageUrl} thumbUrl={card.thumbUrl} size="cell" />
-      </Pressable>
+      {onPress ? (
+        <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={a11y}>
+          <FlatCardImage title={card.name} imageUrl={card.imageUrl} thumbUrl={card.thumbUrl} size="cell" />
+        </Pressable>
+      ) : (
+        <View accessible accessibilityLabel={a11y}>
+          <FlatCardImage title={card.name} imageUrl={card.imageUrl} thumbUrl={card.thumbUrl} size="cell" />
+        </View>
+      )}
       {/* the DESIGNED-BY credit → the contributor profile; "BY YOU" routes to your own. */}
       <Pressable
         onPress={onViewDesigner}
@@ -111,24 +131,41 @@ function GalleryCell({
           )}
         </Text>
       </Pressable>
-      {/* the foot stays an inspect surface (it always was) — its own sibling Pressable, hidden from the
-          SR (the art Pressable carries the full a11y sentence; this would be a duplicate announcement). */}
-      <Pressable onPress={onPress} accessible={false} style={styles.foot}>
-        {/* provenance wins over price: an already-adopted card (or your own) never shows a buy price. */}
-        {card.byViewer || card.adopted ? (
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>{card.byViewer ? 'YOURS' : 'ADOPTED'}</Text>
-          </View>
-        ) : free ? (
-          <View style={styles.freeChip}>
-            <Text style={styles.freeChipText}>FREE</Text>
-          </View>
-        ) : (
-          <PriceChip pixels={card.priceForYou} />
-        )}
-        <AdoptCount count={card.adoptionCount} />
-      </Pressable>
+      {/* the foot — an inspect surface when adopt-capable (its own sibling Pressable, hidden from the SR:
+          the art already carries the full a11y sentence). In browse-only mode (no onPress) it is a plain
+          View — the price/count still read, but there is no adopt tap. */}
+      {onPress ? (
+        <Pressable onPress={onPress} accessible={false} style={styles.foot}>
+          <GalleryFoot card={card} free={free} />
+        </Pressable>
+      ) : (
+        <View style={styles.foot}>
+          <GalleryFoot card={card} free={free} />
+        </View>
+      )}
     </View>
+  );
+}
+
+// The gallery cell's foot content — provenance wins over price: an already-adopted card (or your own)
+// never shows a buy price. Shared by the adopt-capable + browse-only feet so the two can't drift.
+function GalleryFoot({ card, free }: { card: GalleryCardView; free: boolean }) {
+  const styles = useStyles();
+  return (
+    <>
+      {card.byViewer || card.adopted ? (
+        <View style={styles.tag}>
+          <Text style={styles.tagText}>{card.byViewer ? 'YOURS' : 'ADOPTED'}</Text>
+        </View>
+      ) : free ? (
+        <View style={styles.freeChip}>
+          <Text style={styles.freeChipText}>FREE</Text>
+        </View>
+      ) : (
+        <PriceChip pixels={card.priceForYou} />
+      )}
+      <AdoptCount count={card.adoptionCount} />
+    </>
   );
 }
 

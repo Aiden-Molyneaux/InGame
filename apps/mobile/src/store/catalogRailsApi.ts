@@ -1,5 +1,5 @@
-import type { CatalogListResponse } from '@ingame/shared';
-import { catalogListResponseSchema } from '@ingame/shared';
+import type { CatalogListResponse, GameDetail } from '@ingame/shared';
+import { catalogListResponseSchema, gameDetailSchema } from '@ingame/shared';
 import { api } from './api';
 
 // walk2 N2b — the Add-Game pre-query rail trio (CAT-11 NEW RELEASES + CAT-12 FRIENDS ARE PLAYING). Both
@@ -28,8 +28,26 @@ const catalogRailsApi = api.injectEndpoints({
       transformResponse: (raw): CatalogListResponse => catalogListResponseSchema.parse(raw),
       providesTags: ['Catalog'],
     }),
+
+    // GET /catalog/games/:id (CAT-05/09/09c, M6 W-C5 / W-D1 GAP-1) — the game-detail AGGREGATE: canonical
+    // facts (id/name/studio/publisher/releaseDate · genres) + CAT-05 contributor + CAT-09
+    // collectionsCount/friendsHaveCount + the own-it `inCollection` flag + the CAT-09c named `friendsWhoOwn`
+    // list. The shared ABOUT-tab source across ALL Game-page postures (OWN/FRIEND/CATALOG) + the CATALOG
+    // PLAY-block facts. The community card GALLERY is NOT here (its own route, GET /games/:id/cards). Server
+    // is LIVE (W-C5, 50fd467); this closes the CLIENT half. Parsed at the seam (F31). Provides `Catalog` so
+    // an add/remove — which flips `inCollection` + moves the CAT-09 counts — re-reads it, exactly as it
+    // re-reads popular/search.
+    getGameDetail: build.query<GameDetail, string>({
+      query: (gameId) => `/catalog/games/${gameId}`,
+      transformResponse: (raw): GameDetail => gameDetailSchema.parse(raw),
+      providesTags: ['Catalog'],
+    }),
   }),
 });
 
-export const { useGetNewReleasesQuery, useGetFriendsActiveQuery } = catalogRailsApi;
+export const {
+  useGetNewReleasesQuery,
+  useGetFriendsActiveQuery,
+  useGetGameDetailQuery,
+} = catalogRailsApi;
 export { catalogRailsApi };
