@@ -278,9 +278,14 @@ briefs for M7 get this line verbatim.
   same seam). **This is now a build item, not a stretch.**
 
 ## ROUND 4 — Wave C review notes (2026-07-18, owner tested cross-device iPhone↔Android)
-- 🔧 N1 (P2 server, ab9d805) **Contributor REACHED is inflated** — "29 reached" with <29 users: summing
-  per-game collection counts double-counts multi-game owners → fix to COUNT(DISTINCT user) across the
-  contributor's games (CAT-10). Server; API restart.
+- ✅ N1 (P2 server, dc05436) **Contributor REACHED is inflated** — "29 reached" with <29 users: summing
+  per-game collection counts double-counts multi-game owners → fixed to COUNT(DISTINCT user) across the
+  contributor's games via a distinct-owner subquery (`collectionRepo.distinctUsersReachedByGames`, the
+  SYS-01-COMMUNITY-AGGREGATE class; per-game `collectionsCount` tiles kept as-is). **CAT-10 reading:
+  NOT self-excluded** — CAT-07/CAT-09a say "how many USERS' collections contain the game" (no "others"
+  wording) and the per-game tiles already include the contributor's own ownership, so REACHED counts a
+  self-owning contributor too (internal consistency). Slice-tested (3 owners of 2 games → 3 not 6;
+  self-inclusion → 4). Server; API restart.
 - ✅ N2b (P10, 94ef76b) **Add-Game rail trio wired live** — only POPULAR was live; NEW RELEASES missing +
   FRIENDS-ARE-PLAYING a "soon" placeholder (endpoints 404 at build). C7/P7 built both — wired NEW RELEASES
   (CAT-11) + FRIENDS-ACTIVE (CAT-12) via a new `catalogRailsApi` injectEndpoints slice (both return the
