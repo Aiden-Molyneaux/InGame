@@ -103,9 +103,32 @@ describe('PROF-05 / COL-13: Profile Top-3 doors', () => {
     expect(mockPush).toHaveBeenCalledWith('/(tabs)/collection');
   });
 
-  it('empty top10 shows the curate nudge, not a hours-derived fallback', () => {
+  it('empty top10 shows the 3 ghost seats + the board hint, not a hours-derived fallback', () => {
     mockMe = { data: ME([]), isLoading: false, isError: false, refetch: jest.fn() };
     renderProfile();
-    expect(screen.getByText(/rank them in your Collection/i)).toBeTruthy();
+    // walk2 A6 — the board's always-3-seat frame: three dashed ghost seats + the hint (profile-states :797)
+    expect(screen.getByLabelText('Seat 1 empty — rank your top 10')).toBeTruthy();
+    expect(screen.getByLabelText('Seat 3 empty — rank your top 10')).toBeTruthy();
+    expect(screen.getByText(/Rank your Top 10 — the best 3 show here/i)).toBeTruthy();
+  });
+
+  it('walk2 A6: a 2-item Top-3 packs LEFT (flex-start), seat 3 a ghost — never edge-spread', () => {
+    mockMe = { data: ME([TOP(1), TOP(2)]), isLoading: false, isError: false, refetch: jest.fn() };
+    renderProfile();
+    // seat 3 renders as the ghost (the always-3 frame), so nothing spreads to the far edge
+    expect(screen.getByLabelText('Seat 3 empty — rank your top 10')).toBeTruthy();
+    // the container packs left: flex-start, not the space-between that spread 2 seats to the edges.
+    // Walk up from a seat to the first row container that declares justifyContent (the top3 View —
+    // Pressable interposes host views, so .parent alone isn't it).
+    type Node = { parent: Node | null; props?: { style?: unknown } };
+    let p = (screen.getByLabelText('Open Top 1 in your Top 10') as unknown as Node).parent;
+    let flat: Record<string, unknown> = {};
+    while (p) {
+      flat = Object.assign({}, ...[p.props?.style ?? {}].flat(Infinity).filter(Boolean));
+      if (flat.flexDirection === 'row' && flat.justifyContent !== undefined) break;
+      p = p.parent;
+    }
+    expect(flat.justifyContent).toBe('flex-start');
+    expect(flat.flexDirection).toBe('row');
   });
 });

@@ -179,11 +179,15 @@ export default function Profile() {
         </Section>
 
         <Section title="Top 3" action={<TertiaryLink label="View top 10" onPress={openTopView} />}>
-          {top3.length > 0 ? (
-            <View style={styles.top3}>
-              {top3.map((g) => (
+          {/* walk2 A6 — the board's ALWAYS-3-SEAT frame (profile-states :797–801): filled seats wear the
+              card, empty seats the dashed `.ghost-set` (rank + "+", → the TOP view to curate). Seats pack
+              LEFT (flex-start + the gap) — the old space-between spread a 2-seat set to the screen edges. */}
+          <View style={styles.top3}>
+            {[1, 2, 3].map((rank) => {
+              const g = top3.find((e) => e.rank === rank);
+              return g ? (
                 <Pressable
-                  key={g.gameId}
+                  key={rank}
                   style={styles.topSeat}
                   accessibilityRole="button"
                   accessibilityLabel={`Open ${g.title} in your Top 10`}
@@ -195,11 +199,25 @@ export default function Profile() {
                   <EntryCard title={g.title} card={g.card} size="cell" />
                   <RankChip rank={g.rank} />
                 </Pressable>
-              ))}
-            </View>
-          ) : (
-            <Text style={styles.emptyLine}>Your curated Top 3 lands here — rank them in your Collection.</Text>
-          )}
+              ) : (
+                <Pressable
+                  key={rank}
+                  style={styles.topSeat}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Seat ${rank} empty — rank your top 10`}
+                  onPress={openTopView}
+                >
+                  <View style={styles.ghostSeat}>
+                    <Text style={styles.ghostPlus}>+</Text>
+                  </View>
+                  <RankChip rank={rank} />
+                </Pressable>
+              );
+            })}
+          </View>
+          {top3.length === 0 ? (
+            <Text style={styles.emptyLine}>Rank your Top 10 — the best 3 show here.</Text>
+          ) : null}
         </Section>
 
         <Section title="Now Playing">
@@ -342,8 +360,12 @@ const useStyles = themedStyles((t) => ({
   heroMeta: { flex: 1, gap: 3 },
   heroTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5 },
   heroSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.brand.gold, letterSpacing: 1 },
-  top3: { flexDirection: 'row', gap: t.space.lg, justifyContent: 'space-between' },
+  // walk2 A6 — flex-start + gap: partial sets pack LEFT (space-between spread 2 seats to the edges).
+  top3: { flexDirection: 'row', gap: t.space.lg, justifyContent: 'flex-start' },
   topSeat: { gap: t.space.sm, alignItems: 'center' },
+  // the board's `.ghost-set` empty seat (profile-states :385): dashed cell-size silhouette + "+".
+  ghostSeat: { width: 96, height: 134, borderWidth: 1.5, borderColor: t.scr.faint, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center' },
+  ghostPlus: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.faint },
   nowRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.lg },
   nowMeta: { gap: 2 },
   nowTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink },

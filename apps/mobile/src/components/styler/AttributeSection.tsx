@@ -103,12 +103,13 @@ export function AttributeSection({
   );
 }
 
-/** The premium tile badge (CARD-13) — placed top-left so it never collides with the selection pip. */
-function Badge({ badge, selected }: { badge?: TileBadge; selected: boolean }) {
+/** The premium tile badge (CARD-13) — placed top-left so it never collides with the selection pip.
+ *  `style` lets the CardRail hoist it into its ABOVE-STRIP overlay layer (walk2 A5). */
+function Badge({ badge, selected, style }: { badge?: TileBadge; selected: boolean; style?: object }) {
   const styles = useStyles();
   if (!badge) return null;
   return (
-    <View style={styles.badge} pointerEvents="none">
+    <View style={[styles.badge, style]} pointerEvents="none">
       {badge.owned ? (
         <View style={styles.ownedMini}>
           <Text style={styles.ownedMiniText}>✓</Text>
@@ -163,7 +164,6 @@ function CardRail({
               onPress={() => onSelect(o.id)}
               style={[styles.cardTile, { left: i * TILE_STRIDE, width: TILE_W, height: TILE_H }, sel && styles.tileSel]}
             >
-              <Badge badge={badges?.[o.id]} selected={sel} />
               <View style={{ height: CARD_H, width: CARD_W }} />
               <Text style={[styles.name, sel && styles.nameSel]} numberOfLines={1}>
                 {o.name}
@@ -179,6 +179,19 @@ function CardRail({
           </SkiaErrorBoundary>
         </View>
         {selIdx >= 0 ? <StateMark size={8} style={{ position: 'absolute', top: 3, left: selIdx * TILE_STRIDE + TILE_W - 12, zIndex: 2 }} /> : null}
+        {/* walk2 A5 — the premium badges (PriceChip / ✓ / PREVIEW) render AFTER the strip canvas, the
+            SAME hoist the selection pip got at decision 0068 ("the pip rides over the strip so a card
+            never occludes it"). Inside the Pressable tiles they were EARLIER siblings of the absolute
+            stripLayer — RN paints later siblings on top, and a child's zIndex can't escape its parent —
+            so the one-strip card canvas painted OVER every price: the M5-era "cost hidden" bug. */}
+        {options.map((o, i) => (
+          <Badge
+            key={`badge-${o.id}`}
+            badge={badges?.[o.id]}
+            selected={o.id === selectedId}
+            style={{ left: i * TILE_STRIDE + 3, top: 3 }}
+          />
+        ))}
       </View>
     </ScrollView>
   );
