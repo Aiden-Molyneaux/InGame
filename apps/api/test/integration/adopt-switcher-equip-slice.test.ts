@@ -12,7 +12,7 @@ import { COMPOSITION_SCHEMA_VERSION } from '@ingame/shared';
 // adopter (switcher lists it, flattened-only) and EQUIPPABLE (renders on /me/collection), survive the
 // designer unpublishing (CARD-20 adopters-keep), and never leak into the designer's own /me/cards shelf.
 // Plus the SOC-09 §0.6 block endpoints (POST/DELETE /me/blocks) the P8 client already calls.
-// Tags: COL-06, CARD-15/18/20, ECON-04, SOC-09, OQ-122, SYS-01/07.
+// Tags: COL-01, COL-06, CARD-01/15/18/20, ECON-04, SOC-09, OQ-122, SYS-01/07.
 // Standing authz tokens covered here (actor-B → 4xx): authz:block_create · authz:block_delete.
 
 let container: StartedPostgreSqlContainer;
@@ -137,6 +137,38 @@ describe('COL-06/ECON-04: an adopted card is visible + equippable to the adopter
     expect(entryItem.card.id).toBe(cardId);
     expect(entryItem.card.imageUrl).toBeTruthy();
     expect('composition' in entryItem.card).toBe(false);
+    // C8 (contract 0.50 / W-C8) — the equipped ADOPTED card carries the REAL designer's attribution
+    // (a, the original designer), NOT the adopter (b): the client renders the name instead of "COMMUNITY".
+    expect(entryItem.card.designer).toEqual({ userId: a.id, username: a.username });
+  });
+
+  it('C8 (CARD-01): an equipped OWN custom card carries designer = self on /me/collection', async () => {
+    const a = await registerUser();
+    const game = await seedGame(a.token, 'Own Designer RPG');
+    const { id: cardId } = await publishFresh(a.token, game.id, 40, 'My Own Card');
+    const entry = await addEntry(a.token, game.id);
+
+    // equip my OWN published card — the PATCH response already carries the designer rider (self).
+    const equip = await request(app)
+      .patch(`/api/me/collection/${entry}`)
+      .set(authed(a.token))
+      .send({ activeCardDesignId: cardId });
+    expect(equip.status).toBe(200);
+    expect(equip.body.card.isCustom).toBe(true);
+    expect(equip.body.card.designer).toEqual({ userId: a.id, username: a.username });
+
+    // …and so does GET /me/collection (own card → credited to SELF, not "COMMUNITY"/"You").
+    const shelf = await request(app).get('/api/me/collection').set(authed(a.token));
+    const item = shelf.body.items.find((i: { entryId: string }) => i.entryId === entry);
+    expect(item.card.designer).toEqual({ userId: a.id, username: a.username });
+
+    // the default-face stub (an unequipped entry) carries NO designer — attribution is custom-only.
+    const game2 = await seedGame(a.token, 'No Card RPG');
+    const entry2 = await addEntry(a.token, game2.id);
+    const shelf2 = await request(app).get('/api/me/collection').set(authed(a.token));
+    const item2 = shelf2.body.items.find((i: { entryId: string }) => i.entryId === entry2);
+    expect(item2.card.id).toBe('default');
+    expect('designer' in item2.card).toBe(false);
   });
 
   it('a non-adopted FOREIGN card can NOT be equipped → 422 unknown_design (SYS-07 — no existence oracle)', async () => {

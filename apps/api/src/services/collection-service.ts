@@ -17,6 +17,7 @@ import * as catalogRepo from '../repositories/catalog-repo';
 import * as profileRepo from '../repositories/profile-repo';
 import * as cardRepo from '../repositories/card-repo';
 import * as adoptionRepo from '../repositories/adoption-repo';
+import type { AdoptedDesignRow } from '../repositories/adoption-repo';
 import { toAdoptedCardRider, toCardRider } from './card-service';
 import { NotFoundError, ValidationError } from '../errors/AppError';
 import type { CollectionEntryRow, GameRow } from '../db/schema';
@@ -68,25 +69,49 @@ function toItem(
 }
 
 /**
+ * The `self` identity for the C8 designer rider (CARD-01) — the caller's own userId + username.
+ */
+interface SelfDesigner {
+  userId: string;
+  username: string;
+}
+
+/**
+ * C8 (contract 0.50 rider / W-C8) — the CARD-01 `designer` attribution on a /me/collection CUSTOM card.
+ * The caller's OWN design is credited to SELF; an ADOPTED design keeps the ORIGINAL designer's
+ * attribution (the `AdoptedDesignRow` already carries it — the SAME resolution the switcher + friend
+ * serializers use, reused not re-derived). The default-face stub carries no designer. Additive-optional
+ * so the client renders the name the day it lands (honest COMMUNITY fallback meanwhile).
+ */
+const adoptedDesigner = (adopted: AdoptedDesignRow): SelfDesigner => ({
+  userId: adopted.designerId,
+  username: adopted.designerUsername,
+});
+
+/**
  * Resolve the equipped `card` rider (COL-06/CARD-18): the caller's OWN equipped design (composition
  * rides, owner-only) → else an ADOPTED design they hold a grant for (flattened-only, OQ-122) → else the
  * default-face stub. An equipped adopted design must still render on the shelf — the switcher can equip
- * it, so the serializer must resolve it (the COL-06 gap this fix closes).
+ * it, so the serializer must resolve it (the COL-06 gap this fix closes). `self` carries the C8 designer
+ * rider onto a custom face (own → self, adopted → the original designer).
  */
 async function resolveCardRider(
   actorId: string,
   activeCardDesignId: string | null,
+  self: SelfDesigner,
   exec?: Executor,
 ): Promise<CollectionCard> {
   if (!activeCardDesignId) return toCardRider(null);
   const owned = exec
     ? await cardRepo.findOwnedDesign(actorId, activeCardDesignId, exec)
     : await cardRepo.findOwnedDesign(actorId, activeCardDesignId);
-  if (owned) return toCardRider(owned);
+  if (owned) return { ...toCardRider(owned), designer: self }; // C8 — own card credited to self
   const adopted = exec
     ? await adoptionRepo.findAdoptedDesign(actorId, activeCardDesignId, exec)
     : await adoptionRepo.findAdoptedDesign(actorId, activeCardDesignId);
-  return adopted ? toAdoptedCardRider(adopted) : toCardRider(null);
+  return adopted
+    ? { ...toAdoptedCardRider(adopted), designer: adoptedDesigner(adopted) } // C8 — real designer
+    : toCardRider(null);
 }
 
 async function genresByGameId(gameIds: string[], exec?: Executor): Promise<Map<string, GenreView[]>> {
@@ -111,7 +136,8 @@ async function assembleItem(
   const user = exec
     ? await profileRepo.getOwnProfile(actorId, exec)
     : await profileRepo.getOwnProfile(actorId);
-  const card = await resolveCardRider(actorId, entry.activeCardDesignId, exec);
+  const self: SelfDesigner = { userId: actorId, username: user?.username ?? '' };
+  const card = await resolveCardRider(actorId, entry.activeCardDesignId, self, exec);
   return toItem(entry, game, genres.get(game.id) ?? [], user?.nowPlayingGameId ?? null, card);
 }
 
@@ -179,12 +205,15 @@ export async function listCollection(actorId: string): Promise<CollectionRespons
     actorId,
     equippedIds.filter((id) => !ownedDesigns.has(id)),
   );
+  const self: SelfDesigner = { userId: actorId, username: user?.username ?? '' }; // C8 — own-card credit
   const riderFor = (id: string | null): CollectionCard => {
     if (!id) return toCardRider(null);
     const owned = ownedDesigns.get(id);
-    if (owned) return toCardRider(owned);
+    if (owned) return { ...toCardRider(owned), designer: self }; // C8 — own card credited to self
     const adopted = adoptedDesigns.get(id);
-    return adopted ? toAdoptedCardRider(adopted) : toCardRider(null);
+    return adopted
+      ? { ...toAdoptedCardRider(adopted), designer: adoptedDesigner(adopted) } // C8 — real designer
+      : toCardRider(null);
   };
   const items = rows.map((r) =>
     toItem(

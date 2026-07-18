@@ -9,7 +9,7 @@ import type {
   EarnedAchievement,
   InProgressAchievement,
   MeAchievementsResponse,
-  ShowcaseAchievement,
+  ShowcaseEntry,
   UserAchievementsResponse,
 } from '@ingame/shared';
 import * as achievementRepo from '../repositories/achievement-repo';
@@ -124,9 +124,11 @@ export async function getMyAchievements(actorId: string): Promise<MeAchievements
 /**
  * GET /users/:id/achievements (ACH-05) — a user's SHOWCASE. The MOD-09 non-disclosure collapse FIRST
  * (blocked-either-direction / suspended / deleted / unknown / malformed → the generic 404, indistinguishable),
- * THEN the friend gate: a friend (or self) sees the full EARNED list (milestones AND unlocked secrets as
- * plain earned rows — never in-progress, never the locked-secret count); a non-friend sees only the honest
- * `summary.earned` headline. No secret-EXISTENCE ever leaks across the wire.
+ * THEN the friend gate: a friend (or self) sees the full EARNED list — milestones NAMED, and unlocked
+ * SECRETS MASKED (OQ-148 widening, decision 0078: a secret counts toward `summary.earned` but its
+ * name/criterion/glyph never render on a friend's page, so you cannot discover an egg by reading a
+ * friend's showcase). A non-friend sees only the honest `summary.earned` headline. No secret detail ever
+ * leaks across the wire (the locked-secret count is never sent either — earned-only).
  */
 export async function getUserAchievements(
   actorId: string,
@@ -157,15 +159,22 @@ export async function getUserAchievements(
     return { summary: { earned: earnedActive.length }, locked: true };
   }
 
-  const earned: ShowcaseAchievement[] = earnedActive
-    .map((u): ShowcaseAchievement => {
+  // OQ-148 widening (decision 0078): a SECRET-tier earned achievement is MASKED to the sealed
+  // `{ id, kind, tier, locked, unlockedAt }` slot (same shape as the GET-definitions + feed masks) — it
+  // still COUNTS in `summary.earned` but never names the egg. Standard/prestige render NAMED.
+  const earned: ShowcaseEntry[] = earnedActive
+    .map((u): ShowcaseEntry => {
       const def = activeById.get(u.achievementId)!;
+      const unlockedAt = u.unlockedAt.toISOString();
+      if (def.kind === 'secret') {
+        return { id: def.id, kind: 'secret', tier: 'secret', locked: true, unlockedAt };
+      }
       return {
         id: def.id,
         key: def.key,
         name: def.name,
         tier: def.tier as AchievementTier,
-        unlockedAt: u.unlockedAt.toISOString(),
+        unlockedAt,
       };
     })
     .sort((a, b) => b.unlockedAt.localeCompare(a.unlockedAt));

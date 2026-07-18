@@ -177,8 +177,14 @@ export function buildStarterAchievements(b7TargetGameId?: string): StarterDefini
     {
       key: 'b1_neat_freak',
       name: 'Neat Freak',
-      description: 'Reorder your collection 10 times.',
-      criterion: { kind: 'event_count', events: ['collection.reordered'], threshold: 10, unit: 'reorders' },
+      // W-C9 (decision 0078): re-pointed from `collection.reordered` — the COL-07 manual-collection
+      // arrange UI is DEFERRED to M7, so no client mutation ever emits that event at M6, which left this
+      // egg UNREACHABLE (dead content the beta could never earn). Re-aimed at `list.reranked`, the
+      // Top-10 ARRANGE re-rank, which IS a live client gesture (the DragRankList). Same "obsessive
+      // organizer" spirit, same event_count/threshold shape (reconcile-on-read still heals it) — a pure
+      // ACH-01/SYS-04 seed re-point, no migration/app release. Description tracks the new trigger.
+      description: 'Rearrange your Top-10 ten times.',
+      criterion: { kind: 'event_count', events: ['list.reranked'], threshold: 10, unit: 'reranks' },
       tier: 'secret',
       kind: 'secret',
       reward: { ...badge, pixels: 2 },

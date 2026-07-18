@@ -130,9 +130,10 @@ export interface MeAchievementsResponse {
 }
 
 // ── GET /users/:id/achievements (ACH-05, earned-only, privacy-honored) ───────────────────────────────
-/** A showcased earned achievement on a friend's profile — earned-only, NO in-progress, NO secret-
- *  existence leak (an unlocked secret shows as an earned row; the locked count is never sent). The
- *  contract draws `glyph`; we carry `key` (the client maps key→glyph) — flagged as contract drift. */
+/** A showcased earned MILESTONE (standard/prestige) achievement on a friend's profile — earned-only, NO
+ *  in-progress, NO secret-existence leak. The contract draws `glyph`; we carry `key` (the client maps
+ *  key→glyph) — flagged as contract drift. A SECRET-tier earned achievement is NOT shaped like this — it
+ *  is masked (see `MaskedShowcaseAchievement`). */
 export interface ShowcaseAchievement {
   id: string;
   key: string;
@@ -140,6 +141,23 @@ export interface ShowcaseAchievement {
   tier: AchievementTier;
   unlockedAt: string;
 }
+/**
+ * A friend's earned SECRET-tier achievement, MASKED on the showcase (OQ-148 widening, decision 0078 —
+ * "you should not be able to figure out secret achievements by looking at friends' pages"). It COUNTS
+ * toward `summary.earned` but never reveals WHICH egg it is: no name/description/tier-differentiator/glyph
+ * — the SAME sealed `{ id, kind:'secret', tier:'secret', locked:true }` shape the GET /achievements
+ * definitions-mask + the SOC-06 feed-mask use (`tier` is the constant 'secret', not a per-egg reveal).
+ * `unlockedAt` is a non-identifying timestamp that keeps the `earned` list uniform/sortable.
+ */
+export interface MaskedShowcaseAchievement {
+  id: string;
+  kind: 'secret';
+  tier: 'secret';
+  locked: true;
+  unlockedAt: string;
+}
+/** One row of a showcase `earned` list: a named milestone/prestige, or a MASKED secret (OQ-148). */
+export type ShowcaseEntry = ShowcaseAchievement | MaskedShowcaseAchievement;
 export type UserAchievementsResponse =
-  | { summary: { earned: number }; earned: ShowcaseAchievement[] } // friend / self — full earned list
+  | { summary: { earned: number }; earned: ShowcaseEntry[] } // friend / self — full earned list (secrets masked)
   | { summary: { earned: number }; locked: true }; // non-friend / hidden — honest headline count only

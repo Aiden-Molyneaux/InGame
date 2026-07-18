@@ -74,6 +74,32 @@ async function adopt(token: string, cardId: string) {
   if (res.status !== 200) throw new Error(`adopt failed: ${res.status} ${JSON.stringify(res.body)}`);
   return res.body;
 }
+// B1 NEAT FREAK is triggered by `list.reranked` (the Top-10 ARRANGE re-rank) — the W-C9 re-point from
+// the unreachable `collection.reordered` (the manual-collection arrange UI is M7-deferred). These drive
+// the real client-reachable gesture: place games in the Top-10, then re-rank it.
+async function addToTop10(token: string, gameId: string) {
+  const res = await request(app).post('/api/me/lists/top10/items').set(authed(token)).send({ gameId });
+  if (res.status !== 200 && res.status !== 201) {
+    throw new Error(`addToTop10 failed: ${res.status} ${JSON.stringify(res.body)}`);
+  }
+  return res;
+}
+const rerankTop10 = (token: string, orderedGameIds: string[]) =>
+  request(app).patch('/api/me/lists/top10').set(authed(token)).send({ orderedGameIds });
+/** Unlock B1 NEAT FREAK for `token`'s user via its LIVE trigger — 10 Top-10 re-ranks (`list.reranked`).
+ *  Seeds 2 collection games, places them in the Top-10, then alternates the full permutation 10 times. */
+async function unlockNeatFreak(token: string) {
+  const g1 = await seedGame(token, `NF1_${randomUUID().slice(0, 6)}`);
+  const g2 = await seedGame(token, `NF2_${randomUUID().slice(0, 6)}`);
+  await addGame(token, g1);
+  await addGame(token, g2);
+  await addToTop10(token, g1);
+  await addToTop10(token, g2);
+  for (let i = 0; i < 10; i++) {
+    const r = await rerankTop10(token, i % 2 === 0 ? [g2, g1] : [g1, g2]);
+    if (r.status !== 200) throw new Error(`rerankTop10 failed: ${r.status} ${JSON.stringify(r.body)}`);
+  }
+}
 const meAch = (token: string) => request(app).get('/api/me/achievements').set(authed(token));
 const defs = (token: string) => request(app).get('/api/achievements').set(authed(token));
 const userAch = (token: string, id: string) => request(app).get(`/api/users/${id}/achievements`).set(authed(token));
@@ -356,14 +382,16 @@ describe('ACH-03: secret masking on GET /achievements + reveal on unlock', () =>
   it('once the caller unlocks a secret, GET /achievements reveals it (their own only)', async () => {
     await seedReal();
     const a = await seedUser();
-    // B1 NEAT FREAK — reorder the collection 10 times. Seed 2 games so reorder has a permutation.
+    // B1 NEAT FREAK — re-rank the Top-10 ten times (`list.reranked`, the W-C9 client-reachable signal).
+    // Seed 2 collection games, place them in the Top-10, then alternate the order 10x.
     const g1 = await seedGame(a.token, 'R1');
     const g2 = await seedGame(a.token, 'R2');
-    const e1 = await addGame(a.token, g1);
-    const e2 = await addGame(a.token, g2);
+    await addGame(a.token, g1);
+    await addGame(a.token, g2);
+    await addToTop10(a.token, g1);
+    await addToTop10(a.token, g2);
     for (let i = 0; i < 10; i++) {
-      const order = i % 2 === 0 ? [e2, e1] : [e1, e2];
-      const r = await request(app).patch('/api/me/collection/reorder').set(authed(a.token)).send({ orderedEntryIds: order });
+      const r = await rerankTop10(a.token, i % 2 === 0 ? [g2, g1] : [g1, g2]);
       expect(r.status).toBe(200);
     }
     const res = await defs(a.token);
@@ -491,26 +519,46 @@ describe('ACH-05 / SOC-09: the friend showcase read', () => {
     expect('earned' in strangerView.body && Array.isArray(strangerView.body.earned)).toBe(false);
   });
 
-  it('a friend sees an unlocked SECRET as a plain earned row; the locked-secret count NEVER leaks', async () => {
+  // OQ-148 WIDENING (W-C3, decision 0078) — the owner ruled the feed's secret-mask must ALSO apply to a
+  // friend's showcase: "you should not be able to figure out secret achievements by looking at friends'
+  // pages." An earned SECRET is MASKED to the sealed slot (counts, never named); standard/prestige named.
+  it('a friend sees an unlocked SECRET MASKED — no name/criterion leak; standard named; count still includes it (OQ-148)', async () => {
     await seedReal();
     const owner = await seedUser();
     const friend = await seedUser();
     await befriend(owner.id, friend.id);
-    // owner unlocks B1 (a secret) by reordering 10x.
-    const g1 = await seedGame(owner.token, 'S1');
-    const g2 = await seedGame(owner.token, 'S2');
-    const e1 = await addGame(owner.token, g1);
-    const e2 = await addGame(owner.token, g2);
-    for (let i = 0; i < 10; i++) {
-      await request(app).patch('/api/me/collection/reorder').set(authed(owner.token)).send({ orderedEntryIds: i % 2 ? [e1, e2] : [e2, e1] });
-    }
+    // owner earns a STANDARD milestone (A1 FIRST PRINT, named) AND a SECRET (B1 NEAT FREAK, masked).
+    const game = await seedGame(owner.token, 'Showcase Std');
+    await publishCard(owner.token, game, 1); // A1 (standard)
+    await unlockNeatFreak(owner.token); // B1 (secret)
+
     const friendView = await userAch(friend.token, owner.id);
-    const secretRow = friendView.body.earned.find((e: { key: string }) => e.key === 'b1_neat_freak');
-    expect(secretRow).toBeTruthy(); // the unlocked secret shows as an earned row
-    expect(secretRow.tier).toBe('secret');
-    // No locked-secret existence anywhere on the wire.
-    expect(JSON.stringify(friendView.body)).not.toContain('lockedCount');
+    expect(friendView.status).toBe(200);
+
+    // the STANDARD milestone renders NAMED (the sealed masking touches secrets only).
+    const named = friendView.body.earned.find((e: { key?: string }) => e.key === 'a1_first_print');
+    expect(named).toBeTruthy();
+    expect(named.name).toBe('First Print');
+    expect(named.tier).toBe('standard');
+
+    // the SECRET renders MASKED — the sealed key-set, no name/key/criterion (the P6 no-leak pattern).
+    const masked = friendView.body.earned.find((e: { locked?: boolean }) => e.locked === true);
+    expect(masked).toBeTruthy();
+    expect(Object.keys(masked).sort()).toEqual(['id', 'kind', 'locked', 'tier', 'unlockedAt'].sort());
+    expect(masked.kind).toBe('secret');
+    expect(masked.tier).toBe('secret');
+    expect(masked.unlockedAt).toBeTruthy();
+
+    // the egg's name/key NEVER leak on the wire — you cannot discover the secret from a friend's page.
+    expect(JSON.stringify(friendView.body)).not.toContain('Neat Freak');
+    expect(JSON.stringify(friendView.body)).not.toContain('b1_neat_freak');
+    // the masked secret STILL counts toward summary.earned (it IS earned) — summary === all earned rows.
+    const maskedCount = friendView.body.earned.filter((e: { locked?: boolean }) => e.locked === true).length;
+    expect(maskedCount).toBeGreaterThanOrEqual(1);
+    expect(friendView.body.summary.earned).toBe(friendView.body.earned.length);
+    // still earned-only — no in-progress, no locked-secret existence count.
     expect('secrets' in friendView.body).toBe(false);
+    expect(JSON.stringify(friendView.body)).not.toContain('lockedCount');
   });
 
   it('authz:get_user_achievements — a BLOCKED actorB gets the generic 404 (indistinguishable, MOD-09)', async () => {
@@ -539,14 +587,8 @@ describe('SOC-06 / OQ-148: unlocks render in the friend feed; secret labels mask
     // Standard: publish → A1 unlock (named "First Print").
     const game = await seedGame(owner.token, 'Feed RPG');
     await publishCard(owner.token, game, 1);
-    // Secret: reorder 10x → B1 unlock (masked).
-    const g1 = await seedGame(owner.token, 'F1');
-    const g2 = await seedGame(owner.token, 'F2');
-    const e1 = await addGame(owner.token, g1);
-    const e2 = await addGame(owner.token, g2);
-    for (let i = 0; i < 10; i++) {
-      await request(app).patch('/api/me/collection/reorder').set(authed(owner.token)).send({ orderedEntryIds: i % 2 ? [e1, e2] : [e2, e1] });
-    }
+    // Secret: 10 Top-10 re-ranks → B1 unlock (masked; the W-C9 `list.reranked` trigger).
+    await unlockNeatFreak(owner.token);
 
     const feed = await request(app).get('/api/me/feed').set(authed(friend.token));
     expect(feed.status).toBe(200);
@@ -563,9 +605,9 @@ describe('ACH-02 / decision 0078: reconcile-on-read heals dropped evaluations', 
   it('a dropped evaluation (events committed, evaluator never ran) unlocks at the next read — full reward path + the unlocked event', async () => {
     await seedReal();
     const a = await seedUser();
-    // Simulate the owner's live incident: 10 collection.reordered outbox rows exist (each committed),
-    // but the post-commit pass was dropped every time (API restarts) → B1 NEAT FREAK never fired.
-    for (let i = 0; i < 10; i++) await insertEvent(a.id, 'collection.reordered', { count: 2 });
+    // Simulate the owner's live incident: 10 list.reranked outbox rows exist (each committed), but the
+    // post-commit pass was dropped every time (API restarts) → B1 NEAT FREAK never fired.
+    for (let i = 0; i < 10; i++) await insertEvent(a.id, 'list.reranked', { count: 2 });
     expect(await unlockRowCount(a.id, 'b1_neat_freak')).toBe(0);
 
     const res = await meAch(a.token);
@@ -580,7 +622,7 @@ describe('ACH-02 / decision 0078: reconcile-on-read heals dropped evaluations', 
   it('an UNSATISFIED counter is untouched by the read (no unlock, no reward, still in progress)', async () => {
     await seedReal();
     const a = await seedUser();
-    for (let i = 0; i < 4; i++) await insertEvent(a.id, 'collection.reordered', { count: 2 }); // 4 < 10
+    for (let i = 0; i < 4; i++) await insertEvent(a.id, 'list.reranked', { count: 2 }); // 4 < 10
     const res = await meAch(a.token);
     expect(res.status).toBe(200);
     expect(await unlockRowCount(a.id, 'b1_neat_freak')).toBe(0);
@@ -602,7 +644,7 @@ describe('ACH-02 / decision 0078: reconcile-on-read heals dropped evaluations', 
   it('F36: two PARALLEL reads on a satisfied counter → exactly ONE unlock + ONE reward', async () => {
     await seedReal();
     const a = await seedUser();
-    for (let i = 0; i < 10; i++) await insertEvent(a.id, 'collection.reordered', { count: 2 });
+    for (let i = 0; i < 10; i++) await insertEvent(a.id, 'list.reranked', { count: 2 });
 
     const [r1, r2] = await Promise.all([meAch(a.token), meAch(a.token)]);
     expect(r1.status).toBe(200);
@@ -615,7 +657,7 @@ describe('ACH-02 / decision 0078: reconcile-on-read heals dropped evaluations', 
   it('re-reading is idempotent — a healed unlock never re-grants', async () => {
     await seedReal();
     const a = await seedUser();
-    for (let i = 0; i < 10; i++) await insertEvent(a.id, 'collection.reordered', { count: 2 });
+    for (let i = 0; i < 10; i++) await insertEvent(a.id, 'list.reranked', { count: 2 });
     await meAch(a.token); // heals
     await meAch(a.token); // re-read
     await meAch(a.token); // and again
