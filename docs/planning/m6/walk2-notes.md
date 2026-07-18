@@ -52,9 +52,17 @@
 - ✅ W-A6 (dba6029) **Top-3 with 2 seats spreads to screen edges** — space-between artifact; now the
   board's ALWAYS-3-seat frame (profile-states :797 `.ghost-set`): filled seats card, empty seats the
   dashed ghost (rank + "+" → the TOP view), packed flex-start + gap; left-packing test added.
-- ⬜ W-A7 **Device sticker edit-mode never confirms** — placing stickers stays editable until
-  On-shell-preview; leaving the editor keeps editable stickers. Make set/confirm explicit (the
-  KEEP grammar). ⚖ flow ruling implied — record the built shape in 0078.
+- ✅ W-A7 (0d9438d) **Device sticker edit-mode never confirms** — the explicit SET/CONFIRM beat
+  built (⚖ 0078 records this shape): placing/tapping a decal enters its transform state; it EXITS
+  through (1) **tap-away commits** — the band layer's empty-tap deselect (already live) + the editor
+  body now deselects on empty-space taps; (2) a visible **✓ SET key** on the transform chrome
+  (StickerSteppers foot, cream secondary — the TransformDrawer close grammar); (3) **blur
+  auto-commits** — a `focused` gate (useFocusEffect) flushes the pending PATCH, drops the selection,
+  AND unpublishes the edit session (pre-fix the blurred-but-mounted editor kept the session live, so
+  the shell bands wore edit chrome on every other screen — the "leave with stickers still editable").
+  Commit = end the CHROME + flush; the data already saves continuously through the ONE pipeline. No
+  confirm-sheet ceremony (stickers free + reversible); KEEP/acquire stays premium-only. 4 jest cases
+  (place→chrome · tap-away · ✓ SET · blur-unpublish + idle refocus).
 - ✅ W-A8 (7c5dd3e) 🔧 **Celebration didn't fire until an APP RESTART** (owner completed SHELF
   STARTER, nothing appeared) — the P11 ASSUMPTION-1 refetch-delta only re-read `/me/achievements` on
   focus/reconnect. Fix: the UNLOCK-TRIGGERING client mutations now invalidate the `MeAchievements`
