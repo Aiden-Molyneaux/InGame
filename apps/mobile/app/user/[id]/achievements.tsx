@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import type { ShowcaseAchievement, UserAchievementsResponse } from '@ingame/shared';
+import type { ShowcaseEntry, UserAchievementsResponse } from '@ingame/shared';
 import { IdentityBlock } from '../../../src/components/IdentityBlock';
 import { StatTile } from '../../../src/components/StatTile';
 import { TertiaryLink } from '../../../src/components/TertiaryLink';
@@ -10,6 +10,7 @@ import { Skeleton } from '../../../src/components/lifecycle/Skeleton';
 import { LoadError } from '../../../src/components/lifecycle/LoadError';
 import { Unavailable } from '../../../src/components/lifecycle/Unavailable';
 import { BadgeTile } from '../../../src/components/achievements/BadgeTile';
+import { MysterySlot } from '../../../src/components/achievements/MysterySlot';
 import { AchievementSheet, type AchievementDetail } from '../../../src/components/achievements/AchievementSheet';
 import { byTierPrestigeFirst } from '../../../src/components/achievements/tier';
 import { themedStyles, useTheme } from '../../../src/theme';
@@ -79,7 +80,10 @@ export default function FriendAchievements() {
   }
 
   const earned = [...data.earned].sort(byTierPrestigeFirst);
-  const open = (a: ShowcaseAchievement) => setDetail({ kind: 'showcase', achievement: a });
+  // OQ-148 / W-C3b — a masked secret opens the SEALED D3 variant (no name/criterion/tier reveal); a
+  // named row opens its normal showcase detail.
+  const open = (e: ShowcaseEntry) =>
+    setDetail('locked' in e ? { kind: 'locked' } : { kind: 'showcase', achievement: e });
   const sheet = <AchievementSheet detail={detail} onClose={() => setDetail(null)} />;
 
   // VIEW ALL (local view over the bounded earned array).
@@ -115,13 +119,20 @@ function isLocked(d: UserAchievementsResponse): d is { summary: { earned: number
   return 'locked' in d;
 }
 
-function Grid({ items, onOpen }: { items: ShowcaseAchievement[]; onOpen: (a: ShowcaseAchievement) => void }) {
+// OQ-148 / W-C3b — the friend showcase renders the earned union: a NAMED milestone → the normal
+// BadgeTile (name + tier colour); a MASKED secret (`'locked' in entry`) → the SEALED ??? MysterySlot
+// (the self-page grammar), never a name/tier-revealing tile. Both still COUNT in summary.earned.
+function Grid({ items, onOpen }: { items: ShowcaseEntry[]; onOpen: (e: ShowcaseEntry) => void }) {
   const styles = useStyles();
   return (
     <View style={styles.grid}>
-      {items.map((a) => (
-        <BadgeTile key={a.id} glyphKey={a.key} label={a.name.toUpperCase()} tier={a.tier} state="earned" onPress={() => onOpen(a)} />
-      ))}
+      {items.map((e) =>
+        'locked' in e ? (
+          <MysterySlot key={e.id} onPress={() => onOpen(e)} />
+        ) : (
+          <BadgeTile key={e.id} glyphKey={e.key} label={e.name.toUpperCase()} tier={e.tier} state="earned" onPress={() => onOpen(e)} />
+        ),
+      )}
     </View>
   );
 }

@@ -67,8 +67,12 @@ const meAchievementsResponseSchema = z.object({
   secrets: z.object({ found: z.array(earnedSchema), lockedCount: z.number().int().nonnegative() }),
 });
 
-// GET /users/:id/achievements — earned-only friend/self, honest-count-only limited (PROF-03/SOC-09). The
-// showcase row carries `key` (the client maps key→glyph — GAP-2; the contract draws `glyph`).
+// GET /users/:id/achievements — earned-only friend/self, honest-count-only limited (PROF-03/SOC-09). A
+// named showcase row carries `key` (the client maps key→glyph — GAP-2). A friend's EARNED SECRET is
+// MASKED (OQ-148 / W-C3b, server edd9710): the same sealed `{id,kind:'secret',tier:'secret',locked}`
+// shape the GET /achievements defs use, + a non-identifying `unlockedAt` (keeps the list uniform). So a
+// showcase ENTRY is a discriminated union; the masked variant is tried first (its `locked:true` literal
+// is disjoint from a full row, which never carries `locked`).
 const showcaseSchema = z.object({
   id: z.string(),
   key: z.string(),
@@ -76,9 +80,17 @@ const showcaseSchema = z.object({
   tier: tierEnum,
   unlockedAt: z.string(),
 });
+const maskedShowcaseSchema = z.object({
+  id: z.string(),
+  kind: z.literal('secret'),
+  tier: z.literal('secret'),
+  locked: z.literal(true),
+  unlockedAt: z.string(),
+});
+const showcaseEntrySchema = z.union([maskedShowcaseSchema, showcaseSchema]);
 const userAchievementsResponseSchema = z.union([
   z.object({ summary: z.object({ earned: z.number().int().nonnegative() }), locked: z.literal(true) }),
-  z.object({ summary: z.object({ earned: z.number().int().nonnegative() }), earned: z.array(showcaseSchema) }),
+  z.object({ summary: z.object({ earned: z.number().int().nonnegative() }), earned: z.array(showcaseEntrySchema) }),
 ]);
 
 // The GET /achievements payload wraps the defs (`{ achievements: [...] }`); the client reads the array.

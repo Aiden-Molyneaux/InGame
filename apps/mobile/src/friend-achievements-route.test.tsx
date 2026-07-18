@@ -28,7 +28,9 @@ import FriendAchievements from '../app/user/[id]/achievements';
 const FRIEND: UserAchievementsResponse = {
   summary: { earned: 2 },
   earned: [
-    { id: 's1', key: 'b6_night_shift', name: 'NightShift', tier: 'secret', unlockedAt: '2026-03-12T00:00:00Z' },
+    // OQ-148 (W-C3b) — a friend's earned SECRET arrives MASKED (no name/key/real-tier), so it can't be
+    // reverse-engineered by looking at their page; it still COUNTS in summary.earned (2).
+    { id: 's1', kind: 'secret', tier: 'secret', locked: true, unlockedAt: '2026-03-12T00:00:00Z' },
     { id: 'e1', key: 'a1_first_print', name: 'FirstPrint', tier: 'standard', unlockedAt: '2026-02-01T00:00:00Z' },
   ],
 };
@@ -52,16 +54,30 @@ describe('P11 friend achievements route', () => {
     expect(screen.getAllByLabelText('Loading').length).toBeGreaterThan(0);
   });
 
-  it('P3 — earned-only: the friend EARNED grid + back-seam, NO in-progress / secrets leak', () => {
+  it('P3 — earned-only: named milestone renders; the earned SECRET is a SEALED ??? (OQ-148, no name/tier leak)', () => {
     set({ data: FRIEND });
     render(wrap(<FriendAchievements />));
     expect(screen.getByText('‹ RETURN TO RIKO')).toBeTruthy();
     expect(screen.getByText('EARNED')).toBeTruthy();
-    expect(screen.getByText('NIGHTSHIFT')).toBeTruthy();
+    // the named milestone renders normally
     expect(screen.getByText('FIRSTPRINT')).toBeTruthy();
-    // PROF-05 — a friend view never leaks IN PROGRESS or the ??? secret slots
+    // W-C3b — the masked secret renders as the sealed ??? MysterySlot (the P11 self-page grammar), and
+    // its identifying fields NEVER reach the DOM: no name, no key-derived label, no "SECRET" tier tag.
+    expect(screen.getByLabelText('Locked secret achievement')).toBeTruthy();
+    expect(screen.queryByText('NIGHTSHIFT')).toBeNull();
+    expect(screen.queryByText('NIGHT SHIFT')).toBeNull();
+    // PROF-05 — a friend view still never leaks IN PROGRESS
     expect(screen.queryByText('IN PROGRESS')).toBeNull();
-    expect(screen.queryByLabelText('Locked secret achievement')).toBeNull();
+  });
+
+  it('W-C3b — tapping the masked secret opens the SEALED sheet (no name/criterion/tier reveal)', () => {
+    set({ data: FRIEND });
+    render(wrap(<FriendAchievements />));
+    fireEvent.press(screen.getByLabelText('Locked secret achievement'));
+    // the sealed D3 variant — the generic mystery copy only, never the underlying achievement
+    expect(screen.getByText(/This one's a secret/)).toBeTruthy();
+    expect(screen.queryByText('NIGHTSHIFT')).toBeNull();
+    expect(screen.queryByText('REWARD')).toBeNull();
   });
 
   it('P4 — privacy-limited: the honest headline count + the ACHIEVEMENTS HIDDEN lock-well', () => {
