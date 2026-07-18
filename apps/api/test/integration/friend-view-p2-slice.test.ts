@@ -350,7 +350,7 @@ describe('CAT-07: contributions VIEW-ALL cursors + bio/game-thumb gaps', () => {
     expect(games.body.items[0].card).toBeDefined(); // the parvati game-thumb gap
   });
 
-  it('CAT-10 (walk2 N1): REACHED is the DISTINCT-owner count across the contributor’s games (not the per-game sum)', async () => {
+  it('CAT-10 (walk2 N1/N1b): REACHED is the DISTINCT-OTHERS count across the contributor’s games (not the per-game sum; excludes self)', async () => {
     const contributor = await seedUser();
     // Deliberately DISSIMILAR titles — near-identical ones trip the CAT-03 dedup warn (409).
     const g1 = await seedGame(contributor.token, 'Morrowind Chronicles');
@@ -370,11 +370,11 @@ describe('CAT-07: contributions VIEW-ALL cursors + bio/game-thumb gaps', () => {
     expect(asSelf.status).toBe(200);
     expect(asSelf.body.stats.totalReached).toBe(3); // DEDUPED — not 6
 
-    // CAT-10 self-inclusion reading: the contributor owning their OWN game counts (matches the per-game
-    // collectionsCount tiles, which include self) → 3 others + the contributor = 4.
+    // CAT-10 (owner ruling N1b): REACHED = distinct OTHERS — the contributor owning their OWN game does
+    // NOT count. Adding g1 to the contributor's own collection leaves REACHED unchanged at 3.
     await addToCollection(contributor.token, g1.id);
     const after = await request(app).get(`/api/users/${contributor.id}/contributions`).set(authed(contributor.token));
-    expect(after.body.stats.totalReached).toBe(4);
+    expect(after.body.stats.totalReached).toBe(3);
   });
 
   it('the base contributions carries bio on the FRIEND shape but NOT the non-friend/limited shape', async () => {

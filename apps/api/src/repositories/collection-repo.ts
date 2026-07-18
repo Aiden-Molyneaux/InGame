@@ -1,4 +1,4 @@
-import { and, count, eq, inArray, max, or } from 'drizzle-orm';
+import { and, count, eq, inArray, max, ne, or } from 'drizzle-orm';
 import { getDb, type Executor } from '../db/client';
 import { asActor, ownedBy } from '../db/scoped';
 import {
@@ -31,28 +31,29 @@ export async function collectionsCountByGame(
 }
 
 /**
- * CAT-07 REACHED (walk2 N1 fix) — the DEDUPED reach: the count of DISTINCT collection owners across ALL
- * of a contributor's games. A user who owns SEVERAL of the contributor's games counts ONCE (the prior
- * code SUMMED per-game `collectionsCountByGame`, so a multi-game owner inflated the total once per game —
- * the "29 REACHED" bug). CAT-10 reading: CAT-07 defines REACHED as "collections reached = the CAT-09
- * aggregate over your added games", and CAT-09a is "how many USERS' collections contain the game" — no
- * "others" wording, and the per-game `collectionsCount` tiles already include the contributor's own
- * ownership; so this count is NOT self-excluded (a contributor owning their own game counts, matching the
- * per-game tiles for internal consistency). A single query: `count()` over a DISTINCT-owner subquery.
+ * CAT-07 REACHED (walk2 N1 fix + N1b owner ruling) — the DEDUPED reach: the count of DISTINCT collection
+ * owners across ALL of a contributor's games, EXCLUDING the contributor themselves. A user who owns
+ * SEVERAL of the contributor's games counts ONCE (the prior code SUMMED per-game
+ * `collectionsCountByGame`, so a multi-game owner inflated the total once per game — the "29 REACHED"
+ * bug). CAT-10 (owner ruling, walk2 N1b): REACHED = distinct OTHERS reached — the contributor's OWN
+ * ownership does NOT count (the stat measures impact on OTHER users' collections). A single query:
+ * `count()` over a DISTINCT-owner subquery filtered to owners !== the contributor.
  */
 export async function distinctUsersReachedByGames(
   gameIds: string[],
+  contributorId: string,
   exec: Executor = getDb(),
 ): Promise<number> {
   if (gameIds.length === 0) return 0;
   // SYS-01-COMMUNITY-AGGREGATE: CAT-07/CAT-09 — an anonymous cross-user COUNT of DISTINCT owners over
   // the contributor's games (OQ-126; reads-only + aggregate-only — the distinct-owner subquery is
   // counted, never a per-identity row read). The inner .from(collectionEntries) is the cross-user read;
-  // the outer count() over the distinct subquery is the aggregate the marker requires.
+  // the outer count() over the distinct subquery is the aggregate the marker requires. The `ne(userId,
+  // contributorId)` excludes the contributor's own ownership (N1b — "distinct OTHERS reached").
   const distinctOwners = exec
     .selectDistinct({ userId: collectionEntries.userId })
     .from(collectionEntries)
-    .where(inArray(collectionEntries.gameId, gameIds))
+    .where(and(inArray(collectionEntries.gameId, gameIds), ne(collectionEntries.userId, contributorId)))
     .as('distinct_owners');
   const rows = await exec.select({ n: count() }).from(distinctOwners);
   return Number(rows[0]?.n ?? 0);

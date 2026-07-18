@@ -235,10 +235,11 @@ export async function getContributions(
   // ── The honest aggregate stats (always present, both shapes) ──────────────────────────────────────
   const addedGames = await catalogRepo.listGamesAddedBy(targetId);
   const gameIds = addedGames.map((g) => g.id);
-  // walk2 N1 — REACHED is the DEDUPED distinct-owner count across ALL the contributor's games, NOT the
-  // sum of per-game counts (which double-counted a user owning several of the games — the "29 REACHED"
-  // bug). See collectionRepo.distinctUsersReachedByGames for the CAT-10 self-inclusion reading.
-  const totalReached = await collectionRepo.distinctUsersReachedByGames(gameIds);
+  // walk2 N1/N1b — REACHED is the DEDUPED distinct-OTHERS count across ALL the contributor's games, NOT
+  // the sum of per-game counts (which double-counted a user owning several of the games — the "29
+  // REACHED" bug). The contributor's OWN ownership is excluded (owner ruling N1b — "distinct OTHERS
+  // reached"): the second arg is the contributor id the subquery filters out.
+  const totalReached = await collectionRepo.distinctUsersReachedByGames(gameIds, targetId);
   const [cardsDesigned, totalAdoptions] = await Promise.all([
     cardRepo.countPublishedByOwner(targetId),
     cardRepo.totalAdoptionsForOwner(targetId),
