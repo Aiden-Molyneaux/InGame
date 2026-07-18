@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, ilike, inArray, isNull } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, ilike, inArray, isNull, lte } from 'drizzle-orm';
 import { getDb, type Executor } from '../db/client';
 import {
   games,
@@ -75,6 +75,27 @@ export async function upcomingLive(
     .from(games)
     .where(and(isNull(games.deletedAt), gt(games.releaseDate, today)))
     .orderBy(asc(games.releaseDate))
+    .limit(limit);
+}
+
+/**
+ * CAT-11 (M6 W-C7) — LIVE-catalog rows with a `releaseDate` at-or-before `today` (a game releasing
+ * TODAY has already released — it belongs here, the exact complement of `upcomingLive`'s strict-after
+ * boundary). Ordered most-recently-released FIRST (`releaseDate` desc), the caller caps (~12, the
+ * `/catalog/popular` limit posture). A null `releaseDate` never satisfies `lte`, so undated games are
+ * excluded by construction (same as `upcomingLive`). `today` is a caller-supplied `YYYY-MM-DD` string so
+ * the boundary is a stable UTC date, not the DB server's local clock/tz.
+ */
+export async function newReleasesLive(
+  today: string,
+  limit: number,
+  exec: Executor = getDb(),
+): Promise<GameRow[]> {
+  return exec
+    .select()
+    .from(games)
+    .where(and(isNull(games.deletedAt), lte(games.releaseDate, today)))
+    .orderBy(desc(games.releaseDate))
     .limit(limit);
 }
 

@@ -35,6 +35,17 @@ export async function getFriendsActive(req: Request, res: Response): Promise<voi
   res.json(await catalogService.friendsActive(actorOf(req)));
 }
 
+// GET /catalog/new-releases (CAT-11, M6 W-C7).
+export async function getNewReleases(req: Request, res: Response): Promise<void> {
+  res.json(await catalogService.newReleases(actorOf(req)));
+}
+
+// GET /catalog/games/:id (CAT-05/09/09c, M6 W-C5) — the game-detail aggregate. The friend gate +
+// PROF-03/SOC-09 folding live in the service (rooted at the actor's friend set); unknown id → 404.
+export async function getGameDetail(req: Request, res: Response): Promise<void> {
+  res.json(await catalogService.gameDetail(actorOf(req), req.params.id ?? ''));
+}
+
 export async function createGame(req: Request, res: Response): Promise<void> {
   const item = await catalogService.createGame(actorOf(req), req.validated as CreateGameRequest);
   res.status(201).json(item);

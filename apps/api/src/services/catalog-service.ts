@@ -3,6 +3,8 @@ import type {
   CreateGameRequest,
   DedupSuggestion,
   FriendsWhoOwnResponse,
+  FriendWhoOwns,
+  GameDetail,
   GenreView,
 } from '@ingame/shared';
 import { normalizeTitle, rankDedupCandidates, type DedupHit } from '@ingame/shared';
@@ -30,6 +32,7 @@ const SEARCH_LIMIT = 20; // capped, no paging (0.47 — search-as-you-type, like
 const POPULAR_LIMIT = 12; // CAT-09/decision 0019 — capped ~12, no paging
 const UPCOMING_LIMIT = 12; // CAT-08 (M6 P7) — capped ~12, no paging, mirrors the popular-rail posture
 const FRIENDS_ACTIVE_LIMIT = 12; // CAT-12 (M6 P7, decision 0036) — capped ~12, no paging
+const NEW_RELEASES_LIMIT = 12; // CAT-11 (M6 W-C7, OQ-150) — capped ~12, no paging, mirrors popular/upcoming
 // Search RECALL is deliberately looser than the create WARN (D5's 0.5): finding "Elden Ring" from
 // "eldn rig" is the point of CAT-01+CAT-03 riding search; a candidate list over-including is
 // harmless, a create over-refusing is not. A G-K-listed lever like the warn threshold.
@@ -154,6 +157,19 @@ export async function upcoming(actorId: string): Promise<{ items: CatalogItem[] 
 }
 
 /**
+ * CAT-11 — GET /catalog/new-releases (M6 W-C7, OQ-150; decision 0062 slotted the rail): recently-RELEASED
+ * catalog entries (`releaseDate` at-or-before today — a game releasing TODAY has released), most-recent
+ * first, capped ~12, no paging — the exact complement of `upcoming()` (future dates) in the same
+ * search-result shape (incl. the CAT-09 collectionsCount/friendsHaveCount). Backs the onboarding/Add-Game
+ * NEW RELEASES add-rail (AUTH-06), a sibling of `/catalog/popular`.
+ */
+export async function newReleases(actorId: string): Promise<{ items: CatalogItem[] }> {
+  const today = new Date().toISOString().slice(0, 10); // stable UTC yyyy-mm-dd boundary (mirrors upcoming)
+  const rows = await catalogRepo.newReleasesLive(today, NEW_RELEASES_LIMIT);
+  return { items: await assembleItems(actorId, rows) };
+}
+
+/**
  * CAT-12 — GET /catalog/friends-active (M6 P7, decision 0036/0076 §0.8): the "FRIENDS ARE PLAYING"
  * Add-Game rail — catalog entries the actor's accepted friends own that the actor does NOT, ranked by
  * `friendsHaveCount` desc (ties broken by name, the `popular()` tie-break), capped ~12. Blocked friends
@@ -190,19 +206,46 @@ export async function friendsWhoOwn(actorId: string, gameId: string): Promise<Fr
   if (!UUID_RE.test(gameId)) throw new NotFoundError('Game not found.');
   const [game] = await catalogRepo.gamesByIds([gameId]);
   if (!game) throw new NotFoundError('Game not found.');
+  const friendsWhoOwn = await friendsWhoOwnList(actorId, gameId);
+  return { friendsWhoOwn, count: friendsWhoOwn.length };
+}
+
+/**
+ * The CAT-09c named list body — shared by the focused `friendsWhoOwn` route AND the `gameDetail` aggregate
+ * so the PROF-03 gating + SOC-09 block filter live in ONE place. The caller has ALREADY verified the game
+ * exists (the 404 is the caller's; this helper never re-reads it). Rooted at the actor's accepted-friend
+ * set (friendReadRepo.friendsWhoOwnGame rides the SYS-01-FRIEND-READ friendScoped gate).
+ */
+async function friendsWhoOwnList(actorId: string, gameId: string): Promise<FriendWhoOwns[]> {
   const rows = await friendReadRepo.friendsWhoOwnGame(actorId, gameId);
   // SOC-09 defense-in-depth — a block hides the person even if a stray accepted-friendship row survived
   // (in prod a block severs the bond, so friendScoped already excludes them; this is the belt-and-braces
   // the SOC-09 sweep asks for — blocked-either-direction is filtered regardless of the friendship state).
   const blocked = await relationshipRepo.listBlockedIds(actorId, rows.map((r) => r.userId));
   const visible = blocked.size === 0 ? rows : rows.filter((r) => !blocked.has(r.userId));
-  const friendsWhoOwn = visible.map((r) => ({
+  return visible.map((r) => ({
     userId: r.userId,
     username: r.username,
     avatarUrl: r.avatarUrl,
     hours: r.hours, // PROF-03: exposed to a friend at M6 (the per-facet hide toggle is a future seam)
   }));
-  return { friendsWhoOwn, count: friendsWhoOwn.length };
+}
+
+/**
+ * CAT-05/09/09c — GET /catalog/games/:id, the game-detail AGGREGATE (M6 W-C5; the P2/P7-flagged hole).
+ * The canonical facts + genres + CAT-05 contributor + CAT-09 counts + the own-it flag (the assembleItems
+ * search-result shape) PLUS the CAT-09c named `friendsWhoOwn` list (folded in from the same friendScoped
+ * read as the focused route — PROF-03-gated, blocked severed). The ABOUT-tab + CATALOG/OWN/FRIEND
+ * Game-page data source (W-D1). The community CARD GALLERY is deliberately NOT here — it is its own route
+ * (GET /games/:id/cards); this aggregate is the canonical facts + counts + friends only. Unknown id → 404.
+ */
+export async function gameDetail(actorId: string, gameId: string): Promise<GameDetail> {
+  if (!UUID_RE.test(gameId)) throw new NotFoundError('Game not found.');
+  const [game] = await catalogRepo.gamesByIds([gameId]);
+  if (!game) throw new NotFoundError('Game not found.');
+  const [item] = await assembleItems(actorId, [game]);
+  const friendsWhoOwn = await friendsWhoOwnList(actorId, gameId);
+  return { ...item!, friendsWhoOwn };
 }
 
 function screenedField(path: string, value: string | undefined): void {

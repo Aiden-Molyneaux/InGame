@@ -71,3 +71,18 @@ export const friendsWhoOwnResponseSchema = z
   })
   .strict();
 export type FriendsWhoOwnResponse = z.infer<typeof friendsWhoOwnResponseSchema>;
+
+// ── CAT-05/09/09c — GET /catalog/games/:id, the game-detail AGGREGATE (api-contract row /catalog/games/:id) ──
+// The canonical game facts (the 0.47 search-result item shape — id/name/studio/publisher/releaseDate ·
+// genres · CAT-05 contributor · CAT-09 collectionsCount/friendsHaveCount · the own-it `inCollection` flag)
+// PLUS the CAT-09c named `friendsWhoOwn` list (PROF-03-gated hours; blocked friends absent, SOC-09; the
+// aggregate `friendsHaveCount` is the count-only view of the same cohort). This is the ABOUT-tab + the
+// CATALOG/OWN/FRIEND Game-page data source (walk-2 W-C5/W-D1). The community CARD GALLERY is NOT part of
+// this shape — it is its OWN route (GET /games/:id/cards); game-detail is the canonical facts + counts +
+// friends only (the W-C5 guard — do not duplicate the gallery here).
+export const gameDetailSchema = catalogItemSchema
+  .extend({
+    friendsWhoOwn: z.array(friendWhoOwnsSchema), // CAT-09c — the named friends-who-own list
+  })
+  .strict();
+export type GameDetail = z.infer<typeof gameDetailSchema>;

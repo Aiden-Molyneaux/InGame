@@ -10,6 +10,8 @@ import {
   getPopular,
   getUpcoming,
   getFriendsActive,
+  getNewReleases,
+  getGameDetail,
   createGame,
   getFriendsWhoOwn,
 } from '../controllers/catalog-controller';
@@ -65,6 +67,33 @@ export const catalogRoutes: RouteDef[] = [
     crossPrincipal: false,
     specIds: ['CAT-12', 'PROF-03', 'SOC-09'],
     handler: [resolvePrincipal, asyncHandler(getFriendsActive)],
+  }),
+  // GET /catalog/new-releases (CAT-11, M6 W-C7, OQ-150) — recently-RELEASED entries (releaseDate in the
+  // PAST, most-recent first), the search-result shape, sibling of /catalog/popular; the complement of
+  // /catalog/upcoming (future dates). No other principal's row data crosses (the aggregate CAT-09 counts +
+  // own-it flag only) — crossPrincipal:false, mirrors /catalog/popular.
+  defineRoute({
+    method: 'get',
+    path: '/catalog/new-releases',
+    mutates: false,
+    crossPrincipal: false,
+    specIds: ['CAT-11'],
+    handler: [resolvePrincipal, asyncHandler(getNewReleases)],
+  }),
+  // GET /catalog/games/:id (CAT-05/09/09c, M6 W-C5) — the game-detail AGGREGATE (canonical facts + genres +
+  // CAT-05 contributor + CAT-09 counts + own-it flag + the CAT-09c named friendsWhoOwn list). Rooted at the
+  // CALLER's own accepted-friend set for the folded friendsWhoOwn (the friend-visible subset they are
+  // already entitled to, like GET /me/friends + the focused friends-who-own route below) — NOT a general
+  // cross-principal read (a block severs the friendship, so a blocked user is absent, SOC-09). The community
+  // card GALLERY is NOT served here (its own route, GET /games/:id/cards). Kept crossPrincipal:false,
+  // consistent with the friends-who-own sibling.
+  defineRoute({
+    method: 'get',
+    path: '/catalog/games/:id',
+    mutates: false,
+    crossPrincipal: false,
+    specIds: ['CAT-05', 'CAT-09', 'PROF-03', 'SOC-09'],
+    handler: [resolvePrincipal, asyncHandler(getGameDetail)],
   }),
   // GET /catalog/games/:id/friends-who-own (CAT-09c) — the Game-page named friends-who-own list. Rooted
   // at the CALLER's own accepted-friend set (the friend-visible subset they are already entitled to, like

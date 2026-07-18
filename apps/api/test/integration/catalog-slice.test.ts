@@ -46,10 +46,12 @@ async function createGame(
   return request(app).post('/api/catalog/games').set(authed(token)).send(body);
 }
 
-async function addToCollection(token: string, gameId: string) {
+async function addToCollection(token: string, gameId: string, hours = 0) {
   const res = await request(app).post('/api/me/collection').set(authed(token)).send({ gameId });
   if (res.status !== 201) throw new Error(`addToCollection failed: ${res.status}`);
-  return res.body as { entryId: string };
+  const entryId = res.body.entryId as string;
+  if (hours > 0) await request(app).patch(`/api/me/collection/${entryId}`).set(authed(token)).send({ hours });
+  return { entryId };
 }
 
 /** A direct accepted friendship (faster than the request flow; the lifecycle is P1's suite). */
@@ -429,6 +431,139 @@ describe('CAT-12 (M6 P7): GET /catalog/friends-active — the FRIENDS ARE PLAYIN
     const res = await request(app).get('/api/catalog/friends-active').set(authed(a.token));
     expect(res.status).toBe(200);
     expect(res.body.items).toEqual([]);
+  });
+});
+
+describe('CAT-11 (M6 W-C7): GET /catalog/new-releases — recently-released entries', () => {
+  it('returns only PAST-dated entries, ordered releaseDate DESC (most-recently-released first)', async () => {
+    const a = await registerUser();
+    const rpg = await genreIdByName(a.token, 'RPG');
+    // Near-duplicate-shaped fixture names → dedupOverride:true (CAT-03 would otherwise 409-warn); unrelated.
+    await createGame(a.token, { name: 'Old Release Game', genreIds: [rpg], releaseDate: '2019-05-01', dedupOverride: true });
+    await createGame(a.token, { name: 'Recent Release Game', genreIds: [rpg], releaseDate: '2024-11-20', dedupOverride: true });
+    await createGame(a.token, { name: 'Future Unreleased Game', genreIds: [rpg], releaseDate: '2099-01-01', dedupOverride: true });
+
+    const res = await request(app).get('/api/catalog/new-releases').set(authed(a.token));
+    expect(res.status).toBe(200);
+    const names = res.body.items.map((i: { name: string }) => i.name);
+    expect(names).toEqual(['Recent Release Game', 'Old Release Game']); // DESC by releaseDate
+    expect(names).not.toContain('Future Unreleased Game'); // distinct from /catalog/upcoming
+  });
+
+  it('the BOUNDARY — a game releasing TODAY IS a new-release (it has already released)', async () => {
+    const a = await registerUser();
+    const rpg = await genreIdByName(a.token, 'RPG');
+    const today = new Date().toISOString().slice(0, 10);
+    await createGame(a.token, { name: 'Released Today Game', genreIds: [rpg], releaseDate: today, dedupOverride: true });
+    await createGame(a.token, { name: 'Releases Tomorrow Game', genreIds: [rpg], releaseDate: '2099-06-15', dedupOverride: true });
+
+    const res = await request(app).get('/api/catalog/new-releases').set(authed(a.token));
+    expect(res.status).toBe(200);
+    const names = res.body.items.map((i: { name: string }) => i.name);
+    expect(names).toContain('Released Today Game'); // today has released → included (upcoming's complement)
+    expect(names).not.toContain('Releases Tomorrow Game');
+  });
+
+  it('a game with no releaseDate at all is never a "new release"; the item carries the CAT-09 shape', async () => {
+    const a = await registerUser();
+    const rpg = await genreIdByName(a.token, 'RPG');
+    await createGame(a.token, { name: 'No Date Release Game', genreIds: [rpg] });
+    const dated = (await createGame(a.token, { name: 'Dated Release Game', genreIds: [rpg], releaseDate: '2021-03-03', dedupOverride: true })).body;
+    await addToCollection(a.token, dated.id);
+
+    const res = await request(app).get('/api/catalog/new-releases').set(authed(a.token));
+    expect(res.status).toBe(200);
+    const names = res.body.items.map((i: { name: string }) => i.name);
+    expect(names).not.toContain('No Date Release Game');
+    const item = res.body.items.find((i: { name: string }) => i.name === 'Dated Release Game');
+    expect(item).toMatchObject({ collectionsCount: 1, friendsHaveCount: 0, inCollection: true });
+    expect(item.contributor.username).toBe(a.username);
+  });
+
+  it('unauthenticated → 401', async () => {
+    expect((await request(app).get('/api/catalog/new-releases')).status).toBe(401);
+  });
+});
+
+describe('CAT-05/09/09c (M6 W-C5): GET /catalog/games/:id — the game-detail aggregate', () => {
+  it('returns canonical facts + genres + contributor + CAT-09 counts + friendsWhoOwn + inCollection', async () => {
+    const a = await registerUser();
+    const friend = await registerUser();
+    await befriend(a.id, friend.id);
+    const rpg = await genreIdByName(a.token, 'RPG');
+    const game = (await createGame(a.token, {
+      name: 'Aggregate Game', genreIds: [rpg], studio: 'FromSoftware', publisher: 'Bandai Namco', releaseDate: '2022-02-25',
+    })).body;
+    await addToCollection(friend.token, game.id, 42); // a friend owns it (42 hrs)
+
+    const res = await request(app).get(`/api/catalog/games/${game.id}`).set(authed(a.token));
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBe(game.id);
+    expect(res.body.name).toBe('Aggregate Game');
+    expect(res.body.studio).toBe('FromSoftware');
+    expect(res.body.publisher).toBe('Bandai Namco');
+    expect(res.body.releaseDate).toBe('2022-02-25');
+    expect(res.body.genres).toEqual([{ id: rpg, name: 'RPG' }]);
+    expect(res.body.contributor).toEqual({ userId: a.id, username: a.username }); // CAT-05 credit
+    expect(res.body.collectionsCount).toBe(1); // the friend owns it (anonymous aggregate)
+    expect(res.body.friendsHaveCount).toBe(1); // the friend is a's accepted friend
+    expect(res.body.inCollection).toBe(false); // a does NOT own it
+    expect(res.body.friendsWhoOwn).toHaveLength(1); // CAT-09c named list
+    expect(res.body.friendsWhoOwn[0]).toMatchObject({ userId: friend.id, username: friend.username, hours: 42 });
+  });
+
+  it('inCollection reflects whether the CALLER owns it (flips true once added)', async () => {
+    const a = await registerUser();
+    const rpg = await genreIdByName(a.token, 'RPG');
+    const game = (await createGame(a.token, { name: 'Own It Detail Game', genreIds: [rpg] })).body;
+    const before = await request(app).get(`/api/catalog/games/${game.id}`).set(authed(a.token));
+    expect(before.body.inCollection).toBe(false);
+    await addToCollection(a.token, game.id);
+    const after = await request(app).get(`/api/catalog/games/${game.id}`).set(authed(a.token));
+    expect(after.body.inCollection).toBe(true);
+    expect(after.body.collectionsCount).toBe(1);
+  });
+
+  it('friendsWhoOwn: a NON-friend owner is not named, and the PROF-03 hours ride the named friend only', async () => {
+    const a = await registerUser();
+    const friend = await registerUser();
+    const stranger = await registerUser();
+    await befriend(a.id, friend.id);
+    const rpg = await genreIdByName(a.token, 'RPG');
+    const game = (await createGame(a.token, { name: 'Named List Detail Game', genreIds: [rpg] })).body;
+    await addToCollection(friend.token, game.id, 12);
+    await addToCollection(stranger.token, game.id, 99); // a non-friend owner — must NOT be named
+
+    const res = await request(app).get(`/api/catalog/games/${game.id}`).set(authed(a.token));
+    expect(res.status).toBe(200);
+    expect(res.body.friendsWhoOwn).toHaveLength(1);
+    expect(res.body.friendsWhoOwn[0]).toMatchObject({ userId: friend.id, hours: 12 });
+    expect(res.body.friendsHaveCount).toBe(1); // only the friend counts
+    expect(res.body.collectionsCount).toBe(2); // both own it (the anonymous aggregate)
+  });
+
+  it('SOC-09: a BLOCKED ex-friend owner is severed from friendsWhoOwn', async () => {
+    const a = await registerUser();
+    const b = await registerUser();
+    await befriend(a.id, b.id);
+    const rpg = await genreIdByName(a.token, 'RPG');
+    const game = (await createGame(a.token, { name: 'Blocked Owner Detail Game', genreIds: [rpg] })).body;
+    await addToCollection(b.token, game.id, 20);
+
+    const before = await request(app).get(`/api/catalog/games/${game.id}`).set(authed(a.token));
+    expect(before.body.friendsWhoOwn).toHaveLength(1);
+
+    await request(app).post('/api/me/blocks').set(authed(a.token)).send({ userId: b.id });
+
+    const after = await request(app).get(`/api/catalog/games/${game.id}`).set(authed(a.token));
+    expect(after.body.friendsWhoOwn).toHaveLength(0);
+  });
+
+  it('an UNKNOWN game id → 404; a malformed id → 404; unauthenticated → 401', async () => {
+    const a = await registerUser();
+    expect((await request(app).get(`/api/catalog/games/${randomUUID()}`).set(authed(a.token))).status).toBe(404);
+    expect((await request(app).get('/api/catalog/games/not-a-uuid').set(authed(a.token))).status).toBe(404);
+    expect((await request(app).get(`/api/catalog/games/${randomUUID()}`)).status).toBe(401);
   });
 });
 
