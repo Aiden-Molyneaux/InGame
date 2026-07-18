@@ -160,7 +160,21 @@
   caller's collection entry (the /me expansion carries only title+hours); an off-shelf pin degrades
   honestly to the /me hours line alone.
 
-## WAVE C — behavior/server (HOLD until the device session pauses; contract/spec ripples via 0078)
+## WAVE C — behavior/server (DISPATCHED 2026-07-18, owner off-device)
+> **Server batch** = the `wave-c-server` workflow (sequential domain agents catalog→social→ach/coll →
+> adversarial review; no migrations). **Client batch** = C4 Profile-edit + C6 contributions-link on the
+> disjoint client tree. Orchestrator does the final full-suite pass + the contract/spec/OQ + decision
+> 0078 formalization + push after the workflow + client land.
+> - **C7 rails answer (owner asked):** the Add-Game board draws THREE rails — POPULAR (most-collected,
+>   the "recommended" feel) · NEW RELEASES (CAT-11, being built now) · FRIENDS ARE PLAYING (CAT-12).
+>   No distinct "trending GAMES" 4th rail — popular fills "what's hot"; DISC-04 trending is for CARDS.
+> - **C9 ruling:** the manual-arrange Collection UI → DEFER to M7 (sort modes cover the beta); the b1
+>   NEAT FREAK egg gets re-pointed to a reachable organize-signal OR marked inactive (the ach/coll
+>   agent picks the honest one) so it's not dead content.
+> - **C10 (Add-Game community-cards) + the W-D1 game-page build** ride the NEXT build wave — they depend
+>   on C5's game-detail aggregate (built now) + the owner's Wave-D nod (in).
+
+## WAVE C items (contract/spec ripples via 0078)
 - ⬜ W-C1 ⚖ **Fuzzy people-search** — "Kyra" must find "KyraInGame": exact-match → prefix/substring
   (case-insensitive), same neutrality/rate posture. Contract row + server change + PersonRow states
   unchanged. (SOC-07 amendment → 0078.)
