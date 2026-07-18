@@ -223,11 +223,18 @@ briefs for M7 get this line verbatim.
   lives at DeviceShell root, outside the scrim, so blur clears Berry + returns you clean). If the owner
   wants the drawer itself to never strand, that's a separate PulledSheet dismiss-hardening pass. Filed,
   not urgent (the leak — the actual damage — is closed).
-- ⬜ W-B1b ⚖ **Header spacing must be INDEPENDENT of the trailing button** (Profile CurrencyCounter,
-  Friends header key): the title shifts because a same-row button pushes it. The B1 shared
-  `SCREEN_HEADER_PAD` fixed the outer inset, but the title's left position still varies with the
-  trailing chrome — pin the title's geometry so it sits identically whether or not a trailing
-  button/counter is present (reserve the slot or absolute-position the title). Wave B follow-up.
+- ✅ W-B1b (c8f4fe1, 86/578) **Header title position INDEPENDENT of the trailing button.** Root cause
+  (orchestrator-diagnosed with numbers): ScreenHead's row was in-flow `alignItems:'center'`, so a
+  trailing control TALLER than the 21px title grew the row and centred the title lower — the Friends
+  `HeaderKey` (34px) dropped its title ~5px below Collection/Profile's counter-height (~24px) rows;
+  the B1 shared pad only fixed the outer inset. **Fix:** the header row is pinned to one
+  `HEADER_CONTENT_HEIGHT` (26) via the always-present title's `lineHeight` + `minHeight`, and the
+  trailing cluster is taken OUT OF FLOW (absolute + top/bottom:0, centred), so NO control can grow the
+  row or shift the title; `HeaderKey` conformed 34→26 to the band. Collection/Profile unchanged;
+  Friends' title rises to match. Regression test (`screen-head-invariant.test.tsx`) asserts the band
+  minHeight + the absolute cluster are invariant to a deliberately-tall trailing control (RED without
+  the pin). *(Also restored TS types to the theme-leak store-preview test — tsc needs them even though
+  jest-expo strips them; my earlier plain-JS rewrite was doubly unnecessary.)*
 
 ## WAVE D — OWNER NODDED (2026-07-18); the 4 answers + one reshape
 - ✅ **W-D1 model APPROVED** ([`game-page-postures.md`](game-page-postures.md)) with: Q1 KEEP the inline
