@@ -82,10 +82,24 @@
   no-chatter negative).
 
 ## WAVE B — visual/layout rulings (client-only)
-- ⬜ W-B1 ⚖ **Header alignment audit** — page headers must match Collection/Profile positioning
-  (named offenders: Terms of Service, Friends; audit all routes).
-- ⬜ W-B2 ⚖ **"Return to X" spacing audit** — both gaps (header↔return, return↔content) consistent
-  app-wide (named: Add-Game creation page; audit all).
+- ✅ W-B1 (2dece42) ⚖ **Header alignment audit** — the geometry defined ONCE (shared CONSTANTS in
+  ScreenHead.tsx — `SCREEN_HEADER_PAD` lg/lg/md, the Collection/Profile reference; a structural
+  primitive was declined: headers embed varied chrome, constants are the honest single source).
+  Conformed (screen → what moved): **Friends tab + add-friends/friend-requests/friends-roster/
+  invite-friends** (xl→lg inset −4px, +8px header bottom) · **invite/[token]** (xl→lg inset) ·
+  **store** (+8px header bottom) · **Terms/Privacy via LegalScreen** (title floated at the xxl/24
+  document inset → a fixed lg/lg/md header block; content gutter 24→12) · **achievements · compare ·
+  contributor · game · user/[id] · user/[id]/{achievements,collection,entry}** (header bottom sm/4
+  → md/8). Reference screens (collection/profile/discover) now consume the constant too. Jest pins
+  values + consumption (screen-geometry.test.ts).
+- ✅ W-B2 (2dece42) ⚖ **"Return to X" spacing audit** — both gaps = **md/8** app-wide: gap-1 = the
+  header's paddingBottom; gap-2 = the seam row's paddingBottom (`RETURN_SEAM_PAD` lg/md; under-title
+  S2-b seams — **Add-Game**, device, LegalScreen — fuse gap-1 as `HEADER_SEAM_GAP`=md, Add-Game was
+  gap 2px + 12px bottom). Conformed: the social cluster's seams (xl/sm → lg/md) · store's returnRow
+  (top-sm/no-bottom → the seam pad) · **settings + blocked + game/[id]**: the in-scroll links moved
+  to the FIXED seam row above the scroll (the majority grammar — one seam structure app-wide; bodies
+  lose their top pad so gap-2 stays 8). Judgement call recorded: this is the one structural move in
+  an otherwise geometry-only sweep (an in-scroll link cannot hit the audited gap without it).
 - ✅ W-B3 (f3be7b3) ⚖ **Buy-bar height** — the fix lands ONCE in `HoldFillButton` `base` (vertical
   pad md/8 → **lg/12 + horizontal xl/16, the ScreenButton keycap grammar**) and ripples to every buy
   surface by composition: BuyBar → ItemSheet · ReconcileSheet · KeepBar · AdoptCardSheet, plus the
