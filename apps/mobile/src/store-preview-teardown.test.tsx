@@ -24,16 +24,16 @@ import { SCREEN_THEMES } from './theme/palettes';
 // expo-router is mocked with a controllable useFocusEffect that models react-navigation's focus/blur
 // contract: it runs the effect on FOCUS (mount) and its returned cleanup on BLUR (manual) or UNMOUNT.
 // `mock`-prefixed so jest's hoisted factory may reference it.
-const mockFocusReg = { effects: [] };
+const mockFocusReg = { effects: [] as { cleanup?: () => void }[] };
 
 jest.mock('expo-router', () => {
   const RReact = require('react');
   return {
     useLocalSearchParams: () => ({}),
-    useFocusEffect: (cb) => {
+    useFocusEffect: (cb: () => unknown) => {
       RReact.useEffect(() => {
         const result = cb();
-        const entry = { cleanup: typeof result === 'function' ? result : undefined };
+        const entry = { cleanup: typeof result === 'function' ? (result as () => void) : undefined };
         mockFocusReg.effects.push(entry);
         return () => {
           if (entry.cleanup) entry.cleanup();
@@ -91,7 +91,7 @@ function makeStore() {
   return configureStore({ reducer: { prefs: prefsReducer } });
 }
 
-function Harness({ showStore }) {
+function Harness({ showStore }: { showStore: boolean }) {
   return (
     <Provider store={makeStore()}>
       <StoreThemePreviewProvider>

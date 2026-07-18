@@ -1,6 +1,7 @@
 import { Pressable, View, Text } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { themedStyles, useTheme } from '../../theme';
+import { HEADER_CONTENT_HEIGHT } from '../ScreenHead';
 
 // HeaderKey (P8 · friends-states `.head-act`) — the persistent ADD FRIENDS door on the Friends header: a
 // flat cream square chip (F-03, no travel) carrying the person-plus glyph and an optional orange count
@@ -32,8 +33,10 @@ export function HeaderKey({ count = 0, onPress }: { count?: number; onPress: () 
 
 const useStyles = themedStyles((t) => ({
   key: {
-    width: 34,
-    height: 34,
+    // W-B1b — conform to the shared header band (was 34) so the Friends title sits level with
+    // Collection/Profile; a square keycap keeps the person-plus glyph centred.
+    width: HEADER_CONTENT_HEIGHT,
+    height: HEADER_CONTENT_HEIGHT,
     backgroundColor: t.scr.key,
     alignItems: 'center',
     justifyContent: 'center',

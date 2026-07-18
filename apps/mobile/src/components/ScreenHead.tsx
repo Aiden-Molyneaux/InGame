@@ -23,6 +23,15 @@ export const RETURN_SEAM_PAD = {
  *  gap-1 as separate blocks, expressed as the fused block's row gap. */
 export const HEADER_SEAM_GAP = theme.space.md;
 
+// W-B1b (owner ruling — "the header spacing must be independent of the button"). The header row is
+// pinned to ONE content height and the trailing control cluster is taken OUT OF FLOW (absolute), so the
+// title's vertical position is identical on every screen regardless of which trailing control it carries
+// (a HeaderKey · a CurrencyCounter · a CountTag · none). Before this, `alignItems:'center'` on an
+// in-flow row let a trailing control TALLER than the title (the 34px Friends HeaderKey vs the ~24px
+// counters) grow that row and drop the title ~5px below Collection/Profile — the discrepancy the owner
+// kept hitting. All trailing controls conform to (are ≤) this band; HeaderKey was 34→26 to match.
+export const HEADER_CONTENT_HEIGHT = 26;
+
 // CountTag (component-map §5.4 — was CountKeycap) — a flat, DISPLAY-ONLY gold count (never pressable).
 // F-1 fix 7b: sized to match the CurrencyCounter keycap (same padding) so the two read as header
 // siblings when both appear (ECON-07 — the counter is the wallet's entry point elsewhere).
@@ -40,12 +49,12 @@ export function CountTag({ label }: { label: string }) {
 export function ScreenHead({ title, count, trailing }: { title: string; count?: string; trailing?: ReactNode }) {
   const styles = useStyles();
   return (
-    <View style={styles.head}>
+    <View style={styles.head} testID="screen-head">
       <Text style={styles.title} accessibilityRole="header">
         {title.toUpperCase()}
       </Text>
       {count || trailing ? (
-        <View style={styles.right}>
+        <View style={styles.right} testID="screen-head-trailing">
           {count ? <CountTag label={count} /> : null}
           {trailing ?? null}
         </View>
@@ -55,21 +64,33 @@ export function ScreenHead({ title, count, trailing }: { title: string; count?: 
 }
 
 const useStyles = themedStyles((t) => ({
+  // W-B1b — the title is the SOLE in-flow child, pinned to HEADER_CONTENT_HEIGHT; the trailing cluster
+  // is absolute (below), so no trailing control can grow the row and shift the title. `position:relative`
+  // anchors the absolute cluster to the header's content edge (the wrapper owns the horizontal padding).
   head: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    position: 'relative',
+    minHeight: HEADER_CONTENT_HEIGHT,
+  },
+  // the header-right cluster: the gold count chip + any trailing control (the CurrencyCounter). W-B1b —
+  // ABSOLUTE + top/bottom:0 spans the fixed band and centres its children within it, so it is out of the
+  // title's flow (the title can never be pushed). `stretch` keeps the count chip and the CurrencyCounter
+  // the same height (F-1) — now the band height, HEADER_CONTENT_HEIGHT.
+  right: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    flexDirection: 'row',
+    alignItems: 'stretch',
     gap: t.space.md,
   },
-  // the header-right cluster: the gold count chip + any trailing control (the CurrencyCounter).
-  // F-1 (M5) — `stretch` makes the count chip and the CurrencyCounter EXACTLY the same height: the
-  // counter is the taller sibling (its PixelsMark glyph + 11px value set a taller intrinsic box than
-  // the 9px count text), so the flat count chip was ~2px short. Stretching both to the row's cross-size
-  // equalizes them without a magic number; the count chip centres its own text (below).
-  right: { flexDirection: 'row', alignItems: 'stretch', gap: t.space.md },
   title: {
     fontFamily: t.font.screenBold,
     fontSize: t.type.display, // 21 (F-06)
+    lineHeight: HEADER_CONTENT_HEIGHT, // W-B1b — the title box == the band on every screen (deterministic,
+    // independent of font ascent/descent), so the title sits identically everywhere
     color: t.scr.ink,
     letterSpacing: 1,
   },
