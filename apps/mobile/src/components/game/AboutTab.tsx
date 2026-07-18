@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { themedStyles } from '../../theme';
 import { Avatar } from '../Avatar';
@@ -20,12 +21,17 @@ export function AboutTab({
   gameId,
   onViewContributor,
   onOpenUser,
+  beforeFriends,
 }: {
   gameId: string;
   /** CAT-05 — the contributor credit routes to the contributor profile (app-wide designer-tap). */
   onViewContributor: (userId: string) => void;
   /** CAT-09c — a friends-who-own row routes to that friend's profile. */
   onOpenUser: (userId: string) => void;
+  /** W-D1 D-3 — an optional slot rendered AFTER the canonical game info and BEFORE the friends-who-own
+   *  list. CATALOG passes its NOT-IN-YOUR-COLLECTION band here so the section order reads
+   *  info → not-in-collection (+ ADD CTA) → friends-who-own. OWN/FRIEND omit it (no band). */
+  beforeFriends?: ReactNode;
 }) {
   const styles = useStyles();
   const { data, isLoading, isError, refetch } = useGetGameDetailQuery(gameId);
@@ -105,6 +111,9 @@ export function AboutTab({
           <Text style={styles.pl}>FRIENDS HAVE IT</Text>
         </View>
       </View>
+
+      {/* W-D1 D-3 — the CATALOG not-in-collection band slots HERE: after the game info, before friends */}
+      {beforeFriends}
 
       {/* CAT-09c — the named friends-who-own list (LIVE focused read) */}
       <FriendsWhoOwnSection gameId={gameId} onOpenUser={onOpenUser} />

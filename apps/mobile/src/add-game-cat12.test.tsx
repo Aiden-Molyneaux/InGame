@@ -108,6 +108,17 @@ describe('walk2 N2b: the Add-Game rail trio (POPULAR · NEW RELEASES · FRIENDS 
   });
 });
 
+describe('W-D1 D-2: the Add-Game search field starts CLOSED on entry', () => {
+  it('the docked search field does NOT auto-focus (rails show first; tapping the field opens the keyboard)', () => {
+    renderAddGame();
+    const search = screen.getByPlaceholderText('Search the catalog');
+    // starts closed — no autoFocus, so entering Add-Game shows the rail trio, not the keyboard.
+    expect(search.props.autoFocus).toBeFalsy();
+    // the pre-query rails are visible on entry (the field being closed doesn't hide them)
+    expect(screen.getByText('POPULAR FIRST ADDS')).toBeTruthy();
+  });
+});
+
 describe('CAT-02 walk2-B8: the create-this-game prompt is GOLD + pixel-stepped (F-02)', () => {
   it('a query with no match renders the create prompt as ScreenButton/add (the gold stepped grammar)', () => {
     const { UNSAFE_getAllByType } = renderAddGame();

@@ -88,35 +88,39 @@ export function CatalogGamePage({ gameId }: { gameId: string }) {
               onViewDesigner={(userId) => router.push(`/contributor/${userId}`)}
             />
           ) : (
-            <>
-              {/* the neutral band, PINNED above ABOUT so the key action never hides behind a tab */}
-              <View style={styles.band}>
-                <Text style={styles.bandHead}>NOT IN YOUR COLLECTION</Text>
-                <Text style={styles.bandSub}>Add it to track your play, design its card, and compare with friends.</Text>
-                <View style={styles.bandActions}>
-                  <ScreenButton
-                    label={addState.isLoading ? 'Adding…' : '+ Add to collection'}
-                    variant="primary"
-                    onPress={() => void onAdd()}
-                    disabled={addState.isLoading}
-                    block
-                  />
-                  <ScreenButton
-                    label={queued ? 'On your Up Next ✓' : queueState.isLoading ? 'Adding…' : '+ Up Next'}
-                    variant="secondary"
-                    onPress={() => void onUpNext()}
-                    disabled={queued || queueState.isLoading}
-                    block
-                  />
+            // W-D1 D-3 — the ABOUT order reads info → NOT-IN-COLLECTION band → friends-who-own: the band
+            // rides AboutTab's `beforeFriends` slot (was pinned above the whole tab). The ADD CTA sits
+            // right under the game facts, still above the fold and never hidden behind a tab.
+            <AboutTab
+              gameId={gameId}
+              onViewContributor={(userId) => router.push(`/contributor/${userId}`)}
+              onOpenUser={(userId) => router.push(`/user/${userId}`)}
+              beforeFriends={
+                <View style={styles.band}>
+                  <Text style={styles.bandHead}>NOT IN YOUR COLLECTION</Text>
+                  <Text style={styles.bandSub}>Add it to track your play, design its card, and compare with friends.</Text>
+                  <View style={styles.bandActions}>
+                    {/* W-D1 D-4 — ADD TO COLLECTION carries the pixel-STEPPED silhouette (steppedRectPath via
+                        the ScreenButton `stepped` prop), kept ORANGE /primary (0069 — non-acquisitive, NOT gold). */}
+                    <ScreenButton
+                      label={addState.isLoading ? 'Adding…' : '+ Add to collection'}
+                      variant="primary"
+                      stepped
+                      onPress={() => void onAdd()}
+                      disabled={addState.isLoading}
+                      block
+                    />
+                    <ScreenButton
+                      label={queued ? 'On your Up Next ✓' : queueState.isLoading ? 'Adding…' : '+ Up Next'}
+                      variant="secondary"
+                      onPress={() => void onUpNext()}
+                      disabled={queued || queueState.isLoading}
+                      block
+                    />
+                  </View>
                 </View>
-              </View>
-
-              <AboutTab
-                gameId={gameId}
-                onViewContributor={(userId) => router.push(`/contributor/${userId}`)}
-                onOpenUser={(userId) => router.push(`/user/${userId}`)}
-              />
-            </>
+              }
+            />
           )}
         </ScrollView>
 

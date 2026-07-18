@@ -21,6 +21,9 @@ export function DualFaceHero({
   since,
   artist,
   statsLabel = 'YOUR STATS',
+  statsTitle,
+  faceLabel = 'THE FACE',
+  faceA11yLabel,
   onInspect,
 }: {
   title: string;
@@ -35,7 +38,14 @@ export function DualFaceHero({
   status: string;
   since: string | null;
   artist: string | null;
+  /** The OUTER label under the back card. Default OWN "YOUR STATS"; a friend passes "{NAME}'S STATS". */
   statsLabel?: string;
+  /** The INNER StatsBack heading (W-D1 D-1) — defaults to the StatsBack OWN value ("YOUR STATS"). */
+  statsTitle?: string;
+  /** The OUTER label under the face card (default "THE FACE"; a friend passes "{NAME}'S FACE"). */
+  faceLabel?: string;
+  /** Accessibility name for the face tap-target (default the OWN "Inspect your {title} card"). */
+  faceA11yLabel?: string;
   onInspect: () => void;
 }) {
   const styles = useStyles();
@@ -44,17 +54,17 @@ export function DualFaceHero({
       <Pressable
         style={styles.face}
         accessibilityRole="button"
-        accessibilityLabel={`Inspect your ${title} card`}
+        accessibilityLabel={faceA11yLabel ?? `Inspect your ${title} card`}
         onPress={onInspect}
       >
         {/* /grid (161×225) — one size up from /pick per the owner's gate-5 B.5. `animate`: the
             game-page hero is the shelf's showpiece — animated cosmetics run here (0068 opt-in).
             EntryCard owns the own-composition vs adopted-flattened branch (F-8/F-19 class). */}
         <EntryCard title={title} card={{ composition, imageUrl, thumbUrl }} size="grid" animate />
-        <Text style={styles.label}>THE FACE</Text>
+        <Text style={styles.label}>{faceLabel}</Text>
       </Pressable>
       <View style={styles.face}>
-        <StatsBack hours={hours} percent={percent} status={status} since={since} artist={artist} width={161} height={225} />
+        <StatsBack hours={hours} percent={percent} status={status} since={since} artist={artist} statsTitle={statsTitle} width={161} height={225} />
         <Text style={[styles.label, styles.labelAcc]}>{statsLabel}</Text>
       </View>
     </View>

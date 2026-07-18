@@ -63,8 +63,17 @@ jest.mock('./store/hooks', () => ({ useAppSelector: () => 'tok', useAppDispatch:
 jest.mock('./store/shareCard', () => ({ shareCardImage: jest.fn() }));
 jest.mock('./components/SheetLock', () => ({ useSheetLocked: () => false }));
 
-// heavy / posture-irrelevant children — stood in so the scaffolding renders cheaply
-jest.mock('./components/game/DualFaceHero', () => ({ DualFaceHero: () => null }));
+// heavy / posture-irrelevant children — stood in so the scaffolding renders cheaply. W-D1 D-1: the
+// DualFaceHero mock ECHOES its framing props so the friend's dual-face (front label + back title +
+// gated stats) is observable — proving FRIEND PLAY now reuses the SAME shared dual-face as OWN.
+jest.mock('./components/game/DualFaceHero', () => ({
+  DualFaceHero: (p: Record<string, unknown>) => {
+    const { Text } = require('react-native');
+    return (
+      <Text>{`DUALFACE|face=${p.faceLabel ?? 'THE FACE'}|statsTitle=${p.statsTitle ?? 'YOUR STATS'}|statsLabel=${p.statsLabel ?? 'YOUR STATS'}|hours=${p.hours}|status=${p.status}`}</Text>
+    );
+  },
+}));
 jest.mock('./components/game/PlayDossier', () => ({ PlayDossier: () => null }));
 jest.mock('./components/game/CardSwitcher', () => ({ CardSwitcher: () => null }));
 jest.mock('./components/game/CardDetailSheet', () => ({ CardDetailSheet: () => null }));
@@ -79,9 +88,15 @@ jest.mock('./components/EntryCard', () => ({
   },
 }));
 jest.mock('./components/game/AboutTab', () => ({
-  AboutTab: () => {
-    const { Text } = require('react-native');
-    return <Text>ABOUT-TAB</Text>;
+  // renders the D-3 `beforeFriends` slot so the CATALOG NOT-IN-COLLECTION band (now nested in ABOUT) shows
+  AboutTab: ({ beforeFriends }: { beforeFriends?: React.ReactNode }) => {
+    const { Text, View } = require('react-native');
+    return (
+      <View>
+        <Text>ABOUT-TAB</Text>
+        {beforeFriends}
+      </View>
+    );
   },
 }));
 // the gallery stand-in ECHOES `canAdopt` so the Q4 browse-only guard is observable at the seam
@@ -114,6 +129,7 @@ jest.mock('./components/game/GameTabDock', () => ({
 }));
 
 import GamePage from '../app/game/[id]';
+import { ScreenButton } from './components/ScreenButton';
 
 const MY_ENTRY = {
   entryId: 'me1',
@@ -206,7 +222,7 @@ describe('W-D1 posture resolver', () => {
     mockCollection = { data: { items: [MY_ENTRY] } as unknown as CollectionResponse, isLoading: false, isError: false, refetch: jest.fn() }; // Q2: FRIEND wins
     mockUserCollection = { data: FRIEND_COL, isLoading: false, isError: false, refetch: jest.fn() };
     render(wrap(<GamePage />));
-    expect(screen.getByText('RIKO’S FACE')).toBeTruthy();
+    expect(screen.getByText(/face=RIKO’S FACE/)).toBeTruthy(); // the shared dual-face, friend-framed
     expect(screen.queryByText('SWITCH CARD')).toBeNull(); // not the OWN page
   });
 
@@ -237,12 +253,17 @@ describe('W-D1 FRIEND posture — read-only + compose', () => {
     mockUserProfile = { data: { username: 'riko' } };
   });
 
-  it('renders THEIR gated stats + the PRIVATE line, and NO edit/remove/now-playing affordances', () => {
+  it('D-1 — FRIEND PLAY reuses the OWN dual-face (their FACE + their STATS back, gated), read-only', () => {
     render(wrap(<GamePage />));
-    expect(screen.getByText('HOURS')).toBeTruthy();
-    expect(screen.getByText('240')).toBeTruthy();
-    expect(screen.getByText('NOTES · RATING')).toBeTruthy();
-    expect(screen.getByText('🔒 PRIVATE')).toBeTruthy();
+    // the shared DualFaceHero, friend-framed: front label + back title + the gated back stats flow through
+    const df = screen.getByText(/^DUALFACE\|/);
+    expect(df.props.children).toContain('face=RIKO’S FACE'); // THEIR front
+    expect(df.props.children).toContain('statsTitle=RIKO’S STATS'); // THEIR back
+    expect(df.props.children).toContain('hours=240'); // their gated play stats ride the back
+    // SOC-11 gating by construction — the shared StatsBack carries NO notes/rating (the old inline
+    // "NOTES · RATING / PRIVATE" block is retired); the privacy is stated in the note below the hero.
+    expect(screen.queryByText('NOTES · RATING')).toBeNull();
+    expect(screen.getByText(/stay private/)).toBeTruthy();
     // read-only: the overflow carries ONLY report — never a mutation of their entry
     expect(screen.getByText('REPORT THIS GAME')).toBeTruthy();
     expect(screen.queryByText('REMOVE FROM COLLECTION')).toBeNull();
@@ -258,6 +279,25 @@ describe('W-D1 FRIEND posture — read-only + compose', () => {
     expect(screen.getByText('ADD TO COLLECTION')).toBeTruthy();
     expect(screen.queryByText('⇄ COMPARE — YOU vs THEM')).toBeNull();
     expect(screen.queryByText('VIEW YOUR COPY ›')).toBeNull();
+  });
+
+  it('D-4 — unowned with NO adopt-able card: ADD TO COLLECTION is orange /primary + STEPPED', () => {
+    mockCollection = { data: { items: [] } as unknown as CollectionResponse, isLoading: false, isError: false, refetch: jest.fn() };
+    mockGallery = { data: { items: [] } as unknown as GameGalleryResponse }; // their card not adopt-able → ADD is the sole primary
+    const { UNSAFE_getAllByType } = render(wrap(<GamePage />));
+    const add = UNSAFE_getAllByType(ScreenButton).find((b) => String(b.props.label).toLowerCase().includes('add to collection'));
+    expect(add).toBeTruthy();
+    expect(add!.props.variant).toBe('primary'); // orange, not gold (0069)
+    expect(add!.props.stepped).toBe(true); // the pixel-stepped silhouette
+  });
+
+  it('D-4 — when an adopt-able card demotes ADD to the cream secondary, the step drops (never a cream step)', () => {
+    mockCollection = { data: { items: [] } as unknown as CollectionResponse, isLoading: false, isError: false, refetch: jest.fn() };
+    mockGallery = { data: GALLERY_WITH_THEIRS };
+    const { UNSAFE_getAllByType } = render(wrap(<GamePage />));
+    const add = UNSAFE_getAllByType(ScreenButton).find((b) => String(b.props.label).toLowerCase().includes('add to collection'));
+    expect(add!.props.variant).toBe('secondary');
+    expect(add!.props.stepped).toBeFalsy();
   });
 
   it('owned → the single-game compare fragment + VIEW YOUR COPY (swaps to OWN), no ADD', () => {

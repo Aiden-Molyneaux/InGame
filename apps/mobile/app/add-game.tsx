@@ -229,10 +229,12 @@ function SearchMode({
         )}
       </ScrollView>
 
-      {/* bottom-docked search (OQ-035) — rises above the keyboard within the frame (S4-d, R0-2) */}
+      {/* bottom-docked search (OQ-035) — rises above the keyboard within the frame (S4-d, R0-2). W-D1 D-2:
+          the field starts CLOSED (no autoFocus) so entering Add-Game shows the rails/suggestions first;
+          the keyboard opens only when the user taps the docked search field (its own affordance). */}
       <KeyboardLift>
         <View style={styles.dock}>
-          <SearchField value={q} onChangeText={setQ} placeholder="Search the catalog" autoFocus />
+          <SearchField value={q} onChangeText={setQ} placeholder="Search the catalog" />
         </View>
       </KeyboardLift>
     </>

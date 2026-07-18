@@ -23,6 +23,7 @@ export function StatsBack({
   artist,
   gameTitle,
   footer,
+  statsTitle = 'YOUR STATS',
   width = 138,
   height = 193,
 }: {
@@ -31,10 +32,13 @@ export function StatsBack({
   status: string;
   since: string | null;
   artist: string | null;
-  /** COL-12 — the game name on the flip back; "YOUR STATS" demotes to an eyebrow above it. */
+  /** COL-12 — the game name on the flip back; the stats-title demotes to an eyebrow above it. */
   gameTitle?: string;
   /** COL-12 — a slot below the provenance (the VIEW GAME keycap). */
   footer?: ReactNode;
+  /** The back's heading — "YOUR STATS" for OWN (default), "{NAME}'S STATS" for a friend's read-only back
+   *  (W-D1 D-1). Defaults to the OWN value so every existing call renders a byte-identical tree. */
+  statsTitle?: string;
   width?: number;
   height?: number;
 }) {
@@ -57,13 +61,13 @@ export function StatsBack({
     <>
       {gameTitle ? (
         <View style={[styles.head, compact && styles.headCompact]}>
-          <Text style={styles.eyebrow}>YOUR STATS</Text>
+          <Text style={styles.eyebrow}>{statsTitle}</Text>
           <Text style={styles.gameTitle} numberOfLines={1}>
             {gameTitle.toUpperCase()}
           </Text>
         </View>
       ) : (
-        <Text style={styles.title}>YOUR STATS</Text>
+        <Text style={styles.title}>{statsTitle}</Text>
       )}
       <View style={[styles.rows, compact && styles.rowsCompact]}>
         <Row label="HOURS" value={String(hours)} />

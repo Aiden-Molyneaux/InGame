@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import type { GalleryCardView, CollectionItem, FriendCollectionItem } from '@ingame/shared';
 import { EntryCard } from '../EntryCard';
 import { EquipReadout } from './EquipReadout';
+import { DualFaceHero } from './DualFaceHero';
 import { CommunityGallery } from './CommunityGallery';
 import { AboutTab } from './AboutTab';
 import { GameTabDock, type GameSection } from './GameTabDock';
@@ -371,29 +372,34 @@ function FriendPlayTab({
   const whose = friendName ? `${friendName.toUpperCase()}’S` : 'THEIR';
   return (
     <>
-      <Text style={styles.gameTitle}>{friendItem.title}</Text>
-      <Text style={styles.facts}>{factsLine(friendItem)}</Text>
-
-      {/* their card face (flattened) + gated stats readout */}
-      <View style={styles.dualface}>
-        <View style={styles.faceCol}>
-          <EntryCard
-            title={friendItem.title}
-            card={{ imageUrl: card.imageUrl, thumbUrl: card.thumbUrl }}
-            size="cell"
-            nowPlaying={friendItem.nowPlaying}
-          />
-          <Text style={styles.faceLabel}>{whose} FACE</Text>
-        </View>
-        <View style={styles.statsCol}>
-          <StatRow label="HOURS" value={fmt(friendItem.hours)} />
-          <StatRow label="STATUS" value={friendItem.status.toUpperCase()} />
-          {friendItem.ownedSince ? <StatRow label="SINCE" value={friendItem.ownedSince} /> : null}
-          <View style={styles.privRow}>
-            <Text style={styles.privLabel}>NOTES · RATING</Text>
-            <Text style={styles.privValue}>🔒 PRIVATE</Text>
-          </View>
-        </View>
+      {/* W-D1 D-1 — the SAME dual-face grammar as OWN: THEIR card FACE + THEIR stats BACK side-by-side
+          (DualFaceHero, read-only). The back is the shared StatsBack (hours/complete/status/since +
+          CARD ARTIST) — it structurally carries NO notes/rating, so the SOC-11 gating holds by
+          construction (COL-04/05 never appear). `percent=null` (the friend shape omits percentComplete,
+          decision 0026 → "—"). Tapping the face opens the adopt sheet when their card is adopt-able
+          (the board's "a friend's M7 → + adopt"); otherwise it's an inert read. */}
+      <View style={styles.heroGroup}>
+        <Text style={styles.heroTitle}>{friendItem.title}</Text>
+        <Text style={styles.heroFacts}>{factsLine(friendItem)}</Text>
+        <DualFaceHero
+          title={friendItem.title}
+          imageUrl={card.imageUrl}
+          thumbUrl={card.thumbUrl}
+          hours={friendItem.hours}
+          percent={null}
+          status={friendItem.status}
+          since={friendItem.ownedSince}
+          artist={card.designer ? card.designer.username.toUpperCase() : null}
+          statsLabel={`${whose} STATS`}
+          statsTitle={`${whose} STATS`}
+          faceLabel={`${whose} FACE`}
+          faceA11yLabel={
+            galleryCard
+              ? `Adopt ${friendName ? `${friendName}’s` : 'their'} ${friendItem.title} card`
+              : `${friendName ? `${friendName}’s` : 'Their'} ${friendItem.title} card`
+          }
+          onInspect={() => galleryCard && onAdoptTheirCard()}
+        />
       </View>
 
       {/* CARD-22 equipped readout — rendered ONLY when present (a quiet absence otherwise) */}
@@ -427,13 +433,23 @@ function FriendPlayTab({
           <ScreenButton label={`Adopt ${friendName ? `${friendName}’s` : 'their'} card`} variant="primary" onPress={onAdoptTheirCard} block />
         ) : null}
         {!iOwn ? (
-          <ScreenButton
-            label={adding ? 'Adding…' : 'Add to collection'}
-            variant={galleryCard ? 'secondary' : 'primary'}
-            onPress={onAddToCollection}
-            disabled={adding || added}
-            block
-          />
+          // W-D1 D-4 — ADD TO COLLECTION carries the pixel-STEPPED silhouette (steppedRectPath via the
+          // ScreenButton `stepped` prop), kept ORANGE /primary (0069 — non-acquisitive, NOT gold). When
+          // an adopt-able card demotes ADD to the cream secondary (to preserve the ADOPT-primary
+          // hierarchy) the step is dropped — the step is the orange-primary silhouette, never a cream one.
+          (() => {
+            const addVariant = galleryCard ? 'secondary' : 'primary';
+            return (
+              <ScreenButton
+                label={adding ? 'Adding…' : 'Add to collection'}
+                variant={addVariant}
+                stepped={addVariant === 'primary'}
+                onPress={onAddToCollection}
+                disabled={adding || added}
+                block
+              />
+            );
+          })()
         ) : null}
       </View>
 
@@ -488,16 +504,6 @@ function SingleGameCompare({ mine, theirs }: { mine: CollectionItem; theirs: Fri
   );
 }
 
-function StatRow({ label, value }: { label: string; value: string }) {
-  const styles = useStyles();
-  return (
-    <View style={styles.statRow}>
-      <Text style={styles.statLabel}>{label}</Text>
-      <Text style={styles.statValue}>{value}</Text>
-    </View>
-  );
-}
-
 function factsLine(i: FriendCollectionItem): string {
   return [i.developer, i.releaseYear, i.genres[0]?.name].filter(Boolean).join(' · ').toUpperCase();
 }
@@ -542,21 +548,12 @@ const useStyles = themedStyles((t) => ({
   retlink: { ...RETURN_SEAM_PAD },
   body: { paddingHorizontal: t.space.lg, paddingBottom: t.space.xl, gap: t.space.lg },
 
-  gameTitle: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, letterSpacing: 0.5 },
-  facts: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1, marginTop: -t.space.sm },
+  // W-D1 D-1 — the OWN heroGroup grammar (title · facts · dual-face read as one centered unit, gate-5 B.5).
+  heroGroup: { gap: t.space.xs },
+  heroTitle: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, textAlign: 'center', letterSpacing: 0.5 },
+  heroFacts: { fontFamily: t.font.screenSemi, fontSize: t.type.body, color: t.scr.dim, textAlign: 'center', letterSpacing: 1 },
 
-  dualface: { flexDirection: 'row', gap: t.space.lg, alignItems: 'center' },
-  faceCol: { alignItems: 'center', gap: t.space.sm },
-  faceLabel: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
-  statsCol: { flex: 1, gap: t.space.sm, backgroundColor: t.scr.panel, padding: t.space.lg },
-  statRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  statLabel: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
-  statValue: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 0.5 },
-  privRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', opacity: 0.6, marginTop: t.space.xs },
-  privLabel: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
-  privValue: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5 },
-
-  equipWrap: {},
+  equipWrap: { alignItems: 'center' },
   artist: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
   artistName: { fontFamily: t.font.screenBold, color: t.scr.ink },
   privacyNote: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.3, lineHeight: 14 },
