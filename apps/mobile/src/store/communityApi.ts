@@ -49,6 +49,9 @@ const communityApi = api
           'Collection',
           'Cards',
           'CommunityCards',
+          // MeAchievements (W-A8) — card.adopted triggers the ADOPTER'S a7 good_taste / b4 patron. The
+          // DESIGNER'S credit (a13/a14) is an other-actor unlock — rides focus/M7-push (residual).
+          'MeAchievements',
         ],
       }),
 

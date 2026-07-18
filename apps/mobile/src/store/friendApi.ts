@@ -92,11 +92,13 @@ const friendApi = api
           body: { toUserId } satisfies CreateFriendRequest,
         }),
         // The profile chip re-reads (User) AND a new outgoing request appears in the inbox (FriendRequests).
-        // A mutual-pending target auto-accepts → the roster gains a friend, so Friends re-reads too.
+        // A mutual-pending target auto-accepts → the roster gains a friend, so Friends re-reads too — and
+        // that auto-accept emits friend.added (a5/a6), so MeAchievements re-reads too (W-A8).
         invalidatesTags: (_res, _err, toUserId) => [
           { type: 'User', id: toUserId },
           'FriendRequests',
           'Friends',
+          'MeAchievements',
         ],
       }),
 
@@ -127,7 +129,9 @@ const friendApi = api
       // profile all re-read.
       acceptFriendRequest: build.mutation<OkResponse, RequestTransition>({
         query: ({ requestId }) => ({ url: `/friends/requests/${requestId}/accept`, method: 'POST', body: {} }),
-        invalidatesTags: (_res, _err, { userId }) => ['Friends', 'FriendRequests', { type: 'User', id: userId }],
+        // MeAchievements (W-A8) — friend.added dual-credits BOTH parties (a5 player_two / a6 full_lobby);
+        // this covers the ACCEPTER's celebration. The REQUESTER'S unlock is other-actor — focus/M7-push.
+        invalidatesTags: (_res, _err, { userId }) => ['Friends', 'FriendRequests', { type: 'User', id: userId }, 'MeAchievements'],
       }),
       // POST /friends/requests/:id/decline — SILENT (the sender is never told, SOC-08); the request leaves
       // the inbox + a cooldown starts (the profile re-reads as `none`/cooldown).

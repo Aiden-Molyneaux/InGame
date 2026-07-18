@@ -193,6 +193,13 @@ export const api = createApi({
     // MOVE community state — publishCard drops a new card into the gallery — can invalidate it. RTK
     // dedupes with communityApi's addTagTypes; the getGameGallery provider still lives in communityApi.
     'CommunityCards',
+    // W-A8 (walk2) — same precedent: declared here so the UNLOCK-TRIGGERING mutations (mapped from the
+    // seeded ACH criteria's events, P11 manifest) can invalidate the /me/achievements read → the ACH-06
+    // CelebrationHost's refetch-delta fires ON the action, not on the next focus/restart. The provider
+    // lives in achievementsApi (its enhanceEndpoints dedupes). Only the mapped mutations carry it — no
+    // blanket invalidation chatter. Other-ACTOR unlocks (a13/a14/a15 adoptions-received/reach, b8's
+    // recommender credit) still ride focus/reconnect until the M7 push (accepted residual).
+    'MeAchievements',
   ],
   endpoints: (build) => ({
     // ── auth ──────────────────────────────────────────────────────────────────────────────────
@@ -224,7 +231,8 @@ export const api = createApi({
     }),
     addToCollection: build.mutation<CollectionItem, AddCollectionEntryRequest>({
       query: (body) => ({ url: '/me/collection', method: 'POST', body }),
-      invalidatesTags: ['Collection', 'Me', 'Catalog'], // counts + own-it flags move too (CAT-09)
+      // MeAchievements (W-A8) — collection.entry_added triggers a3 shelf_starter (+ the b8 recipient add).
+      invalidatesTags: ['Collection', 'Me', 'Catalog', 'MeAchievements'], // counts + own-it flags move too (CAT-09)
       transformResponse: (raw): CollectionItem => collectionItemSchema.parse(raw),
     }),
     updateEntry: build.mutation<CollectionItem, { entryId: string } & UpdateCollectionEntryRequest>({
@@ -233,7 +241,8 @@ export const api = createApi({
         method: 'PATCH',
         body,
       }),
-      invalidatesTags: ['Collection', 'Me'],
+      // MeAchievements (W-A8) — a status update (→ beaten) triggers a12 beaten_path.
+      invalidatesTags: ['Collection', 'Me', 'MeAchievements'],
     }),
     removeEntry: build.mutation<OkResponse, string>({
       query: (entryId) => ({ url: `/me/collection/${entryId}`, method: 'DELETE' }),
@@ -341,7 +350,8 @@ export const api = createApi({
     }),
     claimDailyBonus: build.mutation<DailyBonusResponse, void>({
       query: () => ({ url: '/me/daily-bonus', method: 'POST', body: {} }),
-      invalidatesTags: ['Wallet', 'Ledger'],
+      // MeAchievements (W-A8) — the daily claim triggers a10 ladder_graduate + b6 night_shift.
+      invalidatesTags: ['Wallet', 'Ledger', 'MeAchievements'],
     }),
     // POST /iap/validate — a pack purchase (receipt) OR restore (rcUserId). Grants → balance + a ledger
     // row + (for the Starter) a purchased flag, so all three invalidate. The client mints the mock
@@ -385,7 +395,8 @@ export const api = createApi({
     // gameId's gallery entry, the same cross-slice pattern adoptCard uses.
     publishCard: build.mutation<CardDesignView, string>({
       query: (cardId) => ({ url: `/cards/${cardId}/publish`, method: 'POST', body: {} }),
-      invalidatesTags: ['Cards', 'Me', 'Collection', 'CommunityCards'],
+      // MeAchievements (W-A8) — card.published triggers a1 first_print / a2 press_operator / b3 renaissance.
+      invalidatesTags: ['Cards', 'Me', 'Collection', 'CommunityCards', 'MeAchievements'],
     }),
 
     // ── catalog (CAT-01..05/09) ───────────────────────────────────────────────────────────────
@@ -403,7 +414,8 @@ export const api = createApi({
     }),
     createGame: build.mutation<CatalogItem, CreateGameRequest>({
       query: (body) => ({ url: '/catalog/games', method: 'POST', body }),
-      invalidatesTags: ['Catalog'],
+      // MeAchievements (W-A8) — catalog.game_created triggers a9 contributor.
+      invalidatesTags: ['Catalog', 'MeAchievements'],
       transformResponse: (raw): CatalogItem => catalogItemSchema.parse(raw),
     }),
   }),

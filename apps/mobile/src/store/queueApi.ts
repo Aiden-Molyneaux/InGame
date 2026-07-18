@@ -34,8 +34,10 @@ const queueApi = api
       addQueueItem: build.mutation<QueueItem, AddQueueItemRequest>({
         query: (body) => ({ url: '/me/queue', method: 'POST', body }),
         transformResponse: (raw): QueueItem => queueItemSchema.parse(raw),
+        // MeAchievements on the friend_rec branch (W-A8) — accepting a rec is the b8 recipient half; the
+        // RECOMMENDER'S credit is other-actor (unreachable client-side) — focus/M7-push (residual).
         invalidatesTags: (_res, _err, arg) =>
-          arg.source === 'friend_rec' ? ['Queue', 'Recommendations'] : ['Queue'],
+          arg.source === 'friend_rec' ? ['Queue', 'Recommendations', 'MeAchievements'] : ['Queue'],
       }),
 
       // PATCH /me/queue/reorder — the full-permutation re-rank (mirrors collection/reorder). The optimistic
