@@ -30,10 +30,17 @@ glyph · cross-device social coherence [refetch-on-focus + shared `Social` tag; 
   Discover · achievements+celebration · settings/report. Receipt: [`surfaces-receipt.md`](surfaces-receipt.md).
 - ✅ **Owner walk-2 iteration (waves A/B/C):** ~40 owner notes triaged + fixed. Ledger:
   [`walk2-notes.md`](walk2-notes.md) (every item, its commit, its diagnosis).
-- ⬜ **Wave D — THE NEXT BUILD:** the adaptive Game page (owner-nodded model in
-  [`game-page-postures.md`](game-page-postures.md)) + the Add-Game community-cards adopt step
-  (OQ-136 reopened, W-C10). C5's game-detail aggregate (built in Wave C) is the seam. Largest
-  remaining client packet.
+- ✅ **Wave D — DONE** (workflow `wave-d-adaptive-gamepage`, review GO; head after push below):
+  the adaptive Game page — one `/game/[id]` resolving OWN (byte-faithful, −60-line extraction to
+  `OwnGamePage`) · FRIEND (`?via=`: read-only PLAY + compare fragment + adopt + VIEW YOUR COPY) ·
+  CATALOG (ABOUT + community CARDS browse-only + ADD TO COLLECTION, **no-adopt structural** via
+  `canAdopt=false`, Q4). Retired `app/user/[id]/entry/[gameId]` + re-pointed its 3 linkers. ABOUT tab
+  live from the game-detail aggregate. Add-Game **inspect chevron** → CATALOG + the **community-cards
+  adopt step** (OQ-136/W-C10: add-then-adopt onto the new entry, blank-default skip). 90 suites/610
+  mobile. **OWNER-WALK-OWED** (UI; parvati not run — browser lane flaky). Owner-eye flags: AS-3 CATALOG
+  PLAY padlocked (board-wins over the doc's "CTA block") · AS-4 FRIEND views keep COLLECTION-active nav
+  pip (usePathname can't read `?via=`) · GAP-2 a direct CATALOG-card→add+adopt bridge deferred (adopt
+  via the Add-Game step or after ADD upgrades to OWN).
 - ⬜ **M6 EXIT GATES (owner lane, the beta):** R2/Cloudflare + API host + managed PG provisioning
   (P15/G-C) · EAS/TestFlight lane (P16) · the alpha wave (close friends) → cohort. See §6.
 - ⬜ **Carried from M5:** P2b real-RevenueCat + G-J + the manual sandbox pass — rides Google Play

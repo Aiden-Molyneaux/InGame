@@ -211,7 +211,7 @@
   lands. 0078 decides.
 
 ## WAVE D — design-think BEFORE build (the owner asked for deeper thought)
-- ⬜ W-D1 **The adaptive Game page consolidation** — ONE Game page across three postures: OWN entry
+- ✅ W-D1 (manifest c573dc0 · postures 934aa5f · add-step 9c8d542 · workflow review GO; 90/610 mobile · OWN posture provably intact) **The adaptive Game page consolidation** — ONE Game page across three postures: OWN entry
   (full PLAY/CARDS/ABOUT) · FRIEND's entry (their PLAY read-only + ABOUT + community CARDS +
   compare affordance — replacing/absorbing P9's separate `/user/[id]/entry/[gameId]` route) ·
   CATALOG/no-entry (ABOUT + community CARDS + add-to-collection — reachable from Add-Game search
@@ -267,7 +267,7 @@ briefs for M7 get this line verbatim.
   **ADD TO COLLECTION** path (a Game page for a game you don't have gets an add affordance), and
   (b) **the Add-Game FLOW gains a community-cards step** — see W-C10. The AdoptCardSheet
   add-to-collection bridge (draft Q4 recommend) is REPLACED by this: no adopt without an entry.
-- ⬜ W-C10 ⚖ **Add-Game community-cards adopt step (OQ-136 REOPENED — un-deferred from onboarding-era).**
+- ✅ W-C10 (9c8d542) ⚖ **Add-Game community-cards adopt step (OQ-136 REOPENED — un-deferred from onboarding-era).**
   The owner: "during the Add-Game flow there is supposed to be a step where the user is shown the
   Community Cards (or a subset) so they can adopt one during Add Game." OQ-136 was deferred to the
   onboarding era at decision 0076 §0.12 — the owner now rules it IN for the beta. Build: an Add-Game
