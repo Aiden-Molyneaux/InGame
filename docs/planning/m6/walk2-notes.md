@@ -23,7 +23,18 @@
   urls. This kills the class.
 - ✅ W-A3 (da51928) **Default cards break plate conventions** — CARD-18's default face must position/float the
   nameplate exactly as designed cards do.
-- ⬜ W-A4 **Achievement celebration renders off-center** — NOTE: rendered CENTERED on web during cluster-1 verify; likely device-specific — owner re-checks on the next live unlock; fix only with a device repro.
+- ✅ W-A3b (efd4ce3, live-confirmed) **Default-card plate POSITION** (owner screenshot, re-opened from A3): the default card
+  renders its plate as a strip pinned BELOW/OUTSIDE the card frame — covering the card's bottom edge
+  + stepped corner (the Hades olive card) — while designed cards compose the plate INSIDE the
+  silhouette. Conform the position, not just the height.
+- ✅ W-A4 **CLOSED — not a centering bug** (owner confirmed: an illusion from the reward strip's
+  contrast against the backdrop).
+- ✅ W-A4b (e134c99) ⚖ **Celebration backdrop = the SCREEN-THEME colour with orange glyphs on top** (owner
+  ruling w/ screenshot) — not the current whole-screen orange-brown tint; rays/glyphs stay orange
+  (tier-coloured), the field is the theme bg.
+- ⬜ W-B15 ⚖ **A less blank DEFAULT CARD visual** (owner todo) — the CARD-18 default face is a flat
+  colour block; wants a visual treatment. Owner-taste design item (candidates → a small drafts pass
+  or the pre-launch content pass; decide at the 0078 sitting).
 - ⬜ W-A5 **Styler premium cost hidden behind the item container** — the price must read at a glance
   (an M5-era layering bug).
 - ⬜ W-A6 **Top-3 with 2 seats spreads to screen edges** — must render consecutively from the left.
