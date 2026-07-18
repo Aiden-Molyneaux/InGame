@@ -6,14 +6,16 @@ import { ScreenHead } from '../../src/components/ScreenHead';
 import { EntryCard } from '../../src/components/EntryCard';
 import { StatTile } from '../../src/components/StatTile';
 import { ScreenButton } from '../../src/components/ScreenButton';
+import { ToolButton } from '../../src/components/ToolButton';
 import { MiniDevice } from '../../src/components/MiniDevice';
 import { RankChip } from '../../src/components/RankChip';
 import { CurrencyCounter } from '../../src/components/commerce';
 import { TertiaryLink } from '../../src/components/TertiaryLink';
-import { theme, themedStyles, useTheme } from '../../src/theme';
+import { theme, themedStyles } from '../../src/theme';
 import { SHELL_NAMES, SCREEN_THEME_NAMES, resolveShellId, resolveScreenThemeId } from '../../src/theme/palettes';
 import { deviceStripCopy } from '../../src/components/device/deviceCopy';
-import { useGetMeQuery, useGetDeviceQuery, useGetWalletQuery } from '../../src/store/api';
+import { STATUS_LABEL } from '../../src/constants/collection';
+import { useGetMeQuery, useGetCollectionQuery, useGetDeviceQuery, useGetWalletQuery } from '../../src/store/api';
 import { useGetMyAchievementsQuery } from '../../src/store/achievementsApi';
 import { useAppDispatch } from '../../src/store/hooks';
 import { setCollectionView } from '../../src/store/prefsSlice';
@@ -27,8 +29,11 @@ import { logoutTeardown } from '../../src/store';
 export default function Profile() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const t = useTheme();
   const { data: me, isLoading, isError, refetch } = useGetMeQuery();
+  // walk2 B14 — the PINNED FAVOURITE hero enriches its detail lines from the (already app-cached)
+  // collection entry: /me's expansion carries only {title, hours, card}; status + developer/year/genre
+  // live on the shelf entry (the decision-0061 stat-line + catalog-line grammar).
+  const { data: collection } = useGetCollectionQuery();
   const { data: device } = useGetDeviceQuery();
   // F-1 fix 7 — the persistent PX counter rides the Profile header too (ECON-07 entry point).
   const { data: wallet } = useGetWalletQuery();
@@ -92,16 +97,13 @@ export default function Profile() {
                 onPress={() => router.push({ pathname: '/store', params: { view: 'wallet' } })}
               />
               {/* P12 (0076 §0.10) — the Profile header's door into Settings (the board's reach pattern;
-                  the M7 EDIT/SHARE tools stay deferred — only the Settings gear opens now). */}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Settings"
+                  the M7 EDIT/SHARE tools stay deferred). walk2 B11 — the gear rides the CREAM utility
+                  keycap (ToolButton — the 0069 secondary keycap voice), navy glyph, never hand-styled. */}
+              <ToolButton
+                icon={<SettingsGear color={theme.brand.navy} />}
+                label="Settings"
                 onPress={() => router.push('/settings')}
-                hitSlop={8}
-                style={({ pressed }) => [styles.gear, pressed && styles.gearPressed]}
-              >
-                <SettingsGear color={t.scr.ink} />
-              </Pressable>
+              />
             </View>
           }
         />
@@ -149,30 +151,49 @@ export default function Profile() {
           </Pressable>
         </Section>
 
-        {/* PINNED FAVOURITE (PROF-01/05 — P2, real as of M3; VIEW GAME rides the Game page, M-later) */}
+        {/* PINNED FAVOURITE (PROF-01/05) — walk2 B14: full HERO-CARD treatment, composed per the
+            Collection NowPlayingHero grammar (decision 0061): the hero-size card (138×193) + a meta
+            column of stat-line ({hours} HRS · {STATUS}) · display-size title · catalog line
+            (DEVELOPER · YEAR · GENRE). Detail lines resolve from the caller's collection entry (the
+            /me expansion carries only title+hours); off-shelf pins degrade to the hours line alone.
+            ASSUMPTION (flagged for the owner): detail-line content = the 0061 stat-line + catalog-line
+            pair verbatim — the same two lines the Collection hero and shelf rows speak. */}
         <Section title="Pinned favourite">
           {me.favouriteGame ? (
-            <View style={styles.heroRow}>
-              {/* CARD-23 NAVIGATE — the pinned-favourite is a game handle → the Game page (mode 1). */}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Open ${me.favouriteGame.title}`}
-                onPress={() => router.push(`/game/${me.favouriteGame!.gameId}`)}
-              >
-                <EntryCard
-                  title={me.favouriteGame.title}
-                  card={me.favouriteGame.card} // both branches owned by EntryCard (adopted-card parity, round-2 bug 9)
-                  size="grid"
-                  width={120}
-                  height={168}
-                  animate // the pinned-favourite hero (0068 opt-in)
-                />
-              </Pressable>
-              <View style={styles.heroMeta}>
-                <Text style={styles.heroTitle}>{me.favouriteGame.title.toUpperCase()}</Text>
-                <Text style={styles.heroSub}>{me.favouriteGame.hours}H LOGGED</Text>
-              </View>
-            </View>
+            (() => {
+              const fav = me.favouriteGame;
+              const entry = collection?.items.find((i) => i.gameId === fav.gameId);
+              const statLine = entry
+                ? `${entry.hours} HRS · ${STATUS_LABEL[entry.status]}`
+                : `${fav.hours} HRS`;
+              const catalogLine = entry
+                ? [entry.developer, entry.releaseYear, entry.genres[0]?.name].filter(Boolean).join(' · ').toUpperCase()
+                : '';
+              return (
+                <View style={styles.heroRow}>
+                  {/* CARD-23 NAVIGATE — the pinned-favourite is a game handle → the Game page (mode 1). */}
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Open ${fav.title}`}
+                    onPress={() => router.push(`/game/${fav.gameId}`)}
+                  >
+                    <EntryCard
+                      title={fav.title}
+                      card={fav.card} // both branches owned by EntryCard (adopted-card parity, round-2 bug 9)
+                      size="grid"
+                      width={138}
+                      height={193}
+                      animate // the pinned-favourite hero (0068 opt-in)
+                    />
+                  </Pressable>
+                  <View style={styles.heroMeta}>
+                    <Text style={styles.heroStat}>{statLine}</Text>
+                    <Text style={styles.heroTitle}>{fav.title.toUpperCase()}</Text>
+                    {catalogLine ? <Text style={styles.heroCatalog}>{catalogLine}</Text> : null}
+                  </View>
+                </View>
+              );
+            })()
           ) : (
             <Text style={styles.emptyLine}>No favourite pinned yet.</Text>
           )}
@@ -284,10 +305,10 @@ export default function Profile() {
   );
 }
 
-// The header gear — the door into Settings (0076 §0.10).
+// The header gear glyph — navy on the cream ToolButton cap (walk2 B11 · 0069 keycap voice).
 function SettingsGear({ color }: { color: string }) {
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24">
+    <Svg width={16} height={16} viewBox="0 0 24 24">
       <Circle cx={12} cy={12} r={3.2} fill="none" stroke={color} strokeWidth={1.8} />
       <Path
         d="M12 2.6v2.4M12 19v2.4M21.4 12H19M5 12H2.6M18.7 5.3l-1.7 1.7M7 17l-1.7 1.7M18.7 18.7L17 17M7 7L5.3 5.3"
@@ -341,8 +362,6 @@ const useStyles = themedStyles((t) => ({
   errTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.accent, letterSpacing: 1 },
   errSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, textAlign: 'center', lineHeight: 16, paddingHorizontal: t.space.xl },
   headTools: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
-  gear: { padding: t.space.xs },
-  gearPressed: { opacity: 0.6 },
   section: { gap: t.space.md },
   sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   sectionHead: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.dim, letterSpacing: 1.5 },
@@ -355,11 +374,13 @@ const useStyles = themedStyles((t) => ({
     paddingVertical: t.space.md,
     paddingHorizontal: t.space.sm,
   },
+  // walk2 B14 — the hero grammar (the Collection NowPlayingHero styles, decision 0061): stat-line +
+  // display-size title + catalog line beside the 138×193 hero card.
   heroRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.lg },
-  favCard: { width: 120, height: 168 },
-  heroMeta: { flex: 1, gap: 3 },
-  heroTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5 },
-  heroSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.brand.gold, letterSpacing: 1 },
+  heroMeta: { flex: 1, justifyContent: 'center', gap: 7 },
+  heroStat: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 2 },
+  heroTitle: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, letterSpacing: 1 },
+  heroCatalog: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
   // walk2 A6 — flex-start + gap: partial sets pack LEFT (space-between spread 2 seats to the edges).
   top3: { flexDirection: 'row', gap: t.space.lg, justifyContent: 'flex-start' },
   topSeat: { gap: t.space.sm, alignItems: 'center' },

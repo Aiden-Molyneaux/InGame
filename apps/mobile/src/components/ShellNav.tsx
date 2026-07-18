@@ -1,5 +1,6 @@
 import { usePathname, useRouter } from 'expo-router';
 import { NavBand, type NavTab } from './NavBand';
+import { useAppSelector } from '../store/hooks';
 
 // ShellNav — the router-aware wrapper that lets the ROOT-mounted NavBand (component-map §5.1) drive
 // tab navigation from the persistent DeviceShell. Because the shell now frames EVERY screen, the
@@ -40,6 +41,13 @@ const ROUTES: Record<string, '/(tabs)/collection' | '/(tabs)/profile' | '/(tabs)
 export function ShellNav({ bottomInset = 0 }: { bottomInset?: number }) {
   const pathname = usePathname();
   const router = useRouter();
+  // walk2 B13 — the legal screens (`/legal/*`) are AUTH-AMBIENT: reached pre-auth from the create-account
+  // acceptance links (nav LOCKED — the pre-auth state) AND signed-in from Settings → ABOUT & LEGAL (nav
+  // LIVE, PROFILE-active — the Settings sub-surface they were opened from). Route-only predicates can't
+  // tell the two apart, so /legal is gated on the LIVE auth state: signed-in ⇒ the Profile cluster;
+  // signed-out ⇒ falls through to `locked`. Gating on the token means the pre-auth lock CANNOT regress —
+  // an unauthed visitor on any /legal route still gets the locked band.
+  const authed = useAppSelector((s) => s.auth.accessToken != null);
 
   // Add-game, the Game page (`/game/:id`, CARD-23 NAVIGATE target) AND the Styler (`/styler/:gameId`,
   // §3.2) are FlowTakeovers OF Collection (board: NavBand untouched, COLLECTION keycap active) — the
@@ -65,7 +73,9 @@ export function ShellNav({ bottomInset = 0 }: { bottomInset?: number }) {
     pathname.startsWith('/device') ||
     pathname.startsWith('/contributor') ||
     pathname.startsWith('/achievements') ||
-    pathname.startsWith('/settings');
+    pathname.startsWith('/settings') ||
+    (pathname.startsWith('/legal') && authed); // walk2 B13 — authed legal = a Settings sub-surface
+
   // The FRIENDS cluster (P8 §3.3 + P9 §4.6/§2.2) — the FRIENDS tab itself (`/friends`), the Find/Add hub
   // + its sub-flows (`/add-friends`, `/invite-friends`, `/friend-requests`, the SOC-10 `/invite/:token`
   // landing), and the friend-view cluster (`/user/:id` + its Collection/entry, `/compare/:friendId`) all

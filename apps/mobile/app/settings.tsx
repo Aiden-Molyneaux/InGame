@@ -53,11 +53,6 @@ export default function Settings() {
             />
             <Row icon={<AtIcon />} label="Username" value={me ? `@${me.username}` : undefined} />
           </Group>
-          <Group style={styles.gapTop}>
-            <View style={styles.actRow}>
-              <ScreenButton label="Sign out" variant="secondary" onPress={() => setSignOutConfirm(true)} block />
-            </View>
-          </Group>
         </Section>
 
         {/* ── PRIVACY & SAFETY ── */}
@@ -80,6 +75,14 @@ export default function Settings() {
             <Row icon={<InfoIcon />} label="Version" value={version} />
           </Group>
         </Section>
+
+        {/* walk2 B11 — SIGN OUT is the screen's TERMINAL row (the board's terminal-row grammar: the
+            session exit closes the list, after every browse section). Raises the S7b calm confirm. */}
+        <Group>
+          <View style={styles.actRow}>
+            <ScreenButton label="Sign out" variant="secondary" onPress={() => setSignOutConfirm(true)} block />
+          </View>
+        </Group>
 
         <Text style={styles.footnote}>
           Screen theme isn’t here — it’s part of your device, set in the Device editor.
@@ -225,7 +228,6 @@ const useStyles = themedStyles((t) => ({
   section: { gap: t.space.md },
   sectionHead: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 2, marginLeft: t.space.xs },
   group: { backgroundColor: t.scr.panel, borderWidth: 1, borderColor: t.scr.hairline },
-  gapTop: { marginTop: t.space.md },
   row: { flexDirection: 'row', alignItems: 'center', gap: t.space.lg, paddingHorizontal: t.space.lg, paddingVertical: t.space.lg },
   rowPressed: { opacity: 0.7 },
   divider: { height: 1, backgroundColor: t.scr.hairline },

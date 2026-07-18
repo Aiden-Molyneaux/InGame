@@ -19,8 +19,12 @@ let mockMe: { data?: unknown; isLoading: boolean; isError: boolean; refetch: () 
 };
 const mockPush = jest.fn();
 
+// walk2 B14 — the favourite hero enriches from the collection cache; controllable per-test.
+let mockCollection: { data?: { items: unknown[] } } = { data: { items: [] } };
+
 jest.mock('./store/api', () => ({
   useGetMeQuery: () => mockMe,
+  useGetCollectionQuery: () => mockCollection,
   useGetDeviceQuery: () => ({ data: undefined }),
   useGetWalletQuery: () => ({ data: { balance: 0 } }),
 }));
@@ -44,7 +48,7 @@ jest.mock('./components/MiniDevice', () => ({
 
 import Profile from '../app/(tabs)/profile';
 
-const ME = (top10: unknown[]) => ({
+const ME = (top10: unknown[], over: Record<string, unknown> = {}) => ({
   id: 'me-0000-0000-0000-000000000000',
   username: 'demo',
   avatarUrl: null,
@@ -63,6 +67,7 @@ const ME = (top10: unknown[]) => ({
   favouriteGame: null,
   nowPlaying: null,
   top10,
+  ...over,
 });
 
 function renderProfile() {
@@ -76,6 +81,7 @@ function renderProfile() {
 
 beforeEach(() => {
   mockPush.mockClear();
+  mockCollection = { data: { items: [] } };
 });
 
 describe('PROF-05 / COL-13: Profile Top-3 doors', () => {
@@ -130,5 +136,50 @@ describe('PROF-05 / COL-13: Profile Top-3 doors', () => {
     }
     expect(flat.justifyContent).toBe('flex-start');
     expect(flat.flexDirection).toBe('row');
+  });
+});
+
+describe('walk2 B11/B14: Settings gear keycap + the favourite hero', () => {
+  const FAV = { gameId: 'g-fav', title: 'Elden Ring', hours: 120, card: CARD };
+  const FAV_ENTRY = {
+    entryId: 'e-fav',
+    gameId: 'g-fav',
+    title: 'Elden Ring',
+    hours: 134,
+    status: 'playing',
+    developer: 'FromSoftware',
+    releaseYear: 2022,
+    genres: [{ id: 'rpg', name: 'RPG' }],
+    card: CARD,
+  };
+
+  it('B11 — the Settings gear rides the cream ToolButton keycap (0069 secondary voice)', () => {
+    mockMe = { data: ME([]), isLoading: false, isError: false, refetch: jest.fn() };
+    renderProfile();
+    const gear = screen.getByLabelText('Settings');
+    const flat: Record<string, unknown> = Object.assign(
+      {},
+      ...[gear.props.style ?? {}].flat(Infinity).filter(Boolean),
+    );
+    expect(flat.backgroundColor).toBe('#f5f1e4'); // brand.cream — the keycap face, not a bare glyph
+    fireEvent.press(gear);
+    expect(mockPush).toHaveBeenCalledWith('/settings');
+  });
+
+  it('B14 — the favourite hero renders the 0061 stat-line + catalog line from the collection entry', () => {
+    mockMe = { data: ME([], { favouriteGame: FAV }), isLoading: false, isError: false, refetch: jest.fn() };
+    mockCollection = { data: { items: [FAV_ENTRY] } };
+    renderProfile();
+    expect(screen.getByText('134 HRS · PLAYING')).toBeTruthy(); // stat-line (entry hours + status)
+    expect(screen.getByText('ELDEN RING')).toBeTruthy(); // display-size hero title
+    expect(screen.getByText('FROMSOFTWARE · 2022 · RPG')).toBeTruthy(); // catalog line
+  });
+
+  it('B14 — an off-shelf pin degrades to the hours line alone (no catalog line)', () => {
+    mockMe = { data: ME([], { favouriteGame: FAV }), isLoading: false, isError: false, refetch: jest.fn() };
+    mockCollection = { data: { items: [] } };
+    renderProfile();
+    expect(screen.getByText('120 HRS')).toBeTruthy(); // the /me hours, no status to speak
+    expect(screen.queryByText(/FROMSOFTWARE/)).toBeNull();
   });
 });
