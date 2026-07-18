@@ -107,12 +107,17 @@
   FILE's deletion physically rode the concurrent B12 commit `bba9774` — a shared-index sweep of this
   packet's staged `git rm`; content correct, attribution noted.* The device editor's separate
   `DevicePreviewStrip` (another agent's file) is untouched.
-- ⬜ W-B6 ⚖ **Collection: Now-Playing card renders in the Hero ONLY** (not repeated in list views).
-- ⬜ W-B7 ⚖ **Shelf view: per-entry chevron** (the List-view quick-entry into the Game page).
-- ⬜ W-B8 ⚖ **Add-Game "create this game" prompt = GOLD with pixel-stepped corners** (acquisitive,
-  F-02-consistent; it creates a card-bearing entry).
-- ⬜ W-B9 ⚖ **Game page DESIGN NEW back to ORANGE** — reverses the 0069 "DESIGN NEW = gold" ruling
-  (owner, this walk). 0078 records the amendment.
+- ✅ W-B6 (477bfad) ⚖ **Collection: Now-Playing card renders in the Hero ONLY** — reading: the board
+  DREW row NOW chrome in all three views (on-card ▶ NOW at :571/:766, list `.now-inline` :681); the ⚖
+  supersedes those draws (0078 board ripple). Removed: FlipCard's nowPlaying pass-through (shelf/grid)
+  + the list inline tag; the entry stays as a plain row; the hero keeps pin + LOG HOURS.
+- ✅ W-B7 (477bfad) ⚖ **Shelf view: per-entry chevron** — the List-view `›` mirrored at the row's
+  right edge (pressable → the Game page; the card face keeps its flip).
+- ✅ W-B8 (477bfad) ⚖ **Add-Game create prompt = GOLD + pixel-stepped** — the TertiaryLink hook
+  replaced by ScreenButton/add (the F-02 gold + steppedRectPath grammar, consumed not hand-drawn)
+  under a quiet NONE OF THESE? lead.
+- ✅ W-B9 (477bfad) ⚖ **Game page DESIGN NEW back to ORANGE** — CardSwitcher's tile/label/tint now
+  scr.accent (+ withAlpha wash); reversal of 0069's "DESIGN NEW = gold" cited in-code; 0078 records.
 - ✅ W-B10 ⚖ **Friend profile layout** — VIEW COLLECTION + COMPARE HOURS in one row · FRIEND tag
   repositioned (under the profile details) · mutual-friends count relocated · section order =
   the self-Profile's order. **(`a5f8794`** — r1: one paired flex row at the FOOT, the board's
