@@ -276,3 +276,23 @@ briefs for M7 get this line verbatim.
   read is live; the adopt-at-add path may need the new entry's id threaded. Contract/spec: OQ-136
   moves Open→Resolved-for-M6 (0078). Rides the W-D1 Game-page build (the CATALOG adopt path is the
   same seam). **This is now a build item, not a stretch.**
+
+## ROUND 4 — Wave C review notes (2026-07-18, owner tested cross-device iPhone↔Android)
+- 🔧 N1 (P2 server, ab9d805) **Contributor REACHED is inflated** — "29 reached" with <29 users: summing
+  per-game collection counts double-counts multi-game owners → fix to COUNT(DISTINCT user) across the
+  contributor's games (CAT-10). Server; API restart.
+- 🔧 N2b (P10, a3105e) **Add-Game rail trio wired live** — only POPULAR was live; NEW RELEASES missing +
+  FRIENDS-ARE-PLAYING a "soon" placeholder (endpoints 404 at build). C7/P7 built both — wire NEW RELEASES
+  (CAT-11) + FRIENDS-ACTIVE (CAT-12). **Answer to the owner: the RAILS (game rows) ship here now; the
+  community-CARDS adopt step is a SEPARATE feature = OQ-136/W-C10 = Wave D.**
+- 🔧 N3 (P12, a5f477) **Add Gamertag button → orange** (0069).
+- 🔧 N4 (P12) **Settings gear glyph reads too light-mode** — replace with a dark-chrome-correct
+  arcade-consistent gear (keep the cream keycap).
+- 🔧 N5 (P8, a548ca) **Cross-device friend state doesn't propagate + a "half-aware" split** (request
+  invisible until app reset; after accept, feed shows the friend but the Friends LIST + Requests don't).
+  Fix = refetch-on-focus + shared invalidation on the friends-list/requests/feed reads so foregrounding
+  coheres them without a reset. **RESIDUAL: true real-time (zero-interaction) = M7 PUSH** (accepted).
+- 🔧 N6 (P12) **Profile privacy toggle clarity** — "Public profile" ON=public reads backwards; make the
+  friends|public control unambiguous with explicit per-state copy.
+- 🔧 N7 (P8) **Can't open a non-friend's profile** — search PersonRow tap only routes when friends; make
+  it always route to /user/[id] (the limited non-friend profile + ADD FRIEND already exist server+P9).
