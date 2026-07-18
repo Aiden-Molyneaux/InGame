@@ -71,8 +71,10 @@
   studio/publisher · contributor credit · CAT-09 counts).
 - ⬜ W-C6 **Profile → MY CONTRIBUTIONS entry** (the P13 screen's missing front door).
 - ⬜ W-C7 **OQ-150 build** — /catalog/new-releases + the rails answer (owed from the morning).
-- ⬜ W-C8 **Feed nameplate server half** — if W-A2's diagnosis finds any peek serving full-only
-  (no thumbUrl), fix the payload side too.
+- ⬜ W-C8 **NARROWED by A1: `/me/collection` must emit the `designer {userId, username}` rider on
+  custom cards** (contract 0.50 prescribes it; the switcher + friend serializers already emit it).
+  The client is pre-widened and renders the name the moment it lands (honest COMMUNITY fallback
+  meanwhile). Feed thumbs needed NO server half — every list payload already carries thumbUrl.
 
 ## WAVE D — design-think BEFORE build (the owner asked for deeper thought)
 - ⬜ W-D1 **The adaptive Game page consolidation** — ONE Game page across three postures: OWN entry
