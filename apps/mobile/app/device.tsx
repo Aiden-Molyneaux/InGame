@@ -32,7 +32,7 @@ import {
   withoutSticker,
   type StickerTransform,
 } from '../src/components/device/stickerGeometry';
-import { editReadoutSub, switchReadout, placingReadout, previewSub } from '../src/components/device/deviceCopy';
+import { placingReadout, previewSub } from '../src/components/device/deviceCopy';
 import { themedStyles, useTheme } from '../src/theme';
 import { useAnnounceOnChange } from '../src/a11y/announce';
 import {
@@ -131,9 +131,6 @@ export default function DeviceEditor() {
   const [saved, setSaved] = useState<DeviceResponse | null>(null);
   // the theme try-on: non-null while the picked theme differs from the saved theme (the PreviewStrip).
   const [previewTheme, setPreviewTheme] = useState<ScreenThemeId | null>(null);
-  // the D2 shell-switch beat — drives the single-line "SWITCHED — «shell» WRAP" edit readout (F-21 r6
-  // removed the redundant was→now MiniDevice pair); cleared on a section change or the next pick.
-  const [switchBeat, setSwitchBeat] = useState<{ from: ShellId; to: ShellId } | null>(null);
 
   const savedRef = useRef<DeviceResponse | null>(null);
   savedRef.current = saved;
@@ -253,7 +250,6 @@ export default function DeviceEditor() {
   // ── section switch — carries preview state (walk 1); clears the transient switch beat + the sticker
   // selection / on-shell preview (both are STICKERS-local) ───────────────────────────────────────────
   const changeSection = useCallback((s: DeviceSection) => {
-    setSwitchBeat(null);
     setSelectedStickerId(null);
     setPreviewing(false);
     setSection(s);
@@ -269,21 +265,18 @@ export default function DeviceEditor() {
   // ── SHELL pick (D1/D2 · D7 premium) ──────────────────────────────────────────────────────────────
   const pickShell = useCallback(
     (id: ShellId) => {
-      const from = liveShellId; // the shell the frame wears BEFORE this pick
       const c = cosmeticFor(id, 'device_shell');
       const isOffline = saveState === 'error' && inlineError === null;
       if (c?.tier && !c.owned) {
         if (isOffline) return; // D9 — acquiring premium is a write; gated offline
-        setSwitchBeat(id !== from ? { from, to: id } : null);
         dispatch(setShellId(id)); // preview live only (no server write until KEEP)
         setPendingPremium((p) => ({ ...p, shell: id }));
         return;
       }
       setPendingPremium((p) => ({ ...p, shell: null })); // a free/owned shell clears the premium preview
-      setSwitchBeat(id !== from ? { from, to: id } : null);
       patchDevice({ activeShellId: id });
     },
-    [liveShellId, patchDevice, cosmeticFor, dispatch, saveState, inlineError],
+    [patchDevice, cosmeticFor, dispatch, saveState, inlineError],
   );
 
   // ── THEME pick (D3 · D7 premium) ─────────────────────────────────────────────────────────────────
@@ -347,7 +340,6 @@ export default function DeviceEditor() {
     if (pendingPremiumRef.current.theme) dispatch(setThemeId(savedTheme));
     // clear the cart too, so a return to the editor starts clean (the preview ended with the exit).
     setPendingPremium({ shell: null, theme: null });
-    setSwitchBeat(null);
   };
   useFocusEffect(
     useCallback(() => {
@@ -480,7 +472,6 @@ export default function DeviceEditor() {
   const applyLook = useCallback(
     (look: LookResponse) => {
       setPreviewTheme(null); // applying a look COMMITS a theme — never a try-on (no lingering strip)
-      setSwitchBeat(null);
       patchDevice({
         activeShellId: look.activeShellId,
         screenThemeId: look.screenThemeId,
@@ -528,7 +519,6 @@ export default function DeviceEditor() {
   // whole tree (which in turn broke the profile signOut's router.replace — the F-16 logout crash).
   // rules-of-hooks: no hook may sit after a conditional return. (react-hooks lint doesn't cover app/.)
   const stickerCount = liveComposition.stickers.length;
-  const beatActive = switchBeat !== null && section === 'shell';
   // the decal whose TransformBox + stepper rows show (STICKERS · not previewing · one selected).
   const selectedSticker =
     section === 'stickers' && !previewing
@@ -551,29 +541,27 @@ export default function DeviceEditor() {
   const atCap = lookList.length >= LOOK_CAP;
   const saveDisabled = atCap || savingLook || offline; // SAVE CURRENT waits for the network (SYS-10)
 
-  // C3 — the edit-readout, one line for all states (precedence: D5 preview → D2 switch beat → a decal
-  // being placed → the default editing line). The D2 beat + the placing line are section-exclusive.
-  const readout: { title: string; sub: string; ok?: boolean } = previewing
+  // C3 → walk2 W-B12 (owner ruling): the default "EDITING YOUR DEVICE" line AND the D2 "SWITCHED —
+  // «shell» WRAP" beat readout are REMOVED (unnecessary chrome — the live device frame above IS the
+  // state; completes the F-21 tail, whose r6 already dropped the beat's was→now MiniDevice pair). The
+  // readout row now renders ONLY for the two informative states — the D5 on-shell preview and the
+  // live PLACING transform line — and otherwise the space collapses cleanly.
+  const readout: { title: string; sub: string; ok?: boolean } | null = previewing
     ? {
         title: 'YOUR DEVICE — AS IT WEARS',
         sub: previewSub(SHELL_NAMES[liveShellId], SCREEN_THEME_NAMES[liveThemeId], stickerCount),
         ok: true,
       }
-    : beatActive && switchBeat
-      ? switchReadout(SHELL_NAMES[switchBeat.to])
-      : selectedSticker
-        ? {
-            title: placingReadout(
-              STICKER_ASSET_BY_ID[selectedSticker.assetId]?.name ?? 'DECAL',
-              selectedSticker.scale,
-              selectedSticker.rotation,
-            ),
-            sub: 'DECALS GO ON THE PLASTIC, NOT THE SCREEN',
-          }
-        : {
-            title: 'EDITING YOUR DEVICE',
-            sub: editReadoutSub(SHELL_NAMES[liveShellId], SCREEN_THEME_NAMES[liveThemeId], stickerCount),
-          };
+    : selectedSticker
+      ? {
+          title: placingReadout(
+            STICKER_ASSET_BY_ID[selectedSticker.assetId]?.name ?? 'DECAL',
+            selectedSticker.scale,
+            selectedSticker.rotation,
+          ),
+          sub: 'DECALS GO ON THE PLASTIC, NOT THE SCREEN',
+        }
+      : null;
 
   // CARD-16 live-region (0044 §105): the save-state line (SAVING… / NOT SAVED — RETRYING / an
   // inline error / SAVED LIVE — the inline error is folded in) is an async result the user can't see
@@ -587,10 +575,10 @@ export default function DeviceEditor() {
           : 'NOT SAVED — RETRYING'
         : 'SAVED LIVE';
   useAnnounceOnChange(saveLineText);
-  // Announce the readout TITLE on transition (the "SWITCHED — … WRAP" beat, the preview/editing
-  // lines) — but SUPPRESS the PLACING readout, whose title carries the live transform (scale/angle)
-  // and changes every drag frame; that would flood the SR queue (transitions, never per-frame).
-  const readoutAnnounce = selectedSticker ? null : readout.title;
+  // Announce the readout TITLE on transition (the preview line) — but SUPPRESS the PLACING readout,
+  // whose title carries the live transform (scale/angle) and changes every drag frame; that would
+  // flood the SR queue (transitions, never per-frame).
+  const readoutAnnounce = selectedSticker ? null : (readout?.title ?? null);
   useAnnounceOnChange(readoutAnnounce);
 
   // ── D7 premium badging + the KeepBar cart ─────────────────────────────────────────────────────────
@@ -678,14 +666,16 @@ export default function DeviceEditor() {
       ) : null}
       {offline ? <OfflineStrip /> : null}
 
-      {/* C3 — the edit-readout (states unified above) */}
-      <View style={styles.readout}>
-        <View style={[styles.dot, readout.ok && styles.dotOk]} />
-        <View style={styles.readoutText}>
-          <Text style={styles.readoutTitle}>{readout.title}</Text>
-          <Text style={styles.readoutSub}>{readout.sub}</Text>
+      {/* C3/W-B12 — the readout renders only for the preview/placing states; otherwise nothing. */}
+      {readout ? (
+        <View style={styles.readout}>
+          <View style={[styles.dot, readout.ok && styles.dotOk]} />
+          <View style={styles.readoutText}>
+            <Text style={styles.readoutTitle}>{readout.title}</Text>
+            <Text style={styles.readoutSub}>{readout.sub}</Text>
+          </View>
         </View>
-      </View>
+      ) : null}
 
       {/* F-13 D7 (owner round-2) — drop the resting "SAVED LIVE" display (the whole editor autosaves;
           announcing "saved" on every idle beat is clutter). The line now shows ONLY the in-flight/error
@@ -704,9 +694,8 @@ export default function DeviceEditor() {
         showsVerticalScrollIndicator={false}
         scrollEnabled={!bgLocked}
       >
-        {/* F-21 ruling 6 — no was→now MiniDevice comparison pair here: the device chrome above IS the live
-            preview, so an old-vs-new render is redundant. The switch still surfaces as a single status line
-            in the edit readout ("SWITCHED — «shell» WRAP", via switchReadout). */}
+        {/* F-21 ruling 6 + walk2 W-B12 — no was→now MiniDevice pair AND no "SWITCHED" status line:
+            the device chrome above IS the live preview; a switch needs no readout at all. */}
         {section === 'shell' ? (
           <>
             <Text style={styles.secTitle}>SHELL</Text>

@@ -1,4 +1,4 @@
-import { stickersLabel, editReadoutSub, switchReadout, deviceStripCopy } from './deviceCopy';
+import { stickersLabel, deviceStripCopy } from './deviceCopy';
 
 // Device-editor copy formatters (M4 §3.5 · C1/C3/D2). No spec-ID strings; all-caps (OQ-110/F-06).
 describe('deviceCopy', () => {
@@ -8,16 +8,8 @@ describe('deviceCopy', () => {
     expect(stickersLabel(3)).toBe('3 STICKERS');
   });
 
-  it('builds the edit-readout sub with all three facets', () => {
-    expect(editReadoutSub('TEAL', 'MIDNIGHT', 2)).toBe('TEAL · MIDNIGHT · 2 STICKERS');
-  });
-
-  it('builds the D2 shell-switch readout', () => {
-    expect(switchReadout('CARBON')).toEqual({
-      title: 'SWITCHED — CARBON WRAP',
-      sub: 'SAME POCKET · STICKERS + THEME RIDE ALONG',
-    });
-  });
+  // W-B12 (owner ruling) — the EDITING-YOUR-DEVICE + SWITCHED readouts are removed; their
+  // formatters (editReadoutSub / switchReadout) went with them.
 
   it('drops the sticker segment on the Profile strip when there are none', () => {
     expect(deviceStripCopy('TEAL', 'MIDNIGHT', 0)).toEqual({
