@@ -16,6 +16,23 @@
 
 ## Open
 
+- OQ-153: **Friend-read repo selects the full entry row — narrow it to make the defense true (defense-in-depth, SOC-11).**
+  `friend-read-repo.ts` `FRIEND_ENTRY_COLUMNS` sets `entry: collectionEntries`, which in Drizzle selects
+  *every* column — including the owner-private `notes` / `rating` / `percentComplete` — so those fields
+  travel repo→service in memory on every friend read. The header comment there ("the owner-only fields
+  are NOT selected — they physically cannot leak; the F06 allowlist is the column list itself") is
+  therefore factually wrong. **No wire leak exists today:** the explicit-field DTO mappers in
+  users-service.ts (`toFriendItem` / `friendCardFromRow` / `toFriendCardEntry`) never emit the private
+  fields, and `friendCollectionItemSchema` would strip them anyway. But the future-risk vector is already
+  live — `users-service.ts:145` passes `shelfRows.map(r => r.entry)` (full entries, private fields in
+  scope) into `profileService.statsOf` (the M6 PROF-04 reuse), so one careless `...r.entry` spread there
+  would serialize private fields with **no repo-level backstop**. Recommended fix: narrow
+  `FRIEND_ENTRY_COLUMNS` to an explicit allowlist (hours/status/owned-since + the card refs, NOT
+  notes/rating/percentComplete) so the comment becomes true and the `statsOf` path can't leak; verify
+  `statsOf` doesn't actually need `percentComplete` for its aggregate before dropping it. Pre-existing
+  (predates Wave D; commit 5b26ae1 touched only apps/mobile). Surfaced by the Wave D adversarial review
+  (2 independent Fable verifiers, LOW). [behavior] server — do under a proper integration-verified pass,
+  not a client fix round. (2026-07-18)
 - OQ-145: **AUTH-07 deletion-ripple — the M8 implementation checklist** (G-N dry-run, M5 2026-07-13;
   findings: docs/planning/m5/gn-dryrun-findings.md; receipt `m5/economy-receipt.md`). Two M8-blockers
   found early: (1) a hard card-delete CASCADES through card_adoptions + active_card_design_id —
