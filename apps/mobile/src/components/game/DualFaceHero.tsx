@@ -14,6 +14,7 @@ export function DualFaceHero({
   title,
   composition = null,
   imageUrl,
+  thumbUrl,
   hours,
   percent,
   status,
@@ -27,6 +28,8 @@ export function DualFaceHero({
   composition?: CardComposition | null;
   /** Flattened image for an equipped ADOPTED card (no composition; F-8 E3-1a) — CardFace renders it. */
   imageUrl?: string | null;
+  /** The plateless thumb sibling (W-A2) — both urls ride; EntryCard picks by rendered size. */
+  thumbUrl?: string | null;
   hours: number;
   percent: number | null;
   status: string;
@@ -47,7 +50,7 @@ export function DualFaceHero({
         {/* /grid (161×225) — one size up from /pick per the owner's gate-5 B.5. `animate`: the
             game-page hero is the shelf's showpiece — animated cosmetics run here (0068 opt-in).
             EntryCard owns the own-composition vs adopted-flattened branch (F-8/F-19 class). */}
-        <EntryCard title={title} card={{ composition, imageUrl }} size="grid" animate />
+        <EntryCard title={title} card={{ composition, imageUrl, thumbUrl }} size="grid" animate />
         <Text style={styles.label}>THE FACE</Text>
       </Pressable>
       <View style={styles.face}>

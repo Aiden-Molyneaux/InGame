@@ -57,4 +57,38 @@ describe('EntryCard (the F-8/F-19 both-cases wrapper)', () => {
     render(<EntryCard title="Future" card={{ composition: { schemaVersion: 999 } }} />);
     expect(faceProps[0].composition).toBeNull();
   });
+
+  // ── walk2 W-A2 — the wrapper owns thumb-vs-full by rendered size (the plate-gate mirror) ────────
+  describe('W-A2 — size-aware flattened source (PLATE_MIN_W gate)', () => {
+    const both = { imageUrl: '/media/c/full.png', thumbUrl: '/media/c/thumb.png?v=2' };
+
+    it('small sizes (thumb/mini, below the plate gate) → the PLATELESS thumbUrl', () => {
+      render(<EntryCard title="Feed" card={both} size="thumb" />);
+      render(<EntryCard title="Rail" card={both} size="mini" />);
+      expect(faceProps[0].imageUrl).toBe(both.thumbUrl);
+      expect(faceProps[1].imageUrl).toBe(both.thumbUrl);
+    });
+
+    it('at/above the gate (cell 96 and up) → the plate-baked imageUrl', () => {
+      render(<EntryCard title="Cell" card={both} size="cell" />);
+      render(<EntryCard title="Grid" card={both} size="grid" />);
+      expect(faceProps[0].imageUrl).toBe(both.imageUrl);
+      expect(faceProps[1].imageUrl).toBe(both.imageUrl);
+    });
+
+    it('an explicit width wins over the size prop (a 48pt-wide render picks the thumb)', () => {
+      render(<EntryCard title="Sized" card={both} size="grid" width={48} height={67} />);
+      expect(faceProps[0].imageUrl).toBe(both.thumbUrl);
+    });
+
+    it('missing thumb at a small size → graceful full fallback (never a blank face)', () => {
+      render(<EntryCard title="OldCard" card={{ imageUrl: both.imageUrl, thumbUrl: null }} size="thumb" />);
+      expect(faceProps[0].imageUrl).toBe(both.imageUrl);
+    });
+
+    it('missing full at a large size → graceful thumb fallback', () => {
+      render(<EntryCard title="ThumbOnly" card={{ imageUrl: null, thumbUrl: both.thumbUrl }} size="grid" />);
+      expect(faceProps[0].imageUrl).toBe(both.thumbUrl);
+    });
+  });
 });

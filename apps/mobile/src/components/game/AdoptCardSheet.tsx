@@ -118,7 +118,7 @@ export function AdoptCardSheet({
         </View>
 
         <View style={styles.cardWrap}>
-          <FlatCardImage title={card.name} imageUrl={card.imageUrl ?? card.thumbUrl} size="pick" />
+          <FlatCardImage title={card.name} imageUrl={card.imageUrl} thumbUrl={card.thumbUrl} size="pick" />
         </View>
 
         {/* P13 (E8a) — the DESIGNED-BY credit now routes to the contributor profile (the app-wide

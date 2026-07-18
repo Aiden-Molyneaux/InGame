@@ -22,6 +22,14 @@ export const collectionCardSchema = z
     isPremium: z.boolean(),
     name: z.string().optional(), // custom designs only (0.53)
     composition: z.unknown().optional(), // custom designs only — OWNER-ONLY (0066 §2)
+    /**
+     * CARD-01 designer attribution (the api-contract 0.50 rider: "the card's rider `designer` …
+     * feed[s] the COL-12 peek-flip stats back"). Walk2 W-A1: the serializer does NOT emit it yet on
+     * `/me/collection` (an adopted-equipped card arrives with no attribution — the W-C8-class server
+     * half is reported, not fixed here); additive-optional so the client renders the designer's name
+     * the day the server emits it.
+     */
+    designer: z.object({ userId: z.string().uuid(), username: z.string() }).strict().optional(),
   })
   .strict();
 

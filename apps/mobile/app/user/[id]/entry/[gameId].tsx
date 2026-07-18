@@ -126,7 +126,7 @@ export default function FriendEntryDetail() {
       {/* their card face (flattened) + gated stats readout */}
       <View style={styles.dualface}>
         <View style={styles.faceCol}>
-          <EntryCard title={friendItem.title} card={{ imageUrl: card.imageUrl }} size="cell" nowPlaying={friendItem.nowPlaying} />
+          <EntryCard title={friendItem.title} card={{ imageUrl: card.imageUrl, thumbUrl: card.thumbUrl }} size="cell" nowPlaying={friendItem.nowPlaying} />
           <Text style={styles.faceLabel}>THEIR FACE</Text>
         </View>
         <View style={styles.statsCol}>
@@ -213,7 +213,7 @@ function SingleGameCompare({ mine, theirs }: { mine: CollectionItem; theirs: Fri
       <View style={styles.compareRow}>
         <View style={styles.compareCol}>
           <Text style={styles.compareWho}>YOU</Text>
-          <EntryCard title={mine.title} card={{ imageUrl: mine.card.imageUrl, composition: mine.card.composition }} size="cell" />
+          <EntryCard title={mine.title} card={{ imageUrl: mine.card.imageUrl, thumbUrl: mine.card.thumbUrl, composition: mine.card.composition }} size="cell" />
         </View>
         <View style={styles.compareMid}>
           <View style={styles.vbar}>
@@ -235,7 +235,7 @@ function SingleGameCompare({ mine, theirs }: { mine: CollectionItem; theirs: Fri
         </View>
         <View style={styles.compareCol}>
           <Text style={styles.compareWho}>THEM</Text>
-          <EntryCard title={theirs.title} card={{ imageUrl: theirs.card.imageUrl }} size="cell" />
+          <EntryCard title={theirs.title} card={{ imageUrl: theirs.card.imageUrl, thumbUrl: theirs.card.thumbUrl }} size="cell" />
         </View>
       </View>
     </View>

@@ -46,7 +46,7 @@ export function CardDetailSheet({
         {/* larger than the hero it enlarges FROM (C.14) — /grid is 161, this inspects at 189×264.
             `animate`: the INSPECT view is exactly where a card shows off (0068 opt-in). EntryCard owns
             the own-composition vs adopted-flattened branch (imageUrl rides on entry.card; F-8/F-19). */}
-        <EntryCard title={entry.title} card={{ composition, imageUrl: entry.card.imageUrl }} size="pick" width={189} height={264} animate />
+        <EntryCard title={entry.title} card={{ composition, imageUrl: entry.card.imageUrl, thumbUrl: entry.card.thumbUrl }} size="pick" width={189} height={264} animate />
       </View>
       <Text style={styles.credit}>{custom ? 'YOUR DESIGN' : 'THE STANDARD FACE'}</Text>
       <EquipReadout card={entry.card} composition={composition} />

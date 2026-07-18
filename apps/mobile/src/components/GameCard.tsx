@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, type LayoutChangeEvent, type ViewStyle } from '
 import Svg, { Path, Line } from 'react-native-svg';
 import { themedStyles, useTheme } from '../theme';
 import { cardStepUnit, steppedRectPath } from '../theme/steppedPath';
+import { PLATE_H_RATIO } from '../render/buildCard';
 
 // GameCard (component-map §5.2) — the universal game handle. F-01: NEVER cropped — the full face at
 // the fixed 63:88 ratio, only scaled. F-02: the signature TL+BR pixel-STEP silhouette is now REAL
@@ -50,7 +51,6 @@ export function GameCard({
   const { w, h } = dims;
   const hue = faceHue(title);
   const showPlate = dims.plate !== null;
-  const plateH = showPlate ? (dims.plate as number) + 8 : 0; // text + vertical padding; > 2u so the BR notch fits
 
   const faceFill = `hsl(${hue}, 42%, 26%)`;
   const bevelStroke = `hsl(${hue}, 55%, 44%)`;
@@ -73,6 +73,11 @@ export function GameCard({
   // F-18 — the pixel-step scales with the drawn box so the default face matches the composed/flattened
   // silhouette at every size (was the fixed `dims.step`, which drifted from the proportional card render).
   const u = cardStepUnit(bw);
+  // walk2 W-A3 (CARD-18) — the default face's plate band uses the SAME geometry as designed cards:
+  // the shared PLATE_H_RATIO of the DRAWN height (buildCard's plated draw), not a fixed text+padding
+  // height — so a default card's plate sits and scales exactly like a designed card's at every size.
+  // (Was `dims.plate + 8`: a constant ~18px band that floated off the designed-plate line.)
+  const plateH = showPlate ? Math.round(bh * PLATE_H_RATIO) : 0;
 
   return (
     <View

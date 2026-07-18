@@ -108,7 +108,12 @@ export function FeedRow({
                 disabled={!o.gameId}
                 onPress={() => o.gameId && onObjectPress(o.gameId)}
               >
-                <EntryCard card={{ imageUrl: o.card?.imageUrl ?? null }} title={o.title ?? ''} size="thumb" />
+                {/* W-A2 — both urls ride; the wrapper picks (thumb size → the plateless thumb.png). */}
+                <EntryCard
+                  card={{ imageUrl: o.card?.imageUrl ?? null, thumbUrl: o.card?.thumbUrl ?? null }}
+                  title={o.title ?? ''}
+                  size="thumb"
+                />
               </Pressable>
             ))}
             {extra > 0 ? (

@@ -4,6 +4,7 @@ import Svg, { Path } from 'react-native-svg';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import type { CollectionItem, GalleryCardView } from '@ingame/shared';
 import { parseComposition } from '../../src/components/CardFace';
+import { cardArtist } from '../../src/components/cardArtist';
 import { DualFaceHero } from '../../src/components/game/DualFaceHero';
 import { PlayDossier } from '../../src/components/game/PlayDossier';
 import { CardSwitcher } from '../../src/components/game/CardSwitcher';
@@ -286,11 +287,13 @@ export default function GamePage() {
                   title={entry.title}
                   composition={equippedComposition}
                   imageUrl={entry.card.imageUrl}
+                  thumbUrl={entry.card.thumbUrl}
                   hours={entry.hours}
                   percent={entry.percentComplete}
                   status={entry.status}
                   since={entry.ownedSince}
-                  artist={entry.card.isCustom ? 'YOU' : null}
+                  // W-A1 — the shared derivation: an adopted card attributes its DESIGNER, never YOU.
+                  artist={cardArtist(entry.card)}
                   onInspect={() => setInspectOpen(true)}
                 />
               </View>

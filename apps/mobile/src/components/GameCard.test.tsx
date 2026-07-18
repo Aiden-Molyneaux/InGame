@@ -29,4 +29,25 @@ describe('GameCard', () => {
     const { getByText } = render(wrap(<GameCard title="Hades" size="grid" nowPlaying />));
     expect(getByText('▶ NOW')).toBeTruthy();
   });
+
+  // walk2 W-A3 (CARD-18) — the default face's plate band uses the SAME geometry as designed cards:
+  // height = round(drawnHeight × PLATE_H_RATIO) (buildCard's plated draw), so default and designed
+  // plates sit identically. Structural parity: read the plate view's height off the rendered tree.
+  it('W-A3: the plate band height matches the designed-card PLATE_H_RATIO geometry', () => {
+    const { PLATE_H_RATIO } = jest.requireActual<typeof import('../render/buildCard')>('../render/buildCard');
+    const { getByText } = render(wrap(<GameCard title="Elden Ring" size="grid" />));
+    // grid intrinsic h = 225 (the first-frame box before any onLayout). The plate view is the nearest
+    // ancestor of the title carrying an explicit style height (style arrays may nest — flatten deep).
+    const flat = (s: unknown): Array<Record<string, unknown>> =>
+      Array.isArray(s) ? s.flatMap(flat) : s && typeof s === 'object' ? [s as Record<string, unknown>] : [];
+    type Node = { props?: { style?: unknown }; parent: Node | null };
+    let height: number | undefined;
+    for (let node = getByText('Elden Ring').parent as Node | null; node && height === undefined; node = node.parent) {
+      height = flat(node.props?.style).reduce<number | undefined>(
+        (acc, s) => (typeof s.height === 'number' ? s.height : acc),
+        undefined,
+      );
+    }
+    expect(height).toBe(Math.round(225 * PLATE_H_RATIO));
+  });
 });

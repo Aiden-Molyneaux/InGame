@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import type { ViewStyle } from 'react-native';
-import { CardFace, parseComposition } from './CardFace';
+import { CardFace, parseComposition, SIZE_DIMS } from './CardFace';
+import { pickFlatSource } from './game/FlatCardImage';
 import type { GameCardSize } from './GameCard';
 
 // EntryCard — the ONE way to render a card that came from an ENTRY/ROW (a collection item, a switcher
@@ -18,6 +19,12 @@ import type { GameCardSize } from './GameCard';
 // composition-vs-imageUrl logic. There is no behaviour change vs. a correctly-threaded CardFace call;
 // this is pure consolidation.
 //
+// walk2 W-A2 extends the same kill to the SECOND flattened choice: thumb-vs-full. `full.png` bakes
+// the nameplate in; `thumb.png` is plateless — and call sites pre-picking one url (`thumbUrl ??
+// imageUrl` and friends) recreated the plate inconsistency the live renderer's PLATE_MIN_W gate
+// prevents (feed thumbs plated, list rows mixed). So the card object carries BOTH urls and the
+// wrapper picks by its rendered width via `pickFlatSource` — a caller can no longer choose wrong.
+//
 // WHY not everything routes through here — OWN-COMPOSITION-ONLY surfaces stay a DIRECT `<CardFace>`:
 //   • Styler / Canvas / Proof / PrintRitual / BaseRail / KeepBeat — the editor is drawing the user's
 //     OWN in-progress design; there is no "adopted" case (and no `imageUrl`) to handle, and the live
@@ -30,13 +37,14 @@ import type { GameCardSize } from './GameCard';
 
 /**
  * The minimal shape an entry/row card carries. `composition` is the RAW wire rider (unknown → parsed
- * here) — or an already-parsed comp (idempotent re-parse); `imageUrl` is the flattened render. Both
- * are optional because a given card has exactly one, but taking the whole object is what makes it
- * impossible to render an entry card while forgetting the flattened branch.
+ * here) — or an already-parsed comp (idempotent re-parse); `imageUrl`/`thumbUrl` are the flattened
+ * renders. All are optional because a given card has exactly one family, but taking the whole object
+ * is what makes it impossible to render an entry card while forgetting the flattened branch.
  */
 export type EntryCardData = {
   composition?: unknown;
   imageUrl?: string | null;
+  thumbUrl?: string | null;
 };
 
 export function EntryCard({
@@ -63,11 +71,14 @@ export function EntryCard({
   // Memoized on the raw rider identity so the skia canvas' composition prop stays stable across parent
   // re-renders (the FlipCard round-4 lesson — a fresh parse per render forced a canvas re-encode).
   const composition = useMemo(() => parseComposition(card.composition), [card.composition]);
+  // W-A2 — the wrapper picks thumb-vs-full by the rendered width (explicit `width` wins, else the
+  // size's intrinsic width), mirroring the live plate gate. Only the flattened branch reads it.
+  const renderedWidth = width ?? SIZE_DIMS[size ?? 'grid'].w;
   return (
     <CardFace
       title={title}
       composition={composition}
-      imageUrl={card.imageUrl}
+      imageUrl={pickFlatSource(renderedWidth, card.imageUrl, card.thumbUrl)}
       size={size}
       width={width}
       height={height}

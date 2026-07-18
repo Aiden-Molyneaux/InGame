@@ -10,6 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import type { CollectionItem } from '@ingame/shared';
 import { EntryCard } from '../EntryCard';
+import { cardArtist } from '../cardArtist';
 import { StatsBack } from '../game/StatsBack';
 import { ScreenButton } from '../ScreenButton';
 import { STATUS_LABEL } from '../../constants/collection';
@@ -124,7 +125,8 @@ export const FlipCard = memo(function FlipCard({
 
   // The single-element SR label: the CURRENT face's content (front = the card; back = the stats read out,
   // since the nested rows/button aren't individually focusable inside the accessible card).
-  const artist = item.card.isCustom ? 'YOU' : null;
+  // W-A1 — the shared derivation: adopted cards attribute their DESIGNER, never the adopter.
+  const artist = cardArtist(item.card);
   const backLabel =
     `${item.title} stats. ${item.hours} hours. ` +
     `${item.percentComplete == null ? 'completion not set' : `${item.percentComplete} percent complete`}. ` +
@@ -186,7 +188,8 @@ export const FlipCard = memo(function FlipCard({
           percent={item.percentComplete}
           status={STATUS_LABEL[item.status]}
           since={item.ownedSince}
-          // GAP-D1 — no designer rider on the collection payload; reuse the Game-page convention.
+          // W-A1 — the shared cardArtist derivation (designer for adopted; the GAP-D1 payload rider
+          // is still owed server-side — reported).
           artist={artist}
           gameTitle={item.title}
           width={box.w}

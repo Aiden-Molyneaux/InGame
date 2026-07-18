@@ -214,9 +214,10 @@ function SignatureHero({ card, onView }: { card: ContributorCard; onView: () => 
         accessibilityLabel={`View ${card.gameTitle} card`}
         onPress={onView}
       >
+        {/* W-A2 — both urls ride; the wrapper picks (130pt ≥ the plate gate → the plated full). */}
         <EntryCard
           title={card.gameTitle}
-          card={{ imageUrl: card.card.thumbUrl ?? card.card.imageUrl }}
+          card={{ imageUrl: card.card.imageUrl, thumbUrl: card.card.thumbUrl }}
           width={130}
           height={182}
         />
@@ -275,7 +276,7 @@ function CardsDesignedSection({
             accessibilityLabel={`View ${c.gameTitle} card, ${c.adoptionCount} adoptions`}
             onPress={() => onOpenGame(c.gameId)}
           >
-            <EntryCard title={c.gameTitle} card={{ imageUrl: c.card.thumbUrl ?? c.card.imageUrl }} size="cell" />
+            <EntryCard title={c.gameTitle} card={{ imageUrl: c.card.imageUrl, thumbUrl: c.card.thumbUrl }} size="cell" />
             <RankChip rank={i + 1} />
           </Pressable>
         ))}
@@ -425,7 +426,7 @@ function ViewAllCards({
             accessibilityLabel={`View ${c.gameTitle} card, ${c.adoptionCount} adoptions`}
             onPress={() => onOpenGame(c.gameId)}
           >
-            <EntryCard title={c.gameTitle} card={{ imageUrl: c.card.thumbUrl ?? c.card.imageUrl }} size="cell" />
+            <EntryCard title={c.gameTitle} card={{ imageUrl: c.card.imageUrl, thumbUrl: c.card.thumbUrl }} size="cell" />
             <Text style={styles.adoptLine}>
               <Text style={styles.adoptB}>{fmt(c.adoptionCount)}</Text> ADOPTIONS
             </Text>

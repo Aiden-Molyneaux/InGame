@@ -61,7 +61,9 @@ export function preloadComposedCard(): Promise<{ default: ComponentType<Composed
 
 const LazyComposedCard = lazy(preloadComposedCard);
 
-const SIZE_DIMS: Record<GameCardSize, { w: number; h: number }> = {
+// Exported for the EntryCard/FlatCardImage flattened-source picker (walk2 W-A2) — the intrinsic
+// rendered width per size is what decides thumb-vs-full against the PLATE_MIN_W gate.
+export const SIZE_DIMS: Record<GameCardSize, { w: number; h: number }> = {
   hero: { w: 224, h: 313 },
   pick: { w: 138, h: 193 },
   grid: { w: 161, h: 225 },

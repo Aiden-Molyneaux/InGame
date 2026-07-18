@@ -110,7 +110,7 @@ export default function FriendCollection() {
           accessibilityLabel={`Open ${hero.title}`}
           onPress={() => openEntry(hero.gameId)}
         >
-          <EntryCard title={hero.title} card={{ imageUrl: hero.card.imageUrl }} size="cell" nowPlaying />
+          <EntryCard title={hero.title} card={{ imageUrl: hero.card.imageUrl, thumbUrl: hero.card.thumbUrl }} size="cell" nowPlaying />
           <View style={styles.heroMeta}>
             <Text style={styles.heroEyebrow}>{username.toUpperCase()}&apos;S NOW PLAYING</Text>
             <Text style={styles.heroTitle} numberOfLines={2}>{hero.title.toUpperCase()}</Text>
@@ -226,7 +226,7 @@ function FriendShelfView({ items, onOpen }: { items: FriendCollectionItem[]; onO
     <View style={styles.shelf}>
       {items.map((i) => (
         <Pressable key={i.entryId} style={styles.shelfRow} accessibilityRole="button" accessibilityLabel={`Open ${i.title}`} onPress={() => onOpen(i.gameId)}>
-          <EntryCard title={i.title} card={{ imageUrl: i.card.imageUrl }} size="cell" nowPlaying={i.nowPlaying} />
+          <EntryCard title={i.title} card={{ imageUrl: i.card.imageUrl, thumbUrl: i.card.thumbUrl }} size="cell" nowPlaying={i.nowPlaying} />
           <View style={styles.shelfMeta}>
             <Text style={styles.shelfTitle} numberOfLines={1}>{i.title.toUpperCase()}</Text>
             <Text style={styles.shelfSub}>{factsLine(i)}</Text>
@@ -244,7 +244,7 @@ function FriendGridView({ items, onOpen }: { items: FriendCollectionItem[]; onOp
     <View style={styles.grid}>
       {items.map((i) => (
         <Pressable key={i.entryId} style={styles.gridCell} accessibilityRole="button" accessibilityLabel={`Open ${i.title}`} onPress={() => onOpen(i.gameId)}>
-          <EntryCard title={i.title} card={{ imageUrl: i.card.imageUrl }} size="cell" nowPlaying={i.nowPlaying} />
+          <EntryCard title={i.title} card={{ imageUrl: i.card.imageUrl, thumbUrl: i.card.thumbUrl }} size="cell" nowPlaying={i.nowPlaying} />
         </Pressable>
       ))}
     </View>

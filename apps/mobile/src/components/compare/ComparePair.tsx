@@ -34,7 +34,7 @@ export function ComparePair({
         accessibilityLabel={`Open ${game.title} — their card`}
         onPress={() => onOpenTheirs(game.gameId)}
       >
-        <EntryCard title={game.title} card={{ imageUrl: game.theirCard.imageUrl }} size="cell" />
+        <EntryCard title={game.title} card={{ imageUrl: game.theirCard.imageUrl, thumbUrl: game.theirCard.thumbUrl }} size="cell" />
         <Text style={styles.owner}>THEM</Text>
       </Pressable>
 
@@ -69,7 +69,7 @@ export function ComparePair({
         accessibilityLabel={`Open ${game.title} — your card`}
         onPress={() => onOpenYours(game.gameId)}
       >
-        <EntryCard title={game.title} card={{ imageUrl: game.yourCard.imageUrl }} size="cell" />
+        <EntryCard title={game.title} card={{ imageUrl: game.yourCard.imageUrl, thumbUrl: game.yourCard.thumbUrl }} size="cell" />
         <Text style={styles.owner}>YOU</Text>
       </Pressable>
     </View>

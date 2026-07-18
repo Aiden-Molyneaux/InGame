@@ -92,7 +92,7 @@ function GalleryCell({
   return (
     <View style={styles.cell}>
       <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={a11y}>
-        <FlatCardImage title={card.name} imageUrl={card.thumbUrl ?? card.imageUrl} size="cell" />
+        <FlatCardImage title={card.name} imageUrl={card.imageUrl} thumbUrl={card.thumbUrl} size="cell" />
       </Pressable>
       {/* the DESIGNED-BY credit → the contributor profile; "BY YOU" routes to your own. */}
       <Pressable

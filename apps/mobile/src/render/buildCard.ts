@@ -652,6 +652,16 @@ function buildPlate(shape: string, W: number, H: number, plateH: number, plateCo
 export const PLATE_H_RATIO = 0.11;
 
 /**
+ * The F-06/0047 plate gate — the minimum rendered width (pt) that carries a nameplate: /cell (96)
+ * and up plate; /mini + /thumb drop it (the title is named beside the card). ONE number shared by
+ * the live draw (below), the CARD-18 default face (GameCard), and the flattened-source picker
+ * (EntryCard/FlatCardImage: below this width the plateless `thumbUrl` is the correct image, at or
+ * above it the plate-baked `imageUrl`) — so live, default and flattened cards can never disagree
+ * about which sizes are plated (walk2 W-A2).
+ */
+export const PLATE_MIN_W = 96;
+
+/**
  * The plate + title as ONE group, drawn TOPMOST (owner ruling 2026-07-09): the plate rides above
  * frame, effect AND finish, lifted a couple px off the card's bottom edge. Shared by the plated
  * draw and the PROOF overlay builder so the two stacks can't disagree.
@@ -693,7 +703,7 @@ export function buildCardElements(c: CardComposition, W: number, H: number, ctx:
   const clip = Skia.Path.MakeFromSVGString(steppedRectPath(W, H, u));
   // F-06 drops the plate on mini/thumb. A plate is REQUIRED (OQ-135 ruling) — legacy 'none'
   // documents keep their object and render as SLAB (see the shape coercion below).
-  const plated = W >= 96 && !!c.nameplate;
+  const plated = W >= PLATE_MIN_W && !!c.nameplate;
   const plateH = plated ? Math.round(H * PLATE_H_RATIO) : 0;
 
   const children: any[] = [];
@@ -890,7 +900,7 @@ export function buildOverlayElements(c: CardComposition, W: number, H: number, c
   // Plate-on-top parity (owner ruling 2026-07-09): the flattened PNG under this overlay carries the
   // plate, but the effect/finish just painted over it — re-stamp the plate so PROOF (and the M5
   // viewer) shows the same topmost plate as the live draw. Opaque, so the double-draw is invisible.
-  if (W >= 96 && c.nameplate) {
+  if (W >= PLATE_MIN_W && c.nameplate) {
     const plate = plateGroup(c, W, H, Math.round(H * PLATE_H_RATIO), ctx);
     if (plate) children.push(plate);
   }

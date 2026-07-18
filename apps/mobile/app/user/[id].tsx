@@ -179,7 +179,7 @@ export default function UserProfile() {
                     accessibilityLabel={`Open ${g.title} in ${data.username}'s Top 10`}
                     onPress={() => router.push({ pathname: `/user/${data.id}/collection`, params: { view: 'top', focus: g.gameId } })}
                   >
-                    <EntryCard title={g.title} card={{ imageUrl: g.card.imageUrl }} size="cell" />
+                    <EntryCard title={g.title} card={{ imageUrl: g.card.imageUrl, thumbUrl: g.card.thumbUrl }} size="cell" />
                     <RankChip rank={g.rank} />
                   </Pressable>
                 ))}
@@ -337,7 +337,7 @@ function FriendNowPlaying({
         onPress={() => onOpen(nowPlaying.gameId)}
         style={({ pressed }) => [styles.nowRow, pressed && { opacity: 0.82 }]}
       >
-        <EntryCard title={nowPlaying.title} card={{ imageUrl: nowPlaying.card.imageUrl }} size="cell" nowPlaying />
+        <EntryCard title={nowPlaying.title} card={{ imageUrl: nowPlaying.card.imageUrl, thumbUrl: nowPlaying.card.thumbUrl }} size="cell" nowPlaying />
         <View style={styles.nowMeta}>
           <Text style={styles.nowTitle} numberOfLines={1}>{nowPlaying.title.toUpperCase()}</Text>
           <Text style={styles.nowSub}>{fmt(nowPlaying.hours)} HRS LOGGED</Text>
