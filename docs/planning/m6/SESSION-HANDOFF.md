@@ -15,8 +15,11 @@ amendments** (ACH achievements/eggs pulled forward from M7; report affordance ca
 closed beta at exit** (decision 0071). The overnight autonomous build shipped ALL 13 buildable packets;
 three owner device walks then drove a large iteration batch (waves A/B/C). **Wave D remains.**
 
-**Green at head:** typecheck + lint clean · **466 integration · ~591 mobile** · `/health` 🟢 ·
-product-spec **0.61** · api-contract **0.71** · component-map **0.13**.
+**Green at head:** typecheck + lint clean · **467 integration · 595 mobile (88 suites)** · `/health` 🟢 ·
+product-spec **0.61** · api-contract **0.71** · component-map **0.13**. (Head `cc571aa`; walk-2 round-4
+Wave-C review notes N1–N7 all ✅ — reached-dedup · Add-Game rail trio live · gamertag orange · gear
+glyph · cross-device social coherence [refetch-on-focus + shared `Social` tag; true realtime=M7 push]
+· privacy FRIENDS-ONLY|PUBLIC switch · non-friend profile reachable from search.)
 
 **Build status:**
 - ✅ **Server (P1–P7 + §1 spike + §4 privacy audit):** social graph · friend-read fabric (the
