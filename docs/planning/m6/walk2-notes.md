@@ -13,17 +13,17 @@
   built (P2 flagged the hole) → W-C5 (server rider + client fill).
 
 ## WAVE A — correctness/bugs (client-first; dispatchable during the walk)
-- ⬜ W-A1 **Adopted cards show "You" as Card Artist** (Collection) — attribution correctness; builder
+- ✅ W-A1 (da51928) **Adopted cards show "You" as Card Artist** (Collection) — attribution correctness; builder
   diagnoses client-vs-payload (the byViewer/designer seam, contract 0.68) and fixes the right side.
-- ⬜ W-A2 **The nameplate inconsistency, unified structurally** — feed thumbs STILL plated; Collection
+- ✅ W-A2 (da51928, live-confirmed plateless feed) **The nameplate inconsistency, unified structurally** — feed thumbs STILL plated; Collection
   LIST mixed; Discover all clean. Root hypothesis: flattened cards rendered at small sizes through
   `imageUrl` (full.png, plate baked) at some call sites vs `thumbUrl` (plateless, ?v=2) at others;
   live-composed cards use the pt-gate → plateless. FIX IN ONE PLACE: EntryCard picks the thumb
   source itself by rendered size (call sites stop choosing); sweep call sites passing pre-picked
   urls. This kills the class.
-- ⬜ W-A3 **Default cards break plate conventions** — CARD-18's default face must position/float the
+- ✅ W-A3 (da51928) **Default cards break plate conventions** — CARD-18's default face must position/float the
   nameplate exactly as designed cards do.
-- ⬜ W-A4 **Achievement celebration renders off-center** — verify + fix (the overlay centering).
+- ⬜ W-A4 **Achievement celebration renders off-center** — NOTE: rendered CENTERED on web during cluster-1 verify; likely device-specific — owner re-checks on the next live unlock; fix only with a device repro.
 - ⬜ W-A5 **Styler premium cost hidden behind the item container** — the price must read at a glance
   (an M5-era layering bug).
 - ⬜ W-A6 **Top-3 with 2 seats spreads to screen edges** — must render consecutively from the left.
