@@ -75,9 +75,14 @@ export function CelebrationMoment({
   const chips = rewardChips(achievement);
 
   return (
-    <View style={[styles.stage, { backgroundColor: t.scr.bg }]}>
-      {/* radial wash + scanline overlay (backdrop) */}
-      <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.radial, { backgroundColor: withAlpha(color, 0.09) }]} />
+    <View testID="celebration-stage" style={[styles.stage, { backgroundColor: t.scr.bg }]}>
+      {/* backdrop (owner ruling, walk2 A4b): the field is the SCREEN-THEME bg (scr.bg — re-themes per
+          DEV-04, never a hardcoded navy) with the board's radial as a THEME-derived centre glow (the
+          mockup's `radial-gradient(#322c63 → scr.bg)` ≈ panelHi lightening toward 50%/36%) + the
+          scanline texture. The TIER colour never tints the field — it rides only the glyphs on top
+          (eyebrow · rays · badge frame), so a STANDARD unlock is orange-on-theme, not an orange room. */}
+      <View pointerEvents="none" style={[styles.glowOuter, { backgroundColor: withAlpha(t.scr.panelHi, 0.4) }]} />
+      <View pointerEvents="none" style={[styles.glowInner, { backgroundColor: withAlpha(t.scr.panelHi, 0.5) }]} />
       <Scanlines />
 
       {/* the tap-anywhere-to-dismiss catcher BEHIND the content (never nest buttons) */}
@@ -157,7 +162,10 @@ function rewardChips(a: EarnedAchievement): { kind: RewardChipKind; name: string
 
 const useStyles = themedStyles((t) => ({
   stage: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', gap: t.space.lg, padding: t.space.xxl },
-  radial: {},
+  // the theme-derived centre glow (the board's radial, RN-approximated as two soft stacked circles
+  // centred at ~50%/36%) — panelHi is the theme's one-step-lighter tone, so it re-themes with scr.*.
+  glowOuter: { position: 'absolute', top: '36%', alignSelf: 'center', width: 340, height: 340, borderRadius: 170, marginTop: -170 },
+  glowInner: { position: 'absolute', top: '36%', alignSelf: 'center', width: 220, height: 220, borderRadius: 110, marginTop: -110 },
   scanWrap: { justifyContent: 'space-between', opacity: 0.35 },
   scanline: { height: StyleSheet.hairlineWidth, backgroundColor: 'rgba(0,0,0,0.5)' },
   eyebrow: { fontFamily: t.font.screenBold, fontSize: t.type.body, letterSpacing: 5 },

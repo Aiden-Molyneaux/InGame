@@ -1,10 +1,12 @@
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import { render, screen, fireEvent, act } from '@testing-library/react-native';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import type { EarnedAchievement, MeAchievementsResponse } from '@ingame/shared';
 import authReducer, { setTokens } from '../../store/authSlice';
 import prefsReducer, { setLastSeenUnlockCount } from '../../store/prefsSlice';
+import { SCREEN_THEMES, DEFAULT_THEME_ID } from '../../theme/palettes';
 
 // P11 — the ACH-06 in-app celebration seam (ARCH-A4 / ASSUMPTION-1). Proves the poll-free refetch-DELTA
 // trigger: a first observation baselines SILENTLY, a later INCREASE fires the moment for the NEWEST
@@ -114,5 +116,23 @@ describe('CelebrationMoment — reduce-motion static variant', () => {
     expect(screen.getByText('GOLDFOIL')).toBeTruthy();
     expect(screen.getByText('+50 PIXELS')).toBeTruthy();
     expect(screen.getByText('CONTINUE')).toBeTruthy();
+  });
+
+  it('W-A4b — the backdrop field is the SCREEN-THEME bg token; the tier colour rides only the glyphs', () => {
+    const store = configureStore({ reducer: { auth: authReducer, prefs: prefsReducer } });
+    render(
+      <Provider store={store}>
+        <CelebrationMoment achievement={ach('e1', 'GoldFoil', '2026-03-12T00:00:00Z', 'prestige')} onContinue={jest.fn()} />
+      </Provider>,
+    );
+    // the field = the live theme's scr.bg (Midnight default via the prefs slice — the 0070 token, not
+    // a literal navy and NOT a tier tint; a theme swap re-themes it per DEV-04).
+    const stage = screen.getByTestId('celebration-stage');
+    const stageStyle = StyleSheet.flatten(stage.props.style) as { backgroundColor?: string };
+    expect(stageStyle.backgroundColor).toBe(SCREEN_THEMES[DEFAULT_THEME_ID].bg);
+    // ...while the eyebrow (a glyph ON the field) wears the tier colour — gold for PRESTIGE.
+    const eyebrow = screen.getByText('ACHIEVEMENT UNLOCKED');
+    const eyebrowStyle = StyleSheet.flatten(eyebrow.props.style) as { color?: string };
+    expect(eyebrowStyle.color).toBe('#ffd23f'); // brand.gold (the F-02 PRESTIGE carve-out)
   });
 });
