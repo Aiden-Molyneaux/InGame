@@ -199,3 +199,38 @@
 Consume the shipped component library — nearly every visual miss this walk was a builder REDRAWING
 something that already existed (PixelsMark, SectionDock, sheet mounts, the plate gate). Manifest
 briefs for M7 get this line verbatim.
+
+## ROUND 3 — post-Wave-B notes + the Wave-D nod (2026-07-18, Opus orchestrator)
+
+- 🔧 W-A9 **THE THEME-PREVIEW LEAK (owner: "figure this out before moving forward").** Store Berry
+  theme preview stuck app-wide after a glitchy drawer close; My-Device readout correctly still
+  Midnight (the desync). Orchestrator pre-diagnosis: `StoreThemePreviewProvider` is ROOT-mounted
+  (app/_layout.tsx wraps the whole app), and its ONLY teardown is the item-sheet's `useEffect`
+  cleanup (store.tsx ~700 `return ()=>setPreview({})`) — NO backstop when the store screen blurs, so
+  a skipped cleanup strands the override forever; the preview never writes prefs (correct → the
+  desync). **Running the `theme-leak-hunt` workflow** (3 investigators → diagnose → fix → adversarial
+  verify; the fix must make the leak IMPOSSIBLE via a store-screen blur backstop, mirror the A7
+  blur-flush, + check the device-editor preview for the same class). Client-only.
+- ⬜ W-B1b ⚖ **Header spacing must be INDEPENDENT of the trailing button** (Profile CurrencyCounter,
+  Friends header key): the title shifts because a same-row button pushes it. The B1 shared
+  `SCREEN_HEADER_PAD` fixed the outer inset, but the title's left position still varies with the
+  trailing chrome — pin the title's geometry so it sits identically whether or not a trailing
+  button/counter is present (reserve the slot or absolute-position the title). Wave B follow-up.
+
+## WAVE D — OWNER NODDED (2026-07-18); the 4 answers + one reshape
+- ✅ **W-D1 model APPROVED** ([`game-page-postures.md`](game-page-postures.md)) with: Q1 KEEP the inline
+  compare fragment · Q2 YES friend-posture-wins + VIEW YOUR COPY · Q3 YES the Add-Game inspect
+  chevron. **Q4 RESHAPED (important):** the CATALOG posture must NOT allow adopting a card for a game
+  you don't own — adoption goes THROUGH the Add-Game path. So: (a) the CATALOG Game page shows an
+  **ADD TO COLLECTION** path (a Game page for a game you don't have gets an add affordance), and
+  (b) **the Add-Game FLOW gains a community-cards step** — see W-C10. The AdoptCardSheet
+  add-to-collection bridge (draft Q4 recommend) is REPLACED by this: no adopt without an entry.
+- ⬜ W-C10 ⚖ **Add-Game community-cards adopt step (OQ-136 REOPENED — un-deferred from onboarding-era).**
+  The owner: "during the Add-Game flow there is supposed to be a step where the user is shown the
+  Community Cards (or a subset) so they can adopt one during Add Game." OQ-136 was deferred to the
+  onboarding era at decision 0076 §0.12 — the owner now rules it IN for the beta. Build: an Add-Game
+  step that surfaces the game's community gallery (or a top subset) with adopt, wired to the existing
+  CommunityGallery/AdoptCardSheet + the adopt-creates-with-the-new-entry flow. Server: the gallery
+  read is live; the adopt-at-add path may need the new entry's id threaded. Contract/spec: OQ-136
+  moves Open→Resolved-for-M6 (0078). Rides the W-D1 Game-page build (the CATALOG adopt path is the
+  same seam). **This is now a build item, not a stretch.**
