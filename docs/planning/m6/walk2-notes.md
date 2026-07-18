@@ -285,14 +285,22 @@ briefs for M7 get this line verbatim.
   FRIENDS-ARE-PLAYING a "soon" placeholder (endpoints 404 at build). C7/P7 built both — wire NEW RELEASES
   (CAT-11) + FRIENDS-ACTIVE (CAT-12). **Answer to the owner: the RAILS (game rows) ship here now; the
   community-CARDS adopt step is a SEPARATE feature = OQ-136/W-C10 = Wave D.**
-- 🔧 N3 (P12, a5f477) **Add Gamertag button → orange** (0069).
-- 🔧 N4 (P12) **Settings gear glyph reads too light-mode** — replace with a dark-chrome-correct
-  arcade-consistent gear (keep the cream keycap).
+- ✅ N3 (P12, 66cd26a) **Add Gamertag button → orange** — `EditableIdentity` ADD GAMERTAG key is now
+  `variant='primary'` (the on-screen accent/orange, 0069 prominent add), not the cream secondary.
+- ✅ N4 (P12, 66cd26a) **Settings gear glyph reads too light-mode** — the header `SettingsGear` is now a
+  BOLD FILLED cog (solid navy body r=7.2 + 8 protruding teeth as 4 full-length rects rotated 45° + a
+  punched cream centre r=3), matching the app's filled-glyph language (nav keycaps are solid navy
+  fills); was a thin 1.8-stroke outline. Cream keycap unchanged (W-B13 ruling).
 - 🔧 N5 (P8, a548ca) **Cross-device friend state doesn't propagate + a "half-aware" split** (request
   invisible until app reset; after accept, feed shows the friend but the Friends LIST + Requests don't).
   Fix = refetch-on-focus + shared invalidation on the friends-list/requests/feed reads so foregrounding
   coheres them without a reset. **RESIDUAL: true real-time (zero-interaction) = M7 PUSH** (accepted).
-- 🔧 N6 (P12) **Profile privacy toggle clarity** — "Public profile" ON=public reads backwards; make the
-  friends|public control unambiguous with explicit per-state copy.
+- ✅ N6 (P12, 66cd26a) **Profile privacy toggle clarity** — replaced the ambiguous ON/OFF "Public
+  profile" toggle with a **labeled two-option `SectionSwitch`** (FRIENDS ONLY | PUBLIC — both states
+  named, the selected one lit F-09) under the header "WHO CAN SEE YOUR PROFILE", plus an explicit
+  current-state sub-line ("FRIENDS ONLY — ONLY FRIENDS SEE YOUR PROFILE" / "PUBLIC — ANYONE CAN SEE
+  YOUR LIMITED PROFILE"). Patches `/me {privacy}`. **CONTROL/COPY CHOICE flagged for the owner:** a
+  segmented switch (not a toggle) — zero ON/OFF ambiguity; the introduced `Toggle` component is now
+  catalog-only (the M7 notifications page is its consumer, per the settings board).
 - 🔧 N7 (P8) **Can't open a non-friend's profile** — search PersonRow tap only routes when friends; make
   it always route to /user/[id] (the limited non-friend profile + ADD FRIEND already exist server+P9).
