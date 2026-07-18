@@ -47,9 +47,10 @@ export async function getContributionsGames(req: Request, res: Response): Promis
   res.json(shape);
 }
 
-// GET /users/search?username= (SOC-07) — exact-match people search. The VIEWER is the authenticated
-// principal (SYS-01; unauth → 401). The self-exclusion, the block/suspended/deleted invisibility, and the
-// relationship (incl. the SOC-08 cooldown) all live in the service; a malformed query → an empty result.
+// GET /users/search?username= (SOC-07; C1 owner-walk amendment) — FUZZY (prefix+substring) people search.
+// The VIEWER is the authenticated principal (SYS-01; unauth → 401). The self-exclusion, the
+// block/suspended/deleted invisibility, and the relationship (incl. the SOC-08 cooldown) all live in the
+// service; a malformed/too-short query → an empty result.
 export async function getUserSearch(req: Request, res: Response): Promise<void> {
   const principal = req.principal;
   if (!principal) throw new AuthFailedError();

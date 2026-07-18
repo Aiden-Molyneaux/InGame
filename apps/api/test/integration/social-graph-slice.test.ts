@@ -222,24 +222,27 @@ describe('SOC-08: cancel (outgoing) + unfriend (silent)', () => {
     expect(await reqStatuses(reqId)).toEqual(['cancelled']);
   });
 
-  it('a cancel stamps the cooldown EXACTLY like decline (SOC-08 verbatim; OQ-147 owns the UX question) — re-request inside the window → 409 REQUEST_COOLDOWN', async () => {
+  it('OQ-147/0078: a voluntary CANCEL is cooldown-EXEMPT — an immediate re-request is ALLOWED (only DECLINE cools down)', async () => {
     const { setRequestCooldownDaysForTest } = await import('../../src/config/social');
-    setRequestCooldownDaysForTest(7);
+    setRequestCooldownDaysForTest(7); // a LONG window: were cancel to stamp it, the re-request would 409
     const a = await seedUser();
     const b = await seedUser();
     await request(app).post('/api/friends/requests').set(authed(a.token)).send({ toUserId: b.id });
     const reqId = await pendingRequestId(a.id, b.id);
-    await request(app).delete(`/api/friends/requests/${reqId}`).set(authed(a.token));
+    const cancel = await request(app).delete(`/api/friends/requests/${reqId}`).set(authed(a.token));
+    expect(cancel.status).toBe(200);
+    expect(await reqStatuses(reqId)).toEqual(['cancelled']);
 
-    // Decline-parity: the cancelled row carries the same SYS-04 cooldown stamp a decline would.
+    // OQ-147 (owner-ruled 2026-07-17): cancel does NOT cool down → an immediate re-request to the same
+    // person is allowed (the friends:request rate bucket still guards spam). Contrast the decline suite
+    // above, where the SAME 7-day window DOES 409 a re-request.
     const retry = await request(app).post('/api/friends/requests').set(authed(a.token)).send({ toUserId: b.id });
-    expect(retry.status).toBe(409);
-    expect(retry.body.error.code).toBe('REQUEST_COOLDOWN');
-    expect(typeof retry.body.error.cooldownUntil).toBe('string');
-
-    // The cooldown is the CANCELLER's — the addressee is unaffected and may request the canceller freely.
-    const other = await request(app).post('/api/friends/requests').set(authed(b.token)).send({ toUserId: a.id });
-    expect(other.status).toBe(201);
+    expect(retry.status).toBe(201);
+    // and no cooldown stamp landed on the cancelled row.
+    const { getDb } = await import('../../src/db/client');
+    const { friendRequests } = await import('../../src/db/schema');
+    const cancelled = await getDb().select().from(friendRequests).where(eq(friendRequests.id, reqId));
+    expect(cancelled[0]!.cooldownUntil).toBeNull();
   });
 
   it('DELETE /me/friends/:userId unfriends (hard-delete of the bond); a non-friend unfriend collapses to 404', async () => {

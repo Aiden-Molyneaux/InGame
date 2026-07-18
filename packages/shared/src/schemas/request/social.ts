@@ -29,10 +29,12 @@ export const createFriendRequestSchema = z
 export type CreateFriendRequest = z.infer<typeof createFriendRequestSchema>;
 
 /**
- * GET /users/search?username= query (SOC-07). EXACT-match people search — the `username` is validated
- * against the SAME `usernameSchema` the rest of the surface uses (a query that can't be a valid username
- * matches NObody, so the service returns an empty result set rather than a 422 — an impossible handle is
- * not an error, and refusing it would leak the username grammar as an oracle). No fuzzy/prefix at M6.
+ * GET /users/search?username= query (SOC-07; C1 owner-walk amendment). FUZZY people search — the service
+ * does a case-insensitive PREFIX + interior-SUBSTRING match (LIKE `%q%`). The `username` here is still
+ * validated against the SAME `usernameSchema` the rest of the surface uses (charset + 3–20 bounds): a
+ * query that can't be a valid username fragment matches NObody, so the service returns an empty result
+ * set rather than a 422 — an impossible handle is not an error, and refusing it would leak the username
+ * grammar as an oracle. (The 3-char floor also keeps a 1–2-char query from returning half the directory.)
  */
 export const userSearchQuerySchema = z
   .object({

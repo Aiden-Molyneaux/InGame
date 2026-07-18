@@ -49,6 +49,7 @@ import type { TrendingDesignRow } from '../repositories/card-repo';
 const uuidSchema = z.string().uuid();
 const CONTRIBUTOR_TOP_N = 10;
 const VIEW_ALL_PAGE = 24; // CAT-07 VIEW-ALL cursor page size
+const PEOPLE_SEARCH_LIMIT = 20; // SOC-07 fuzzy people-search cap (no paging — a directory taster)
 
 // A cross-user read target that resolves to the generic "unavailable" collapse for a blocked (either
 // direction) / suspended / deleted / unknown / malformed-id target — the ONE indistinguishable 404
@@ -305,49 +306,62 @@ function toContributorCard(row: TrendingDesignRow, adoptionCount: number): Contr
 // ── P3 — GET /users/search?username= (SOC-07) ────────────────────────────────────────────────────────
 
 /**
- * GET /users/search?username= (SOC-07) — EXACT-match people search (no fuzzy/prefix at M6). Returns at
- * most ONE PersonRow (usernames are unique). The exact-username → user resolution reuses the ONE
- * lint-legal exact-username read in the codebase (`auth-repo.findByUsername`, the AUTH-LOOKUP
- * case-insensitive lookup) — see the seam note in the receipt; there is no separate people-search read
- * class at M6.
+ * GET /users/search?username= (SOC-07, C1 owner-walk amendment) — FUZZY people search: case-insensitive
+ * PREFIX + interior-SUBSTRING match (LIKE `%q%`), so "Kyra" finds "KyraInGame". Capped at
+ * `PEOPLE_SEARCH_LIMIT` (no paging). The directory read is `auth-repo.searchByUsername` — this EXTENDS the
+ * exact-search precedent (which reused the AUTH-LOOKUP username read); the read-class decision + the
+ * guard-surface flag live on that repo function's doc + the receipt (no new lint marker was invented).
  *
- * VISIBILITY (AUTH-11 anti-enumeration posture): SELF is excluded (the contract enumerates no `self`
- * value); a deleted / suspended user is invisible; a user blocked EITHER direction is invisible (mutual
- * invisibility, SOC-09) — all of these simply produce an EMPTY result set, indistinguishable from
- * "no such username", so search is never a presence/block oracle. A syntactically-impossible query
- * (fails `usernameSchema`) matches nobody → empty (not a 422 — an impossible handle isn't an error).
+ * VISIBILITY (AUTH-11 anti-enumeration posture — UNCHANGED from the exact search): SELF is excluded (the
+ * contract enumerates no `self` value); a deleted / suspended user is invisible; a user blocked EITHER
+ * direction is invisible (mutual invisibility, SOC-09). Each of these is simply DROPPED from the result
+ * set, indistinguishable from "no such handle", so search is never a presence/block oracle. Fuzzy match
+ * exposes no new existence signal beyond what the limited `/users/:id` already permits (public rows only,
+ * the same public PersonRow allowlist). A syntactically-impossible query (fails `usernameSchema`) matches
+ * nobody → empty (not a 422 — an impossible handle isn't an error, and refusing it would leak the grammar).
  *
- * RELATIONSHIP: the 6-value search enum. A pending request → `outgoing`/`incoming`; an accepted bond →
- * `friend`; otherwise, an OPEN SOC-08 re-request cooldown → `cooldown` (+ `cooldownUntil`); else `none`.
- * (`blocked` never surfaces — a blocked user is already invisible above; the value exists for the shared
- * component only.)
+ * RELATIONSHIP (per row): the 6-value search enum, UNCHANGED. A pending request → `outgoing`/`incoming`;
+ * an accepted bond → `friend`; otherwise, an OPEN SOC-08 re-request cooldown → `cooldown` (+ `cooldownUntil`);
+ * else `none`. (`blocked` never surfaces — a blocked user is already invisible; the value exists for the
+ * shared component only.)
  */
 export async function searchUsers(actorId: string, rawUsername: unknown): Promise<UserSearchResponse> {
   const parsed = userSearchQuerySchema.safeParse({ username: rawUsername });
   if (!parsed.success) return { results: [] }; // an impossible handle matches nobody (no grammar oracle)
 
-  const target = await authRepo.findByUsername(parsed.data.username);
-  if (!target || target.deletedAt) return { results: [] }; // unknown / gone
-  if (target.id === actorId) return { results: [] }; // SELF excluded (no `self` value in the enum)
-  if (await suspensionRepo.getActiveSuspension(target.id)) return { results: [] }; // MOD-09 invisible
-  if (await relationshipRepo.isBlockedBetween(actorId, target.id)) return { results: [] }; // SOC-09 both dirs
+  const candidates = await authRepo.searchByUsername(parsed.data.username, PEOPLE_SEARCH_LIMIT);
+  if (candidates.length === 0) return { results: [] };
 
-  const relationship = await relationshipRepo.getRelationship(actorId, target.id);
-  const row: PersonSearchResult = {
-    userId: target.id,
-    username: target.username,
-    avatarUrl: target.avatarUrl,
-    relationship: relationship as SearchRelationship,
-  };
-  // Only a `none` relation can be shadowed by an open cooldown (a pending/accepted relation wins).
-  if (relationship === 'none') {
-    const cooldownUntil = await friendRequestRepo.cooldownUntilFor(actorId, target.id, new Date());
-    if (cooldownUntil) {
-      row.relationship = 'cooldown';
-      row.cooldownUntil = cooldownUntil.toISOString();
+  // SOC-09 — drop users blocked EITHER direction in ONE batched read (mutual invisibility); SELF is
+  // excluded up front. The remaining per-row reads (suspension / relationship / cooldown) mirror the
+  // exact search's per-target checks, now applied across the capped candidate set.
+  const nonSelfIds = candidates.map((c) => c.id).filter((id) => id !== actorId);
+  const blockedIds = await relationshipRepo.listBlockedIds(actorId, nonSelfIds);
+
+  const results: PersonSearchResult[] = [];
+  for (const target of candidates) {
+    if (target.id === actorId) continue; // SELF excluded (no `self` value in the enum)
+    if (blockedIds.has(target.id)) continue; // SOC-09 both directions
+    if (await suspensionRepo.getActiveSuspension(target.id)) continue; // MOD-09 invisible
+
+    const relationship = await relationshipRepo.getRelationship(actorId, target.id);
+    const row: PersonSearchResult = {
+      userId: target.id,
+      username: target.username,
+      avatarUrl: target.avatarUrl,
+      relationship: relationship as SearchRelationship,
+    };
+    // Only a `none` relation can be shadowed by an open cooldown (a pending/accepted relation wins).
+    if (relationship === 'none') {
+      const cooldownUntil = await friendRequestRepo.cooldownUntilFor(actorId, target.id, new Date());
+      if (cooldownUntil) {
+        row.relationship = 'cooldown';
+        row.cooldownUntil = cooldownUntil.toISOString();
+      }
     }
+    results.push(row);
   }
-  return { results: [row] };
+  return { results };
 }
 
 // ── P2 — GET /users/:id/collection (COL-10/11 · SOC-11) ──────────────────────────────────────────────

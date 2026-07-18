@@ -169,21 +169,22 @@ export async function declinePendingReturning(
 
 /**
  * SOC-08 — ATOMICALLY CANCEL the OUTGOING request `requestId` IFF sent FROM the actor and pending.
- * Stamps the SYS-04 `cooldownUntil` exactly like decline (SOC-08 verbatim: re-requesting after a
- * decline/CANCEL is cooldown-limited) — the CANCELLER's own re-request is throttled; the addressee is
- * unaffected (cooldownUntilFor scopes to the actor's own `from` rows). The accidental-cancel UX
- * question is OQ-147. Returns the row or null (unknown / not-yours / already-terminal → the collapse).
+ * COOLDOWN-EXEMPT (OQ-147, owner-ruled 2026-07-17 → decision 0078): a voluntary cancel does NOT stamp
+ * the SYS-04 re-request cooldown — only a DECLINE cools down. An accidental cancel must not lock the
+ * sender out for 7 days; re-request spam is still throttled by the friends:request rate bucket (10/hr).
+ * (This reverts the P1 conformance stamp; the SOC-08 spec text moves from "decline/cancel" to
+ * "decline only" — orchestrator-owned edit.) Returns the row or null (unknown / not-yours /
+ * already-terminal → the collapse).
  */
 export async function cancelOutgoingReturning(
   actorId: string,
   requestId: string,
-  cooldownUntil: Date,
   exec: Executor = getDb(),
 ): Promise<FriendRequestRow | null> {
   const actor = asActor(actorId);
   const rows = await exec
     .update(friendRequests)
-    .set({ status: 'cancelled', cooldownUntil, updatedAt: new Date() })
+    .set({ status: 'cancelled', updatedAt: new Date() })
     .where(
       and(
         eq(friendRequests.id, requestId),

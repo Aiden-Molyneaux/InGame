@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull, like } from 'drizzle-orm';
 import { getDb, type Executor } from '../db/client';
 import { asActor, ownedBy } from '../db/scoped';
 import {
@@ -35,6 +35,50 @@ export async function findByUsername(
     .where(eq(users.usernameNormalized, username.toLowerCase()))
     .limit(1);
   return rows[0] ?? null;
+}
+
+/**
+ * SOC-07 (C1 / OQ-147-era owner walk ruling) — FUZZY people-directory search: case-insensitive
+ * PREFIX + interior-SUBSTRING match (LIKE `%q%`) so "Kyra" finds "KyraInGame". Matches on the generated
+ * case-fold column (`usernameNormalized` = lower(username)); the query is lowercased so a plain LIKE is
+ * case-insensitive. LIKE metacharacters in the query are escaped so a literal `_` in a handle is not a
+ * wildcard (`%`/`\` cannot appear — usernames are [A-Za-z0-9_], but they are escaped for safety). Deleted
+ * rows are excluded; the result is capped (no paging). Ordered prefix-hits-first, then alphabetical (the
+ * DB orders alphabetically; the JS stable partition lifts prefix matches without a raw-SQL `position()`,
+ * which the SYS-01 repo lint bans). Returns AT MOST `limit` public rows; the SERVICE applies the AUTH-11 /
+ * SOC-09 visibility filter (self / block / suspended) and serializes the public PersonRow allowlist.
+ *
+ * READ-CLASS (SYS-01): // SYS-01-AUTH-LOOKUP. This EXTENDS the exact-search precedent — the exact people
+ * search already reused this auth-layer username read (findByUsername, the AUTH-LOOKUP class). The lint
+ * already covers any `.from` SELECT in this auth-repo under the marker, so NO guard-surface/lint change is
+ * introduced. It DOES stretch the marker's documented "pre-auth single-credential lookup" intent to an
+ * authenticated multi-row directory read — FLAGGED for owner review (a future `SYS-01-DIRECTORY-READ` /
+ * public-presence read-class may be preferred). No scope is silently widened: the payload is the same
+ * public allowlist the exact search returned; the marker only exempts the actor-scope check, never the
+ * service-side visibility filter.
+ */
+export async function searchByUsername(
+  query: string,
+  limit: number,
+  exec: Executor = getDb(),
+): Promise<UserRow[]> {
+  const normalized = query.toLowerCase();
+  // Escape LIKE metacharacters (\ % _) so they match literally (default Postgres escape char is \).
+  const escaped = normalized.replace(/[\\%_]/g, '\\$&');
+  // SYS-01-AUTH-LOOKUP: people-directory presence read (SOC-07) — reads only, auth-layer confined.
+  const rows = await exec
+    .select()
+    .from(users)
+    .where(and(like(users.usernameNormalized, `%${escaped}%`), isNull(users.deletedAt)))
+    .orderBy(users.usernameNormalized)
+    .limit(limit);
+  // Prefix matches ("kyra" → "kyrainggame") rank above interior-substring matches; the DB already
+  // ordered alphabetically, and Array.sort is stable, so alphabetical order holds within each group.
+  return rows.sort((a, b) => {
+    const ap = (a.usernameNormalized ?? '').startsWith(normalized) ? 0 : 1;
+    const bp = (b.usernameNormalized ?? '').startsWith(normalized) ? 0 : 1;
+    return ap - bp;
+  });
 }
 
 export async function insertUser(values: NewUserRow, exec: Executor = getDb()): Promise<UserRow> {

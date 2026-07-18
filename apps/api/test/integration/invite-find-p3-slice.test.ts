@@ -5,8 +5,9 @@ import { and, eq } from 'drizzle-orm';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import type { Express } from 'express';
 
-// M6 P3 — find + invite (decision 0076 §0.6/§0.7). Covers GET /users/search (SOC-07 exact-match +
-// relationship matrix incl. cooldown + mutual-block invisibility), POST /me/invites (SOC-10 mint · TTL ·
+// M6 P3 — find + invite (decision 0076 §0.6/§0.7; SOC-07 fuzzy amendment = C1 owner walk). Covers GET
+// /users/search (SOC-07 FUZZY prefix+substring + relationship matrix incl. cooldown + mutual-block
+// invisibility), POST /me/invites (SOC-10 mint · TTL ·
 // cap-5 create-new-invalidates-oldest · invites:create bucket) and GET /invites/:token (the AUTH-LOOKUP
 // bearer read class — INVITE_INVALID/EXPIRED · byte-identical non-disclosure · multi-redeem) + the full
 // mint→resolve→request→accept→friends thread + the F36 races. Standing authz tokens covered here
@@ -97,8 +98,8 @@ beforeEach(async () => {
   resetInviteConfigForTest();
 });
 
-// ── SOC-07 GET /users/search — exact-match people finder + relationship matrix ─────────────────────────
-describe('SOC-07: GET /users/search — exact-match people search', () => {
+// ── SOC-07 GET /users/search — FUZZY people finder + relationship matrix ────────────────────────────────
+describe('SOC-07: GET /users/search — fuzzy people search', () => {
   it('F06: an exact username match returns ONE PersonRow with the exact public key-set', async () => {
     const me = await seedUser();
     const target = await seedUser();
@@ -118,19 +119,38 @@ describe('SOC-07: GET /users/search — exact-match people search', () => {
     });
   });
 
-  it('SOC-07: exact-match only — a non-existent handle and a prefix both return empty', async () => {
+  it('SOC-07 C1: FUZZY — prefix, interior-substring, and case-insensitive all hit; a true non-match is empty', async () => {
     const me = await seedUser();
-    const target = await seedUser({ username: 'aiden_exact' });
+    const target = await seedUser({ username: 'KyraInGame' });
+    // a genuinely non-matching handle → empty (no oracle).
     const miss = await request(app).get('/api/users/search?username=nobody_here').set(authed(me.token));
     expect(miss.status).toBe(200);
     expect(miss.body.results).toEqual([]);
-    // a PREFIX of the real username is not an exact match → empty (no fuzzy/prefix at M6).
-    const prefix = await request(app).get('/api/users/search?username=aiden').set(authed(me.token));
-    expect(prefix.body.results).toEqual([]);
-    // exact (case-insensitive) → hit.
-    const hit = await request(app).get('/api/users/search?username=AIDEN_EXACT').set(authed(me.token));
-    expect(hit.body.results).toHaveLength(1);
-    expect(hit.body.results[0].userId).toBe(target.id);
+    // PREFIX: "Kyra" → "KyraInGame" (the owner-walk headline case).
+    const prefix = await request(app).get('/api/users/search?username=Kyra').set(authed(me.token));
+    expect(prefix.body.results).toHaveLength(1);
+    expect(prefix.body.results[0].userId).toBe(target.id);
+    // INTERIOR SUBSTRING: "raInG" → "KyraInGame".
+    const substr = await request(app).get('/api/users/search?username=raInG').set(authed(me.token));
+    expect(substr.body.results.map((r: { userId: string }) => r.userId)).toContain(target.id);
+    // CASE-INSENSITIVE: an all-caps query still hits.
+    const ci = await request(app).get('/api/users/search?username=KYRAINGAME').set(authed(me.token));
+    expect(ci.body.results).toHaveLength(1);
+    expect(ci.body.results[0].userId).toBe(target.id);
+  });
+
+  it('SOC-07 C1: prefix matches rank ABOVE interior-substring matches', async () => {
+    const me = await seedUser();
+    const prefixHit = await seedUser({ username: 'Kyra_Prime' }); // "kyra" is a prefix → normalized "kyra_prime"
+    // "kyra" is interior; normalized "aakyraaa" sorts ALPHABETICALLY BEFORE the prefix hit, so a passing
+    // test proves the prefix-first reorder (alphabetical order alone would place the interior match first).
+    const interiorHit = await seedUser({ username: 'aaKyraaa' });
+    const res = await request(app).get('/api/users/search?username=Kyra').set(authed(me.token));
+    const ids = res.body.results.map((r: { userId: string }) => r.userId);
+    expect(ids).toContain(prefixHit.id);
+    expect(ids).toContain(interiorHit.id);
+    // the prefix match sorts before the interior-substring match.
+    expect(ids.indexOf(prefixHit.id)).toBeLessThan(ids.indexOf(interiorHit.id));
   });
 
   it('SOC-07: SELF is excluded from search results (no `self` relationship value)', async () => {
