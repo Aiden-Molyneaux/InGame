@@ -41,6 +41,16 @@ glyph · cross-device social coherence [refetch-on-focus + shared `Social` tag; 
   PLAY padlocked (board-wins over the doc's "CTA block") · AS-4 FRIEND views keep COLLECTION-active nav
   pip (usePathname can't read `?via=`) · GAP-2 a direct CATALOG-card→add+adopt bridge deferred (adopt
   via the Add-Game step or after ADD upgrades to OWN).
+  **REVIEW-PASS DONE + PUSHED (`f9f6bcd`, origin/m6):** adversarial review (`wave-d-fix-review`, 4 Fable
+  lenses × verify) returned GO (0 blocker/high; no SOC-11 leak — StatsBack structurally omits
+  notes/rating). Fixed F1 (the one real regression: CATALOG's ADD-TO-COLLECTION band was gated on the
+  game-facts fetch — now renders in AboutTab's loading+error branches so it survives a lag/failure) ·
+  F2/F3 a11y (friend stats-back announced "Your"; inert friend face announced as a button) · F4 a real
+  `DualFaceHero`+`StatsBack` render test (the D-1 reuse was proven only against a mock) · F5 a
+  ScreenButton stepped-silhouette test · F6 stale comment. 93 suites/626 mobile · 467 int · typecheck
+  clean; OWN a11y byte-identity re-confirmed. **OQ-153 filed** (`0783bca`): pre-existing server
+  defense-in-depth — friend-read repo selects the full entry row (no live leak; the DTO mapper gates
+  it), narrow it under a proper server pass. STILL OWNER-WALK-OWED (visual gate; browser lane wedged).
 - ⬜ **M6 EXIT GATES (owner lane, the beta):** R2/Cloudflare + API host + managed PG provisioning
   (P15/G-C) · EAS/TestFlight lane (P16) · the alpha wave (close friends) → cohort. See §6.
 - ⬜ **Carried from M5:** P2b real-RevenueCat + G-J + the manual sandbox pass — rides Google Play
