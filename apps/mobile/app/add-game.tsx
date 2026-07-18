@@ -22,6 +22,8 @@ import {
   useAddToCollectionMutation,
   useUpdateEntryMutation,
 } from '../src/store/api';
+// walk2 N2b — the CAT-11 / CAT-12 pre-query rails (own slice, never api.ts).
+import { useGetNewReleasesQuery, useGetFriendsActiveQuery } from '../src/store/catalogRailsApi';
 
 // ADD GAME (§2.4, the §4.3 boards) — a FlowTakeover entered from the Collection's gold ADD.
 // Search (CAT-01, bottom-docked field · never-blank POPULAR rail pre-query) → a tap-focused card
@@ -106,114 +108,108 @@ function SearchMode({
 }) {
   const styles = useStyles();
   const { data: popular } = useGetPopularQuery();
+  // walk2 N2b — the CAT-11 / CAT-12 pre-query rails, live off the now-built endpoints (skipped while
+  // querying: search overwrites the rails, the board's model).
+  const trimmed = q.trim();
+  const querying = trimmed.length > 0;
+  const { data: newReleases } = useGetNewReleasesQuery(undefined, { skip: querying });
+  const { data: friendsActive } = useGetFriendsActiveQuery(undefined, { skip: querying });
   const [search, searchState] = useLazySearchCatalogQuery();
   const [foreIndex, setForeIndex] = useState(0);
-  const [addError, setAddError] = useState<string | null>(null);
-  const [addToCollection, addState] = useAddToCollectionMutation();
+  // ONE add mutation feeds every rail; `addingId`/`errFor` tag the acting card so only its button
+  // shows the in-flight/error (a shared spinner would light all rails at once).
+  const [addingId, setAddingId] = useState<string | null>(null);
+  const [errFor, setErrFor] = useState<{ id: string; message: string } | null>(null);
+  const [addToCollection] = useAddToCollectionMutation();
 
-  const trimmed = q.trim();
   useEffect(() => {
     if (trimmed.length === 0) return;
     const t = setTimeout(() => void search(trimmed, true), SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(t);
   }, [trimmed, search]);
 
-  const querying = trimmed.length > 0;
-  const items: CatalogItem[] = useMemo(() => {
-    if (querying) return searchState.data?.items ?? [];
-    return popular?.items ?? []; // never blank — the POPULAR FIRST ADDS rail (CAT-09)
-  }, [querying, searchState.data, popular]);
+  const results: CatalogItem[] = useMemo(
+    () => (querying ? (searchState.data?.items ?? []) : []),
+    [querying, searchState.data],
+  );
 
-  // Reset the fore to the first card when the result set changes (a stale index must not carry over).
+  // Reset the search fan's fore when the result set changes (a stale index must not carry over).
   useEffect(() => setForeIndex(0), [querying, searchState.data]);
+  const safeFore = results.length > 0 ? Math.min(foreIndex, results.length - 1) : 0;
+  const focused = results[safeFore] ?? null;
 
-  // §0.7 focus-only: the CardFan's centered FORE card is the focused card and always shows its meta +
-  // ADD (the board's P1 static frame just isn't mid-interaction). Clamp in case the list shrank before
-  // the reset effect runs. Add acts on the fore — a visible, meta-shown card, never a hidden one.
-  const safeFore = items.length > 0 ? Math.min(foreIndex, items.length - 1) : 0;
-  const focused = items[safeFore] ?? null;
-
-  async function add() {
-    if (!focused) return;
-    setAddError(null);
+  // The shared per-item add (any rail's ADD, or the search fan's) — routes through onAdded to the
+  // COL-02 status beat exactly as before; tags the acting id for the in-flight/error affordance.
+  async function addItem(item: CatalogItem) {
+    setAddingId(item.id);
+    setErrFor(null);
     try {
-      onAdded(await addToCollection({ gameId: focused.id }).unwrap());
+      const added = await addToCollection({ gameId: item.id }).unwrap();
+      onAdded(added);
     } catch (e) {
-      setAddError(errOf(e).message ?? 'Couldn’t add. Try again.');
+      setErrFor({ id: item.id, message: errOf(e).message ?? 'Couldn’t add. Try again.' });
+    } finally {
+      setAddingId(null);
     }
   }
 
   return (
     <>
       <ScrollView style={styles.flex} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        {/* R14 — the board's match COUNT, not a static "RESULTS" (board P2 "MATCHING…" · P3 "N MATCHES") */}
-        <Text style={styles.railHead}>
-          {querying
-            ? searchState.isFetching
-              ? 'MATCHING…'
-              : `${items.length} ${items.length === 1 ? 'MATCH' : 'MATCHES'}`
-            : 'POPULAR FIRST ADDS'}
-        </Text>
-
-        {querying && searchState.isFetching ? (
-          <ActivityIndicator color={theme.brand.accent} />
-        ) : items.length === 0 ? (
-          <View style={styles.noneWrap}>
-            <Text style={styles.noneTitle}>{querying ? 'NO MATCHES' : 'THE CATALOG IS EMPTY'}</Text>
-            <Text style={styles.noneSub}>
-              {querying
-                ? 'Not in the community catalog yet — be the one who adds it.'
-                : 'Someone has to go first.'}
-            </Text>
-          </View>
-        ) : (
+        {querying ? (
+          // ── SEARCH — the results fan overwrites the rails (the board's model) ──
           <>
-            {/* S4-f — the focused card's meta ABOVE the fan (name-first · CAT-09 presence · CAT-05 credit) */}
-            {focused ? <FocusedMeta item={focused} /> : null}
-            {/* S4-c — the 3-up CardFan: fore + rotated neighbours + ‹ dots › + SWIPE (focus-only, §0.7) */}
-            <CardFan
-              items={items.map((i) => ({ id: i.id, title: i.name }))}
-              foreIndex={safeFore}
-              onFocus={setForeIndex}
-            />
-            {addError ? <Text style={styles.errLine}>{addError}</Text> : null}
-            <ScreenButton
-              label={
-                focused?.inCollection
-                  ? 'In your collection ✓'
-                  : addState.isLoading
-                    ? '…'
-                    : 'Add to collection'
-              }
-              variant="add"
-              disabled={!focused || focused.inCollection || addState.isLoading}
-              onPress={add}
-              block
+            {/* R14 — the board's match COUNT, not a static "RESULTS" (board P2 "MATCHING…" · P3 "N MATCHES") */}
+            <Text style={styles.railHead}>
+              {searchState.isFetching ? 'MATCHING…' : `${results.length} ${results.length === 1 ? 'MATCH' : 'MATCHES'}`}
+            </Text>
+            {searchState.isFetching ? (
+              <ActivityIndicator color={theme.brand.accent} />
+            ) : results.length === 0 ? (
+              <View style={styles.noneWrap}>
+                <Text style={styles.noneTitle}>NO MATCHES</Text>
+                <Text style={styles.noneSub}>Not in the community catalog yet — be the one who adds it.</Text>
+              </View>
+            ) : (
+              <>
+                {focused ? <FocusedMeta item={focused} /> : null}
+                <CardFan items={results.map((i) => ({ id: i.id, title: i.name }))} foreIndex={safeFore} onFocus={setForeIndex} />
+                {errFor && focused && errFor.id === focused.id ? <Text style={styles.errLine}>{errFor.message}</Text> : null}
+                <ScreenButton
+                  label={focused?.inCollection ? 'In your collection ✓' : addingId === focused?.id ? '…' : 'Add to collection'}
+                  variant="add"
+                  disabled={!focused || focused.inCollection || addingId === focused?.id}
+                  onPress={() => focused && void addItem(focused)}
+                  block
+                />
+              </>
+            )}
+            <View style={styles.noneHook}>
+              {/* walk2 B8 ⚖ (owner ruling 2026-07-17) — the create-this-game prompt is the F-02
+                  ACQUISITIVE voice: GOLD with the pixel-stepped silhouette. ScreenButton/add IS that
+                  grammar (gold fill + steppedRectPath corners) — consumed, not hand-drawn. */}
+              <Text style={styles.noneLead}>NONE OF THESE?</Text>
+              <ScreenButton label={`Create “${trimmed}”`} variant="add" onPress={onNoneOfThese} block />
+            </View>
+          </>
+        ) : (
+          // ── PRE-QUERY — the rail trio (board: three stacked suggestion fans) ──
+          // walk2 N2b: POPULAR (CAT-09, live) · NEW RELEASES (CAT-11, now live) · FRIENDS ARE PLAYING
+          // (CAT-12, now live — ranked by friendsHaveCount; the "lands soon" placeholder retired). Each
+          // is a RailFan (capped 12, its own focus + ADD via the shared addItem); FRIENDS shows the quiet
+          // rail-empty when the caller has no friends-active games.
+          <>
+            <RailFan heading="POPULAR FIRST ADDS" items={popular?.items ?? []} addingId={addingId} errFor={errFor} onAdd={addItem} />
+            <RailFan heading="NEW RELEASES" items={newReleases?.items ?? []} addingId={addingId} errFor={errFor} onAdd={addItem} />
+            <RailFan
+              heading="FRIENDS ARE PLAYING"
+              items={friendsActive?.items ?? []}
+              addingId={addingId}
+              errFor={errFor}
+              onAdd={addItem}
+              emptyText="No friends are playing something new yet — add a friend to see their games here."
             />
           </>
-        )}
-
-        {querying ? (
-          <View style={styles.noneHook}>
-            {/* walk2 B8 ⚖ (owner ruling 2026-07-17) — the create-this-game prompt is the F-02
-                ACQUISITIVE voice: GOLD with the pixel-stepped silhouette. ScreenButton/add IS that
-                grammar (gold fill + steppedRectPath corners) — consumed, not hand-drawn; the quiet
-                TertiaryLink it replaces undersold the catalog's be-first hook (CAT-02). */}
-            <Text style={styles.noneLead}>NONE OF THESE?</Text>
-            <ScreenButton label={`Create “${trimmed}”`} variant="add" onPress={onNoneOfThese} block />
-          </View>
-        ) : (
-          // CAT-12 FRIENDS-ARE-PLAYING rail (0076 §0.8 · decision 0062) — pre-query context. The
-          // `/catalog/friends-active` endpoint is NOT live yet (404 — only `friends-who-own` is on the
-          // catalog router), so the rail renders an honest EXPECTED-empty with the cite, NEVER faked. It
-          // hard-needs the P1 friend graph + a server route; ranked by `friendsHaveCount` when it lands.
-          <View style={styles.friendsRail}>
-            <Text style={styles.railHead}>FRIENDS ARE PLAYING</Text>
-            <Text style={styles.friendsExpected}>
-              See what your friends are adding here soon — the friends-active catalog feed lands with the
-              server’s CAT-12 route.
-            </Text>
-          </View>
         )}
       </ScrollView>
 
@@ -224,6 +220,61 @@ function SearchMode({
         </View>
       </KeyboardLift>
     </>
+  );
+}
+
+// walk2 N2b — one pre-query suggestion rail (POPULAR / NEW RELEASES / FRIENDS ARE PLAYING). Capped at
+// 12; a 3-up CardFan whose centered FORE is the focused card (its meta + ADD ride above/below, §0.7).
+// Owns its own foreIndex (each rail scrolls independently). Empty → the quiet `emptyText` (no rail at
+// all when there's no empty copy, e.g. an empty POPULAR — the catalog-empty first-run is the search
+// view's concern). Add routes through the shared `onAdd` (→ the COL-02 status beat).
+const RAIL_CAP = 12;
+function RailFan({
+  heading,
+  items,
+  addingId,
+  errFor,
+  onAdd,
+  emptyText,
+}: {
+  heading: string;
+  items: CatalogItem[];
+  addingId: string | null;
+  errFor: { id: string; message: string } | null;
+  onAdd: (item: CatalogItem) => void;
+  emptyText?: string;
+}) {
+  const styles = useStyles();
+  const [foreIndex, setForeIndex] = useState(0);
+  const capped = useMemo(() => items.slice(0, RAIL_CAP), [items]);
+  useEffect(() => setForeIndex(0), [capped.length]);
+
+  if (capped.length === 0) {
+    return emptyText ? (
+      <View style={styles.rail}>
+        <Text style={styles.railHead}>{heading}</Text>
+        <Text style={styles.railEmpty}>{emptyText}</Text>
+      </View>
+    ) : null;
+  }
+  const safe = Math.min(foreIndex, capped.length - 1);
+  const focused = capped[safe]!;
+  return (
+    <View style={styles.rail}>
+      <Text style={styles.railHead}>{heading}</Text>
+      {/* S4-f — the focused card's meta ABOVE the fan (name-first · CAT-09 presence · CAT-05 credit) */}
+      <FocusedMeta item={focused} />
+      {/* S4-c — the 3-up CardFan: fore + rotated neighbours + ‹ dots › + SWIPE (focus-only, §0.7) */}
+      <CardFan items={capped.map((i) => ({ id: i.id, title: i.name }))} foreIndex={safe} onFocus={setForeIndex} />
+      {errFor && errFor.id === focused.id ? <Text style={styles.errLine}>{errFor.message}</Text> : null}
+      <ScreenButton
+        label={focused.inCollection ? 'In your collection ✓' : addingId === focused.id ? '…' : 'Add to collection'}
+        variant="add"
+        disabled={focused.inCollection || addingId === focused.id}
+        onPress={() => onAdd(focused)}
+        block
+      />
+    </View>
   );
 }
 
@@ -450,8 +501,9 @@ const useStyles = themedStyles((t) => ({
   returnLink: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 1 },
   body: { paddingHorizontal: t.space.lg, paddingBottom: t.space.lg, gap: t.space.lg }, // W-B2 — top pad dropped (the seam owns gap-2)
   railHead: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
-  friendsRail: { gap: t.space.sm, marginTop: t.space.xl, borderTopWidth: 1, borderTopColor: t.scr.hairline, paddingTop: t.space.lg },
-  friendsExpected: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.3, lineHeight: 14 },
+  // walk2 N2b — one pre-query suggestion rail (POPULAR / NEW RELEASES / FRIENDS ARE PLAYING).
+  rail: { gap: t.space.md, marginBottom: t.space.xl },
+  railEmpty: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.3, lineHeight: 14 },
   // N4 — the focused game's details are centered (owner, 2026-07-04).
   meta: { gap: 3, alignItems: 'center' },
   metaTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5, textAlign: 'center' },
