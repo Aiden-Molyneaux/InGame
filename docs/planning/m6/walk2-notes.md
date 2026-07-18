@@ -295,6 +295,17 @@ briefs for M7 get this line verbatim.
   silhouette (ScreenButton `stepped`), kept ORANGE `/primary` (0069 — non-acquisitive, NOT gold). The
   FRIEND ADD is stepped when it's the primary add; when an adopt-able card demotes it to the cream
   secondary the step drops (the step is the orange-primary silhouette, never a cream one).
+- ✅ **D-1..D-4 review-pass** — adversarial review returned GO; 6 findings fixed:
+  **F1 (MED regression)** `AboutTab` now renders the `beforeFriends` slot in its LOADING and ERROR
+  branches too, so the CATALOG ADD band survives a `GET /catalog/games/:id` lag/failure (the resolver
+  gates posture on the COLLECTION query, so those branches are reachable on CATALOG) · **F2 (a11y)**
+  `StatsBack` a11y label sentence-cases `statsTitle` → FRIEND announces "Riko's stats card back", OWN
+  stays byte-identical "Your stats card back" · **F3 (a11y)** an inert friend face (no adopt-able card)
+  renders a plain View, not a Pressable — no "button" role, no no-op double-tap; the descriptive label
+  survives · **F4 (test gap)** new `DualFaceHero.test.tsx` renders the REAL component + REAL StatsBack
+  (OWN defaults · statsTitle plumb-through · both faces present · percent=null→"—" · the F3 inert/button
+  branches) · **F5** new `ScreenButton.test.tsx` proves `stepped` DRAWS the SVG polygon post-layout · **F6**
+  the stale CatalogGamePage "PINNED up top" comment updated. Full mobile **93/626** (was 91/615); typecheck+lint clean.
 
 ## ROUND 4 — Wave C review notes (2026-07-18, owner tested cross-device iPhone↔Android)
 - ✅ N1 (P2 server, dc05436) **Contributor REACHED is inflated** — "29 reached" with <29 users: summing

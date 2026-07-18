@@ -398,7 +398,9 @@ function FriendPlayTab({
               ? `Adopt ${friendName ? `${friendName}’s` : 'their'} ${friendItem.title} card`
               : `${friendName ? `${friendName}’s` : 'Their'} ${friendItem.title} card`
           }
-          onInspect={() => galleryCard && onAdoptTheirCard()}
+          // F3 — only an adopt-able card makes the face interactive; otherwise it's an inert read (no
+          // "button" SR role, no no-op double-tap). DualFaceHero renders a plain View for undefined.
+          onInspect={galleryCard ? onAdoptTheirCard : undefined}
         />
       </View>
 

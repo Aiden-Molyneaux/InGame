@@ -46,23 +46,38 @@ export function DualFaceHero({
   faceLabel?: string;
   /** Accessibility name for the face tap-target (default the OWN "Inspect your {title} card"). */
   faceA11yLabel?: string;
-  onInspect: () => void;
+  /** The face-tap handler. UNDEFINED → the face is INERT: a plain non-button View, no "button" SR role,
+   *  no no-op double-tap (F3 — a friend whose card isn't adopt-able). A real handler → the Pressable. */
+  onInspect?: () => void;
 }) {
   const styles = useStyles();
+  const face = (
+    <>
+      {/* /grid (161×225) — one size up from /pick per the owner's gate-5 B.5. `animate`: the
+          game-page hero is the shelf's showpiece — animated cosmetics run here (0068 opt-in).
+          EntryCard owns the own-composition vs adopted-flattened branch (F-8/F-19 class). */}
+      <EntryCard title={title} card={{ composition, imageUrl, thumbUrl }} size="grid" animate />
+      <Text style={styles.label}>{faceLabel}</Text>
+    </>
+  );
   return (
     <View style={styles.wrap}>
-      <Pressable
-        style={styles.face}
-        accessibilityRole="button"
-        accessibilityLabel={faceA11yLabel ?? `Inspect your ${title} card`}
-        onPress={onInspect}
-      >
-        {/* /grid (161×225) — one size up from /pick per the owner's gate-5 B.5. `animate`: the
-            game-page hero is the shelf's showpiece — animated cosmetics run here (0068 opt-in).
-            EntryCard owns the own-composition vs adopted-flattened branch (F-8/F-19 class). */}
-        <EntryCard title={title} card={{ composition, imageUrl, thumbUrl }} size="grid" animate />
-        <Text style={styles.label}>{faceLabel}</Text>
-      </Pressable>
+      {onInspect ? (
+        <Pressable
+          style={styles.face}
+          accessibilityRole="button"
+          accessibilityLabel={faceA11yLabel ?? `Inspect your ${title} card`}
+          onPress={onInspect}
+        >
+          {face}
+        </Pressable>
+      ) : (
+        // F3 — inert face: a plain View (no button role, no press). Keep the descriptive a11y label
+        // (an image-like readout) but drop the interactive affordance a screen reader would announce.
+        <View style={styles.face} accessibilityLabel={faceA11yLabel ?? `${title} card`}>
+          {face}
+        </View>
+      )}
       <View style={styles.face}>
         <StatsBack hours={hours} percent={percent} status={status} since={since} artist={artist} statsTitle={statsTitle} width={161} height={225} />
         <Text style={[styles.label, styles.labelAcc]}>{statsLabel}</Text>

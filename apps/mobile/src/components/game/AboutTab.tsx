@@ -36,9 +36,15 @@ export function AboutTab({
   const styles = useStyles();
   const { data, isLoading, isError, refetch } = useGetGameDetailQuery(gameId);
 
+  // F1 (Wave D review) — `beforeFriends` (the CATALOG NOT-IN-COLLECTION band + ADD CTA) MUST survive a
+  // game-detail fetch that lags or fails: the route resolver gates posture on the COLLECTION query, not
+  // this game-detail read, so the CATALOG page reaches these branches with the key action inside the slot.
+  // Render it above the skeleton / above the error so ADD TO COLLECTION is never unreachable. (Pre-D-3 the
+  // band was a sibling above AboutTab and always rendered; the slot must preserve that guarantee.)
   if (isLoading) {
     return (
       <View style={styles.wrap} accessibilityLabel="Loading">
+        {beforeFriends}
         <View style={[styles.sk, { width: '46%', height: 21, alignSelf: 'center' }]} />
         <View style={[styles.sk, { width: '64%', height: 11, alignSelf: 'center' }]} />
         <View style={[styles.sk, { width: '90%', height: 11 }]} />
@@ -49,6 +55,7 @@ export function AboutTab({
   if (isError || !data) {
     return (
       <View style={styles.wrap}>
+        {beforeFriends}
         <LoadError
           title="Couldn't load the game facts"
           message="This section didn't answer. Try again."

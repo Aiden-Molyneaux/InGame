@@ -20,8 +20,10 @@ import { SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../ScreenHead';
 //           own; adoption routes through Add-Game, W-C10). `canAdopt={false}` makes the adopt path
 //           STRUCTURALLY absent — the sheet is never mountable here. Empty gallery → the be-first door
 //           (DESIGN THE FIRST CARD, gold/card-creating, CAT-05).
-//   ABOUT — the shared game-detail fill (identical to OWN/FRIEND) with the CatalogHeader neutral band
-//           PINNED up top so the key action (ADD TO COLLECTION) never hides behind a tab.
+//   ABOUT — the shared game-detail fill (identical to OWN/FRIEND). D-3: the NOT-IN-YOUR-COLLECTION band
+//           rides AboutTab's `beforeFriends` slot, so the order reads info → the band (+ ADD/UP-NEXT) →
+//           friends-who-own. The band renders in AboutTab's loading/error branches too (F1), so the key
+//           action (ADD TO COLLECTION) is never lost to a facts-fetch failure.
 //
 // ADD TO COLLECTION is the orange `/primary` NON-acquisitive add (0069; NOT gold — no PX spent). On
 // success the resolver's Collection re-read lands `myEntry` → the page UPGRADES IN PLACE to OWN at the

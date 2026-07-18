@@ -86,7 +86,11 @@ export function StatsBack({
   return (
     <View
       style={{ width, height }}
-      accessibilityLabel="Your stats card back"
+      // F2 (Wave D review) — the a11y label tracks the visible heading, so a FRIEND back announces
+      // "Riko's stats card back" instead of "Your". Sentence-cased from statsTitle: OWN's default
+      // "YOUR STATS" → "Your stats card back" — BYTE-IDENTICAL to the prior hardcoded value. Derived
+      // so the announced text and the visible heading never drift.
+      accessibilityLabel={`${statsTitle.charAt(0).toUpperCase()}${statsTitle.slice(1).toLowerCase()} card back`}
       pointerEvents={compact ? 'box-none' : 'auto'}
     >
       {/* The silhouette Svg is WRAPPED in a plain View: react-native-svg's NATIVE view runs a custom

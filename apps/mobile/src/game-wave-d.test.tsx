@@ -20,27 +20,28 @@ jest.mock('expo-router', () => ({
 }));
 jest.mock('./store/api', () => ({ useAddToCollectionMutation: () => [mockAdd, { isLoading: false }] }));
 jest.mock('./store/queueApi', () => ({ useAddQueueItemMutation: () => [mockQueue, { isLoading: false }] }));
-// AboutTab is REAL (D-3 order) — mock ONLY its data hooks.
-jest.mock('./store/catalogRailsApi', () => ({
-  useGetGameDetailQuery: () => ({
-    data: {
-      id: 'g1',
-      name: 'Destiny',
-      studio: 'Bungie',
-      publisher: 'Bungie',
-      releaseDate: '2014-09-09',
-      genres: [{ id: 'gn', name: 'Shooter' }],
-      collectionsCount: 214,
-      friendsHaveCount: 2,
-      inCollection: false,
-      contributor: { userId: 'c1', username: 'maverick' },
-      friendsWhoOwn: [],
-    },
-    isLoading: false,
-    isError: false,
-    refetch: jest.fn(),
-  }),
-}));
+// AboutTab is REAL (D-3 order) — mock ONLY its data hooks. The game-detail result is SWITCHABLE so F1
+// can drive the loading / error branches (the CATALOG band must survive a facts-fetch failure).
+const GAME_DETAIL = {
+  id: 'g1',
+  name: 'Destiny',
+  studio: 'Bungie',
+  publisher: 'Bungie',
+  releaseDate: '2014-09-09',
+  genres: [{ id: 'gn', name: 'Shooter' }],
+  collectionsCount: 214,
+  friendsHaveCount: 2,
+  inCollection: false,
+  contributor: { userId: 'c1', username: 'maverick' },
+  friendsWhoOwn: [],
+};
+let mockGameDetail: { data?: unknown; isLoading: boolean; isError: boolean; refetch: () => void } = {
+  data: GAME_DETAIL,
+  isLoading: false,
+  isError: false,
+  refetch: jest.fn(),
+};
+jest.mock('./store/catalogRailsApi', () => ({ useGetGameDetailQuery: () => mockGameDetail }));
 jest.mock('./store/friendApi', () => ({
   useGetFriendsWhoOwnQuery: () => ({
     data: { friendsWhoOwn: [{ userId: 'f1', username: 'riko', avatarUrl: null, hours: 240 }], count: 1 },
@@ -62,6 +63,10 @@ function renderCatalog() {
     </Provider>,
   );
 }
+
+beforeEach(() => {
+  mockGameDetail = { data: GAME_DETAIL, isLoading: false, isError: false, refetch: jest.fn() };
+});
 
 describe('W-D1 D-3 — CATALOG ABOUT order: info → not-in-collection → friends-who-own', () => {
   it('the NOT-IN-COLLECTION prompt sits UNDER the game info and ABOVE the friends list', () => {
@@ -88,5 +93,24 @@ describe('W-D1 D-4 — the CATALOG ADD TO COLLECTION button is orange /primary +
     expect(add!.props.variant).toBe('primary'); // orange, non-acquisitive (NOT gold/add)
     expect(add!.props.stepped).toBe(true); // the pixel-stepped corners
     expect(screen.getByText('NOT IN YOUR COLLECTION')).toBeTruthy();
+  });
+});
+
+describe('W-D1 F1 — the CATALOG band survives a game-detail fetch that lags or fails', () => {
+  it('game-detail LOADING → the NOT-IN-COLLECTION band + ADD CTA still render (above the skeleton)', () => {
+    mockGameDetail = { data: undefined, isLoading: true, isError: false, refetch: jest.fn() };
+    renderCatalog();
+    expect(screen.getByText('NOT IN YOUR COLLECTION')).toBeTruthy();
+    expect(screen.getByText('+ ADD TO COLLECTION')).toBeTruthy();
+  });
+
+  it('game-detail ERROR → the NOT-IN-COLLECTION band + ADD CTA still render (above the LoadError)', () => {
+    mockGameDetail = { data: undefined, isLoading: false, isError: true, refetch: jest.fn() };
+    renderCatalog();
+    // the key action is reachable even though the facts failed (pre-D-3 the band was a sibling above)
+    expect(screen.getByText('NOT IN YOUR COLLECTION')).toBeTruthy();
+    expect(screen.getByText('+ ADD TO COLLECTION')).toBeTruthy();
+    // we're genuinely in the ERROR branch (not success): the success-only game facts are absent
+    expect(screen.queryByText('ADDED TO THE CATALOG BY')).toBeNull();
   });
 });
