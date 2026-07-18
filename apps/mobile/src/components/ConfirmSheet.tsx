@@ -65,7 +65,13 @@ export function ConfirmSheet({
             block
           />
         )}
-        <ScreenButton label="Cancel" variant="secondary" onPress={onClose} disabled={busy} block />
+        {/* W-B4 (owner walk2, the F-21 family finish) — BUY confirms carry NO explicit CANCEL: the
+            purchase tone's escape is the sheet grammar itself (scrim tap / grab handle / hardware back
+            via PulledSheet → onClose). The destructive/primary tones KEEP the 0040 CANCEL — the
+            safe-default weight is core to the destructive grammar, and those aren't buy pages. */}
+        {tone !== 'purchase' ? (
+          <ScreenButton label="Cancel" variant="secondary" onPress={onClose} disabled={busy} block />
+        ) : null}
       </View>
     </PulledSheet>
   );

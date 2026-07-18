@@ -24,7 +24,6 @@ import {
   ThemePreviewScreen,
   sampleCompositionWith,
   isCardCosmetic,
-  PreviewStrip,
   LedgerRow,
   LandedMoment,
   PixelsMark,
@@ -808,10 +807,10 @@ function ItemPreview({ item, deviceShellId }: { item: CosmeticListItem; deviceSh
   const styles = useStyles();
   if (item.type === 'screen_theme') {
     // P3 — the theme applied live: the ThemePreview subtree repaints the mock screen to the previewed
-    // palette (no PATCH, no global repaint), so "PREVIEWING — BERRY" actually shows BERRY.
+    // palette (no PATCH, no global repaint). W-B5 (owner walk2): NO "PREVIEWING" announcement chip —
+    // the repainted mock screen IS the preview; the state needs no label (PreviewStrip retired).
     return (
       <View style={styles.previewCol}>
-        <PreviewStrip name={item.name} />
         <ThemePreview themeId={item.id}>
           <ThemePreviewScreen />
         </ThemePreview>

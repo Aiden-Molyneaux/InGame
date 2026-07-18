@@ -88,6 +88,29 @@ describe('ConfirmSheet', () => {
     expect(tree).not.toContain(ALERT_RED);
   });
 
+  it('W-B4 — the purchase tone carries NO CANCEL; the sheet scrim is the escape (destructive keeps it)', () => {
+    const onClose = jest.fn();
+    render(
+      wrap(
+        <ConfirmSheet
+          visible
+          tone="purchase"
+          holdToConfirm
+          title="CONFIRM PURCHASE"
+          message="$1.99 will be charged."
+          confirmLabel="Hold to pay $1.99"
+          onConfirm={jest.fn()}
+          onClose={onClose}
+        />,
+      ),
+    );
+    // no explicit CANCEL on a buy confirm (the F-21 family finish)
+    expect(screen.queryByText('CANCEL')).toBeNull();
+    // ...but the escape path stands: the PulledSheet scrim closes (onClose fires)
+    fireEvent.press(screen.getByLabelText('Close'));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it('busy disables the actions and shows the working glyph', () => {
     render(
       wrap(

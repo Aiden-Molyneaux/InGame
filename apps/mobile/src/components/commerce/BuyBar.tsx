@@ -12,7 +12,8 @@ import { PixelsMark } from './PixelsMark';
 //   G1 — a PX cost renders the GOLD economy voice (F-02).
 //   G2 — HOLD-to-activate with a FILLING gold sweep while held (the shared HoldFillButton); releasing
 //        early spends nothing. Reduce-motion (OQ-046 / 0044 §104) collapses to an INLINE two-step
-//        confirm (CANCEL · CONFIRM), so a timed gesture never gates a motor-impaired user.
+//        confirm (press → CONFIRM), so a timed gesture never gates a motor-impaired user. No explicit
+//        CANCEL (W-B4) — the sheet grammar is the escape; `confirming` self-resets on price/disabled.
 //   G3 — INSUFFICIENT funds NEVER offer the hold (pre-emptive, uniform, no failed-attempt flow): when
 //        the balance can't cover the price AND a top-up destination exists, the bar renders its
 //        can't-afford state — "NOT ENOUGH ◇ — YOU HAVE N" — with the TOP UP door INLINE beneath. The
@@ -58,9 +59,11 @@ export function BuyBar({
   const [confirming, setConfirming] = useState(false);
 
   // Drop out of the inline confirm if the item/price changes or the key sleeps (a short bridge opened),
-  // so a stale "CONFIRM" can never spend against a changed price or a disabled key.
+  // so a stale "CONFIRM" can never spend against a changed price or a disabled key. W-B4 leans on this
+  // as an escape path (no explicit CANCEL), and the old `if (disabled)` guard silently skipped the
+  // price-change case — the reset is now unconditional on either dep moving (mount is a no-op).
   useEffect(() => {
-    if (disabled) setConfirming(false);
+    setConfirming(false);
   }, [disabled, price]);
 
   const label = `${price} PX`;
@@ -112,28 +115,18 @@ export function BuyBar({
         </View>
       ) : reduceMotion ? (
         // OQ-046 accessible alt — a single press flips to an INLINE confirm (no hold, no nested sheet). The
-        // keys are HoldFillButtons (immediate-press under reduce-motion), so they wear the same stepped face.
+        // key is a HoldFillButton (immediate-press under reduce-motion), so it wears the same stepped face.
+        // W-B4 (owner walk2) — NO explicit CANCEL beside the confirm: escape = the sheet grammar (the
+        // hosting PulledSheet's scrim/handle closes), and `confirming` self-resets when the price changes
+        // or the key sleeps (the effect above) — the F-21 KeepBar-CANCEL-removal precedent, family-wide.
         confirming ? (
-          <View style={styles.confirmRow}>
-            <View style={styles.confirmCell}>
-              <HoldFillButton
-                label="CANCEL"
-                accessibilityLabel="Cancel"
-                tone="cream"
-                onComplete={() => setConfirming(false)}
-                block
-              />
-            </View>
-            <View style={styles.confirmCell}>
-              <HoldFillButton
-                label={`CONFIRM · ${label}`}
-                accessibilityLabel={`Confirm ${verbLower} for ${label}`}
-                tone="gold"
-                onComplete={handleBuy}
-                block
-              />
-            </View>
-          </View>
+          <HoldFillButton
+            label={`CONFIRM · ${label}`}
+            accessibilityLabel={`Confirm ${verbLower} for ${label}`}
+            tone="gold"
+            onComplete={handleBuy}
+            block
+          />
         ) : (
           <HoldFillButton
             label={`${verb} · ${label}`}
@@ -169,9 +162,6 @@ const useStyles = themedStyles((t) => ({
   balanceLabel: { fontFamily: t.font.screenSemi, fontSize: t.type.body, color: t.scr.dim, letterSpacing: 1 },
   balanceValue: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.value, letterSpacing: 0.5 },
   noteText: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5 },
-  // the reduce-motion two-step keys share a row (CANCEL · CONFIRM), each stretching to half the width.
-  confirmRow: { flexDirection: 'row', gap: t.space.md },
-  confirmCell: { flex: 1 },
   // G3 — the pre-emptive can't-afford cluster (F-02 gold voice on the shortfall glyph, not alert-red).
   shortWrap: { alignItems: 'flex-end', gap: t.space.sm },
   shortLine: { flexDirection: 'row', alignItems: 'center' },

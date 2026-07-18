@@ -185,8 +185,13 @@ const AnimatedRect = Animated.createAnimatedComponent(Rect);
 
 const useStyles = themedStyles((t) => ({
   base: {
-    paddingHorizontal: t.space.lg,
-    paddingVertical: t.space.md,
+    // W-B3 (owner walk2) — proper BUTTON height: the key was a hair short (vertical pad md/8) next to
+    // every ScreenButton keycap. It now wears the ScreenButton height grammar (lg/12 vertical ·
+    // xl/16 horizontal, ScreenButton.tsx `base`) — fixed HERE ONCE, so every buy surface that composes
+    // this primitive (BuyBar → ItemSheet/ReconcileSheet/KeepBar/AdoptCardSheet · the ConfirmSheet PAY)
+    // ripples without per-surface forks.
+    paddingHorizontal: t.space.xl,
+    paddingVertical: t.space.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },

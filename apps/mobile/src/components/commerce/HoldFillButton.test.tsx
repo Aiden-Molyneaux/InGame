@@ -31,6 +31,20 @@ describe('HoldFillButton — the filling hold-to-activate primitive', () => {
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
+  it('W-B3 — the key wears the ScreenButton keycap height grammar (lg/12 vertical, xl/16 horizontal), ONCE here', () => {
+    // the ONE-place height fix: every buy surface (BuyBar sheets · the ConfirmSheet PAY) composes this
+    // primitive, so asserting the base padding HERE covers the whole family — no per-surface forks.
+    const { StyleSheet } = require('react-native');
+    const { theme } = require('../../theme');
+    render(wrap(<HoldFillButton label="HOLD TO PAY" accessibilityLabel="Hold to pay" onComplete={jest.fn()} />));
+    const style = StyleSheet.flatten(screen.getByLabelText('Hold to pay').props.style) as {
+      paddingVertical?: number;
+      paddingHorizontal?: number;
+    };
+    expect(style.paddingVertical).toBe(theme.space.lg); // 12 — the ScreenButton `base` vertical
+    expect(style.paddingHorizontal).toBe(theme.space.xl); // 16 — the ScreenButton `base` horizontal
+  });
+
   it('releasing before the hold completes fires nothing', () => {
     const onComplete = jest.fn();
     render(wrap(<HoldFillButton label="HOLD TO PAY" accessibilityLabel="Hold to pay" onComplete={onComplete} />));

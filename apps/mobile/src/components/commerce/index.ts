@@ -10,7 +10,6 @@ export { LedgerRow } from './LedgerRow';
 export { OwnedTag, LockedTag, EarnedOnlyTag } from './Tags';
 export { DailyBonusBar } from './DailyBonusBar';
 export { AisleIndex, AISLES } from './AisleIndex';
-export { PreviewStrip } from './PreviewStrip';
 export { PreviewStage } from './PreviewStage';
 export { LandedMoment } from './LandedMoment';
 export { ItemSheet, type StoreItem } from './ItemSheet';

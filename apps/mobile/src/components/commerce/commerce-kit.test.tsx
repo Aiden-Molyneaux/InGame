@@ -20,6 +20,15 @@ jest.mock('../../a11y/useReducedMotion', () => ({ useReducedMotion: () => mockRe
 const store = configureStore({ reducer: { prefs: prefsReducer } });
 const wrap = (ui: React.ReactElement) => <Provider store={store}>{ui}</Provider>;
 
+describe('W-B5 — the PREVIEWING chip is retired', () => {
+  it('the commerce kit no longer exports PreviewStrip (the theme preview announces nothing)', () => {
+    // owner walk2: the repainted mock screen IS the preview — no "◆ PREVIEWING" chip. The component is
+    // deleted, not just unmounted; this guards the barrel so a re-export can't quietly bring it back.
+    const kit = require('./index') as Record<string, unknown>;
+    expect(kit.PreviewStrip).toBeUndefined();
+  });
+});
+
 describe('CurrencyCounter (§7)', () => {
   it('renders the balance and opens the wallet on press', () => {
     const onPress = jest.fn();

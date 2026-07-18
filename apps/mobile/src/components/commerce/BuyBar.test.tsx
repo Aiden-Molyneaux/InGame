@@ -61,24 +61,29 @@ describe('BuyBar — the OQ-046 buy gate (both paths)', () => {
     // pre-confirm: only the BUY key, no confirm/cancel yet
     expect(screen.queryByText('CONFIRM · 8 PX')).toBeNull();
     fireEvent.press(screen.getByLabelText('Buy for 8 PX'));
-    // F-8 E3-C3: the confirm is INLINE in the bar (CONFIRM + CANCEL both present) — not a nested
-    // ConfirmSheet that a PulledSheet parent would clip. The spend prompt shows in the meta line.
+    // F-8 E3-C3: the confirm is INLINE in the bar — not a nested ConfirmSheet that a PulledSheet parent
+    // would clip. W-B4 (owner walk2): NO CANCEL beside it — escape = the hosting sheet's grammar (the
+    // F-21 KeepBar precedent, family-wide). The spend prompt shows in the meta line.
     expect(screen.getByText('CONFIRM · 8 PX')).toBeTruthy();
-    expect(screen.getByLabelText('Cancel')).toBeTruthy();
+    expect(screen.queryByLabelText('Cancel')).toBeNull();
+    expect(screen.queryByText('CANCEL')).toBeNull();
     expect(screen.getByText('Spend 8 PX — pixels are spent instantly.')).toBeTruthy();
     fireEvent.press(screen.getByText('CONFIRM · 8 PX'));
     expect(onBuy).toHaveBeenCalledTimes(1);
   });
 
-  it('under reduce-motion CANCEL dismisses the inline confirm and spends nothing', () => {
+  it('W-B4 escape — a price change resets the armed inline confirm (nothing spent)', () => {
     mockReduced = true;
     const onBuy = jest.fn();
-    render(wrap(<BuyBar price={8} balance={12} onBuy={onBuy} />));
+    const { rerender } = render(wrap(<BuyBar price={8} balance={12} onBuy={onBuy} />));
     fireEvent.press(screen.getByLabelText('Buy for 8 PX'));
-    fireEvent.press(screen.getByLabelText('Cancel'));
-    // back to the pre-confirm BUY key; nothing spent
+    expect(screen.getByText('CONFIRM · 8 PX')).toBeTruthy();
+    // the item/price changes under the armed confirm (a re-pick) → the confirm DISARMS itself: a stale
+    // CONFIRM can never spend against a changed price. This + the hosting sheet's scrim are the escape.
+    rerender(wrap(<BuyBar price={5} balance={12} onBuy={onBuy} />));
     expect(screen.queryByText('CONFIRM · 8 PX')).toBeNull();
-    expect(screen.getByLabelText('Buy for 8 PX')).toBeTruthy();
+    expect(screen.queryByText('CONFIRM · 5 PX')).toBeNull(); // back to step 1, not re-armed
+    expect(screen.getByLabelText('Buy for 5 PX')).toBeTruthy();
     expect(onBuy).not.toHaveBeenCalled();
   });
 
