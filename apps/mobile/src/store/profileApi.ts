@@ -22,15 +22,20 @@ const profileApi = api.injectEndpoints({
     // MOD-07 screening + PROF-06 cooldown + uniqueness are enforced server-side; a rejection is a
     // VALIDATION_ERROR with field-targeted `details` (api-contract 0.46) the editor surfaces inline.
     //
-    // OPTIMISTIC (round-5 N-A2). Favourite-genres (and every field-commit) must flip on the frame the
-    // user taps, not after two sequential round-trips. There is NO `Me` invalidation: instead
+    // OPTIMISTIC (round-5 N-A2; hardened round-6 for murr-HIGH out-of-order safety). Favourite-genres
+    // (and every field-commit) must flip on the frame the user taps, not after two sequential
+    // round-trips. So:
     //  (a) we patch the getMe cache immediately — so the chip repaints AND the NEXT tap computes off the
     //      already-updated array (kills the rapid-tap last-write-wins race: a second tap that read the
     //      stale `favouriteGenreIds` used to silently revert the first), and
-    //  (b) on success we seed the cache from the PATCH's OWN authoritative self-view (already
-    //      selfProfileSchema-parsed by transformResponse), reconciling server-derived riders
-    //      (favouriteGame expansion, usernameNextChangeAt, stats) WITHOUT a forced GET /me.
-    // The heavy GET /me (~12 sequential server queries) is thus off the interaction path entirely.
+    //  (b) once the mutation SETTLES (success OR failure) we reconcile the cache to server truth with a
+    //      SINGLE background GET /me (invalidateTags(['Me'])). We deliberately do NOT seed the cache from
+    //      the PATCH's own response snapshot: under overlapping rapid toggles an out-of-order resolve
+    //      would clobber the cache with the earlier PATCH's stale snapshot, and a rejected earlier
+    //      patch's blind undo would drop a later toggle — the post-settle reconcile is what repairs both.
+    // The reconcile runs AFTER the optimistic flip, so the heavy GET /me (~12 sequential server queries)
+    // stays off the INTERACTION path — the chip never waits on it. RTK dedupes concurrent getMe
+    // refetches, so a burst of toggles collapses to a single reconcile.
     patchMe: build.mutation<SelfProfile, PatchMeRequest>({
       query: (body) => ({ url: '/me', method: 'PATCH', body }),
       transformResponse: (raw): SelfProfile => selfProfileSchema.parse(raw),
@@ -42,10 +47,15 @@ const profileApi = api.injectEndpoints({
           }),
         );
         try {
-          const { data } = await queryFulfilled;
-          dispatch(api.util.upsertQueryData('getMe', undefined, data));
+          await queryFulfilled;
         } catch {
-          undo.undo(); // the PATCH was rejected/failed — roll the optimistic patch back
+          undo.undo(); // the PATCH was rejected/failed — roll THIS optimistic patch back
+        } finally {
+          // Reconcile to server truth once the mutation has settled. Non-blocking: the optimistic patch
+          // already flipped the chip, so this background GET /me does NOT reintroduce the blocking
+          // double round-trip N-A2 removed. It self-corrects any out-of-order resolve or overlap-undo
+          // transient (a rejected earlier patch that over-reverted a later toggle).
+          dispatch(api.util.invalidateTags(['Me']));
         }
       },
     }),
