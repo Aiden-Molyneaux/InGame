@@ -390,3 +390,17 @@ Buildable notes all landed + pushed; the two feature asks captured to OQ-154/155
   pending owner calls.
 - ⬜ **OQ-154 Ultimate colour-cosmetics** (owner: PULL INTO BETA) + **OQ-155 game-detail editing** (owner:
   WIKI + MODERATION) — design-think + spec pass owed before build; the biggest round-5 adds.
+
+### Round-5 dev-copy D-bucket (owner calls, 2026-07-18)
+- ✅ D-i (3fc5c1d) **RATING implemented** — 5 tappable gold stars in the PLAY dossier (tap-set / tap-current-clears;
+  persists to `entry.rating`; client-only, `rating` was already wired end-to-end; SOC-11 private, not friend-visible) ·
+  **PLATFORMS row removed**.
+- ✅ D-iii (57c2a1a · contract 0.72 @ 21658d2) **Real adoption count wired** into the KeepBeat/PrintRitual clout line
+  (was hardcoded 0) — new optional `adoptionCount` on the save-private/publish responses (fresh card = 0, honest).
+- ✅ D-iv/D-v (1aa5e38) **Clutter dropped** — device decal-repeat + LOOKS triple-heading · store empty-aisle
+  double-print + "arrive as the catalog fills" soon-copy · friends LOW-NOISE badge.
+- ⬜ D-ii **OWNER-ESCALATED to features** (not copy fixes): Forgot Password (needs email infra — beta has none) ·
+  Sign in with Apple (native + backend) — both need a scope pass. **Avatar "light-switcher"** — CLARIFY the shape.
+  **Contributor VIEW ALL** = the full designed-cards/added-games list (said "arrives soon" = pagination unbuilt) —
+  reword or ship; **owner: remove the redundant Achievements VIEW-ALL button from the Profile?** (pending).
+- Combined verify green throughout: typecheck · mobile 96/640 · integration 468 · /health 🟢.
