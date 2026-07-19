@@ -18,7 +18,13 @@ const mockQueue = jest.fn(() => ({ unwrap: () => Promise.resolve({}) }));
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), navigate: jest.fn() }),
 }));
-jest.mock('./store/api', () => ({ useAddToCollectionMutation: () => [mockAdd, { isLoading: false }] }));
+// W-6 — AboutTab now also reads me (the A1 pre-gate) + genres (the chip editor); undefined keeps
+// the EDIT key live and inert — this suite doesn't exercise the edit mode (AboutTab.edit.test.tsx does).
+jest.mock('./store/api', () => ({
+  useAddToCollectionMutation: () => [mockAdd, { isLoading: false }],
+  useGetMeQuery: () => ({ data: undefined }),
+  useGetGenresQuery: () => ({ data: undefined }),
+}));
 jest.mock('./store/queueApi', () => ({ useAddQueueItemMutation: () => [mockQueue, { isLoading: false }] }));
 // AboutTab is REAL (D-3 order) — mock ONLY its data hooks. The game-detail result is SWITCHABLE so F1
 // can drive the loading / error branches (the CATALOG band must survive a facts-fetch failure).
@@ -41,7 +47,10 @@ let mockGameDetail: { data?: unknown; isLoading: boolean; isError: boolean; refe
   isError: false,
   refetch: jest.fn(),
 };
-jest.mock('./store/catalogRailsApi', () => ({ useGetGameDetailQuery: () => mockGameDetail }));
+jest.mock('./store/catalogRailsApi', () => ({
+  useGetGameDetailQuery: () => mockGameDetail,
+  useSubmitGameEditMutation: () => [jest.fn(), { isLoading: false }], // W-6 — inert here
+}));
 jest.mock('./store/friendApi', () => ({
   useGetFriendsWhoOwnQuery: () => ({
     data: { friendsWhoOwn: [{ userId: 'f1', username: 'riko', avatarUrl: null, hours: 240 }], count: 1 },

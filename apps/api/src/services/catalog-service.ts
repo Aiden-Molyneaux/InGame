@@ -5,26 +5,45 @@ import type {
   FriendsWhoOwnResponse,
   FriendWhoOwns,
   GameDetail,
+  GameEditableField,
+  GameEditRequest,
+  GameEditResponse,
+  GameEditView,
+  GameEditValue,
   GenreView,
 } from '@ingame/shared';
-import { normalizeTitle, rankDedupCandidates, type DedupHit } from '@ingame/shared';
+import {
+  GAME_EDIT_VALUE_SCHEMAS,
+  isEditableGameField,
+  normalizeTitle,
+  rankDedupCandidates,
+  type DedupHit,
+} from '@ingame/shared';
 import { mutation } from '../db/mutation';
 import type { Executor } from '../db/client';
 import { isUniqueViolation } from '../db/pg-errors';
 import * as catalogRepo from '../repositories/catalog-repo';
+import * as gameEditRepo from '../repositories/game-edit-repo';
 import * as collectionRepo from '../repositories/collection-repo';
 import * as profileRepo from '../repositories/profile-repo';
 import * as friendReadRepo from '../repositories/friend-read-repo';
 import * as relationshipRepo from '../repositories/relationship-repo';
-import { DuplicateSuspectedError, NotFoundError, ValidationError } from '../errors/AppError';
+import {
+  AccountTooNewError,
+  DuplicateSuspectedError,
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+} from '../errors/AppError';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 import { screenText } from '../moderation/screen';
-import type { GameRow } from '../db/schema';
+import type { GameEditRow, GameRow, UserRow } from '../db/schema';
 import type { LiveGameSlim } from '../repositories/catalog-repo';
 
-// Catalog service (CAT-01..05/09). Reads are global-catalog reads assembled into the 0.47
-// search-result item shape; the ONE write (createGame) is the CAT-03 dedup-guarded @mutation.
+// Catalog service (CAT-01..05/09 + the CAT-13/14 wiki edits, M6 W-6). Reads are global-catalog reads
+// assembled into the 0.47 search-result item shape; the writes are the CAT-03 dedup-guarded create
+// and the CAT-13 apply/revert edit pair (each an @mutation, applied live in its own tx).
 // The matcher runs in-service over a slim projection of live rows (D5 hand-rolled trigram — fine at
 // v2 community scale; the pg_trgm-indexed upgrade is the known path if the catalog outgrows it).
 
@@ -245,7 +264,21 @@ export async function gameDetail(actorId: string, gameId: string): Promise<GameD
   if (!game) throw new NotFoundError('Game not found.');
   const [item] = await assembleItems(actorId, [game]);
   const friendsWhoOwn = await friendsWhoOwnList(actorId, gameId);
-  return { ...item!, friendsWhoOwn };
+  // CAT-14 (M6 W-6) — the `lastEdit` attribution: the latest `game_edits` row's editor + moment
+  // (a reversal row is itself an edit, so it naturally wins). ABSENT when never edited — derived,
+  // no games-table change. Username via the scoped by-id read, exposed as the { userId, username }
+  // allowlist only (the CAT-05 credit's F06 posture).
+  const last = await gameEditRepo.latestEditForGame(gameId);
+  if (!last) return { ...item!, friendsWhoOwn };
+  const editorRow = await profileRepo.getOwnProfile(last.editorId);
+  return {
+    ...item!,
+    friendsWhoOwn,
+    lastEdit: {
+      editor: { userId: last.editorId, username: editorRow?.username ?? 'unknown' },
+      editedAt: last.editedAt.toISOString(),
+    },
+  };
 }
 
 function screenedField(path: string, value: string | undefined): void {
@@ -321,4 +354,231 @@ export async function createGame(actorId: string, input: CreateGameRequest): Pro
     }
     throw e;
   }
+}
+
+// ── CAT-13/14 — wiki-live game editing + revert (M6 W-6, game-edit-wiki-draft; owner-signed) ───────
+
+/** A1 — the 14-day editor age-gate (role='admin' EXEMPT). SYS-04-tunable; G-K async. */
+const GAME_EDIT_MIN_ACCOUNT_AGE_MS = 14 * 24 * 60 * 60_000;
+
+/**
+ * A1 — resolve the actor + enforce editor standing: the account must be ≥ 14 days old unless the
+ * actor is an admin (the role column is live). The client pre-gates with the quiet disabled EDIT
+ * key; THIS is the enforcement.
+ */
+async function requireEditorStanding(actorId: string, exec: Executor): Promise<UserRow> {
+  const actor = await profileRepo.getOwnProfile(actorId, exec);
+  if (!actor) throw new NotFoundError('Account not found.');
+  if (actor.role !== 'admin' && Date.now() - actor.createdAt.getTime() < GAME_EDIT_MIN_ACCOUNT_AGE_MS) {
+    throw new AccountTooNewError();
+  }
+  return actor;
+}
+
+/** History values compare canonically: genre arrays are sorted at write, so JSON equality decides. */
+function sameEditValue(a: GameEditValue, b: GameEditValue): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function toEditView(row: GameEditRow, editorUsername: string): GameEditView {
+  return {
+    id: row.id,
+    gameId: row.gameId,
+    field: row.field as GameEditableField,
+    oldValue: row.oldValue ?? null,
+    newValue: row.newValue ?? null,
+    editor: { userId: row.editorId, username: editorUsername },
+    editedAt: row.editedAt.toISOString(),
+    status: row.status as 'live' | 'reverted',
+  };
+}
+
+/** The current canonical value of an editable field (genres = the SORTED id array, the history form). */
+async function currentFieldValue(
+  game: GameRow,
+  field: GameEditableField,
+  exec: Executor,
+): Promise<GameEditValue> {
+  if (field === 'genres') return (await gameEditRepo.genreIdsForGame(game.id, exec)).sort();
+  return game[field];
+}
+
+/** Apply a (new or replayed-old) value onto the canonical row — the same-tx wiki-live write. */
+async function applyFieldValue(
+  gameId: string,
+  field: GameEditableField,
+  value: GameEditValue,
+  exec: Executor,
+): Promise<void> {
+  if (field === 'genres') {
+    await gameEditRepo.replaceGameGenres(gameId, value as string[], exec);
+    return;
+  }
+  await gameEditRepo.updateGameFields(gameId, { [field]: value as string | null }, exec);
+}
+
+/**
+ * @mutation — POST /catalog/games/:id/edits (CAT-13/14). One field per request; the request IS the
+ * history row, applied LIVE in the same tx. The stage-2 value parse (shared zod) + MOD-07 screening +
+ * the CAT-04 controlled-list check mirror create; `name` (and anything off the editable set) refuses
+ * with the NAMED 422 `uneditable_field` — the title is dedup identity (CAT-03), fixed via report →
+ * admin MOD-14, never here. Concurrency is last-write-wins by design (draft §4 [owner-nod]) — no
+ * CAS/baseValue; the loser's value sits intact in history one revert away.
+ */
+const applyGameEditMutation = mutation(
+  {
+    name: 'catalog.applyGameEdit',
+    specIds: ['CAT-13', 'CAT-14', 'CAT-04', 'MOD-07', 'SYS-01', 'SYS-02', 'SYS-05'],
+  },
+  async (ctx, actorId, gameId: string, input: GameEditRequest): Promise<GameEditRow> => {
+    if (!isEditableGameField(input.field)) {
+      throw new ValidationError('That field can’t be edited.', 'uneditable_field', [
+        { path: 'field', message: 'Only studio, publisher, releaseDate, and genres are editable.' },
+      ]);
+    }
+    const field = input.field;
+
+    // Stage 2 — the per-field value rules (shared zod; the route already parsed the envelope).
+    const parsed = GAME_EDIT_VALUE_SCHEMAS[field].safeParse(input.newValue);
+    if (!parsed.success) throw parsed.error; // → 422 VALIDATION_ERROR (+ B1 details)
+    let newValue = parsed.data as GameEditValue;
+
+    await requireEditorStanding(actorId, ctx.tx); // A1 — 14-day gate, admins exempt
+
+    const [game] = await catalogRepo.gamesByIds([gameId], ctx.tx);
+    if (!game) throw new NotFoundError('Game not found.');
+
+    if (field === 'studio' || field === 'publisher') {
+      screenedField(field, (newValue as string | null) ?? undefined); // MOD-07
+    }
+    if (field === 'genres') {
+      const genreIds = [...new Set(newValue as string[])];
+      const known = await catalogRepo.genresByIds(genreIds, ctx.tx);
+      if (known.length !== genreIds.length) {
+        throw new ValidationError('Unknown genre.', 'unknown_genre', [
+          { path: 'newValue', message: 'Contains a genre that is not on the controlled list.' },
+        ]);
+      }
+      newValue = genreIds.sort(); // the canonical (sorted) history form
+    }
+
+    const oldValue = await currentFieldValue(game, field, ctx.tx);
+    if (sameEditValue(oldValue, newValue)) {
+      // The no-op guard — don't pollute the append-only history with zero-diff rows (draft §1.1).
+      throw new ValidationError('Nothing changed.', 'no_change', [
+        { path: 'newValue', message: 'The new value equals the current one.' },
+      ]);
+    }
+
+    const edit = await gameEditRepo.insertGameEdit(
+      { gameId, editorId: actorId, field, oldValue, newValue, status: 'live' },
+      ctx.tx,
+    );
+    await applyFieldValue(gameId, field, newValue, ctx.tx);
+
+    await ctx.emit({
+      eventType: 'catalog.game_edited',
+      entityRef: { type: 'game', id: gameId },
+      payload: { field }, // the pinned field enum only — old/new user text stays off the spine (F18)
+    });
+    return edit;
+  },
+);
+
+export async function submitGameEdit(
+  actorId: string,
+  gameId: string,
+  input: GameEditRequest,
+): Promise<GameEditResponse> {
+  if (!UUID_RE.test(gameId)) throw new NotFoundError('Game not found.');
+  const edit = await applyGameEditMutation(actorId, gameId, input);
+  // Post-commit: assemble the APPLIED GameDetail (the one-round-trip client reconcile) + the
+  // editor's username for the edit view (the actor's own row — a self read).
+  const editor = await profileRepo.getOwnProfile(actorId);
+  const game = await gameDetail(actorId, gameId);
+  return { edit: toEditView(edit, editor?.username ?? 'unknown'), game };
+}
+
+/**
+ * @mutation — POST /catalog/games/:id/edits/:editId/revert (CAT-14). Replays `oldValue` onto the
+ * game, stamps the target row reverted (conditionally — the F36 double-revert race decider), and
+ * writes a NEW reversal row (editor = the reverter, old/new swapped) so the history stays a
+ * complete, append-only account and a revert is itself visible and re-revertible. Rights (A3):
+ * the edit's own editor · the game's CAT-05 contributor · admins (admin-standing revert writes the
+ * MOD-10 audit row).
+ */
+const revertGameEditMutation = mutation(
+  {
+    name: 'catalog.revertGameEdit',
+    specIds: ['CAT-14', 'MOD-10', 'SYS-01', 'SYS-07'],
+  },
+  async (ctx, actorId, gameId: string, editId: string): Promise<GameEditRow> => {
+    const [game] = await catalogRepo.gamesByIds([gameId], ctx.tx);
+    if (!game) throw new NotFoundError('Game not found.');
+    const edit = await gameEditRepo.getEditById(editId, ctx.tx);
+    if (!edit || edit.gameId !== gameId) throw new NotFoundError('Edit not found.');
+
+    // A3 — revert entitlement: editor-self · the game's contributor · admins. Everyone else has the
+    // report signal (the correct escalation for "two users disagree" — draft §2.4 [owner-nod]).
+    const isSelf = edit.editorId === actorId;
+    const isContributor = game.createdBy === actorId;
+    let adminStanding = false;
+    if (!isSelf && !isContributor) {
+      const actor = await profileRepo.getOwnProfile(actorId, ctx.tx);
+      if (actor?.role !== 'admin') {
+        throw new ForbiddenError(
+          'Only the editor, the game’s contributor, or an admin can revert this edit.',
+        );
+      }
+      adminStanding = true;
+    }
+
+    // Conditional stamp — status='live' guards the F36 double-revert race: the loser sees no row.
+    const stamped = await gameEditRepo.markReverted(editId, actorId, ctx.tx);
+    if (!stamped) {
+      throw new ValidationError('That edit was already reverted.', 'already_reverted', [
+        { path: 'editId', message: 'This history row is no longer live.' },
+      ]);
+    }
+
+    await applyFieldValue(gameId, edit.field as GameEditableField, edit.oldValue ?? null, ctx.tx);
+    const reversal = await gameEditRepo.insertGameEdit(
+      {
+        gameId,
+        editorId: actorId,
+        field: edit.field,
+        oldValue: edit.newValue ?? null,
+        newValue: edit.oldValue ?? null,
+        status: 'live',
+      },
+      ctx.tx,
+    );
+
+    // MOD-10 — an ADMIN-standing revert (not self, not contributor) is a privileged write: logged.
+    if (adminStanding) {
+      await ctx.audit({
+        action: 'catalog.game_edit_reverted',
+        target: { type: 'game_edit', id: edit.id },
+      });
+    }
+
+    await ctx.emit({
+      eventType: 'catalog.game_edited',
+      entityRef: { type: 'game', id: gameId },
+      payload: { field: edit.field, revertedEditId: edit.id }, // ids + the pinned enum only (F18)
+    });
+    return reversal;
+  },
+);
+
+export async function revertGameEdit(
+  actorId: string,
+  gameId: string,
+  editId: string,
+): Promise<GameEditResponse> {
+  if (!UUID_RE.test(gameId) || !UUID_RE.test(editId)) throw new NotFoundError('Edit not found.');
+  const reversal = await revertGameEditMutation(actorId, gameId, editId);
+  const reverter = await profileRepo.getOwnProfile(actorId);
+  const game = await gameDetail(actorId, gameId);
+  return { edit: toEditView(reversal, reverter?.username ?? 'unknown'), game };
 }

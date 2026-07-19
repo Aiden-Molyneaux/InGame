@@ -27,8 +27,19 @@ let mockGallery: { data?: GameGalleryResponse; isLoading: boolean; isError: bool
   refetch: jest.fn(),
 };
 
-jest.mock('./store/catalogRailsApi', () => ({ useGetGameDetailQuery: () => mockDetail }));
+jest.mock('./store/catalogRailsApi', () => ({
+  useGetGameDetailQuery: () => mockDetail,
+  // W-6 (CAT-13) — AboutTab's facts-block EDIT mode rides this mutation; inert here (its own
+  // behavior suite is components/game/AboutTab.edit.test.tsx).
+  useSubmitGameEditMutation: () => [jest.fn(), { isLoading: false }],
+}));
 jest.mock('./store/friendApi', () => ({ useGetFriendsWhoOwnQuery: () => mockFriendsWhoOwn }));
+// W-6 — AboutTab now reads me (the A1 young-account pre-gate) + genres (the chip editor); undefined
+// keeps the EDIT key live and the editors empty — these suites don't exercise the edit mode.
+jest.mock('./store/api', () => ({
+  useGetMeQuery: () => ({ data: undefined }),
+  useGetGenresQuery: () => ({ data: undefined }),
+}));
 jest.mock('./store/communityApi', () => ({ useGetGameGalleryQuery: () => mockGallery }));
 jest.mock('./components/game/FlatCardImage', () => ({
   FlatCardImage: () => null,

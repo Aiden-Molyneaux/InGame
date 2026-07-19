@@ -27,6 +27,12 @@ const DEFAULTS: Record<string, RateLimitRule> = {
   // per-minute burst cap AND a per-day cap — both mounted as stacked middlewares (both must pass).
   'catalog:create': { limit: 10, windowMs: 60_000 },
   'catalog:create:daily': { limit: 200, windowMs: 24 * 60 * 60_000 },
+  // M6 W-6 wiki game-edits (CAT-13 · game-edit-wiki-draft §2.2, owner-approved; SYS-05/G-K async).
+  // Stacked pair per the `catalog:create` precedent (both mounted, both must pass): ten a minute
+  // covers a genuine fix-up burst across several games; fifty a day is far beyond honest use and
+  // starves a vandalism loop to a trickle the CAT-14 history can absorb and revert.
+  'catalog:edit': { limit: 10, windowMs: 60_000 },
+  'catalog:edit:daily': { limit: 50, windowMs: 24 * 60 * 60_000 },
   // Collection writes (add · status/hours · reorder · delete · now-playing) share one cap (OQ-094) —
   // 60/min is ample for any real editing burst; the only way past it is a scripted/abusive client.
   'collection:write': { limit: 60, windowMs: 60_000 },

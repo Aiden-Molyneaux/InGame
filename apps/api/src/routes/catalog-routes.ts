@@ -1,4 +1,4 @@
-import { createGameRequestSchema } from '@ingame/shared';
+import { createGameRequestSchema, gameEditRequestSchema } from '@ingame/shared';
 import { defineRoute, type RouteDef } from '../http/defineRoute';
 import { validateBody } from '../http/validate';
 import { asyncHandler } from '../http/asyncHandler';
@@ -13,6 +13,8 @@ import {
   getNewReleases,
   getGameDetail,
   createGame,
+  createGameEdit,
+  revertGameEdit,
   getFriendsWhoOwn,
 } from '../controllers/catalog-controller';
 
@@ -122,5 +124,36 @@ export const catalogRoutes: RouteDef[] = [
       validateBody(createGameRequestSchema),
       asyncHandler(createGame),
     ],
+  }),
+  // POST /catalog/games/:id/edits (CAT-13/14, M6 W-6) — one wiki-live field edit, applied in-tx;
+  // the request IS the history row. Editable set = studio·publisher·releaseDate·genres (title
+  // LOCKED, 422 uneditable_field); text MOD-07-screened; the A1 14-day age-gate (admins exempt) →
+  // 403 ACCOUNT_TOO_NEW; the CAT-06 suggestion-queue path at this SAME contract line is repurposed
+  // (superseded by CAT-13/14 — no dead endpoint left behind).
+  defineRoute({
+    method: 'post',
+    path: '/catalog/games/:id/edits',
+    mutates: true,
+    authzTest: 'authz:catalog_edit',
+    specIds: ['CAT-13', 'CAT-14', 'CAT-04', 'MOD-07', 'SYS-02', 'SYS-05', 'SYS-07'],
+    handler: [
+      resolvePrincipal,
+      rateLimit('catalog:edit'), // SYS-05 per-minute burst (draft §2.2, owner-approved)
+      rateLimit('catalog:edit:daily'), // SYS-05 per-day cap (stacks with the burst)
+      validateBody(gameEditRequestSchema),
+      asyncHandler(createGameEdit),
+    ],
+  }),
+  // POST /catalog/games/:id/edits/:editId/revert (CAT-14) — replay oldValue, stamp the target row,
+  // write the reversal row. Rights-gated in the service (A3: editor-self · contributor · admin →
+  // else 403; admin-standing reverts write the MOD-10 audit row). Not bucketed (the draft's §4
+  // contract line rates only the edits POST; the rights gate is the guard).
+  defineRoute({
+    method: 'post',
+    path: '/catalog/games/:id/edits/:editId/revert',
+    mutates: true,
+    authzTest: 'authz:catalog_edit_revert',
+    specIds: ['CAT-14', 'MOD-10', 'SYS-07'],
+    handler: [resolvePrincipal, asyncHandler(revertGameEdit)],
   }),
 ];

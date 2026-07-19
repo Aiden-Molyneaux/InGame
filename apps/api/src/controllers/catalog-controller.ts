@@ -1,5 +1,9 @@
 import type { Request, Response } from 'express';
-import { catalogSearchQuerySchema, type CreateGameRequest } from '@ingame/shared';
+import {
+  catalogSearchQuerySchema,
+  type CreateGameRequest,
+  type GameEditRequest,
+} from '@ingame/shared';
 import * as catalogService from '../services/catalog-service';
 
 // Catalog controllers (CAT-01..05/09) — thin: resolve the actor from the verified principal,
@@ -55,4 +59,24 @@ export async function createGame(req: Request, res: Response): Promise<void> {
 // friend gate + PROF-03 hours-gating live in the service (rooted at the actor's friend set).
 export async function getFriendsWhoOwn(req: Request, res: Response): Promise<void> {
   res.json(await catalogService.friendsWhoOwn(actorOf(req), req.params.id ?? ''));
+}
+
+// POST /catalog/games/:id/edits (CAT-13/14, M6 W-6) — one wiki-live field edit; 201 { edit, game }.
+export async function createGameEdit(req: Request, res: Response): Promise<void> {
+  res
+    .status(201)
+    .json(
+      await catalogService.submitGameEdit(
+        actorOf(req),
+        req.params.id ?? '',
+        req.validated as GameEditRequest,
+      ),
+    );
+}
+
+// POST /catalog/games/:id/edits/:editId/revert (CAT-14) — replay oldValue; 200 { edit, game }.
+export async function revertGameEdit(req: Request, res: Response): Promise<void> {
+  res.json(
+    await catalogService.revertGameEdit(actorOf(req), req.params.id ?? '', req.params.editId ?? ''),
+  );
 }

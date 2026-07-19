@@ -20,15 +20,18 @@ export const reportReasonSchema = z.enum([
   'wrong_game', // card
   'spam', // card · user
   'duplicate', // game
-  'incorrect_info', // game — details REQUIRED
+  'incorrect_info', // card · game — details REQUIRED (card added M6 W-6, owner amendment A2)
   'abusive_profile', // user
   'impersonation', // user — details REQUIRED
 ]);
 export type ReportReason = z.infer<typeof reportReasonSchema>;
 
-/** MOD-01 (api-contract 0.70, PINNED) — the valid reasons per target type. */
+/** MOD-01 (api-contract, PINNED; card `incorrect_info` added M6 W-6 A2) — the valid reasons per
+ *  target type. A card's `incorrect_info` (wrong details ON a card — e.g. it reflects a since-
+ *  corrected fact) feeds the SAME wrongness signal the game reason does: the M7 console correlates
+ *  both with the game's `game_edits` history (CAT-14/MOD-16). */
 export const REPORT_REASONS_BY_TARGET: Record<ReportTargetType, readonly ReportReason[]> = {
-  card: ['offensive', 'wrong_game', 'spam'],
+  card: ['offensive', 'wrong_game', 'spam', 'incorrect_info'],
   game: ['duplicate', 'incorrect_info'],
   user: ['abusive_profile', 'impersonation', 'spam'],
 };

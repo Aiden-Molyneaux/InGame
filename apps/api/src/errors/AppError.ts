@@ -374,6 +374,21 @@ export class ListFullError extends AppError {
   }
 }
 
+/**
+ * CAT-13 (M6 W-6, owner amendment A1) — POST /catalog/games/:id/edits refused: the editor's account
+ * is younger than the 14-day age-gate (role='admin' exempt). 403 — the FORBIDDEN family, an
+ * actor-STANDING refusal (not a resource-state 409): the request is well-formed and the target fine;
+ * the caller simply hasn't earned canonical-edit standing yet. The client pre-gates (the quiet
+ * disabled EDIT key) but the SERVER is the enforcement.
+ */
+export class AccountTooNewError extends AppError {
+  readonly code = 'ACCOUNT_TOO_NEW';
+  readonly httpStatus = 403;
+  constructor(message = 'Editing unlocks after your account is 14 days old.') {
+    super(message);
+  }
+}
+
 /** SERVER_ERROR carries a GENERIC body downstream — the middleware never serializes this message. */
 export class ServerError extends AppError {
   readonly code = 'SERVER_ERROR';

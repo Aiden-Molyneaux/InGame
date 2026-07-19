@@ -67,6 +67,12 @@ export const ERROR_CODES = [
   // FIRST live use (reserved since the §0.7 seed table), reused across BOTH ceilings: the queue's
   // cap-50 (POST /me/queue) and the Top-10's cap-10 (POST /me/lists/:id/items).
   'LIST_FULL', // 409 — a capped list write refused: the queue (50) or a Top-10 list (10) is already full
+  // M6 W-6 wiki game-edits (CAT-13, owner amendment A1) — the F-17 additive path. The 14-day
+  // age-gate: the editor's ACCOUNT must be ≥ 14 days old to submit a canonical edit (role='admin'
+  // exempt). 403 — an actor-STANDING refusal (the FORBIDDEN family, not a resource-state 409): the
+  // request is well-formed and the target fine; the caller simply hasn't earned the ability yet.
+  // The client pre-gates (a quiet disabled EDIT key) but the SERVER is the enforcement.
+  'ACCOUNT_TOO_NEW', // 403 — POST /catalog/games/:id/edits refused: the account is younger than 14 days (admins exempt)
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];

@@ -96,6 +96,11 @@ export const DOMAIN_EVENT_TYPES = [
   'report.filed', // MOD-01 — POST /reports. Payload = { reportId, targetType } ONLY (never the reason,
   // targetId, or details text — the moderation queue (M7) reads those off the row itself; the event
   // spine stays minimal/PII-light, F18).
+  // M6 W-6 wiki game-edits (CAT-13/14 — the `game_edits` table; game-edit-wiki-draft §1.1). Append at the END.
+  'catalog.game_edited', // CAT-13/14 — POST /catalog/games/:id/edits applied a live edit, OR a revert wrote
+  // its reversal row (a revert IS an edit — the history stays append-only). Payload = { field } (+
+  // { revertedEditId } on a reversal) — the field name is the pinned enum, ids only; the old/new VALUES
+  // stay off the event spine (user text never rides it, F18/MOD-07 — read them off the row).
 ] as const;
 
 export type DomainEventType = (typeof DOMAIN_EVENT_TYPES)[number];

@@ -12,6 +12,11 @@ export const GLOBAL_TABLES = [
   'games',
   'genres',
   'game_genres',
+  // CAT-13/14 (M6 W-6) — the wiki edit history on the GLOBAL catalog. Community data every user
+  // reads (the lastEdit attribution + the revertible ledger); writes ride the CAT-13 service gates
+  // (age-gate · MOD-07 · rate buckets), not actor scoping — the editor_id column is attribution,
+  // not an owner key (an edit row is readable/revertible by non-editors per CAT-14).
+  'game_edits',
   // Cosmetics library (definitions, not per-user entitlements)
   'cosmetic_items',
   'cosmetic_packs',

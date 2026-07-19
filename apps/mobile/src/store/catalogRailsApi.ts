@@ -1,5 +1,11 @@
-import type { CatalogListResponse, GameDetail } from '@ingame/shared';
-import { catalogListResponseSchema, gameDetailSchema } from '@ingame/shared';
+import type {
+  CatalogListResponse,
+  GameDetail,
+  GameEditableField,
+  GameEditResponse,
+  GameEditValue,
+} from '@ingame/shared';
+import { catalogListResponseSchema, gameDetailSchema, gameEditResponseSchema } from '@ingame/shared';
 import { api } from './api';
 
 // walk2 N2b — the Add-Game pre-query rail trio (CAT-11 NEW RELEASES + CAT-12 FRIENDS ARE PLAYING). Both
@@ -42,6 +48,31 @@ const catalogRailsApi = api.injectEndpoints({
       transformResponse: (raw): GameDetail => gameDetailSchema.parse(raw),
       providesTags: ['Catalog'],
     }),
+
+    // POST /catalog/games/:id/edits (CAT-13/14, M6 W-6) — ONE wiki-live field edit ({ field, newValue };
+    // the request IS the `game_edits` history row). The 201 carries { edit, game } — the APPLIED
+    // GameDetail — so the gameDetail cache reconciles IN ONE ROUND-TRIP (upsert below, NO tag
+    // invalidation / refetch — the E2 packet's explicit grammar). Refusals (`screened` · `no_change` ·
+    // `unknown_genre` · 429 · ACCOUNT_TOO_NEW) surface on the owning field row in AboutTab.
+    submitGameEdit: build.mutation<
+      GameEditResponse,
+      { gameId: string; field: GameEditableField; newValue: GameEditValue }
+    >({
+      query: ({ gameId, field, newValue }) => ({
+        url: `/catalog/games/${gameId}/edits`,
+        method: 'POST',
+        body: { field, newValue },
+      }),
+      transformResponse: (raw): GameEditResponse => gameEditResponseSchema.parse(raw),
+      async onQueryStarted({ gameId }, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(catalogRailsApi.util.updateQueryData('getGameDetail', gameId, () => data.game));
+        } catch {
+          // the mutation hook surfaces the error to the owning row — nothing to reconcile
+        }
+      },
+    }),
   }),
 });
 
@@ -49,5 +80,6 @@ export const {
   useGetNewReleasesQuery,
   useGetFriendsActiveQuery,
   useGetGameDetailQuery,
+  useSubmitGameEditMutation,
 } = catalogRailsApi;
 export { catalogRailsApi };

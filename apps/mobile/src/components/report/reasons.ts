@@ -20,6 +20,15 @@ const CARD_REASONS: ReasonOption[] = [
   { reason: 'offensive', label: 'Offensive or NSFW', requiresDetails: false, hint: 'Pick a reason to continue — submit unlocks once a reason is chosen.' },
   { reason: 'wrong_game', label: 'Wrong game', requiresDetails: false, hint: 'Pick a reason to continue — submit unlocks once a reason is chosen.' },
   { reason: 'spam', label: 'Spam or low-effort', requiresDetails: false, hint: 'Pick a reason to continue — submit unlocks once a reason is chosen.' },
+  // M6 W-6 A2 (MOD-01 amendment) — wrong details ON a card; feeds the same wrongness signal as the
+  // game reason (the M7 console correlates both with the game's edit history, CAT-14/MOD-16).
+  {
+    reason: 'incorrect_info',
+    label: 'Incorrect info',
+    requiresDetails: true,
+    detailsLabel: "What's incorrect? — required for this reason",
+    hint: 'Moderators need specifics for this one — submit unlocks when a note is added.',
+  },
 ];
 
 const GAME_REASONS: ReasonOption[] = [

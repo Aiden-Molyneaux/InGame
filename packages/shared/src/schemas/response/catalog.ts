@@ -80,9 +80,51 @@ export type FriendsWhoOwnResponse = z.infer<typeof friendsWhoOwnResponseSchema>;
 // CATALOG/OWN/FRIEND Game-page data source (walk-2 W-C5/W-D1). The community CARD GALLERY is NOT part of
 // this shape — it is its OWN route (GET /games/:id/cards); game-detail is the canonical facts + counts +
 // friends only (the W-C5 guard — do not duplicate the gallery here).
+// CAT-14 (M6 W-6) — the game-detail attribution fuel: the LATEST `game_edits` row's editor + moment
+// (a reversal row is itself an edit, so it naturally becomes the latest). ABSENT when the game has
+// never been edited (no phantom attribution). Derived from `game_edits` — no games-table change.
+export const gameLastEditSchema = z
+  .object({
+    editor: contributorCreditSchema,
+    editedAt: z.string(), // ISO-8601 UTC
+  })
+  .strict();
+export type GameLastEdit = z.infer<typeof gameLastEditSchema>;
+
 export const gameDetailSchema = catalogItemSchema
   .extend({
     friendsWhoOwn: z.array(friendWhoOwnsSchema), // CAT-09c — the named friends-who-own list
+    lastEdit: gameLastEditSchema.optional(), // CAT-14 — the EDITED BY X · 2D AGO line (absent = never edited)
   })
   .strict();
 export type GameDetail = z.infer<typeof gameDetailSchema>;
+
+// ── CAT-13/14 (M6 W-6) — POST /catalog/games/:id/edits (+ .../edits/:editId/revert) ───────────────
+// One immutable `game_edits` history row per field-submit, applied live in the same tx; revert
+// replays oldValue, stamps the target row `reverted`, and writes a NEW reversal row (also this
+// shape, status 'live'). `oldValue`/`newValue` serialize uniformly: string (text/date) · null
+// (cleared) · sorted genre-id array. The response carries the APPLIED GameDetail so the client
+// reconciles in one round-trip (no refetch).
+export const gameEditValueSchema = z.union([z.string(), z.null(), z.array(z.string().uuid())]);
+
+export const gameEditViewSchema = z
+  .object({
+    id: z.string().uuid(),
+    gameId: z.string().uuid(),
+    field: z.enum(['studio', 'publisher', 'releaseDate', 'genres']),
+    oldValue: gameEditValueSchema,
+    newValue: gameEditValueSchema,
+    editor: contributorCreditSchema, // ids + username only, never the row (F06)
+    editedAt: z.string(), // ISO-8601 UTC
+    status: z.enum(['live', 'reverted']),
+  })
+  .strict();
+export type GameEditView = z.infer<typeof gameEditViewSchema>;
+
+export const gameEditResponseSchema = z
+  .object({
+    edit: gameEditViewSchema,
+    game: gameDetailSchema, // the applied result — the client's one-round-trip reconcile
+  })
+  .strict();
+export type GameEditResponse = z.infer<typeof gameEditResponseSchema>;
