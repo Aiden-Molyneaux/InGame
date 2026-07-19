@@ -1,4 +1,4 @@
-import { eq, and, isNull, desc, sql } from 'drizzle-orm';
+import { eq, and, isNull, desc } from 'drizzle-orm';
 import { getDb, type Executor } from '../db/client';
 import { asActor, ownedBy } from '../db/scoped';
 import { authTokens, type AuthTokenRow } from '../db/schema';
@@ -66,17 +66,21 @@ export async function consumeAllForUser(
     .where(ownedBy(actor, authTokens.userId, and(eq(authTokens.purpose, purpose), isNull(authTokens.consumedAt))));
 }
 
-/** AUTH-04 (P-B) — count a wrong guess against a code row (the caller consumes the row at the cap).
- * Scoped to the owner (SYS-01). */
-export async function bumpAttempts(
+/** AUTH-04 (P-B) — record a wrong guess against a code row (the caller consumes the row at the cap).
+ * The VALUE is computed by the caller from the row it just read in the SAME transaction (the SYS-01
+ * scoping lint fails closed on raw sql`` in repositories, OQ-118 — so no in-place `attempts + 1`);
+ * a racing undercount is bounded by the `auth:reset-verify` limiter and the cap-then-consume
+ * semantics. Scoped to the owner (SYS-01). */
+export async function setAttempts(
   tokenId: string,
   userId: string,
+  attempts: number,
   exec: Executor = getDb(),
 ): Promise<void> {
   const actor = asActor(userId);
   await exec
     .update(authTokens)
-    .set({ attempts: sql`${authTokens.attempts} + 1` })
+    .set({ attempts })
     .where(ownedBy(actor, authTokens.userId, eq(authTokens.id, tokenId)));
 }
 

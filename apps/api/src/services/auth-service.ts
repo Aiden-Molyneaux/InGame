@@ -319,7 +319,7 @@ export async function verifyPasswordReset(input: PasswordResetVerify): Promise<P
       if (row.attempts + 1 >= RESET_CODE_MAX_ATTEMPTS) {
         await authTokenRepo.markConsumed(row.id, user.id, tx);
       } else {
-        await authTokenRepo.bumpAttempts(row.id, user.id, tx);
+        await authTokenRepo.setAttempts(row.id, user.id, row.attempts + 1, tx);
       }
       return { kind: 'invalid' };
     }
