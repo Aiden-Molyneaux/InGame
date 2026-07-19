@@ -31,6 +31,7 @@ describe('loadEnv — the IAP provider production floor (ECON-06 fail-closed)', 
       NODE_ENV: 'production',
       IAP_PROVIDER: 'revenuecat',
       EMAIL_PROVIDER: 'resend',
+      RESEND_API_KEY: 're_test_key', // resend now fail-loud-requires its key at boot (AUTH-12 murr LOW)
       APPLE_VERIFIER: 'apple',
     });
     expect(env.iapProvider).toBe('revenuecat');

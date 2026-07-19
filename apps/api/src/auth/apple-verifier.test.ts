@@ -15,7 +15,7 @@ import {
 // normalization) is integration-tested end-to-end in test/integration/auth-slice.test.ts.
 
 const BASE = { DATABASE_URL: 'postgres://x', JWT_SIGNING_SECRET: 's'.repeat(24) };
-const PROD_REST = { IAP_PROVIDER: 'revenuecat', EMAIL_PROVIDER: 'resend' }; // the sibling floors
+const PROD_REST = { IAP_PROVIDER: 'revenuecat', EMAIL_PROVIDER: 'resend', RESEND_API_KEY: 're_test_key' }; // the sibling floors (resend requires its key at boot — AUTH-12)
 
 describe('loadEnv — the APPLE verifier production floor (AUTH-03 fail-closed)', () => {
   it("nodeEnv=production + APPLE_VERIFIER='stub' → loadEnv throws the refusal", () => {
@@ -67,6 +67,7 @@ describe('getAppleVerifier — selection + defense-in-depth at the build site', 
     process.env.APPLE_VERIFIER = 'stub';
     process.env.IAP_PROVIDER = 'revenuecat';
     process.env.EMAIL_PROVIDER = 'resend';
+    process.env.RESEND_API_KEY = 're_test_key'; // sibling floor (resend requires its key at boot — AUTH-12)
     resetAppleVerifier();
     expect(() => getAppleVerifier()).toThrow(/refused in production/);
   });

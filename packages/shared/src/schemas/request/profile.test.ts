@@ -56,6 +56,7 @@ describe('SYS-02: PATCH /me request schema', () => {
       'favouriteGenreIds',
       'favouriteGameId',
       'privacy',
+      'avatarConfig',
     ]);
   });
 });
