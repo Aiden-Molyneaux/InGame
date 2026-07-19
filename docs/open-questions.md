@@ -16,6 +16,22 @@
 
 ## Open
 
+- OQ-159: **Wave-audit residual code-robustness lows (deferred, non-blocking).** Captured from the Murr wave
+  audit (`waw38brwv`), the walk2 audit (agent `ac83ae79bfcc75d00`), and the re-Murr verify (agent
+  `aab36fc085b8d47d9`) — none reopens a shipped fix; all beta-acceptable, filed so they're not lost:
+  (a) **`blockUser` doesn't self-invalidate `Social`** (`communityApi.ts:75`) — a block fired from a
+  non-roster surface (game-page designer-block / a ReportSheet outside friends-roster) only coheres the
+  friends list/feed/requests on the next `refetchOnFocus`, not immediately; move the `Social` invalidate
+  into `blockUser.invalidatesTags` so every caller inherits it. (b) **Own-card designer rider empty-string
+  username** (`collection-service.ts:139`) — `username: user?.username ?? ''` renders a blank designer name
+  if the (effectively-unreachable) own-profile read returns null; use a fallback. (c) **Genres optimistic
+  reconcile transient window** — the `finally { invalidateTags(['Me']) }` refetch can be deduped into an
+  in-flight refetch issued before the last PATCH committed; self-heals on the final settle, holds no durable
+  stale state (re-Murr residual). (d) **Attempts-cap fix coupled to READ COMMITTED** — the `.for('update')`
+  attempts-cap (`auth-token-repo.ts`) blocks-and-rereads under the current default isolation; a future global
+  bump to REPEATABLE READ/SERIALIZABLE would turn the contention into serialization aborts (500s unless
+  retried) — worth a guardrail comment (re-Murr residual). The editable-field-scatter low already carries a
+  code `TODO(tech-debt)`. (2026-07-19) [behavior] deferred
 - OQ-158: **Fuzzy people-search ranks prefix-above-interior AFTER the SQL `.limit(20)`** — so the
   "prefix beats interior" guarantee only holds within the alphabetically-first 20 rows, not globally
   (`auth-repo.ts:77`, Murr walk2 audit). Once 20+ users contain the query as an *interior* substring and
@@ -59,6 +75,12 @@
   design-think + spec pass (the new "Ultimate" ECON tier · per-design `colorCustomizable` flag · the
   composition colour attribute + a migration · the editor ColorPicker hook · store merchandising · the
   RevenueCat SKU) BEFORE build. Expands beta scope — sets part of the beta timeline.
+  **→ DESIGN RATIFIED (decision [0080](decisions/0080-m6-w5-ultimate-cosmetics.md), filed 2026-07-19):** the
+  draft's §7 owner-nod items are resolved — 10-PX existing `ultimate` band · gold ULTIMATE badge ·
+  adopt-pricing ECON-03/04 unchanged · MARQUEE/BRASS/SCRIPT minted as SEPARATE ultimate SKUs (no promotion,
+  §E amendment 1). Corrected findings: the tier + composition colour fields already exist (near-zero schema,
+  NOT the "new ECON band / migration / RevenueCat SKU" the item above guessed — cosmetics are Pixel-priced).
+  **BUILD still owed** (W-5 not yet built). Stays OPEN as the build tracker until W-5 ships.
 - OQ-153: **Friend-read repo selects the full entry row — narrow it to make the defense true (defense-in-depth, SOC-11).**
   `friend-read-repo.ts` `FRIEND_ENTRY_COLUMNS` sets `entry: collectionEntries`, which in Drizzle selects
   *every* column — including the owner-private `notes` / `rating` / `percentComplete` — so those fields

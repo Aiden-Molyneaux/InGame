@@ -10,27 +10,50 @@
   Was DARK all session (browser wedge, root-caused + fixed 2026-07-19 — see qa-runbook). Now runnable via
   claude-in-chrome + settle-wait.
 
-## Coverage matrix
+> **AUDIT RECONCILE (2026-07-19, next-session integrity pass):** the Murr/Parvati passes below all RAN
+> in-session but this doc was written mid-run and left stale. Corrected here. Two verdicts lived only in
+> ephemeral agent runs (empty/uncommitted on disk) — cited by agent id + confirmed for the record.
 
-| Packet | Commits | Murr | Parvati |
+## Coverage matrix — BOTH GATES CLOSED
+
+| Packet | Commits | Murr — done | Parvati — done |
 |---|---|---|---|
-| **Wave D** adaptive game page + review pass | 934aa5f · 9c8d542 · 5b26ae1 · f9f6bcd | ✅ adversarial workflow (GO) | ❌ **OWED** |
-| **Round-5** Profile/genres/Game/UpNext | 127ec8f · 55ab96b · d2d77b7 · dfebb37 · 9e00319 | ✅ Murr wave-audit (found+fixed the genres HIGH) | ❌ **OWED** |
-| **Round-5** dev-copy A/B/C + D-bucket (RATING/adoption/drops) | strip · 1aa5e38 · 3fc5c1d · 57c2a1a | ✅ Murr wave-audit | ❌ **OWED** (RATING dossier, buy pages) |
-| **W-1** Contributor VIEW ALL | 6b161fb | ✅ Murr wave-audit | ❌ **OWED** (the 2 new full-list routes) |
-| **W-4** Monogram Forge | 57d6602 · 4c28e70 + person-summary follow-up | ✅ Murr wave-audit (found the list-row gap → fixed) | ❌ **OWED** (the forge UI + list-row monograms) |
-| **Auth epic** P-A/P-B/P-D (server) | e98fec4 · 3805591 · 01fae0e | ✅ Murr wave-audit (found+fixed 2 MED) | n/a — server; the auth CLIENT screens (P-C/P-E) aren't built yet |
-| **W-6** wiki game-editing | 53da735 | ✅ adversarial (GO) + Murr quality lens | ❌ **OWED** (AboutTab EDIT mode) |
-| **Murr fixes** (genres/auth/W-6/W-4) | 3fb15d2 · f8a7e0d · d6a18b8 | ⏳ re-Murr owed on the 2 HIGH + 2 MED to confirm closed | rides the screen Parvati |
-| **walk2 waves A/B/C** owner-walk fixes | 0d9438d · a5f8794 · bba9774 · f3be7b3 · c9acce2 · 477bfad · a5e4faf · c8f4fe1 · abff0c0 · a49bf8c · 50fd467 · edd9710 · 47d7a36 · 66cd26a · 94ef76b · dc05436 · e4ab962 · 5a3d878 | ⚠️ **GAP** — combined-verify + §4 privacy audit only; no dedicated Murr | ⚠️ owner device-walks were the parity check; a formal Parvati wasn't run this session |
+| **Wave D** adaptive game page + review pass | 934aa5f · 9c8d542 · 5b26ae1 · f9f6bcd | ✅ adversarial workflow (GO) | ✅ batch1 (Game-page OWN); CATALOG/FRIEND postures not re-exercised (validated in the prior consolidated walk) |
+| **Round-5** Profile/genres/Game/UpNext | 127ec8f · 55ab96b · d2d77b7 · dfebb37 · 9e00319 | ✅ wave-audit — **2 HIGH, both genres** (`profileApi.ts:45` out-of-order clobber + `:47` error-overlap wipe) → fixed 3fb15d2 | ✅ batch1 (Profile · Collection · Up Next · Game page) |
+| **Round-5** dev-copy A/B/C + D-bucket (RATING/adoption/drops) | strip · 1aa5e38 · 3fc5c1d · 57c2a1a | ✅ wave-audit | ✅ batch1 (RATING dossier · Collection) + batch2 (Store buy pages) |
+| **W-1** Contributor VIEW ALL | 6b161fb | ✅ wave-audit | ✅ batch2 (Friends → MY CONTRIBUTIONS → VIEW ALL full lists) |
+| **W-4** Monogram Forge | 57d6602 · 4c28e70 · 6aa7082 | ✅ wave-audit (found the list-row gap → fixed 6aa7082) | ✅ batch1 (forge UI) + batch2 (list rows) — **CAVEAT: no seeded user has a forged avatarConfig, so the row-monogram COLOUR is unverified (plumbing confirmed)** |
+| **Auth epic** P-A/P-B/P-D (server) | e98fec4 · 3805591 · 01fae0e | ✅ wave-audit (found+fixed 2 MED) | n/a — server; the auth CLIENT screens (P-C/P-E) aren't built yet |
+| **W-6** wiki game-editing | 53da735 | ✅ adversarial (GO) + wave-audit quality lens | ✅ batch2 (Add-Game → CATALOG game page → AboutTab EDIT) |
+| **Murr fixes** (2 HIGH genres · 2 MED auth · W-6 · W-4) | 3fb15d2 · f8a7e0d · d6a18b8 · 6aa7082 | ✅ **RE-MURR: `all_closed: true`** — each closed with a regression test that fails against pre-fix code; agent **`aab36fc085b8d47d9`** (its on-disk output is empty — the verdict is recorded here + in this session's transcript notification). 2 low residuals → OQ-159. | rides the screen Parvati above |
+| **walk2 waves A/B/C** owner-walk fixes | 0d9438d · a5f8794 · bba9774 · f3be7b3 · c9acce2 · 477bfad · a5e4faf · c8f4fe1 · abff0c0 · a49bf8c · 50fd467 · edd9710 · 47d7a36 · 66cd26a · 94ef76b · dc05436 · e4ab962 · 5a3d878 | ✅ **Murr walk2 audit — SOUND** (0 blocker/major; 5 lows → OQ-157/158 filed + OQ-159 residuals); agent **`ac83ae79bfcc75d00`** | owner device-walks were the parity check; the logic-bearing screens are also covered by batch1/2 above |
 | pre-compaction overnight M6 build (P1–P13) | (earlier) | §4 privacy cross-audit + gate reviews | ✅ reviewed+parvati'd per m6 receipts (memory) |
 
-## What's owed (the closing passes)
-1. **Re-Murr the 4 confirmed fixes** (2 HIGH genres + 2 MED auth) — verify closed, not just claimed. Combined verify first (waiting on the W-4 person-summary agent to land).
-2. **Murr on the walk2 gap** — one pass over the walk2 A/B/C diff (the logic-bearing ones: theme-leak teardown, social-reads refetch, the C-wave server work). DISPATCHED.
-3. **Parvati sweep** — the real hole. Every ❌-OWED screen, now that the browser works. Priority order:
-   Game page (Wave D postures + RATING + AboutTab edit) → Profile (forge + teasers) → Collection → Up Next →
-   Store → Friends/Feed/Contributor (list-row monograms + VIEW ALL) → Add Game → Device. Sequential (one browser).
+## The Parvati sweep — what actually happened (2 agent batches, 8 screens)
+- **Batch 1** (agent `a3c596794a3d19e04`): Collection · Game-page OWN · Profile · Up Next. **0 🚩 flags.**
+- **Batch 2** (agent `a9fc2bf0288c5b695`): Store · Friends/Feed · Add Game · Device. **1 🚩 flag** (the Profile
+  CONTRIBUTIONS teaser count) + ~9 🎨 polish (ADD-colour, "1 FRIEND HAS IT" grammar, nested-`<button>`, BRASS
+  truncation, DECAL-ZONE overlap, …). NOT "one finding" — one 🚩 + polish.
+- **Fixes shipped** for the flag + owner-ruled polish: `57c7a31` (teaser → `cardsPublished`) + `e92ae60`
+  (client: teaser render · ADD→gold [owner ruling, reverses D-4 orange · walk2-notes:295] · grammar ·
+  nested-button · BRASS/DECAL polish).
+- **Two verification GAPS (owner's eye / a richer seed closes both):** (1) no seeded user has a forged
+  avatarConfig → row-monogram colour unverified; (2) no card is adopted-from-another-designer → W-A1
+  "You→real designer" is code-confirmed (da51928) but not seen on screen.
+- Owner-option items left open: "H" vs "HRS" unit label; the now-playing pin's KEPT `▶ NOW` badge.
+
+## Definitive green at HEAD (re-run 2026-07-19 at `6a1a502`)
+**typecheck PASS · unit 270 · mobile 677 · integration 519.** (The handoff prompt's earlier 269/676/518 and
+269/677/519 were both stale/mis-transcribed — this is the real count.)
+
+## Operational actions this pass (disk/DB state, not git — recorded here so they're not lost)
+- **Dev-DB durability net** (committed `b9e72a2`): `npm -w @ingame/api run db:backup` + `db:reset`
+  auto-backs-up first. Backups in `~/ingame-db-backups/` (3 taken 2026-07-19; keeps 20). Permanent fix =
+  managed PG (G-C). Owner's real cards (ADawg: Minecraft/Hollow Knight/Destiny 2) captured + intact.
+- **Seed scrub (dev DB, soft-delete):** 5 junk catalog games hidden (`deleted_at` set) — `hentai sniper
+  wwII`, `P6 Smoke Game 1784274921`, `Smoke Odyssey Delta`, `ban`, `min`. All their stray cards/entries
+  belonged to demo/smoke/walk TEST users, none to the owner's real account. Follow-up: check whether smoke
+  tests writing to the dev DB re-create such junk (unverified).
 
 ## Recipe for Parvati captures (qa-runbook)
 API healthy (`dev-stack up` + `doctor` green) → claude-in-chrome at `http://localhost:8082` → login

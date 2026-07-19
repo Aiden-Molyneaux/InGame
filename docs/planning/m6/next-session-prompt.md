@@ -14,7 +14,7 @@ STEP 1 — GROUND YOURSELF (read, then reconcile against reality):
   and docs/open-questions.md (Open section — OQ-153..158 are the live ones).
 - Reconcile with git: `git log --oneline -20`, `git status`. The wave (incl. the last parvati-sweep
   fixes — teaser → published "5", ADD → gold, grammar, nested-button) is COMMITTED + PUSHED as of
-  `e92ae60`; the tree was green (typecheck · unit 269 · mobile 677 · integration 519). Confirm
+  `e92ae60`; the tree is green — re-run 2026-07-19 at HEAD: typecheck · **unit 270 · mobile 677 · integration 519**. Confirm
   `git status` is clean and HEAD is pushed; if not, run the combined verify (`npm run typecheck`,
   `npm -w @ingame/mobile test`, `npm run test:integration`) and reconcile before anything new.
 
@@ -22,8 +22,8 @@ STEP 2 — TELL ME WHERE WE ARE, then STOP and ask for direction. Present:
 (a) M6 status: the milestone is Social + the beta launch (beta ships at M6 exit). ALL buildable M6
     packets are DONE and both quality gates just closed: Murr (code) — whole wave audited, 2 highs +
     2 meds fixed and independently re-verified closed; Parvati (screens) — full 8-screen sweep, clean
-    pass, one flag (the teaser count) being fixed. Tree is green (typecheck · unit 269 · mobile 676 ·
-    integration 518) and pushed. The browser/Parvati wedge was root-caused (dev-DB migration drift →
+    pass, one 🚩 flag (the teaser count) + polish, all fixed. Tree is green (typecheck · unit 270 · mobile 677 ·
+    integration 519) and pushed. The browser/Parvati wedge was root-caused (dev-DB migration drift →
     API down) and fixed; a dev-DB durability net is in place (see below).
 (b) WHAT'S LEFT (verify against beta-feature-wave.md §A — don't trust this list blindly):
     - Remaining wave BUILDS: the auth CLIENT screens (W-2 forgot-password: email→6-digit-code→new-

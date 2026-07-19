@@ -57,9 +57,12 @@
 - **Products + `default` Offering**: the five SKUs imported / packaged. *(Verify the offering shows
   all five packages on next dashboard visit — last step of the sitting.)*
 
-### Google Play (in flight)
-- **Enrollment started 2026-07-12**: personal developer account, $25 paid, **identity verification
-  submitted** (the multi-day clock — watch email).
+### Google Play (VERIFIED — updated 2026-07-19 from owner report)
+- **Enrollment 2026-07-12**: personal developer account, $25 paid, identity verification submitted.
+- **✅ IDENTITY VERIFICATION COMPLETE + ANDROID DEVICE IN HAND (owner-confirmed 2026-07-18):** "a fully
+  verified Google Play Console account" and "officially have an Android device." This UNBLOCKS the Play
+  side of RevenueCat (P2b), G-J, and the sandbox pass. **FLAG:** the specific Android device MODEL was not
+  reported — capture it here when known (needed only for the QA record, not blocking).
 
 ---
 
@@ -80,8 +83,8 @@
 
 | # | Item | Due at | Detail |
 |---|---|---|---|
-| 1 | **Google Play identity verification completes** | days (external clock) | Watch email; nothing blocked meanwhile |
-| 2 | **Android device acquisition** | before Play device verification / M6 Android QA | No Android device owned. Requirement: physical, non-rooted, Android 10+ (emulators rejected). Cheap used Pixel/Samsung (~$40–80, FB Marketplace) doubles as the project's Android QA unit for M6–M8. A borrowed device also works (Play Console app, <1 min, multi-account-safe) |
+| 1 | ~~Google Play identity verification completes~~ **✅ DONE 2026-07-18** (owner-confirmed) | — | Was the multi-day clock; now verified |
+| 2 | ~~Android device acquisition~~ **✅ DONE 2026-07-18** — device in hand | — | Owner has a physical Android device (model TBD — capture when known); doubles as the M6–M8 Android QA unit |
 | 3 | **Play device verification** | before the app can go live on Play (M6 beta track prep) | Needs #1 + #2 |
 | 4 | **Play app record** (`com.aidenmolyneaux.ingame`) + Play-side IAP products (same 5 SKUs) | after #1; before Play-side sandbox/beta IAP | Mirror of the Apple product sheet (decision 0072) |
 | 5 | **RevenueCat Play app + service-account credentials** | with #4 | RC needs a Google Cloud service-account JSON for Play — its docs walk it; Android public SDK key (`goog_…`) → `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY` then |

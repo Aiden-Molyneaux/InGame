@@ -1,5 +1,10 @@
 # W-5 — "Ultimate" colour-customizable cosmetics (OQ-154) — design + spec draft
 
+> **✅ §7 NODDED → decision [0080](../../decisions/0080-m6-w5-ultimate-cosmetics.md) (2026-07-19).** The §7
+> owner-nod items are resolved there: 10-PX existing band · gold ULTIMATE badge · adopt-pricing unchanged ·
+> and **§4.2 amendment — MARQUEE/BRASS/SCRIPT are minted as SEPARATE ultimate SKUs, NOT promoted in place**
+> (the "promote three existing roster designs" proposal below is superseded). Build W-5 from 0080 + this draft.
+>
 > **Status:** DRAFT for owner review — nothing here is spec until the owner nods §7 and the
 > product-spec/api-contract pass lands (00-INDEX §4). Owner ruling already on file (OQ-154,
 > 2026-07-18): **into the beta · per-design single-SKU** (one purchase = one specific design that
