@@ -16,6 +16,24 @@
 
 ## Open
 
+- OQ-158: **Fuzzy people-search ranks prefix-above-interior AFTER the SQL `.limit(20)`** — so the
+  "prefix beats interior" guarantee only holds within the alphabetically-first 20 rows, not globally
+  (`auth-repo.ts:77`, Murr walk2 audit). Once 20+ users contain the query as an *interior* substring and
+  sort alphabetically before the true prefix match, the DB fetches only those 20 and the exact-prefix
+  match (the feature's headline case: `kyra` → `KyraInGame`) is never returned — you can't find a friend
+  by typing the start of their name. **Harmless at beta scale (12 testers); a silent relevance cliff as
+  the directory grows.** Fix: two capped ranked reads (prefix ∪ substring), or over-fetch (~60) and rank
+  before slicing to the cap. Also flagged same audit: the search candidate loop is N+1 (suspension +
+  relationship + cooldown awaited per candidate; only blocks batched — `users-service.ts:351`) — debt,
+  bounded by the cap+rate-limit. (Murr walk2 audit, 2026-07-19) [behavior] scale
+- OQ-157: **Masked secret achievements on a friend's showcase still emit the real `def.id`** — OQ-148
+  strips the name/key/tier (so a secret is not directly readable), but the stable id rides the masked slot
+  (`achievement-service.ts:169`, Murr walk2 audit). A viewer who has earned some secrets (learning id→name
+  via `/me/achievements`) can build an id→name table and read exactly which/how-many distinct secret eggs a
+  friend holds — a correlation vector, not a direct name leak. **Consistent with the pre-existing feed-mask
+  and GET /achievements definitions-mask (not introduced here), so owner-call, not a defect.** If masked
+  secrets must be *uncorrelatable*, emit a per-viewer opaque token instead of the real id (a broader change
+  touching all three mask sites). (Murr walk2 audit, 2026-07-19) [behavior] owner-call
 - OQ-156: **Self-profile assembly runs ~12 sequential queries (server perf, non-blocking)** — surfaced by
   the N-A2 genres-latency investigation. `profile-service.ts` `assembleSelfShape` (~L104-160) awaits ~12
   reads serially (gamertags · full shelf · friend count · designs · adoptions · pin cards · 2× gamesByIds ·
