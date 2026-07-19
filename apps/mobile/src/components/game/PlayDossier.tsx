@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import type { CollectionItem, CollectionStatus, UpdateCollectionEntryRequest } from '@ingame/shared';
 import { GenreTag } from '../GenreTag';
@@ -11,8 +11,9 @@ import { themedStyles } from '../../theme';
 // PlayDossier (component-map §9 `PlayStats`) — the "YOUR PLAY" readout with PER-STAT INLINE editing
 // (owner gate-5 B.8: every stat displays here and edits individually IN PLACE — the whole-form flip
 // is retired; opening one stat's editor must not shift the others). Each save PATCHes just that
-// field. NOTES reads back + pre-fills (OQ-134, api 0.53). Still surfaced-not-faked: PLATFORMS is
-// EXPECTED(COL-04 · decision 0058 §7); RATING stays PENDING (OQ-058).
+// field. NOTES reads back + pre-fills (OQ-134, api 0.53). RATING is a live tap-to-set star row
+// (owner round-5 D-i) persisting `entry.rating` — OWNER-PRIVATE per SOC-11 (the friend-view shapes
+// never carry it). The PLATFORMS row is gone entirely (COL-04 isn't built — owner D-i).
 
 type EditableField = 'hours' | 'percent' | 'status' | 'ownedSince' | 'notes';
 
@@ -24,12 +25,55 @@ const FIELD_LABEL: Record<EditableField, string> = {
   notes: 'NOTES',
 };
 
-function PendingRating() {
+/** The 1–5 star scale (the shared schema's bound: rating ∈ 1..5 | null). */
+const STAR_SCALE = [1, 2, 3, 4, 5] as const;
+
+/**
+ * The tap-to-set rating stars (owner round-5 D-i). Tapping a star SAVES it; tapping the CURRENT
+ * rating again clears back to unset (all-dim). Self-contained mutation state on purpose — a rating
+ * tap must not close/poison whichever inline editor happens to be open (the same isolation the
+ * status chips needed, murr gate-5 round 2). The tapped value shows immediately and reconciles when
+ * the refetched entry lands; a failed save reverts to server truth.
+ */
+function RatingStars({ entryId, rating }: { entryId: string; rating: number | null }) {
   const styles = useStyles();
+  const [updateEntry] = useUpdateEntryMutation();
+  const [pending, setPending] = useState<number | null | undefined>(undefined);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    if (pending !== undefined && rating === pending) setPending(undefined);
+  }, [rating, pending]);
+  const shown = pending === undefined ? rating : pending;
+
+  function rate(n: number) {
+    const next = n === shown ? null : n;
+    setFailed(false);
+    setPending(next);
+    void updateEntry({ entryId, rating: next })
+      .unwrap()
+      .catch(() => {
+        setPending(undefined);
+        setFailed(true);
+      });
+  }
+
   return (
-    <View style={styles.ratingRow}>
-      <Text style={styles.stars}>★★★★★</Text>
-      <Text style={styles.pending}>PENDING</Text>
+    <View style={styles.ratingWrap}>
+      <View style={styles.ratingRow}>
+        {STAR_SCALE.map((n) => (
+          <Pressable
+            key={n}
+            accessibilityRole="button"
+            accessibilityLabel={n === shown ? 'Clear rating' : `Rate ${n} star${n === 1 ? '' : 's'}`}
+            hitSlop={{ top: 8, bottom: 8 }}
+            style={styles.starHit}
+            onPress={() => rate(n)}
+          >
+            <Text style={[styles.star, shown != null && n <= shown && styles.starOn]}>★</Text>
+          </Pressable>
+        ))}
+      </View>
+      {failed ? <Text style={styles.err}>Couldn't save — try again.</Text> : null}
     </View>
   );
 }
@@ -208,11 +252,8 @@ export function PlayDossier({ entry }: { entry: CollectionItem }) {
         >
           <Text style={styles.val}>{entry.ownedSince ?? '—'}</Text>
         </Row>
-        <Row label="PLATFORMS">
-          <Text style={styles.deferVal}>—</Text>
-        </Row>
         <Row label="RATING">
-          <PendingRating />
+          <RatingStars entryId={entry.entryId} rating={entry.rating} />
         </Row>
         <Row
           label={FIELD_LABEL.notes}
@@ -308,9 +349,11 @@ const useStyles = themedStyles((t) => ({
     lineHeight: 16,
     textAlign: 'right',
   },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.md },
-  stars: { fontSize: t.type.body, color: t.scr.faint, letterSpacing: 1 },
-  pending: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5 },
+  ratingWrap: { alignItems: 'flex-end', gap: t.space.sm },
+  ratingRow: { flexDirection: 'row', alignItems: 'center' },
+  starHit: { paddingHorizontal: t.space.xs },
+  star: { fontSize: t.type.body, color: t.scr.faint }, // dim/empty (unset or beyond the rating)
+  starOn: { color: t.scr.value }, // F-02 gold — the mockups' `.stars { color: var(--gold) }`
   editor: { paddingHorizontal: t.space.lg, paddingBottom: t.space.md, gap: t.space.md },
   editorRow: { flexDirection: 'row', gap: t.space.md },
   editorBtn: { flex: 1, paddingVertical: t.space.md },
