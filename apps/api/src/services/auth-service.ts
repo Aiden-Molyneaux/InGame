@@ -307,6 +307,11 @@ export async function verifyPasswordReset(input: PasswordResetVerify): Promise<P
     new ValidationError('That code is invalid or has expired.', 'invalid_code');
 
   const user = await authRepo.findByEmail(email);
+  // KNOWN TIMING RESIDUAL (murr LOW; OQ pending): the unknown/deleted-email miss returns here WITHOUT
+  // the code-row read + hash compare a live-account miss performs, so it is marginally faster — the
+  // response is shape-neutral (byte-identical invalid_code) but NOT time-neutral. Same class as
+  // requestPasswordReset; the SYS-05 auth:reset-verify limiter bounds online exploitation. Documented,
+  // not equalized (no dummy-work padding — the marginal signal doesn't warrant the complexity).
   if (!user || user.deletedAt) throw invalidCode();
 
   const outcome: ResetVerifyOutcome = await withTransaction(async (tx) => {

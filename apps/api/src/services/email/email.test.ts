@@ -149,12 +149,20 @@ describe('email-service — kind routing (the AUTH-08 allowlist) + the reset-cod
     clearOutbox();
   });
 
-  it("email_verify NEVER reaches the provider (stub/log-only even under a 'real' provider)", async () => {
+  it("email_verify NEVER reaches the provider (allowlist: no real send yet, even under a 'real' provider)", async () => {
     const send = vi.fn(async () => {});
-    setEmailProvider({ send }); // stands in for the real Resend adapter
+    setEmailProvider({ send }); // stands in for the real Resend adapter (a NON-stub provider)
     await sendVerification('v@example.com', 'tok_123');
-    expect(send).not.toHaveBeenCalled();
-    expect(lastEmail('email_verify', 'v@example.com')?.token).toBe('tok_123'); // the standing test hook still works
+    expect(send).not.toHaveBeenCalled(); // the AUTH-08 allowlist — no redemption surface yet
+    // MED-2: off-stub (a prod/real-provider process) the outbox is NOT recorded — no plaintext token
+    // retained in the module-level array (mirrors the password_reset off-stub assertion below).
+    expect(lastEmail('email_verify', 'v@example.com')).toBeUndefined();
+  });
+
+  it('email_verify IS recorded on the stub/dev lane (the standing test hook the auth suite relies on)', async () => {
+    setEmailProvider(new StubEmailProvider());
+    await sendVerification('v@example.com', 'tok_123');
+    expect(lastEmail('email_verify', 'v@example.com')?.token).toBe('tok_123');
   });
 
   it('password_reset_code DOES reach the provider, and the outbox is NOT recorded off-stub (no plaintext retention)', async () => {

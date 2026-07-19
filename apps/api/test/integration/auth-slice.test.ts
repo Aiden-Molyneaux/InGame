@@ -345,6 +345,35 @@ describe('AUTH-04 password reset', () => {
     expect(exhausted.body.error.reason).toBe('invalid_code');
   });
 
+  it('CONCURRENT wrong guesses cannot bypass the ≤5 cap — the code is consumed, not absorbed (murr MED-1)', async () => {
+    // The limiter is lifted high so the ATTEMPTS CAP (not the SYS-05 IP throttle) is what's under test:
+    // the concurrency-safety of the cap itself. Before the FOR-UPDATE fix, N parallel verifies all read
+    // attempts=0 and each bumped to 1 — the code absorbed ~N guesses. It must die at 5 regardless of race.
+    const { overrideRuleForTest } = await import('../../src/config/rate-limits');
+    overrideRuleForTest('auth:reset-verify', { limit: 100, windowMs: 60_000 });
+
+    const { email } = await registerUser();
+    await post('/auth/password-reset/request', { email });
+    const code = await sentCode(email);
+
+    // Fire 10 wrong guesses ALL AT ONCE — the race the plain SELECT lost.
+    const misses = await Promise.all(
+      Array.from({ length: 10 }, () =>
+        post('/auth/password-reset/verify', { email, code: wrongCode(code) }),
+      ),
+    );
+    // Every guess is the same neutral invalid_code (none 500s on the lock contention).
+    for (const m of misses) {
+      expect(m.status).toBe(422);
+      expect(m.body.error.reason).toBe('invalid_code');
+    }
+    // The definitive assertion: the row is CONSUMED at the cap, so even the CORRECT code is now dead.
+    // Under the bug (no serialization) the cap never engaged and the correct code would still 200.
+    const withCorrect = await post('/auth/password-reset/verify', { email, code });
+    expect(withCorrect.status).toBe(422);
+    expect(withCorrect.body.error.reason).toBe('invalid_code');
+  });
+
   it('wrong guesses BELOW the cap do not kill the code (the correct code still verifies)', async () => {
     const { email } = await registerUser();
     await post('/auth/password-reset/request', { email });

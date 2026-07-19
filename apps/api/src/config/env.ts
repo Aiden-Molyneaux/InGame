@@ -118,7 +118,11 @@ function resolveIapProvider(nodeEnv: string, raw: string | undefined): string {
  * silently swallow password resets; and an UNSET provider must not silently mean the stub. Outside
  * production, unset defaults to 'stub' (the standing dev/test posture — delivery is a log line).
  */
-function resolveEmailProvider(nodeEnv: string, raw: string | undefined): string {
+function resolveEmailProvider(
+  nodeEnv: string,
+  raw: string | undefined,
+  apiKey: string | undefined,
+): string {
   const isProduction = nodeEnv === 'production';
   const provider = raw ?? (isProduction ? '' : 'stub');
   if (isProduction && (provider === '' || provider === 'stub')) {
@@ -128,6 +132,16 @@ function resolveEmailProvider(nodeEnv: string, raw: string | undefined): string 
           'reset would silently vanish. Set EMAIL_PROVIDER to a real provider (fail-closed, F03 pattern).'
         : 'EMAIL_PROVIDER is required in production — an unset provider must not silently mean the stub. ' +
           'Set EMAIL_PROVIDER explicitly to a real provider (fail-closed, F03 pattern).',
+    );
+  }
+  // AUTH-12 (murr LOW) — fail LOUD at boot on a resend-selected-but-KEYLESS process. Otherwise the
+  // ResendProvider throws lazily per-send and the neutral reset catch (AUTH-11) swallows it, so every
+  // password reset vanishes silently. Enforced whenever 'resend' is the resolved provider (any env);
+  // the ResendProvider constructor keeps the same guard as defense-in-depth for direct construction.
+  if (provider === 'resend' && !(apiKey ?? '').trim()) {
+    throw new Error(
+      "EMAIL_PROVIDER='resend' requires RESEND_API_KEY to be set (SYS-03) — a keyless resend process " +
+        'throws per-send and the neutral reset catch swallows it, so resets vanish silently (fail-loud at boot).',
     );
   }
   return provider;
@@ -176,7 +190,7 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): ApiEnv {
       .map((s) => s.trim())
       .filter(Boolean),
     iapProvider: resolveIapProvider(nodeEnv, source.IAP_PROVIDER),
-    emailProvider: resolveEmailProvider(nodeEnv, source.EMAIL_PROVIDER),
+    emailProvider: resolveEmailProvider(nodeEnv, source.EMAIL_PROVIDER, source.RESEND_API_KEY),
     resendApiKey: source.RESEND_API_KEY ?? '',
     emailFrom: source.EMAIL_FROM ?? 'InGame <no-reply@mail.ingame.app>',
     appleVerifier: resolveAppleVerifier(nodeEnv, source.APPLE_VERIFIER),

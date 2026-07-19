@@ -59,6 +59,9 @@ export async function sendPasswordResetCode(to: string, code: string): Promise<v
  * recorded on the semantic outbox (the standing dev/test flow) and logged, never sent for real.
  */
 export async function sendVerification(to: string, token: string): Promise<void> {
-  recordStubEmail('email_verify', to, token);
+  // MED-2 — record the plaintext token to the semantic outbox ONLY on the stub/dev lane, exactly as
+  // sendPasswordResetCode gates. Unconditional recording made the module-level outbox grow forever in
+  // production and retain plaintext email+token in memory (against StubEmailProvider's own invariant).
+  if (getEmailProvider() instanceof StubEmailProvider) recordStubEmail('email_verify', to, token);
   logger.info({ to, kind: 'email_verify' }, 'verification email held on the stub lane (AUTH-12 allowlist)'); // token redacted by pino
 }

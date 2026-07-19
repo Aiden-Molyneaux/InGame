@@ -35,8 +35,15 @@ export async function findByHash(
   return rows[0] ?? null;
 }
 
-/** AUTH-04 (P-B) — the user's newest LIVE (unconsumed) row of a purpose. Scoped (SYS-01): the owner
- * is resolved from the presented email BEFORE this read; expiry is judged by the caller. */
+/** AUTH-04 (P-B) — the user's newest LIVE (unconsumed) row of a purpose, ROW-LOCKED (`FOR UPDATE`).
+ * Scoped (SYS-01): the owner is resolved from the presented email BEFORE this read; expiry is judged
+ * by the caller. The lock SERIALIZES concurrent verifies on the code row (murr MED-1): without it, N
+ * parallel POST /password-reset/verify each read attempts=0, each bump to 1 < 5, and the ≤5 cap never
+ * engages — the code absorbs ~N guesses instead of dying at 5. With the lock, a racing verify blocks
+ * until the holder commits, then re-reads the incremented `attempts` (or finds the row consumed at the
+ * cap, since the WHERE still requires `consumedAt IS NULL`), so the cap-then-consume is authoritative.
+ * MUST run inside the caller's transaction (verifyPasswordReset does) for the lock to hold to commit —
+ * this is an atomic-increment substitute the OQ-118 raw-`sql`-in-repo ban rules out (see setAttempts). */
 export async function findNewestLive(
   userId: string,
   purpose: AuthTokenPurpose,
@@ -48,7 +55,8 @@ export async function findNewestLive(
     .from(authTokens)
     .where(ownedBy(actor, authTokens.userId, and(eq(authTokens.purpose, purpose), isNull(authTokens.consumedAt))))
     .orderBy(desc(authTokens.createdAt))
-    .limit(1);
+    .limit(1)
+    .for('update');
   return rows[0] ?? null;
 }
 
