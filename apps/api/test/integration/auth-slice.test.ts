@@ -269,29 +269,175 @@ describe('AUTH-04 password reset', () => {
     expect(unknown.body).toEqual(known.body);
   });
 
-  it('confirm sets a new password (single-use); a valid old + new login proves the swap', async () => {
-    const { email, password } = await registerUser();
-    await post('/auth/password-reset/request', { email });
+  // ── the P-B 6-digit code exchange (AUTH-04 amendment) ──────────────────────────────────────────
+
+  /** The emailed 6-digit code for an address (from the stub outbox). */
+  async function sentCode(email: string): Promise<string> {
     const { lastEmail } = await import('../../src/services/email');
-    const token = lastEmail('password_reset', email)?.token;
-    expect(token).toBeTruthy();
+    const code = lastEmail('password_reset', email)?.token;
+    expect(code).toMatch(/^\d{6}$/);
+    return code as string;
+  }
+
+  /** Exchange email+code for the reset proof (the happy path helper). */
+  async function verifiedResetToken(email: string): Promise<string> {
+    const res = await post('/auth/password-reset/verify', { email, code: await sentCode(email) });
+    expect(res.status).toBe(200);
+    expect(typeof res.body.resetToken).toBe('string');
+    return res.body.resetToken as string;
+  }
+
+  /** A wrong-but-well-formed code differing from the live one. */
+  function wrongCode(right: string): string {
+    return right === '000000' ? '000001' : '000000';
+  }
+
+  /** Age rows of a purpose past expiry, directly in the DB. */
+  async function expireRows(purpose: string): Promise<void> {
+    const { getDb } = await import('../../src/db/client');
+    const { authTokens } = await import('../../src/db/schema');
+    const { eq } = await import('drizzle-orm');
+    await getDb()
+      .update(authTokens)
+      .set({ expiresAt: new Date(Date.now() - 1000) })
+      .where(eq(authTokens.purpose, purpose));
+  }
+
+  it('full lifecycle: request → verify (code→proof) → confirm → login with the NEW password', async () => {
+    const { email, password } = await registerUser();
+    await post('/auth/password-reset/request', { email }).expect(200);
+    const resetToken = await verifiedResetToken(email);
 
     const newPw = 'BrandNewPass9!';
-    await post('/auth/password-reset/confirm', { token, password: newPw }).expect(200);
+    await post('/auth/password-reset/confirm', { token: resetToken, password: newPw }).expect(200);
 
     // old password no longer works; new one does.
     expect((await post('/auth/login', { email, password })).status).toBe(401);
     expect((await post('/auth/login', { email, password: newPw })).status).toBe(200);
   });
 
-  it('authz:reset_confirm — actorB REUSING a consumed reset token → 422 invalid_token (single-use)', async () => {
+  it('confirm still revokes EVERY session (the pre-reset refresh token 401s afterwards)', async () => {
+    const { email, res } = await registerUser();
+    const preResetRefresh = res.body.refreshToken as string;
+    await post('/auth/password-reset/request', { email });
+    const resetToken = await verifiedResetToken(email);
+    await post('/auth/password-reset/confirm', { token: resetToken, password: 'BrandNewPass9!' }).expect(200);
+
+    expect((await post('/auth/refresh', { refreshToken: preResetRefresh })).status).toBe(401);
+  });
+
+  it('a wrong code ×5 kills the row — the CORRECT code then fails with the SAME invalid_code', async () => {
     const { email } = await registerUser();
     await post('/auth/password-reset/request', { email });
-    const { lastEmail } = await import('../../src/services/email');
-    const token = lastEmail('password_reset', email)?.token as string;
-    await post('/auth/password-reset/confirm', { token, password: 'FirstNewPass9!' }).expect(200);
+    const code = await sentCode(email);
 
-    const reuse = await post('/auth/password-reset/confirm', { token, password: 'SecondTry9!' });
+    for (let i = 0; i < 5; i++) {
+      const miss = await post('/auth/password-reset/verify', { email, code: wrongCode(code) });
+      expect(miss.status).toBe(422);
+      expect(miss.body.error.reason).toBe('invalid_code');
+    }
+    // Attempts exhausted → the row is consumed; even the right code is now the same neutral miss.
+    const exhausted = await post('/auth/password-reset/verify', { email, code });
+    expect(exhausted.status).toBe(422);
+    expect(exhausted.body.error.reason).toBe('invalid_code');
+  });
+
+  it('wrong guesses BELOW the cap do not kill the code (the correct code still verifies)', async () => {
+    const { email } = await registerUser();
+    await post('/auth/password-reset/request', { email });
+    const code = await sentCode(email);
+    for (let i = 0; i < 4; i++) {
+      await post('/auth/password-reset/verify', { email, code: wrongCode(code) }).expect(422);
+    }
+    await post('/auth/password-reset/verify', { email, code }).expect(200);
+  });
+
+  it('an EXPIRED code → the same neutral invalid_code', async () => {
+    const { email } = await registerUser();
+    await post('/auth/password-reset/request', { email });
+    const code = await sentCode(email);
+    await expireRows('password_reset_code');
+    const res = await post('/auth/password-reset/verify', { email, code });
+    expect(res.status).toBe(422);
+    expect(res.body.error.reason).toBe('invalid_code');
+  });
+
+  it('a re-request KILLS the prior code (one live code at a time); the new code works', async () => {
+    const { email } = await registerUser();
+    await post('/auth/password-reset/request', { email });
+    const first = await sentCode(email);
+    await post('/auth/password-reset/request', { email });
+    const second = await sentCode(email);
+
+    if (first !== second) {
+      // (When the two random codes collide — 1e-6 — the first IS the second and stays live.)
+      const stale = await post('/auth/password-reset/verify', { email, code: first });
+      expect(stale.status).toBe(422);
+      expect(stale.body.error.reason).toBe('invalid_code');
+    }
+    await post('/auth/password-reset/verify', { email, code: second }).expect(200);
+  });
+
+  it('verify is SINGLE-USE — the same code cannot be exchanged twice', async () => {
+    const { email } = await registerUser();
+    await post('/auth/password-reset/request', { email });
+    const code = await sentCode(email);
+    await post('/auth/password-reset/verify', { email, code }).expect(200);
+    const again = await post('/auth/password-reset/verify', { email, code });
+    expect(again.status).toBe(422);
+    expect(again.body.error.reason).toBe('invalid_code');
+  });
+
+  it('an EXPIRED proof token → confirm 422 invalid_token (bounce to re-request)', async () => {
+    const { email } = await registerUser();
+    await post('/auth/password-reset/request', { email });
+    const resetToken = await verifiedResetToken(email);
+    await expireRows('password_reset');
+    const res = await post('/auth/password-reset/confirm', { token: resetToken, password: 'BrandNewPass9!' });
+    expect(res.status).toBe(422);
+    expect(res.body.error.reason).toBe('invalid_token');
+  });
+
+  it('AUTH-11 neutrality: an UNKNOWN email verifies to the BYTE-SAME invalid_code as a real-account miss', async () => {
+    const { email } = await registerUser();
+    await post('/auth/password-reset/request', { email });
+    const code = await sentCode(email);
+
+    const realMiss = await post('/auth/password-reset/verify', { email, code: wrongCode(code) });
+    const unknown = await post('/auth/password-reset/verify', {
+      email: `nobody_${randomUUID().slice(0, 6)}@example.com`,
+      code: '123456',
+    });
+    expect(realMiss.status).toBe(422);
+    expect(unknown.status).toBe(realMiss.status);
+    expect(unknown.body).toEqual(realMiss.body); // indistinguishable — no existence disclosure
+  });
+
+  it('authz:reset_verify — actorB bursting verify past the SYS-05 cap → 429 (the online-guess guard)', async () => {
+    const { overrideRuleForTest } = await import('../../src/config/rate-limits');
+    overrideRuleForTest('auth:reset-verify', { limit: 2, windowMs: 60_000 });
+    const results = [];
+    for (let i = 0; i < 3; i++)
+      results.push(await post('/auth/password-reset/verify', { email: 'a@example.com', code: '123456' }));
+    expect(results.some((r) => r.status === 429 && r.body.error.code === 'RATE_LIMITED')).toBe(true);
+  });
+
+  it('confirm bursting past the SYS-05 cap → 429 (all three buckets hold)', async () => {
+    const { overrideRuleForTest } = await import('../../src/config/rate-limits');
+    overrideRuleForTest('auth:reset-confirm', { limit: 2, windowMs: 60_000 });
+    const results = [];
+    for (let i = 0; i < 3; i++)
+      results.push(await post('/auth/password-reset/confirm', { token: 'x', password: 'Whatever9!' }));
+    expect(results.some((r) => r.status === 429)).toBe(true);
+  });
+
+  it('authz:reset_confirm — actorB REUSING a consumed reset proof → 422 invalid_token (single-use)', async () => {
+    const { email } = await registerUser();
+    await post('/auth/password-reset/request', { email });
+    const resetToken = await verifiedResetToken(email);
+    await post('/auth/password-reset/confirm', { token: resetToken, password: 'FirstNewPass9!' }).expect(200);
+
+    const reuse = await post('/auth/password-reset/confirm', { token: resetToken, password: 'SecondTry9!' });
     expect(reuse.status).toBe(422);
     expect(reuse.body.error.reason).toBe('invalid_token');
   });

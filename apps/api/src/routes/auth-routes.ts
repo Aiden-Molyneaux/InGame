@@ -5,6 +5,7 @@ import {
   refreshRequestSchema,
   logoutRequestSchema,
   passwordResetRequestSchema,
+  passwordResetVerifySchema,
   passwordResetConfirmSchema,
   verifyEmailConfirmSchema,
 } from '@ingame/shared';
@@ -72,6 +73,18 @@ export const authRoutes: RouteDef[] = [
       rateLimit('auth:reset-request'),
       validateBody(passwordResetRequestSchema),
       asyncHandler(auth.requestPasswordReset),
+    ],
+  }),
+  defineRoute({
+    method: 'post',
+    path: '/auth/password-reset/verify',
+    mutates: true,
+    authzTest: 'authz:reset_verify',
+    specIds: ['AUTH-04', 'AUTH-11', 'SYS-05'],
+    handler: [
+      rateLimit('auth:reset-verify'),
+      validateBody(passwordResetVerifySchema),
+      asyncHandler(auth.verifyPasswordReset),
     ],
   }),
   defineRoute({

@@ -65,3 +65,15 @@ export function generateOpaqueToken(bytes = 32): OpaqueTokenPair {
   const token = randomBytes(bytes).toString('base64url');
   return { token, tokenHash: hashOpaqueToken(token) };
 }
+
+/**
+ * AUTH-04 (auth-epic P-B) — the stored hash of a 6-digit reset code, SALTED with the user id: codes
+ * are low-entropy, so an unsalted hash would collide across users/history against the
+ * `auth_tokens_token_hash_idx` UNIQUE index (a birthday problem over a 10^6 space). Codes are matched
+ * per-user-row (find the newest live row, compare), NEVER looked up by hash, so the salt costs
+ * nothing. (Accepted beta risk, recorded in the manifest: a full-DB leak makes a live code hash
+ * offline-brutable inside its ≤30-min window — a leak of that severity already yields every hash.)
+ */
+export function hashResetCode(userId: string, code: string): string {
+  return createHash('sha256').update(`reset-code:${userId}:${code}`).digest('hex');
+}

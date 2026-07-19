@@ -1,10 +1,12 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID, randomInt } from 'node:crypto';
 import type {
   AppleRequest,
   AuthSession,
   LoginRequest,
   PasswordResetConfirm,
   PasswordResetRequest,
+  PasswordResetVerify,
+  PasswordResetVerifyResult,
   RefreshResult,
   RegisterRequest,
   UsernameAvailability,
@@ -22,7 +24,7 @@ import * as profileRepo from '../repositories/profile-repo';
 import { isUniqueViolation } from '../db/pg-errors';
 import { argon2Hasher } from '../auth/password';
 import { checkPasswordBreached } from '../auth/breach-check';
-import { signAccessToken, generateOpaqueToken, hashOpaqueToken } from '../auth/tokens';
+import { signAccessToken, generateOpaqueToken, hashOpaqueToken, hashResetCode } from '../auth/tokens';
 import { stubAppleVerifier, type AppleTokenVerifier } from '../auth/apple-verifier';
 import * as emailService from './email/email-service';
 import { captureException } from '../observability/sentry';
@@ -246,32 +248,102 @@ export async function logout(input: { refreshToken: string }): Promise<void> {
   });
 }
 
-// ── AUTH-04 password reset ───────────────────────────────────────────────────────────────────────
+// ── AUTH-04 password reset (auth-epic P-B — the 6-digit code exchange) ──────────────────────────
+// request mints an emailed 6-digit CODE (hashed at rest, ~30 min, one live code at a time, ≤5 wrong
+// guesses) → verify exchanges a matching code for the EXISTING short-lived opaque reset proof
+// (~15 min) → confirm (byte-for-byte the M2 path: single-use · HIBP · revoke-all-sessions).
+
+/** G-K async default (owner-nod #6) — wrong guesses allowed on one code before the row is dead. */
+const RESET_CODE_MAX_ATTEMPTS = 5;
+
 export async function requestPasswordReset(input: PasswordResetRequest): Promise<void> {
   const email = input.email.toLowerCase();
   const user = await authRepo.findByEmail(email);
   if (user && !user.deletedAt) {
-    const reset = generateOpaqueToken();
-    await withTransaction((tx) =>
-      authTokenRepo.insertToken(
-        {
-          userId: user.id,
-          purpose: 'password_reset',
-          tokenHash: reset.tokenHash,
-          expiresAt: new Date(Date.now() + loadEnv().passwordResetTtlSeconds * 1000),
-        },
-        tx,
-      ),
-    );
+    // NEVER Math.random for a credential; zero-padded to exactly six digits.
+    let code = randomInt(0, 1_000_000).toString().padStart(6, '0');
+    // The salted hash can still collide with the SAME user's historical rows (tiny odds, unique
+    // index on token_hash) — re-mint a fresh code rather than surfacing a 500.
+    for (let attempt = 0; ; attempt++) {
+      try {
+        await withTransaction(async (tx) => {
+          // One live code at a time — a re-request consumes any outstanding code rows first.
+          await authTokenRepo.consumeAllForUser(user.id, 'password_reset_code', tx);
+          await authTokenRepo.insertToken(
+            {
+              userId: user.id,
+              purpose: 'password_reset_code',
+              tokenHash: hashResetCode(user.id, code),
+              expiresAt: new Date(Date.now() + loadEnv().passwordResetTtlSeconds * 1000),
+            },
+            tx,
+          );
+        });
+        break;
+      } catch (e) {
+        if (!isUniqueViolation(e) || attempt >= 2) throw e;
+        code = randomInt(0, 1_000_000).toString().padStart(6, '0');
+      }
+    }
     // AUTH-11/12 — a provider send-failure is CAUGHT + Sentry'd and the response stays neutral:
     // throwing only on the account-exists branch would turn provider errors into an enumeration oracle.
     try {
-      await emailService.sendPasswordReset(user.email, reset.token);
+      await emailService.sendPasswordResetCode(user.email, code);
     } catch (err) {
       captureException(err);
     }
   }
   // ALWAYS neutral — the response never reveals whether the account exists (AUTH-04/11).
+}
+
+type ResetVerifyOutcome = { kind: 'invalid' } | { kind: 'ok'; resetToken: string };
+
+/**
+ * POST /auth/password-reset/verify — exchange a live matching code for the reset proof. EVERY failure
+ * mode (unknown email · no live row · wrong code · expired · attempts exhausted) surfaces the SAME
+ * `VALIDATION_ERROR reason:"invalid_code"` — enumeration-neutral by construction (AUTH-11). NOTE the
+ * outcome shape: the wrong-guess counter must COMMIT, so nothing throws inside the transaction.
+ */
+export async function verifyPasswordReset(input: PasswordResetVerify): Promise<PasswordResetVerifyResult> {
+  const email = input.email.toLowerCase();
+  const invalidCode = () =>
+    new ValidationError('That code is invalid or has expired.', 'invalid_code');
+
+  const user = await authRepo.findByEmail(email);
+  if (!user || user.deletedAt) throw invalidCode();
+
+  const outcome: ResetVerifyOutcome = await withTransaction(async (tx) => {
+    const row = await authTokenRepo.findNewestLive(user.id, 'password_reset_code', tx);
+    if (!row || row.expiresAt.getTime() <= Date.now()) return { kind: 'invalid' };
+
+    if (row.tokenHash !== hashResetCode(user.id, input.code)) {
+      // A wrong guess is COUNTED (committed); at the cap the row is consumed — dead even to the
+      // correct code afterwards (the re-request loop is the way back in).
+      if (row.attempts + 1 >= RESET_CODE_MAX_ATTEMPTS) {
+        await authTokenRepo.markConsumed(row.id, user.id, tx);
+      } else {
+        await authTokenRepo.bumpAttempts(row.id, user.id, tx);
+      }
+      return { kind: 'invalid' };
+    }
+
+    // Match → the code is consumed (single-use) and the EXISTING proof-token machinery takes over.
+    await authTokenRepo.markConsumed(row.id, user.id, tx);
+    const proof = generateOpaqueToken();
+    await authTokenRepo.insertToken(
+      {
+        userId: user.id,
+        purpose: 'password_reset',
+        tokenHash: proof.tokenHash,
+        expiresAt: new Date(Date.now() + loadEnv().passwordResetProofTtlSeconds * 1000),
+      },
+      tx,
+    );
+    return { kind: 'ok', resetToken: proof.token };
+  });
+
+  if (outcome.kind === 'invalid') throw invalidCode();
+  return { resetToken: outcome.resetToken };
 }
 
 export async function confirmPasswordReset(input: PasswordResetConfirm): Promise<void> {

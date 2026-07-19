@@ -53,26 +53,6 @@ export async function sendPasswordResetCode(to: string, code: string): Promise<v
   await provider.send(passwordResetCodeTemplate(to, code));
 }
 
-/** TRANSITIONAL (P-A → P-B): the M2 token-emailing reset path routed through the new seam, behavior
- * unchanged. P-B replaces this with the 6-digit `sendPasswordResetCode` exchange (AUTH-04 amendment). */
-export async function sendPasswordReset(to: string, token: string): Promise<void> {
-  const provider = getEmailProvider();
-  if (provider instanceof StubEmailProvider) recordStubEmail('password_reset', to, token);
-  await provider.send({
-    to,
-    subject: `Reset your ${APP_NAME} password`,
-    text: [
-      `${APP_NAME} — PASSWORD RESET`,
-      '',
-      'Use this single-use reset token in the app to choose a new password:',
-      '',
-      `    ${token}`,
-      '',
-      `Didn't ask to reset your password? Ignore this email — your account is unchanged.`,
-    ].join('\n'),
-  });
-}
-
 /**
  * AUTH-08 — email verification. ALLOWLIST EXCEPTION (see header): stays stub/log-only under EVERY
  * provider until the real template + in-app redemption surface land (a later packet) — the token is

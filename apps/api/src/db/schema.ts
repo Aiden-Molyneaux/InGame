@@ -4,6 +4,7 @@ import {
   uuid,
   text,
   integer,
+  smallint,
   bigserial,
   boolean,
   timestamp,
@@ -127,8 +128,13 @@ export const refreshTokens = pgTable(
 );
 
 /**
- * `auth_tokens` — single-use, time-boxed tokens for password reset (AUTH-04, ~1h) and email
- * verification (AUTH-08). Only the token HASH is stored; `consumedAt` enforces single-use. USER-OWNED.
+ * `auth_tokens` — single-use, time-boxed tokens for password reset (AUTH-04) and email verification
+ * (AUTH-08). Only the token HASH is stored; `consumedAt` enforces single-use. USER-OWNED.
+ * AUTH-04 (auth-epic P-B): `purpose:'password_reset_code'` rows are the emailed 6-digit codes
+ * (~30 min; hash salted with the user id — codes are matched per-user-row, never looked up by hash);
+ * `attempts` counts wrong guesses on a code row — at the cap (5) the row is consumed (dead).
+ * `purpose:'password_reset'` rows are the short-lived reset PROOF minted by a successful verify
+ * (~15 min), consumed by the unchanged confirm path.
  */
 export const authTokens = pgTable(
   'auth_tokens',
@@ -137,10 +143,12 @@ export const authTokens = pgTable(
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    purpose: text('purpose').notNull(), // 'password_reset' | 'email_verify'
+    purpose: text('purpose').notNull(), // 'password_reset' | 'password_reset_code' | 'email_verify'
     tokenHash: text('token_hash').notNull(),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     consumedAt: timestamp('consumed_at', { withTimezone: true }),
+    // AUTH-04 (P-B) — wrong-guess counter for 'password_reset_code' rows (cap 5, then consumed).
+    attempts: smallint('attempts').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({

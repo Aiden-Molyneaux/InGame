@@ -155,6 +155,27 @@
       "when": 1784276147877,
       "tag": "0021_secret_skin",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1784431912911,
+      "tag": "0022_stormy_siren",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1784432125363,
+      "tag": "0023_special_mandroid",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1784432257546,
+      "tag": "0024_spooky_sabretooth",
+      "breakpoints": true
     }
   ]
 }

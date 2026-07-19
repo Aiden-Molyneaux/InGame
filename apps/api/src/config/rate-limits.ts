@@ -15,6 +15,9 @@ const DEFAULTS: Record<string, RateLimitRule> = {
   'auth:refresh': { limit: 30, windowMs: 60_000 },
   'auth:logout': { limit: 30, windowMs: 60_000 },
   'auth:reset-request': { limit: 5, windowMs: 60_000 },
+  // AUTH-04 (auth-epic P-B; SYS-05/G-K async, owner-nod #6) — the 6-digit-code exchange. Guess math:
+  // 10^6 code space ÷ 5 attempts-per-code ÷ 10 IP-tries/min ÷ 30-min TTL ⇒ online guessing is dead.
+  'auth:reset-verify': { limit: 10, windowMs: 60_000 },
   'auth:reset-confirm': { limit: 10, windowMs: 60_000 },
   'auth:verify-request': { limit: 5, windowMs: 60_000 },
   'auth:verify-confirm': { limit: 10, windowMs: 60_000 },

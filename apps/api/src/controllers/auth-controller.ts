@@ -4,6 +4,7 @@ import type {
   LoginRequest,
   PasswordResetConfirm,
   PasswordResetRequest,
+  PasswordResetVerify,
   RefreshRequest,
   RegisterRequest,
   LogoutRequest,
@@ -44,6 +45,13 @@ export async function logout(req: Request, res: Response): Promise<void> {
 export async function requestPasswordReset(req: Request, res: Response): Promise<void> {
   await authService.requestPasswordReset(req.validated as PasswordResetRequest);
   res.json({ ok: true }); // always neutral (AUTH-04/11)
+}
+
+export async function verifyPasswordReset(req: Request, res: Response): Promise<void> {
+  // AUTH-04 (P-B) — a matching code returns the short-lived reset proof; every miss is the neutral
+  // 422 invalid_code thrown by the service (AUTH-11).
+  const result = await authService.verifyPasswordReset(req.validated as PasswordResetVerify);
+  res.json(result);
 }
 
 export async function confirmPasswordReset(req: Request, res: Response): Promise<void> {

@@ -13,8 +13,11 @@ export interface ApiEnv {
   accessTokenTtlSeconds: number;
   /** AUTH-02 — refresh-token lifetime (long-lived, rotating). */
   refreshTokenTtlSeconds: number;
-  /** AUTH-04 — password-reset token lifetime (~1 hour, single-use). */
+  /** AUTH-04 (P-B) — the emailed 6-digit reset CODE lifetime (~30 min, single-use, ≤5 attempts). */
   passwordResetTtlSeconds: number;
+  /** AUTH-04 (P-B) — the reset PROOF token lifetime (~15 min): minted by a successful code verify,
+   * consumed by the unchanged confirm path. */
+  passwordResetProofTtlSeconds: number;
   /** AUTH-08 — email-verification token lifetime (soft). */
   emailVerifyTtlSeconds: number;
   /** PROF-06 — username-change cooldown (server-configurable, SYS-04; default 30 days). */
@@ -131,7 +134,9 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): ApiEnv {
     jwtSigningSecret: source.JWT_SIGNING_SECRET ?? '',
     accessTokenTtlSeconds: num(source.ACCESS_TOKEN_TTL_SECONDS, 15 * 60),
     refreshTokenTtlSeconds: num(source.REFRESH_TOKEN_TTL_SECONDS, 30 * 24 * 60 * 60),
-    passwordResetTtlSeconds: num(source.PASSWORD_RESET_TTL_SECONDS, 60 * 60),
+    // AUTH-04 (P-B) — default dropped 3600 → 1800: the ~30-min posture fits a low-entropy 6-digit code.
+    passwordResetTtlSeconds: num(source.PASSWORD_RESET_TTL_SECONDS, 30 * 60),
+    passwordResetProofTtlSeconds: num(source.PASSWORD_RESET_PROOF_TTL_SECONDS, 15 * 60),
     emailVerifyTtlSeconds: num(source.EMAIL_VERIFY_TTL_SECONDS, 24 * 60 * 60),
     usernameCooldownSeconds: num(source.USERNAME_COOLDOWN_SECONDS, 30 * 24 * 60 * 60),
     sentryDsn: source.SENTRY_DSN ?? '',

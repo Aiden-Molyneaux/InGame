@@ -25,6 +25,11 @@ export const refreshResultSchema = z
   .strict();
 export type RefreshResult = z.infer<typeof refreshResultSchema>;
 
+/** POST /auth/password-reset/verify → `{ resetToken }` (AUTH-04 P-B — the short-lived reset proof,
+ * returned ONCE; the client holds it in component state only, never persisted). */
+export const passwordResetVerifyResultSchema = z.object({ resetToken: z.string() }).strict();
+export type PasswordResetVerifyResult = z.infer<typeof passwordResetVerifyResultSchema>;
+
 /** The generic acknowledgement (logout, reset-request/confirm, verify) → `{ ok: true }`. */
 export const okResultSchema = z.object({ ok: z.literal(true) }).strict();
 export type OkResult = z.infer<typeof okResultSchema>;

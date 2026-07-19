@@ -72,7 +72,22 @@ export type LogoutRequest = z.infer<typeof logoutRequestSchema>;
 export const passwordResetRequestSchema = z.object({ email: emailSchema }).strict();
 export type PasswordResetRequest = z.infer<typeof passwordResetRequestSchema>;
 
-/** POST /auth/password-reset/confirm — `{ token, password }` (AUTH-04; single-use, ~1h). */
+/**
+ * POST /auth/password-reset/verify — `{ email, code }` (AUTH-04, auth-epic P-B). Exchanges the
+ * emailed 6-digit code for the short-lived opaque reset proof. Shape-strict here (exactly six
+ * digits); EVERY semantic miss (unknown email / wrong / expired / attempts-exhausted) surfaces the
+ * same neutral `VALIDATION_ERROR reason:"invalid_code"` (AUTH-11).
+ */
+export const resetCodeSchema = z.string().regex(/^\d{6}$/, 'The code is six digits.');
+export const passwordResetVerifySchema = z
+  .object({
+    email: emailSchema,
+    code: resetCodeSchema,
+  })
+  .strict();
+export type PasswordResetVerify = z.infer<typeof passwordResetVerifySchema>;
+
+/** POST /auth/password-reset/confirm — `{ token, password }` (AUTH-04; token = the verify-step proof, single-use). */
 export const passwordResetConfirmSchema = z
   .object({
     token: opaqueTokenSchema,
@@ -105,6 +120,9 @@ export const REFRESH_FIELDS = Object.keys(refreshRequestSchema.shape) as Array<k
 export const LOGOUT_FIELDS = Object.keys(logoutRequestSchema.shape) as Array<keyof LogoutRequest>;
 export const RESET_REQUEST_FIELDS = Object.keys(passwordResetRequestSchema.shape) as Array<
   keyof PasswordResetRequest
+>;
+export const RESET_VERIFY_FIELDS = Object.keys(passwordResetVerifySchema.shape) as Array<
+  keyof PasswordResetVerify
 >;
 export const RESET_CONFIRM_FIELDS = Object.keys(passwordResetConfirmSchema.shape) as Array<
   keyof PasswordResetConfirm
