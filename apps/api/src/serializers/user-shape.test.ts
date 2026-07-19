@@ -49,6 +49,22 @@ describe('F06: read-path privacy serializer (relationship matrix)', () => {
     expect(out.adminTier).toBe(2);
   });
 
+  it('CAT-07 — cardsPublished (the MY CONTRIBUTIONS teaser count) rides the self shape, distinct from stats.cardsDesigned', () => {
+    const out = toSelfShape(makeUser(), {
+      gamertags: [],
+      usernameNextChangeAt: null,
+      // finished designs (private + published) = 4; PUBLISHED contributions = 2 — the teaser shows 2.
+      stats: { games: 0, hours: 0, completionPct: 0, cardsDesigned: 4, adoptionsReceived: 0, friends: 0 },
+      favouriteGame: null,
+      nowPlaying: null,
+      top10: [],
+      cardsPublished: 2,
+    });
+    expect(selfProfileSchema.parse(out)).toEqual(out);
+    expect(out.cardsPublished).toBe(2); // the public-contributions count (the teaser)
+    expect(out.stats.cardsDesigned).toBe(4); // the finished-designs stat stays independent
+  });
+
   it('PROF-08 (W-4) — avatarConfig rides on the self + both cross-user shapes (null default + a set config)', () => {
     // null default (byte-identical to today's monogram) parses on every shape.
     expect(toSelfShape(makeUser()).avatarConfig).toBeNull();

@@ -145,6 +145,11 @@ export const selfProfileSchema = z
     /** PROF-06 — when the next username change is allowed (ISO-8601 UTC), or null ⇒ allowed now. */
     usernameNextChangeAt: z.string().nullable(),
     stats: selfStatsSchema,
+    /** CAT-07 — the PUBLISHED-card count (public contributions). Distinct from `stats.cardsDesigned`
+     *  (FINISHED designs = private + published): this is the count the Profile "MY CONTRIBUTIONS"
+     *  teaser shows so tapping it lands on the SAME number the contributor screen counts (owner ruling
+     *  2026-07-19). A `count()` over the actor's `status='published'` designs. */
+    cardsPublished: z.number().int().nonnegative(),
     favouriteGame: selfGameExpansionSchema.nullable(),
     nowPlaying: selfGameExpansionSchema.nullable(),
     top10: z.array(selfTopTenEntrySchema),

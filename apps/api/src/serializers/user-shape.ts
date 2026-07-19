@@ -49,6 +49,9 @@ export interface SelfExtras {
   nowPlaying: SelfGameExpansion | null;
   /** SOC-04 (M6 P5) — the actor's own Top-10, rank-ordered (`[]` ⇒ never curated). */
   top10: SelfTopTenEntry[];
+  /** CAT-07 — the PUBLISHED-card count backing the MY CONTRIBUTIONS teaser (public contributions;
+   *  distinct from `stats.cardsDesigned` = finished designs). Owner ruling 2026-07-19. */
+  cardsPublished: number;
 }
 
 export function toSelfShape(
@@ -60,6 +63,7 @@ export function toSelfShape(
     favouriteGame: null,
     nowPlaying: null,
     top10: [],
+    cardsPublished: 0,
   },
 ): SelfProfile {
   return {
@@ -82,6 +86,7 @@ export function toSelfShape(
     favouriteGame: extras.favouriteGame,
     nowPlaying: extras.nowPlaying,
     top10: extras.top10,
+    cardsPublished: extras.cardsPublished,
   };
 }
 

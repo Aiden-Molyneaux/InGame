@@ -574,6 +574,27 @@ describe('CAT-07: contributor data goes LIVE after publish + adopt (honest-zeros
     expect(contrib.body.topCards).toHaveLength(1);
   });
 
+  it('GET /me cardsPublished (the MY CONTRIBUTIONS teaser) counts PUBLISHED only — == the contributor screen, distinct from stats.cardsDesigned', async () => {
+    const a = await registerUser();
+    const game = await seedGame(a.token, 'Teaser Count RPG');
+    // one PRIVATE finished design (save-private) — counts to stats.cardsDesigned, NOT cardsPublished.
+    const draft = await createDraft(a.token, game.id, comp({ rects: 3, seed: 40 }));
+    const sp = await request(app).post(`/api/cards/${draft.id}/save-private`).set(authed(a.token));
+    expect(sp.status).toBe(200);
+    // one PUBLISHED design — counts to BOTH.
+    await publishFresh(a.token, game.id, { rects: 3, seed: 41 });
+
+    const me = await request(app).get('/api/me').set(authed(a.token));
+    expect(me.status).toBe(200);
+    expect(me.body.stats.cardsDesigned).toBe(2); // finished designs (private + published)
+    expect(me.body.cardsPublished).toBe(1); // the teaser — PUBLISHED contributions only
+
+    // the flag: the teaser count == the number the contributor screen shows (published contributions).
+    const contrib = await request(app).get(`/api/users/${a.id}/contributions`).set(authed(a.token));
+    expect(contrib.status).toBe(200);
+    expect(contrib.body.stats.cardsDesigned).toBe(me.body.cardsPublished);
+  });
+
   it('authz:get_contributions — actor-B on a blocked/unknown target → the generic 404 collapse (MOD-09)', async () => {
     const a = await registerUser();
     const b = await registerUser();

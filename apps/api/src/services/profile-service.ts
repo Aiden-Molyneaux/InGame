@@ -116,6 +116,13 @@ export async function assembleSelfShape(row: UserRow, exec?: Executor): Promise<
   const cardsDesigned = exec
     ? await cardRepo.countOwnedDesigns(row.id, exec)
     : await cardRepo.countOwnedDesigns(row.id);
+  // CAT-07 — the PUBLISHED-card count backing the MY CONTRIBUTIONS teaser (public contributions;
+  // reuses the same aggregate the contributor screen counts, so the teaser number == the number the
+  // /contributor/:id screen shows — owner ruling 2026-07-19). Distinct from `cardsDesigned` above,
+  // which counts FINISHED designs (private + published).
+  const cardsPublished = exec
+    ? await cardRepo.countPublishedByOwner(row.id, exec)
+    : await cardRepo.countPublishedByOwner(row.id);
   // CARD-05 clout — the LIFETIME adoptions across the user's cards (real since M5; un-zeroed M6 C4).
   const adoptionsReceived = exec
     ? await cardRepo.totalAdoptionsForOwner(row.id, exec)
@@ -156,6 +163,7 @@ export async function assembleSelfShape(row: UserRow, exec?: Executor): Promise<
     favouriteGame: await expand(row.favouriteGameId),
     nowPlaying: await expand(row.nowPlayingGameId),
     top10: await resolveTopTen(row.id, exec),
+    cardsPublished,
   });
 }
 
