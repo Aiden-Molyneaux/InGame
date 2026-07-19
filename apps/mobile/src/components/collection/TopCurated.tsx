@@ -230,7 +230,7 @@ export function SelfTopView({
   return (
     <TopScaffold
       rows={rows}
-      subLine="YOUR TOP 10 — the curated showcase (it headlines your Profile). Tap ARRANGE to re-rank or change members."
+      subLine="YOUR TOP 10 · headlines your Profile — tap ARRANGE to edit."
       focusGameId={focusGameId}
       onOpenGame={onOpenGame}
       emptyNode={<EmptyTop />}
@@ -279,7 +279,7 @@ export function FriendTopView({
     <View style={styles.wrap}>
       <TopScaffold
         rows={rows}
-        subLine={`${username.toUpperCase()}'S TOP 10 · read-only. Tap a card to open the game.`}
+        subLine={`${username.toUpperCase()}'S TOP 10. Tap a card to open the game.`}
         focusGameId={focusGameId}
         onOpenGame={onOpenGame}
         emptyNode={<Text style={styles.friendEmpty}>{username} hasn&apos;t curated a Top 10 yet.</Text>}

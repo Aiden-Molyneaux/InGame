@@ -69,7 +69,7 @@ export function CardDetailSheet({
       <Text style={styles.note}>
         {custom
           ? 'SHARE creates an image with your credit (once the card is published). EDIT resumes it in the Styler.'
-          : 'Design your own card from the CARDS tab — the Styler is open.'}
+          : 'This is the standard face — design your own from the CARDS tab.'}
       </Text>
     </PulledSheet>
   );

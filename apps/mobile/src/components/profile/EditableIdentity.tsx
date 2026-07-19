@@ -106,7 +106,7 @@ export function EditableIdentity({
           </View>
         </Pressable>
         <View style={styles.avatarMeta}>
-          <Text style={styles.editHint}>YOUR AVATAR IS A DESIGN (PROF-08)</Text>
+          <Text style={styles.editHint}>YOUR AVATAR IS A DESIGN</Text>
           {avatarNote ? (
             <Text style={styles.avatarNote}>The avatar designer is coming — for now you wear the monogram.</Text>
           ) : null}
@@ -129,10 +129,10 @@ export function EditableIdentity({
         {cooldownActive ? (
           // N-A1 — the PROF-06 time-gate wears the screen ACCENT (orange) for salience.
           <Text style={[styles.usernameNote, styles.usernameNoteGate]}>
-            NEXT CHANGE {formatWhen(me.usernameNextChangeAt)} · ONCE / 30 DAYS (PROF-06)
+            NEXT CHANGE {formatWhen(me.usernameNextChangeAt)} · ONCE / 30 DAYS
           </Text>
         ) : (
-          <Text style={styles.usernameNote}>SCREENED (MOD-07) · A–Z, 0–9, _ · SAVES WHEN YOU TAP AWAY</Text>
+          <Text style={styles.usernameNote}>A–Z, 0–9, _ · SAVES WHEN YOU TAP AWAY</Text>
         )}
       </View>
 

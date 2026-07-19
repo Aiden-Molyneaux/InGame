@@ -189,8 +189,7 @@ export default function Discover() {
               <Text style={styles.secTitle}>UPCOMING</Text>
               <View style={styles.expected}>
                 <Text style={styles.expectedText}>
-                  Upcoming releases arrive with the M7 discovery batch — the browse-and-notify rail lands when
-                  the catalog upcoming feed is live.
+                  Upcoming releases aren&apos;t here yet — check back soon.
                 </Text>
               </View>
             </View>

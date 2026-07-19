@@ -186,7 +186,7 @@ export default function FriendCollection() {
       )}
 
       {/* read-only sort / filter drawer (COL-11) — status facets, client-side */}
-      <PulledSheet visible={drawerOpen} onClose={() => setDrawerOpen(false)} title="Filter · read-only">
+      <PulledSheet visible={drawerOpen} onClose={() => setDrawerOpen(false)} title="Filter">
         <Text style={styles.drawerHead}>STATUS</Text>
         <View style={styles.facetRow}>
           {['playing', 'beaten', 'completed', 'backlog', 'dropped', 'wishlist'].map((s) => {

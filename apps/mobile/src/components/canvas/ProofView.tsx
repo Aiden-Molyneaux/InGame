@@ -28,7 +28,7 @@ export function ProofView({ composition, title }: { composition: CardComposition
       </View>
       {flattenFailed ? <Text style={styles.flattenErr}>The flatten hiccuped — showing the live draw instead. Nothing is lost.</Text> : null}
       <Text style={styles.hint}>
-        <Text style={styles.hintBold}>PROOFING</Text> — THE TRUE PRINT, CLOSED ATTRIBUTES LIVE · RELEASE / TAP AGAIN TO LIFT IT
+        <Text style={styles.hintBold}>PROOFING</Text> — THE TRUE PRINT, FRAME &amp; EFFECT INCLUDED · RELEASE / TAP AGAIN TO LIFT IT
       </Text>
       <View style={styles.sizes}>
         <Text style={styles.sizesHead}>

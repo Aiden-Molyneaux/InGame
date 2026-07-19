@@ -95,7 +95,6 @@ export default function InviteLanding() {
               ) : null}
               <ScreenButton label="View their profile" variant="secondary" onPress={() => router.push(`/user/${data.sender.userId}`)} block />
             </View>
-            <Text style={styles.foot}>Resolves through their profile — one tap sends the request.</Text>
           </View>
         )}
       </ScrollView>
@@ -150,7 +149,6 @@ const useStyles = themedStyles((t) => ({
   name: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, letterSpacing: 1 },
   sub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.ink, textAlign: 'center', lineHeight: 16, maxWidth: 260 },
   cta: { width: '100%', gap: t.space.md, marginTop: t.space.lg },
-  foot: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.4, marginTop: t.space.md, textAlign: 'center', maxWidth: 266 },
   errCard: { width: 92, height: 92, alignItems: 'center', justifyContent: 'center', backgroundColor: t.scr.panel, borderWidth: 2, borderStyle: 'dashed', borderColor: t.scr.faint, marginBottom: t.space.sm },
   errBang: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.accent },
 }));

@@ -108,9 +108,7 @@ export function KeepBeat({
         <Pressable accessibilityRole="button" accessibilityLabel="Edit art — open the Canvas" onPress={onEditArt} hitSlop={6}>
           <Text style={styles.canvasDoorLive}>⤢ EDIT ART — REOPEN IN THE CANVAS</Text>
         </Pressable>
-      ) : (
-        <Text style={styles.canvasDoor}>⤢ EDIT ART — the Canvas arrives with the deep editor</Text>
-      )}
+      ) : null}
 
       {/* E7a — the CARD-21 share row (glyph, not emoji), mirroring the PrintRitual share grammar. */}
       {onShare ? (
@@ -118,12 +116,7 @@ export function KeepBeat({
           <ShareGlyph size={11} color={t.scr.accent} />
           <Text style={styles.shareDoorLive}>SHARE THIS CARD</Text>
         </Pressable>
-      ) : (
-        <View style={styles.shareRow}>
-          <ShareGlyph size={11} color={t.scr.faint} />
-          <Text style={styles.shareDoor}>SHARE — arrives with card sharing</Text>
-        </View>
-      )}
+      ) : null}
 
       <ScreenButton label="Done — back to the game" onPress={onDone} block />
     </View>
@@ -150,9 +143,7 @@ const useStyles = themedStyles((t) => ({
   okSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
   spent: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.brand.gold, letterSpacing: 0.5, marginTop: 2 },
   clout: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
-  canvasDoor: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5 },
   canvasDoorLive: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 0.5 },
   shareRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.sm },
-  shareDoor: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5 },
   shareDoorLive: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 0.5 },
 }));

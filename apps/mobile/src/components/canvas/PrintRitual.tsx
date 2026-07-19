@@ -288,12 +288,7 @@ export function PrintRitual({
             <ShareGlyph size={11} color={t.scr.accent} />
             <Text style={styles.shareDoorLive}>SHARE THIS CARD</Text>
           </Pressable>
-        ) : (
-          <View pointerEvents="none" style={styles.shareRow}>
-            <ShareGlyph size={11} color={t.scr.faint} />
-            <Text style={styles.shareDoor}>SHARE — arrives with card sharing</Text>
-          </View>
-        )}
+        ) : null}
         <ScreenButton label="Done — back to the game" onPress={onDone} block />
       </Animated.View>
     </View>
@@ -334,6 +329,5 @@ const useStyles = themedStyles((t) => ({
   settleBlock: { alignItems: 'center', gap: t.space.lg, alignSelf: 'stretch' },
   clout: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
   shareRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.sm },
-  shareDoor: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5 },
   shareDoorLive: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 0.5 },
 }));

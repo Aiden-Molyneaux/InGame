@@ -206,7 +206,6 @@ export default function UserProfile() {
 
           {/* AS-1 RETIRED (P9 fix-round) — stats/device/nowPlaying are served + rendered above. The one
               remaining absence: PROF-07 percentile chips on the stat tiles (the M7 ranking engine). */}
-          <Text style={styles.residual}>Percentile standings arrive with a later update.</Text>
 
           {/* W-B10 ruling 1 — the doors into their world (SOC-02 / decision 0050) as ONE ROW: paired
               side-by-side keys (the board's paired-action grammar), seated at the FOOT — the on-screen
@@ -462,7 +461,6 @@ const useStyles = themedStyles((t) => ({
   nowMeta: { flex: 1, gap: 2 },
   nowTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5 },
   nowSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 1 },
-  residual: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.3, textAlign: 'center' },
   achRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: t.scr.panel, padding: t.space.lg },
   achCount: { flex: 1, fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5 },
   chev: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.faint },

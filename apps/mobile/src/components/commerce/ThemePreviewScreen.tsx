@@ -19,8 +19,8 @@ export function ThemePreviewScreen() {
       </View>
 
       <View style={styles.panel}>
-        <Text style={styles.ink}>Primary text reads here</Text>
-        <Text style={styles.dim}>Secondary copy sits under it</Text>
+        <Text style={styles.ink}>Hollow Knight</Text>
+        <Text style={styles.dim}>142 hrs · Playing</Text>
       </View>
 
       <View style={styles.toolRow}>

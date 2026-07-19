@@ -75,7 +75,7 @@ export default function InviteFriends() {
             <ActivityIndicator color={t.scr.accent} />
           </View>
         ) : isError || !invite ? (
-          <LoadError message="Couldn't mint your invite. Check your connection and try again." onRetry={() => void createInvite()} />
+          <LoadError message="Couldn't create your invite. Check your connection and try again." onRetry={() => void createInvite()} />
         ) : (
           <>
             <Text style={styles.secTitle}>YOUR INVITE LINK</Text>
@@ -96,7 +96,7 @@ export default function InviteFriends() {
             <QrCard value={invite.url} username={username} />
 
             <Text style={styles.foot}>
-              One token mints your link and this QR. Anyone who opens it lands on your profile with a one-tap request. Expires in 7 days.
+              The link and QR are the same invite. Anyone who opens it can add you with one tap. Expires in 7 days.
             </Text>
           </>
         )}

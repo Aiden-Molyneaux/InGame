@@ -215,7 +215,7 @@ export function CardSwitcher({
               the card face already carry that info; the panel leads with the cosmetic readout. */}
           {selected.origin === 'adopted' ? (
             // CARD-15 — an adopted card is the IMAGE, not the layers; no per-attribute readout to show.
-            <Text style={styles.note}>Adopted from {selected.designer} — the image, not the layers.</Text>
+            <Text style={styles.note}>Adopted from {selected.designer} — adopted cards can't be edited.</Text>
           ) : (
             <EquipReadout card={{ ...entry.card, isCustom: true }} composition={selected.composition} />
           )}

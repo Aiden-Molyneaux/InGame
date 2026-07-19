@@ -739,11 +739,8 @@ export default function DeviceEditor() {
             <Text style={styles.secTitle}>STICKERS</Text>
             {previewing ? (
               <View style={styles.stickerBody}>
-                <Text style={styles.floorNote}>
-                  ☑ STICKERS RIDE THE REAL SHELL · NAV STAYS FULLY LEGIBLE
-                </Text>
                 <Text style={styles.secSub}>
-                  Handles hidden, controls quiet — the true on-shell preview.
+                  This is how your device wears it.
                 </Text>
                 <View style={styles.previewRow}>
                   <View style={styles.flexSpacer} />
@@ -957,13 +954,6 @@ const useStyles = themedStyles((t) => ({
   secTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
   secSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.5 },
   tray: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.md, paddingTop: t.space.sm },
-  floorNote: {
-    fontFamily: t.font.screenSemi,
-    fontSize: t.type.micro,
-    color: t.brand.success,
-    letterSpacing: 0.5,
-    paddingTop: t.space.sm,
-  },
   placeholder: {
     minHeight: 120,
     borderWidth: 1,

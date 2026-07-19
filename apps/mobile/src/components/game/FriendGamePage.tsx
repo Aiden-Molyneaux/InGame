@@ -425,7 +425,7 @@ function FriendPlayTab({
       ) : null}
 
       <Text style={styles.privacyNote}>
-        {friendName ? `${friendName}’s` : 'Their'} notes &amp; platforms stay private (COL-04/05) — only
+        {friendName ? `${friendName}’s` : 'Their'} notes &amp; platforms stay private — only
         hours · status · since show.
       </Text>
 

@@ -231,6 +231,6 @@ describe('DISC-04: DISCOVER room', () => {
     expect(screen.getByText('▲ 1.2K')).toBeTruthy();
     expect(screen.getByText('FLAT:Erdtree')).toBeTruthy();
     // upcoming is honest EXPECTED-empty (endpoint 404), never faked
-    expect(screen.getByText(/M7 discovery batch/i)).toBeTruthy();
+    expect(screen.getByText(/check back soon/i)).toBeTruthy();
   });
 });

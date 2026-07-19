@@ -170,7 +170,7 @@ export default function Friends() {
                     <ScreenButton label={feedLoading ? 'Loading…' : 'Load more'} variant="secondary" onPress={() => void loadMore()} disabled={feedLoading} />
                   </View>
                 ) : !quiet && feedItems.length > 0 ? (
-                  <Text style={styles.end}>The river continues — aggregated, capped, trivia excluded.</Text>
+                  <Text style={styles.end}>You're all caught up.</Text>
                 ) : null}
               </>
             )}

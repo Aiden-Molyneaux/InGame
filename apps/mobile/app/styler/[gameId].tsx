@@ -1150,7 +1150,6 @@ export default function Styler() {
               setForeIndex(0);
             }}
           />
-          <Text style={styles.adoptHint}>Looking for community faces? Adopting arrives with the gallery.</Text>
         </View>
       </Frame>
     );
@@ -1521,7 +1520,6 @@ const useStyles = themedStyles((t) => ({
   costTail: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 1, marginLeft: 2 },
   costOwned: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.brand.gold, letterSpacing: 1 },
   pickCtas: { alignItems: 'center', gap: t.space.md, paddingVertical: t.space.md },
-  adoptHint: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, textAlign: 'center' },
   inlineErr: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.brand.alert, textAlign: 'center' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: t.space.md, padding: t.space.xl },
   errTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1.5 },

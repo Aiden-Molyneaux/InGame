@@ -505,7 +505,7 @@ function NowPlayingHero({ hero, onLogHours }: { hero: CollectionItem | null; onL
     return (
       <View style={styles.nudge}>
         <Text style={styles.nudgeTitle}>SET YOUR NOW PLAYING</Text>
-        <Text style={styles.nudgeSub}>Pin the game you’re on — it leads the shelf (WTP-03).</Text>
+        <Text style={styles.nudgeSub}>Pin the game you’re on — it leads the shelf.</Text>
       </View>
     );
   }

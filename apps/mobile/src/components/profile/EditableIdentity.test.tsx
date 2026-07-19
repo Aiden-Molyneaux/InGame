@@ -139,9 +139,9 @@ describe('EditableIdentity (W-C4 · in-place per-field commit)', () => {
     expect(flatStyle(gate).color).toBe(theme.scr.accent); // #ff9f43 on Midnight — NOT the dim default
   });
 
-  it('N-A1 — the non-cooldown screening hint stays dim, not accent', () => {
-    renderEditor(); // usernameNextChangeAt: null → the SCREENED branch
-    const hint = screen.getByText(/SCREENED/);
+  it('N-A1 — the non-cooldown format hint stays dim, not accent', () => {
+    renderEditor(); // usernameNextChangeAt: null → the no-cooldown format-hint branch
+    const hint = screen.getByText(/SAVES WHEN YOU TAP AWAY/);
     expect(flatStyle(hint).color).toBe(theme.scr.dim);
   });
 
