@@ -12,11 +12,11 @@ STEP 1 — GROUND YOURSELF (read, then reconcile against reality):
   docs/planning/m6/SESSION-HANDOFF.md, beta-feature-wave.md (§A the packet table, §E the sign-off),
   review-coverage.md (the Murr/Parvati coverage matrix), walk2-notes.md (the per-note ledger),
   and docs/open-questions.md (Open section — OQ-153..158 are the live ones).
-- Reconcile with git: `git log --oneline -20`, `git status`. Check whether a code-fix commit
-  (Profile contributions teaser → published count "5"; ADD-TO-COLLECTION → gold; "1 FRIEND HAS IT"
-  grammar; Discover queue nested-<button> fix) has landed on top of `b9e72a2`. If it's uncommitted
-  or unpushed, that's your FIRST action: run the combined verify (`npm run typecheck`,
-  `npm -w @ingame/mobile test`, `npm run test:integration`) and push it.
+- Reconcile with git: `git log --oneline -20`, `git status`. The wave (incl. the last parvati-sweep
+  fixes — teaser → published "5", ADD → gold, grammar, nested-button) is COMMITTED + PUSHED as of
+  `e92ae60`; the tree was green (typecheck · unit 269 · mobile 677 · integration 519). Confirm
+  `git status` is clean and HEAD is pushed; if not, run the combined verify (`npm run typecheck`,
+  `npm -w @ingame/mobile test`, `npm run test:integration`) and reconcile before anything new.
 
 STEP 2 — TELL ME WHERE WE ARE, then STOP and ask for direction. Present:
 (a) M6 status: the milestone is Social + the beta launch (beta ships at M6 exit). ALL buildable M6
