@@ -183,8 +183,10 @@ export default function Profile() {
           </View>
         </Section>
 
-        {/* ACHIEVEMENTS teaser (ACH-05) — the earned count, a door into the trophy case (P11). */}
-        <Section title="Achievements" action={<TertiaryLink label="View all" onPress={() => router.push('/achievements')} />}>
+        {/* ACHIEVEMENTS teaser (ACH-05) — the earned count, a door into the trophy case (P11). The
+            section ROW is the tap target into /achievements; the owner retired the redundant VIEW-ALL
+            button (W-1) — one door, not two. */}
+        <Section title="Achievements">
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="View your achievements"

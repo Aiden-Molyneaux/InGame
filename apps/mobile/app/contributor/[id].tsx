@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -28,12 +28,12 @@ import { SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../../src/components/ScreenH
 // P13 — Contributor profile (E8a · CAT-07 · design board contributor-states.html). The designer-tap
 // destination: a person's "My Contributions" pride surface in the Profile grammar — IdentityBlock →
 // boxless STATS (+ gold PctPill standing, CAT-10, threshold-gated) → SIGNATURE CARD hero → CARDS
-// DESIGNED /cell grid + GAMES ADDED rows, each with a VIEW ALL local view. Reached FROM a profile —
+// DESIGNED /cell grid + GAMES ADDED rows, each with a VIEW ALL door. Reached FROM a profile —
 // the NavBand renders PROFILE-active (ShellNav's onProfile predicate includes `/contributor`; parvati
-// F2 fix — it originally fell through to `locked`). CLIENT-ONLY: the base endpoint is live since M5 P3;
-// the VIEW-ALL cursor
-// sub-lists are drawn-not-built, so VIEW ALL renders over this base top-N payload (P2 server tail
-// EXPECTED). All card faces are FLATTENED (EntryCard, never a hand-rolled imageUrl fallback — F-20).
+// F2 fix — it originally fell through to `locked`). The base endpoint is live since M5 P3; VIEW ALL now
+// pushes the dedicated cursor-paginated full-list routes (/contributor/[id]/cards · /games — W-1, over
+// the LIVE M6 P13 sub-routes). All card faces are FLATTENED (EntryCard, never a hand-rolled imageUrl
+// fallback — F-20).
 export default function ContributorProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -44,11 +44,6 @@ export default function ContributorProfile() {
   const { data, isLoading, isError, error, refetch } = useGetContributionsQuery(id ?? '', {
     skip: !id,
   });
-  // VIEW ALL is a local view (ARCH A1) — one payload, three views; no second fetch (the cursor
-  // sub-routes aren't live). Reset to root when the contributor changes (expo-router re-renders a
-  // dynamic route on param change rather than remounting — a stale view would bleed across ids).
-  const [view, setView] = useState<'root' | 'cards' | 'games'>('root');
-  useEffect(() => setView('root'), [id]);
 
   // ── lifecycle (L1 · L2 · MOD-09 terminal) ───────────────────────────────────────────────────────
   if (isLoading || !id) {
@@ -86,23 +81,7 @@ export default function ContributorProfile() {
   const username = data.user.username;
   const backLabel = isSelf ? 'Return to profile' : `Return to ${username}`;
 
-  // ── VIEW ALL (V1 cards · V2 games) — over the base top-N payload (EXPECTED P2 server tail) ────────
-  if (view === 'cards') {
-    return (
-      <Frame title="Cards designed" backLabel="Contributions" onBack={() => setView('root')}>
-        <ViewAllCards data={data} username={username} onOpenGame={openGame(router)} />
-      </Frame>
-    );
-  }
-  if (view === 'games') {
-    return (
-      <Frame title="Games added" backLabel="Contributions" onBack={() => setView('root')}>
-        <ViewAllGames data={data} username={username} onOpenGame={openGame(router)} />
-      </Frame>
-    );
-  }
-
-  // ── the base profile (root view) ─────────────────────────────────────────────────────────────────
+  // ── the base profile ─────────────────────────────────────────────────────────────────────────────
   // The limited/non-friend shape (PROF-03) omits the set-piece lists — that IS the discriminator.
   const isLimited = data.topCards === undefined && data.topGames === undefined;
   const s = data.stats;
@@ -149,7 +128,7 @@ export default function ContributorProfile() {
           <CardsDesignedSection
             cards={data.topCards ?? []}
             isSelf={isSelf}
-            onViewAll={() => setView('cards')}
+            onViewAll={() => router.push(`/contributor/${id}/cards`)}
             onOpenGame={openGame(router)}
             onDesignCard={() => router.push('/add-game')}
           />
@@ -157,7 +136,7 @@ export default function ContributorProfile() {
           <GamesAddedSection
             games={data.topGames ?? []}
             isSelf={isSelf}
-            onViewAll={() => setView('games')}
+            onViewAll={() => router.push(`/contributor/${id}/games`)}
             onOpenGame={openGame(router)}
             onAddGame={() => router.push('/add-game')}
           />
@@ -398,83 +377,6 @@ function LockWell({ username, onAddFriend }: { username: string; onAddFriend: ()
   );
 }
 
-// ── VIEW ALL bodies (over the base top-N; the terminal note stands in for the drawn-not-built tail) ─
-function ViewAllCards({
-  data,
-  username,
-  onOpenGame,
-}: {
-  data: ContributionsResponse;
-  username: string;
-  onOpenGame: (gameId: string) => void;
-}) {
-  const styles = useStyles();
-  const cards = data.topCards ?? [];
-  const more = data.stats.cardsDesigned > cards.length;
-  return (
-    <>
-      <Text style={styles.listsum}>
-        {more ? 'The top ' : 'All '}
-        <Text style={styles.listsumB}>{cards.length}</Text> cards {username} has designed ·{' '}
-        <Text style={styles.listsumB}>{fmt(data.stats.totalAdoptions)}</Text> adoptions in all
-      </Text>
-      <View style={styles.fullgrid}>
-        {cards.map((c) => (
-          <Pressable
-            key={c.cardId}
-            style={styles.fullcell}
-            accessibilityRole="button"
-            accessibilityLabel={`View ${c.gameTitle} card, ${c.adoptionCount} adoptions`}
-            onPress={() => onOpenGame(c.gameId)}
-          >
-            <EntryCard title={c.gameTitle} card={{ imageUrl: c.card.imageUrl, thumbUrl: c.card.thumbUrl }} size="cell" />
-            <Text style={styles.adoptLine}>
-              <Text style={styles.adoptB}>{fmt(c.adoptionCount)}</Text> ADOPTIONS
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-      {more ? <TailNote /> : null}
-    </>
-  );
-}
-
-function ViewAllGames({
-  data,
-  username,
-  onOpenGame,
-}: {
-  data: ContributionsResponse;
-  username: string;
-  onOpenGame: (gameId: string) => void;
-}) {
-  const styles = useStyles();
-  const games = data.topGames ?? [];
-  const more = data.stats.gamesAdded > games.length;
-  return (
-    <>
-      <Text style={styles.listsum}>
-        {more ? 'The top ' : 'All '}
-        <Text style={styles.listsumB}>{games.length}</Text> games {username} brought to the catalog ·
-        in <Text style={styles.listsumB}>{fmt(data.stats.totalReached)}</Text> collections in all
-      </Text>
-      <View style={styles.rows}>
-        {games.map((g) => (
-          <GameRow key={g.gameId} game={g} onPress={() => onOpenGame(g.gameId)} />
-        ))}
-      </View>
-      {more ? <TailNote /> : null}
-    </>
-  );
-}
-
-// The drawn-not-built cursor tail (EXPECTED P2 server tail): a calm terminal note — the base endpoint
-// returns the top-N only, so VIEW ALL can't page to the full list yet.
-function TailNote() {
-  const styles = useStyles();
-  return <Text style={styles.tailNote}>Showing the top results — the full list arrives soon.</Text>;
-}
-
 // ── section header + the shared screen frame (header · back-seam · scroll) ─────────────────────────
 function Section({
   title,
@@ -640,20 +542,4 @@ const useStyles = themedStyles((t) => ({
   },
   lockTitle: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 1.5 },
   lockSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, textAlign: 'center', lineHeight: 15, maxWidth: 260 },
-
-  // view all
-  listsum: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5, lineHeight: 15 },
-  listsumB: { fontFamily: t.font.screenBold, color: t.scr.ink },
-  fullgrid: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.lg, justifyContent: 'space-between' },
-  fullcell: { alignItems: 'center', gap: t.space.sm },
-  adoptLine: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
-  adoptB: { fontFamily: t.font.screenBold, color: t.scr.accent },
-  tailNote: {
-    fontFamily: t.font.screen,
-    fontSize: t.type.micro,
-    color: t.scr.faint,
-    textAlign: 'center',
-    letterSpacing: 0.5,
-    marginTop: t.space.md,
-  },
 }));

@@ -174,15 +174,21 @@ describe('P13 contributor-profile route — the state matrix', () => {
     expect(screen.getByText('RETRY')).toBeTruthy();
   });
 
-  it('VIEW ALL — the CARDS DESIGNED view-all toggles to the full-list view', () => {
+  it('VIEW ALL — the CARDS DESIGNED / GAMES ADDED view-all pushes the dedicated full-list routes (W-1)', () => {
     set({ data: FULL });
     render(wrap(<ContributorProfile />));
-    // two VIEW ALL links (cards + games) — press the first (cards).
+    // two VIEW ALL links (cards + games) — they now navigate to the dedicated cursor-paginated routes.
     const viewAll = screen.getAllByText('VIEW ALL ›');
-    fireEvent.press(viewAll[0]);
-    // the header swaps + the listsum renders
-    expect(screen.getByText('CARDS DESIGNED')).toBeTruthy();
-    expect(screen.getByText(/adoptions in all/)).toBeTruthy();
+    fireEvent.press(viewAll[0]); // CARDS DESIGNED
+    expect(mockPush).toHaveBeenCalledWith(`/contributor/${OTHER}/cards`);
+    fireEvent.press(viewAll[1]); // GAMES ADDED
+    expect(mockPush).toHaveBeenCalledWith(`/contributor/${OTHER}/games`);
+  });
+
+  it('the drawn-not-built "arrives soon" tail note is gone (VIEW ALL is a real paginated route now)', () => {
+    set({ data: FULL });
+    render(wrap(<ContributorProfile />));
+    expect(screen.queryByText(/arrives soon/i)).toBeNull();
   });
 
   it('a card tap routes to the Game page (CARD-23 NAVIGATE)', () => {
