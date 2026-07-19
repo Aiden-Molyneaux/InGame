@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { pathToFileURL } from 'node:url';
 import { assertDisposableDb } from './destructive-guard';
+import { backupDevDb } from './backup';
 import { getDb, closeDb } from './client';
 
 // A DESTRUCTIVE runner (truncates all data) — the exact class F03 guards. `assertDisposableDb` is
@@ -8,6 +9,11 @@ import { getDb, closeDb } from './client';
 // never wipe a production database (the agent is the threat model — a stray DATABASE_URL).
 export async function resetDb(): Promise<void> {
   assertDisposableDb();
+  // Durability net: dump the standing dev DB BEFORE truncating, so a reset of local_ingame (which is
+  // `local_`-named → disposable, so this guard passes on the owner's real dev data) is always
+  // recoverable. No-op under Testcontainers/CI (no ingame-dev-db container). See backup.ts.
+  const backup = backupDevDb();
+  if (backup) console.log(`reset: backed up the dev DB first → ${backup}`);
   const db = getDb();
   // TRUNCATE the parent `users` + the append-only logs; CASCADE clears every child table that FKs
   // users (auth_identities, refresh_tokens, auth_tokens, gamertags, friendships, user_blocks,
