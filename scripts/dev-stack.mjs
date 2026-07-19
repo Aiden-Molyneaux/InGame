@@ -189,6 +189,25 @@ async function doctor() {
     api ? '/api/health ok' : '/api/health not answering',
     'node scripts/dev-stack.mjs up  (API is restart-safe; env incl. stable JWT secret in apps/api/.env.dev)');
 
+  // migration drift — dev DB behind the on-disk migrations = the API boots but 500s every query with
+  // "column ... does not exist" (the web app then can't load → the screenshot renderer hangs). Recurs
+  // after any feature wave that generates migrations without applying them to local_ingame (2026-07-19).
+  if (db) {
+    let drift = false, migDetail, migFix = null;
+    try {
+      const onDisk = fs.readdirSync(path.join(ROOT, 'apps', 'api', 'drizzle')).filter((f) => /^\d+_.*\.sql$/.test(f)).length;
+      const applied = parseInt(execFileSync('docker',
+        ['exec', DB_CONTAINER, 'psql', '-U', 'ingame', '-d', 'local_ingame', '-tAc', 'select count(*) from drizzle.__drizzle_migrations'],
+        { encoding: 'utf8', timeout: 8000 }).trim(), 10);
+      drift = Number.isFinite(applied) && onDisk > applied;
+      migDetail = drift ? `dev DB behind: ${applied} applied, ${onDisk} on disk — the API 500s "column ... does not exist"` : `in sync (${applied}/${onDisk} applied)`;
+      migFix = 'DATABASE_URL=postgres://ingame:ingame@localhost:5432/local_ingame npm -w @ingame/api run db:migrate';
+    } catch {
+      migDetail = 'skipped (could not read drizzle.__drizzle_migrations)';
+    }
+    check(migFix ? 'FAIL' : 'INFO', 'migration drift', !drift, migDetail, migFix);
+  }
+
   // api env file + CORS for the :8082 web origin (OQ-120)
   let corsOk = false, corsDetail, corsFix;
   if (!fs.existsSync(API_ENV_DEV)) {

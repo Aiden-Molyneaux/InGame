@@ -195,3 +195,16 @@ teardown→refetch→401→teardown loop class (fixed by the tokenless-401 guard
 commit F-17): check for cycling 401s in the API log. Related recipe: RN-web Pressables ignore CDP
 ref-clicks while the tab is hidden — dispatch a synthetic pointerdown/mousedown/pointerup/mouseup/click
 sequence via javascript_tool instead; it makes the hidden-tab lane fully drivable.
+
+## Migration drift — API 500s "column ... does not exist" → app can't load → screenshot hangs
+- **Symptom:** every API query 500s (login/refresh/etc.) with `column "X" does not exist` (seen: `avatar_config`); the API `/health` may pass but the app can't load data; the web app hangs on a perpetual failing/loading state and the **screenshot renderer times out** (read_page/JS still work — DOM is there, but the capture never gets a stable frame). Would also break the owner's phone.
+- **Diagnosis:** a feature wave GENERATED + committed migrations (schema.ts + `drizzle/*.sql`) that passed the integration suite (Testcontainers apply every migration to a fresh DB) but were **never applied to the standing dev DB `local_ingame`** — so the code SELECTs columns/tables the dev DB lacks.
+- **Fix:** `DATABASE_URL=postgres://ingame:ingame@localhost:5432/local_ingame npm -w @ingame/api run db:migrate` (applies pending). Verify: `docker exec ingame-dev-db psql -U ingame -d local_ingame -tc "select 1 from information_schema.columns where column_name='<col>'"`.
+- **PROMOTED to `doctor`** (2026-07-19): `dev-stack.mjs doctor` now compares on-disk `drizzle/*.sql` count vs `drizzle.__drizzle_migrations` applied count → FAIL "migration drift" with the exact db:migrate fix. Run `up` + `doctor` after any wave that adds migrations.
+- **Verified:** 2026-07-19 · **Hits:** 1
+
+## Screenshot capture wedged — use claude-in-chrome + settle-wait, NOT the Claude_Browser preview pane
+- **Symptom:** `mcp__Claude_Browser__computer{screenshot}` on `:8082` times out after 30s every time, all session, on every page — while read_page / get_page_text / javascript_tool / network all work. Looks like a total browser wedge; it is NOT.
+- **Diagnosis:** the Claude_Browser *preview pane's* screenshot renderer is broken in this environment (it also can't attach to the standing Metro on :8082 — CLAUDE.md). It's the CAPTURE path, not the app or the network (once the API is healthy the page loads fine). Separately, RN-web keeps a rAF render loop busy briefly during load/route transitions, so a capture fired immediately also fails ("page busy / script injection timed out").
+- **Fix:** view/screenshot the running app via **claude-in-chrome** (real Chrome + extension) at `http://localhost:8082`, and **`wait` ~3–4s for the RN-web page to settle** before `screenshot`. Recipe: load the core tools (ToolSearch `select:mcp__claude-in-chrome__{tabs_context_mcp,navigate,computer,read_page,tabs_create_mcp}`) → tabs_context_mcp{createIfEmpty} → navigate `http://localhost:8082` → wait 3s → screenshot. This is the standing path for Parvati captures. Demo login `demo@ingame.app` / `InGameDemo1!`.
+- **Verified:** 2026-07-19 · **Hits:** 1
