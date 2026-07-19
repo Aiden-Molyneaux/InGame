@@ -243,6 +243,12 @@ const updateProfileMutation = mutation(
       updates.favouriteGenreIds = input.favouriteGenreIds;
       changed.push('favouriteGenreIds');
     }
+    if (input.avatarConfig !== undefined) {
+      // PROF-08 (W-4 Monogram Forge) — the whole blob is stored/replaced (a null clears it). The zod
+      // parse at the route boundary already validated the hex/glyph/frame grammar (no re-check here).
+      updates.avatarConfig = input.avatarConfig;
+      changed.push('avatarConfig');
+    }
 
     if (changed.length === 0) return current; // present-but-unchanged → a no-op (no emit)
 

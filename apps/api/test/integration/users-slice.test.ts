@@ -78,7 +78,7 @@ beforeEach(async () => {
   await resetDb();
 });
 
-const LIMITED_KEYS = ['id', 'username', 'avatarUrl', 'memberSince', 'mutualFriendsCount', 'relationship'];
+const LIMITED_KEYS = ['id', 'username', 'avatarUrl', 'avatarConfig', 'memberSince', 'mutualFriendsCount', 'relationship'];
 
 describe('G-D · SYS-07: GET /users/:id privacy SHAPE (asserts the shape for actor-B)', () => {
   it('authz:get_user — a NON-FRIEND (actorB) sees the LIMITED shape only (no bio/gamertags/friendsCount leak)', async () => {
@@ -112,6 +112,25 @@ describe('G-D · SYS-07: GET /users/:id privacy SHAPE (asserts the shape for act
     expect(res.body.gamertags[0].handle).toBe('AHandle');
     expect(res.body.friendsCount).toBe(1);
     expect('email' in res.body).toBe(false); // still allowlisted — no secret leak
+  });
+
+  it('PROF-08 (W-4) — avatarConfig rides on BOTH cross-user shapes (friend + non-friend), public-safe', async () => {
+    const actorA = await seedUser();
+    const cfg = { bg: '#101018', ink: '#ffd23f', glyph: 'A', frame: 'ring' };
+    await request(app).patch('/api/me').set(authed(actorA.token)).send({ avatarConfig: cfg }).expect(200);
+
+    // a non-friend reads the LIMITED shape — avatarConfig is present (cosmetic, not friend-gated).
+    const stranger = await seedUser();
+    const limited = await request(app).get(`/api/users/${actorA.id}`).set(authed(stranger.token));
+    expect(limited.status).toBe(200);
+    expect(limited.body.avatarConfig).toEqual(cfg);
+
+    // a friend reads the FULL shape — avatarConfig carries there too (the friend roster monogram).
+    const friend = await seedUser();
+    await seedFriendship(actorA.id, friend.id, 'accepted');
+    const full = await request(app).get(`/api/users/${actorA.id}`).set(authed(friend.token));
+    expect(full.status).toBe(200);
+    expect(full.body.avatarConfig).toEqual(cfg);
   });
 
   it('reflects the relationship direction (outgoing / incoming) for a pending request', async () => {

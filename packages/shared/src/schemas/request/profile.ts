@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { boundedText } from '../sanitize';
 import { privacySchema } from '../common';
+import { avatarConfigSchema } from '../avatar-config';
 
 // REQUEST/INPUT schemas — the rule-3 field-for-field half of the contract. These transcribe the
 // api-contract PATCH /me body, never a paraphrase. The server-side parse of these IS the security
@@ -32,9 +33,13 @@ export const bioSchema = boundedText(BIO_MAX);
 
 /**
  * PATCH /me request body (api-contract PROF section):
- *   { username?, bio?, favouriteGenreIds?, favouriteGameId?, privacy? }
+ *   { username?, bio?, favouriteGenreIds?, favouriteGameId?, privacy?, avatarConfig? }
  * `.strict()` rejects unknown keys — the server never trusts an id in the body to identify the actor
  * (SYS-01); the actor is resolved from the authenticated principal only.
+ *
+ * PROF-08 — `avatarConfig` (the Monogram Forge, W-4): the tight cosmetic blob, or `null` to RESET to the
+ * default monogram. `.nullable().optional()` — absent ⇒ untouched; `null` ⇒ clear; object ⇒ replace
+ * (the blob is stored whole, so a forge field-commit sends the complete current config).
  */
 export const patchMeRequestSchema = z
   .object({
@@ -43,6 +48,7 @@ export const patchMeRequestSchema = z
     favouriteGenreIds: z.array(z.string().uuid()).optional(),
     favouriteGameId: z.string().uuid().nullable().optional(),
     privacy: privacySchema.optional(),
+    avatarConfig: avatarConfigSchema.nullable().optional(),
   })
   .strict();
 

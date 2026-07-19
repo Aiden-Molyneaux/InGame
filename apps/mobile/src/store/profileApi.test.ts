@@ -28,6 +28,7 @@ const ME_BASE = {
   id: UUID_SELF,
   username: 'demo',
   avatarUrl: null,
+  avatarConfig: null,
   bio: '',
   memberSince: '2026-01-01T00:00:00.000Z',
   privacy: 'friends',

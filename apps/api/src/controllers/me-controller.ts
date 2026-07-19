@@ -38,7 +38,8 @@ export async function patchMe(req: Request, res: Response): Promise<void> {
     body.bio !== undefined ||
     body.privacy !== undefined ||
     body.favouriteGameId !== undefined ||
-    body.favouriteGenreIds !== undefined;
+    body.favouriteGenreIds !== undefined ||
+    body.avatarConfig !== undefined;
   if (hasChange) await profileService.updateProfile(actorId, body);
   const view = await profileService.getSelfView(actorId);
   if (!view) throw new NotFoundError('Profile not found.');

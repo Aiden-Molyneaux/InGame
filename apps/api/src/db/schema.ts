@@ -15,7 +15,7 @@ import {
   primaryKey,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
-import type { StickerComposition } from '@ingame/shared';
+import type { StickerComposition, AvatarConfig } from '@ingame/shared';
 
 // M2 data layer (product-spec §6 entity map). Every table here is USER-OWNED unless it is on the F32
 // global-table manifest (packages/shared) — the rule-2 scope-lint treats an unlisted table as
@@ -48,6 +48,10 @@ export const users = pgTable('users', {
   emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true }),
   bio: text('bio').notNull().default(''),
   avatarUrl: text('avatar_url'),
+  // PROF-08 (W-4 Monogram Forge) — the tiny cosmetic monogram descriptor (bg/ink/glyph?/frame?),
+  // shared avatarConfigSchema-validated at the boundary. NULL ⇒ the deterministic default monogram
+  // (byte-identical to today). Public-safe cosmetic — serialized beside avatarUrl on cross-user shapes.
+  avatarConfig: jsonb('avatar_config').$type<AvatarConfig>(),
   privacy: text('privacy').notNull().default('friends'),
   role: text('role').notNull().default('user'),
   adminTier: integer('admin_tier'),
@@ -474,6 +478,52 @@ export const games = pgTable(
     createdByIdx: index('games_created_by_idx').on(table.createdBy),
   }),
 );
+
+/**
+ * `game_edits` — the CAT-13/14 wiki edit history (M6 W-6, game-edit-wiki-draft §1.1). GLOBAL (on the
+ * F32 manifest — community data on the global catalog; `editor_id` is ATTRIBUTION, not an owner key).
+ * ONE IMMUTABLE ROW per changed field per submit — the row IS the history entry AND the audit record,
+ * applied to `games`/`game_genres` in the SAME transaction (wiki-live, CAT-13). APPEND-ONLY: no row is
+ * ever deleted or value-mutated; `status` + the revert stamps are the only mutable bits (CAT-14).
+ *  - `field` ∈ studio|publisher|releaseDate|genres (the CAT-13 editable set; `name` is LOCKED —
+ *    CAT-03 dedup identity — title fixes ride the `incorrect_info` report → admin MOD-14).
+ *  - `old_value`/`new_value` — jsonb so string | sorted genre-id array serialize uniformly. NULLABLE
+ *    (deviation from the draft's NOT NULL, recorded): a cleared optional field IS null, and the pg
+ *    driver serializes JS null as SQL NULL — a NOT NULL constraint would refuse legitimate
+ *    cleared-value history rows. SQL NULL ≡ the cleared value.
+ *  - Revert (CAT-14) replays `old_value`, stamps THIS row reverted/`reverted_by`/`reverted_at`, and
+ *    writes a NEW row for the reversal (editor = the reverter, old/new swapped) — so a revert is
+ *    itself visible and re-revertible. Rights: editor-self · the game's CAT-05 contributor · admins
+ *    (admin revert writes the MOD-10 audit row).
+ */
+export const gameEdits = pgTable(
+  'game_edits',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    gameId: uuid('game_id')
+      .notNull()
+      .references(() => games.id),
+    editorId: uuid('editor_id')
+      .notNull()
+      .references(() => users.id),
+    field: text('field').notNull(), // 'studio' | 'publisher' | 'releaseDate' | 'genres'
+    oldValue: jsonb('old_value').$type<string | string[] | null>(), // the value BEFORE (null = was clear)
+    newValue: jsonb('new_value').$type<string | string[] | null>(), // the value AFTER (null = cleared)
+    status: text('status').notNull().default('live'), // 'live' | 'reverted'
+    revertedBy: uuid('reverted_by'), // who reverted (null while live)
+    revertedAt: timestamp('reverted_at', { withTimezone: true }), // when (null while live)
+    editedAt: timestamp('edited_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    // The history read + the lastEdit attribution (latest-first per game).
+    gameEditedIdx: index('game_edits_game_edited_idx').on(table.gameId, table.editedAt),
+    // The rate/abuse view + the M7 MOD-16 editor-level rollup.
+    editorIdx: index('game_edits_editor_idx').on(table.editorId),
+  }),
+);
+
+export type GameEditRow = typeof gameEdits.$inferSelect;
+export type NewGameEditRow = typeof gameEdits.$inferInsert;
 
 /** `game_genres` — games × controlled genres (CAT-02/04). GLOBAL (F32 manifest). */
 export const gameGenres = pgTable(

@@ -250,6 +250,7 @@ export async function getContributions(
       id: target.id,
       username: target.username,
       avatarUrl: target.avatarUrl,
+      avatarConfig: target.avatarConfig, // PROF-08 (W-4) — the contributor IdentityBlock's monogram
       memberSince: target.createdAt.toISOString(),
     },
     stats: { gamesAdded: addedGames.length, cardsDesigned, totalAdoptions, totalReached },

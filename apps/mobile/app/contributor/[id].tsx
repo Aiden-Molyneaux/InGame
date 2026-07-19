@@ -92,6 +92,7 @@ export default function ContributorProfile() {
       <IdentityBlock
         username={data.user.username}
         avatarUrl={data.user.avatarUrl}
+        avatarConfig={data.user.avatarConfig}
         memberSince={data.user.memberSince}
       />
 

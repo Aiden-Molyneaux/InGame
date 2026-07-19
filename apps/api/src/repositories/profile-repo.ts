@@ -1,3 +1,4 @@
+import type { AvatarConfig } from '@ingame/shared';
 import { getDb, type Executor } from '../db/client';
 import { users, type UserRow } from '../db/schema';
 import { asActor, ownedBy } from '../db/scoped';
@@ -24,6 +25,8 @@ export interface ProfileUpdate {
   privacy?: string;
   usernamePending?: boolean;
   usernameChangedAt?: Date;
+  /** PROF-08 (W-4 Monogram Forge) — the cosmetic monogram blob; `null` resets to the default monogram. */
+  avatarConfig?: AvatarConfig | null;
   /** WTP-03 — the single Now-Playing pin (PUT /me/now-playing). */
   nowPlayingGameId?: string | null;
 }

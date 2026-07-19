@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { privacySchema, roleSchema, adminTierSchema, relationshipSchema } from '../common';
+import { avatarConfigSchema } from '../avatar-config';
 import { gamertagViewSchema } from './gamertag';
 import { collectionCardSchema, friendCollectionCardSchema } from './collection';
 import { stickerCompositionSchema } from '../device';
@@ -129,6 +130,8 @@ export const selfProfileSchema = z
     id: z.string().uuid(),
     username: z.string(),
     avatarUrl: z.string().url().nullable(),
+    // PROF-08 (W-4 Monogram Forge) — rides beside avatarUrl; null ⇒ the default monogram.
+    avatarConfig: avatarConfigSchema.nullable(),
     bio: z.string(),
     memberSince: z.string(), // ISO-8601 UTC
     privacy: privacySchema,
@@ -159,6 +162,8 @@ export const publicProfileSchema = z
     id: z.string().uuid(),
     username: z.string(),
     avatarUrl: z.string().url().nullable(),
+    // PROF-08 (W-4 Monogram Forge) — public-safe cosmetic; rides on both cross-user shapes.
+    avatarConfig: avatarConfigSchema.nullable(),
     memberSince: z.string(),
     mutualFriendsCount: z.number().int().nonnegative(),
     relationship: relationshipSchema,
@@ -314,6 +319,8 @@ export const contributionsResponseSchema = z
         id: z.string().uuid(),
         username: z.string(),
         avatarUrl: z.string().url().nullable(),
+        // PROF-08 (W-4 Monogram Forge) — the contributor IdentityBlock renders the config'd monogram.
+        avatarConfig: avatarConfigSchema.nullable(),
         memberSince: z.string(),
         // `bio` (parvati board gap, P2 additive) — the contributor board's IdentityBlock draws it;
         // FRIEND/FULL shape ONLY (absent on the non-friend/limited shape, PROF-03). Friend-gated.

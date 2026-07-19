@@ -28,6 +28,7 @@ const ME = (over: Partial<SelfProfile> = {}): SelfProfile =>
     id: 'me-0000-0000-4000-8000-000000000000',
     username: 'demo',
     avatarUrl: null,
+    avatarConfig: null,
     bio: 'hello',
     memberSince: '2025-01-01T00:00:00.000Z',
     privacy: 'friends',
@@ -125,12 +126,14 @@ describe('EditableIdentity (W-C4 · in-place per-field commit)', () => {
     expect(tree).toContain('#ff9f43');
   });
 
-  it('avatar = the PROF-08 monogram + the ✎ "designer coming" note; NO server call (D-2)', () => {
+  it('W-4 (D-2) — the ✎ opens the Monogram Forge inline; opening alone makes NO server call', () => {
     const onPatchMe = jest.fn<Promise<SaveOutcome>, unknown[]>().mockResolvedValue({ ok: true });
     renderEditor({ onPatchMe });
+    // the forge is closed until the pencil is tapped (no designer-coming note anymore).
+    expect(screen.queryByText('MONOGRAM FORGE')).toBeNull();
     fireEvent.press(screen.getByLabelText('Edit avatar'));
-    expect(screen.getByText(/avatar designer is coming/i)).toBeTruthy();
-    expect(onPatchMe).not.toHaveBeenCalled();
+    expect(screen.getByText('MONOGRAM FORGE')).toBeTruthy();
+    expect(onPatchMe).not.toHaveBeenCalled(); // opening the forge doesn't patch
   });
 
   // Flatten a node's style array into one object.

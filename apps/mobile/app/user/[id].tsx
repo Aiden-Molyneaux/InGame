@@ -114,6 +114,7 @@ export default function UserProfile() {
       <IdentityBlock
         username={data.username}
         avatarUrl={data.avatarUrl}
+        avatarConfig={data.avatarConfig}
         staff={data.staff}
         memberSince={data.memberSince}
         bio={isFriend ? data.bio : undefined}

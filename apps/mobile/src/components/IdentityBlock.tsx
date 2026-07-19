@@ -1,5 +1,5 @@
 import { View, Text } from 'react-native';
-import type { GamertagView } from '@ingame/shared';
+import type { GamertagView, AvatarConfig } from '@ingame/shared';
 import { themedStyles } from '../theme';
 import { Avatar } from './Avatar';
 import { RoleTag, selfRoleLabel } from './RoleTag';
@@ -19,6 +19,7 @@ const PLATFORM_LABEL: Record<string, string> = {
 export function IdentityBlock({
   username,
   avatarUrl,
+  avatarConfig,
   role = 'user',
   adminTier = null,
   staff = false,
@@ -28,6 +29,8 @@ export function IdentityBlock({
 }: {
   username: string;
   avatarUrl?: string | null;
+  /** PROF-08 (W-4) — the Monogram Forge config; null/undefined ⇒ the default monogram. */
+  avatarConfig?: AvatarConfig | null;
   role?: string;
   adminTier?: number | null;
   staff?: boolean;
@@ -41,7 +44,7 @@ export function IdentityBlock({
   return (
     <View style={styles.well}>
       <View style={styles.row}>
-        <Avatar username={username} avatarUrl={avatarUrl} size={64} />
+        <Avatar username={username} avatarUrl={avatarUrl} avatarConfig={avatarConfig} size={64} />
         <View style={styles.meta}>
           <View style={styles.nameRow}>
             <Text style={styles.name} numberOfLines={1}>

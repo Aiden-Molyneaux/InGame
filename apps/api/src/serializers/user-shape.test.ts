@@ -24,6 +24,7 @@ function makeUser(over: Partial<UserRow> = {}): UserRow {
     emailVerifiedAt: null,
     bio: 'collector of trophies',
     avatarUrl: null,
+    avatarConfig: null,
     privacy: 'friends',
     role: 'user',
     adminTier: null,
@@ -46,6 +47,32 @@ describe('F06: read-path privacy serializer (relationship matrix)', () => {
     const out = toSelfShape(makeUser({ role: 'admin', adminTier: 2 }));
     expect(selfProfileSchema.parse(out)).toEqual(out);
     expect(out.adminTier).toBe(2);
+  });
+
+  it('PROF-08 (W-4) — avatarConfig rides on the self + both cross-user shapes (null default + a set config)', () => {
+    // null default (byte-identical to today's monogram) parses on every shape.
+    expect(toSelfShape(makeUser()).avatarConfig).toBeNull();
+    expect(toPublicShape(makeUser(), { relationship: 'none', mutualFriendsCount: 0 }).avatarConfig).toBeNull();
+    // a set config survives the strict schemas on the self + friend/public shapes.
+    const cfg = { bg: '#101018', ink: '#ffd23f', glyph: 'AM', frame: 'ring' as const };
+    const self = toSelfShape(makeUser({ avatarConfig: cfg }));
+    expect(selfProfileSchema.parse(self)).toEqual(self);
+    expect(self.avatarConfig).toEqual(cfg);
+    const pub = toPublicShape(makeUser({ avatarConfig: cfg }), { relationship: 'none', mutualFriendsCount: 0 });
+    expect(publicProfileSchema.parse(pub)).toEqual(pub);
+    expect(pub.avatarConfig).toEqual(cfg);
+    const friend = toFriendShape(makeUser({ avatarConfig: cfg }), {
+      relationship: 'friend',
+      mutualFriendsCount: 0,
+      friendsCount: 0,
+      gamertags: [],
+      top10: [],
+      stats: { games: 0, hours: 0, completionPct: 0, cardsDesigned: 0, adoptionsReceived: 0, friends: 0 },
+      device: { shellId: 'teal', screenThemeId: 'midnight', stickerComposition: { version: 1, stickers: [] } },
+      nowPlaying: null,
+    });
+    expect(friendProfileSchema.parse(friend)).toEqual(friend);
+    expect(friend.avatarConfig).toEqual(cfg);
   });
 
   const relationships: Relationship[] = ['none', 'outgoing', 'incoming', 'friend'];

@@ -66,6 +66,7 @@ export function toSelfShape(
     id: row.id,
     username: row.username,
     avatarUrl: row.avatarUrl, // null ⇒ default monogram (PROF-08)
+    avatarConfig: row.avatarConfig, // PROF-08 (W-4 Monogram Forge) — null ⇒ default monogram
     bio: row.bio,
     memberSince: row.createdAt.toISOString(),
     privacy: row.privacy as Privacy,
@@ -110,6 +111,7 @@ export function toPublicShape(row: UserRow, ctx: OtherPrincipalContext): PublicP
     id: row.id,
     username: row.username,
     avatarUrl: row.avatarUrl,
+    avatarConfig: row.avatarConfig, // PROF-08 (W-4) — public-safe cosmetic; friend shape inherits via spread
     memberSince: row.createdAt.toISOString(),
     mutualFriendsCount: ctx.mutualFriendsCount,
     relationship: ctx.relationship,

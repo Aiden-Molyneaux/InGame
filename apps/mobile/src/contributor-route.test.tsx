@@ -51,7 +51,7 @@ const CARD = (n: number) => ({
 });
 
 const FULL: ContributionsResponse = {
-  user: { id: OTHER, username: 'riko', avatarUrl: null, memberSince: '2025-01-01T00:00:00Z' },
+  user: { id: OTHER, username: 'riko', avatarUrl: null, avatarConfig: null, memberSince: '2025-01-01T00:00:00Z' },
   stats: { gamesAdded: 7, cardsDesigned: 7, totalAdoptions: 586, totalReached: 3200 },
   standing: null,
   signatureCard: CARD(1),
@@ -63,7 +63,7 @@ const FULL: ContributionsResponse = {
 };
 
 const EMPTY: ContributionsResponse = {
-  user: { id: OTHER, username: 'vesper', avatarUrl: null, memberSince: '2025-01-01T00:00:00Z' },
+  user: { id: OTHER, username: 'vesper', avatarUrl: null, avatarConfig: null, memberSince: '2025-01-01T00:00:00Z' },
   stats: { gamesAdded: 0, cardsDesigned: 0, totalAdoptions: 0, totalReached: 0 },
   standing: null,
   signatureCard: null,
@@ -72,7 +72,7 @@ const EMPTY: ContributionsResponse = {
 };
 
 const PARTIAL: ContributionsResponse = {
-  user: { id: OTHER, username: 'nova', avatarUrl: null, memberSince: '2025-01-01T00:00:00Z' },
+  user: { id: OTHER, username: 'nova', avatarUrl: null, avatarConfig: null, memberSince: '2025-01-01T00:00:00Z' },
   stats: { gamesAdded: 3, cardsDesigned: 0, totalAdoptions: 0, totalReached: 540 },
   standing: null,
   signatureCard: null,
@@ -82,7 +82,7 @@ const PARTIAL: ContributionsResponse = {
 
 // Non-friend/limited — the set-piece lists OMITTED (undefined) is the discriminator (PROF-03).
 const LIMITED: ContributionsResponse = {
-  user: { id: OTHER, username: 'vanta', avatarUrl: null, memberSince: '2023-01-01T00:00:00Z' },
+  user: { id: OTHER, username: 'vanta', avatarUrl: null, avatarConfig: null, memberSince: '2023-01-01T00:00:00Z' },
   stats: { gamesAdded: 8, cardsDesigned: 4, totalAdoptions: 612, totalReached: 5140 },
   standing: null,
 };

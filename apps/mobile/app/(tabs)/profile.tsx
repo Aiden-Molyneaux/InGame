@@ -164,6 +164,7 @@ export default function Profile() {
           <IdentityBlock
             username={me.username}
             avatarUrl={me.avatarUrl}
+            avatarConfig={me.avatarConfig}
             role={me.role}
             adminTier={me.adminTier}
             memberSince={me.memberSince}

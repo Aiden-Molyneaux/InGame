@@ -4,14 +4,16 @@ import type { SelfProfile, GenresResponse, Platform, PatchMeRequest, CreateGamer
 import { BIO_MAX } from '@ingame/shared';
 import { themedStyles } from '../../theme';
 import { Avatar } from '../Avatar';
+import { MonogramForge } from './MonogramForge';
 import { TextField } from '../TextField';
 import { ScreenButton } from '../ScreenButton';
 
 // EditableIdentity (W-C4 · profile-states Edit-mode artboard) — the IN-PLACE identity editor (OQ-034:
 // per-field commit, no giant save). Store-free + callback-driven (the AdoptCardSheet/ReportSheet
-// pattern) so it unit-tests without a store. Editable: avatar (monogram + deferred designer note,
-// D-2) · username (PROF-06 cooldown + MOD-07 screening 422) · bio (140 counter) · genres (controlled
-// list) · gamertags (add/remove, PROF-02). Privacy rides Settings (D-3), not here.
+// pattern) so it unit-tests without a store. Editable: avatar (the W-4 Monogram Forge — bg/ink/glyph/
+// frame, D-2: the beta avatar; the full DESIGNER stays product-spec PROF-08 §10) · username (PROF-06
+// cooldown + MOD-07 screening 422) · bio (140 counter) · genres (controlled list) · gamertags
+// (add/remove, PROF-02). Privacy rides Settings (D-3), not here.
 
 // A field commit resolves ok, or fails with per-field messages (the VALIDATION_ERROR `details` map by
 // path) and/or a generic message.
@@ -32,22 +34,20 @@ export function EditableIdentity({
   onPatchMe,
   onAddGamertag,
   onRemoveGamertag,
-  onOpenAvatar,
 }: {
   me: SelfProfile;
   genres: GenresResponse | undefined;
   onPatchMe: (patch: PatchMeRequest) => Promise<SaveOutcome>;
   onAddGamertag: (req: CreateGamertagRequest) => Promise<SaveOutcome>;
   onRemoveGamertag: (id: string) => Promise<void>;
-  /** D-2 — the avatar composition editor is a future packet; the ✎ badge surfaces the note. */
-  onOpenAvatar?: () => void;
 }) {
   const styles = useStyles();
   const [username, setUsername] = useState(me.username);
   const [bio, setBio] = useState(me.bio ?? '');
   const [usernameErr, setUsernameErr] = useState<string | null>(null);
   const [bioErr, setBioErr] = useState<string | null>(null);
-  const [avatarNote, setAvatarNote] = useState(false);
+  // D-2 — the ✎ opens the W-4 Monogram Forge inline (replacing the deferred "designer coming" note).
+  const [forgeOpen, setForgeOpen] = useState(false);
 
   // gamertag-add draft
   const [gtPlatform, setGtPlatform] = useState<Platform>('pc');
@@ -89,29 +89,34 @@ export function EditableIdentity({
 
   return (
     <View style={styles.well}>
-      {/* avatar — the PROF-08 monogram + the ✎ "designer coming" affordance (D-2, no server call) */}
+      {/* avatar — the PROF-08 monogram + the ✎ opens the W-4 Monogram Forge inline (D-2: the beta avatar
+          editor; the full flatten-pipeline DESIGNER stays product-spec PROF-08 §10). */}
       <View style={styles.avatarRow}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Edit avatar"
-          onPress={() => {
-            setAvatarNote(true);
-            onOpenAvatar?.();
-          }}
+          accessibilityState={{ expanded: forgeOpen }}
+          onPress={() => setForgeOpen((v) => !v)}
           style={styles.avatarPress}
         >
-          <Avatar username={me.username} avatarUrl={me.avatarUrl} size={64} />
+          <Avatar username={me.username} avatarUrl={me.avatarUrl} avatarConfig={me.avatarConfig} size={64} />
           <View style={styles.cbadge}>
             <Text style={styles.cbadgeGlyph}>✎</Text>
           </View>
         </Pressable>
         <View style={styles.avatarMeta}>
-          <Text style={styles.editHint}>YOUR AVATAR IS A DESIGN</Text>
-          {avatarNote ? (
-            <Text style={styles.avatarNote}>The avatar designer is coming — for now you wear the monogram.</Text>
-          ) : null}
+          <Text style={styles.editHint}>YOUR MONOGRAM</Text>
+          <Text style={styles.avatarNote}>{forgeOpen ? 'Close the forge when you’re done.' : 'Tap the pencil to forge your colours, letters and frame.'}</Text>
         </View>
       </View>
+
+      {forgeOpen ? (
+        <MonogramForge
+          username={me.username}
+          config={me.avatarConfig}
+          onCommit={(avatarConfig) => onPatchMe({ avatarConfig })}
+        />
+      ) : null}
 
       {/* username — PROF-06 cooldown-gated + MOD-07 screening (server 422 → inline). N-A1 — the field +
           its microcopy are ONE section (usernameSection) so the note hugs the field (tight internal gap,

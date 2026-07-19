@@ -288,6 +288,54 @@ describe('PROF-01/03/06 · AUTH-09: PATCH /me widened body', () => {
   });
 });
 
+// ── PROF-08 (W-4 Monogram Forge): avatarConfig round-trip + junk rejection ────────────────────────
+describe('PROF-08 · W-4: PATCH /me avatarConfig (the Monogram Forge)', () => {
+  it('round-trips a config on /me and clears it back to the default with null', async () => {
+    const actor = await seedUser();
+    // fresh account → null (the deterministic default monogram).
+    const before = await request(app).get('/api/me').set(authed(actor.token));
+    expect(before.body.avatarConfig).toBeNull();
+
+    const cfg = { bg: '#14121f', ink: '#ff9f43', glyph: 'IG', frame: 'inset' };
+    const patch = await request(app).patch('/api/me').set(authed(actor.token)).send({ avatarConfig: cfg });
+    expect(patch.status).toBe(200);
+    expect(patch.body.avatarConfig).toEqual(cfg);
+
+    const me = await request(app).get('/api/me').set(authed(actor.token));
+    expect(me.body.avatarConfig).toEqual(cfg);
+
+    // null resets to the default monogram.
+    const cleared = await request(app).patch('/api/me').set(authed(actor.token)).send({ avatarConfig: null });
+    expect(cleared.status).toBe(200);
+    expect(cleared.body.avatarConfig).toBeNull();
+  });
+
+  it('accepts a minimal config (colour pair only — glyph/frame optional)', async () => {
+    const actor = await seedUser();
+    const cfg = { bg: '#000000', ink: '#ffffff' };
+    const res = await request(app).patch('/api/me').set(authed(actor.token)).send({ avatarConfig: cfg });
+    expect(res.status).toBe(200);
+    expect(res.body.avatarConfig).toEqual(cfg);
+  });
+
+  it('rejects junk (bad hex · over-long glyph · unknown frame · extra key) with 422', async () => {
+    const actor = await seedUser();
+    const bads = [
+      { bg: 'red', ink: '#ffffff' }, // not a hex
+      { bg: '#fff', ink: '#ffffff' }, // shorthand hex not allowed
+      { bg: '#000000', ink: '#ffffff', glyph: 'TOOLONG' }, // >2 chars
+      { bg: '#000000', ink: '#ffffff', glyph: '!' }, // non-alphanumeric
+      { bg: '#000000', ink: '#ffffff', frame: 'sparkle' }, // unknown frame
+      { bg: '#000000', ink: '#ffffff', junk: true }, // extra key (.strict())
+    ];
+    for (const avatarConfig of bads) {
+      const res = await request(app).patch('/api/me').set(authed(actor.token)).send({ avatarConfig });
+      expect(res.status).toBe(422);
+      expect(res.body.error.code).toBe('VALIDATION_ERROR');
+    }
+  });
+});
+
 // ── PROF-02 gamertag CRUD + the SYS-07 cross-user authz tests ─────────────────────────────────────
 describe('PROF-02 · SYS-07: gamertag CRUD', () => {
   it('creates, lists, updates, and deletes the caller’s own gamertags', async () => {
