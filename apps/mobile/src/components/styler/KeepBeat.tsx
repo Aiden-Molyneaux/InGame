@@ -8,8 +8,10 @@ import type { CardComposition } from '../../render/composition';
 
 // KeepBeat (component-map §8a / board P7) — the LIGHT celebration tier (decision 0015): the finished
 // card + ONE gold edge-pulse + the ✓ strip. Deliberately no ritual (that's canvas-tier, OQ-040).
-// Honors reduce-motion (0044 baseline): the pulse is skipped, the strip stays. The clout line is
-// AGGREGATE + honest (cardsDesigned real; adoptions 0 until M5 — CARD-05/decision 0036).
+// Honors reduce-motion (0044 baseline): the pulse is skipped, the strip stays. The clout line is honest:
+// `cardsDesigned` is the aggregate stat, `adoptionCount` is THIS design's real all-time AdoptCount
+// (M6 round-5 D-iii — CARD-05/decision 0072; the save-private response carries it). A brand-new card is
+// honestly 0 (nobody's adopted it yet); a re-kept design shows its real number, not a frozen literal.
 
 // E7a (M5 F-9) — the KEEP flow gains the CARD-21 share affordance for the just-kept card (owner may
 // share a PRIVATE card of their own). The mark mirrors the PrintRitual's ShareGlyph (a HOUSE inline SVG
@@ -28,6 +30,7 @@ export function KeepBeat({
   title,
   composition,
   cardsDesigned,
+  adoptionCount,
   pxSpent = 0,
   onDone,
   onEditArt,
@@ -36,6 +39,8 @@ export function KeepBeat({
   title: string;
   composition: CardComposition;
   cardsDesigned: number | null;
+  /** D-iii — how many users have adopted THIS design (all-time AdoptCount); 0 for a not-yet-adopted card. */
+  adoptionCount: number;
   /** CARD-13 — PX spent acquiring premium components as part of this KEEP (0 = none rode along). */
   pxSpent?: number;
   onDone: () => void;
@@ -100,7 +105,7 @@ export function KeepBeat({
 
       {cardsDesigned !== null ? (
         <Text style={styles.clout}>
-          {cardsDesigned} CARD{cardsDesigned === 1 ? '' : 'S'} DESIGNED · 0 ADOPTIONS
+          {cardsDesigned} CARD{cardsDesigned === 1 ? '' : 'S'} DESIGNED · {adoptionCount} ADOPTION{adoptionCount === 1 ? '' : 'S'}
         </Text>
       ) : null}
 

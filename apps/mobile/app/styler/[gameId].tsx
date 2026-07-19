@@ -199,6 +199,10 @@ export default function Styler() {
   // the FLATTENED render the publish response returns (0066 §1) — the PrintRitual "print emerges" beat
   // slides this real image up; null (e.g. web dev, flatten still pending) falls back to the live CardFace.
   const [publishedImageUrl, setPublishedImageUrl] = useState<string | null>(null);
+  // D-iii — the just-committed design's real all-time AdoptCount, carried on the save-private/publish
+  // responses. Feeds the KeepBeat/PrintRitual clout line (0 for a not-yet-adopted card; the real number
+  // for a re-kept/re-published design that already has adopters), replacing the old hardcoded 0.
+  const [committedAdoptions, setCommittedAdoptions] = useState(0);
   const [dupFailed, setDupFailed] = useState(false); // a DUPLICATE_COMPOSITION 409 flips the checklist
   // M5 D6 — a publish refusal re-homed INTO the PressSheet (calm, in-flow), instead of the old
   // screen-jarring inlineError banner. DUPLICATE uses the UNIQUE checklist row (dupFailed); premium
@@ -548,7 +552,8 @@ export default function Styler() {
             throw e;
           });
       }
-      await savePrivateCard(commitTarget).unwrap();
+      const saved = await savePrivateCard(commitTarget).unwrap();
+      setCommittedAdoptions(saved.adoptionCount ?? 0); // D-iii — the KeepBeat clout line reads the real count
       // the committed card IS private now + becomes the session baseline. Record it before the equip
       // step, or a failed equip leaves local status 'draft' and ✕'s quiet-evaporate branch deletes a
       // KEPT card (murr, gate-5 round 2). Post-KEEP, discard means revert-to-kept, never delete (D.23).
@@ -723,6 +728,7 @@ export default function Styler() {
       if (d) await updateCard({ cardId: commitTarget, composition: d }).unwrap(); // flatten reads the saved doc
       const published = await publishCardMut(commitTarget).unwrap();
       setPublishedImageUrl(published.imageUrl); // the PrintRitual "print emerges" beat (null → live fallback)
+      setCommittedAdoptions(published.adoptionCount ?? 0); // D-iii — the PrintRitual clout line reads the real count
       const publishedRow = { id: commitTarget, name: curRow.name, status: 'published' };
       cardRef.current = publishedRow;
       setCardRow(publishedRow);
@@ -1083,6 +1089,7 @@ export default function Styler() {
           title={title}
           composition={draft}
           cardsDesigned={me?.stats.cardsDesigned ?? null}
+          adoptionCount={committedAdoptions}
           pxSpent={pxSpent}
           onDone={() => router.replace(`/game/${gameId}`)}
           onEditArt={() => {
@@ -1107,6 +1114,7 @@ export default function Styler() {
           composition={draft}
           imageUrl={publishedImageUrl}
           cardsDesigned={me?.stats.cardsDesigned ?? null}
+          adoptionCount={committedAdoptions}
           onDone={() => router.replace(`/game/${gameId}`)}
           onShare={cardRow ? () => void sharePublished(cardRow.id, title) : undefined}
         />

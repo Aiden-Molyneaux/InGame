@@ -227,6 +227,31 @@ describe('ECON-03/04: adopt = component acquisition + free grant (decision 0072)
     expect(gallery.body.items[0].adoptionCount).toBe(1);
   });
 
+  // D-iii (M6 round-5) — the per-design AdoptCount rides the COMMIT responses (publish · save-private),
+  // so the KeepBeat/PrintRitual clout line reads the REAL number instead of the old hardcoded 0. A fresh
+  // publish is honestly 0; after an adoption the same design's commit responses report the live count.
+  it('D-iii: the per-design AdoptCount rides the publish + save-private responses (0 fresh → real after adopt)', async () => {
+    const a = await registerUser();
+    const b = await registerUser();
+    const game = await seedGame(a.token, 'Clout Line RPG');
+    // A fresh publish: nobody's adopted it yet → 0 (the PrintRitual clout line, honest).
+    const { id, published } = await publishFresh(a.token, game.id, { rects: 3, seed: 21 });
+    expect(published.adoptionCount).toBe(0);
+    // B adopts → the design's all-time count is 1.
+    const adopt = await request(app).post(`/api/cards/${id}/adopt`).set(authed(b.token));
+    expect(adopt.status).toBe(200);
+    // An idempotent re-publish now reports the REAL number, not a frozen 0.
+    const republish = await publish(a.token, id);
+    expect(republish.status).toBe(200);
+    expect(republish.body.adoptionCount).toBe(1);
+    // KEEP-side: A unpublishes (the count freezes at 1), then save-private carries the same real count.
+    await request(app).post(`/api/cards/${id}/unpublish`).set(authed(a.token)).expect(200);
+    const saved = await request(app).post(`/api/cards/${id}/save-private`).set(authed(a.token));
+    expect(saved.status).toBe(200);
+    expect(saved.body.status).toBe('private');
+    expect(saved.body.adoptionCount).toBe(1);
+  });
+
   it('a premium card debits EXACTLY the missing-components sum + grants account-wide entitlements', async () => {
     const a = await registerUser();
     const b = await registerUser();

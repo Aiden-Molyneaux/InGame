@@ -132,7 +132,7 @@ export function toAdoptedCardRider(adopted: AdoptedDesignRow): CollectionCard {
   };
 }
 
-export function toCardView(row: CardDesignRow): CardDesignView {
+export function toCardView(row: CardDesignRow, adoptionCount?: number): CardDesignView {
   return {
     id: row.id,
     gameId: row.gameId,
@@ -144,6 +144,9 @@ export function toCardView(row: CardDesignRow): CardDesignView {
     thumbUrl: row.thumbUrl,
     isPremium: row.isPremium,
     derivedFromCardId: row.derivedFromCardId, // CARD-24a copy-on-write origin (decision 0067)
+    // M6 round-5 (D-iii) — the per-design AdoptCount rides the COMMIT responses only (save-private /
+    // publish), so the KeepBeat/PrintRitual clout line reads the real count; omitted (optional) elsewhere.
+    ...(adoptionCount !== undefined ? { adoptionCount } : {}),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -282,10 +285,13 @@ export const savePrivate = mutation(
     if (!UUID_RE.test(cardId)) throw designNotFound();
     const current = await cardRepo.findOwnedDesign(actorId, cardId, ctx.tx);
     if (!current) throw designNotFound();
-    if (current.status === 'private') return toCardView(current); // idempotent
     if (current.status === 'published') {
       throw new ValidationError('Published cards are immutable.', 'immutable_published');
     }
+    // M6 D-iii — the design's all-time AdoptCount rides the KEEP response (the KeepBeat clout line). The
+    // same aggregate the gallery reads; a not-yet-adopted card is honestly 0. In-tx read (ctx.tx).
+    const adoptionCount = (await cardRepo.adoptionCountsByCard([cardId], ctx.tx)).get(cardId) ?? 0;
+    if (current.status === 'private') return toCardView(current, adoptionCount); // idempotent
     // Re-parse the stored composition at the transition (defense-in-depth: the row was
     // boundary-validated at write time; F21 — an unknown schemaVersion refuses here).
     const parsed = compositionSchema.safeParse(current.composition);
@@ -313,7 +319,7 @@ export const savePrivate = mutation(
       entityRef: { type: 'card_design', id: cardId },
       payload: {},
     });
-    return toCardView(row);
+    return toCardView(row, adoptionCount);
   },
 );
 
@@ -562,7 +568,12 @@ export async function publishCard(actorId: string, cardId: string): Promise<Card
   if (!UUID_RE.test(cardId)) throw designNotFound();
   const current = await cardRepo.findOwnedDesign(actorId, cardId);
   if (!current) throw designNotFound(); // actor-B → the same 404 (no existence oracle)
-  if (current.status === 'published') return toCardView(current); // idempotent
+  if (current.status === 'published') {
+    // M6 D-iii — an idempotent re-publish still reports the real AdoptCount (a re-published card that had
+    // adoptions before an unpublish keeps them — decision 0072; the PrintRitual clout line reads this).
+    const already = (await cardRepo.adoptionCountsByCard([cardId])).get(cardId) ?? 0;
+    return toCardView(current, already); // idempotent
+  }
 
   const parsed = compositionSchema.safeParse(current.composition);
   if (!parsed.success) throw new ValidationError('This card cannot be published.', 'invalid_composition');
@@ -596,13 +607,18 @@ export async function publishCard(actorId: string, cardId: string): Promise<Card
 
   // ── The publish write (tx: re-validate the race-sensitive gates + write) ─────────────────────────
   try {
-    return await publishWrite(actorId, cardId, {
+    const view = await publishWrite(actorId, cardId, {
       imageUrl,
       thumbUrl,
       premiumComponentIds: premiumIds,
       equippedLabels,
       compositionHash: current.compositionHash,
     });
+    // M6 D-iii — carry the design's all-time AdoptCount onto the publish response so the PrintRitual
+    // clout line reads the real number (0 for a first publish; a re-published card keeps its prior
+    // adoptions). A plain read after the committed write — publishing never changes the count.
+    const adoptionCount = (await cardRepo.adoptionCountsByCard([cardId])).get(cardId) ?? 0;
+    return { ...view, adoptionCount };
   } catch (err) {
     // Best-effort cleanup of the orphaned renders (the row never transitioned).
     await storage.delete(fullKey).catch(() => {});

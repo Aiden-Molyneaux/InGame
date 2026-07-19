@@ -54,6 +54,7 @@ export function PrintRitual({
   composition,
   imageUrl,
   cardsDesigned,
+  adoptionCount,
   onDone,
   onShare,
 }: {
@@ -63,6 +64,8 @@ export function PrintRitual({
    *  (web dev, flatten still pending) → the live-composition CardFace, so the reveal is never broken. */
   imageUrl?: string | null;
   cardsDesigned: number | null;
+  /** D-iii — how many users have adopted THIS design (all-time AdoptCount); 0 for a first publish. */
+  adoptionCount: number;
   onDone: () => void;
   /** CARD-21 share (P9) — absent, the door renders as the deferred "arrives with sharing" line. */
   onShare?: () => void;
@@ -279,7 +282,7 @@ export function PrintRitual({
       <Animated.View pointerEvents="box-none" style={[styles.settleBlock, { opacity: strip, transform: [{ translateY: stripY }] }]}>
         {cardsDesigned !== null ? (
           <Text pointerEvents="none" style={styles.clout}>
-            {cardsDesigned} CARD{cardsDesigned === 1 ? '' : 'S'} DESIGNED · 0 ADOPTIONS
+            {cardsDesigned} CARD{cardsDesigned === 1 ? '' : 'S'} DESIGNED · {adoptionCount} ADOPTION{adoptionCount === 1 ? '' : 'S'}
           </Text>
         ) : null}
 

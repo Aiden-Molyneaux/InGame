@@ -66,6 +66,13 @@ export const cardDesignSchema = z
     // CARD-24a copy-on-write origin (decision 0067): set on a draft COPY of a committed card; null
     // otherwise. A crash-recovered copy knows its origin — resuming then KEEPing merges it home.
     derivedFromCardId: z.string().uuid().nullable(),
+    // M6 round-5 (owner ruling D-iii) — the design's ALL-TIME adoption count (COUNT over card_adoptions
+    // for THIS design id; the same public AdoptCount the gallery/trending shapes carry, decision
+    // 0072/0024, revoked-inclusive). Present on the COMMIT responses (save-private · publish) so the
+    // KeepBeat/PrintRitual clout line shows the real number instead of a frozen 0 — a brand-new card is
+    // honestly 0 (nobody's adopted it yet). OPTIONAL: the other CardDesignView serializers (create ·
+    // update · /me/cards · the COL-06 switcher) don't compute it, so it's simply absent there.
+    adoptionCount: z.number().int().nonnegative().optional(),
     createdAt: z.string(), // ISO-8601
     updatedAt: z.string(),
   })

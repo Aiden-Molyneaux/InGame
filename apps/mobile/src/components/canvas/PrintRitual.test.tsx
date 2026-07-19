@@ -50,6 +50,7 @@ describe('PrintRitual (P8 — the press run)', () => {
             composition={composition}
             imageUrl="/media/cards/hades.png"
             cardsDesigned={4}
+            adoptionCount={12}
             onDone={onDone}
           />,
         ),
@@ -57,6 +58,8 @@ describe('PrintRitual (P8 — the press run)', () => {
       act(() => jest.advanceTimersByTime(1600)); // press 250 + emerge 600 + marquee 500 + slack
       expect(screen.getByText('FLAT-IMAGE')).toBeTruthy(); // the flattened print emerged
       expect(screen.getByText('PUBLISHED FOR HADES')).toBeTruthy();
+      // D-iii — the clout line shows the design's REAL AdoptCount (pluralized), never a frozen 0
+      expect(screen.getByText('4 CARDS DESIGNED · 12 ADOPTIONS')).toBeTruthy();
       fireEvent.press(screen.getByText('DONE — BACK TO THE GAME'));
       expect(onDone).toHaveBeenCalledTimes(1);
     } finally {
@@ -77,6 +80,7 @@ describe('PrintRitual (P8 — the press run)', () => {
             composition={composition}
             imageUrl="/media/cards/celeste.png"
             cardsDesigned={2}
+            adoptionCount={0}
             onDone={onDone}
           />,
         ),
@@ -101,6 +105,7 @@ describe('PrintRitual (P8 — the press run)', () => {
           composition={composition}
           imageUrl="/media/cards/stardew.png"
           cardsDesigned={9}
+          adoptionCount={1}
           onDone={jest.fn()}
         />,
       ),
@@ -108,6 +113,8 @@ describe('PrintRitual (P8 — the press run)', () => {
     expect(screen.getByText('FLAT-IMAGE')).toBeTruthy();
     expect(screen.getByText('PUBLISHED FOR STARDEW')).toBeTruthy();
     expect(screen.getByText('DONE — BACK TO THE GAME')).toBeTruthy();
+    // D-iii — singular grammar for a single adopter
+    expect(screen.getByText('9 CARDS DESIGNED · 1 ADOPTION')).toBeTruthy();
   });
 
   it('falls back to the live-composition CardFace when the flattened imageUrl is absent', () => {
@@ -119,6 +126,7 @@ describe('PrintRitual (P8 — the press run)', () => {
           composition={composition}
           imageUrl={null}
           cardsDesigned={1}
+          adoptionCount={0}
           onDone={jest.fn()}
         />,
       ),
@@ -138,6 +146,7 @@ describe('PrintRitual (P8 — the press run)', () => {
             composition={composition}
             imageUrl="/media/cards/elden.png"
             cardsDesigned={3}
+            adoptionCount={0}
             onDone={jest.fn()}
           />,
         ),
