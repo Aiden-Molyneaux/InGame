@@ -33,7 +33,7 @@ jest.mock('./components/EntryCard', () => ({
 
 import Compare from '../app/compare/[friendId]';
 
-const FRIEND = { userId: 'friend-1111-1111-1111-111111111111', username: 'riko', avatarUrl: null };
+const FRIEND = { userId: 'friend-1111-1111-1111-111111111111', username: 'riko', avatarUrl: null, avatarConfig: null };
 const CARD = { id: 'c1', imageUrl: null, thumbUrl: null, isCustom: false, isPremium: false };
 
 const FULL: CompareResponse = {
@@ -43,7 +43,7 @@ const FULL: CompareResponse = {
     { gameId: 'g1', title: 'Destiny 2', yourCard: CARD, theirCard: CARD, yourHours: 210, theirHours: 184, leader: 'you' },
   ],
   leaderboard: [
-    { rank: 1, user: { userId: 'me', username: 'maverick', avatarUrl: null }, hours: 1240, games: 48, isMe: true },
+    { rank: 1, user: { userId: 'me', username: 'maverick', avatarUrl: null, avatarConfig: null }, hours: 1240, games: 48, isMe: true },
     { rank: 2, user: FRIEND, hours: 1180, games: 41, isMe: false },
   ],
 };

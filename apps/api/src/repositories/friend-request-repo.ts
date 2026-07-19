@@ -1,7 +1,7 @@
 import { and, desc, eq, gt, or } from 'drizzle-orm';
 import { getDb, type Executor } from '../db/client';
 import { asActor } from '../db/scoped';
-import { friendRequests, users, type FriendRequestRow } from '../db/schema';
+import { friendRequests, users, type FriendRequestRow, type UserRow } from '../db/schema';
 
 // SOC-08 friend-REQUEST lifecycle reads/writes (M6 P1). `friend_requests` is USER-OWNED (both parties);
 // every read is scoped to the ACTOR (the actor is `from` OR `to`) via asActor. The accepted BOND lands
@@ -16,6 +16,8 @@ export interface RequestPersonRow {
   userId: string;
   username: string;
   avatarUrl: string | null;
+  /** PROF-08 (W-4) — the request row's forged monogram; null ⇒ the default. Public-safe cosmetic. */
+  avatarConfig: UserRow['avatarConfig'];
   createdAt: Date;
 }
 
@@ -236,6 +238,7 @@ export async function listIncomingPending(
       userId: users.id,
       username: users.username,
       avatarUrl: users.avatarUrl,
+      avatarConfig: users.avatarConfig,
       createdAt: friendRequests.createdAt,
       deletedAt: users.deletedAt,
     })
@@ -261,6 +264,7 @@ export async function listOutgoingPending(
       userId: users.id,
       username: users.username,
       avatarUrl: users.avatarUrl,
+      avatarConfig: users.avatarConfig,
       createdAt: friendRequests.createdAt,
       deletedAt: users.deletedAt,
     })

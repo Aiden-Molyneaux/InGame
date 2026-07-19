@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { avatarConfigSchema } from '../avatar-config';
 
 // RESPONSE/VIEW schema for the SOC-06 aggregated friend-activity feed (GET /me/feed; api-contract line
 // 161, OQ-071). Computed at request time from the ACH-08 `domain_events` outbox over the actor's ACCEPTED
@@ -66,6 +67,9 @@ export const feedItemSchema = z
         // Plain string, NOT .url() (C1) — avatar urls may be relative /media/… paths like every other
         // served asset; matches the sibling person-summary typing.
         avatarUrl: z.string().nullable(),
+        // PROF-08 (W-4 Monogram Forge) — rides beside avatarUrl so the feed actor's forged monogram
+        // renders on every activity row; null ⇒ the default monogram.
+        avatarConfig: avatarConfigSchema.nullable(),
       })
       .strict(),
     type: feedItemTypeSchema,

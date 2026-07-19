@@ -44,7 +44,7 @@ function LeaderRow({
   const body = (
     <>
       <Text style={[styles.rank, row.isMe && styles.rankMe]}>{row.rank}</Text>
-      <Avatar username={row.user.username} avatarUrl={row.user.avatarUrl} size={30} />
+      <Avatar username={row.user.username} avatarUrl={row.user.avatarUrl} avatarConfig={row.user.avatarConfig} size={30} />
       <View style={styles.meta}>
         <Text style={styles.name} numberOfLines={1}>
           @{row.user.username}

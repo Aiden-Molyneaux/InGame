@@ -12,7 +12,7 @@ import { FriendActionsSheet } from './FriendActionsSheet';
 const store = configureStore({ reducer: { prefs: prefsReducer } });
 const wrap = (ui: React.ReactElement) => <Provider store={store}>{ui}</Provider>;
 
-const PERSON: PersonSummary = { userId: 'u-1', username: 'riko', avatarUrl: null, relationship: 'friend' };
+const PERSON: PersonSummary = { userId: 'u-1', username: 'riko', avatarUrl: null, avatarConfig: null, relationship: 'friend' };
 
 function renderSheet(over: Partial<React.ComponentProps<typeof FriendActionsSheet>> = {}) {
   const cb = {

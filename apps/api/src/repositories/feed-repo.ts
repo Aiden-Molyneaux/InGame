@@ -1,7 +1,7 @@
 import { and, desc, eq, inArray, isNull } from 'drizzle-orm';
 import { getDb, type Executor } from '../db/client';
 import { friendScoped } from './friend-read-repo';
-import { domainEvents, friendships, users } from '../db/schema';
+import { domainEvents, friendships, users, type UserRow } from '../db/schema';
 
 // SOC-06 feed source read (M6 P4). The aggregated friend-activity feed is computed at request time from
 // the ACH-08 `domain_events` outbox — a USER-OWNED table (NOT on the F32 manifest → rule-02 fails closed).
@@ -22,6 +22,8 @@ export interface FriendEventRow {
   actorId: string;
   actorUsername: string;
   actorAvatarUrl: string | null;
+  /** PROF-08 (W-4) — the feed actor's forged monogram; null ⇒ the default. Public-safe cosmetic. */
+  actorAvatarConfig: UserRow['avatarConfig'];
   entityId: string;
   payload: Record<string, unknown>;
 }
@@ -39,9 +41,6 @@ export async function listFriendEvents(
   exec: Executor = getDb(),
 ): Promise<FriendEventRow[]> {
   if (eventTypes.length === 0) return [];
-  // SYS-01-FRIEND-READ — friendScoped binds actor↔the event's actor (an accepted friend); the joined
-  // rows are the friend-visible activity allowlist (public identity + the event's own payload). Strip
-  // friendScoped → every user's events leak and the G-D absence/lint tests go RED.
   const rows = await exec
     .select({
       id: domainEvents.id,
@@ -50,9 +49,13 @@ export async function listFriendEvents(
       actorId: domainEvents.actorId,
       actorUsername: users.username,
       actorAvatarUrl: users.avatarUrl,
+      actorAvatarConfig: users.avatarConfig,
       entityId: domainEvents.entityId,
       payload: domainEvents.payload,
     })
+    // SYS-01-FRIEND-READ — friendScoped binds actor↔the event's actor (an accepted friend); the joined
+    // rows are the friend-visible activity allowlist (public identity + the event's own payload). Strip
+    // friendScoped → every user's events leak and the G-D absence/lint tests go RED.
     .from(domainEvents)
     .innerJoin(friendships, friendScoped(actorId, domainEvents.actorId))
     .innerJoin(users, eq(users.id, domainEvents.actorId))

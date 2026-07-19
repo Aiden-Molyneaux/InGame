@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { relationshipSchema, searchRelationshipSchema } from '../common';
+import { avatarConfigSchema } from '../avatar-config';
 
 // RESPONSE/VIEW schemas for the SOC-08 social-graph read surfaces (GET /me/friends ·
 // /me/friends/requests · /me/blocks). Owned by the F06 privacy serializer (the sanctioned divergence
@@ -20,6 +21,9 @@ export const personSummarySchema = z
     userId: z.string().uuid(),
     username: z.string(),
     avatarUrl: z.string().url().nullable(),
+    // PROF-08 (W-4 Monogram Forge) — rides beside avatarUrl on every person-summary row so the forged
+    // monogram renders on the roster / requests / friend-actions surfaces; null ⇒ the default monogram.
+    avatarConfig: avatarConfigSchema.nullable(),
     relationship: relationshipSchema,
   })
   .strict();
@@ -91,6 +95,9 @@ export const personSearchResultSchema = z
     userId: z.string().uuid(),
     username: z.string(),
     avatarUrl: z.string().url().nullable(),
+    // PROF-08 (W-4 Monogram Forge) — public-safe cosmetic; rides beside avatarUrl so a search result
+    // renders the person's forged monogram, not the default. Null ⇒ the default monogram.
+    avatarConfig: avatarConfigSchema.nullable(),
     relationship: searchRelationshipSchema,
     cooldownUntil: z.string().optional(),
   })

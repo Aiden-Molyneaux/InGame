@@ -79,7 +79,7 @@ export function PersonRow({
         style={styles.tapTarget}
         hitSlop={4}
       >
-        <Avatar username={person.username} avatarUrl={person.avatarUrl} size={38} />
+        <Avatar username={person.username} avatarUrl={person.avatarUrl} avatarConfig={person.avatarConfig} size={38} />
         <View style={styles.meta}>
           <Text style={[styles.name, rel === 'blocked' && styles.dimName]} numberOfLines={1}>
             {person.username}

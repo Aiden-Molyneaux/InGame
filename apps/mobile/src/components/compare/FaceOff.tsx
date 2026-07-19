@@ -1,6 +1,6 @@
 import { View, Text } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
-import type { CompareTotals } from '@ingame/shared';
+import type { AvatarConfig, CompareTotals } from '@ingame/shared';
 import { themedStyles, useTheme } from '../../theme';
 import { Avatar } from '../Avatar';
 
@@ -14,8 +14,8 @@ export function FaceOff({
   friend,
   totals,
 }: {
-  you: { username: string; avatarUrl: string | null };
-  friend: { username: string; avatarUrl: string | null };
+  you: { username: string; avatarUrl: string | null; avatarConfig?: AvatarConfig | null };
+  friend: { username: string; avatarUrl: string | null; avatarConfig?: AvatarConfig | null };
   totals: CompareTotals;
 }) {
   const styles = useStyles();
@@ -31,14 +31,14 @@ export function FaceOff({
     <View style={styles.faceoff}>
       <View style={styles.top}>
         <View style={styles.side}>
-          <Avatar username={you.username} avatarUrl={you.avatarUrl} size={50} />
+          <Avatar username={you.username} avatarUrl={you.avatarUrl} avatarConfig={you.avatarConfig} size={50} />
           <Text style={styles.who}>YOU</Text>
           <Text style={[styles.hrs, yourLead && styles.hrsLead]}>{fmt(totals.yourHours)}</Text>
           <Text style={styles.unit}>HOURS</Text>
         </View>
         <Text style={styles.vs}>VS</Text>
         <View style={styles.side}>
-          <Avatar username={friend.username} avatarUrl={friend.avatarUrl} size={50} />
+          <Avatar username={friend.username} avatarUrl={friend.avatarUrl} avatarConfig={friend.avatarConfig} size={50} />
           <Text style={styles.who}>@{friend.username.toUpperCase()}</Text>
           {hoursHidden ? (
             <View style={styles.hidRow}>

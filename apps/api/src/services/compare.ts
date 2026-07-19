@@ -1,4 +1,5 @@
 import type {
+  AvatarConfig,
   CompareGame,
   CompareLeader,
   CompareLeaderboardRow,
@@ -41,13 +42,15 @@ export interface CompareCohortMember {
   userId: string;
   username: string;
   avatarUrl: string | null;
+  /** PROF-08 (W-4) — the leaderboard row's forged monogram; null ⇒ the default. */
+  avatarConfig: AvatarConfig | null;
   hours: number;
   games: number;
   isMe: boolean;
 }
 
 export interface CompareInput {
-  friend: { userId: string; username: string; avatarUrl: string | null };
+  friend: { userId: string; username: string; avatarUrl: string | null; avatarConfig: AvatarConfig | null };
   yourHours: number;
   yourGames: number;
   theirHours: number;
@@ -99,7 +102,7 @@ export function buildCompare(input: CompareInput, vis: CompareVisibility): Compa
     res.leaderboard = input.cohort.map(
       (m, i): CompareLeaderboardRow => ({
         rank: i + 1,
-        user: { userId: m.userId, username: m.username, avatarUrl: m.avatarUrl },
+        user: { userId: m.userId, username: m.username, avatarUrl: m.avatarUrl, avatarConfig: m.avatarConfig },
         hours: m.hours,
         games: m.games,
         isMe: m.isMe,

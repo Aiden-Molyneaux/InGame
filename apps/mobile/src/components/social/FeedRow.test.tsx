@@ -19,7 +19,7 @@ const wrap = (ui: React.ReactElement) => <Provider store={store}>{ui}</Provider>
 function item(type: FeedItemType, over: Partial<FeedItem> = {}): FeedItem {
   return {
     feedItemId: `${type}:a:1`,
-    actor: { userId: 'act-1', username: 'riko', avatarUrl: null },
+    actor: { userId: 'act-1', username: 'riko', avatarUrl: null, avatarConfig: null },
     type,
     aggregateCount: 1,
     objects: [{ gameId: 'g1', title: 'Hades' }],

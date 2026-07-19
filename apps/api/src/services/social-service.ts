@@ -323,6 +323,7 @@ export async function listFriendRequests(actorId: string): Promise<FriendRequest
         userId: r.userId,
         username: r.username,
         avatarUrl: r.avatarUrl,
+        avatarConfig: r.avatarConfig, // PROF-08 (W-4) — the request row's forged monogram
         relationship: 'incoming' as const,
       },
       createdAt: r.createdAt.toISOString(),
@@ -333,6 +334,7 @@ export async function listFriendRequests(actorId: string): Promise<FriendRequest
         userId: r.userId,
         username: r.username,
         avatarUrl: r.avatarUrl,
+        avatarConfig: r.avatarConfig, // PROF-08 (W-4) — the request row's forged monogram
         relationship: 'outgoing' as const,
       },
       createdAt: r.createdAt.toISOString(),

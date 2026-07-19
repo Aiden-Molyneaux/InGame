@@ -123,7 +123,7 @@ export default function Friends() {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rail}>
               {roster.slice(0, 8).map((p) => (
                 <Pressable key={p.userId} style={styles.tile} onPress={() => router.push(`/user/${p.userId}`)} accessibilityRole="button" accessibilityLabel={p.username}>
-                  <Avatar username={p.username} avatarUrl={p.avatarUrl} size={38} />
+                  <Avatar username={p.username} avatarUrl={p.avatarUrl} avatarConfig={p.avatarConfig} size={38} />
                   <Text style={styles.tileName} numberOfLines={1}>
                     {p.username}
                   </Text>

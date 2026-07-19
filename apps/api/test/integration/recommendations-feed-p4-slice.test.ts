@@ -270,7 +270,8 @@ describe('SOC-06 / OQ-071: the aggregated activity feed', () => {
     expect(feed.status).toBe(200);
     expect(feed.body.items).toHaveLength(1);
     expect(Object.keys(feed.body.items[0]).sort()).toEqual(FEED_ITEM_KEYS);
-    expect(Object.keys(feed.body.items[0].actor).sort()).toEqual(['avatarUrl', 'userId', 'username']);
+    // avatarConfig rides beside avatarUrl on the feed actor (W-4 Monogram Forge) — the forged monogram.
+    expect(Object.keys(feed.body.items[0].actor).sort()).toEqual(['avatarConfig', 'avatarUrl', 'userId', 'username']);
   });
 
   it('import-flood suppression: 100 entry_added in one window → ONE item, aggregateCount 100, ≤3 peeks', async () => {

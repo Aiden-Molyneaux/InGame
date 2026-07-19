@@ -358,6 +358,7 @@ export async function searchUsers(actorId: string, rawUsername: unknown): Promis
       userId: target.id,
       username: target.username,
       avatarUrl: target.avatarUrl,
+      avatarConfig: target.avatarConfig, // PROF-08 (W-4) — the search result's forged monogram
       relationship: relationship as SearchRelationship,
     };
     // Only a `none` relation can be shadowed by an open cooldown (a pending/accepted relation wins).
@@ -602,13 +603,13 @@ export async function getCompare(actorId: string, rawFriendId: string): Promise<
   // The friend cohort (accepted friends) + the actor's OWN row (isMe), ranked by hours desc.
   const cohortRows = await friendReadRepo.friendCohortTotals(actorId);
   const cohort: CompareCohortMember[] = [
-    { userId: actorId, username: me?.username ?? '', avatarUrl: me?.avatarUrl ?? null, hours: yourHours, games: mine.length, isMe: true },
-    ...cohortRows.map((r) => ({ userId: r.userId, username: r.username, avatarUrl: r.avatarUrl, hours: r.hours, games: r.games, isMe: false })),
+    { userId: actorId, username: me?.username ?? '', avatarUrl: me?.avatarUrl ?? null, avatarConfig: me?.avatarConfig ?? null, hours: yourHours, games: mine.length, isMe: true },
+    ...cohortRows.map((r) => ({ userId: r.userId, username: r.username, avatarUrl: r.avatarUrl, avatarConfig: r.avatarConfig, hours: r.hours, games: r.games, isMe: false })),
   ].sort((a, b) => b.hours - a.hours || a.username.localeCompare(b.username));
 
   return buildCompare(
     {
-      friend: { userId: friendId, username: friend?.username ?? '', avatarUrl: friend?.avatarUrl ?? null },
+      friend: { userId: friendId, username: friend?.username ?? '', avatarUrl: friend?.avatarUrl ?? null, avatarConfig: friend?.avatarConfig ?? null },
       yourHours,
       yourGames: mine.length,
       theirHours,

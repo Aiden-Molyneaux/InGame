@@ -33,7 +33,7 @@ export function FriendRow({
         style={styles.tapTarget}
         hitSlop={4}
       >
-        <Avatar username={person.username} avatarUrl={person.avatarUrl} size={38} />
+        <Avatar username={person.username} avatarUrl={person.avatarUrl} avatarConfig={person.avatarConfig} size={38} />
         <Text style={styles.name} numberOfLines={1}>
           {person.username}
         </Text>

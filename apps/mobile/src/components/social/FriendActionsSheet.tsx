@@ -37,7 +37,7 @@ export function FriendActionsSheet({
   return (
     <PulledSheet visible={visible} onClose={onClose}>
       <View style={styles.head}>
-        <Avatar username={person.username} avatarUrl={person.avatarUrl} size={50} />
+        <Avatar username={person.username} avatarUrl={person.avatarUrl} avatarConfig={person.avatarConfig} size={50} />
         <View style={styles.headMeta}>
           <Text style={styles.headName} numberOfLines={1}>
             {person.username}

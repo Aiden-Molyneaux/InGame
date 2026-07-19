@@ -80,8 +80,8 @@ export default function Compare() {
   return (
     <Frame title="Compare" backLabel={`Return to ${friendName}`} onBack={() => router.back()}>
       <FaceOff
-        you={{ username: me?.username ?? 'you', avatarUrl: me?.avatarUrl ?? null }}
-        friend={{ username: friendName, avatarUrl: data.friend.avatarUrl }}
+        you={{ username: me?.username ?? 'you', avatarUrl: me?.avatarUrl ?? null, avatarConfig: me?.avatarConfig ?? null }}
+        friend={{ username: friendName, avatarUrl: data.friend.avatarUrl, avatarConfig: data.friend.avatarConfig }}
         totals={data.totals}
       />
 

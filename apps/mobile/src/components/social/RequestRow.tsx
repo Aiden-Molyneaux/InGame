@@ -35,7 +35,7 @@ export function RequestRow({
   return (
     <View style={[styles.row, kind === 'incoming' && styles.incoming]}>
       <Pressable accessibilityRole="button" accessibilityLabel={`${p.username} profile`} onPress={() => onProfile(p.userId)} hitSlop={4}>
-        <Avatar username={p.username} avatarUrl={p.avatarUrl} size={38} />
+        <Avatar username={p.username} avatarUrl={p.avatarUrl} avatarConfig={p.avatarConfig} size={38} />
       </Pressable>
       <View style={styles.meta}>
         <Text style={styles.name} numberOfLines={1}>

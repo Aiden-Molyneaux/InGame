@@ -9,7 +9,7 @@ import { buildCompare, leaderOf, type CompareInput } from './compare';
 const card = (id: string) => ({ id, imageUrl: null, thumbUrl: null, isCustom: false, isPremium: false });
 
 const INPUT: CompareInput = {
-  friend: { userId: '11111111-1111-1111-1111-111111111111', username: 'rival', avatarUrl: null },
+  friend: { userId: '11111111-1111-1111-1111-111111111111', username: 'rival', avatarUrl: null, avatarConfig: null },
   yourHours: 40,
   yourGames: 3,
   theirHours: 55,
@@ -18,8 +18,8 @@ const INPUT: CompareInput = {
     { gameId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', title: 'Shared', yourCard: card('c1'), theirCard: card('c2'), yourHours: 10, theirHours: 25 },
   ],
   cohort: [
-    { userId: 'me', username: 'me', avatarUrl: null, hours: 40, games: 3, isMe: true },
-    { userId: '11111111-1111-1111-1111-111111111111', username: 'rival', avatarUrl: null, hours: 55, games: 4, isMe: false },
+    { userId: 'me', username: 'me', avatarUrl: null, avatarConfig: null, hours: 40, games: 3, isMe: true },
+    { userId: '11111111-1111-1111-1111-111111111111', username: 'rival', avatarUrl: null, avatarConfig: null, hours: 55, games: 4, isMe: false },
   ],
 };
 

@@ -17,7 +17,7 @@ const store = configureStore({ reducer: { prefs: prefsReducer } });
 const wrap = (ui: React.ReactElement) => <Provider store={store}>{ui}</Provider>;
 
 function person(relationship: SearchRelationship, over: Partial<PersonSearchResult> = {}): PersonSearchResult {
-  return { userId: 'u-1', username: 'riptide', avatarUrl: null, relationship, ...over };
+  return { userId: 'u-1', username: 'riptide', avatarUrl: null, avatarConfig: null, relationship, ...over };
 }
 function renderRow(p: PersonSearchResult, cb: Partial<React.ComponentProps<typeof PersonRow>> = {}) {
   return render(
@@ -91,5 +91,24 @@ describe('PersonRow — the SOC-07 relationship spine', () => {
     fireEvent.press(screen.getByLabelText('riptide profile'));
     expect(onProfile).toHaveBeenCalledWith('u-1');
     expect(screen.getByLabelText('Add riptide')).toBeTruthy();
+  });
+
+  // W-4 (murr completion) — the row's avatarConfig reaches the shared <Avatar>, so a search/roster row
+  // renders the person's FORGED monogram, not the default. Null ⇒ the byte-identical default.
+  it('renders the row person’s forged monogram (config colour pair + glyph) when avatarConfig is set', () => {
+    const { toJSON } = renderRow(
+      person('friend', { avatarConfig: { bg: '#101018', ink: '#ffd23f', glyph: 'RT' } }),
+    );
+    const tree = JSON.stringify(toJSON());
+    expect(tree).toContain('#101018'); // bg
+    expect(tree).toContain('#ffd23f'); // ink
+    expect(tree).toContain('RT'); // the glyph override, not the derived RI
+  });
+
+  it('falls back to the default monogram (derived initials, no config colours) when avatarConfig is null', () => {
+    const { toJSON } = renderRow(person('friend', { avatarConfig: null }));
+    const tree = JSON.stringify(toJSON());
+    expect(tree).toContain('RI'); // derived from "riptide"
+    expect(tree).not.toContain('#101018'); // no forged colour pair leaked in
   });
 });

@@ -108,9 +108,10 @@ describe('SOC-07: GET /users/search — fuzzy people search', () => {
       .set(authed(me.token));
     expect(res.status).toBe(200);
     expect(res.body.results).toHaveLength(1);
-    // F06 — the PersonRow public allowlist EXACTLY (no bio/email/privacy/hours strays).
+    // F06 — the PersonRow public allowlist EXACTLY (no bio/email/privacy/hours strays). avatarConfig is
+    // public cosmetic data (rides beside avatarUrl — W-4 Monogram Forge), so the forged monogram renders.
     expect(Object.keys(res.body.results[0]).sort()).toEqual(
-      ['avatarUrl', 'relationship', 'userId', 'username'].sort(),
+      ['avatarConfig', 'avatarUrl', 'relationship', 'userId', 'username'].sort(),
     );
     expect(res.body.results[0]).toMatchObject({
       userId: target.id,

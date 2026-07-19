@@ -65,6 +65,8 @@ export interface FriendSummary {
   userId: string;
   username: string;
   avatarUrl: string | null;
+  /** PROF-08 (W-4) — the roster row's forged monogram; null ⇒ the default. Public-safe cosmetic. */
+  avatarConfig: UserRow['avatarConfig'];
 }
 
 /**
@@ -81,7 +83,7 @@ export async function listFriendSummaries(
   // SYS-01-FRIEND-READ — the accepted-friendship predicate (friendScoped) IS the scope; the friend is
   // the far side of the bond. Public allowlist only (username/avatar).
   const rows = await exec
-    .select({ userId: users.id, username: users.username, avatarUrl: users.avatarUrl })
+    .select({ userId: users.id, username: users.username, avatarUrl: users.avatarUrl, avatarConfig: users.avatarConfig })
     .from(users)
     .innerJoin(friendships, friendScoped(actorId, users.id))
     .where(isNull(users.deletedAt))
@@ -202,6 +204,8 @@ export interface FriendCohortTotals {
   userId: string;
   username: string;
   avatarUrl: string | null;
+  /** PROF-08 (W-4) — the compare leaderboard row's forged monogram; null ⇒ the default. */
+  avatarConfig: UserRow['avatarConfig'];
   hours: number;
   games: number;
 }
@@ -250,6 +254,7 @@ export async function friendCohortTotals(
       userId: users.id,
       username: users.username,
       avatarUrl: users.avatarUrl,
+      avatarConfig: users.avatarConfig,
       hours: sum(collectionEntries.hours),
       games: count(collectionEntries.id),
     })
@@ -257,11 +262,12 @@ export async function friendCohortTotals(
     .innerJoin(friendships, friendScoped(actorId, users.id))
     .leftJoin(collectionEntries, eq(collectionEntries.userId, users.id))
     .where(isNull(users.deletedAt))
-    .groupBy(users.id, users.username, users.avatarUrl);
+    .groupBy(users.id, users.username, users.avatarUrl, users.avatarConfig);
   return rows.map((r) => ({
     userId: r.userId,
     username: r.username,
     avatarUrl: r.avatarUrl,
+    avatarConfig: r.avatarConfig,
     hours: Number(r.hours ?? 0),
     games: Number(r.games ?? 0),
   }));

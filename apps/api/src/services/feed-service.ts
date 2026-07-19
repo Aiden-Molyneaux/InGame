@@ -45,6 +45,7 @@ interface MappedEvent {
   actorId: string;
   actorUsername: string;
   actorAvatarUrl: string | null;
+  actorAvatarConfig: FriendEventRow['actorAvatarConfig'];
   type: FeedItemType;
   occurredAt: Date;
   /** The object ref this event contributes (a gameId, a cardId, or an achievementId + optional label). */
@@ -57,6 +58,7 @@ function mapEvent(e: FriendEventRow): MappedEvent | null {
     actorId: e.actorId,
     actorUsername: e.actorUsername,
     actorAvatarUrl: e.actorAvatarUrl,
+    actorAvatarConfig: e.actorAvatarConfig,
     occurredAt: e.occurredAt,
   };
   const p = e.payload;
@@ -98,6 +100,7 @@ interface Bucket {
   actorId: string;
   actorUsername: string;
   actorAvatarUrl: string | null;
+  actorAvatarConfig: FriendEventRow['actorAvatarConfig'];
   type: FeedItemType;
   windowStartMs: number;
   count: number;
@@ -176,6 +179,7 @@ export async function getFeed(actorId: string, cursor?: string): Promise<FeedRes
         actorId: mapped.actorId,
         actorUsername: mapped.actorUsername,
         actorAvatarUrl: mapped.actorAvatarUrl,
+        actorAvatarConfig: mapped.actorAvatarConfig,
         type: mapped.type,
         windowStartMs,
         count: 0,
@@ -292,7 +296,7 @@ export async function getFeed(actorId: string, cursor?: string): Promise<FeedRes
     });
     return {
       feedItemId: `${b.type}:${b.actorId}:${b.windowStartMs}`,
-      actor: { userId: b.actorId, username: b.actorUsername, avatarUrl: b.actorAvatarUrl },
+      actor: { userId: b.actorId, username: b.actorUsername, avatarUrl: b.actorAvatarUrl, avatarConfig: b.actorAvatarConfig },
       type: b.type,
       aggregateCount: b.count,
       objects,

@@ -8,7 +8,7 @@ import { mergeFeedPages } from './feedApi';
 function item(id: string): FeedItem {
   return {
     feedItemId: id,
-    actor: { userId: '11111111-1111-1111-1111-111111111111', username: 'riko', avatarUrl: null },
+    actor: { userId: '11111111-1111-1111-1111-111111111111', username: 'riko', avatarUrl: null, avatarConfig: null },
     type: 'beat_game',
     aggregateCount: 1,
     objects: [{ gameId: '22222222-2222-2222-2222-222222222222', title: 'Hades' }],

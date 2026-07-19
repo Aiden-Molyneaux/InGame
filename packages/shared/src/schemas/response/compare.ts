@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { friendCollectionCardSchema } from './collection';
+import { avatarConfigSchema } from '../avatar-config';
 
 // GET /me/compare/:friendId (SOC-03) — the collection face-off (api-contract 0.25). READ-ONLY,
 // non-commerce (comparing creates no card, spends no PX). PRIVACY-GATED (PROF-03): a hidden axis is
@@ -51,6 +52,9 @@ export const compareLeaderboardRowSchema = z
         userId: z.string().uuid(),
         username: z.string(),
         avatarUrl: z.string().url().nullable(),
+        // PROF-08 (W-4 Monogram Forge) — the mutual-cohort leaderboard row renders each member's
+        // forged monogram beside avatarUrl; null ⇒ the default monogram.
+        avatarConfig: avatarConfigSchema.nullable(),
       })
       .strict(),
     hours: z.number().int().nonnegative(),
@@ -82,6 +86,9 @@ export const compareResponseSchema = z
         userId: z.string().uuid(),
         username: z.string(),
         avatarUrl: z.string().url().nullable(),
+        // PROF-08 (W-4 Monogram Forge) — the face-off hero renders the friend's forged monogram beside
+        // avatarUrl; null ⇒ the default monogram.
+        avatarConfig: avatarConfigSchema.nullable(),
       })
       .strict(),
     totals: compareTotalsSchema,

@@ -6,10 +6,13 @@ import { themedStyles, useTheme } from '../theme';
 // (PROF-08 default-monogram guarantee). F-07 square on screen; accent hairline.
 //
 // W-4 (the Monogram Forge): the ONE monogram component consumes `avatarConfig` — so every surface that
-// renders <Avatar> (Profile · friend profile · contributor · friends rows · feed · compare) shows the
-// user's customised monogram automatically as its payload carries the config. When `avatarConfig` is
-// null/undefined the render is BYTE-IDENTICAL to the historical default (theme panelHi bg · accent ink ·
-// hairline border · derived initials). `avatarUrl` (a real designed avatar, launch-era) always wins.
+// renders <Avatar> shows the user's customised monogram automatically, because each avatar-bearing
+// payload now carries the config beside `avatarUrl`. That is TRUE end-to-end: the profile shapes
+// (Profile · friend/limited profile · contributor) AND the person-summary LIST rows — the friends
+// roster, friend requests, /users/search results, the friend-actions sheet, the feed actor, and the
+// compare face-off + mutual-cohort leaderboard — all ride `avatarConfig`. When it is null/undefined the
+// render is BYTE-IDENTICAL to the historical default (theme panelHi bg · accent ink · hairline border ·
+// derived initials). `avatarUrl` (a real designed avatar, launch-era) always wins.
 export function Avatar({
   username,
   avatarUrl,

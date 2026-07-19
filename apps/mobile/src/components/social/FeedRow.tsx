@@ -58,7 +58,7 @@ export function FeedRow({
         onPress={() => onActorPress(item.actor.userId)}
         hitSlop={6}
       >
-        <Avatar username={item.actor.username} avatarUrl={item.actor.avatarUrl} size={38} />
+        <Avatar username={item.actor.username} avatarUrl={item.actor.avatarUrl} avatarConfig={item.actor.avatarConfig} size={38} />
       </Pressable>
 
       <View style={styles.body}>

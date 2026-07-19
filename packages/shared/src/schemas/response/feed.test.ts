@@ -19,6 +19,7 @@ describe('SOC-06 (C1): feed schema accepts RELATIVE media paths', () => {
             userId: '3c30c359-d7fb-4810-b62f-0e2b46b40dda',
             username: 'smoke_friend',
             avatarUrl: '/media/avatars/3c30c359/full.png', // relative — must parse (C1)
+            avatarConfig: null, // PROF-08 (W-4) — rides beside avatarUrl on the feed actor
           },
           type: 'published_card',
           aggregateCount: 1,

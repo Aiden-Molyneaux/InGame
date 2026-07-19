@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 // The CAT-07 VIEW-ALL cursor accumulation (W-1) — RTK-free on purpose (the two dedicated routes own the
 // RTK hooks; this owns only the page-fold + cursor state), so it unit-tests without pulling the store.
@@ -35,14 +35,21 @@ export function useContributorPaging<T>(
   keyOf: (item: T) => string,
 ): { items: T[]; hasMore: boolean; moreError: boolean; loadMore: () => Promise<void> } {
   const [tail, setTail] = useState<T[]>([]);
-  const [cursor, setCursor] = useState<string | null>(null);
   const [moreError, setMoreError] = useState(false);
-
-  useEffect(() => {
+  // w1 — seat the cursor SYNCHRONOUSLY from page1, not in a post-paint effect, so the first non-skeleton
+  // render already knows `hasMore`. A post-paint useEffect left `cursor` null for one frame, so the
+  // terminal "That's everything." flashed before the effect re-seated it on lists that HAVE more pages.
+  // This is the render-phase reconciliation pattern (the documented "adjusting state when a prop changes"):
+  // a fresh page1 (initial load / a Contributions invalidation) RESETS the tail + re-seats the cursor
+  // BEFORE paint — same reset the effect did, minus the flash.
+  const [cursor, setCursor] = useState<string | null>(page1?.nextCursor ?? null);
+  const [seededPage, setSeededPage] = useState(page1);
+  if (page1 !== seededPage) {
+    setSeededPage(page1);
     setTail([]);
     setMoreError(false);
     setCursor(page1?.nextCursor ?? null);
-  }, [page1]);
+  }
 
   const items = useMemo(() => appendUnique(page1?.items ?? [], tail, keyOf), [page1, tail, keyOf]);
 

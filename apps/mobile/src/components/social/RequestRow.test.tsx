@@ -11,7 +11,7 @@ const wrap = (ui: React.ReactElement) => <Provider store={store}>{ui}</Provider>
 
 const ITEM: FriendRequestItem = {
   requestId: 'req-1',
-  person: { userId: 'u-1', username: 'nova', avatarUrl: null, relationship: 'incoming' },
+  person: { userId: 'u-1', username: 'nova', avatarUrl: null, avatarConfig: null, relationship: 'incoming' },
   createdAt: '2026-07-15T12:00:00Z',
 };
 
