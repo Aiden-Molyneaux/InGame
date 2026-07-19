@@ -57,3 +57,18 @@ ever** — off-brand, and it drags in UGC-image moderation the beta doesn't need
 `avatarConfig` on the user (no flatten pipeline needed); renders everywhere the monogram already
 renders. Real identity expression for beta friends, nothing throwaway, and the full designer stays a
 launch headline.
+
+## E · OWNER SIGN-OFF (2026-07-18) — agenda approved with 3 amendments
+All 14 nod-items **approved** except as amended:
+1. **W-5 amendment — no promotion:** existing designs KEEP their normal single-colour versions at
+   their current tiers; ULTIMATE colour-customizable versions are **minted as separate catalog
+   entries** alongside (e.g. MARQUEE 8 PX fixed + MARQUEE ULTIMATE 10 PX customizable). No
+   grandfathering needed (nothing changes for existing owners).
+2. **W-6 amendment — card reports for incorrect details:** users may report CARDS for incorrect
+   details too — the card report-reason enum gains `incorrect_info` (details-required), additive
+   MOD-01 amendment; those reports feed the same wrongness signal as game `incorrect_info`.
+3. **W-6 amendment — the edit age-gate:** accounts must be **≥ 14 days old** to edit game details;
+   **`role='admin'` exempt** (the role model is live — PROF-09/0034; the console stays M7). New
+   refusal code (e.g. `ACCOUNT_TOO_NEW`).
+Avatar W-4 = the Monogram Forge — **approved**. Builds fan out now: auth-server lane (P-A→P-B→P-D
+sequential, same tree) ∥ W-4 ∥ W-6; W-5 + the auth client screens follow as lanes free.
