@@ -57,6 +57,8 @@ export function CardSwitcher({
   onRequestDelete,
   deleteError,
   onClearDeleteError,
+  onShare,
+  shareBusy = false,
 }: {
   entry: CollectionItem;
   onEditInStyler: (cardId: string) => void;
@@ -67,6 +69,11 @@ export function CardSwitcher({
   deleteError?: string | null;
   /** Selection changed — the page clears its delete error so it can't blame the wrong card. */
   onClearDeleteError?: () => void;
+  /** N-B9 — per-card SHARE (CARD-21), moved here from PLAY so ANY of this game's cards can share.
+   *  The page owns the fetch/present path; the switcher owns the publish gate (a draft/private
+   *  design has no public face to share — an adopted card is published by definition). */
+  onShare?: (cardId: string, name: string) => void;
+  shareBusy?: boolean;
 }) {
   const t = useTheme();
   const styles = useStyles();
@@ -204,9 +211,8 @@ export function CardSwitcher({
         </Text>
       ) : selected ? (
         <View style={styles.opts}>
-          <Text style={styles.optsTitle}>
-            {selected.name} — {TAG_LABEL[tagKeyOf(selected)]}
-          </Text>
+          {/* round-5 N-B10 — the "name — PRIVATE/PUBLISHED" title is dropped: the tile's status tag and
+              the card face already carry that info; the panel leads with the cosmetic readout. */}
           {selected.origin === 'adopted' ? (
             // CARD-15 — an adopted card is the IMAGE, not the layers; no per-attribute readout to show.
             <Text style={styles.note}>Adopted from {selected.designer} — the image, not the layers.</Text>
@@ -231,6 +237,15 @@ export function CardSwitcher({
                 style={styles.miniBtn}
               />
             )}
+            {/* N-B9 — SHARE on EVERY card's panel (moved out of PLAY): publish-gated for an owned
+                design; an adopted card is shareable as-is (it is published by definition). */}
+            <ScreenButton
+              label={shareBusy ? '…' : 'Share'}
+              variant="secondary"
+              disabled={!onShare || shareBusy || (selected.origin === 'owned' && selected.status !== 'published')}
+              onPress={() => onShare?.(selected.id, selected.name)}
+              style={styles.miniBtn}
+            />
             {/* Edit is OWNED-only — a foreign adopted card has no layers to edit (CARD-15). */}
             {selected.origin === 'owned' ? (
               <>
@@ -344,7 +359,6 @@ const useStyles = themedStyles((t) => ({
     borderColor: t.scr.hairline,
     gap: t.space.md,
   },
-  optsTitle: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 0.5 },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.sm },
   miniBtn: { paddingVertical: t.space.md, paddingHorizontal: t.space.md },
   note: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, lineHeight: 15 },

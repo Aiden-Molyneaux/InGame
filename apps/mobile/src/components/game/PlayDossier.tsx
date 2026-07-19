@@ -132,6 +132,7 @@ export function PlayDossier({ entry }: { entry: CollectionItem }) {
             'hours',
             <TextField
               label="Hours"
+              bare // N-B8 — the row above already titles the field; no second label, no reserved error slot
               value={value}
               onChangeText={(v) => setValue(v.replace(/[^0-9]/g, '').slice(0, 5))}
               keyboardType="number-pad"
@@ -149,6 +150,7 @@ export function PlayDossier({ entry }: { entry: CollectionItem }) {
             'percent',
             <TextField
               label="Completion %"
+              bare
               value={value}
               onChangeText={(v) => setValue(v.replace(/[^0-9]/g, '').slice(0, 3))}
               keyboardType="number-pad"
@@ -201,7 +203,7 @@ export function PlayDossier({ entry }: { entry: CollectionItem }) {
           onEdit={() => beginEdit('ownedSince')}
           editor={editor(
             'ownedSince',
-            <TextField label="Owned since" value={value} onChangeText={setValue} placeholder="YYYY-MM-DD" />,
+            <TextField label="Owned since" bare value={value} onChangeText={setValue} placeholder="YYYY-MM-DD" />,
           )}
         >
           <Text style={styles.val}>{entry.ownedSince ?? '—'}</Text>
@@ -220,6 +222,7 @@ export function PlayDossier({ entry }: { entry: CollectionItem }) {
             'notes',
             <TextField
               label="Notes"
+              bare
               value={value}
               onChangeText={setValue}
               autoCapitalize="sentences"

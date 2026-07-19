@@ -300,21 +300,8 @@ function OwnGamePage({ entry }: { entry: CollectionItem }) {
                 />
               </View>
               <PlayDossier entry={entry} />
-              <View style={styles.actionRow}>
-                <ScreenButton
-                  label="Switch card"
-                  variant="secondary"
-                  onPress={() => setSection('cards')}
-                  style={styles.mini}
-                />
-                <ScreenButton
-                  label="Share"
-                  variant="secondary"
-                  onPress={() => void shareCard(entry.card.id, entry.title)}
-                  disabled={shareBusy}
-                  style={styles.mini}
-                />
-              </View>
+              {/* round-5 N-B9 — the SWITCH CARD button is retired (the CARDS dock tab is the door) and
+                  SHARE moved into the CARDS tab as a per-card action (any card, not just the equipped). */}
             </>
           ) : section === 'cards' ? (
             <>
@@ -325,6 +312,9 @@ function OwnGamePage({ entry }: { entry: CollectionItem }) {
                 onRequestDelete={(id, name, adopted) => setConfirmDeleteCard({ id, name, adopted: adopted ?? false })}
                 deleteError={deleteCardError}
                 onClearDeleteError={() => setDeleteCardError(null)}
+                // N-B9 — SHARE rides each card's action panel now (CARD-21; publish-gated in the switcher)
+                onShare={(cardId, name) => void shareCard(cardId, name)}
+                shareBusy={shareBusy}
               />
               {/* P8 — the community gallery (other users' published cards for this game) → adopt */}
               <CommunityGallery
@@ -584,8 +574,6 @@ const useStyles = themedStyles((t) => ({
     textAlign: 'center',
     letterSpacing: 1,
   },
-  actionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.md },
-  mini: { paddingVertical: t.space.md, paddingHorizontal: t.space.lg },
   // skeleton
   skBar: { backgroundColor: t.scr.panel },
   skDual: { flexDirection: 'row', justifyContent: 'center', gap: t.space.lg, paddingVertical: t.space.md },

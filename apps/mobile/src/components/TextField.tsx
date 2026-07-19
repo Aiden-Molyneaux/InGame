@@ -20,6 +20,7 @@ export function TextField({
   editable = true,
   labelRight,
   multiline,
+  bare = false,
 }: {
   label: string;
   value: string;
@@ -37,6 +38,10 @@ export function TextField({
   labelRight?: ReactNode;
   /** Grow the input (the bio field). */
   multiline?: boolean;
+  /** N-B8 — embedded mode (the dossier's inline row editors): the surrounding row already TITLES the
+      field and owns the error line, so render ONLY the input box — no label row, no reserved error
+      slot. `label` still names the input for the screen reader. */
+  bare?: boolean;
 }) {
   // S2-j — reveal toggles masking of the typed value (not the field). Only meaningful when secure.
   const [revealed, setRevealed] = useState(false);
@@ -46,7 +51,7 @@ export function TextField({
 
   return (
     <View style={styles.field}>
-      {labelRight ? (
+      {bare ? null : labelRight ? (
         <View style={styles.labelRow}>
           <Text style={styles.label}>{label.toUpperCase()}</Text>
           {labelRight}
@@ -82,10 +87,13 @@ export function TextField({
         ) : null}
       </View>
       {/* R2 (4b) — the error line's space is ALWAYS reserved, so showing/clearing an error never
-          reflows the form (layout stability over compactness). Shared here → every TextField form. */}
-      <View style={styles.errorSlot}>
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-      </View>
+          reflows the form (layout stability over compactness). Shared here → every TextField form.
+          `bare` drops the slot: the embedding row owns its own error line (N-B8). */}
+      {bare ? null : (
+        <View style={styles.errorSlot}>
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+        </View>
+      )}
     </View>
   );
 }

@@ -12,6 +12,10 @@ import { steppedRectPath } from '../../theme/steppedPath';
 // `add` polygon. State-title = emphasis 15 (F-06 conformance, decision 0024 / OQ-066). Square + flat
 // (F-07/F-09).
 const STEP_UNIT = theme.step / 2;
+// N-B7 — the dashed stroke is CENTERED on its path: drawn at the exact layout bounds, half of it
+// falls outside the Svg canvas and clips (on fractional layout heights the whole BOTTOM run vanished
+// — the CARDS-tab empty box). Inset the silhouette one stroke-width so every dash renders fully.
+const FRAME_STROKE = 1.5;
 
 export function StateFrame({
   glyph,
@@ -55,10 +59,11 @@ export function StateFrame({
       {size ? (
         <Svg width={size.w} height={size.h} style={StyleSheet.absoluteFill} pointerEvents="none">
           <Path
-            d={steppedRectPath(size.w, size.h, STEP_UNIT)}
+            d={steppedRectPath(size.w - FRAME_STROKE * 2, size.h - FRAME_STROKE * 2, STEP_UNIT)}
+            transform={`translate(${FRAME_STROKE}, ${FRAME_STROKE})`}
             fill="none"
             stroke={stroke}
-            strokeWidth={1.5}
+            strokeWidth={FRAME_STROKE}
             strokeDasharray="5 5"
           />
         </Svg>

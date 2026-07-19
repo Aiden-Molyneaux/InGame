@@ -212,7 +212,11 @@ describe('W-D1 posture resolver', () => {
     mockCollection = { data: { items: [MY_ENTRY] } as unknown as CollectionResponse, isLoading: false, isError: false, refetch: jest.fn() };
     render(wrap(<GamePage />));
     expect(screen.getByText('Destiny')).toBeTruthy(); // the OWN hero title
-    expect(screen.getByText('SWITCH CARD')).toBeTruthy(); // an OWN-only action
+    expect(screen.getByText('REMOVE FROM COLLECTION')).toBeTruthy(); // an OWN-only action (the overflow)
+    // round-5 N-B9 — the PLAY action row is retired: no SWITCH CARD (the dock tab is the door) and
+    // no PLAY-level SHARE (share is per-card in the CARDS tab now).
+    expect(screen.queryByText('SWITCH CARD')).toBeNull();
+    expect(screen.queryByText('SHARE')).toBeNull();
     expect(screen.queryByText('NOT IN YOUR COLLECTION')).toBeNull();
     expect(screen.queryByText(/RIKO’S FACE/)).toBeNull();
   });
@@ -223,13 +227,13 @@ describe('W-D1 posture resolver', () => {
     mockUserCollection = { data: FRIEND_COL, isLoading: false, isError: false, refetch: jest.fn() };
     render(wrap(<GamePage />));
     expect(screen.getByText(/face=RIKO’S FACE/)).toBeTruthy(); // the shared dual-face, friend-framed
-    expect(screen.queryByText('SWITCH CARD')).toBeNull(); // not the OWN page
+    expect(screen.queryByText('REMOVE FROM COLLECTION')).toBeNull(); // not the OWN page
   });
 
   it('CATALOG — no entry, no via → the neutral/not-owned posture', () => {
     render(wrap(<GamePage />)); // default: empty collection, no via
     expect(screen.getByText('NOT IN YOUR COLLECTION')).toBeTruthy();
-    expect(screen.queryByText('SWITCH CARD')).toBeNull();
+    expect(screen.queryByText('REMOVE FROM COLLECTION')).toBeNull();
     expect(screen.queryByText(/RIKO’S FACE/)).toBeNull();
   });
 
@@ -268,7 +272,6 @@ describe('W-D1 FRIEND posture — read-only + compose', () => {
     expect(screen.getByText('REPORT THIS GAME')).toBeTruthy();
     expect(screen.queryByText('REMOVE FROM COLLECTION')).toBeNull();
     expect(screen.queryByText('SET AS NOW PLAYING')).toBeNull();
-    expect(screen.queryByText('SWITCH CARD')).toBeNull();
   });
 
   it('unowned → ADOPT their card + ADD TO COLLECTION, no compare / no VIEW YOUR COPY', () => {
