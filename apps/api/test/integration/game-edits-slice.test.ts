@@ -52,6 +52,14 @@ async function makeAdmin(userId: string) {
   await getDb().update(users).set({ role: 'admin', adminTier: 4 }).where(eq(users.id, userId));
 }
 
+/** Retire a genre from the controlled list — simulates a genre removed BETWEEN an edit and its revert. */
+async function deleteGenre(genreId: string) {
+  const { getDb } = await import('../../src/db/client');
+  const { genres } = await import('../../src/db/schema');
+  const { eq } = await import('drizzle-orm');
+  await getDb().delete(genres).where(eq(genres.id, genreId));
+}
+
 /** A registered + AGED user (the standing editor most tests need). */
 async function agedUser() {
   const u = await registerUser();
@@ -330,6 +338,33 @@ describe('CAT-14: revert — replay oldValue · stamp the row · write the rever
     const res = await revertEdit(a.token, game.id, edited.body.edit.id);
     expect(res.status).toBe(200);
     expect(res.body.game.genres).toEqual([{ id: rpg, name: 'RPG' }]);
+  });
+
+  it('a genres revert whose replayed set holds a SINCE-REMOVED genre → typed 422 unknown_genre (never a 500); nothing is stamped', async () => {
+    // W-6 L1 — the revert REPLAYS a historical genre set; if the controlled list changed since, the
+    // replay must re-run CAT-04 and refuse with the typed 422, not FK-violate into a 500.
+    const a = await agedUser();
+    const rpg = await genreIdByName(a.token, 'RPG');
+    const soulslike = await genreIdByName(a.token, 'Soulslike');
+    const game = await createGame(a.token, { name: 'Stale Genre Revert Game', genreIds: [rpg, soulslike] });
+
+    // edit AWAY from soulslike (oldValue = the [rpg, soulslike] set) so game_genres no longer
+    // references it and it can be retired from the controlled list…
+    const edited = await editGame(a.token, game.id, { field: 'genres', newValue: [rpg] });
+    expect(edited.status).toBe(201);
+    const editId = edited.body.edit.id as string;
+    await deleteGenre(soulslike);
+
+    // …now the revert would replay [rpg, soulslike] — the removed id must refuse cleanly.
+    const res = await revertEdit(a.token, game.id, editId);
+    expect(res.status).toBe(422);
+    expect(res.body.error.code).toBe('VALIDATION_ERROR');
+    expect(res.body.error.reason).toBe('unknown_genre');
+
+    // the refusal is checked BEFORE the stamp — the target row is untouched (still live, revertible)
+    const rows = await editRowsFor(game.id);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.status).toBe('live');
   });
 
   it('A3 rights matrix: editor-self ✓ · game contributor ✓ · admin ✓ (MOD-10-logged) · stranger 403 (authz:catalog_edit_revert)', async () => {

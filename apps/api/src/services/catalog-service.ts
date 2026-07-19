@@ -393,6 +393,11 @@ function toEditView(row: GameEditRow, editorUsername: string): GameEditView {
   };
 }
 
+// TODO(tech-debt): per-field editable handling is spread across ~6 sites (currentFieldValue,
+// applyFieldValue, the mutation's screen + controlled-list branches, GAME_EDIT_VALUE_SCHEMAS, and
+// now the genres re-check on BOTH the forward and revert paths). Adding an editable field means
+// touching all of them and the parallel switches can silently drift apart. A single per-field
+// descriptor (schema · screen? · controlled-list check · apply) would collapse the duplication.
 /** The current canonical value of an editable field (genres = the SORTED id array, the history form). */
 async function currentFieldValue(
   game: GameRow,
@@ -415,6 +420,26 @@ async function applyFieldValue(
     return;
   }
   await gameEditRepo.updateGameFields(gameId, { [field]: value as string | null }, exec);
+}
+
+/**
+ * CAT-04 — every genre id in a value must be on the controlled list. Used by BOTH the forward edit
+ * (guards the user's new set) and the revert (re-guards the REPLAYED historical set — the list can
+ * change between an edit and its revert). A since-removed id refuses with the typed unknown_genre
+ * 422 instead of the FK-violation 500 a blind replaceGameGenres would raise. `path` points the B1
+ * detail at the right field (`newValue` on the forward path, `editId` on the revert).
+ */
+async function assertGenresOnControlledList(
+  genreIds: string[],
+  exec: Executor,
+  path: string,
+): Promise<void> {
+  const known = await catalogRepo.genresByIds(genreIds, exec);
+  if (known.length !== genreIds.length) {
+    throw new ValidationError('Unknown genre.', 'unknown_genre', [
+      { path, message: 'Contains a genre that is not on the controlled list.' },
+    ]);
+  }
 }
 
 /**
@@ -453,12 +478,7 @@ const applyGameEditMutation = mutation(
     }
     if (field === 'genres') {
       const genreIds = [...new Set(newValue as string[])];
-      const known = await catalogRepo.genresByIds(genreIds, ctx.tx);
-      if (known.length !== genreIds.length) {
-        throw new ValidationError('Unknown genre.', 'unknown_genre', [
-          { path: 'newValue', message: 'Contains a genre that is not on the controlled list.' },
-        ]);
-      }
+      await assertGenresOnControlledList(genreIds, ctx.tx, 'newValue');
       newValue = genreIds.sort(); // the canonical (sorted) history form
     }
 
@@ -531,6 +551,14 @@ const revertGameEditMutation = mutation(
         );
       }
       adminStanding = true;
+    }
+
+    // L1 (W-6) — a revert REPLAYS a historical value; for genres the CAT-04 controlled list may have
+    // changed since the edit, so re-run the same validity check the forward edit performs. A
+    // since-removed genre id refuses with the typed unknown_genre 422 here — never the FK-violation
+    // 500 a blind replaceGameGenres would raise. Checked BEFORE the stamp so a refusal writes nothing.
+    if (edit.field === 'genres') {
+      await assertGenresOnControlledList([...new Set((edit.oldValue ?? []) as string[])], ctx.tx, 'editId');
     }
 
     // Conditional stamp — status='live' guards the F36 double-revert race: the loser sees no row.

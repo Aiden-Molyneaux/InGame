@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import type { GameDetail, GameEditableField, GameEditValue } from '@ingame/shared';
 import { themedStyles } from '../../theme';
@@ -241,13 +241,23 @@ function FactsEditBlock({ game }: { game: GameDetail }) {
   const { data: genres } = useGetGenresQuery(undefined, { skip: !editing });
   const [submitEdit, submitState] = useSubmitGameEditMutation();
   const [open, setOpen] = useState<EditableFactsField | null>(null);
+  // L3 (W-6) — a "latest value" mirror of `open` so a slow save can tell, at settle time, whether
+  // the user has since moved to a DIFFERENT row (see save()).
+  const openRef = useRef(open);
+  openRef.current = open;
   const [value, setValue] = useState('');
   const [genreDraft, setGenreDraft] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
 
   // A1 — the quiet pre-gate: account younger than 14 days (and not admin) can't edit yet.
+  // L2 (W-6) — fail CLOSED on an unparseable memberSince: a NaN date must NOT silently open the
+  // gate (Date.now() - NaN < X is false). Treat missing/malformed as not-yet-eligible; the SERVER
+  // is the real enforcement, so the quiet pre-gate errs to the "unlocks after 14 days" state.
+  const memberSinceMs = me != null ? Date.parse(me.memberSince) : NaN;
   const tooNew =
-    me != null && me.role !== 'admin' && Date.now() - Date.parse(me.memberSince) < EDIT_UNLOCK_AGE_MS;
+    me != null &&
+    me.role !== 'admin' &&
+    (Number.isNaN(memberSinceMs) || Date.now() - memberSinceMs < EDIT_UNLOCK_AGE_MS);
 
   function beginEdit(f: EditableFactsField) {
     setError(null);
@@ -281,7 +291,11 @@ function FactsEditBlock({ game }: { game: GameDetail }) {
     }
     try {
       await submitEdit({ gameId: game.id, field: f, newValue }).unwrap();
-      closeRow(); // the returned game reconciled the cache — the row re-reads the applied value
+      // L3 (W-6) — a slow save settles ONLY its own row. If the user has since opened a different
+      // row (openRef moved off `f`), leave that row and the input they started there untouched;
+      // force-closing it would discard their in-progress edit. Otherwise close: the returned game
+      // reconciled the cache and the row re-reads the applied value.
+      if (openRef.current === f) closeRow();
     } catch (e) {
       const err = (e as {
         data?: { error?: { code?: string; message?: string; details?: { message?: string }[] } };
