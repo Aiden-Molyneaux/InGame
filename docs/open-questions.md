@@ -16,6 +16,15 @@
 
 ## Open
 
+- OQ-156: **Self-profile assembly runs ~12 sequential queries (server perf, non-blocking)** — surfaced by
+  the N-A2 genres-latency investigation. `profile-service.ts` `assembleSelfShape` (~L104-160) awaits ~12
+  reads serially (gamertags · full shelf · friend count · designs · adoptions · pin cards · 2× gamesByIds ·
+  top-10 list+items+cards), and `equippedCardsByGameId` re-reads the whole shelf twice per assembly.
+  `getSelfView` (L163-167) is NOT inside a transaction, so the "sequential on purpose (exec may be an open
+  tx)" rationale doesn't apply on that path — the independent reads could be `Promise.all`'d and the triple
+  full-shelf read shared. The client-side N-A2 fix removes a whole round-trip so this is now the lesser
+  factor, but it's a real perf smell on the hottest self-read. Separate server pass (integration-verified),
+  not a client fix. (2026-07-18) [behavior] server-perf
 - OQ-154: **"Ultimate" colour-customizable cosmetics** — a new cosmetic class where the user picks the
   cosmetic's COLOUR via a colour picker (a Frame whose colour you choose, the equivalent Nameplate,
   Font, effect, etc.). Owner (2026-07-18) leans **per-DESIGN, single-SKU** (one purchase = one specific
@@ -28,6 +37,10 @@
   Ultimate items); (e) **timing — beta vs M7** (additive; the close-friends alpha doesn't require it).
   Behavior/economy → product-spec (ECON/COSM/CARD) + api-contract + design. A real feature needing
   design-think + a spec pass, NOT a fix. (2026-07-18) [behavior]
+  **→ OWNER RULED (2026-07-18): PULL INTO THE BETA** + per-design single-SKU model confirmed. Next: a
+  design-think + spec pass (the new "Ultimate" ECON tier · per-design `colorCustomizable` flag · the
+  composition colour attribute + a migration · the editor ColorPicker hook · store merchandising · the
+  RevenueCat SKU) BEFORE build. Expands beta scope — sets part of the beta timeline.
 - OQ-155: **Edit game canonical details after creation** — a game's studio/genre/year/etc. are set only at
   creation (add-game); there is no later edit path, which the owner finds undesirable. OPEN: (a) WHO may
   edit — the game's original contributor only (simplest, lowest vandalism risk; recommended for beta), any
@@ -36,6 +49,14 @@
   (e.g. title vs merge/dedup concerns); (d) timing — beta vs later. Note N-B8 (round-5) may surface a
   partial edit form in add-game; its finding informs this. Behavior → product-spec (CAT-) + api-contract +
   design. (2026-07-18) [behavior]
+  **→ OWNER RULED (2026-07-18): ANY USER, WIKI-STYLE + MODERATION.** So game-detail edits are open to any
+  user, with edit history + moderation. **DEPENDENCY TO RESOLVE in the spec pass:** the moderation CONSOLE
+  is M7-scoped (the M6 gate shipped Report as capture-only; console stays M7 — decisions 0076/0077). Wiki
+  editing needs a moderation surface — so either (a) edits go live optimistically at beta and are
+  reversible via the edit history, with review riding the M7 console (recommended — ships the edit ability
+  without pulling console work forward), or (b) pull a minimal mod-review surface into the beta. Also open:
+  which fields are editable vs locked (title/merge/dedup concerns), and the edit-history data model
+  (CAT-/MOD-). Design-think + spec pass BEFORE build; the biggest of the round-5 adds.
 - OQ-153: **Friend-read repo selects the full entry row — narrow it to make the defense true (defense-in-depth, SOC-11).**
   `friend-read-repo.ts` `FRIEND_ENTRY_COLUMNS` sets `entry: collectionEntries`, which in Drizzle selects
   *every* column — including the owner-private `notes` / `rating` / `percentComplete` — so those fields
