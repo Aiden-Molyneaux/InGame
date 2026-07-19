@@ -51,6 +51,19 @@ export interface ApiEnv {
    */
   inviteLinkBase: string;
   /**
+   * AUTH-12 (auth-epic P-A) — the transactional-email provider selection ('stub' default OUTSIDE
+   * production; 'resend' = the real HTTPS adapter). Chosen via `EMAIL_PROVIDER`. FAIL-CLOSED IN
+   * PRODUCTION (F03, the IAP_PROVIDER pattern): the stub only logs — a production process running it
+   * silently swallows every password reset — so `loadEnv` HARD-THROWS when nodeEnv === 'production'
+   * and EMAIL_PROVIDER is 'stub' OR unset.
+   */
+  emailProvider: string;
+  /** AUTH-12 — the Resend API key (owner-provisioned, host secret store; SYS-03). Empty on the stub lane. */
+  resendApiKey: string;
+  /** AUTH-12 — the From header (`EMAIL_FROM`). Placeholder default; the real value follows the
+   * mail.ingame.app domain sitting (SPF/DKIM, owner-provisioned). */
+  emailFrom: string;
+  /**
    * AUTH-01 (decision 0076 §0.9) — the SYS-04 kill-switch for the HIBP breach check on register +
    * password-reset-confirm. Defaults ON (`true`); set `BREACH_CHECK_ENABLED=false` to skip the
    * network call entirely (e.g. the provider is unreachable / rate-limiting us) — a manual off-ramp
@@ -86,6 +99,27 @@ function resolveIapProvider(nodeEnv: string, raw: string | undefined): string {
   return provider;
 }
 
+/**
+ * AUTH-12 (auth-epic P-A) — the fail-closed production floor on the EMAIL provider, verbatim the
+ * `resolveIapProvider` F03 pattern above: an unconfigured mail path must fail loudly at boot, never
+ * silently swallow password resets; and an UNSET provider must not silently mean the stub. Outside
+ * production, unset defaults to 'stub' (the standing dev/test posture — delivery is a log line).
+ */
+function resolveEmailProvider(nodeEnv: string, raw: string | undefined): string {
+  const isProduction = nodeEnv === 'production';
+  const provider = raw ?? (isProduction ? '' : 'stub');
+  if (isProduction && (provider === '' || provider === 'stub')) {
+    throw new Error(
+      provider === 'stub'
+        ? "EMAIL_PROVIDER='stub' is refused in production — the stub only logs, so every password " +
+          'reset would silently vanish. Set EMAIL_PROVIDER to a real provider (fail-closed, F03 pattern).'
+        : 'EMAIL_PROVIDER is required in production — an unset provider must not silently mean the stub. ' +
+          'Set EMAIL_PROVIDER explicitly to a real provider (fail-closed, F03 pattern).',
+    );
+  }
+  return provider;
+}
+
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): ApiEnv {
   const flag = (source.DISPOSABLE_DB ?? '').toLowerCase();
   const nodeEnv = source.NODE_ENV ?? 'development';
@@ -106,6 +140,9 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): ApiEnv {
       .map((s) => s.trim())
       .filter(Boolean),
     iapProvider: resolveIapProvider(nodeEnv, source.IAP_PROVIDER),
+    emailProvider: resolveEmailProvider(nodeEnv, source.EMAIL_PROVIDER),
+    resendApiKey: source.RESEND_API_KEY ?? '',
+    emailFrom: source.EMAIL_FROM ?? 'InGame <no-reply@mail.ingame.app>',
     revenueCatWebhookAuth: source.REVENUECAT_WEBHOOK_AUTH ?? '',
     // SOC-10 — the invite-link base (no trailing slash needed; the service joins with '/'). The P15
     // landing owns the real route; this placeholder keeps the seam functional in dev/test.

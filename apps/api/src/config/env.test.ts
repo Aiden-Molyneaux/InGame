@@ -24,7 +24,14 @@ describe('loadEnv — the IAP provider production floor (ECON-06 fail-closed)', 
   });
 
   it("nodeEnv=production + a real provider value passes loadEnv (wired at P2b)", () => {
-    const env = loadEnv({ ...BASE, NODE_ENV: 'production', IAP_PROVIDER: 'revenuecat' });
+    // EMAIL_PROVIDER rides along: production now ALSO fail-closes on an unset email provider
+    // (AUTH-12, auth-epic P-A — same F03 floor), so the passing case sets both.
+    const env = loadEnv({
+      ...BASE,
+      NODE_ENV: 'production',
+      IAP_PROVIDER: 'revenuecat',
+      EMAIL_PROVIDER: 'resend',
+    });
     expect(env.iapProvider).toBe('revenuecat');
   });
 

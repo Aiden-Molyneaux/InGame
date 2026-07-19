@@ -24,7 +24,8 @@ import { argon2Hasher } from '../auth/password';
 import { checkPasswordBreached } from '../auth/breach-check';
 import { signAccessToken, generateOpaqueToken, hashOpaqueToken } from '../auth/tokens';
 import { stubAppleVerifier, type AppleTokenVerifier } from '../auth/apple-verifier';
-import { stubEmailer } from '../auth/email';
+import * as emailService from './email/email-service';
+import { captureException } from '../observability/sentry';
 import { AuthFailedError, AccountSuspendedError, ValidationError } from '../errors/AppError';
 import { loadEnv } from '../config/env';
 import { track } from '../observability/funnel';
@@ -142,8 +143,13 @@ export async function register(input: RegisterRequest): Promise<AuthSession> {
     throw e;
   });
 
-  // Post-commit side-effects (never rolled back): "send" the AUTH-08 verification email + funnel event.
-  await stubEmailer.sendVerification(outcome.user.email, outcome.verifyToken);
+  // Post-commit side-effects (never rolled back): send the AUTH-08 verification email + funnel event.
+  // The send is CAUGHT (AUTH-12): registration must never fail because email is down.
+  try {
+    await emailService.sendVerification(outcome.user.email, outcome.verifyToken);
+  } catch (err) {
+    captureException(err);
+  }
   track({ name: 'signup', userId: outcome.user.id, props: { method: 'password' } });
   return outcome.session;
 }
@@ -257,7 +263,13 @@ export async function requestPasswordReset(input: PasswordResetRequest): Promise
         tx,
       ),
     );
-    await stubEmailer.sendPasswordReset(user.email, reset.token);
+    // AUTH-11/12 — a provider send-failure is CAUGHT + Sentry'd and the response stays neutral:
+    // throwing only on the account-exists branch would turn provider errors into an enumeration oracle.
+    try {
+      await emailService.sendPasswordReset(user.email, reset.token);
+    } catch (err) {
+      captureException(err);
+    }
   }
   // ALWAYS neutral — the response never reveals whether the account exists (AUTH-04/11).
 }
@@ -302,7 +314,11 @@ export async function requestEmailVerification(userId: string): Promise<void> {
       tx,
     ),
   );
-  await stubEmailer.sendVerification(user.email, verify.token);
+  try {
+    await emailService.sendVerification(user.email, verify.token); // caught — the resend is best-effort (AUTH-12)
+  } catch (err) {
+    captureException(err);
+  }
 }
 
 export async function confirmEmailVerification(input: VerifyEmailConfirm): Promise<void> {

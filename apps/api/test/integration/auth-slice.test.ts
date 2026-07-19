@@ -65,8 +65,10 @@ beforeEach(async () => {
   resetRateLimitStore();
   const { clearRuleOverrides } = await import('../../src/config/rate-limits');
   clearRuleOverrides();
-  const { clearOutbox } = await import('../../src/auth/email');
+  const { clearOutbox, resetEmailProvider } = await import('../../src/services/email');
   clearOutbox();
+  resetEmailProvider(); // any per-test injected provider (setEmailProvider) is dropped
+
 });
 
 describe('AUTH-01 register', () => {
@@ -270,7 +272,7 @@ describe('AUTH-04 password reset', () => {
   it('confirm sets a new password (single-use); a valid old + new login proves the swap', async () => {
     const { email, password } = await registerUser();
     await post('/auth/password-reset/request', { email });
-    const { lastEmail } = await import('../../src/auth/email');
+    const { lastEmail } = await import('../../src/services/email');
     const token = lastEmail('password_reset', email)?.token;
     expect(token).toBeTruthy();
 
@@ -285,13 +287,45 @@ describe('AUTH-04 password reset', () => {
   it('authz:reset_confirm — actorB REUSING a consumed reset token → 422 invalid_token (single-use)', async () => {
     const { email } = await registerUser();
     await post('/auth/password-reset/request', { email });
-    const { lastEmail } = await import('../../src/auth/email');
+    const { lastEmail } = await import('../../src/services/email');
     const token = lastEmail('password_reset', email)?.token as string;
     await post('/auth/password-reset/confirm', { token, password: 'FirstNewPass9!' }).expect(200);
 
     const reuse = await post('/auth/password-reset/confirm', { token, password: 'SecondTry9!' });
     expect(reuse.status).toBe(422);
     expect(reuse.body.error.reason).toBe('invalid_token');
+  });
+});
+
+describe('AUTH-12 email substrate (auth-epic P-A)', () => {
+  it('reset-request stays NEUTRAL 200 when the provider send THROWS (no enumeration oracle)', async () => {
+    const { email } = await registerUser();
+    const { setEmailProvider } = await import('../../src/services/email');
+    setEmailProvider({
+      async send() {
+        throw new Error('provider down');
+      },
+    });
+    // The account-exists branch is the only one that actually sends — a throw there must NOT change
+    // the response, or provider outages become an account-existence oracle (AUTH-11).
+    const known = await post('/auth/password-reset/request', { email });
+    const unknown = await post('/auth/password-reset/request', {
+      email: `nobody_${randomUUID().slice(0, 6)}@example.com`,
+    });
+    expect(known.status).toBe(200);
+    expect(unknown.status).toBe(200);
+    expect(known.body).toEqual(unknown.body);
+  });
+
+  it('registration still succeeds when the provider is down (the verification send never blocks it)', async () => {
+    const { setEmailProvider } = await import('../../src/services/email');
+    setEmailProvider({
+      async send() {
+        throw new Error('provider down');
+      },
+    });
+    const { res } = await registerUser();
+    expect(res.status).toBe(201);
   });
 });
 
@@ -305,7 +339,7 @@ describe('AUTH-08 email verification', () => {
   it('confirm marks the email verified (GET /me reflects it)', async () => {
     const { email, res } = await registerUser();
     const accessToken = res.body.accessToken as string;
-    const { lastEmail } = await import('../../src/auth/email');
+    const { lastEmail } = await import('../../src/services/email');
     const token = lastEmail('email_verify', email)?.token as string;
     expect(token).toBeTruthy();
     await post('/auth/verify-email/confirm', { token }).expect(200);
