@@ -81,7 +81,8 @@ beforeEach(async () => {
   await resetDb();
 });
 
-const LIMITED_KEYS = ['id', 'username', 'avatarUrl', 'memberSince', 'mutualFriendsCount', 'relationship'];
+// avatarConfig is public cosmetic data (rides beside avatarUrl on the limited shape — W-4 Monogram Forge).
+const LIMITED_KEYS = ['id', 'username', 'avatarUrl', 'avatarConfig', 'memberSince', 'mutualFriendsCount', 'relationship'];
 
 describe('SOC-08: friend-request lifecycle threads end-to-end (request → accept → friend shape)', () => {
   it('A requests B, B accepts → an accepted friendship exists and GET /users/:B returns A the FRIEND shape', async () => {

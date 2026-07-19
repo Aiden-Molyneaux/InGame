@@ -239,7 +239,8 @@ describe('PROF-05 · F06 (C4): the friend/full /users/:id carries stats + device
     const res = await request(app).get(`/api/users/${target.id}`).set(authed(stranger.token));
     expect(res.status).toBe(200);
     expect(Object.keys(res.body).sort()).toEqual(
-      ['id', 'username', 'avatarUrl', 'memberSince', 'mutualFriendsCount', 'relationship'].sort(),
+      // avatarConfig is public cosmetic data (rides beside avatarUrl on the limited shape — W-4 Monogram Forge).
+      ['id', 'username', 'avatarUrl', 'avatarConfig', 'memberSince', 'mutualFriendsCount', 'relationship'].sort(),
     );
     for (const leak of ['stats', 'device', 'nowPlaying', 'top10', 'bio']) {
       expect(leak in res.body).toBe(false);
