@@ -494,7 +494,9 @@ const useStyles = themedStyles((t) => ({
   // ACH-05 teaser row (mirrors the device-row affordance).
   achRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: t.scr.panel, padding: t.space.lg },
   achMeta: { flex: 1, gap: 2 },
-  achCount: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5 },
+  // N-A5 — the EARNED / CARDS DESIGNED labels stepped DOWN one F-06 rung (title 15 → body 11); the
+  // only legal on-screen sizes are 21/15/11/9 (F-06 law), so 11 is the next-smaller allowed size.
+  achCount: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 0.5 },
   achSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
   chev: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.faint },
 }));

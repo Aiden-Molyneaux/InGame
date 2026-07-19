@@ -113,23 +113,28 @@ export function EditableIdentity({
         </View>
       </View>
 
-      {/* username — PROF-06 cooldown-gated + MOD-07 screening (server 422 → inline) */}
-      <TextField
-        label="Username"
-        value={username}
-        onChangeText={setUsername}
-        onBlur={commitUsername}
-        editable={!cooldownActive}
-        autoCapitalize="none"
-        error={usernameErr}
-      />
-      {cooldownActive ? (
-        <Text style={styles.microcopy}>
-          NEXT CHANGE {formatWhen(me.usernameNextChangeAt)} · ONCE / 30 DAYS (PROF-06)
-        </Text>
-      ) : (
-        <Text style={styles.microcopy}>SCREENED (MOD-07) · A–Z, 0–9, _ · SAVES WHEN YOU TAP AWAY</Text>
-      )}
+      {/* username — PROF-06 cooldown-gated + MOD-07 screening (server 422 → inline). N-A1 — the field +
+          its microcopy are ONE section (usernameSection) so the note hugs the field (tight internal gap,
+          decoupled from the larger inter-section gap) instead of floating a full section-gap below it. */}
+      <View style={styles.usernameSection}>
+        <TextField
+          label="Username"
+          value={username}
+          onChangeText={setUsername}
+          onBlur={commitUsername}
+          editable={!cooldownActive}
+          autoCapitalize="none"
+          error={usernameErr}
+        />
+        {cooldownActive ? (
+          // N-A1 — the PROF-06 time-gate wears the screen ACCENT (orange) for salience.
+          <Text style={[styles.usernameNote, styles.usernameNoteGate]}>
+            NEXT CHANGE {formatWhen(me.usernameNextChangeAt)} · ONCE / 30 DAYS (PROF-06)
+          </Text>
+        ) : (
+          <Text style={styles.usernameNote}>SCREENED (MOD-07) · A–Z, 0–9, _ · SAVES WHEN YOU TAP AWAY</Text>
+        )}
+      </View>
 
       {/* bio — 140-char counter, screened */}
       <TextField
@@ -215,8 +220,16 @@ export function EditableIdentity({
           error={gtErr}
         />
         {/* N3 (owner) — the add-gamertag key is ORANGE /primary (0069 prominent non-acquisitive: an add
-            action, not the cream secondary voice). */}
-        <ScreenButton label="Add gamertag" variant="primary" onPress={() => void addGamertag()} disabled={gtHandle.trim().length === 0} block />
+            action, not the cream secondary voice). N-A4 — the key hugs the handle field: pull it up to
+            reclaim the TextField's reserved error-slot slack so it reads as belonging to that input. */}
+        <ScreenButton
+          label="Add gamertag"
+          variant="primary"
+          onPress={() => void addGamertag()}
+          disabled={gtHandle.trim().length === 0}
+          block
+          style={styles.gtAddButton}
+        />
       </View>
     </View>
   );
@@ -228,8 +241,27 @@ function formatWhen(iso: string | null): string {
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }).toUpperCase();
 }
 
-const useStyles = themedStyles((t) => ({
-  well: { backgroundColor: t.scr.panel, padding: t.space.lg, gap: t.space.lg },
+const useStyles = themedStyles((t) => {
+  // N-A3 — ONE inter-section gap, applied uniformly by the `well` between EVERY editor section
+  // (avatar · username · bio · genres · gamertags). No per-section drift; the comfortable/larger rung.
+  const sectionGap = t.space.xl;
+  return {
+  well: { backgroundColor: t.scr.panel, padding: t.space.lg, gap: sectionGap },
+  // N-A1 — the username field + its microcopy live in one section with a TIGHT internal gap, so the
+  // note reads as attached to the field (decoupled from the larger `sectionGap` between sections).
+  usernameSection: { gap: t.space.xs },
+  // the username microcopy — a negative top pulls it up into the TextField's always-reserved error
+  // slot so it hugs the field instead of floating a full slot+gap below it.
+  usernameNote: {
+    fontFamily: t.font.screenSemi,
+    fontSize: t.type.micro,
+    color: t.scr.dim,
+    letterSpacing: 0.5,
+    lineHeight: 13,
+    marginTop: -t.space.sm,
+  },
+  // N-A1 — the PROF-06 time-gate note recolours to the screen ACCENT (orange) for salience.
+  usernameNoteGate: { color: t.scr.accent },
   avatarRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.lg },
   avatarPress: { position: 'relative' },
   // the ✎ corner badge (board `.cbadge` — punched-out ring, method A)
@@ -268,4 +300,8 @@ const useStyles = themedStyles((t) => ({
   platformKeyOn: { borderColor: t.scr.accent },
   platformText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
   platformTextOn: { color: t.scr.accent },
-}));
+  // N-A4 — the add key hugs the handle field: reclaim the TextField's reserved error-slot slack (the
+  // slot stays reserved, so a shown error never reflows) so the key reads as part of the input.
+  gtAddButton: { marginTop: -t.space.md },
+  };
+});

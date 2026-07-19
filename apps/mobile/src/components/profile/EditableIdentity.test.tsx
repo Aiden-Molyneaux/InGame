@@ -3,6 +3,7 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import type { SelfProfile, GenresResponse } from '@ingame/shared';
 import prefsReducer from '../../store/prefsSlice';
+import { theme } from '../../theme';
 import { EditableIdentity, type SaveOutcome } from './EditableIdentity';
 
 jest.mock('../../a11y/useReducedMotion', () => ({ useReducedMotion: () => true }));
@@ -125,5 +126,37 @@ describe('EditableIdentity (W-C4 · in-place per-field commit)', () => {
     fireEvent.press(screen.getByLabelText('Edit avatar'));
     expect(screen.getByText(/avatar designer is coming/i)).toBeTruthy();
     expect(onPatchMe).not.toHaveBeenCalled();
+  });
+
+  // Flatten a node's style array into one object.
+  const flatStyle = (node: { props: { style?: unknown } }): Record<string, unknown> =>
+    Object.assign({}, ...[node.props.style ?? {}].flat(Infinity).filter(Boolean));
+
+  it('N-A1 — the PROF-06 time-gate note wears the screen accent (orange) for salience', () => {
+    const future = new Date(Date.now() + 5 * 86400_000).toISOString();
+    renderEditor({ me: ME({ usernameNextChangeAt: future }) });
+    const gate = screen.getByText(/NEXT CHANGE/);
+    expect(flatStyle(gate).color).toBe(theme.scr.accent); // #ff9f43 on Midnight — NOT the dim default
+  });
+
+  it('N-A1 — the non-cooldown screening hint stays dim, not accent', () => {
+    renderEditor(); // usernameNextChangeAt: null → the SCREENED branch
+    const hint = screen.getByText(/SCREENED/);
+    expect(flatStyle(hint).color).toBe(theme.scr.dim);
+  });
+
+  it('N-A3 — the well applies ONE equal inter-section gap (theme.space.xl) across every section', () => {
+    renderEditor();
+    // Walk up from the Username input to the `well` (the panel-backed section container).
+    type Node = { parent: Node | null; props: { style?: unknown } };
+    let p = (screen.getByLabelText('Username') as unknown as Node).parent;
+    let flat: Record<string, unknown> = {};
+    while (p) {
+      flat = flatStyle(p);
+      if (flat.backgroundColor === theme.scr.panel) break;
+      p = p.parent;
+    }
+    expect(flat.backgroundColor).toBe(theme.scr.panel); // found the well
+    expect(flat.gap).toBe(theme.space.xl); // 16 — the single, larger, equal section gap
   });
 });

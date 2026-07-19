@@ -212,3 +212,20 @@ describe('walk2 C4/C6: Profile EDIT mode + MY CONTRIBUTIONS door', () => {
     expect(screen.queryByLabelText('Username')).toBeNull();
   });
 });
+
+describe('N-A5 — Achievements/Contributions teaser labels sit on the F-06 scale', () => {
+  const F06 = [21, 15, 11, 9]; // F-06 law — the ONLY legal on-screen sizes
+  it('the EARNED + CARDS DESIGNED labels are 11 (stepped down one rung from 15)', () => {
+    mockMe = { data: ME([]), isLoading: false, isError: false, refetch: jest.fn() };
+    renderProfile();
+    for (const label of ['0 EARNED', '0 CARDS DESIGNED']) {
+      const node = screen.getByText(label);
+      const flat: Record<string, unknown> = Object.assign(
+        {},
+        ...[node.props.style ?? {}].flat(Infinity).filter(Boolean),
+      );
+      expect(flat.fontSize).toBe(11); // title (15) → body (11)
+      expect(F06).toContain(flat.fontSize as number);
+    }
+  });
+});
