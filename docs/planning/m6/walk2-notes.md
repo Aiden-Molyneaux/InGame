@@ -365,3 +365,28 @@ ledger's word): **30/30 addressed — 29 confirmed-in-code · 1 partial · 0 mis
   survive · #23 sticker blur-teardown.
 - Swept 3 stale comments the reconciliation caught (f39f015): cardArtist "server half owed" (W-C8 landed);
   collection SHELF/LIST "▶ NOW" tags (removed W-B6).
+
+## ROUND 5 — new owner notes (2026-07-18) + the pre-beta dev-copy cleanup
+Buildable notes all landed + pushed; the two feature asks captured to OQ-154/155 (owner-ruled).
+- ✅ N-A1/A3/A4/A5 (127ec8f) **Profile surface** — editor time-gate hugs the username field + orange on
+  cooldown · equal 16px spacing between all editor sections · gamertag button pulled to its field · the
+  Achievements "EARNED"/Contributions "CARDS DESIGNED" labels stepped 15→11 (F-06).
+- ✅ N-A2 (55ab96b) **Favourite-genres latency** — root-caused (no optimistic update + `invalidatesTags:['Me']`
+  = two round-trips per chip tap over a ~12-query GET /me; plus a tap race). Fix: optimistic `updateQueryData`
+  + upsert-from-response, drop the `Me` invalidation on `patchMe`. Instant flip, race killed. (Server-side
+  assembly perf = OQ-156, non-blocking.)
+- ✅ N-B7/B8/B9/B10 (d2d77b7) **Game page** — CARDS empty dashed-box clip fixed centrally in StateFrame ·
+  the duplicate field title fixed (a `bare` TextField prop; the dup lived in the PLAY dossier's per-stat
+  editors — **N-B8 finding: game-detail editing does NOT exist; add-game is a one-shot form** → informs
+  OQ-155) · Switch Card removed + Share moved to a per-card action in the CARDS tab · card panel drops the
+  name/privacy line.
+- ✅ N-C11/C12 (dfebb37) **Up Next** — both "+ Add from collection" buttons stepped (orange, 0069) · the
+  redundant "▶ NOW PLAYING" per-item tag removed (the section header is the single identifier; **card NOW
+  badge KEPT** — flagged: can drop it too for a true single identifier) · Log Hours moved into the title
+  column.
+- ✅ **Dev-copy ledger A+B+C** (5e6e519; [devcopy-ledger.md](devcopy-ledger.md)) — owner-approved: 5
+  rendered feature-IDs stripped · 4 stale/false deferral rows removed (SHARE/EDIT-ART/adopting "arrives",
+  percentile, sticker checkbox) · 13 spec-vocab rewords to product voice. 2 test matchers followed. D/E
+  pending owner calls.
+- ⬜ **OQ-154 Ultimate colour-cosmetics** (owner: PULL INTO BETA) + **OQ-155 game-detail editing** (owner:
+  WIKI + MODERATION) — design-think + spec pass owed before build; the biggest round-5 adds.
