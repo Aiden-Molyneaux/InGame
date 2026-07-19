@@ -25,7 +25,7 @@ import { isUniqueViolation } from '../db/pg-errors';
 import { argon2Hasher } from '../auth/password';
 import { checkPasswordBreached } from '../auth/breach-check';
 import { signAccessToken, generateOpaqueToken, hashOpaqueToken, hashResetCode } from '../auth/tokens';
-import { stubAppleVerifier, type AppleTokenVerifier } from '../auth/apple-verifier';
+import { getAppleVerifier } from '../auth/apple-verifier';
 import * as emailService from './email/email-service';
 import { captureException } from '../observability/sentry';
 import { AuthFailedError, AccountSuspendedError, ValidationError } from '../errors/AppError';
@@ -40,9 +40,6 @@ import type { UserRow, UserSuspensionRow } from '../db/schema';
 // account exists (register + username-available stay disclosing-but-throttled per the contract).
 // Issuance flows use `withTransaction` (they are pre-actor / by-credential, not the `@mutation` seam),
 // with the transactional-outbox event emitted in-tx and the funnel event fired POST-commit.
-
-// Apple verifier injected behind ONE interface — the REAL impl swaps in at enrollment (M1-P).
-const appleVerifier: AppleTokenVerifier = stubAppleVerifier;
 
 function refreshExpiry(): Date {
   return new Date(Date.now() + loadEnv().refreshTokenTtlSeconds * 1000);
@@ -437,9 +434,10 @@ export async function appleSignIn(input: AppleRequest): Promise<AuthSession> {
 }
 
 async function appleSignInAttempt(input: AppleRequest): Promise<AuthSession> {
-  // STUB verification — the REAL server verifier (validate the JWT vs Apple's JWKS + bind the nonce)
-  // is DEFERRED to enrollment (M1-P). Everything below is the real, tested downstream machinery.
-  const identity = await appleVerifier.verify(input.identityToken, input.nonce);
+  // The verifier behind the APPLE_VERIFIER seam (auth-epic P-D): the RealAppleVerifier (remote JWKS +
+  // nonce binding) in production, the stub in dev/test. Everything below is the unchanged, tested
+  // downstream machinery (find-or-create on apple_sub · AUTH-09 link · usernamePending).
+  const identity = await getAppleVerifier().verify(input.identityToken, input.nonce);
 
   const outcome: AppleOutcome = await withTransaction(async (tx) => {
     // (1) A known Apple identity → that account.

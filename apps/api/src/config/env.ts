@@ -67,6 +67,16 @@ export interface ApiEnv {
    * mail.ingame.app domain sitting (SPF/DKIM, owner-provisioned). */
   emailFrom: string;
   /**
+   * AUTH-03/09 (auth-epic P-D) — the Apple identity-token verifier selection ('stub' default OUTSIDE
+   * production; 'apple' = the real remote-JWKS verifier). Chosen via `APPLE_VERIFIER`. FAIL-CLOSED IN
+   * PRODUCTION (F03): the stub accepts forgeable `mock.*` tokens — running it in production is total
+   * account takeover — so `loadEnv` HARD-THROWS when nodeEnv === 'production' and APPLE_VERIFIER is
+   * 'stub' OR unset.
+   */
+  appleVerifier: string;
+  /** AUTH-03 — the `aud` claim the real verifier asserts (the M1-P bundle id). */
+  appleBundleId: string;
+  /**
    * AUTH-01 (decision 0076 §0.9) — the SYS-04 kill-switch for the HIBP breach check on register +
    * password-reset-confirm. Defaults ON (`true`); set `BREACH_CHECK_ENABLED=false` to skip the
    * network call entirely (e.g. the provider is unreachable / rate-limiting us) — a manual off-ramp
@@ -123,6 +133,27 @@ function resolveEmailProvider(nodeEnv: string, raw: string | undefined): string 
   return provider;
 }
 
+/**
+ * AUTH-03/09 (auth-epic P-D) — the fail-closed production floor on the Apple verifier, verbatim the
+ * two floors above (F03): the stub accepts any hand-built `mock.<b64url>` token, so a production
+ * process running it hands out sessions for free — total account takeover. Outside production, unset
+ * defaults to 'stub' (the standing dev/test posture; SIWA E2E rides the EAS build, P16).
+ */
+function resolveAppleVerifier(nodeEnv: string, raw: string | undefined): string {
+  const isProduction = nodeEnv === 'production';
+  const provider = raw ?? (isProduction ? '' : 'stub');
+  if (isProduction && (provider === '' || provider === 'stub')) {
+    throw new Error(
+      provider === 'stub'
+        ? "APPLE_VERIFIER='stub' is refused in production — the stub accepts forgeable mock.* tokens " +
+          '(total account takeover). Set APPLE_VERIFIER to a real verifier (fail-closed, F03 pattern).'
+        : 'APPLE_VERIFIER is required in production — an unset verifier must not silently mean the stub. ' +
+          'Set APPLE_VERIFIER explicitly to a real verifier (fail-closed, F03 pattern).',
+    );
+  }
+  return provider;
+}
+
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): ApiEnv {
   const flag = (source.DISPOSABLE_DB ?? '').toLowerCase();
   const nodeEnv = source.NODE_ENV ?? 'development';
@@ -148,6 +179,8 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): ApiEnv {
     emailProvider: resolveEmailProvider(nodeEnv, source.EMAIL_PROVIDER),
     resendApiKey: source.RESEND_API_KEY ?? '',
     emailFrom: source.EMAIL_FROM ?? 'InGame <no-reply@mail.ingame.app>',
+    appleVerifier: resolveAppleVerifier(nodeEnv, source.APPLE_VERIFIER),
+    appleBundleId: source.APPLE_BUNDLE_ID ?? 'com.aidenmolyneaux.ingame',
     revenueCatWebhookAuth: source.REVENUECAT_WEBHOOK_AUTH ?? '',
     // SOC-10 — the invite-link base (no trailing slash needed; the service joins with '/'). The P15
     // landing owns the real route; this placeholder keeps the seam functional in dev/test.

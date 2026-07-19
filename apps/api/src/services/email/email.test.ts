@@ -38,6 +38,7 @@ describe('loadEnv — the EMAIL provider production floor (AUTH-12 fail-closed)'
       IAP_PROVIDER: 'revenuecat',
       EMAIL_PROVIDER: 'resend',
       RESEND_API_KEY: 're_test_123',
+      APPLE_VERIFIER: 'apple', // the P-D floor rides along (same F03 pattern)
     });
     expect(env.emailProvider).toBe('resend');
     expect(env.resendApiKey).toBe('re_test_123');

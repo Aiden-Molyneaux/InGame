@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import request from 'supertest';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
+import type { KeyLike } from 'jose';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import type { Express } from 'express';
 
@@ -68,6 +69,8 @@ beforeEach(async () => {
   const { clearOutbox, resetEmailProvider } = await import('../../src/services/email');
   clearOutbox();
   resetEmailProvider(); // any per-test injected provider (setEmailProvider) is dropped
+  const { resetAppleVerifier } = await import('../../src/auth/apple-verifier');
+  resetAppleVerifier(); // back to the env-selected stub (P-D describes inject the real verifier)
 
 });
 
@@ -535,6 +538,168 @@ describe('AUTH-03/09 Sign-in-with-Apple (stub verifier)', () => {
     expect(res.status).toBe(200);
     expect(res.body.user.id).toBe(accountAId); // linked to the existing account
     expect(res.body.user.usernamePending).toBe(false); // existing account keeps its username
+  });
+});
+
+describe('AUTH-03/09 SIWA — the REAL verifier against a fixture JWKS (auth-epic P-D)', () => {
+  // A local RSA key pair stands in for Apple's JWKS (the RealAppleVerifier keyResolver seam) — the
+  // tests sign REAL RS256 identity tokens; no network in CI. The downstream machinery is byte-the-same
+  // path the stub suite above exercises.
+  const BUNDLE_ID = 'com.aidenmolyneaux.ingame';
+  const APPLE_ISS = 'https://appleid.apple.com';
+  let privateKey: KeyLike;
+  let fixtureJwk: Record<string, unknown>;
+
+  function sha256hex(s: string): string {
+    return createHash('sha256').update(s).digest('hex');
+  }
+
+  beforeAll(async () => {
+    const { generateKeyPair, exportJWK } = await import('jose');
+    const pair = await generateKeyPair('RS256', { extractable: true });
+    privateKey = pair.privateKey;
+    fixtureJwk = { ...(await exportJWK(pair.publicKey)), kid: 'fixture-key', alg: 'RS256' };
+  });
+
+  /** Install the RealAppleVerifier wired to the fixture JWKS. */
+  async function useRealVerifier(): Promise<void> {
+    const { setAppleVerifier, RealAppleVerifier } = await import('../../src/auth/apple-verifier');
+    const { createLocalJWKSet } = await import('jose');
+    setAppleVerifier(
+      new RealAppleVerifier({
+        keyResolver: createLocalJWKSet({ keys: [fixtureJwk] as never }),
+      }),
+    );
+  }
+
+  /** Sign a real RS256 "Apple" identity token against the fixture key. */
+  async function mintToken(over: {
+    sub?: string;
+    email?: string;
+    emailVerified?: boolean | string;
+    rawNonce?: string;
+    nonceClaim?: string;
+    aud?: string;
+    iss?: string;
+    expired?: boolean;
+  } = {}): Promise<string> {
+    const { SignJWT } = await import('jose');
+    const now = Math.floor(Date.now() / 1000);
+    const claims: Record<string, unknown> = {
+      email: over.email,
+      email_verified: over.emailVerified ?? true,
+      nonce: over.nonceClaim ?? sha256hex(over.rawNonce ?? 'raw-nonce'),
+    };
+    return new SignJWT(claims)
+      .setProtectedHeader({ alg: 'RS256', kid: 'fixture-key' })
+      .setSubject(over.sub ?? `apple-sub-${randomUUID()}`)
+      .setIssuer(over.iss ?? APPLE_ISS)
+      .setAudience(over.aud ?? BUNDLE_ID)
+      .setIssuedAt(over.expired ? now - 7200 : now)
+      .setExpirationTime(over.expired ? now - 3600 : now + 300)
+      .sign(privateKey);
+  }
+
+  it('a VALID signed token → 200 session; new user arrives usernamePending (the downstream is unchanged)', async () => {
+    await useRealVerifier();
+    const email = `real_${randomUUID().slice(0, 6)}@privaterelay.appleid.com`;
+    const token = await mintToken({ email, rawNonce: 'raw-nonce' });
+    const res = await post('/auth/apple', { identityToken: token, nonce: 'raw-nonce' });
+    expect(res.status).toBe(200);
+    expect(res.body.user.usernamePending).toBe(true);
+    expect(typeof res.body.accessToken).toBe('string');
+  });
+
+  it('email_verified as the STRING "true" normalizes → AUTH-09 links to the matching account', async () => {
+    await useRealVerifier();
+    const { email } = await registerUser(); // existing email/password account
+    const token = await mintToken({ email, emailVerified: 'true', rawNonce: 'n1' });
+    const res = await post('/auth/apple', { identityToken: token, nonce: 'n1' });
+    expect(res.status).toBe(200);
+    expect(res.body.user.usernamePending).toBe(false); // linked, not a fresh account
+  });
+
+  it('a WRONG audience (another app id) → neutral 401 AUTH_FAILED', async () => {
+    await useRealVerifier();
+    const token = await mintToken({ aud: 'com.somebody.else' });
+    const res = await post('/auth/apple', { identityToken: token, nonce: 'raw-nonce' });
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe('AUTH_FAILED');
+  });
+
+  it('a WRONG issuer → neutral 401', async () => {
+    await useRealVerifier();
+    const token = await mintToken({ iss: 'https://evil.example.com' });
+    const res = await post('/auth/apple', { identityToken: token, nonce: 'raw-nonce' });
+    expect(res.status).toBe(401);
+  });
+
+  it('an EXPIRED token → neutral 401', async () => {
+    await useRealVerifier();
+    const token = await mintToken({ expired: true });
+    const res = await post('/auth/apple', { identityToken: token, nonce: 'raw-nonce' });
+    expect(res.status).toBe(401);
+  });
+
+  it('a NONCE MISMATCH (token bound to a different raw nonce) → neutral 401', async () => {
+    await useRealVerifier();
+    const token = await mintToken({ rawNonce: 'the-other-nonce' });
+    const res = await post('/auth/apple', { identityToken: token, nonce: 'raw-nonce' });
+    expect(res.status).toBe(401);
+  });
+
+  it('ALG CONFUSION: an HS256-signed forgery is rejected → neutral 401 (RS256 pinned)', async () => {
+    await useRealVerifier();
+    const { SignJWT } = await import('jose');
+    const now = Math.floor(Date.now() / 1000);
+    const forged = await new SignJWT({ nonce: sha256hex('raw-nonce') })
+      .setProtectedHeader({ alg: 'HS256', kid: 'fixture-key' })
+      .setSubject('apple-sub-forged')
+      .setIssuer(APPLE_ISS)
+      .setAudience(BUNDLE_ID)
+      .setIssuedAt(now)
+      .setExpirationTime(now + 300)
+      .sign(new TextEncoder().encode('a-symmetric-secret-32-bytes-long!'));
+    const res = await post('/auth/apple', { identityToken: forged, nonce: 'raw-nonce' });
+    expect(res.status).toBe(401);
+  });
+
+  it('authz:apple — a GARBAGE token → neutral 401 AUTH_FAILED (actorB, real verifier)', async () => {
+    await useRealVerifier();
+    const res = await post('/auth/apple', { identityToken: 'not-a-jwt-at-all', nonce: 'raw-nonce' });
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe('AUTH_FAILED');
+  });
+
+  it('a JWKS FETCH failure → 500 SERVER_ERROR, NOT 401 (infrastructure down is not "bad credentials")', async () => {
+    const { setAppleVerifier, RealAppleVerifier } = await import('../../src/auth/apple-verifier');
+    setAppleVerifier(
+      new RealAppleVerifier({
+        keyResolver: () => {
+          throw new TypeError('fetch failed'); // what a network-dead remote JWKS surfaces as
+        },
+      }),
+    );
+    const token = await mintToken({});
+    const res = await post('/auth/apple', { identityToken: token, nonce: 'raw-nonce' });
+    expect(res.status).toBe(500);
+    expect(res.body.error.code).toBe('SERVER_ERROR');
+  });
+
+  it('the SAME Apple subject through the real verifier resolves the SAME account (find-or-create intact)', async () => {
+    await useRealVerifier();
+    const sub = `apple-sub-${randomUUID()}`;
+    const first = await post('/auth/apple', {
+      identityToken: await mintToken({ sub, rawNonce: 'n-a' }),
+      nonce: 'n-a',
+    });
+    const again = await post('/auth/apple', {
+      identityToken: await mintToken({ sub, rawNonce: 'n-b' }),
+      nonce: 'n-b',
+    });
+    expect(first.status).toBe(200);
+    expect(again.status).toBe(200);
+    expect(again.body.user.id).toBe(first.body.user.id);
   });
 });
 
