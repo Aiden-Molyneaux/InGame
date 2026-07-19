@@ -155,8 +155,9 @@ export function ReleaseRow({ title, studio, releaseLabel }: { title: string; stu
   );
 }
 
-// NowPlayingPin (WTP-03) — the single pinned game atop the UP NEXT room: card + NOW PLAYING tag + title +
-// hours·status + LOG HOURS. Reads the /me/collection nowPlaying entry.
+// NowPlayingPin (WTP-03) — the single pinned game atop the UP NEXT room: card + title + hours·status +
+// LOG HOURS, all in one meta column. The section header "NOW PLAYING" is the single identifier — the
+// per-item "▶ NOW PLAYING" tag was dropped (it triple-named the same fact). Reads the /me/collection nowPlaying entry.
 export function NowPlayingPin({ item, onLogHours, onPress }: { item: CollectionItem; onLogHours: () => void; onPress: () => void }) {
   const styles = useStyles();
   return (
@@ -165,11 +166,12 @@ export function NowPlayingPin({ item, onLogHours, onPress }: { item: CollectionI
         <EntryCard title={item.title} card={item.card} size="cell" nowPlaying animate />
       </Pressable>
       <View style={styles.pinMeta}>
-        <Text style={styles.pinTag}>▶ NOW PLAYING</Text>
         <Text style={styles.pinTitle} numberOfLines={1}>{item.title.toUpperCase()}</Text>
         <Text style={styles.pinSub}>{item.hours} H · {STATUS_LABEL[item.status] ?? item.status.toUpperCase()}</Text>
+        <View style={styles.pinAction}>
+          <ScreenButton label="Log hours" variant="action-alt" size="mini" onPress={onLogHours} />
+        </View>
       </View>
-      <ScreenButton label="Log hours" variant="action-alt" size="mini" onPress={onLogHours} />
     </View>
   );
 }
@@ -229,7 +231,7 @@ const useStyles = themedStyles((t) => ({
 
   pin: { flexDirection: 'row', alignItems: 'center', gap: t.space.lg, backgroundColor: t.scr.panel, borderWidth: 1, borderColor: t.scr.hairline, padding: t.space.md },
   pinMeta: { flex: 1, gap: 2, minWidth: 0 },
-  pinTag: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 1.5 },
   pinTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5 },
   pinSub: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
+  pinAction: { marginTop: t.space.sm, alignSelf: 'flex-start' },
 }));

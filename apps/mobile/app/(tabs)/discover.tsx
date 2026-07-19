@@ -174,7 +174,7 @@ export default function Discover() {
                   {/* walk-9 — a STANDARD ScreenButton orange /primary (the same 0069 ruling as the TOP
                       add-seat: prominent non-acquisitive; the queue is non-commerce, so orange NOT gold
                       — the earlier gold carve-out reading is superseded by the owner's walk). */}
-                  <ScreenButton label="+ Add from collection" variant="primary" block onPress={() => { setCapError(false); setPickerOpen(true); }} />
+                  <ScreenButton label="+ Add from collection" variant="primary" block stepped onPress={() => { setCapError(false); setPickerOpen(true); }} />
                 </View>
               </View>
             )}
@@ -254,8 +254,8 @@ function EmptyQueue({ onAdd }: { onAdd: () => void }) {
       <Text style={styles.inviteEyebrow}>NOTHING QUEUED</Text>
       <Text style={styles.inviteTitle}>QUEUE&apos;S EMPTY</Text>
       <Text style={styles.inviteSub}>Line up what to play next — pull a few games straight from your collection.</Text>
-      {/* walk-9 — orange /primary (0069), matching the populated queue's add control */}
-      <ScreenButton label="+ Add from collection" variant="primary" onPress={onAdd} />
+      {/* walk-9 — orange /primary (0069), matching the populated queue's add control; stepped (round-5 N-C11) */}
+      <ScreenButton label="+ Add from collection" variant="primary" stepped onPress={onAdd} />
     </View>
   );
 }

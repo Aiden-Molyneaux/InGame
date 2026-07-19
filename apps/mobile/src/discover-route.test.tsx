@@ -114,7 +114,9 @@ describe('WTP-01/02: UP NEXT room', () => {
       isLoading: false,
     };
     render();
-    expect(screen.getByText('▶ NOW PLAYING')).toBeTruthy();
+    // N-C12 — the section header is the single now-playing identifier; the per-item "▶ NOW PLAYING" tag was removed.
+    expect(screen.getByText('NOW PLAYING')).toBeTruthy();
+    expect(screen.queryByText('▶ NOW PLAYING')).toBeNull();
     expect(screen.getByText('CARD:Elden Ring')).toBeTruthy();
     expect(screen.getByText('IN COLLECTION')).toBeTruthy();
     expect(screen.getByText('★ WISHLIST')).toBeTruthy();
