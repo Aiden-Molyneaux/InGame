@@ -381,9 +381,13 @@ const useStyles = themedStyles((t) => ({
     opacity: 0.7,
   },
   zoneLabel: {
+    // centered at the top of the forehead band so it clears the POWER label (far left) and the grille
+    // (far right) — the old top-left placement sat on top of "POWER".
     position: 'absolute',
-    left: 3,
+    left: 0,
+    right: 0,
     top: 1,
+    textAlign: 'center',
     fontFamily: t.font.screenBold,
     fontSize: t.type.micro,
     color: t.scr.accent,

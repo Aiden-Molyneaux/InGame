@@ -217,7 +217,10 @@ export default function Profile() {
             style={({ pressed }) => [styles.achRow, pressed && styles.devRowPressed]}
           >
             <View style={styles.achMeta}>
-              <Text style={styles.achCount}>{me.stats.cardsDesigned} CARDS DESIGNED</Text>
+              {/* the teaser shows the PUBLISHED-card count (public contributions) so tapping it lands on
+                  the SAME number the contributor screen shows — NOT stats.cardsDesigned (finished
+                  designs = private + published). Owner ruling 2026-07-19. */}
+              <Text style={styles.achCount}>{me.cardsPublished} CARDS DESIGNED</Text>
               <Text style={styles.achSub}>YOUR DESIGNS &amp; GAMES ADDED</Text>
             </View>
             <Text style={styles.chev}>›</Text>

@@ -150,7 +150,8 @@ export function AboutTab({
         </View>
         <View style={styles.pstat}>
           <Text style={[styles.pv, styles.pvGold]}>{data.friendsHaveCount.toLocaleString('en-US')}</Text>
-          <Text style={styles.pl}>FRIENDS HAVE IT</Text>
+          {/* singularize the verb + noun at 1 — "1 FRIEND HAS IT" / "N FRIENDS HAVE IT" */}
+          <Text style={styles.pl}>{data.friendsHaveCount === 1 ? 'FRIEND HAS IT' : 'FRIENDS HAVE IT'}</Text>
         </View>
       </View>
 

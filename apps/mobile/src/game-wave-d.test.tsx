@@ -10,7 +10,8 @@ import prefsReducer from './store/prefsSlice';
 //
 //   D-3 — ABOUT order: canonical game INFO → the NOT-IN-YOUR-COLLECTION prompt (+ ADD CTA) → the
 //         FRIENDS-WHO-OWN list. The band rides AboutTab's `beforeFriends` slot (was pinned above the tab).
-//   D-4 — ADD TO COLLECTION carries the pixel-stepped silhouette, orange /primary (0069, not gold).
+//   D-4 — ADD TO COLLECTION wears the GOLD `add` grammar (intrinsically stepped), matching the
+//         Add-Game rail (owner reversed the D-4 orange→gold 2026-07-19).
 
 const mockAdd = jest.fn(() => ({ unwrap: () => Promise.resolve({}) }));
 const mockQueue = jest.fn(() => ({ unwrap: () => Promise.resolve({}) }));
@@ -92,15 +93,14 @@ describe('W-D1 D-3 — CATALOG ABOUT order: info → not-in-collection → frien
   });
 });
 
-describe('W-D1 D-4 — the CATALOG ADD TO COLLECTION button is orange /primary + STEPPED', () => {
-  it('carries the stepped silhouette, kept /primary (0069, not gold)', () => {
+describe('W-D1 D-4 — the CATALOG ADD TO COLLECTION button is GOLD (add), matching the rail (owner reversed orange→gold 2026-07-19)', () => {
+  it('wears the gold `add` grammar (F-02 gold + intrinsic step)', () => {
     const { UNSAFE_getAllByType } = renderCatalog();
     const add = UNSAFE_getAllByType(ScreenButton).find((b) =>
       String(b.props.label).toLowerCase().includes('add to collection'),
     );
     expect(add).toBeTruthy();
-    expect(add!.props.variant).toBe('primary'); // orange, non-acquisitive (NOT gold/add)
-    expect(add!.props.stepped).toBe(true); // the pixel-stepped corners
+    expect(add!.props.variant).toBe('add'); // gold, intrinsically stepped — matches the Add-Game rail
     expect(screen.getByText('NOT IN YOUR COLLECTION')).toBeTruthy();
   });
 });

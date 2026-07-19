@@ -435,17 +435,16 @@ function FriendPlayTab({
           <ScreenButton label={`Adopt ${friendName ? `${friendName}’s` : 'their'} card`} variant="primary" onPress={onAdoptTheirCard} block />
         ) : null}
         {!iOwn ? (
-          // W-D1 D-4 — ADD TO COLLECTION carries the pixel-STEPPED silhouette (steppedRectPath via the
-          // ScreenButton `stepped` prop), kept ORANGE /primary (0069 — non-acquisitive, NOT gold). When
-          // an adopt-able card demotes ADD to the cream secondary (to preserve the ADOPT-primary
-          // hierarchy) the step is dropped — the step is the orange-primary silhouette, never a cream one.
+          // W-D1 D-4 (owner reversed orange→gold 2026-07-19) — ADD TO COLLECTION wears the GOLD stepped
+          // `add` grammar (F-02 gold + intrinsic step), matching the Add-Game rail. When an adopt-able
+          // card is present ADOPT is the orange /primary and ADD demotes to the cream secondary (to keep
+          // one loud CTA) — the cream secondary carries no step (the step rides the gold silhouette).
           (() => {
-            const addVariant = galleryCard ? 'secondary' : 'primary';
+            const addVariant = galleryCard ? 'secondary' : 'add';
             return (
               <ScreenButton
                 label={adding ? 'Adding…' : 'Add to collection'}
                 variant={addVariant}
-                stepped={addVariant === 'primary'}
                 onPress={onAddToCollection}
                 disabled={adding || added}
                 block

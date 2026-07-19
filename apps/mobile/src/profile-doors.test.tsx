@@ -73,6 +73,7 @@ const ME = (top10: unknown[], over: Record<string, unknown> = {}) => ({
   favouriteGame: null,
   nowPlaying: null,
   top10,
+  cardsPublished: 0,
   ...over,
 });
 
@@ -196,6 +197,23 @@ describe('walk2 C4/C6: Profile EDIT mode + MY CONTRIBUTIONS door', () => {
     renderProfile();
     fireEvent.press(screen.getByLabelText('View your contributions'));
     expect(mockPush).toHaveBeenCalledWith('/contributor/me-0000-0000-0000-000000000000');
+  });
+
+  it('C6 — the teaser shows the PUBLISHED count, NOT stats.cardsDesigned (owner ruling 2026-07-19)', () => {
+    // finished designs (stats.cardsDesigned) = 18; published contributions = 5 — the teaser shows 5, so
+    // tapping it lands on the SAME number the contributor screen counts.
+    mockMe = {
+      data: ME([], {
+        cardsPublished: 5,
+        stats: { games: 17, hours: 300, completionPct: 40, cardsDesigned: 18, adoptionsReceived: 0, friends: 3 },
+      }),
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    };
+    renderProfile();
+    expect(screen.getByText('5 CARDS DESIGNED')).toBeTruthy(); // the published count
+    expect(screen.queryByText('18 CARDS DESIGNED')).toBeNull(); // NOT the finished-designs stat
   });
 
   it('C4 — the EDIT keycap toggles the in-place identity editor (OQ-034)', () => {

@@ -49,6 +49,7 @@ const ME_BASE = {
   favouriteGame: null,
   nowPlaying: null,
   top10: [],
+  cardsPublished: 0,
 };
 
 function make200(body: unknown) {

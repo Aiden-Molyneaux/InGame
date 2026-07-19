@@ -59,32 +59,37 @@ export function QueueRow({
     ? `REC'D BY @${recBy.username}${item.note ? ` · ${item.note}` : ''}`
     : ''; // hours/status aren't on the queue shape; a self-add shows its source tag only (board sub is context)
   return (
-    <Pressable
-      style={styles.qrow}
-      accessibilityRole="button"
-      accessibilityLabel={`${item.title}, rank ${rank}`}
-      onPress={onPress}
-      disabled={arranging}
-    >
-      {arranging ? <Grip /> : null}
-      <Text style={styles.qrank}>{rank}</Text>
-      <EntryCard title={item.title} card={item.card} size="thumb" />
-      <View style={styles.qmeta}>
-        <Text style={styles.qtitle} numberOfLines={1}>{item.title.toUpperCase()}</Text>
-        {sub ? <Text style={styles.qsub} numberOfLines={2}>{sub}</Text> : null}
-      </View>
-      {/* walk-8 — the source indicator FIRST, the ⋯ overflow at the row's RIGHT EDGE (owner walk). */}
-      <View style={item.owned ? styles.tagSrc : styles.tagWish}>
-        <Text style={item.owned ? styles.tagSrcText : styles.tagWishText}>
-          {item.owned ? 'IN COLLECTION' : '★ WISHLIST'}
-        </Text>
-      </View>
+    // De-nested (RN-web hydration): the row is a plain View; the tappable content and the ⋯ overflow
+    // are SIBLING Pressables — a Pressable inside a Pressable renders nested <button>s on web.
+    <View style={styles.qrow}>
+      <Pressable
+        style={styles.qrowMain}
+        accessibilityRole="button"
+        accessibilityLabel={`${item.title}, rank ${rank}`}
+        onPress={onPress}
+        disabled={arranging}
+      >
+        {arranging ? <Grip /> : null}
+        <Text style={styles.qrank}>{rank}</Text>
+        <EntryCard title={item.title} card={item.card} size="thumb" />
+        <View style={styles.qmeta}>
+          <Text style={styles.qtitle} numberOfLines={1}>{item.title.toUpperCase()}</Text>
+          {sub ? <Text style={styles.qsub} numberOfLines={2}>{sub}</Text> : null}
+        </View>
+        {/* walk-8 — the source indicator at the tappable row's RIGHT EDGE (owner walk). */}
+        <View style={item.owned ? styles.tagSrc : styles.tagWish}>
+          <Text style={item.owned ? styles.tagSrcText : styles.tagWishText}>
+            {item.owned ? 'IN COLLECTION' : '★ WISHLIST'}
+          </Text>
+        </View>
+      </Pressable>
+      {/* the ⋯ overflow — a SIBLING of the row Pressable (never nested inside it) */}
       {onOverflow && !arranging ? (
         <Pressable accessibilityRole="button" accessibilityLabel={`${item.title} options`} onPress={onOverflow} hitSlop={8}>
           <Text style={styles.ovf}>⋯</Text>
         </Pressable>
       ) : null}
-    </Pressable>
+    </View>
   );
 }
 
@@ -197,6 +202,8 @@ const useStyles = themedStyles((t) => ({
     paddingHorizontal: t.space.md,
     paddingVertical: t.space.sm,
   },
+  // the tappable row content (everything but the ⋯ overflow); fills the row so the tag packs right.
+  qrowMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: t.space.md, minWidth: 0 },
   qrank: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.dim, width: 16, textAlign: 'center' },
   qmeta: { flex: 1, gap: 1, minWidth: 0 },
   qtitle: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 0.5 },

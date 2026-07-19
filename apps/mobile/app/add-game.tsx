@@ -311,7 +311,8 @@ function FocusedMeta({ item }: { item: CatalogItem }) {
       {/* the CAT-09 presence line */}
       <Text style={styles.metaPresence}>
         IN {item.collectionsCount} COLLECTION{item.collectionsCount === 1 ? '' : 'S'} ·{' '}
-        {item.friendsHaveCount} FRIEND{item.friendsHaveCount === 1 ? '' : 'S'} HAVE IT
+        {item.friendsHaveCount} FRIEND{item.friendsHaveCount === 1 ? '' : 'S'}{' '}
+        {item.friendsHaveCount === 1 ? 'HAS' : 'HAVE'} IT
       </Text>
       {/* W-D1 Q3 — the INSPECT affordance: see the ABOUT page + Community Cards before adding (the B7
           shelf-chevron grammar). Resolves the adaptive Game page: CATALOG when unowned, OWN if owned. */}

@@ -292,9 +292,12 @@ briefs for M7 get this line verbatim.
   band (+ ADD CTA) moved off the top of the tab into it, so the order reads **info → not-in-collection →
   friends-who-own**.
 - ✅ **D-4** ⚖ **Stepped-corner ADD TO COLLECTION** — the CATALOG ADD button carries the pixel-stepped
-  silhouette (ScreenButton `stepped`), kept ORANGE `/primary` (0069 — non-acquisitive, NOT gold). The
-  FRIEND ADD is stepped when it's the primary add; when an adopt-able card demotes it to the cream
-  secondary the step drops (the step is the orange-primary silhouette, never a cream one).
+  silhouette. **↺ REVERSED 2026-07-19 (owner):** ADD TO COLLECTION is now **GOLD** — the ScreenButton
+  `add` grammar (F-02 gold + intrinsic step), matching the Add-Game rail's ADD **exactly** (the original
+  D-4 orange `/primary` is retired; the owner ruled the catalog/friend ADD consistent with the rail's
+  gold). The FRIEND ADD is gold `add` when it's the primary add; when an adopt-able card is present
+  ADOPT stays the orange `/primary` and ADD demotes to the cream secondary (one loud CTA; the step
+  rides the gold silhouette, never a cream one).
 - ✅ **D-1..D-4 review-pass** — adversarial review returned GO; 6 findings fixed:
   **F1 (MED regression)** `AboutTab` now renders the `beforeFriends` slot in its LOADING and ERROR
   branches too, so the CATALOG ADD band survives a `GET /catalog/games/:id` lag/failure (the resolver

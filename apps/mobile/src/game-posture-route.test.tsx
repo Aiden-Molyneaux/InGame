@@ -284,14 +284,13 @@ describe('W-D1 FRIEND posture — read-only + compose', () => {
     expect(screen.queryByText('VIEW YOUR COPY ›')).toBeNull();
   });
 
-  it('D-4 — unowned with NO adopt-able card: ADD TO COLLECTION is orange /primary + STEPPED', () => {
+  it('D-4 — unowned with NO adopt-able card: ADD TO COLLECTION is GOLD (add), matching the rail (owner reversed orange→gold 2026-07-19)', () => {
     mockCollection = { data: { items: [] } as unknown as CollectionResponse, isLoading: false, isError: false, refetch: jest.fn() };
     mockGallery = { data: { items: [] } as unknown as GameGalleryResponse }; // their card not adopt-able → ADD is the sole primary
     const { UNSAFE_getAllByType } = render(wrap(<GamePage />));
     const add = UNSAFE_getAllByType(ScreenButton).find((b) => String(b.props.label).toLowerCase().includes('add to collection'));
     expect(add).toBeTruthy();
-    expect(add!.props.variant).toBe('primary'); // orange, not gold (0069)
-    expect(add!.props.stepped).toBe(true); // the pixel-stepped silhouette
+    expect(add!.props.variant).toBe('add'); // gold, intrinsically stepped — matches the Add-Game rail
   });
 
   it('D-4 — when an adopt-able card demotes ADD to the cream secondary, the step drops (never a cream step)', () => {

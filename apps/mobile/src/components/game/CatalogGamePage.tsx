@@ -25,7 +25,8 @@ import { SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../ScreenHead';
 //           friends-who-own. The band renders in AboutTab's loading/error branches too (F1), so the key
 //           action (ADD TO COLLECTION) is never lost to a facts-fetch failure.
 //
-// ADD TO COLLECTION is the orange `/primary` NON-acquisitive add (0069; NOT gold — no PX spent). On
+// ADD TO COLLECTION is the GOLD stepped `add` grammar (F-02, matching the Add-Game rail — owner
+// reversed the D-4 orange→gold 2026-07-19). On
 // success the resolver's Collection re-read lands `myEntry` → the page UPGRADES IN PLACE to OWN at the
 // same URL (§1). UP NEXT adds the game to the WTP queue as a wishlist item (WTP-02, source='discovery').
 export function CatalogGamePage({ gameId }: { gameId: string }) {
@@ -102,12 +103,12 @@ export function CatalogGamePage({ gameId }: { gameId: string }) {
                   <Text style={styles.bandHead}>NOT IN YOUR COLLECTION</Text>
                   <Text style={styles.bandSub}>Add it to track your play, design its card, and compare with friends.</Text>
                   <View style={styles.bandActions}>
-                    {/* W-D1 D-4 — ADD TO COLLECTION carries the pixel-STEPPED silhouette (steppedRectPath via
-                        the ScreenButton `stepped` prop), kept ORANGE /primary (0069 — non-acquisitive, NOT gold). */}
+                    {/* W-D1 D-4 (owner reversed orange→gold 2026-07-19) — ADD TO COLLECTION now wears the
+                        GOLD stepped `add` grammar (F-02 gold + intrinsic steppedRectPath), matching the
+                        Add-Game rail's ADD exactly (the D-4 orange /primary is retired). */}
                     <ScreenButton
                       label={addState.isLoading ? 'Adding…' : '+ Add to collection'}
-                      variant="primary"
-                      stepped
+                      variant="add"
                       onPress={() => void onAdd()}
                       disabled={addState.isLoading}
                       block

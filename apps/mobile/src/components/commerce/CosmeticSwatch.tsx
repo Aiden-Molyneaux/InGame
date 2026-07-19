@@ -271,7 +271,10 @@ export function PlateSwatch({ shape, size }: { shape: string; size: SwatchSize }
       </Svg>
       <Text
         numberOfLines={1}
-        style={{ fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: ink, letterSpacing: 1, maxWidth: W - 12 }}
+        adjustsFontSizeToFit
+        // tighter tracking + a wider clamp so "SAMPLE" fits the narrow row-size plate (e.g. BRASS)
+        // instead of ellipsizing to "SAM…"
+        style={{ fontFamily: theme.font.screenBold, fontSize: theme.type.micro, color: ink, letterSpacing: 0.3, maxWidth: W - 4, textAlign: 'center' }}
       >
         SAMPLE
       </Text>
