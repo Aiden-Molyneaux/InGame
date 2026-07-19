@@ -16,6 +16,26 @@
 
 ## Open
 
+- OQ-154: **"Ultimate" colour-customizable cosmetics** — a new cosmetic class where the user picks the
+  cosmetic's COLOUR via a colour picker (a Frame whose colour you choose, the equivalent Nameplate,
+  Font, effect, etc.). Owner (2026-07-18) leans **per-DESIGN, single-SKU** (one purchase = one specific
+  design that carries colour customization; buying a second customizable font is a separate purchase) —
+  NOT a per-category "unlock colour for all frames". Not every design gets it to start (a per-design
+  `colorCustomizable` flag). OPEN: (a) per-design vs per-category [owner leans per-design ✓]; (b) WHERE the
+  colour is chosen — recommend **in the Styler/Canvas editor**, reusing the shared `ColorPicker` (decision
+  0067/CR-11), the chosen colour stored as a per-layer attribute in the composition JSON (CARD-15); (c) the
+  **"Ultimate" price tier** — a new ECON band above premium; (d) store merchandising (a badge/aisle marking
+  Ultimate items); (e) **timing — beta vs M7** (additive; the close-friends alpha doesn't require it).
+  Behavior/economy → product-spec (ECON/COSM/CARD) + api-contract + design. A real feature needing
+  design-think + a spec pass, NOT a fix. (2026-07-18) [behavior]
+- OQ-155: **Edit game canonical details after creation** — a game's studio/genre/year/etc. are set only at
+  creation (add-game); there is no later edit path, which the owner finds undesirable. OPEN: (a) WHO may
+  edit — the game's original contributor only (simplest, lowest vandalism risk; recommended for beta), any
+  user wiki-style + moderation (bigger — needs edit history + MOD review), or contributor+mod; (b) edit
+  history / moderation for a community-owned catalog (CAT-/MOD-); (c) which fields are editable vs locked
+  (e.g. title vs merge/dedup concerns); (d) timing — beta vs later. Note N-B8 (round-5) may surface a
+  partial edit form in add-game; its finding informs this. Behavior → product-spec (CAT-) + api-contract +
+  design. (2026-07-18) [behavior]
 - OQ-153: **Friend-read repo selects the full entry row — narrow it to make the defense true (defense-in-depth, SOC-11).**
   `friend-read-repo.ts` `FRIEND_ENTRY_COLUMNS` sets `entry: collectionEntries`, which in Drizzle selects
   *every* column — including the owner-private `notes` / `rating` / `percentComplete` — so those fields
