@@ -4,7 +4,12 @@ import { configureStore } from '@reduxjs/toolkit';
 import type { SelfProfile, GenresResponse } from '@ingame/shared';
 import prefsReducer from '../../store/prefsSlice';
 import { theme } from '../../theme';
+import { SCREEN_THEMES, DEFAULT_THEME_ID } from '../../theme/palettes';
 import { EditableIdentity, type SaveOutcome } from './EditableIdentity';
+
+// Tests assert against the DEFAULT (Midnight) palette directly — the rule-theme-tokens convention
+// for test files (cf. celebration.test.tsx): `theme.scr` is the live layer, off-limits statically.
+const SCR = SCREEN_THEMES[DEFAULT_THEME_ID];
 
 jest.mock('../../a11y/useReducedMotion', () => ({ useReducedMotion: () => true }));
 
@@ -136,13 +141,13 @@ describe('EditableIdentity (W-C4 · in-place per-field commit)', () => {
     const future = new Date(Date.now() + 5 * 86400_000).toISOString();
     renderEditor({ me: ME({ usernameNextChangeAt: future }) });
     const gate = screen.getByText(/NEXT CHANGE/);
-    expect(flatStyle(gate).color).toBe(theme.scr.accent); // #ff9f43 on Midnight — NOT the dim default
+    expect(flatStyle(gate).color).toBe(SCR.accent); // #ff9f43 on Midnight — NOT the dim default
   });
 
   it('N-A1 — the non-cooldown format hint stays dim, not accent', () => {
     renderEditor(); // usernameNextChangeAt: null → the no-cooldown format-hint branch
     const hint = screen.getByText(/SAVES WHEN YOU TAP AWAY/);
-    expect(flatStyle(hint).color).toBe(theme.scr.dim);
+    expect(flatStyle(hint).color).toBe(SCR.dim);
   });
 
   it('N-A3 — the well applies ONE equal inter-section gap (theme.space.xl) across every section', () => {
@@ -153,10 +158,10 @@ describe('EditableIdentity (W-C4 · in-place per-field commit)', () => {
     let flat: Record<string, unknown> = {};
     while (p) {
       flat = flatStyle(p);
-      if (flat.backgroundColor === theme.scr.panel) break;
+      if (flat.backgroundColor === SCR.panel) break;
       p = p.parent;
     }
-    expect(flat.backgroundColor).toBe(theme.scr.panel); // found the well
+    expect(flat.backgroundColor).toBe(SCR.panel); // found the well
     expect(flat.gap).toBe(theme.space.xl); // 16 — the single, larger, equal section gap
   });
 });
