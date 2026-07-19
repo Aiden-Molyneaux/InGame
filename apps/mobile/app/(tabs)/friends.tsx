@@ -140,7 +140,6 @@ export default function Friends() {
             {/* RECENT ACTIVITY — the SOC-06 river */}
             <View style={styles.sec}>
               <Text style={styles.secTitle}>RECENT ACTIVITY</Text>
-              {!quiet && feedItems.length > 0 ? <Text style={styles.secTag}>LOW-NOISE</Text> : null}
             </View>
 
             {feedLoading && feedItems.length === 0 ? (
@@ -255,7 +254,6 @@ const useStyles = themedStyles((t) => ({
 
   sec: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: t.space.xl, marginBottom: t.space.md },
   secTitle: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 2 },
-  secTag: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 1 },
 
   rail: { gap: t.space.lg, paddingVertical: t.space.xs },
   tile: { width: 52, alignItems: 'center', gap: t.space.sm },

@@ -546,7 +546,7 @@ export default function DeviceEditor() {
   // state; completes the F-21 tail, whose r6 already dropped the beat's was→now MiniDevice pair). The
   // readout row now renders ONLY for the two informative states — the D5 on-shell preview and the
   // live PLACING transform line — and otherwise the space collapses cleanly.
-  const readout: { title: string; sub: string; ok?: boolean } | null = previewing
+  const readout: { title: string; sub?: string; ok?: boolean } | null = previewing
     ? {
         title: 'YOUR DEVICE — AS IT WEARS',
         sub: previewSub(SHELL_NAMES[liveShellId], SCREEN_THEME_NAMES[liveThemeId], stickerCount),
@@ -559,7 +559,6 @@ export default function DeviceEditor() {
             selectedSticker.scale,
             selectedSticker.rotation,
           ),
-          sub: 'DECALS GO ON THE PLASTIC, NOT THE SCREEN',
         }
       : null;
 
@@ -672,7 +671,7 @@ export default function DeviceEditor() {
           <View style={[styles.dot, readout.ok && styles.dotOk]} />
           <View style={styles.readoutText}>
             <Text style={styles.readoutTitle}>{readout.title}</Text>
-            <Text style={styles.readoutSub}>{readout.sub}</Text>
+            {readout.sub ? <Text style={styles.readoutSub}>{readout.sub}</Text> : null}
           </View>
         </View>
       ) : null}
@@ -803,10 +802,7 @@ export default function DeviceEditor() {
             <Text style={styles.secSub}>
               Save the whole styled combo — shell, stickers &amp; theme — and re-apply it in a tap.
             </Text>
-            <Text style={styles.looksHead}>SAVED LOOKS</Text>
-            <Text style={styles.looksReadout}>
-              YOUR LOOKS — {lookList.length} SAVED · SHELL + STICKERS + THEME, SAVED AS ONE
-            </Text>
+            <Text style={styles.looksHead}>SAVED LOOKS — {lookList.length}</Text>
             <LooksGrid
               looks={lookList}
               liveFacets={liveFacets}
@@ -984,12 +980,6 @@ const useStyles = themedStyles((t) => ({
     color: t.scr.dim,
     letterSpacing: 1,
     paddingTop: t.space.sm,
-  },
-  looksReadout: {
-    fontFamily: t.font.screenSemi,
-    fontSize: t.type.micro, // 9 (F-06)
-    color: t.scr.faint,
-    letterSpacing: 0.5,
   },
   looksError: {
     fontFamily: t.font.screenSemi,

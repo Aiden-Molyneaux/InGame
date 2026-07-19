@@ -468,9 +468,6 @@ function BrowseView({
       ) : null}
 
       <Text style={styles.secTitle}>THE INDEX — ALL AISLES</Text>
-      {featured.length > 0 ? null : (
-        <Text style={styles.emptyNote}>New premium items arrive as the catalog fills — browse the aisles below.</Text>
-      )}
       <AisleIndex onAisle={onAisle} onTopUp={onTopUp} counts={aisleCounts} />
       <Text style={styles.baseHint}>The free baseline isn&apos;t sold here — it lives in the editors.</Text>
     </View>
@@ -657,10 +654,7 @@ function AisleView({
         FROM THE INDEX — {items.length} {aisle.label}
       </Text>
       {items.length === 0 ? (
-        <Text style={styles.emptyNote}>
-          This aisle is being stocked — its premium items arrive as the catalog fills. The free baseline
-          already lives in the editors.
-        </Text>
+        <Text style={styles.emptyNote}>No items here yet.</Text>
       ) : (
         <View style={styles.aisleList}>
           {items.map((it) => (
@@ -668,7 +662,10 @@ function AisleView({
           ))}
         </View>
       )}
-      <Text style={styles.baseHint}>The free baseline isn&apos;t sold here — it lives in the editors.</Text>
+      {/* the free-baseline hint reads once — suppressed on the empty aisle (the emptyNote stands alone). */}
+      {items.length > 0 ? (
+        <Text style={styles.baseHint}>The free baseline isn&apos;t sold here — it lives in the editors.</Text>
+      ) : null}
     </View>
   );
 }
