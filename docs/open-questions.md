@@ -41,22 +41,6 @@
   design-think + spec pass (the new "Ultimate" ECON tier · per-design `colorCustomizable` flag · the
   composition colour attribute + a migration · the editor ColorPicker hook · store merchandising · the
   RevenueCat SKU) BEFORE build. Expands beta scope — sets part of the beta timeline.
-- OQ-155: **Edit game canonical details after creation** — a game's studio/genre/year/etc. are set only at
-  creation (add-game); there is no later edit path, which the owner finds undesirable. OPEN: (a) WHO may
-  edit — the game's original contributor only (simplest, lowest vandalism risk; recommended for beta), any
-  user wiki-style + moderation (bigger — needs edit history + MOD review), or contributor+mod; (b) edit
-  history / moderation for a community-owned catalog (CAT-/MOD-); (c) which fields are editable vs locked
-  (e.g. title vs merge/dedup concerns); (d) timing — beta vs later. Note N-B8 (round-5) may surface a
-  partial edit form in add-game; its finding informs this. Behavior → product-spec (CAT-) + api-contract +
-  design. (2026-07-18) [behavior]
-  **→ OWNER RULED (2026-07-18): ANY USER, WIKI-STYLE + MODERATION.** So game-detail edits are open to any
-  user, with edit history + moderation. **DEPENDENCY TO RESOLVE in the spec pass:** the moderation CONSOLE
-  is M7-scoped (the M6 gate shipped Report as capture-only; console stays M7 — decisions 0076/0077). Wiki
-  editing needs a moderation surface — so either (a) edits go live optimistically at beta and are
-  reversible via the edit history, with review riding the M7 console (recommended — ships the edit ability
-  without pulling console work forward), or (b) pull a minimal mod-review surface into the beta. Also open:
-  which fields are editable vs locked (title/merge/dedup concerns), and the edit-history data model
-  (CAT-/MOD-). Design-think + spec pass BEFORE build; the biggest of the round-5 adds.
 - OQ-153: **Friend-read repo selects the full entry row — narrow it to make the defense true (defense-in-depth, SOC-11).**
   `friend-read-repo.ts` `FRIEND_ENTRY_COLUMNS` sets `entry: collectionEntries`, which in Drizzle selects
   *every* column — including the owner-private `notes` / `rating` / `percentComplete` — so those fields
@@ -564,6 +548,18 @@
 - OQ-110: **Spec IDs leak into UI copy.** "CARD-16"-style stable IDs appear in user-facing strings (styler:493); strip app-wide. (board copy cleanup) [presentation/QUICK] — any
 
 ## Resolved
+- OQ-155 → **RESOLVED (2026-07-18): W-6 wiki game-detail editing BUILT** (game-edit-wiki-draft, owner-signed
+  + amendments A1–A3; product-spec **0.62** · api-contract **0.75**). Owner ruled ANY USER, WIKI-STYLE:
+  edits go **live immediately** and are fully reversible via history (option (a) — review rides the M7
+  console, MOD-16; nothing pulled forward). **CAT-13** (wiki-live editing: studio·publisher·releaseDate·
+  genres; **title LOCKED** — CAT-03 dedup identity, fixes ride the `incorrect_info` report → MOD-14; MOD-07
+  screening; `catalog:edit` 10/min+50/day; the **A1 14-day editor age-gate**, `ACCOUNT_TOO_NEW`, admins
+  exempt) + **CAT-14** (the immutable `game_edits` history + revert — replay-oldValue + reversal rows;
+  rights = editor-self · contributor · admin (MOD-10-logged), A3; the `EDITED BY X · 2D AGO` attribution)
+  + **MOD-16** (the M7 console EDITS queue, dependency note). CAT-06/MOD-06 superseded. **A2:** the CARD
+  report reason set gains `incorrect_info` (details required, MOD-01). Server (migration 0022 + service +
+  routes + integration suite) + client (AboutTab per-field EDIT mode + report sheet) shipped M6 W-6.
+  [behavior]
 - OQ-116 → **RESOLVED (2026-07-01): pinned in api-contract 0.42** by the parallel spec-owner pass
   (`/me` gains `usernamePending`/`emailVerified`/`role`/`adminTier`; gamertag CRUD bodies + the
   controlled platform list, `{ items: [...] }` GET wrapper, `handle` ≤64 sanitized+screened). The
