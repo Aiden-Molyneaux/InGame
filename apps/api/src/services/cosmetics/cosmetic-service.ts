@@ -1,6 +1,7 @@
 import type {
   AcquireBatchResponse,
   AcquireResponse,
+  CosmeticListItem,
   CosmeticsResponse,
   CosmeticType,
   Entitlement,
@@ -11,7 +12,13 @@ import type { Executor } from '../../db/client';
 import * as entitlementRepo from '../../repositories/entitlement-repo';
 import * as economyRepo from '../../repositories/economy-repo';
 import * as ledger from '../economy/ledger-service';
-import { listCatalog, lookupCosmeticTier, priceForTier, type CosmeticTier } from '../../config/cosmetics';
+import {
+  listCatalog,
+  lookupCosmeticTier,
+  priceForTier,
+  type CosmeticCatalogEntry,
+  type CosmeticTier,
+} from '../../config/cosmetics';
 import { SPEND_FLOOR, STARTING_GRANT } from '../../config/economy';
 import { InsufficientBalanceError, NotFoundError } from '../../errors/AppError';
 import type { UserEntitlementRow } from '../../db/schema';
@@ -123,6 +130,24 @@ export async function listMyEntitlements(actorId: string): Promise<EntitlementsR
 }
 
 /**
+ * The ONE catalog-entry → `cosmeticListItem` mapper (api-contract 0.77) — shared by GET /cosmetics
+ * (below) and GET /store's `premiumCosmetics` (iap-service), so the two surfaces can never drift.
+ * `owned` is caller-scoped from the passed entitlement set (free items are always owned);
+ * `colorCustomizable` rides only when the entry carries the COSM-05 flag (F-17 additive).
+ */
+export function toCosmeticListItem(entry: CosmeticCatalogEntry, ownedIds: Set<string>): CosmeticListItem {
+  return {
+    id: entry.id,
+    type: entry.type,
+    name: entry.name,
+    ...(entry.tier ? { tier: entry.tier } : {}),
+    price: priceForTier(entry.tier),
+    owned: entry.tier === null ? true : ownedIds.has(entry.id),
+    ...(entry.colorCustomizable ? { colorCustomizable: true as const } : {}),
+  };
+}
+
+/**
  * GET /cosmetics — the COSM-01 library listing (decision 0075, P10): every catalog item, free +
  * premium, optionally filtered to one type. `owned` is caller-scoped (free items are always `true`;
  * premium items check the caller's own `user_entitlements` — one batched read, never per-item). A pure
@@ -132,16 +157,7 @@ export async function listCosmeticLibrary(actorId: string, type?: CosmeticType):
   const catalog = listCatalog(type);
   const premiumIds = catalog.filter((e) => e.tier !== null).map((e) => e.id);
   const owned = await entitlementRepo.findOwnedCosmeticIds(actorId, premiumIds);
-  return {
-    items: catalog.map((e) => ({
-      id: e.id,
-      type: e.type,
-      name: e.name,
-      ...(e.tier ? { tier: e.tier } : {}),
-      price: priceForTier(e.tier),
-      owned: e.tier === null ? true : owned.has(e.id),
-    })),
-  };
+  return { items: catalog.map((e) => toCosmeticListItem(e, owned)) };
 }
 
 function toEntitlementView(row: UserEntitlementRow): Entitlement {

@@ -206,7 +206,10 @@ function PlatePreview({ comp }: { comp: CardComposition }) {
   const W = 96;
   const H = 30;
   const d = platePath(shape, W, H);
-  const plateFill = shape === 'brass' ? '#e8c14a' : (np?.plate ?? '#141026');
+  // brass tints gold — EXCEPT a colour-customized (COSM-05 ultimate) plate, whose explicit
+  // `cosmeticId` signals that `plate` is the chosen hue (mirrors buildCard's brass-ramp gate).
+  const plateFill =
+    shape === 'brass' ? (np?.cosmeticId ? (np?.plate ?? '#e8c14a') : '#e8c14a') : (np?.plate ?? '#141026');
   return (
     <View style={{ width: W, height: H, alignItems: 'center', justifyContent: 'center' }}>
       <Svg width={W} height={H} style={StyleSheet.absoluteFill}>

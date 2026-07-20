@@ -63,12 +63,16 @@ export type CardComposition = {
   schemaVersion: typeof COMPOSITION_SCHEMA_VERSION;
   base: { gradient: [string, string] } | { fill: string };
   elements: CardElement[]; // cap MAX_ELEMENTS (validated by the shared compositionSchema)
-  frame?: { kind?: FrameKind; color: string; width: number }; // width normalized 0..1 of card width; kind defaults thin-line
+  // `cosmeticId` (COSM-05, W-5/decision 0080): the optional additive explicit design identity —
+  // written by the Styler when an ULTIMATE (colorCustomizable) design is applied, so identity resolves
+  // colour-independently (registry-validated server-side; the brass ramp + flatten backstop key off it).
+  // Additive at schemaVersion 1 inside the shared schema's `.passthrough()` envelope (the F21 rule).
+  frame?: { kind?: FrameKind; color: string; width: number; cosmeticId?: string }; // width normalized 0..1 of card width; kind defaults thin-line
   // `title` is GAME-DERIVED, not user content (CARD-11 / owner ruling 2026-07-15): the text is ALWAYS
   // the game title (system-forced by the server flatten + the client write-path); only shape/fontId/ink
   // + the plate cosmetic are user-customizable. The stored `title` is a render INPUT kept for the flatten,
   // never trusted as authored copy. shape defaults slab; fontId defaults clean-sans.
-  nameplate?: { shape?: NameplateShape; fontId?: string; title: string; plate: string; ink: string; size: number };
+  nameplate?: { shape?: NameplateShape; fontId?: string; title: string; plate: string; ink: string; size: number; cosmeticId?: string };
   effect?: { kind: EffectKind; intensity: number }; // ONE at a time (CARD-12) — a RUNTIME overlay, not baked
   finish?: { kind: FinishKind }; // stacks OVER the effect; binary material, no slider (CARD-12/OQ-048)
 };

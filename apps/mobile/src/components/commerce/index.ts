@@ -8,6 +8,8 @@ export { PackTile } from './PackTile';
 export { ItemTile } from './ItemTile';
 export { LedgerRow } from './LedgerRow';
 export { OwnedTag, LockedTag, EarnedOnlyTag } from './Tags';
+export { UltimateChip } from './UltimateChip';
+export { HueStrip } from './HueStrip';
 export { DailyBonusBar } from './DailyBonusBar';
 export { AisleIndex, AISLES } from './AisleIndex';
 export { PreviewStage } from './PreviewStage';

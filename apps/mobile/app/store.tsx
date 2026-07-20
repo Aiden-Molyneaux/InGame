@@ -18,6 +18,8 @@ import {
   PackTile,
   PriceChip,
   OwnedTag,
+  UltimateChip,
+  HueStrip,
   ItemTile,
   ItemSheet,
   CosmeticSwatch,
@@ -32,7 +34,7 @@ import {
   type StoreItem,
 } from '../src/components/commerce';
 import { CardFace } from '../src/components/CardFace';
-import { COSMETIC_TYPE_LABEL } from '../src/components/commerce/storeCopy';
+import { COSMETIC_TYPE_LABEL, sortUltimateFirst } from '../src/components/commerce/storeCopy';
 import { useStorePreview } from '../src/components/StoreThemePreview';
 import { useSheetLocked } from '../src/components/SheetLock';
 import { themedStyles, ThemePreview } from '../src/theme';
@@ -459,6 +461,8 @@ function BrowseView({
                 type={COSMETIC_TYPE_LABEL[it.type]}
                 price={it.owned ? undefined : it.price}
                 owned={it.owned}
+                tier={it.tier}
+                colorCustomizable={it.colorCustomizable}
                 preview={<CosmeticSwatch type={it.type} id={it.id} size="row" />}
                 onPress={() => onOpen(it)}
               />
@@ -623,8 +627,10 @@ function AisleView({
   const styles = useStyles();
   const { data: library, isLoading, isError, refetch } = useGetCosmeticsQuery();
 
+  // COSM-05 (decision 0080 · draft §4.1) — ULTIMATE designs sort FIRST within the type aisle; the rest
+  // keep their incoming order (sortUltimateFirst is a stable ultimate/not partition). No ULTIMATE aisle.
   const items = useMemo(
-    () => (library?.items ?? []).filter((i) => i.type === aisle.key && i.price > 0),
+    () => sortUltimateFirst((library?.items ?? []).filter((i) => i.type === aisle.key && i.price > 0)),
     [library, aisle.key],
   );
 
@@ -771,14 +777,21 @@ function CosmeticSheet({
   );
 }
 
-/** One aisle row (P9 itemrow) — a preview thumb · name · type · its state chip (OwnedTag or PriceChip). */
+/** One aisle row (P9 itemrow) — a preview thumb · name · type · its tier tells (ULTIMATE chip + hue-strip)
+ *  · its state chip (OwnedTag or PriceChip). */
 function AisleRow({ item, onPress }: { item: CosmeticListItem; onPress: () => void }) {
   const styles = useStyles();
+  const ultimate = item.tier === 'ultimate';
+  // colour-customizability rides the FLAT label (Murr W-5 LOW) — the nested HueStrip's own label is
+  // unreachable to VoiceOver inside this labelled Pressable.
+  const a11y = `${item.name}, ${COSMETIC_TYPE_LABEL[item.type]}${ultimate ? ', Ultimate' : ''}${
+    item.colorCustomizable ? ', colour-customizable' : ''
+  }${item.owned ? ', owned' : `, ${item.price} pixels`}`;
   return (
     <Pressable
       style={styles.aisleRow}
       accessibilityRole="button"
-      accessibilityLabel={`${item.name}, ${COSMETIC_TYPE_LABEL[item.type]}${item.owned ? ', owned' : `, ${item.price} pixels`}`}
+      accessibilityLabel={a11y}
       onPress={onPress}
     >
       <View style={styles.rowThumb}>
@@ -791,6 +804,14 @@ function AisleRow({ item, onPress }: { item: CosmeticListItem; onPress: () => vo
         <Text style={styles.rowType} numberOfLines={1}>
           {COSMETIC_TYPE_LABEL[item.type]}
         </Text>
+        {/* decision 0080 r3 — the ULTIMATE chip + hue-strip ride under the meta (the badge grammar), so
+            a colour-customizable design is legible in the row without crowding the trailing state chip. */}
+        {ultimate || item.colorCustomizable ? (
+          <View style={styles.rowTier}>
+            {ultimate ? <UltimateChip compact /> : null}
+            {item.colorCustomizable ? <HueStrip /> : null}
+          </View>
+        ) : null}
       </View>
       {/* F-8 (E3-D1): the price/owned chip must stay READABLE — never painted behind the swatch. It's
           `flexShrink:0` so a narrow phone can't squeeze it under the thumb, and `zIndex:1` so it
@@ -873,6 +894,8 @@ function toStoreItem(item: CosmeticListItem): StoreItem {
     name: item.name,
     type: `${COSMETIC_TYPE_LABEL[item.type]} · CATALOG`,
     price: item.price,
+    tier: item.tier,
+    colorCustomizable: item.colorCustomizable,
   };
 }
 
@@ -966,6 +989,7 @@ const useStyles = themedStyles((t) => ({
   // meta or its trailing chip (F-8 E3-D1).
   rowThumb: { width: 46, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   rowMeta: { flex: 1, gap: 3, minWidth: 0 },
+  rowTier: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 1 },
   // the trailing price/owned chip — never shrinks, always in front (E3-D1).
   rowState: { flexShrink: 0, zIndex: 1 },
   rowName: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 1 },

@@ -1,5 +1,13 @@
 import type { CosmeticType, LedgerEntry } from '@ingame/shared';
 
+// COSM-05 (M6 W-5 · decision 0080 · draft §4.1) — within a type aisle, ULTIMATE designs sort FIRST (the
+// top of the ladder leads); everything else keeps its incoming order (STABLE — Array#sort is stable in
+// modern JS engines, and we only key on the ultimate/not partition so no non-ultimate pair ever swaps).
+// NO dedicated ULTIMATE aisle at beta — this is the only ultimate merchandising nudge in the aisle list.
+export function sortUltimateFirst<T extends { tier?: string }>(items: readonly T[]): T[] {
+  return [...items].sort((a, b) => Number(b.tier === 'ultimate') - Number(a.tier === 'ultimate'));
+}
+
 // COSM-01 type → the human display noun for the Store aisle sheets (mirrors the server's
 // COSMETIC_TYPE_LABELS in config/cosmetics.ts — the wire vocabulary is shared, the copy is the client's).
 export const COSMETIC_TYPE_LABEL: Record<CosmeticType, string> = {

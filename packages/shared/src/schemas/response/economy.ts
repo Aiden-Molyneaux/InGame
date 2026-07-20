@@ -137,6 +137,9 @@ export const cosmeticListItemSchema = z
     tier: cosmeticTierSchema.optional(),
     price: z.number().int().nonnegative(),
     owned: z.boolean(),
+    // COSM-05 (W-5 / decision 0080; api-contract 0.77) — the per-design colour-freedom flag. Present
+    // (`true`) ONLY on an Ultimate design; absent otherwise (F-17 additive — old clients ignore it).
+    colorCustomizable: z.literal(true).optional(),
   })
   .strict();
 export type CosmeticListItem = z.infer<typeof cosmeticListItemSchema>;

@@ -1,4 +1,4 @@
-import { buildCardElements } from './buildCard';
+import { BRASS_RAMP, brassPlateRamp, buildCardElements } from './buildCard';
 import { SAMPLE_COMPOSITION, MAX_ELEMENTS, type CardComposition } from './composition';
 import { FRAMES, EFFECTS, FINISHES, NAMEPLATES, FONTS, surpriseDeal } from '../styler/roster';
 
@@ -80,23 +80,26 @@ describe('decision 0075 — roster tiering (P10)', () => {
     // above (bracket-corners is exercised via composition.ts's FrameKind union / EquipReadout labels).
   });
 
-  it('the 26-premium-item split lands exactly where 0075 pins it', () => {
+  it('the premium split lands where 0075 pins it (+ the three W-5 ULTIMATE SKUs, COSM-05/0080)', () => {
     const premiumIds = (arr: { id: string; tier?: 'basic' | 'premium' }[]) =>
       arr.filter((x) => x.tier === 'premium').map((x) => x.id);
     expect(premiumIds(FRAMES).sort()).toEqual(
-      ['thin-gold', 'chrome', 'ember-glow', 'plasma', 'ornate-gold', 'holo-foil', 'marquee'].sort(),
+      ['thin-gold', 'chrome', 'ember-glow', 'plasma', 'ornate-gold', 'holo-foil', 'marquee', 'marquee-ultimate'].sort(),
     );
     expect(premiumIds(EFFECTS).sort()).toEqual(['halftone', 'scanline', 'frost', 'embers'].sort());
     expect(premiumIds(FINISHES).sort()).toEqual(['linen', 'holographic', 'metallic'].sort());
-    expect(premiumIds(NAMEPLATES).sort()).toEqual(['brass']);
-    expect(premiumIds(FONTS).sort()).toEqual(['bitter', 'space-mono', 'pacifico', 'stencil'].sort());
+    expect(premiumIds(NAMEPLATES).sort()).toEqual(['brass', 'brass-ultimate']);
+    expect(premiumIds(FONTS).sort()).toEqual(['bitter', 'space-mono', 'pacifico', 'pacifico-ultimate', 'stencil'].sort());
     const totalPremium =
       premiumIds(FRAMES).length +
       premiumIds(EFFECTS).length +
       premiumIds(FINISHES).length +
       premiumIds(NAMEPLATES).length +
       premiumIds(FONTS).length;
-    expect(totalPremium).toBe(19); // 26 total minus the 7 device shells/themes (theme/palettes.test.ts)
+    // 0075's 19 (26 catalog minus the 7 device shells/themes — theme/palettes.test.ts) + the W-5
+    // MARQUEE/BRASS/SCRIPT ULTIMATE mints (COSM-05, decision 0080 ruling 2 — separate SKUs, no
+    // promotion; the server catalog banner's 29-premium count, same split).
+    expect(totalPremium).toBe(22);
   });
 
   it("surpriseDeal (CARD-16's free baseline) never hands out a premium frame/effect/font", () => {
@@ -176,5 +179,43 @@ describe('buildCardElements — decision 0068 present-paths', () => {
     const plateIdx = keys.indexOf('plate');
     expect(plateIdx).toBeGreaterThan(keys.indexOf('frame')); // above the frame
     expect(plateIdx).toBe(keys.length - 1); // above everything (owner ruling 2026-07-09)
+  });
+});
+
+// ── COSM-05 (M6 W-5, decision 0080) — the parameterized brass ramp in the (shared) editor preview
+// path: the explicit `cosmeticId` is the colour signal — an ultimate document derives the ramp from
+// the chosen plate colour; a legacy/base-brass document keeps the hard-coded gold, pixel-identical.
+describe('COSM-05 — buildCardElements consumes the parameterized brass ramp', () => {
+  const brassComp = (plate: string, cosmeticId?: string): CardComposition =>
+    ({
+      ...SAMPLE_COMPOSITION,
+      elements: [],
+      frame: undefined,
+      nameplate: { shape: 'brass', title: 'X', plate, ink: '#fff', size: 0.05, ...(cosmeticId ? { cosmeticId } : {}) },
+    }) as CardComposition;
+
+  const plateRampColors = (tree: any): string[] => {
+    const group = kidsOf(tree).find((k) => k?.key === 'plate');
+    expect(group).toBeTruthy();
+    const rect = (group.props.children as any[]).filter(Boolean).find((k) => k?.key === 'plate');
+    expect(rect).toBeTruthy();
+    return rect.props.children.props.colors as string[];
+  };
+
+  it('a legacy/base-brass document (no cosmeticId) keeps the hard-coded gold ramp', () => {
+    const tree = buildCardElements(brassComp('#141026'), 161, 225, stubCtx) as any;
+    expect(plateRampColors(tree)).toEqual([...BRASS_RAMP]);
+  });
+
+  it('an ultimate document (explicit cosmeticId) derives the ramp from the chosen plate colour', () => {
+    const tree = buildCardElements(brassComp('#3a86ff', 'brass-ultimate'), 161, 225, stubCtx) as any;
+    expect(plateRampColors(tree)).toEqual(brassPlateRamp('#3a86ff'));
+    expect(plateRampColors(tree)).not.toEqual([...BRASS_RAMP]);
+  });
+
+  it('the registry gold recolour is pixel-identical to the legacy ramp (matched, not re-derived)', () => {
+    expect(brassPlateRamp('#c9971f')).toEqual([...BRASS_RAMP]);
+    const tree = buildCardElements(brassComp('#c9971f', 'brass-ultimate'), 161, 225, stubCtx) as any;
+    expect(plateRampColors(tree)).toEqual([...BRASS_RAMP]);
   });
 });

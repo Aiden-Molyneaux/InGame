@@ -68,6 +68,29 @@ describe('ReconcileSheet — SHORT (balance below the total)', () => {
     expect(onTopUp).toHaveBeenCalledTimes(1);
   });
 
+  it('an ULTIMATE reconcile row wears the ULTIMATE chip; the non-ultimate row does not (0080 r3)', () => {
+    render(
+      wrap(
+        <ReconcileSheet
+          visible
+          onClose={jest.fn()}
+          items={[
+            { cosmeticId: 'marquee-ultimate', name: 'MARQUEE ULTIMATE', type: 'frame', price: 10, tier: 'ultimate' },
+            { cosmeticId: 'thin-gold', name: 'GOLD', type: 'frame', price: 3, tier: 'standard' },
+          ]}
+          total={13}
+          balance={20}
+          onAcquireAll={jest.fn()}
+          onTopUp={jest.fn()}
+        />,
+      ),
+    );
+    expect(screen.getByText('MARQUEE ULTIMATE')).toBeTruthy();
+    expect(screen.getByText('GOLD')).toBeTruthy();
+    expect(screen.getAllByLabelText('Ultimate')).toHaveLength(1); // only the ultimate row is chipped
+    expect(screen.getByLabelText('10 pixels')).toBeTruthy(); // the ultimate row keeps its 10-PX price
+  });
+
   it('NOT NOW closes without spending', () => {
     const onClose = jest.fn();
     const onAcquireAll = jest.fn();

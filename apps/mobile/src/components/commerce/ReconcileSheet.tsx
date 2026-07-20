@@ -1,4 +1,4 @@
-import type { CosmeticType } from '@ingame/shared';
+import type { CosmeticType, CosmeticTier } from '@ingame/shared';
 import { View, Text } from 'react-native';
 import { PulledSheet } from '../PulledSheet';
 import { ScreenButton } from '../ScreenButton';
@@ -6,6 +6,7 @@ import { BuyBar } from './BuyBar';
 import { PriceChip } from './PriceChip';
 import { PixelsMark } from './PixelsMark';
 import { CosmeticSwatch } from './CosmeticSwatch';
+import { UltimateChip } from './UltimateChip';
 import { themedStyles } from '../../theme';
 
 // ReconcileSheet (component-map §7 · CARD-13 · styler-states P6 · canvas PRESS reconcile) — the ACQUIRE
@@ -22,6 +23,9 @@ export interface ReconcileItem {
   /** COSM-01 type — drives the G4 CosmeticSwatch (M5 F-9): the shopper sees what they're buying. */
   type: CosmeticType;
   price: number;
+  /** COSM-05 (decision 0080 r3) — the component's tier; `'ultimate'` wears the compact ULTIMATE chip,
+   *  the same marking the store + adopt surfaces use (consistency across the cost-stack anatomy). */
+  tier?: CosmeticTier;
 }
 
 export function ReconcileSheet({
@@ -70,6 +74,9 @@ export function ReconcileSheet({
               {it.name}
             </Text>
             <View style={styles.spacer} />
+            {/* decision 0080 r3 — an ULTIMATE component wears the same compact chip as the store/adopt
+                rows; the 10-PX price still rides the PriceChip beside it (the cost-stack is unchanged). */}
+            {it.tier === 'ultimate' ? <UltimateChip compact /> : null}
             <PriceChip pixels={it.price} />
           </View>
         ))}

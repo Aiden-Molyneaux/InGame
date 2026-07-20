@@ -1,6 +1,6 @@
 import type { CardComposition } from '../render/composition';
 import { FRAMES, EFFECTS, FINISHES, NAMEPLATES, FONTS } from './roster';
-import type { CosmeticListItem, CosmeticType } from '@ingame/shared';
+import type { CosmeticListItem, CosmeticType, CosmeticTier } from '@ingame/shared';
 
 // CARD-13 / COSM-03 (M5 P7) — the CLIENT premium derivation. Mirrors the server's
 // `config/cosmetics.ts#collectCosmeticRefs`: given a composition, resolve the premium roster ids it
@@ -8,16 +8,52 @@ import type { CosmeticListItem, CosmeticType } from '@ingame/shared';
 // live on the client roster (roster.ts); the PX price + caller-scoped `owned` come from GET /cosmetics.
 // Kept PURE + roster-driven so the cost-stack math is unit-testable without the network.
 
+// ── COSM-05 (M6 W-5, decision 0080) — the explicit composition `cosmeticId`, client mirror ────────
+// A frame/nameplate closed attribute MAY carry an optional `cosmeticId`, written by the Styler when
+// an ULTIMATE (colour-customizable) design is applied. Trusted only after ROSTER validation (the id
+// must exist on the right roster and its render kind/shape must match the attribute — mirroring the
+// server's `resolveExplicitCosmeticId`); an invalid/mismatched id falls back to colour-inference.
+// This keeps a freely-recoloured ultimate design resolving to ITS OWN SKU (the 10-PX reconcile price,
+// the styler selection derive, the preset recipe) instead of silently reading FREE or as its base.
+
+/** The VALIDATED explicit frame roster id, or undefined (caller falls back to kind+color inference).
+ *  PREMIUM-ONLY (Murr W-5 MED): the server's `resolveExplicitCosmeticId` looks up PREMIUM_BY_ID, so a
+ *  free id never validates there — mirroring that here keeps the client cost-stack agreeing with the
+ *  publish reconcile (a smuggled free `cosmeticId` on a premium-coloured frame must NOT zero the price). */
+export function explicitFrameRosterId(
+  frame: { kind?: string; cosmeticId?: string } | undefined,
+): string | undefined {
+  if (!frame || typeof frame.cosmeticId !== 'string' || !frame.cosmeticId) return undefined;
+  const f = FRAMES.find((x) => x.id === frame.cosmeticId);
+  return f && f.tier === 'premium' && f.kind != null && f.kind === frame.kind ? f.id : undefined;
+}
+
+/** The VALIDATED explicit nameplate roster id, or undefined (caller falls back to the shape ref).
+ *  PREMIUM-ONLY — same server-mirror rule as the frame resolver above. */
+export function explicitPlateRosterId(
+  nameplate: { shape?: string; cosmeticId?: string } | undefined,
+): string | undefined {
+  if (!nameplate || typeof nameplate.cosmeticId !== 'string' || !nameplate.cosmeticId) return undefined;
+  const p = NAMEPLATES.find((x) => x.id === nameplate.cosmeticId);
+  return p && p.tier === 'premium' && p.shape === (nameplate.shape ?? 'slab') ? p.id : undefined;
+}
+
 /** The premium roster ids a composition references (deduped, order = frame→effect→finish→plate→fonts). */
 export function collectPremiumRosterIds(composition: CardComposition | null | undefined): string[] {
   if (!composition) return [];
   const ids: string[] = [];
   const c = composition;
-  // frame — kind+color resolves the id (several ids share a kind; premium disambiguated by color)
+  // frame — a validated explicit `cosmeticId` WINS (COSM-05 colour-independence); else kind+color
+  // resolves the id (several ids share a kind; premium disambiguated by color)
   if (c.frame?.kind) {
-    const f =
-      FRAMES.find((x) => x.kind === c.frame!.kind && x.color === c.frame!.color) ??
-      FRAMES.find((x) => x.kind === c.frame!.kind);
+    const explicit = explicitFrameRosterId(c.frame);
+    // colour compare is case-INSENSITIVE, mirroring the server's resolveFrameCosmeticId (Murr W-5
+    // MED: '#E8C14A' must price as thin-gold on BOTH sides, never free-here/3-PX-there).
+    const frameColor = typeof c.frame.color === 'string' ? c.frame.color.toLowerCase() : '';
+    const f = explicit
+      ? FRAMES.find((x) => x.id === explicit)
+      : (FRAMES.find((x) => x.kind === c.frame!.kind && x.color.toLowerCase() === frameColor) ??
+        FRAMES.find((x) => x.kind === c.frame!.kind));
     if (f?.tier === 'premium') ids.push(f.id);
   }
   // effect — kind is the id
@@ -30,9 +66,13 @@ export function collectPremiumRosterIds(composition: CardComposition | null | un
     const f = FINISHES.find((x) => x.kind === c.finish!.kind);
     if (f?.tier === 'premium') ids.push(f.id);
   }
-  // nameplate shape + font
+  // nameplate shape + font — a validated explicit plate `cosmeticId` REPLACES the shape ref
+  // (COSM-05: one design, one id — an ultimate plate must never also read as its base SKU)
   if (c.nameplate) {
-    const p = NAMEPLATES.find((x) => x.shape === (c.nameplate!.shape ?? 'slab'));
+    const explicitPlate = explicitPlateRosterId(c.nameplate);
+    const p = explicitPlate
+      ? NAMEPLATES.find((x) => x.id === explicitPlate)
+      : NAMEPLATES.find((x) => x.shape === (c.nameplate!.shape ?? 'slab'));
     if (p?.tier === 'premium') ids.push(p.id);
     if (c.nameplate.fontId) {
       const font = FONTS.find((x) => x.id === c.nameplate!.fontId);
@@ -62,6 +102,9 @@ export interface PremiumRef {
   type: CosmeticType;
   price: number;
   owned: boolean;
+  /** COSM-05 (decision 0080 r3) — the library tier; carried so the reconcile row can wear the ULTIMATE
+   *  chip (the same marking the store/adopt surfaces use). Absent for a ref that precedes the library load. */
+  tier?: CosmeticTier;
 }
 
 /** Join premium roster ids against the GET /cosmetics library (price + caller-scoped ownership). */
@@ -75,6 +118,7 @@ export function resolvePremiumRefs(ids: string[], library: CosmeticListItem[] | 
       type: item?.type ?? inferCosmeticType(id),
       price: item?.price ?? 0,
       owned: item?.owned ?? false,
+      tier: item?.tier,
     };
   });
 }

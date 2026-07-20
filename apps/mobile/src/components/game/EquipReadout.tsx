@@ -1,7 +1,8 @@
 import { View, Text } from 'react-native';
 import type { CollectionCard, EquippedReadout as EquippedLabels } from '@ingame/shared';
 import { themedStyles } from '../../theme';
-import { FRAMES } from '../../styler/roster';
+import { FRAMES, NAMEPLATES, FONTS } from '../../styler/roster';
+import { explicitFrameRosterId, explicitPlateRosterId } from '../../styler/premium';
 import type { CardComposition } from '../../render/composition';
 
 // EquipReadout (CARD-22) — the read-only summary of a card's equipped closed attributes as DISPLAY
@@ -49,11 +50,34 @@ const NAME: Record<string, string> = {
 };
 const label = (id: string | undefined | null, fallback: string) => (id ? (NAME[id] ?? id.toUpperCase()) : fallback);
 
-/** The frame's roster display name — kind+color first (0068), kind-only as the legacy fallback. */
+/** The frame's roster display name — a VALIDATED explicit `cosmeticId` wins (COSM-05: a recoloured
+ *  MARQUEE ULTIMATE must read as itself, and its colour matches no roster row); then kind+color
+ *  (0068), kind-only as the legacy fallback. */
 const frameLabel = (frame: CardComposition['frame']): string => {
   if (!frame?.kind) return 'CLEAN';
+  const explicit = explicitFrameRosterId(frame);
+  if (explicit) return FRAMES.find((f) => f.id === explicit)?.name ?? label(frame.kind, 'CLEAN');
   const hit = FRAMES.find((f) => f.kind === frame.kind && f.color === frame.color) ?? FRAMES.find((f) => f.kind === frame.kind);
   return hit?.name ?? label(frame.kind, 'CLEAN');
+};
+
+/** The plate's display name — explicit-id first (COSM-05: BRASS ULTIMATE shares brass's shape), then
+ *  the shape label. Legacy 'none' renders as slab (OQ-135). */
+const plateLabel = (nameplate: CardComposition['nameplate']): string => {
+  if (!nameplate) return 'SLAB';
+  const explicit = explicitPlateRosterId(nameplate);
+  if (explicit) {
+    const hit = NAMEPLATES.find((p) => p.id === explicit)?.name;
+    if (hit) return hit;
+  }
+  return label(nameplate.shape === 'none' ? 'slab' : (nameplate.shape ?? 'slab'), 'SLAB');
+};
+
+/** The font's display name — the roster id IS explicit identity (fontId one-for-one), so the roster
+ *  name wins ('pacifico-ultimate' → SCRIPT ULTIMATE, never the raw-id uppercase fallback). */
+const fontLabel = (fontId: string | undefined): string => {
+  if (!fontId) return 'CHAKRA';
+  return FONTS.find((f) => f.id === fontId)?.name ?? label(fontId, 'CHAKRA');
 };
 
 // CARD-22 cross-user (P9 · OQ-146) — the friend/gallery readout arrives as PRE-COMPUTED display labels
@@ -107,8 +131,8 @@ export function EquipReadout({
         ['EFFECT', label(composition.effect?.kind === 'none' ? null : composition.effect?.kind, 'NONE')],
         ['FINISH', label(composition.finish?.kind === 'none' ? null : composition.finish?.kind, 'STANDARD')],
         // legacy 'none' renders as slab (OQ-135: a plate is required) — the readout tells that truth
-        ['NAMEPLATE', composition.nameplate ? label(composition.nameplate.shape === 'none' ? 'slab' : (composition.nameplate.shape ?? 'slab'), 'SLAB') : 'SLAB'],
-        ['FONT', label(composition.nameplate?.fontId, 'CHAKRA')],
+        ['NAMEPLATE', plateLabel(composition.nameplate)],
+        ['FONT', fontLabel(composition.nameplate?.fontId)],
       ]
     : card?.isCustom !== false
       ? [] // a custom card whose composition didn't parse — show nothing rather than fabricate

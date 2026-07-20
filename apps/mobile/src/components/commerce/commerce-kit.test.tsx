@@ -11,6 +11,9 @@ import { PackTile } from './PackTile';
 import { LedgerRow } from './LedgerRow';
 import { LandedMoment } from './LandedMoment';
 import { AisleIndex } from './AisleIndex';
+import { ItemTile } from './ItemTile';
+import { UltimateChip } from './UltimateChip';
+import { HueStrip } from './HueStrip';
 
 // A flippable reduce-motion mock (the `mock` prefix lets the factory close over it). Defaults to
 // reduced=true so the LandedMoment burst never plays for the settled-layout assertions below.
@@ -272,5 +275,45 @@ describe('AisleIndex (§7)', () => {
     expect(onAisle).toHaveBeenCalledWith({ key: 'effect', label: 'EFFECTS' });
     fireEvent.press(screen.getByLabelText('Pixels — top up'));
     expect(onTopUp).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('UltimateChip + HueStrip (M6 W-5 · decision 0080 r3)', () => {
+  it('the ULTIMATE chip renders its inverted-gold word', () => {
+    render(wrap(<UltimateChip />));
+    expect(screen.getByText('ULTIMATE')).toBeTruthy();
+    expect(screen.getByLabelText('Ultimate')).toBeTruthy();
+  });
+  it('the HueStrip glyph carries a single ANY-COLOUR a11y label (not five nameless swatches)', () => {
+    render(wrap(<HueStrip />));
+    expect(screen.getByLabelText('Any colour — colour-customizable')).toBeTruthy();
+  });
+});
+
+describe('ItemTile — the ULTIMATE tells (M6 W-5 · decision 0080 r3)', () => {
+  it('an ultimate + colour-customizable tile shows the chip AND the hue-strip AND its price', () => {
+    render(
+      wrap(
+        <ItemTile
+          name="MARQUEE ULTIMATE"
+          type="FRAME"
+          price={10}
+          tier="ultimate"
+          colorCustomizable
+        />,
+      ),
+    );
+    expect(screen.getByLabelText('MARQUEE ULTIMATE, FRAME, Ultimate, colour-customizable')).toBeTruthy(); // a11y names the tier + the flag (Murr W-5 LOW — the nested HueStrip label is VoiceOver-unreachable)
+    expect(screen.getByText('ULTIMATE')).toBeTruthy(); // the chip
+    expect(screen.getByLabelText('Any colour — colour-customizable')).toBeTruthy(); // the hue-strip
+    expect(screen.getByLabelText('10 pixels')).toBeTruthy(); // the PriceChip still rides
+  });
+
+  it('a plain premium tile (tier deluxe, not colour-customizable) shows NEITHER tell', () => {
+    render(wrap(<ItemTile name="HOLOGRAPHIC" type="FINISH" price={8} tier="deluxe" />));
+    expect(screen.queryByText('ULTIMATE')).toBeNull();
+    expect(screen.queryByLabelText('Any colour — colour-customizable')).toBeNull();
+    expect(screen.getByLabelText('HOLOGRAPHIC, FINISH')).toBeTruthy(); // no ", Ultimate" suffix
+    expect(screen.getByLabelText('8 pixels')).toBeTruthy();
   });
 });

@@ -1,4 +1,9 @@
-import { frameLabelFor, lookupCatalogName } from '../config/cosmetics';
+import {
+  frameLabelFor,
+  lookupCatalogName,
+  lookupCosmeticEntry,
+  resolveExplicitCosmeticId,
+} from '../config/cosmetics';
 
 // CARD-22 / OQ-146 (decision 0076 §0.2, M6 P2) — derive the equipped-readout DISPLAY LABELS from a card
 // composition. This is the PUBLISH-TIME snapshot the server denormalizes into `card_designs.equipped_labels`
@@ -32,8 +37,11 @@ export function deriveEquippedLabels(composition: unknown): Record<string, strin
     else if (typeof base.fill === 'string') labels.base = 'SOLID';
   }
 
-  // FRAME — kind+color (never the id); no frame object → CLEAN.
-  labels.frame = frameLabelFor(asObject(c.frame));
+  // FRAME — a validated explicit `cosmeticId` wins (COSM-05: ultimate labels resolve
+  // colour-independently); else kind+color inference (never the id); no frame object → CLEAN.
+  const frame = asObject(c.frame);
+  const explicitFrame = frame ? resolveExplicitCosmeticId('frame', frame) : undefined;
+  labels.frame = (explicitFrame && lookupCosmeticEntry(explicitFrame)?.name) || frameLabelFor(frame);
 
   // EFFECT — kind IS the roster id (effect NONE vs finish STANDARD disambiguated by type). Absent → omit.
   const effect = asObject(c.effect);
@@ -53,8 +61,12 @@ export function deriveEquippedLabels(composition: unknown): Record<string, strin
   // clean-sans → CHAKRA). Two distinct readout slots (nameplate = the plate, font = the title face).
   const nameplate = asObject(c.nameplate);
   if (nameplate) {
+    // A validated explicit plate `cosmeticId` wins (COSM-05 — a recoloured BRASS ULTIMATE never
+    // mislabels as BRASS); else the shape IS the id.
     const shape = typeof nameplate.shape === 'string' ? nameplate.shape : 'slab';
-    const plateName = lookupCatalogName('nameplate', shape);
+    const explicitPlate = resolveExplicitCosmeticId('nameplate', nameplate);
+    const plateName =
+      (explicitPlate && lookupCosmeticEntry(explicitPlate)?.name) || lookupCatalogName('nameplate', shape);
     if (plateName) labels.nameplate = plateName;
     const fontId = typeof nameplate.fontId === 'string' ? nameplate.fontId : 'clean-sans';
     const fontName = lookupCatalogName('font', fontId);

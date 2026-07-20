@@ -58,12 +58,15 @@ export function ColorField({
   onCommit,
   recents = [],
   cardColors = [],
+  swatches = [],
 }: {
   value: string;
   onChange: (hex: string) => void;
   onCommit?: (hex: string) => void;
   recents?: string[];
   cardColors?: string[];
+  /** Quick swatches inside the opened picker (COSM-05 ink unlock: the curated INKS ride here). */
+  swatches?: string[];
 }) {
   const fieldStyles = useFieldStyles();
   const [mode, setMode] = useState<'closed' | 'picker' | 'card'>('closed');
@@ -142,7 +145,7 @@ export function ColorField({
           <Btn label={mode === 'card' ? 'CLOSE' : 'FROM CARD'} glyph={<EyedropperGlyph />} on={mode === 'card'} onPress={() => setMode((m) => (m === 'card' ? 'closed' : 'card'))} />
         ) : null}
       </View>
-      {mode === 'picker' ? <ColorPicker value={value} onChange={pickerChange} swatches={[]} usedColors={[]} /> : null}
+      {mode === 'picker' ? <ColorPicker value={value} onChange={pickerChange} swatches={swatches} usedColors={[]} /> : null}
       {mode === 'card' ? (
         <View style={fieldStyles.cardRow}>
           {cardSet.length ? (

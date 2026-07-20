@@ -153,3 +153,36 @@ describe('ItemSheet — the P2/P9 state grammar', () => {
     // the BuyBar is disabled (still present but its accessibilityState disabled) — the short strip is the tell.
   });
 });
+
+describe('ItemSheet — the M6 W-5 ULTIMATE marking (decision 0080 r3)', () => {
+  const ult: StoreItem = {
+    id: 'marquee-ultimate',
+    name: 'MARQUEE ULTIMATE',
+    type: 'FRAME · CATALOG',
+    price: 10,
+    tier: 'ultimate',
+    colorCustomizable: true,
+  };
+
+  it('an ultimate item shows the ULTIMATE chip + the hue-strip + the ANY-COLOUR copy line', () => {
+    render(wrap(<ItemSheet visible item={ult} balance={27} onClose={jest.fn()} onBuy={jest.fn()} />));
+    expect(screen.getByLabelText('Ultimate')).toBeTruthy(); // the inverted-gold chip
+    expect(screen.getByText('ANY COLOUR — YOURS TO PICK')).toBeTruthy(); // the copy line
+    expect(screen.getByLabelText('Any colour — colour-customizable')).toBeTruthy(); // the hue-strip glyph
+    expect(screen.getByLabelText('10 pixels')).toBeTruthy(); // the price still rides alongside
+  });
+
+  it('the ULTIMATE chip stays on an OWNED ultimate item (tier is a design property, not ownership)', () => {
+    render(wrap(<ItemSheet visible item={ult} balance={0} owned onClose={jest.fn()} onBuy={jest.fn()} />));
+    expect(screen.getByLabelText('Ultimate')).toBeTruthy();
+    expect(screen.getByText('ANY COLOUR — YOURS TO PICK')).toBeTruthy();
+    expect(screen.queryByLabelText('10 pixels')).toBeNull(); // owned → no price
+  });
+
+  it('a premium (non-ultimate) item shows NEITHER the chip NOR the hue-strip/copy', () => {
+    render(wrap(<ItemSheet visible item={holo} balance={27} onClose={jest.fn()} onBuy={jest.fn()} />));
+    expect(screen.queryByLabelText('Ultimate')).toBeNull();
+    expect(screen.queryByText('ANY COLOUR — YOURS TO PICK')).toBeNull();
+    expect(screen.queryByLabelText('Any colour — colour-customizable')).toBeNull();
+  });
+});

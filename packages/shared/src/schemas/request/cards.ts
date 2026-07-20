@@ -55,6 +55,12 @@ export const stylePresetStyleSchema = z
     finishId: boundedText(40).optional(),
     nameplateId: boundedText(40).optional(),
     title: z.object({ fontId: boundedText(40), ink: boundedText(40) }).strict().optional(),
+    // COSM-05 (W-5, api-contract 0.77) — the CUSTOM hue an ULTIMATE frame/plate was wearing when the
+    // preset was snapshotted, so a preset re-applies the picked colour, not the registry default.
+    // Additive + only meaningful when the paired id is a colorCustomizable SKU (the client apply-path
+    // ignores them otherwise; the flatten backstop force-corrects any hand-crafted misuse regardless).
+    frameColor: boundedText(40).optional(),
+    plateColor: boundedText(40).optional(),
   })
   .strict();
 export type StylePresetStyle = z.infer<typeof stylePresetStyleSchema>;

@@ -42,6 +42,9 @@ export function useCardSkiaCtx(): SkiaCtx {
   if (slab) typefaces['bitter'] = slab;
   if (mono) typefaces['space-mono'] = mono;
   if (script) typefaces['pacifico'] = script;
+  // COSM-05 (W-5/0080) — SCRIPT ULTIMATE (`pacifico-ultimate`) is its own SKU id (`fontId` IS the
+  // cosmetic id), but draws the same Pacifico face.
+  if (script) typefaces['pacifico-ultimate'] = script;
   if (stencil) typefaces['stencil'] = stencil;
   return { Group, Fill, Rect, Oval, Path, Text, LinearGradient, RadialGradient, BlurMask, Skia, typeface, typefaces };
 }

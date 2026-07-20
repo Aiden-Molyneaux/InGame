@@ -47,6 +47,7 @@ import { deriveEquippedLabels } from '../render/equipped-labels';
 import { getStorage, type StorageProvider } from '../storage';
 import {
   collectCosmeticRefs,
+  forceRegistryColors,
   isPremiumComposition,
   lookupCosmeticEntry,
   lookupCosmeticTier,
@@ -547,6 +548,9 @@ function resolveComponents(premiumIds: string[], ownedByCaller: Set<string>): Ca
       cosmeticId: id,
       name: entry?.name ?? id.toUpperCase(),
       type: (entry?.type ?? 'frame') as CosmeticType,
+      // COSM-05 (0.77) — the adopt sheet's ULTIMATE chip keys off `tier === 'ultimate'`; absent only
+      // on the unknown-id degrade (which also has no price tier to report).
+      ...(entry?.tier ? { tier: entry.tier } : {}),
       price: priceForTier(lookupCosmeticTier(id)),
       owned: ownedByCaller.has(id),
     });
@@ -596,8 +600,12 @@ export async function publishCard(actorId: string, cardId: string): Promise<Card
   // derived), NOT the stored composition value — the server flatten is the authoritative source of
   // truth. Join the game and force the title so every cross-user artifact (gallery · adopted · share)
   // shows the game title regardless of any drift in `composition.nameplate.title`.
+  // COSM-05 (W-5/0080) — the same authoritative posture for COLOUR: force the registry colour onto
+  // any premium design that is NOT colorCustomizable, so a hand-crafted composition can never ship a
+  // recoloured non-ultimate premium design (free + flagged designs pass through untouched).
   const [game] = await catalogRepo.gamesByIds([current.gameId]);
-  const renderComposition = game ? withGameTitle(current.composition, game.name) : current.composition;
+  const backstopped = forceRegistryColors(current.composition);
+  const renderComposition = game ? withGameTitle(backstopped, game.name) : backstopped;
   const { full, thumb } = await flattenComposition(renderComposition);
   const storage = getStorage();
   const fullKey = fullImageKey(cardId);
@@ -928,7 +936,9 @@ async function resolveBaseRender(
   }
   if (composition) {
     // CARD-11: force the game title before the on-demand flatten (server-authoritative title text).
-    const render = gameTitle ? withGameTitle(composition, gameTitle) : composition;
+    // COSM-05: + the colour-force backstop — the share composite is a cross-user artifact too.
+    const backstopped = forceRegistryColors(composition);
+    const render = gameTitle ? withGameTitle(backstopped, gameTitle) : backstopped;
     const { full } = await flattenComposition(render);
     return full;
   }

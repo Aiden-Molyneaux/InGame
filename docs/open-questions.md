@@ -81,6 +81,16 @@
   §E amendment 1). Corrected findings: the tier + composition colour fields already exist (near-zero schema,
   NOT the "new ECON band / migration / RevenueCat SKU" the item above guessed — cosmetics are Pixel-priced).
   **BUILD still owed** (W-5 not yet built). Stays OPEN as the build tracker until W-5 ships.
+  **→ W-5 P5+P1 BUILT (2026-07-19):** the spec ripple landed (**product-spec 0.65** — +COSM-05 · CARD-11/22
+  amendments · the ECON-01 ultimate-band parenthetical; **api-contract 0.77** — `cosmeticListItem.colorCustomizable?`
+  on /cosmetics + /store · `components` rows gain `tier?`) and the server registry slice shipped: the three
+  0080-minted ultimate SKUs (`marquee-ultimate` · `brass-ultimate` · `pacifico-ultimate`, 10 PX,
+  `colorCustomizable: true`) · the composition `cosmeticId` colour-independent identity (registry-validated,
+  wins over inference) · the flatten colour-force backstop on non-flagged premium frame/nameplate · the
+  brass-ramp parameterization (legacy renders pixel-identical — unit-proven). Adopt/acquire needed NO code
+  change (0080 ruling 4 — an ultimate component prices through the existing 10-PX tier; integration-tested).
+  **Still owed: P2 (Styler picker beat + `cosmeticId` write-path) · P3 (store ULTIMATE badge/hue-glyph +
+  client roster mirror) · P4 (adopt-sheet ULTIMATE marking)** — stays OPEN until those land.
 - OQ-153: **Friend-read repo selects the full entry row — narrow it to make the defense true (defense-in-depth, SOC-11).**
   `friend-read-repo.ts` `FRIEND_ENTRY_COLUMNS` sets `entry: collectionEntries`, which in Drizzle selects
   *every* column — including the owner-private `notes` / `rating` / `percentComplete` — so those fields

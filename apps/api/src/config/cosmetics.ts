@@ -9,8 +9,10 @@
 //     rosters (`apps/mobile/src/styler/roster.ts` + `theme/palettes.ts`) — one id space, no synthetic
 //     namespacing (ids are the SAME bare strings the client roster uses: `'thin-gold'`, `'bitter'`,
 //     `'deepsea'`, …), matching what `collectCosmeticRefs` below already extracts from a composition's
-//     `fontId`/`iconId` fields. **26 premium items** at the 0075-amended launch price points (3/6/8 PX
-//     only — tiers 1/2/4/10 launch empty, the pre-launch content pass fills them). Free items are NOT
+//     `fontId`/`iconId` fields. **29 premium items** — 26 at the 0075-amended launch price points
+//     (3/6/8 PX) + the three W-5 ULTIMATE SKUs at 10 PX (COSM-05, decision 0080 — `colorCustomizable`
+//     colour-freedom designs, minted ALONGSIDE their untouched base designs; tiers 1/2/4 stay
+//     launch-empty for the pre-launch content pass). Free items are NOT
 //     registered in the tier lookup (`REAL_ROSTER`, premium-only — see `lookupCosmeticTier`) but DO
 //     appear in `COSMETIC_CATALOG` (the GET /cosmetics library needs the full free+premium listing).
 //     **Two 0075 removals** — BRACKETS frame (`bracket-corners`) + SUBTLE GLOSS finish
@@ -77,10 +79,17 @@ export interface CosmeticCatalogEntry {
   type: CosmeticType;
   name: string;
   tier: CosmeticTier | null; // null = free
+  /** COSM-05 (M6 W-5, decision 0080) — the per-design colour-freedom flag: the owner picks this
+   *  design's colour in the editor (frame.color / nameplate.plate / nameplate.ink), stored in the
+   *  composition (CARD-12 precedent) and baked at flatten. Registry metadata like `tier`; present
+   *  (`true`) only on the Ultimate designs — the flag and the `ultimate` tier travel together at
+   *  launch, but the registry deliberately does not enforce the pairing (a future earned/ACH-04
+   *  colour-customizable prestige item stays possible). */
+  colorCustomizable?: true;
 }
 
 export const COSMETIC_CATALOG: CosmeticCatalogEntry[] = [
-  // ── Frames (0075 — free 7 · premium 6@standard · premium 1@showpiece; BRACKETS removed) ───────────
+  // ── Frames (0075 — free 7 · premium 6@standard · premium 1@showpiece · W-5 +1@ultimate; BRACKETS removed) ──
   { id: 'clean', type: 'frame', name: 'CLEAN', tier: null },
   { id: 'thin-line', type: 'frame', name: 'LINE', tier: null },
   { id: 'double-line', type: 'frame', name: 'DOUBLE LINE', tier: null },
@@ -95,6 +104,10 @@ export const COSMETIC_CATALOG: CosmeticCatalogEntry[] = [
   { id: 'ornate-gold', type: 'frame', name: 'ORNATE GOLD', tier: 'standard' },
   { id: 'holo-foil', type: 'frame', name: 'HOLO FOIL', tier: 'standard' },
   { id: 'marquee', type: 'frame', name: 'MARQUEE', tier: 'showpiece' },
+  // W-5 (COSM-05 / decision 0080 ruling 2): the ultimate SKUs are minted as SEPARATE entries ALONGSIDE
+  // their base designs — NO promotion, no grandfathering, no price movement. Same render machinery: the
+  // ULTIMATE frame rides kind 'marquee' (identity via the explicit composition `cosmeticId`, below).
+  { id: 'marquee-ultimate', type: 'frame', name: 'MARQUEE ULTIMATE', tier: 'ultimate', colorCustomizable: true },
   // ── Effects (0075 — free 5 · premium 2@standard · premium 2@showpiece; SCANLINE moved from free) ──
   { id: 'none', type: 'effect', name: 'NONE', tier: null },
   { id: 'soft-glow', type: 'effect', name: 'SOFT GLOW', tier: null },
@@ -115,7 +128,7 @@ export const COSMETIC_CATALOG: CosmeticCatalogEntry[] = [
   { id: 'linen', type: 'finish', name: 'LINEN', tier: 'standard' },
   { id: 'holographic', type: 'finish', name: 'HOLOGRAPHIC', tier: 'showpiece' },
   { id: 'metallic', type: 'finish', name: 'METALLIC', tier: 'showpiece' },
-  // ── Nameplates (0075 — free 7 · premium 1@standard; BRASS the only premium nameplate) ─────────────
+  // ── Nameplates (0075 — free 7 · premium 1@standard · W-5 +1@ultimate) ─────────────────────────────
   { id: 'slab', type: 'nameplate', name: 'SLAB', tier: null },
   { id: 'ribbon', type: 'nameplate', name: 'RIBBON', tier: null },
   { id: 'bevel', type: 'nameplate', name: 'BEVEL', tier: null },
@@ -124,13 +137,19 @@ export const COSMETIC_CATALOG: CosmeticCatalogEntry[] = [
   { id: 'arch', type: 'nameplate', name: 'ARCH', tier: null },
   { id: 'dogtag', type: 'nameplate', name: 'DOGTAG', tier: null },
   { id: 'brass', type: 'nameplate', name: 'BRASS', tier: 'standard' },
-  // ── Fonts (0075 amended — free 3 · premium 4@standard) ─────────────────────────────────────────────
+  // W-5 (COSM-05/0080): the metal ramp in any hue — rides plate shape 'brass' (brass-ramp
+  // parameterization, render/buildCard.ts); identity via the explicit `cosmeticId`.
+  { id: 'brass-ultimate', type: 'nameplate', name: 'BRASS ULTIMATE', tier: 'ultimate', colorCustomizable: true },
+  // ── Fonts (0075 amended — free 3 · premium 4@standard · W-5 +1@ultimate) ───────────────────────────
   { id: 'clean-sans', type: 'font', name: 'CHAKRA', tier: null },
   { id: 'bold-display', type: 'font', name: 'PAYTONE', tier: null },
   { id: 'press-start', type: 'font', name: 'PIXEL', tier: null },
   { id: 'bitter', type: 'font', name: 'SLAB', tier: 'standard' },
   { id: 'space-mono', type: 'font', name: 'MONO', tier: 'standard' },
   { id: 'pacifico', type: 'font', name: 'SCRIPT', tier: 'standard' },
+  // W-5 (COSM-05/0080): free-pick ink while equipped (the CARD-11/OQ-137 unlock). A font's cosmetic id
+  // IS the composition `fontId`, so this SKU carries its own id and reuses the pacifico face client-side.
+  { id: 'pacifico-ultimate', type: 'font', name: 'SCRIPT ULTIMATE', tier: 'ultimate', colorCustomizable: true },
   { id: 'stencil', type: 'font', name: 'STENCIL', tier: 'standard' },
   // ── Device shells (0075 — free 2 · premium 2@big · premium 1@showpiece; GRAPE→free, SUNSET→premium) ─
   { id: 'teal', type: 'device_shell', name: 'TEAL', tier: null },
@@ -287,6 +306,136 @@ function resolveFrameCosmeticId(frame: Record<string, unknown>): string | undefi
   return FREE_VARIANT_FRAME_KINDS.has(kind) ? undefined : ofKind[0]!.id;
 }
 
+// ── COSM-05 (M6 W-5, decision 0080) — the explicit composition `cosmeticId` + the colour-force
+// backstop ─────────────────────────────────────────────────────────────────────────────────────────
+// A frame/nameplate closed attribute MAY carry an optional additive `cosmeticId` (schemaVersion 1,
+// the `.passthrough()` envelope — the F21 rule), written by the Styler when an ULTIMATE design is
+// applied. It is trusted ONLY after registry validation — the id must exist, be premium, sit on the
+// right layer, and its render kind/shape must match the attribute — else colour-inference stands
+// (`resolveFrameCosmeticId` / the shape ref). This makes premium identity COLOUR-INDEPENDENT: a
+// freely-recoloured ultimate design can never silently read as FREE (frames) or as its base SKU.
+
+/** The render kind each explicit-id-capable FRAME cosmetic draws — PREMIUM_FRAMES + the ultimate
+ *  SKU(s), which share their base design's kind (0080: same render machinery, separate identity). */
+const FRAME_KIND_BY_ID = new Map<string, string>([
+  ...PREMIUM_FRAMES.map((f): [string, string] => [f.id, f.kind]),
+  ['marquee-ultimate', 'marquee'],
+]);
+
+/** The plate shape each explicit-id-capable NAMEPLATE cosmetic draws. */
+const NAMEPLATE_SHAPE_BY_ID = new Map<string, string>([
+  ['brass', 'brass'],
+  ['brass-ultimate', 'brass'],
+]);
+
+// FAIL-LOUD completeness floor (Murr W-5 audit): every colorCustomizable frame/nameplate SKU MUST have
+// its render-kind/shape mapping, or resolveExplicitCosmeticId silently rejects the id and the design
+// degrades to its base identity (wrong price, wrong label) with no test tripping. A miss here is a
+// registry-authoring bug — refuse to boot rather than mis-sell a 10-PX SKU.
+for (const entry of PREMIUM_BY_ID.values()) {
+  if (entry.colorCustomizable !== true) continue;
+  if (entry.type === 'frame' && !FRAME_KIND_BY_ID.has(entry.id))
+    throw new Error(`cosmetics registry: colorCustomizable frame '${entry.id}' missing from FRAME_KIND_BY_ID`);
+  if (entry.type === 'nameplate' && !NAMEPLATE_SHAPE_BY_ID.has(entry.id))
+    throw new Error(`cosmetics registry: colorCustomizable nameplate '${entry.id}' missing from NAMEPLATE_SHAPE_BY_ID`);
+}
+
+/** COSM-05 — is this cosmetic id a colour-customizable (Ultimate) design? Unknown/free ids → false. */
+export function isColorCustomizable(cosmeticId: string): boolean {
+  return PREMIUM_BY_ID.get(cosmeticId)?.colorCustomizable === true;
+}
+
+/**
+ * COSM-05 — validate + resolve a closed attribute's explicit `cosmeticId`. Returns the id when it is
+ * a registered PREMIUM cosmetic of the right type whose render kind/shape matches the attribute;
+ * `undefined` otherwise (the caller falls back to colour-inference — never trusted blind).
+ */
+export function resolveExplicitCosmeticId(
+  layer: 'frame' | 'nameplate',
+  attrs: Record<string, unknown>,
+): string | undefined {
+  const id = attrs.cosmeticId;
+  if (typeof id !== 'string' || id.length === 0) return undefined;
+  const entry = PREMIUM_BY_ID.get(id);
+  if (!entry || entry.type !== layer) return undefined;
+  if (layer === 'frame') {
+    return typeof attrs.kind === 'string' && FRAME_KIND_BY_ID.get(id) === attrs.kind ? id : undefined;
+  }
+  return typeof attrs.shape === 'string' && NAMEPLATE_SHAPE_BY_ID.get(id) === attrs.shape ? id : undefined;
+}
+
+// The REGISTRY colour per premium design — what the flatten backstop forces a recoloured NON-flagged
+// premium layer back to. Frames come from PREMIUM_FRAMES; BRASS is the hard-coded ramp's base stop
+// (render/buildCard.ts BRASS_RAMP[1] — the draft's "the current gold = the ramp of #c9971f").
+const FRAME_REGISTRY_COLOR_BY_ID = new Map<string, string>(PREMIUM_FRAMES.map((f) => [f.id, f.color]));
+const NAMEPLATE_REGISTRY_COLOR_BY_ID = new Map<string, string>([['brass', '#c9971f']]);
+
+// The CARD-11 curated title-ink set — MIRRORS apps/mobile/src/styler/roster.ts INKS (colors only;
+// candidate for a packages/shared lift alongside BRASS_RAMP, see the W-5 debt note). The flatten
+// backstop holds non-ultimate compositions to this set: free-pick ink is EXACTLY what the 10-PX
+// colorCustomizable font sells (COSM-05), so an off-list ink under a non-flagged font is a smuggle.
+const CURATED_INK_COLORS = new Set(
+  ['#f3ecd9', '#14121f', '#e8c14a', '#e85ad0', '#7ad0e8', '#a8c980'].map((c) => c.toLowerCase()),
+);
+/** The forced fallback for a smuggled off-list ink — CREAM, the roster's default/first ink. */
+const DEFAULT_INK_COLOR = '#f3ecd9';
+
+/**
+ * COSM-05 (the CARD-11 title-force precedent) — the server-flatten COLOUR-FORCE BACKSTOP: overwrite
+ * the layer colour of any premium design that is NOT `colorCustomizable` with its registry value, so a
+ * hand-crafted composition can never ship a recoloured non-ultimate premium design. Free designs are
+ * untouched (free kinds tolerate arbitrary colours — they simply read as the free variant); flagged
+ * (Ultimate) designs are untouched (colour freedom is the entitlement working). INK (COSM-05, Murr
+ * W-5 fix): unless the equipped FONT design (`fontId` — the roster id one-for-one) is
+ * colorCustomizable, the title ink is held to the CARD-11 curated set — off-list ink forces to
+ * CREAM, because free-pick ink IS the SCRIPT-ULTIMATE entitlement and must not ship un-bought.
+ * Pure + non-mutating; returns the SAME reference when nothing needed forcing.
+ */
+export function forceRegistryColors(composition: Record<string, unknown>): Record<string, unknown> {
+  let out = composition;
+
+  const frame = composition.frame;
+  if (frame && typeof frame === 'object') {
+    const attrs = frame as Record<string, unknown>;
+    const id = resolveExplicitCosmeticId('frame', attrs) ?? resolveFrameCosmeticId(attrs);
+    if (id && !isColorCustomizable(id)) {
+      const registry = FRAME_REGISTRY_COLOR_BY_ID.get(id);
+      const current = typeof attrs.color === 'string' ? attrs.color.toLowerCase() : '';
+      if (registry && current !== registry.toLowerCase()) {
+        out = { ...out, frame: { ...attrs, color: registry } };
+      }
+    }
+  }
+
+  const nameplate = composition.nameplate;
+  if (nameplate && typeof nameplate === 'object') {
+    const attrs = nameplate as Record<string, unknown>;
+    let forced: Record<string, unknown> | null = null;
+
+    const shape = typeof attrs.shape === 'string' ? attrs.shape : 'slab';
+    const id = resolveExplicitCosmeticId('nameplate', attrs) ?? shape;
+    if (!isColorCustomizable(id)) {
+      const registry = NAMEPLATE_REGISTRY_COLOR_BY_ID.get(id);
+      const current = typeof attrs.plate === 'string' ? attrs.plate.toLowerCase() : '';
+      if (registry && current !== registry.toLowerCase()) {
+        forced = { ...attrs, plate: registry };
+      }
+    }
+
+    // The INK half of the backstop — gated on the FONT design's flag, not the plate's (they are
+    // separate cosmetics sharing the layer; fontId is explicit identity, no inference needed).
+    const fontId = typeof attrs.fontId === 'string' ? attrs.fontId : 'clean-sans';
+    const ink = typeof attrs.ink === 'string' ? attrs.ink.toLowerCase() : undefined;
+    if (ink !== undefined && !isColorCustomizable(fontId) && !CURATED_INK_COLORS.has(ink)) {
+      forced = { ...(forced ?? attrs), ink: DEFAULT_INK_COLOR };
+    }
+
+    if (forced) out = { ...out, nameplate: forced };
+  }
+
+  return out;
+}
+
 interface ComposedRefShape {
   // composition shape
   elements?: Array<Record<string, unknown>>;
@@ -312,8 +461,10 @@ export function collectCosmeticRefs(composition: unknown): string[] {
     if (el.type === 'text' && typeof el.fontId === 'string') refs.push(el.fontId);
   }
   // — composition CLOSED attributes (kind/shape = id, except frame = kind+color) —
+  // COSM-05: a validated explicit `cosmeticId` WINS over colour-inference (colour-independent
+  // identity for the ultimate designs); an invalid/mismatched one falls back to inference.
   if (c.frame && typeof c.frame === 'object') {
-    const id = resolveFrameCosmeticId(c.frame);
+    const id = resolveExplicitCosmeticId('frame', c.frame) ?? resolveFrameCosmeticId(c.frame);
     if (id) refs.push(id);
   }
   if (c.effect && typeof c.effect === 'object') {
@@ -326,7 +477,11 @@ export function collectCosmeticRefs(composition: unknown): string[] {
     if (typeof f.kind === 'string') refs.push(f.kind);
   }
   if (c.nameplate && typeof c.nameplate === 'object') {
-    if (typeof c.nameplate.shape === 'string') refs.push(c.nameplate.shape); // composition plate shape
+    // COSM-05: a validated explicit plate `cosmeticId` REPLACES the shape ref (one design, one id —
+    // an ultimate plate must never also read as its base SKU); else the shape IS the id (banner rule).
+    const plateId = resolveExplicitCosmeticId('nameplate', c.nameplate);
+    if (plateId) refs.push(plateId);
+    else if (typeof c.nameplate.shape === 'string') refs.push(c.nameplate.shape); // composition plate shape
     if (typeof c.nameplate.fontId === 'string') refs.push(c.nameplate.fontId);
   }
   // — style_presets `.style` ids (carried directly) —

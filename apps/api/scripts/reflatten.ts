@@ -21,6 +21,7 @@ import { eq, isNull, not } from 'drizzle-orm';
 import { getDb, closeDb } from '../src/db/client';
 import { cardDesigns, games } from '../src/db/schema';
 import { flattenComposition, withGameTitle } from '../src/render/flatten';
+import { forceRegistryColors } from '../src/config/cosmetics';
 import { getStorage } from '../src/storage';
 
 async function main(): Promise<void> {
@@ -43,7 +44,12 @@ async function main(): Promise<void> {
   let ok = 0;
   for (const row of rows) {
     try {
-      const { full, thumb } = await flattenComposition(withGameTitle(row.composition, row.gameTitle));
+      // forceRegistryColors (Murr W-5 fix): publish forces the RENDER but stores the original
+      // composition — without re-forcing here, a reflatten would regenerate every PNG from the raw
+      // stored document and silently ship any smuggled recolour publish had suppressed.
+      const { full, thumb } = await flattenComposition(
+        withGameTitle(forceRegistryColors(row.composition), row.gameTitle),
+      );
       await storage.put(`cards/${row.id}/full.png`, full, 'image/png');
       await storage.put(`cards/${row.id}/thumb.png`, thumb, 'image/png');
       ok += 1;

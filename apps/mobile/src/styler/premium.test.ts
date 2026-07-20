@@ -1,4 +1,11 @@
-import { collectPremiumRosterIds, premiumStatusOf, resolvePremiumRefs } from './premium';
+import {
+  collectPremiumRosterIds,
+  explicitFrameRosterId,
+  explicitPlateRosterId,
+  premiumStatusOf,
+  resolvePremiumRefs,
+} from './premium';
+import { NAMEPLATES } from './roster';
 import { COMPOSITION_SCHEMA_VERSION, type CosmeticListItem } from '@ingame/shared';
 import type { CardComposition } from '../render/composition';
 
@@ -93,7 +100,94 @@ describe('CARD-13: resolvePremiumRefs — names/prices/ownership join from the l
   it('joins by id and falls back honestly for an unknown id', () => {
     const refs = resolvePremiumRefs(['frost', 'mystery'], LIB);
     // M5 F-9 (G4): `type` rides for the reconcile/keep buy-list swatch — from the library, else inferred.
-    expect(refs[0]).toEqual({ cosmeticId: 'frost', name: 'FROST', type: 'effect', price: 8, owned: false });
-    expect(refs[1]).toEqual({ cosmeticId: 'mystery', name: 'MYSTERY', type: 'frame', price: 0, owned: false });
+    // COSM-05 (M6 W-5): `tier` also rides (from the library) so the reconcile row can wear the ULTIMATE
+    // chip; an unknown id has no library row, so its tier is absent.
+    expect(refs[0]).toEqual({ cosmeticId: 'frost', name: 'FROST', type: 'effect', price: 8, owned: false, tier: 'showpiece' });
+    expect(refs[1]).toEqual({ cosmeticId: 'mystery', name: 'MYSTERY', type: 'frame', price: 0, owned: false, tier: undefined });
+  });
+});
+
+// ── COSM-05 (M6 W-5, decision 0080) — colour-independent ultimate identity ───────────────────────
+
+const ULTIMATE_LIB: CosmeticListItem[] = [
+  ...LIB,
+  { id: 'marquee', type: 'frame', name: 'MARQUEE', tier: 'showpiece', price: 8, owned: false },
+  { id: 'marquee-ultimate', type: 'frame', name: 'MARQUEE ULTIMATE', tier: 'ultimate', price: 10, owned: false, colorCustomizable: true },
+  { id: 'brass-ultimate', type: 'nameplate', name: 'BRASS ULTIMATE', tier: 'ultimate', price: 10, owned: false, colorCustomizable: true },
+  { id: 'pacifico-ultimate', type: 'font', name: 'SCRIPT ULTIMATE', tier: 'ultimate', price: 10, owned: false, colorCustomizable: true },
+];
+
+describe('COSM-05: explicit composition cosmeticId — validated-first, inference-fallback', () => {
+  it('a recoloured MARQUEE ULTIMATE frame resolves to ITS OWN SKU, never base marquee or free', () => {
+    const frame = { kind: 'marquee' as const, color: '#12e0b8', width: 0.045, cosmeticId: 'marquee-ultimate' };
+    expect(explicitFrameRosterId(frame)).toBe('marquee-ultimate');
+    expect(collectPremiumRosterIds(base({ frame }))).toEqual(['marquee-ultimate']);
+  });
+
+  it('without the explicit id, colour inference stays BASE-first (default-gold marquee reads marquee)', () => {
+    expect(
+      collectPremiumRosterIds(base({ frame: { kind: 'marquee', color: '#e8c14a', width: 0.045 } })),
+    ).toEqual(['marquee']);
+  });
+
+  it('roster invariant — every colorCustomizable plate carries its plateSeed (preset/styler agreement — Murr W-5 LOW)', () => {
+    // preset-apply requires BOTH (colorCustomizable && plateSeed) while styler-apply falls back — a
+    // flagged-but-seedless row would diverge the two paths. Pin the invariant so a future authoring
+    // slip fails here, not in a user's preset.
+    for (const p of NAMEPLATES) {
+      if (p.colorCustomizable) expect(p.plateSeed).toBeTruthy();
+    }
+  });
+
+  it('a BASIC (non-premium) cosmeticId never validates — the cost-stack mirrors the server (Murr W-5 MED)', () => {
+    // Murr's smuggle: a free/basic id on a premium-coloured frame. The server's resolveExplicitCosmeticId
+    // is PREMIUM_BY_ID-only so it colour-infers thin-gold (3 PX); a client that accepted 'lime' would
+    // say 0 PX and the publish reconcile would surprise the user. Reject → same inference → same price.
+    const frame = { kind: 'thin-line' as const, color: '#e8c14a', width: 0.045, cosmeticId: 'lime' };
+    expect(explicitFrameRosterId(frame)).toBeUndefined();
+    expect(collectPremiumRosterIds(base({ frame }))).toEqual(['thin-gold']);
+    // same rule on plates: a basic plate id (slab) never validates as explicit identity
+    expect(explicitPlateRosterId({ shape: 'slab', cosmeticId: 'slab' })).toBeUndefined();
+  });
+
+  it('a mismatched/unknown frame cosmeticId falls back to inference (never trusted blind)', () => {
+    // kind mismatch — brass-ultimate is not a frame of kind thin-line
+    expect(explicitFrameRosterId({ kind: 'thin-line', cosmeticId: 'brass-ultimate' })).toBeUndefined();
+    // unknown id → inference: thin-line at the GOLD colour is thin-gold
+    expect(
+      collectPremiumRosterIds(base({ frame: { kind: 'thin-line', color: '#e8c14a', width: 0.045, cosmeticId: 'nope' } })),
+    ).toEqual(['thin-gold']);
+  });
+
+  it('an ultimate plate resolves as ITSELF and REPLACES the shape ref (never also its base SKU)', () => {
+    const comp = base({
+      nameplate: { shape: 'brass', fontId: 'clean-sans', title: 'X', plate: '#3a86ff', ink: '#fff', size: 0.05, cosmeticId: 'brass-ultimate' },
+    });
+    expect(collectPremiumRosterIds(comp)).toEqual(['brass-ultimate']);
+    expect(explicitPlateRosterId(comp.nameplate)).toBe('brass-ultimate');
+  });
+
+  it('a shape-mismatched plate cosmeticId falls back to the shape ref (base brass)', () => {
+    const comp = base({
+      nameplate: { shape: 'brass', fontId: 'clean-sans', title: 'X', plate: '#000', ink: '#fff', size: 0.05, cosmeticId: 'marquee-ultimate' },
+    });
+    expect(collectPremiumRosterIds(comp)).toEqual(['brass']);
+  });
+
+  it('SCRIPT ULTIMATE rides fontId directly — the fontId IS the cosmetic id', () => {
+    const comp = base({
+      nameplate: { shape: 'slab', fontId: 'pacifico-ultimate', title: 'X', plate: '#000', ink: '#0f0', size: 0.05 },
+    });
+    expect(collectPremiumRosterIds(comp)).toEqual(['pacifico-ultimate']);
+  });
+
+  it('the reconcile prices a recoloured unowned ultimate design at the 10-PX band', () => {
+    const comp = base({
+      frame: { kind: 'marquee', color: '#12e0b8', width: 0.045, cosmeticId: 'marquee-ultimate' },
+      nameplate: { shape: 'brass', fontId: 'pacifico-ultimate', title: 'X', plate: '#12e0b8', ink: '#0f0', size: 0.05, cosmeticId: 'brass-ultimate' },
+    });
+    const s = premiumStatusOf(comp, ULTIMATE_LIB);
+    expect(s.unowned.map((r) => r.cosmeticId).sort()).toEqual(['brass-ultimate', 'marquee-ultimate', 'pacifico-ultimate']);
+    expect(s.costStack).toBe(30);
   });
 });

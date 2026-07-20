@@ -609,15 +609,51 @@ function plateTextInset(shape: string): number {
   return 0.12; // ribbon · bevel · capsule · tab
 }
 
+// ── COSM-05 (M6 W-5, decision 0080) — the parameterized brass ramp ─────────────────────────────────
+// The ONE real render change of the ultimate-cosmetics draft: the brass plate's gradient derives from
+// `nameplate.plate` (lighten / base / darken of the chosen colour) — but ONLY for a document carrying
+// the explicit `cosmeticId` colour signal (the ultimate write-path). The pre-W5 renderer IGNORED
+// plateColor for brass (legacy plates carry the untouched '#141026' styler default), so every legacy
+// document must keep the hard-coded gold — hence the signal gate, not a colour sniff.
+
+/** The legacy hard-coded brass gold — light / base / dark. BRASS_RAMP[1] is the registry colour the
+ *  flatten backstop forces non-ultimate brass to (config/cosmetics.ts). */
+export const BRASS_RAMP = ['#f6d879', '#c9971f', '#8a6410'] as const;
+
+const clamp255 = (n: number): number => Math.max(0, Math.min(255, Math.round(n)));
+const toHex = (r: number, g: number, b: number): string =>
+  `#${[r, g, b].map((c) => clamp255(c).toString(16).padStart(2, '0')).join('')}`;
+
+/**
+ * The 3 brass gradient stops for a chosen plate colour — lighten / base / darken (pure, total). The
+ * registry gold `#c9971f` returns the EXACT legacy stops (pixel-identity by construction — the legacy
+ * highlight/shadow pair is not a uniform transform of its base, so the default is matched, not
+ * re-derived); an unparseable colour degrades to the legacy gold (never a crash, never a black plate).
+ */
+export function brassPlateRamp(plateColor: string): [string, string, string] {
+  const m = /^#?([0-9a-f]{6})$/i.exec(plateColor.trim());
+  if (!m) return [...BRASS_RAMP];
+  const hex = m[1]!.toLowerCase();
+  if (`#${hex}` === BRASS_RAMP[1]) return [...BRASS_RAMP];
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16)) as [number, number, number];
+  // light = mix 55% toward white (the bevel catch); dark = scale to 62% (the shadowed foot).
+  const light = toHex(r + (255 - r) * 0.55, g + (255 - g) * 0.55, b + (255 - b) * 0.55);
+  const dark = toHex(r * 0.62, g * 0.62, b * 0.62);
+  return [light, `#${hex}`, dark];
+}
+
 /** The plate background node(s) for a shape (the bottom `plateH` band). One node except brass (2). */
-function buildPlate(shape: string, W: number, H: number, plateH: number, plateColor: string, ctx: SkiaCtx): any[] {
+function buildPlate(shape: string, W: number, H: number, plateH: number, plateColor: string, ctx: SkiaCtx, colorCustomized = false): any[] {
   const h = createElement;
   const { Rect, Path, Skia, LinearGradient } = ctx;
   const top = H - plateH;
   if (shape === 'brass') {
-    // a gold-gradient face + a bright top-edge highlight (the bevel catch) — ignores plateColor.
+    // the metal-ramp face + a bright top-edge highlight (the bevel catch). Legacy documents (no
+    // explicit cosmeticId — plateColor was historically ignored) keep the hard-coded gold; an
+    // ultimate document derives the ramp from the chosen plate colour (COSM-05).
+    const ramp = colorCustomized ? brassPlateRamp(plateColor) : [...BRASS_RAMP];
     return [
-      h(Rect, { key: 'plate', x: 0, y: top, width: W, height: plateH }, h(LinearGradient, { start: { x: 0, y: top }, end: { x: 0, y: H }, colors: ['#f6d879', '#c9971f', '#8a6410'] })),
+      h(Rect, { key: 'plate', x: 0, y: top, width: W, height: plateH }, h(LinearGradient, { start: { x: 0, y: top }, end: { x: 0, y: H }, colors: ramp })),
       h(Rect, { key: 'plateHi', x: 0, y: top, width: W, height: Math.max(1, plateH * 0.12), color: 'rgba(255,240,190,0.5)' }),
     ];
   }
@@ -670,7 +706,9 @@ function plateGroup(c: CardComposition, W: number, H: number, plateH: number, ct
   const raw = c.nameplate.shape ?? 'slab';
   const shape = raw === 'none' ? 'slab' : raw; // OQ-135: the name always renders
   const lift = Math.max(2, Math.round(H * 0.012)); // "a couple pixels from the bottom"
-  const children: any[] = buildPlate(shape, W, H, plateH, c.nameplate.plate, ctx);
+  // COSM-05: the explicit `cosmeticId` is the ultimate-design colour signal — only then does the
+  // brass ramp derive from the chosen plate colour (legacy documents keep the hard-coded gold).
+  const children: any[] = buildPlate(shape, W, H, plateH, c.nameplate.plate, ctx, typeof c.nameplate.cosmeticId === 'string');
   const face = (c.nameplate.fontId && ctx.typefaces?.[c.nameplate.fontId]) || typeface;
   if (face) {
     const fontSize = scaledSize(c.nameplate.size, H, c.nameplate.fontId);

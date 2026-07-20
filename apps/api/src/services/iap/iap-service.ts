@@ -9,7 +9,8 @@ import * as iapRepo from '../../repositories/iap-repo';
 import * as storeRepo from '../../repositories/store-repo';
 import * as economyRepo from '../../repositories/economy-repo';
 import * as entitlementRepo from '../../repositories/entitlement-repo';
-import { listFeaturedCatalog, priceForTier } from '../../config/cosmetics';
+import { listFeaturedCatalog } from '../../config/cosmetics';
+import { toCosmeticListItem } from '../cosmetics/cosmetic-service';
 import * as ledger from '../economy/ledger-service';
 import { getIapProvider } from './index';
 import type { IapProvider } from './IapProvider';
@@ -277,14 +278,9 @@ export async function getStore(actorId: string): Promise<StoreResponse> {
       oneTime: p.oneTime,
       purchased: purchased.has(p.productId),
     })),
-    premiumCosmetics: featured.map((e) => ({
-      id: e.id,
-      type: e.type,
-      name: e.name,
-      ...(e.tier ? { tier: e.tier } : {}),
-      price: priceForTier(e.tier),
-      owned: e.tier === null ? true : owned.has(e.id),
-    })),
+    // the ONE cosmeticListItem mapper (cosmetic-service) — /store and /cosmetics can never drift;
+    // COSM-05 `colorCustomizable` rides automatically the day an ultimate SKU is featured (0.77).
+    premiumCosmetics: featured.map((e) => toCosmeticListItem(e, owned)),
     drops: [], // TODO(P10/ECON-08): seasonal drops — the drawer renders, authoring is later
   };
 }

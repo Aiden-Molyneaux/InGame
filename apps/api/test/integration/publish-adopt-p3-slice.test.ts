@@ -687,7 +687,7 @@ describe('M5 F-9 E2: cross-user `components` metadata (registry-resolved, owned-
     expect(card.adopted).toBe(false);
     // the components metadata — resolved from the registry, owned per B (unowned).
     expect(card.components).toEqual([
-      { cosmeticId: 'bitter', name: 'SLAB', type: 'font', price: 3, owned: false },
+      { cosmeticId: 'bitter', name: 'SLAB', type: 'font', price: 3, owned: false, tier: 'standard' },
     ]);
     // OQ-122 — no composition leaks onto the cross-user shape, nor onto any component row.
     expect('composition' in card).toBe(false);
@@ -707,7 +707,7 @@ describe('M5 F-9 E2: cross-user `components` metadata (registry-resolved, owned-
     expect(card.byViewer).toBe(true);
     expect(card.adopted).toBe(false);
     expect(card.components).toEqual([
-      { cosmeticId: 'bitter', name: 'SLAB', type: 'font', price: 3, owned: true },
+      { cosmeticId: 'bitter', name: 'SLAB', type: 'font', price: 3, owned: true, tier: 'standard' },
     ]);
   });
 
@@ -746,7 +746,7 @@ describe('M5 F-9 E2: cross-user `components` metadata (registry-resolved, owned-
     const adopted = switcher.body.items.find((c: { id: string }) => c.id === id);
     expect(adopted.origin).toBe('adopted');
     expect(adopted.components).toEqual([
-      { cosmeticId: 'bitter', name: 'SLAB', type: 'font', price: 3, owned: true },
+      { cosmeticId: 'bitter', name: 'SLAB', type: 'font', price: 3, owned: true, tier: 'standard' },
     ]);
     expect('composition' in adopted).toBe(false);
   });

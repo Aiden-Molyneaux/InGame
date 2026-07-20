@@ -22,7 +22,9 @@ import { ReconcileSheet } from '../../src/components/commerce/ReconcileSheet';
 import { PrintRitual } from '../../src/components/canvas/PrintRitual';
 import type { TileBadge } from '../../src/components/styler/AttributeSection';
 import type { PublishChecklist } from '../../src/components/canvas/PressSheet';
-import { premiumStatusOf } from '../../src/styler/premium';
+import { explicitFrameRosterId, explicitPlateRosterId, premiumStatusOf } from '../../src/styler/premium';
+import { draftToPresetStyle, presetToComposition } from '../../src/styler/presets';
+import { ColorField } from '../../src/components/ColorPicker';
 import { themedStyles, useTheme } from '../../src/theme';
 import { useAnnounceOnChange } from '../../src/a11y/announce';
 import type { CardComposition } from '../../src/render/composition';
@@ -34,9 +36,12 @@ import {
   FRAMES,
   INKS,
   NAMEPLATES,
+  PLATE_DEFAULT_COLOR,
   START_SOURCES,
   surpriseDeal,
   withGameTitle,
+  type FrameDef,
+  type NameplateDef,
 } from '../../src/styler/roster';
 import {
   useGetCollectionQuery,
@@ -74,44 +79,39 @@ type SaveState = 'saved' | 'saving' | 'error' | 'fresh';
 const AUTOSAVE_MS = 1200;
 const RETRY_MS = 3000;
 
-function presetToComposition(style: StylePresetStyle, base: CardComposition): CardComposition {
-  const next: CardComposition = { ...base };
-  const frame = style.frameId ? FRAMES.find((f) => f.id === style.frameId) : undefined;
-  if (frame?.kind) next.frame = { kind: frame.kind, color: frame.color, width: frame.width };
-  const effect = style.effect ? EFFECTS.find((e) => e.id === style.effect!.id) : undefined;
-  if (effect && effect.kind !== 'none') next.effect = { kind: effect.kind, intensity: style.effect!.intensity };
-  const finish = style.finishId ? FINISHES.find((f) => f.id === style.finishId) : undefined;
-  if (finish && finish.kind !== 'none') next.finish = { kind: finish.kind };
-  const plateDef = style.nameplateId ? NAMEPLATES.find((p) => p.id === style.nameplateId) : undefined;
-  if (next.nameplate && plateDef?.shape) next.nameplate = { ...next.nameplate, shape: plateDef.shape };
-  if (next.nameplate && style.title) {
-    next.nameplate = { ...next.nameplate, fontId: style.title.fontId, ink: style.title.ink };
+// (presetToComposition / draftToPresetStyle moved to src/styler/presets.ts for W-5 — the COSM-05
+// ultimate-identity rules in them are unit-tested beside premium.ts.)
+
+// ── COSM-05 (M6 W-5, decision 0080) — the attribute a FRAME / PLATE pick writes ──────────────────
+// One builder each, shared by the rail PREVIEW and the tap APPLY so they can never disagree.
+// An ULTIMATE (colorCustomizable) design writes its explicit `cosmeticId` (colour-independent
+// identity) and SEEDS the registry default colour on first apply — but keeps the owner's picked
+// colour when the design is already worn (re-tapping the tile must not clobber a recolour). A
+// non-ultimate pick is byte-identical to the pre-W5 behavior; leaving an ultimate plate restores
+// the constant styler plate colour (the picked hue belongs to the design, not the document).
+
+function frameAttrsFor(f: FrameDef, d: CardComposition): NonNullable<CardComposition['frame']> {
+  if (f.colorCustomizable) {
+    const keep = d.frame?.cosmeticId === f.id ? d.frame.color : f.color;
+    return { kind: f.kind!, color: keep, width: f.width, cosmeticId: f.id };
   }
-  return next;
+  return { kind: f.kind!, color: f.color, width: f.width };
 }
 
-/** Derive the CARD-24b recipe from the draft's closed attributes (the SAVE-AS-PRESET write). */
-function draftToPresetStyle(d: CardComposition): StylePresetStyle {
-  const style: StylePresetStyle = {};
-  if (d.frame?.kind) {
-    // kind+color so a preset derived from THIN GOLD doesn't resolve to THIN LINE (decision 0068).
-    const f = FRAMES.find((x) => x.kind === d.frame!.kind && x.color === d.frame!.color) ?? FRAMES.find((x) => x.kind === d.frame!.kind);
-    if (f) style.frameId = f.id;
+function plateAttrsFor(
+  p: NameplateDef,
+  base: NonNullable<CardComposition['nameplate']>,
+): NonNullable<CardComposition['nameplate']> {
+  if (p.colorCustomizable) {
+    const keep = base.cosmeticId === p.id ? base.plate : (p.plateSeed ?? base.plate);
+    return { ...base, shape: p.shape, cosmeticId: p.id, plate: keep };
   }
-  if (d.effect && d.effect.kind !== 'none') {
-    const e = EFFECTS.find((x) => x.kind === d.effect!.kind);
-    if (e) style.effect = { id: e.id, intensity: d.effect.intensity };
+  if (base.cosmeticId) {
+    // leaving an ultimate plate: drop the identity + restore the styler default plate colour
+    const { cosmeticId: _dropped, ...rest } = base;
+    return { ...rest, shape: p.shape, plate: PLATE_DEFAULT_COLOR };
   }
-  if (d.finish && d.finish.kind !== 'none') {
-    const f = FINISHES.find((x) => x.kind === d.finish!.kind);
-    if (f) style.finishId = f.id;
-  }
-  if (d.nameplate) {
-    const p = NAMEPLATES.find((x) => x.shape === (d.nameplate!.shape ?? 'slab'));
-    if (p) style.nameplateId = p.id;
-    style.title = { fontId: d.nameplate.fontId ?? 'clean-sans', ink: d.nameplate.ink };
-  }
-  return style;
+  return { ...base, shape: p.shape };
 }
 
 export default function Styler() {
@@ -209,6 +209,38 @@ export default function Styler() {
   // routes to the ReconcileSheet; everything else (RATE_LIMITED · COMPOSITION_CHANGED · MIN_COMPLEXITY ·
   // network · generic) lands here and renders as the sheet's InlineBanner. Cleared on any edit / retry.
   const [publishError, setPublishError] = useState<string | null>(null);
+  // ── COSM-05 (M6 W-5) — the ultimate colour beat ──────────────────────────────────────────────
+  // The picker GATES on the server library flag (`colorCustomizable` rides the GET /cosmetics list
+  // shapes — the registry is the authority; no library yet → no picker, same as no badges). The
+  // roster mirror drives only the pure write/seed paths (frameAttrsFor/plateAttrsFor above).
+  const flaggedIds = useMemo(
+    () => new Set((cosmetics?.items ?? []).filter((i) => i.colorCustomizable).map((i) => i.id)),
+    [cosmetics],
+  );
+  // The last-10 committed colours + every colour already on the card — the ColorField's recents +
+  // FROM-CARD eyedropper (the CanvasSurface derivation, mirrored for the styler colour rows).
+  const [recents, setRecents] = useState<string[]>([]);
+  const noteColor = useCallback((hex: string) => {
+    setRecents((r) => [hex, ...r.filter((c) => c.toLowerCase() !== hex.toLowerCase())].slice(0, 10));
+  }, []);
+  const cardColors = useMemo(() => {
+    if (!draft) return [];
+    const set = new Set<string>();
+    const b = draft.base;
+    if ('gradient' in b) {
+      set.add(b.gradient[0]);
+      set.add(b.gradient[1]);
+    } else {
+      set.add(b.fill);
+    }
+    for (const e of draft.elements ?? []) {
+      set.add(e.fill);
+      if (e.type !== 'text' && e.fill2) set.add(e.fill2);
+      if (e.type !== 'text' && e.stroke) set.add(e.stroke.color);
+    }
+    return [...set];
+  }, [draft]);
+
   // per-roster-id premium badge lookup (price + owned) — only PREMIUM ids get an entry.
   const badgeFor = useCallback(
     (ids: string[]): Record<string, TileBadge> => {
@@ -956,21 +988,25 @@ export default function Styler() {
     });
     switch (section) {
       case 'frame': {
-        // Match kind AND color — several frames share a kind (THIN LINE/GOLD/LIME/BUBBLEGUM are all
-        // `thin-line`), so kind alone would highlight the wrong tile (decision 0068).
+        // A validated explicit `cosmeticId` derives FIRST (COSM-05 — a recoloured ultimate design
+        // stays selected as ITSELF); else match kind AND color — several frames share a kind (THIN
+        // LINE/GOLD/LIME/BUBBLEGUM are all `thin-line`), so kind alone would highlight the wrong
+        // tile (decision 0068).
         const selected =
-          FRAMES.find((f) => (f.kind ?? null) === (draft.frame?.kind ?? null) && f.color === (draft.frame?.color ?? ''))?.id ?? 'clean';
+          explicitFrameRosterId(draft.frame) ??
+          FRAMES.find((f) => (f.kind ?? null) === (draft.frame?.kind ?? null) && f.color === (draft.frame?.color ?? ''))?.id ??
+          'clean';
         return opts(
           FRAMES.map((f) => ({
             id: f.id,
             name: f.name,
-            preview: f.kind ? { ...draft, frame: { kind: f.kind, color: f.color, width: f.width } } : stripKey(draft, 'frame'),
+            preview: f.kind ? { ...draft, frame: frameAttrsFor(f, draft) } : stripKey(draft, 'frame'),
           })),
           selected,
           'FRAME — THE BORDER OBJECT',
           (id) => {
             const f = FRAMES.find((x) => x.id === id)!;
-            patchDraft((d) => (f.kind ? { ...d, frame: { kind: f.kind, color: f.color, width: f.width } } : stripKey(d, 'frame')));
+            patchDraft((d) => (f.kind ? { ...d, frame: frameAttrsFor(f, d) } : stripKey(d, 'frame')));
           },
         );
       }
@@ -1014,22 +1050,28 @@ export default function Styler() {
         );
       }
       case 'plate': {
-        // Every pick — NONE included — patches ONLY `shape`; the nameplate object (title/font/ink)
-        // always survives in the document, so a later ink/font pick can never resurrect defaults
-        // (the parvati ink-clobbers-font flag, 2026-07-06).
-        const selected = draft.nameplate ? (NAMEPLATES.find((p) => p.shape === (draft.nameplate!.shape ?? 'slab'))?.id ?? 'slab') : 'none';
+        // Every pick — NONE included — patches ONLY `shape` (+ the COSM-05 identity/colour fields,
+        // plateAttrsFor); the nameplate object (title/font/ink) always survives in the document, so
+        // a later ink/font pick can never resurrect defaults (the parvati ink-clobbers-font flag,
+        // 2026-07-06). A validated explicit `cosmeticId` derives the selection FIRST (COSM-05 —
+        // BRASS ULTIMATE and BRASS share the `brass` shape).
+        const selected = draft.nameplate
+          ? (explicitPlateRosterId(draft.nameplate) ??
+            NAMEPLATES.find((p) => p.shape === (draft.nameplate!.shape ?? 'slab'))?.id ??
+            'slab')
+          : 'none';
         return opts(
           NAMEPLATES.map((p) => ({
             id: p.id,
             name: p.name,
-            preview: { ...draft, nameplate: { ...(draft.nameplate ?? basePlate(title)), shape: p.shape } },
+            preview: { ...draft, nameplate: plateAttrsFor(p, draft.nameplate ?? basePlate(title)) },
           })),
           selected,
           'NAMEPLATE — SHAPE',
           (id) => {
             const p = NAMEPLATES.find((x) => x.id === id);
             if (!p) return;
-            patchDraft((d) => ({ ...d, nameplate: { ...(d.nameplate ?? basePlate(title)), shape: p.shape } }));
+            patchDraft((d) => ({ ...d, nameplate: plateAttrsFor(p, d.nameplate ?? basePlate(title)) }));
           },
         );
       }
@@ -1043,7 +1085,20 @@ export default function Styler() {
           })),
           selected,
           'TITLE STYLING — FONT + INK',
-          (id) => patchDraft((d) => ({ ...d, nameplate: { ...(d.nameplate ?? basePlate(title)), fontId: id } })),
+          (id) =>
+            patchDraft((d) => {
+              const plate = { ...(d.nameplate ?? basePlate(title)), fontId: id };
+              // COSM-05 (Murr W-5 HIGH) — leaving an ULTIMATE font must not strand a free-picked ink:
+              // a non-flagged font holds the CARD-11 curated set, and the server flatten would silently
+              // force CREAM at publish (published card ≠ approved preview). Mirror plateAttrsFor's
+              // restore rule; the ROSTER flag (not the library) so the rule holds pre-library-load.
+              const flagged = FONTS.find((f) => f.id === id)?.colorCustomizable === true;
+              const ink = typeof plate.ink === 'string' ? plate.ink.toLowerCase() : undefined;
+              if (!flagged && ink && !INKS.some((i) => i.color.toLowerCase() === ink)) {
+                plate.ink = INKS[0]!.color; // CREAM — the curated default (matches the server force)
+              }
+              return { ...d, nameplate: plate };
+            }),
         );
       }
     }
@@ -1228,7 +1283,7 @@ export default function Styler() {
           onClearError: () => setPublishError(null),
           reconcile: {
             open: reconcileOpen,
-            items: premium.unowned.map((u) => ({ cosmeticId: u.cosmeticId, name: u.name, type: u.type, price: u.price })),
+            items: premium.unowned.map((u) => ({ cosmeticId: u.cosmeticId, name: u.name, type: u.type, price: u.price, tier: u.tier })),
             total: premium.costStack,
             balance,
             busy: reconcileBusy || busyPublish,
@@ -1288,22 +1343,84 @@ export default function Styler() {
             {section === 'effect' ? (
               <Text style={styles.railHint}>Picking another effect swaps it — the slot holds one.</Text>
             ) : null}
-            {section === 'title' ? (
-              <View style={styles.inkRow}>
-                {INKS.map((ink) => {
-                  const sel = draft.nameplate?.ink === ink.color;
-                  return (
-                    <Pressable
-                      key={ink.id}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${ink.name} ink`}
-                      accessibilityState={{ selected: sel }}
-                      onPress={() => patchDraft((d) => ({ ...d, nameplate: { ...(d.nameplate ?? basePlate(title)), ink: ink.color } }))}
-                      style={[styles.inkSwatch, { backgroundColor: ink.color }, sel && styles.inkSel]}
-                    />
-                  );
-                })}
+            {/* COSM-05 (W-5) — the FRAME/PLATE colour beat: when the SELECTED design carries the
+                server library's `colorCustomizable` flag, the shared ColorField mounts in this
+                section-extra slot (the IntensitySlider precedent), patching the layer colour live.
+                Un-flagged designs never mount it — their sections render exactly as before. */}
+            {/* Mount gate rides the VALIDATED resolver (Murr W-5 MED) — a mismatched/smuggled id
+                (reachable via the passthrough draft PUT) must not mount a picker the cost-stack and
+                the flatten backstop both refuse to honour. */}
+            {section === 'frame' &&
+            draft.frame != null &&
+            (() => {
+              const vid = explicitFrameRosterId(draft.frame);
+              return vid != null && flaggedIds.has(vid);
+            })() ? (
+              <View style={styles.colourWrap}>
+                <Text style={styles.colourLabel}>COLOUR</Text>
+                <ColorField
+                  value={draft.frame.color}
+                  onChange={(hex) => patchDraft((d) => (d.frame ? { ...d, frame: { ...d.frame, color: hex } } : d))}
+                  onCommit={noteColor}
+                  recents={recents}
+                  cardColors={cardColors}
+                />
               </View>
+            ) : null}
+            {section === 'plate' &&
+            draft.nameplate != null &&
+            (() => {
+              const vid = explicitPlateRosterId(draft.nameplate);
+              return vid != null && flaggedIds.has(vid);
+            })() ? (
+              <View style={styles.colourWrap}>
+                <Text style={styles.colourLabel}>COLOUR</Text>
+                <ColorField
+                  value={draft.nameplate.plate}
+                  onChange={(hex) =>
+                    patchDraft((d) => (d.nameplate ? { ...d, nameplate: { ...d.nameplate, plate: hex } } : d))
+                  }
+                  onCommit={noteColor}
+                  recents={recents}
+                  cardColors={cardColors}
+                />
+              </View>
+            ) : null}
+            {section === 'title' ? (
+              draft.nameplate?.fontId && flaggedIds.has(draft.nameplate.fontId) ? (
+                // COSM-05 ink unlock (CARD-11 as amended / OQ-137): while an ULTIMATE font is
+                // equipped, the curated ink row upgrades to free-pick ink — the curated INKS ride
+                // inside the picker as its quick-swatch row. Any other font keeps the curated set.
+                <View style={styles.colourWrap}>
+                  <Text style={styles.colourLabel}>INK — ANY COLOUR</Text>
+                  <ColorField
+                    value={draft.nameplate.ink}
+                    onChange={(hex) =>
+                      patchDraft((d) => ({ ...d, nameplate: { ...(d.nameplate ?? basePlate(title)), ink: hex } }))
+                    }
+                    onCommit={noteColor}
+                    recents={recents}
+                    cardColors={cardColors}
+                    swatches={INKS.map((i) => i.color)}
+                  />
+                </View>
+              ) : (
+                <View style={styles.inkRow}>
+                  {INKS.map((ink) => {
+                    const sel = draft.nameplate?.ink === ink.color;
+                    return (
+                      <Pressable
+                        key={ink.id}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${ink.name} ink`}
+                        accessibilityState={{ selected: sel }}
+                        onPress={() => patchDraft((d) => ({ ...d, nameplate: { ...(d.nameplate ?? basePlate(title)), ink: ink.color } }))}
+                        style={[styles.inkSwatch, { backgroundColor: ink.color }, sel && styles.inkSel]}
+                      />
+                    );
+                  })}
+                </View>
+              )
             ) : null}
           </AttributeSection>
         ) : null}
@@ -1401,7 +1518,7 @@ export default function Styler() {
           setReconcileOpen(false);
           pendingCommitRef.current = null;
         }}
-        items={premium.unowned.map((u) => ({ cosmeticId: u.cosmeticId, name: u.name, type: u.type, price: u.price }))}
+        items={premium.unowned.map((u) => ({ cosmeticId: u.cosmeticId, name: u.name, type: u.type, price: u.price, tier: u.tier }))}
         total={premium.costStack}
         balance={balance}
         busy={reconcileBusy || busyKeep}
@@ -1501,6 +1618,9 @@ const useStyles = themedStyles((t) => ({
   sectionBody: { gap: t.space.md, paddingBottom: t.space.lg },
   railHint: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, lineHeight: 15 },
   inkRow: { flexDirection: 'row', gap: t.space.md, alignItems: 'center', paddingVertical: t.space.sm },
+  // COSM-05 — the section-extra colour beat (FRAME/PLATE COLOUR row + the ultimate-ink upgrade)
+  colourWrap: { gap: t.space.sm, paddingVertical: t.space.sm },
+  colourLabel: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 2 },
   inkSwatch: { width: 26, height: 26, borderWidth: 1, borderColor: t.scr.hairline },
   inkSel: { borderWidth: 2, borderColor: t.scr.accent },
   tools: {

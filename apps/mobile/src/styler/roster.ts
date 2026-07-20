@@ -28,6 +28,12 @@ export interface RosterItem<T extends string = string> {
   id: T;
   name: string; // display copy (F-06-sized by the consumer)
   tier?: CosmeticTier; // COSM-03 gating metadata; absent = basic (the pre-0068 entries are all basic)
+  /** COSM-05 (M6 W-5, decision 0080) — registry-mirror metadata for the ULTIMATE colour-freedom
+   *  designs (apps/api/src/config/cosmetics.ts is the authority; the server library flag gates the
+   *  picker UI). The client mirror drives the PURE paths that can't wait on the network: writing the
+   *  explicit composition `cosmeticId` on apply, seeding the registry default colour, and the preset
+   *  recipe mapping. Present (`true`) only on the ultimate SKUs. */
+  colorCustomizable?: true;
 }
 
 // ── Frames (0063 §4 — structural kinds; neutral free tones) ─────────────────────────────────────
@@ -63,6 +69,11 @@ export const FRAMES: FrameDef[] = [
   { id: 'plasma', name: 'PLASMA', kind: 'glow', color: '#5ad0ff', width: 0.04, tier: 'premium' },
   { id: 'holo-foil', name: 'HOLO FOIL', kind: 'foil', color: '#e85ad0', width: BAND, tier: 'premium' },
   { id: 'marquee', name: 'MARQUEE', kind: 'marquee', color: '#e8c14a', width: BAND, tier: 'premium' },
+  // ── W-5 ULTIMATE SKU (COSM-05 / decision 0080 ruling 2): minted ALONGSIDE the untouched base
+  // design — same render kind, separate identity (the composition `cosmeticId` carries it; colour
+  // inference alone must keep resolving base-first, so this row sits AFTER `marquee`). `color` is
+  // the registry default the first apply seeds (the design is never colourless). ──────────────────
+  { id: 'marquee-ultimate', name: 'MARQUEE ULTIMATE', kind: 'marquee', color: '#e8c14a', width: BAND, tier: 'premium', colorCustomizable: true },
 ];
 
 // ── Effects (0063 §2 — ONE at a time + intensity, CARD-12) ─────────────────────────────────────
@@ -107,6 +118,10 @@ export const FINISHES: FinishDef[] = [
 // NONE left the roster; legacy `shape:'none'` documents render as SLAB (buildCard coerces).
 export interface NameplateDef extends RosterItem {
   shape: NameplateShape;
+  /** COSM-05 — the registry default plate colour a colorCustomizable plate SEEDS on first apply
+   *  (BRASS ULTIMATE seeds the legacy brass gold — `BRASS_RAMP[1]`, render/buildCard.ts — so the
+   *  fresh apply renders pixel-identical to base BRASS until the owner recolours). */
+  plateSeed?: string;
 }
 export const NAMEPLATES: NameplateDef[] = [
   { id: 'slab', name: 'SLAB', shape: 'slab' },
@@ -119,6 +134,9 @@ export const NAMEPLATES: NameplateDef[] = [
   { id: 'dogtag', name: 'DOGTAG', shape: 'dogtag', tier: 'basic' },
   // BRASS re-tagged premium by decision 0075 (P10) — the only premium nameplate.
   { id: 'brass', name: 'BRASS', shape: 'brass', tier: 'premium' },
+  // ── W-5 ULTIMATE SKU (COSM-05/0080): the metal ramp in any hue — same `brass` shape, separate
+  // identity via the composition `cosmeticId` (AFTER `brass` so shape inference stays base-first). ──
+  { id: 'brass-ultimate', name: 'BRASS ULTIMATE', shape: 'brass', tier: 'premium', colorCustomizable: true, plateSeed: '#c9971f' },
 ];
 
 // ── Title styling (CARD-11 — font + ink). CHAKRA + PAYTONE were the M4 pair; decision 0068 adds
@@ -132,6 +150,10 @@ export const FONTS: RosterItem[] = [
   { id: 'bitter', name: 'SLAB', tier: 'premium' },
   { id: 'space-mono', name: 'MONO', tier: 'premium' },
   { id: 'pacifico', name: 'SCRIPT', tier: 'premium' },
+  // ── W-5 ULTIMATE SKU (COSM-05/0080): free-pick ink while equipped (the CARD-11/OQ-137 unlock).
+  // A font's cosmetic id IS the composition `fontId`, so identity needs no `cosmeticId` — the SKU
+  // carries its own id and reuses the pacifico face (render/CardComposition + previewPrimitives). ──
+  { id: 'pacifico-ultimate', name: 'SCRIPT ULTIMATE', tier: 'premium', colorCustomizable: true },
   { id: 'stencil', name: 'STENCIL', tier: 'premium' },
 ];
 export const INKS: Array<RosterItem & { color: string }> = [
@@ -153,8 +175,13 @@ export const BASE_GRADIENTS: Array<[string, string]> = [
   ['#402a10', '#170e04'],
 ];
 
+/** The styler's constant default plate colour (plate()/basePlate) — also what a plate RESTORES to
+ *  when an ultimate (colour-customized) plate is swapped for a normal one (COSM-05: the picked
+ *  colour belongs to the ultimate design, never to the document at large). */
+export const PLATE_DEFAULT_COLOR = '#141026';
+
 function plate(title: string, ink = '#f3ecd9', shape: NameplateShape = 'slab', fontId = 'clean-sans') {
-  return { shape, fontId, title: title.toUpperCase(), plate: '#141026', ink, size: 0.05 };
+  return { shape, fontId, title: title.toUpperCase(), plate: PLATE_DEFAULT_COLOR, ink, size: 0.05 };
 }
 
 /**

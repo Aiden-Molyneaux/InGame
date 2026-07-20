@@ -62,6 +62,25 @@ describe('AdoptCardSheet (P8 · SOC-11 · M5 F-9 E1 — the styler-buy anatomy)'
     expect(screen.getByText('58×')).toBeTruthy();
   });
 
+  it('an ULTIMATE component row wears the ULTIMATE chip; non-ultimate rows do not (M6 W-5 · 0080 r3)', () => {
+    const withUltimate: GalleryCardView = {
+      ...PRICED,
+      priceForYou: 13,
+      components: [
+        { cosmeticId: 'marquee-ultimate', name: 'MARQUEE ULTIMATE', type: 'frame', tier: 'ultimate', price: 10, owned: false },
+        { cosmeticId: 'bitter', name: 'SLAB', type: 'font', tier: 'standard', price: 3, owned: false },
+      ],
+    };
+    renderSheet({ card: withUltimate });
+    expect(screen.getByText('MARQUEE ULTIMATE')).toBeTruthy();
+    expect(screen.getByText('SLAB')).toBeTruthy();
+    // exactly ONE ultimate chip — the ultimate component row only, not the standard font row
+    expect(screen.getAllByLabelText('Ultimate')).toHaveLength(1);
+    expect(screen.getByText('ULTIMATE')).toBeTruthy();
+    // the 10-PX price still rides the ultimate row (the chip does not replace it)
+    expect(screen.getByLabelText('10 pixels')).toBeTruthy();
+  });
+
   it('FUNDED priced → the gold BuyBar hold-to-adopt (reduce-motion inline confirm) → onAdopt (G1/G2)', async () => {
     const onAdopt = jest.fn<Promise<AdoptOutcome>, []>().mockResolvedValue({
       ok: true,

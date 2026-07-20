@@ -13,6 +13,8 @@ export const FONT_FAMILY: Record<string, string> = {
   bitter: 'Bitter_700Bold',
   'space-mono': 'SpaceMono_700Bold',
   pacifico: 'Pacifico_400Regular',
+  // COSM-05 (W-5/0080) — SCRIPT ULTIMATE is its own SKU id but reuses the pacifico face.
+  'pacifico-ultimate': 'Pacifico_400Regular',
   stencil: 'AllertaStencil_400Regular',
 };
 

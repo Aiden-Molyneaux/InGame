@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { View, Text } from 'react-native';
-import type { StorePack } from '@ingame/shared';
+import type { StorePack, CosmeticTier } from '@ingame/shared';
 import { themedStyles } from '../../theme';
 import { PulledSheet } from '../PulledSheet';
 import { TertiaryLink } from '../TertiaryLink';
 import { PixelsMark } from './PixelsMark';
 import { OwnedTag } from './Tags';
+import { UltimateChip } from './UltimateChip';
+import { HueStrip } from './HueStrip';
 import { BuyBar } from './BuyBar';
 import { AcquireBeat } from './AcquireBeat';
 import { PreviewStage } from './PreviewStage';
@@ -23,6 +25,10 @@ export interface StoreItem {
   name: string;
   type: string; // e.g. "FINISH · CATALOG"
   price: number;
+  /** COSM-05 (decision 0080 r3) — `'ultimate'` earns the inverted-gold ULTIMATE chip in the title row. */
+  tier?: CosmeticTier;
+  /** COSM-05 — a colour-customizable design carries the hue-strip glyph + the ANY-COLOUR copy line. */
+  colorCustomizable?: boolean;
 }
 
 export function ItemSheet({
@@ -82,6 +88,7 @@ export function ItemSheet({
   if (!item) return null;
   const short = shortBy != null && shortBy > 0;
   const free = freePack || item.price <= 0;
+  const ultimate = item.tier === 'ultimate';
   return (
     <PulledSheet visible={visible} onClose={onClose}>
       {/* F-15 fix 3 — the item IDENTITY leads: name · type · price sit at the TOP of the sheet (right
@@ -97,6 +104,9 @@ export function ItemSheet({
           {item.type}
         </Text>
         <View style={styles.spacer} />
+        {/* decision 0080 r3 — the ULTIMATE chip renders wherever `tier === 'ultimate'`, owned or not
+            (the tier is a property of the design, not its ownership); it sits before the price/owned mark. */}
+        {ultimate ? <UltimateChip /> : null}
         {owned ? (
           <OwnedTag />
         ) : free ? null : (
@@ -106,6 +116,15 @@ export function ItemSheet({
           </View>
         )}
       </View>
+
+      {/* the colour-freedom tell (draft §4.1) — the hue-strip glyph + the locked copy line, on a
+          colorCustomizable design only. Reads right under the identity row, above the live preview. */}
+      {item.colorCustomizable ? (
+        <View style={styles.colourTell}>
+          <HueStrip size={8} />
+          <Text style={styles.colourTellText}>ANY COLOUR — YOURS TO PICK</Text>
+        </View>
+      ) : null}
 
       <PreviewStage label={previewLabel} swapLabel={previewSwapLabel} onSwap={onPreviewSwap}>
         {preview}
@@ -161,6 +180,9 @@ const useStyles = themedStyles((t) => ({
   spacer: { flex: 1 },
   // F-21 ruling 3 — the sheet price as GOLD TEXT (economy text voice, F-02 `scr.value`) + the mark glyph.
   priceText: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  // draft §4.1 — the ANY-COLOUR tell row (hue-strip glyph + copy), gold economy voice.
+  colourTell: { flexDirection: 'row', alignItems: 'center', gap: t.space.sm, marginTop: t.space.sm },
+  colourTellText: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.value, letterSpacing: 1 },
   priceValue: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.value, letterSpacing: 0.5 },
   ownedRow: {
     flexDirection: 'row',

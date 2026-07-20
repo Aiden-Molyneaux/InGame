@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { compositionSchema } from '../composition';
-import { cosmeticTypeSchema } from '../common';
+import { cosmeticTierSchema, cosmeticTypeSchema } from '../common';
 import { stylePresetStyleSchema } from '../request/cards';
 
 // RESPONSE/VIEW schemas for the M4 card substrate (api-contract 0.53 / decision 0066). OWNER-ONLY
@@ -23,6 +23,9 @@ export const cardComponentSchema = z
     cosmeticId: z.string(),
     name: z.string(),
     type: cosmeticTypeSchema,
+    // COSM-05 (W-5 / api-contract 0.77) — the component's price tier; the adopt sheet's ULTIMATE chip
+    // renders where `tier === 'ultimate'` (F-17 additive; absent only for an unregistered-id degrade).
+    tier: cosmeticTierSchema.optional(),
     price: z.number().int().nonnegative(),
     owned: z.boolean(),
   })

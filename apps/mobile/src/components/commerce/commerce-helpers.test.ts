@@ -1,6 +1,6 @@
 import type { LedgerEntry, StorePack } from '@ingame/shared';
 import { usdFor, pxPerDollar, valueLine, isBestRate } from './packMeta';
-import { ledgerLabel, ledgerTone, ledgerSign, ledgerWhen } from './storeCopy';
+import { ledgerLabel, ledgerTone, ledgerSign, ledgerWhen, sortUltimateFirst } from './storeCopy';
 
 const pack = (productId: string, pixels: number, oneTime = false): StorePack => ({
   productId,
@@ -53,6 +53,45 @@ const entry = (over: Partial<LedgerEntry>): LedgerEntry => ({
   refId: null,
   createdAt: new Date().toISOString(),
   ...over,
+});
+
+describe('storeCopy — sortUltimateFirst (M6 W-5 · decision 0080 · aisle sort)', () => {
+  const item = (id: string, tier?: string) => ({ id, tier });
+
+  it('lifts ULTIMATE items to the FRONT within the aisle', () => {
+    const sorted = sortUltimateFirst([
+      item('a', 'deluxe'),
+      item('b', 'ultimate'),
+      item('c', 'standard'),
+      item('d', 'ultimate'),
+    ]);
+    expect(sorted.map((i) => i.id)).toEqual(['b', 'd', 'a', 'c']);
+  });
+
+  it('leaves the NON-ULTIMATE relative order untouched (stable partition)', () => {
+    const sorted = sortUltimateFirst([
+      item('x', 'accent'),
+      item('y', 'trim'),
+      item('z', 'showpiece'),
+    ]);
+    expect(sorted.map((i) => i.id)).toEqual(['x', 'y', 'z']);
+  });
+
+  it('keeps the ULTIMATE items in their own incoming order too', () => {
+    const sorted = sortUltimateFirst([
+      item('u1', 'ultimate'),
+      item('p', 'deluxe'),
+      item('u2', 'ultimate'),
+    ]);
+    expect(sorted.map((i) => i.id)).toEqual(['u1', 'u2', 'p']);
+  });
+
+  it('does not mutate the input array', () => {
+    const input = [item('a', 'standard'), item('b', 'ultimate')];
+    const before = input.map((i) => i.id);
+    sortUltimateFirst(input);
+    expect(input.map((i) => i.id)).toEqual(before);
+  });
 });
 
 describe('storeCopy — ledger labels, tone, sign, when', () => {

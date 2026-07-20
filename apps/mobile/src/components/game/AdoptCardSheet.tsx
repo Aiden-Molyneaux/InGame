@@ -14,6 +14,7 @@ import { CosmeticSwatch } from '../commerce/CosmeticSwatch';
 import { PriceChip } from '../commerce/PriceChip';
 import { PixelsMark } from '../commerce/PixelsMark';
 import { OwnedTag } from '../commerce/Tags';
+import { UltimateChip } from '../commerce/UltimateChip';
 import { FlatCardImage } from './FlatCardImage';
 import { AdoptCount } from './CommunityGallery';
 
@@ -237,6 +238,9 @@ export function AdoptCardSheet({
                         {c.name}
                       </Text>
                       <View style={styles.spacer} />
+                      {/* decision 0080 r3 — an ULTIMATE component wears the same inverted-gold chip as the
+                          store (compact for the tight row); the 10-PX price still rides owned/price below. */}
+                      {c.tier === 'ultimate' ? <UltimateChip compact /> : null}
                       {c.owned ? <OwnedTag /> : <PriceChip pixels={c.price} />}
                     </View>
                   ))}

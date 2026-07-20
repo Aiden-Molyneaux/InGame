@@ -439,16 +439,17 @@ describe('COSM-01: GET /cosmetics — the full free+premium library, decision 00
     expect(res.status).toBe(401);
   });
 
-  it('lists 26 premium items total (14@3 + 6@6 + 6@8) alongside the free baseline, unfiltered', async () => {
+  it('lists 29 premium items total (14@3 + 6@6 + 6@8 + the 3 W-5 ULTIMATE @10) alongside the free baseline, unfiltered', async () => {
     const a = await registerUser();
     const res = await request(app).get('/api/cosmetics').set(authed(a.token));
     expect(res.status).toBe(200);
     const premium = res.body.items.filter((i: { tier?: string }) => i.tier);
-    expect(premium).toHaveLength(26);
+    expect(premium).toHaveLength(29); // 26 (decision 0075) + the 3 COSM-05 ULTIMATE SKUs (decision 0080)
     const byPrice = (price: number) => premium.filter((i: { price: number }) => i.price === price).length;
     expect(byPrice(3)).toBe(14);
     expect(byPrice(6)).toBe(6);
     expect(byPrice(8)).toBe(6);
+    expect(byPrice(10)).toBe(3); // marquee-ultimate · brass-ultimate · pacifico-ultimate (COSM-05)
     const free = res.body.items.filter((i: { tier?: string }) => !i.tier);
     expect(free.length).toBeGreaterThan(0);
     for (const item of free) expect(item.price).toBe(0);
