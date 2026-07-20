@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -6,10 +6,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  Alert,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useRouter } from 'expo-router';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import * as Crypto from 'expo-crypto';
 import { TextField } from '../src/components/TextField';
 import { ScreenButton } from '../src/components/ScreenButton';
 import { TertiaryLink } from '../src/components/TertiaryLink';
@@ -19,6 +20,7 @@ import {
   useRegisterMutation,
   useLazyUsernameAvailableQuery,
 } from '../src/store/api';
+import { useAppleSignInMutation } from '../src/store/authApi';
 import { useAppDispatch } from '../src/store/hooks';
 import { setSession } from '../src/store/authSlice';
 import { saveTokens } from '../src/auth/tokenStore';
@@ -47,6 +49,7 @@ export default function SignIn() {
   const dispatch = useAppDispatch();
   const [login, loginState] = useLoginMutation();
   const [register, registerState] = useRegisterMutation();
+  const [appleSignIn, appleState] = useAppleSignInMutation();
   // W3 (AUTH-11) — the debounced ADVISORY availability beat; never gates submit.
   const [checkUsername, availability] = useLazyUsernameAvailableQuery();
   const styles = useStyles();
@@ -60,8 +63,11 @@ export default function SignIn() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   // AUTH-10 (OQ-119) — real acceptance gate; registration cannot submit until this is checked.
   const [accepted, setAccepted] = useState(false);
+  // S2-i (AUTH-03) — the Apple control renders only where the native module reports availability
+  // (real iOS with the entitlement; false on web/Android/Expo Go — AUTH-03: Android registers via email).
+  const [appleAvailable, setAppleAvailable] = useState(false);
 
-  const busy = loginState.isLoading || registerState.isLoading;
+  const busy = loginState.isLoading || registerState.isLoading || appleState.isLoading;
   const candidate = username.trim();
 
   useEffect(() => {
@@ -69,6 +75,24 @@ export default function SignIn() {
     const t = setTimeout(() => void checkUsername(candidate), USERNAME_CHECK_DEBOUNCE_MS);
     return () => clearTimeout(t);
   }, [mode, candidate, checkUsername]);
+
+  // F-16 — hooks unconditional, above every early return. The Platform gate lives INSIDE the effect
+  // (never around the hook); a resolve-after-unmount is dropped via the `alive` flag.
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+    let alive = true;
+    AppleAuthentication.isAvailableAsync()
+      .then((ok) => {
+        if (alive) setAppleAvailable(ok);
+      })
+      .catch(() => {
+        // availability probe failed (e.g. simulator quirk) — treat as unavailable, never crash sign-in
+        if (alive) setAppleAvailable(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // S2-f — a field's error (and the top-line auth error) clears the moment the user edits it; for the
   // username field that also un-gates the advisory availability line (which hides while it errors).
@@ -92,10 +116,63 @@ export default function SignIn() {
     setMode((m) => (m === 'signin' ? 'create' : 'signin'));
   }
 
-  // S2-h / S2-i — the FORGOT? and Sign-in-with-Apple affordances are present but the flows behind them
-  // (AUTH-04 reset · AUTH-03 SIWA) are deferred; a calm "coming soon" beat keeps them from dead-ending.
-  function comingSoon(feature: string) {
-    Alert.alert(`${feature} is coming soon`, "We're still building this — it lands in a later update.");
+  // S2-i (AUTH-03/09, auth-epic P-E) — the real SIWA flow. NONCE SHAPE: the RAW nonce (a random UUID)
+  // goes to OUR server; its SHA-256 hex goes on the NATIVE request, so Apple's identity token carries
+  // the hash and the server verifier can assert sha256hex(raw) === token.nonce (apple-verifier.ts) —
+  // a replayed token can't be bound to a fresh exchange. Session establishment mirrors submit() below
+  // byte-for-byte (saveTokens → setSession); the only fork is the AUTH-09 usernamePending route.
+  // `busy` (RTK isLoading) only flips once the POST dispatches — it does NOT cover the digest + native
+  // signInAsync phase, so a rapid double-tap could race two Apple flows (the loser rejects with a
+  // non-CANCELED code and would flash a spurious error strip). A ref is synchronous, so the second tap
+  // bails before the first sheet even mounts.
+  const appleFlightRef = useRef(false);
+  async function signInWithApple() {
+    if (appleFlightRef.current) return;
+    appleFlightRef.current = true;
+    setError(null);
+    setFieldErrors({});
+    try {
+      const rawNonce = Crypto.randomUUID();
+      const hashedNonce = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA256,
+        rawNonce,
+      );
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+        nonce: hashedNonce,
+      });
+      if (!credential.identityToken) {
+        // Apple resolved without a token (documented edge) — name the cause, don't POST garbage.
+        setError('Apple didn’t return an identity token. Please try again.');
+        return;
+      }
+      const session = await appleSignIn({
+        identityToken: credential.identityToken,
+        nonce: rawNonce,
+      }).unwrap();
+      await saveTokens({ accessToken: session.accessToken, refreshToken: session.refreshToken });
+      dispatch(setSession(session));
+      // AUTH-09 — a first Apple sign-in has no handle yet; complete it before entering the app.
+      router.replace(session.user.usernamePending ? '/choose-username' : '/(tabs)/collection');
+    } catch (e) {
+      const err = e as { code?: string; status?: number | string };
+      // The user closed Apple's sheet — an intentional exit, not an error (silent no-op).
+      if (err?.code === 'ERR_REQUEST_CANCELED') return;
+      if (err?.status === 401) {
+        // The server refused the identity token (neutral AUTH_FAILED) — name the failure mode.
+        setError('Apple sign-in couldn’t be verified. Please try again.');
+      } else if (err?.status === 'FETCH_ERROR') {
+        setError('Couldn’t reach the server — check your connection and try again.');
+      } else {
+        setError(errParts(e).message);
+      }
+    } finally {
+      // Always release — a canceled sheet or a failed POST must re-arm the button.
+      appleFlightRef.current = false;
+    }
   }
 
   async function submit() {
@@ -109,7 +186,9 @@ export default function SignIn() {
             await register({ email, username, password, acceptedTerms: true }).unwrap();
       await saveTokens({ accessToken: session.accessToken, refreshToken: session.refreshToken });
       dispatch(setSession(session));
-      router.replace('/(tabs)/collection');
+      // AUTH-09 — same fork as the SIWA path: a usernamePending account (e.g. a SIWA user who
+      // password-reset their relay email, then email-signed-in) completes its handle before the tabs.
+      router.replace(session.user.usernamePending ? '/choose-username' : '/(tabs)/collection');
     } catch (e) {
       const { message, fields } = errParts(e);
       setFieldErrors(fields);
@@ -193,7 +272,7 @@ export default function SignIn() {
                 <TertiaryLink
                   label="Forgot?"
                   chevron="none"
-                  onPress={() => comingSoon('Password reset')}
+                  onPress={() => router.push('/forgot-password')}
                 />
               ) : undefined
             }
@@ -233,9 +312,10 @@ export default function SignIn() {
             block
           />
 
-          {/* S2-i — SIWA placeholder (AUTH-03 stub): iOS + sign-in only, per the board's platform fork
-              (W1 has it, W1b Android does not). Web/Android never render it. */}
-          {mode === 'signin' && Platform.OS === 'ios' ? (
+          {/* S2-i — SIWA (AUTH-03, P-E live): sign-in mode only, and only where the native module
+              reports availability (real iOS — the board's platform fork: W1 has it, W1b Android does
+              not; web/Android/Expo Go never render it). */}
+          {mode === 'signin' && appleAvailable ? (
             <>
               <View style={styles.orDiv}>
                 <View style={styles.orLine} />
@@ -245,7 +325,9 @@ export default function SignIn() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Sign in with Apple"
-                onPress={() => comingSoon('Sign in with Apple')}
+                accessibilityState={{ disabled: busy }}
+                disabled={busy}
+                onPress={signInWithApple}
                 style={({ pressed }) => [styles.appleBtn, pressed && styles.applePressed]}
               >
                 {/* Apple HIG-mandated control — black/white are token-exempt (board OQ-035). */}

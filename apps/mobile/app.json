@@ -9,7 +9,8 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.aidenmolyneaux.ingame"
+      "bundleIdentifier": "com.aidenmolyneaux.ingame",
+      "usesAppleSignIn": true
     },
     "android": {
       "package": "com.aidenmolyneaux.ingame"
@@ -21,7 +22,8 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      "expo-apple-authentication"
     ]
   }
 }
