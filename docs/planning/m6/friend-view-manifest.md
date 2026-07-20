@@ -1,5 +1,13 @@
 # P9 — Friend-view surfaces manifest (friend profile · friend collection · SOC-11 entry detail · game-page friendsWhoOwn)
 
+> **SUPERSESSION (2026-07-20 owner walk-3):** two P9 friend-shape omissions are overridden by owner
+> directive — the friend profile now serves + renders (1) the **PINNED FAVOURITE** (`favouriteGame`,
+> the same flattened friend-view expansion as `nowPlaying`; the P9 "n/a — not on the friend shape"
+> posture is retired) and (2) a **CONTRIBUTIONS teaser** (`cardsPublished`, PUBLISHED-only per the
+> 57c7a31 teaser ruling, shown-even-at-0, routes to `/contributor/:id`). Both ride the SOC-11
+> leak-disciplined path (flattened cards + counts only; absent from the limited/non-friend shape;
+> leak-asserted). api-contract 0.78/0.79 carry the field additions.
+
 > **Packet:** M6 P9 (client · Opus). **Branch:** `m6`. **Scope:** `apps/mobile/**` only.
 > **Boards:** `profile/profile-states.html` (friend artboards) · `collection/collection-states.html`
 > (friend read-only COL-10/11 + friend TOP) · `game-page/game-page-states.html` (M5 ABOUT friends-who-own

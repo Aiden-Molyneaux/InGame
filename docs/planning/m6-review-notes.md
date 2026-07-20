@@ -189,3 +189,57 @@ cheap and it is the whole first impression.**
 🚩 0 flags · 🎨 3 polish
 SCREENS: store FRAMES aisle — REACHED · store NAMEPLATES aisle — REACHED · store FONTS aisle — REACHED · MARQUEE ULTIMATE ItemSheet — REACHED · non-ultimate neither-tell — REACHED · styler FRAME ColorField+recolour — REACHED · styler PLATE BRASS-ULTIMATE — REACHED · styler TITLE INK—ANY-COLOUR — REACHED · KEEP ReconcileSheet (3× compact ULTIMATE chip @10) — REACHED · Adopt sheet ultimate row — NOT REACHED (seed gap)
 CREATED: NONE
+
+---
+
+## OWNER-WALK FIX WAVE (17 findings) — Parvati build-vs-design: game-page · collection · friend-profile · store · device-editor · styler — 2026-07-20
+
+**Verdict:** 0 🚩 flag · 1 🎨 polish · 6 surfaces walked (5 fully REACHED, 1 sub-item NOT-REACHED on a seed gap). Measured vs the owner's own walk findings (each fix must visibly deliver what he asked) + the app's existing grammar + the uncommitted source. Demo user (demo@ingame.app). **CREATED/TOUCHED: nothing net** — no purchases, publishes, cards, users, reports, or blocks; the one device sticker nudge was restored to an identical composition; the collection coachmark flag was reset then re-dismissed back to its original `true`.
+**Reviewed from** the running Expo-web app (:8082, device-frame chrome) captured live via claude-in-chrome — screenshots + DOM measurement (getBoundingClientRect / computed styles) where the skia renderer's capture froze — plus source read of the touched files.
+
+### ✅ Delivered — each owner ask visibly met (present · placed · on-grammar)
+
+**1. GAME PAGE (Hades own game + adopted card; Stardew)**
+- **1a — adopted card cosmetics readout (CardSwitcher/EquipReadout):** the ADOPTED "Hades — Walkseed Cut" card now shows its read-only server-label readout like own cards do — `BASE · GRADIENT · FRAME · LINE · EFFECT · SOFT GLOW · PLATE · SLAB · FONT · CHAKRA` + the lock note "Adopted from walkseed_designer — adopted cards can't be edited." + UNEQUIP/SHARE/REMOVE (no EDIT). An own DRAFT card renders the same chip grammar with EDIT IN STYLER/DELETE — parity confirmed.
+- **1b — "Edit catalog details" overflow → ABOUT edit mode + disclaimer:** the OWN game "…" opens GAME OPTIONS (SET AS NOW PLAYING · EDIT CATALOG DETAILS · REPORT THIS GAME · REMOVE FROM COLLECTION); EDIT CATALOG DETAILS jumps to ABOUT in edit mode with the header "EDITING CATALOG DETAILS" + the accuracy disclaimer "These facts are shared with everyone. Please edit only with accurate information — your changes are public and attributed to you." verbatim.
+- **1c — explicit labeled rows + genres exactly once:** ABOUT shows STUDIO / PUBLISHER / RELEASE DATE labeled rows + a single GENRES row rendering `[ACTION][ROGUELIKE]` as chips (Hades) — no duplicate genre strip (the old meta subtitle + DISC-02 chip strip were retired, AboutTab.tsx:92-94). Stardew confirms absent-field omit: no PUBLISHER row (null), genres `[SIMULATION]`.
+- **1d — community stats, absent rows omitted:** COLLECTION · FRIENDS HAVE IT (both always shown, 0 is meaningful) · AVG HOURS. avgRating / avgHours are gated `!= null` (AboutTab.tsx:149-160) — no faked zero average. Hades `1 · 0 · 96 AVG HOURS` with AVG RATING omitted; Stardew `1 · 0 · 210 AVG HOURS`, AVG RATING omitted.
+
+**2. COLLECTION**
+- **2a — equal-height header pills:** the "17 GAMES" pill and the "◇ 113" pixel counter measure identically — h=26px, top=58.97px, same gold fill + 5×8 padding recipe.
+- **2b — flip hint is a layout-neutral absolute overlay:** the "Tap a card to flip it for your stats." coachmark renders `position: absolute` at top=808 (pinned above the tools bar, out of flow). Dismissing it via GOT IT moved **0 of 35** shelf card boxes (maxDelta 0px) — appear/dismiss reflow is dead (collection.tsx:387-393; the fix was reset + re-observed live).
+
+**3. FRIEND PROFILE (walkseed_avatar / demo_curator2)**
+- **3b — CONTRIBUTIONS teaser between ACHIEVEMENTS and the pin, shown at 0, routes:** "WALKSEED_AVATAR'S CONTRIBUTIONS · 0 CARDS DESIGNED" tapped → `/contributor/<id>`. (demo_curator2 shows "4 CARDS DESIGNED".)
+- **3c — COMPARE HOURS is the cream/white secondary voice** (vs the orange VIEW COLLECTION primary).
+- **3d — "…" opens a REAL sheet:** REPORT THIS USER with reasons (ABUSIVE PROFILE · IMPERSONATION · SPAM), a gated SUBMIT REPORT + CANCEL, and a BLOCK <user> action. The scrim-with-nothing bug is dead. (Cancelled — no report/block filed.)
+- **3e — ACHIEVEMENTS count at the OWN-profile size (11, not 15):** friend "0 EARNED" and "1 EARNED" both render at fontSize **11px**, identical to the own profile's "8 EARNED" (11px). Parity confirmed.
+
+**4. STORE**
+- **4a — lead header reads SPOTLIGHT** (not NEW THIS WEEK), six items (MARQUEE · FROST · HOLOGRAPHIC · BRASS · CARBON · BERRY).
+- **4b — THE INDEX — ALL AISLES is aisles-only:** 8 aisles (STICKER PACKS · EFFECTS · FINISHES · FRAMES · NAMEPLATES · FONTS · DEVICE SHELLS · SCREEN THEMES), NO top-up row inside the index.
+- **4c — new bottom two-entry section routes correctly:** PIXEL TOP-UP → the TOP UP view (pixel packs 10/$1.99 … 140/$19.99 BEST RATE + STARTER PACK claimed); WALLET → the WALLET view (balance + LEDGER). Both in the Index row grammar.
+
+**5. DEVICE EDITOR — status slot is layout-neutral through drag→release→drag**
+- Selecting a placed sticker mounts the PLACING readout inside `device-status` (35.2px = readout row 18.2 + a **fixed 17px saveSlot** — device.tsx:963 constant `height`). The saveSlot reserves its 17px **even when the save-line is absent (settled)** — the direct proof the SAVING…↔settled toggle can't reflow. Driving a real transform (rotation 0°→2°→1°→0° via the discrete steppers, each firing the autosave pipeline), the status block held **exactly 35.2px (18.2 + 17)** at every step — no growth/shrink. **Left via the discard-equivalent path** (blur-commit of the restored state); the composition read back **identical to the original** (7 stickers, star rotation 0). The owner's device is untouched.
+
+**6. STYLER (opened from Elden Ring; nothing kept — exited from PICK-A-START)**
+- **6a — START FROM fan: 6 curated + DEFAULT, all coherent (taste verdict: PASS):** NEBULA (indigo, gold crescent + stars) · EMBER (coal + orange ember glow, stub frame) · HORIZON (synthwave pink/gold sun over cyan bars) · GROVE (forest botanical medallion, lime frame) · ARCADE (magenta triangle + cyan bar, pixel font) · MONOLITH (minimal gold diamond in a cream ring) — each reads as a distinct, purposeful, palette-coherent template. DEFAULT (plain floor) follows the six; the user's saved presets ride alongside after it. **Not "hideous" — a clean, cohesive set.** Genre-fit **works**: Elden Ring's genres are RPG + Soulslike; NEBULA (rpg, idx 0) and EMBER (soulslike, idx 1) tie at score 1, and the curated-order tiebreak (roster.ts:438) correctly leads NEBULA. Not a miss.
+- **6b — SURPRISE ME reads coherent, not noise:** three deals → an ARCADE-family cluster (gold star + magenta diamond), a GROVE deal (green triangle + cream bars, lime/dust/arch/chakra), and another ARCADE cluster (cyan/magenta diamonds + gold star). Every deal drew its face + chrome from a single curated palette family.
+- **6c — no premium cost on any start/surprise:** the reconcile/cost strip never appeared; the wallet held 113 PX throughout; every readout referenced free-tier cosmetics only (matches the startsources.test.ts zero-cost-stack guarantee).
+
+### 🎨 Polish / owner-eye (built-app, iteration lane — not a blocker)
+- **Adopted-card readout label vocabulary diverges from the own-card readout.** The cross-user/adopted path (EquipReadout.tsx:88-95) labels the nameplate slot **"PLATE"** and surfaces a **"BASE"** chip; the own-card composition path (EquipReadout.tsx:128-135) labels the same slot **"NAMEPLATE"** and omits base entirely. So flipping between an adopted card and an own card in the same switcher shows the nameplate slot renamed (PLATE↔NAMEPLATE) and a BASE chip appearing/vanishing. The core ask (adopted card shows a read-only server-label readout like own cards) IS met; this is a label-parity tidy for whoever wants the two readouts to read word-for-word identically.
+
+### NOT-REACHED (seed gap — recorded, not forced)
+- **3a — a FRIEND's PINNED FAVOURITE card.** No seeded friend/other user has a `favouriteGame` set: the dev seed pins Hades only for the self/demo user (seed-dev.ts:147), and walk-seed.ts creates walkseed_avatar/designer/ultimate with no favourite. Both reachable friend profiles (walkseed_avatar, demo_curator2) carry `favouriteGame: null` → the section is correctly absent (user/[id].tsx:415 `if (!favourite) return null`). The **self** profile's PINNED FAVOURITE hero (Destiny 2) renders, and FriendPinnedFavourite mirrors that grammar gated on a non-null payload — so the render path is present and sound, just not exercisable with the current seed.
+- **1d — the AVG RATING star cell.** No game in the seed carries community ratings, so `avgRating` is null on every game walked → the star row is (correctly) omitted everywhere. The omit-behavior is confirmed on two games; the `{avgRating.toFixed(1)}★` render (AboutTab.tsx:151) couldn't be seen with populated data.
+
+### Environment caveats (NOT app defects)
+- Web reloads drop the in-memory auth token (SIGNAL LOST) — flows were run back-to-back with re-logins between them, per the qa-runbook web caveat.
+- The skia card/sticker renderer intermittently froze `Page.captureScreenshot` (a preview-renderer instability, W-5-documented); a screenshot retry or a fresh tab recovered it, and DOM measurement (getBoundingClientRect / computed styles / ref-clicks) drove the frozen stretches reliably.
+
+### PARVATI-VERDICT: CLEAN
+🚩 0 flags · 🎨 1 polish
+SCREENS: game-page 1a adopted-readout — REACHED · 1b edit-catalog-details+disclaimer — REACHED · 1c labeled-rows+genres-once — REACHED · 1d community-stats-omit — REACHED (AVG RATING star NOT-REACHED, seed) · collection 2a equal-height pills — REACHED · 2b flip-hint layout-neutral — REACHED · friend 3a pinned-favourite — NOT-REACHED (no friend has a pin seeded) · 3b contributions-teaser+route — REACHED · 3c compare-hours secondary voice — REACHED · 3d real report/block sheet — REACHED · 3e achievements 11px parity — REACHED · store 4a SPOTLIGHT+6 — REACHED · 4b index aisles-only — REACHED · 4c top-up/wallet rows route — REACHED · device 5 status-slot layout-neutral — REACHED · styler 6a 6-curated+DEFAULT+genre-fit — REACHED · 6b surprise coherent — REACHED · 6c no premium cost — REACHED
+CREATED: NONE (device sticker nudge restored to identical; coachmark flag restored)

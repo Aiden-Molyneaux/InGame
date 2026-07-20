@@ -101,6 +101,31 @@
 - **Debt recorded:** BRASS_RAMP + CURATED_INK_COLORS duplicated api↔mobile (shared-lift candidate,
   both sides tested) · the F-17 "additive" wording vs `.strict()` clients (documented in 0.77).
 
+## Owner walk-3 fix wave (2026-07-20, `3a4dcb7`) — BOTH GATES CLOSED AT LANDING
+- **Scope:** 17 owner walk findings, 6 surfaces (game · collection · friend profile · store · device
+  editor · styler), 8 builder lanes + a Murr-fix round. Per-finding ledger: [`walk3-notes.md`](walk3-notes.md).
+- **Murr (full-diff, fresh-context): NO-GO → fixed.** 1 MAJOR (community avgHours counted WISHLIST
+  rows as owners — status-filtered per statsOf/0058 + 2 attack tests) · 2 debt (a theater test
+  strengthened with the not-a-scroll-descendant discriminator · a lying spotlight comment) · 3
+  owner-calls ledgered (walk3 W3-C/E + the edit-posture split). Probed clean: SOC-11 on both friend-
+  shape additions · aggregate denominators · client↔server styler pricing (kind+colour collision
+  hunt) · all cross-agent merged-state seams · layout stretch in all 5 header consumers.
+- **Parvati (opus, all six surfaces): CLEAN — 0 🚩 · 1 🎨** (readout label parity — FIXED in the
+  landing commit). Pixel-measured proofs: header keycaps h=26 identical · flip-hint dismiss moved 0
+  of 35 cards · device status block held 35.2px through the drag cycle. NOT-REACHED (seed-shaped,
+  code+test-covered): the AVG RATING star (no rated seed game) · a FRIEND's pinned favourite (no
+  seeded friend pin). Full section in [`m6-review-notes.md`](../m6-review-notes.md).
+- **Definitive green at `3a4dcb7`:** typecheck · lint 0 err · **unit 300 · integration 532 ·
+  mobile 109 suites/796+** (the catalog slice grew +2 wishlist attack tests post-verify).
+- **Watch item:** forgot-password/choose-username jest suites flake on timeouts ONLY under
+  multi-suite parallel contention (never in clean runs) — hygiene candidate, not shipped-flaky.
+- **Companion artifacts this walk:** [`cosmetic-inventory.md`](cosmetic-inventory.md) (design-round
+  sitting doc; the STICKER-PACKS ghost aisle is the headline) · [`load-harness-notes.md`](load-harness-notes.md)
+  (4 confirmed scaling cliffs: unpaginated /me/collection · unvirtualized shelf ScrollView ·
+  max-age=0 thumbs · full-shelf refetch per mutation) · the walkseed_* demo data (3 verification
+  gaps CLOSED: forged avatarConfig · adopted-from-another-designer · ultimate-worn card — all three
+  owner-walked this session).
+
 ## Operational actions this pass (disk/DB state, not git — recorded here so they're not lost)
 - **Dev-DB durability net** (committed `b9e72a2`): `npm -w @ingame/api run db:backup` + `db:reset`
   auto-backs-up first. Backups in `~/ingame-db-backups/` (3 taken 2026-07-19; keeps 20). Permanent fix =
