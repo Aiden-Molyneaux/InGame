@@ -240,13 +240,18 @@ export function lookupCosmeticEntry(cosmeticId: string): CosmeticCatalogEntry | 
   return PREMIUM_BY_ID.get(cosmeticId);
 }
 
-// ── The featured storefront (M5 F-6 — the board P1 "NEW THIS WEEK" grid) ───────────────────────────────
-// A SYS-04-tunable seed: six premium ids, one per showy category, emphasizing the showpieces so the
-// storefront leads with the best. Order = display order in the 3-up grid. These are the SAME roster ids
-// the client rosters use (no synthetic namespacing); each is premium (a tier), so GET /store computes
-// `owned` from the caller's entitlements exactly as GET /cosmetics does. Tunable — swap ids to re-curate
-// the featured shelf; the pre-launch content pass owns ECON-08 seasonal drops (a separate surface).
-export const FEATURED_COSMETICS: readonly string[] = [
+// ── The SPOTLIGHT storefront (M6 owner-walk — was the M5 F-6 board P1 "NEW THIS WEEK" grid) ─────────────
+// SPOTLIGHT_IDS is an OWNER-CURATABLE seed (SYS-04-tunable, config-not-schema — the same owner-tunable-
+// data pattern as TIER_PRICES and the REAL_ROSTER above): the owner hand-picks which premium ids lead the
+// store. Selection is deliberately NOT date-driven and NOT auto-rotating — the M5 "NEW THIS WEEK" framing
+// implied a guaranteed weekly churn of fresh items (owner walk-finding: nothing guarantees six brand-new
+// items roll in every week), whereas a curated SPOTLIGHT is an editorial choice, not a calendar promise.
+// Order = display order in the 3-up grid. These are the SAME roster ids the client rosters use (no
+// synthetic namespacing); each is premium (a tier), so GET /store computes `owned` from the caller's
+// entitlements exactly as GET /cosmetics does. Seeded with the M5 featured set so the visible store is
+// UNCHANGED until the owner curates. The pre-launch content pass owns ECON-08 seasonal drops (a separate
+// surface).
+export const SPOTLIGHT_IDS: readonly string[] = [
   'marquee', // FRAME · showpiece — the animated marquee band
   'frost', // EFFECT · showpiece — the frost sweep
   'holographic', // FINISH · showpiece — the rainbow foil
@@ -255,12 +260,24 @@ export const FEATURED_COSMETICS: readonly string[] = [
   'berry', // SCREEN THEME · big — the berry palette
 ];
 
-/** The featured catalog entries in display order (M5 F-6). Any id absent from the catalog is skipped —
- *  the seed degrades gracefully rather than surfacing a phantom item. */
-export function listFeaturedCatalog(): CosmeticCatalogEntry[] {
-  return FEATURED_COSMETICS.map((id) => PREMIUM_BY_ID.get(id)).filter(
-    (e): e is CosmeticCatalogEntry => e != null,
-  );
+/** The empty-list fallback size — the newest N premium entries stand in until the owner curates. */
+export const SPOTLIGHT_FALLBACK_COUNT = 6;
+
+/**
+ * The Spotlight catalog entries in display order (M6 owner-walk). The CURATED list (`SPOTLIGHT_IDS`) wins:
+ * each id resolves against the premium catalog, and any id absent from the catalog is skipped — the seed
+ * degrades gracefully rather than surfacing a phantom item. When the curated list resolves to NOTHING
+ * (emptied, or every id stale), it FALLS BACK to the newest `SPOTLIGHT_FALLBACK_COUNT` premium entries
+ * (catalog append order = the recency proxy — the static registry carries no date field) so the shelf is
+ * never blank pre-curation. `ids` is injectable for unit tests (the fallback path is otherwise unreachable
+ * while the launch seed is non-empty).
+ */
+export function listSpotlightCatalog(ids: readonly string[] = SPOTLIGHT_IDS): CosmeticCatalogEntry[] {
+  const curated = ids
+    .map((id) => PREMIUM_BY_ID.get(id))
+    .filter((e): e is CosmeticCatalogEntry => e != null);
+  if (curated.length > 0) return curated;
+  return COSMETIC_CATALOG.filter((e) => e.tier !== null).slice(-SPOTLIGHT_FALLBACK_COUNT);
 }
 
 // ── CARD-06 derivation support (M5 P7 — the CLOSED-ATTRIBUTE extension) ──────────────────────────────

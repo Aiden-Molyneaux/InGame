@@ -15,6 +15,7 @@ import {
   CurrencyCounter,
   DailyBonusBar,
   AisleIndex,
+  StoreEntries,
   PackTile,
   PriceChip,
   OwnedTag,
@@ -56,8 +57,10 @@ import {
 // VIEWS (the STORE keycap stays active — the FlowTakeover precedent). LIVE at M5: the CurrencyCounter
 // (/me/wallet balance), the DailyBonusBar claim, Top Up (the 0072 pack ladder → /iap/validate DEV-mock →
 // the landed moment), Restore, the Wallet (hero + paginated ledger + the ECON-09 negative). The premium
-// storefront (drop cover · NEW-THIS-WEEK grid · aisle item lists · item sheets) is drawn but has no
-// server content at M5 (roster re-tag = P4) — it renders empty-graceful (store-manifest EXPECTED rows).
+// storefront (drop cover · SPOTLIGHT grid · aisle item lists · item sheets) is drawn but has no server
+// content at M5 (roster re-tag = P4) — it renders empty-graceful (store-manifest EXPECTED rows). M6
+// owner-walk: the "NEW THIS WEEK" grid became the owner-curatable SPOTLIGHT, and the Top Up + Wallet
+// doors moved to a two-entry section at the store bottom (StoreEntries).
 
 const TICK_MS = 2500; // how long the CurrencyCounter tick chip + glow linger (motion.counterTick)
 
@@ -277,7 +280,7 @@ export default function Store() {
             />
           ) : null}
           {/* F-15 fix 4 — the item sheet lives HERE (screen root), so its scrim covers the whole screen
-              incl. the header. Both entry points (NEW-THIS-WEEK featured + aisle rows) open THIS sheet. */}
+              incl. the header. Both entry points (SPOTLIGHT tiles + aisle rows) open THIS sheet. */}
           <CosmeticSheet
             item={openItem}
             offline={offline}
@@ -306,13 +309,14 @@ export default function Store() {
           ladderReward={wallet?.dailyBonus.ladderReward}
           onClaim={onClaim}
           claiming={claiming}
-          featured={store?.premiumCosmetics ?? []}
+          spotlight={store?.premiumCosmetics ?? []}
           onAisle={(a) => {
             setAisle(a);
             setView('aisle');
           }}
           onOpen={setOpenItem}
           onTopUp={() => setView('topup')}
+          onWallet={() => setView('wallet')}
         />
       ) : view === 'topup' ? (
         landed ? (
@@ -402,10 +406,11 @@ function BrowseView({
   ladderReward,
   onClaim,
   claiming,
-  featured,
+  spotlight,
   onAisle,
   onOpen,
   onTopUp,
+  onWallet,
 }: {
   available: boolean;
   amount: number;
@@ -413,11 +418,13 @@ function BrowseView({
   ladderReward?: { pixels: number; cosmeticId?: string };
   onClaim: () => void;
   claiming: boolean;
-  featured: CosmeticListItem[];
+  spotlight: CosmeticListItem[];
   onAisle: (a: { key: string; label: string }) => void;
   /** F-15 fix 4 — raise the screen-root item sheet (lifted to Store so its scrim covers the header). */
   onOpen: (item: CosmeticListItem) => void;
+  /** M6 owner-walk — the store-bottom entry points (StoreEntries): the pack ladder + the wallet views. */
   onTopUp: () => void;
+  onWallet: () => void;
 }) {
   const styles = useStyles();
   // THE INDEX aisle counts (owner-walk polish 2026-07-13; F-2 fix 2026-07-13) — PREMIUM-only tallies
@@ -447,14 +454,16 @@ function BrowseView({
       />
       {/* the seasonal drop cover (ECON-08) is EXPECTED(P10) — /store.drops is [] at M5, no cover drawn. */}
 
-      {/* NEW THIS WEEK (board P1) — the featured storefront: six premium ItemTiles, each wearing its real
-          preview (M5 F-6) + PriceChip, opening its own P2 sheet. Empty-graceful: no featured → the aisle
-          index is the browse spine and an honest one-liner stands in. */}
-      {featured.length > 0 ? (
+      {/* SPOTLIGHT (M6 owner-walk — was "NEW THIS WEEK") — the owner-curatable storefront lead: up to six
+          premium ItemTiles, each wearing its real preview + PriceChip, opening its own P2 sheet. Selection
+          is server-curated (SPOTLIGHT_IDS), NOT a weekly date churn. Empty-graceful: no spotlight → the
+          whole section (header incl.) unmounts and the aisle index is the browse spine — nothing stands
+          in. (Server-side, an empty curated list falls back to newest-N, so 0 items means 0 CATALOG.) */}
+      {spotlight.length > 0 ? (
         <>
-          <Text style={styles.secTitle}>NEW THIS WEEK</Text>
+          <Text style={styles.secTitle}>SPOTLIGHT</Text>
           <View style={styles.rack3}>
-            {featured.map((it) => (
+            {spotlight.map((it) => (
               <ItemTile
                 key={`${it.type}:${it.id}`}
                 name={it.name}
@@ -472,8 +481,12 @@ function BrowseView({
       ) : null}
 
       <Text style={styles.secTitle}>THE INDEX — ALL AISLES</Text>
-      <AisleIndex onAisle={onAisle} onTopUp={onTopUp} counts={aisleCounts} />
+      <AisleIndex onAisle={onAisle} counts={aisleCounts} />
       <Text style={styles.baseHint}>The free baseline isn&apos;t sold here — it lives in the editors.</Text>
+
+      {/* M6 owner-walk — the two store-bottom entry points (StoreEntries), in the Index row grammar: the
+          Pixel Top-Up door (moved here from The Index) + an explicit Wallet door. Navigation only. */}
+      <StoreEntries onTopUp={onTopUp} onWallet={onWallet} />
     </View>
   );
 }
@@ -676,7 +689,7 @@ function AisleView({
   );
 }
 
-// The P2 item sheet + its BUY flow (shared by the aisle rows and the NEW-THIS-WEEK featured grid). Owns
+// The P2 item sheet + its BUY flow (shared by the aisle rows and the SPOTLIGHT grid). Owns
 // the acquire mutation, the in-place OWNED flip (justBought), and the P5 insufficient-balance bridge.
 // `item` is passed LIVE (re-read from its query on invalidation) so `owned` reflects a just-landed buy.
 function CosmeticSheet({
@@ -994,7 +1007,7 @@ const useStyles = themedStyles((t) => ({
   rowState: { flexShrink: 0, zIndex: 1 },
   rowName: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 1 },
   rowType: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
-  // NEW THIS WEEK featured grid (board `.rack3`) — a 3-up dense grid of ItemTiles.
+  // SPOTLIGHT grid (board `.rack3`) — a 3-up dense grid of ItemTiles.
   rack3: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.md },
   // ── ItemSheet previews (P3 theme · P4 shell before/after · card-cosmetic live CardFace) ──
   livePreview: { alignItems: 'center', justifyContent: 'center', alignSelf: 'stretch' },

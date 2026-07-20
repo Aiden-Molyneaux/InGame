@@ -95,6 +95,13 @@ export const gameDetailSchema = catalogItemSchema
   .extend({
     friendsWhoOwn: z.array(friendWhoOwnsSchema), // CAT-09c — the named friends-who-own list
     lastEdit: gameLastEditSchema.optional(), // CAT-14 — the EDITED BY X · 2D AGO line (absent = never edited)
+    // CAT-09 (owner walk m6) — the community AVERAGES rounding out the game-detail stats block (beside
+    // collectionsCount/friendsHaveCount). Both are anonymous cross-user AGGREGATES (SYS-01-COMMUNITY-
+    // AGGREGATE, OQ-126): the community mean only, never an individual owner's rating/hours. Each is
+    // `null` when there is no data to average (no ratings / no owners) so the ABOUT tab OMITS that row
+    // rather than print a misleading "0" — the same absent-stat posture the app uses elsewhere.
+    avgRating: z.number().nullable(), // community mean of the COL-03 1..5 rating (1 dp); null = nobody has rated
+    avgHours: z.number().nullable(), // community mean of COL-03 hours over all owners (rounded); null = no owners
   })
   .strict();
 export type GameDetail = z.infer<typeof gameDetailSchema>;

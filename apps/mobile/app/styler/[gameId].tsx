@@ -37,7 +37,8 @@ import {
   INKS,
   NAMEPLATES,
   PLATE_DEFAULT_COLOR,
-  START_SOURCES,
+  defaultBase,
+  startSourcesFor,
   surpriseDeal,
   withGameTitle,
   type FrameDef,
@@ -497,7 +498,9 @@ export default function Styler() {
 
   // ── the BaseRail sources: system bases + [CARD-24b] saved presets, merged client-side ─────────
   const railEntries = useMemo<RailEntry[]>(() => {
-    const sys: RailEntry[] = START_SOURCES.map((s) => ({
+    // W-6: genre-aware — lead with the start-from family that best fits the game's genres (the shelf
+    // entry already carries them, no new fetch). Nothing is hidden; DEFAULT stays last.
+    const sys: RailEntry[] = startSourcesFor(entry?.genres ?? []).map((s) => ({
       id: s.id,
       name: s.name,
       kindLabel: s.kindLabel,
@@ -507,13 +510,14 @@ export default function Styler() {
       id: `preset-${p.id}`,
       name: p.name.toUpperCase(),
       kindLabel: 'PRESET',
-      composition: presetToComposition(p.style as StylePresetStyle, START_SOURCES[0]!.compose(title)),
+      // a preset recipe applies onto the NEUTRAL default base (never a curated family's face)
+      composition: presetToComposition(p.style as StylePresetStyle, defaultBase(title)),
     }));
     const deal: RailEntry[] = surprise
       ? [{ id: 'surprise', name: 'SURPRISE', kindLabel: 'KIT', composition: surprise }]
       : [];
     return [...deal, ...sys, ...fromPresets];
-  }, [title, presets, surprise]);
+  }, [title, presets, surprise, entry?.genres]);
 
   // One in-flight guard for the three non-idempotent creates — a double-tap must not POST twice
   // (an orphan draft / a duplicate preset).

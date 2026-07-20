@@ -12,7 +12,7 @@ import prefsReducer from '../../store/prefsSlice';
 // CosmeticSwatch (M5 F-6 — owner device-walk notes 1+2): every store cosmetic renders APPLIED on a
 // neutral sample so the shopper isn't guessing. These prove (1) each roster type dispatches to a real,
 // un-broken preview, (2) the ItemSheet's card-cosmetic path renders intact (note-1 regression — it was
-// a bare placeholder), and (3) the NEW-THIS-WEEK featured grid composes six tiles with real previews.
+// a bare placeholder), and (3) the SPOTLIGHT grid composes six tiles with real previews.
 
 jest.mock('../../a11y/useReducedMotion', () => ({ useReducedMotion: () => false }));
 
@@ -88,8 +88,8 @@ describe('ItemSheet — the card-cosmetic preview path renders un-broken (note 1
   });
 });
 
-describe('NEW THIS WEEK featured grid — six tiles, each wearing its real preview (note 3)', () => {
-  const featured: CosmeticListItem[] = [
+describe('SPOTLIGHT grid — six tiles, each wearing its real preview (note 3)', () => {
+  const spotlight: CosmeticListItem[] = [
     { id: 'marquee', type: 'frame', name: 'MARQUEE', tier: 'showpiece', price: 8, owned: false },
     { id: 'frost', type: 'effect', name: 'FROST', tier: 'showpiece', price: 8, owned: false },
     { id: 'holographic', type: 'finish', name: 'HOLOGRAPHIC', tier: 'showpiece', price: 8, owned: true },
@@ -98,11 +98,11 @@ describe('NEW THIS WEEK featured grid — six tiles, each wearing its real previ
     { id: 'berry', type: 'screen_theme', name: 'BERRY', tier: 'big', price: 6, owned: false },
   ];
 
-  it('renders one tappable tile per featured item; owned items drop the price, others show a PriceChip', () => {
+  it('renders one tappable tile per spotlight item; owned items drop the price, others show a PriceChip', () => {
     render(
       wrap(
         <>
-          {featured.map((it) => (
+          {spotlight.map((it) => (
             <ItemTile
               key={`${it.type}:${it.id}`}
               name={it.name}
@@ -117,8 +117,8 @@ describe('NEW THIS WEEK featured grid — six tiles, each wearing its real previ
       ),
     );
     // six named tiles.
-    for (const it of featured) expect(screen.getByText(it.name)).toBeTruthy();
-    // the owned featured item (HOLOGRAPHIC) shows OWNED, no price; an unowned one shows its PriceChip.
+    for (const it of spotlight) expect(screen.getByText(it.name)).toBeTruthy();
+    // the owned spotlight item (HOLOGRAPHIC) shows OWNED, no price; an unowned one shows its PriceChip.
     expect(screen.getAllByLabelText('Owned').length).toBeGreaterThan(0);
     expect(screen.getAllByLabelText('8 pixels').length).toBe(3); // MARQUEE / FROST / CARBON
     expect(screen.getByLabelText('3 pixels')).toBeTruthy(); // BRASS

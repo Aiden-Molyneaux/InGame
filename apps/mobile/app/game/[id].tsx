@@ -100,6 +100,9 @@ function OwnGamePage({ entry }: { entry: CollectionItem }) {
   const [section, setSection] = useState<GameSection>('play');
   const [inspectOpen, setInspectOpen] = useState(false);
   const [overflowOpen, setOverflowOpen] = useState(false);
+  // Owner walk (m6) — the wiki-edit trigger is RELOCATED into the ⋯ overflow ("Edit catalog details").
+  // The page owns the mode; the overflow turns it on and AboutTab reflects it (CAT-13 controlled entry).
+  const [editingCatalog, setEditingCatalog] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
   // the switcher's card-delete confirm lives HERE — a sheet mounted inside the ScrollView docks to
   // the switcher's box, not the screen bottom (PulledSheet's screen-root contract; gate-5 D.27)
@@ -133,6 +136,7 @@ function OwnGamePage({ entry }: { entry: CollectionItem }) {
     setSection('play');
     setInspectOpen(false);
     setOverflowOpen(false);
+    setEditingCatalog(false);
     setConfirmRemove(false);
     setConfirmDeleteCard(null);
     setDeleteCardError(null);
@@ -331,11 +335,20 @@ function OwnGamePage({ entry }: { entry: CollectionItem }) {
               gameId={entry.gameId}
               onViewContributor={(userId) => router.push(`/contributor/${userId}`)}
               onOpenUser={(userId) => router.push(`/user/${userId}`)}
+              editing={editingCatalog}
+              onEditingChange={setEditingCatalog}
             />
           )}
         </ScrollView>
 
-        <GameTabDock value={section} onChange={setSection} />
+        <GameTabDock
+          value={section}
+          onChange={(s) => {
+            // leaving ABOUT ends an in-progress catalog edit (the mode is ABOUT-scoped)
+            if (s !== 'about') setEditingCatalog(false);
+            setSection(s);
+          }}
+        />
       </View>
 
       {/* overlays — mounted at the screen root (PulledSheet contract) */}
@@ -361,6 +374,18 @@ function OwnGamePage({ entry }: { entry: CollectionItem }) {
           label={entry.nowPlaying ? 'Clear now playing' : 'Set as now playing'}
           variant="secondary"
           onPress={toggleNowPlaying}
+          block
+        />
+        {/* Owner walk (m6) — the wiki EDIT entry, relocated off the ABOUT facts block into the overflow.
+            Turns on ABOUT + edit mode (AboutTab shows the per-field rows + the accuracy disclaimer). */}
+        <ScreenButton
+          label="Edit catalog details"
+          variant="secondary"
+          onPress={() => {
+            setOverflowOpen(false);
+            setSection('about');
+            setEditingCatalog(true);
+          }}
           block
         />
         <ScreenButton

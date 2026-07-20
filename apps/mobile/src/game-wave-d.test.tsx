@@ -41,6 +41,8 @@ const GAME_DETAIL = {
   inCollection: false,
   contributor: { userId: 'c1', username: 'maverick' },
   friendsWhoOwn: [],
+  avgRating: null,
+  avgHours: null,
 };
 let mockGameDetail: { data?: unknown; isLoading: boolean; isError: boolean; refetch: () => void } = {
   data: GAME_DETAIL,

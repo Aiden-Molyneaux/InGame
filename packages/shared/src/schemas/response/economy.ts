@@ -124,7 +124,7 @@ export const storePackSchema = z
 export type StorePack = z.infer<typeof storePackSchema>;
 
 /**
- * One library item (GET /cosmetics, decision 0075; also the GET /store featured element, M5 F-6). `tier`
+ * One library item (GET /cosmetics, decision 0075; also the GET /store spotlight element, M6). `tier`
  * is absent for a free item (never priced, always `owned:true`); `price` is 0 for a free item, the tier's
  * PX otherwise. `owned` is caller-scoped (the caller's own `user_entitlements` — never another
  * principal's). Defined here (above `storeResponseSchema`) so the store's `premiumCosmetics` can reuse it.
@@ -146,8 +146,9 @@ export type CosmeticListItem = z.infer<typeof cosmeticListItemSchema>;
 
 /**
  * GET /store — `{ packs, premiumCosmetics, drops }` (ECON-01/07/08/10). `packs` is the real-money
- * currency ladder (decision 0072). `premiumCosmetics` (M5 F-6) is the FEATURED storefront set — the board
- * P1 "NEW THIS WEEK" grid — as `cosmeticListItem`s (COSM-03 PX-priced, caller-scoped `owned`). `drops`
+ * currency ladder (decision 0072). `premiumCosmetics` (M6) is the SPOTLIGHT storefront set — the
+ * owner-curatable store lead (formerly the "NEW THIS WEEK" grid) — as `cosmeticListItem`s (COSM-03
+ * PX-priced, caller-scoped `owned`). `drops`
  * (ECON-08 seasonal) stays an HONEST EMPTY — the drawer renders, the content is authored at P10.
  */
 export const storeResponseSchema = z

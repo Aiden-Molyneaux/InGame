@@ -559,6 +559,83 @@ describe('CAT-05/09/09c (M6 W-C5): GET /catalog/games/:id — the game-detail ag
     expect(after.body.friendsWhoOwn).toHaveLength(0);
   });
 
+  it('CAT-09 (owner walk m6): reports the community AVG rating + AVG hours over all owners', async () => {
+    const a = await registerUser();
+    const u1 = await registerUser();
+    const u2 = await registerUser();
+    const u3 = await registerUser();
+    const rpg = await genreIdByName(a.token, 'RPG');
+    const game = (await createGame(a.token, { name: 'Community Averages Game', genreIds: [rpg] })).body;
+    // three owners — hours 10 / 20 / 90 (mean 40); ratings 5 / 4 / UNRATED → mean 4.5 over the 2 raters
+    const e1 = (await addToCollection(u1.token, game.id, 10)).entryId;
+    const e2 = (await addToCollection(u2.token, game.id, 20)).entryId;
+    await addToCollection(u3.token, game.id, 90);
+    await request(app).patch(`/api/me/collection/${e1}`).set(authed(u1.token)).send({ rating: 5 });
+    await request(app).patch(`/api/me/collection/${e2}`).set(authed(u2.token)).send({ rating: 4 });
+
+    const res = await request(app).get(`/api/catalog/games/${game.id}`).set(authed(a.token));
+    expect(res.status).toBe(200);
+    expect(res.body.collectionsCount).toBe(3);
+    expect(res.body.avgHours).toBe(40); // (10 + 20 + 90) / 3, rounded to a whole hour
+    expect(res.body.avgRating).toBe(4.5); // (5 + 4) / 2 — the UNRATED owner never drags the mean (1 dp)
+  });
+
+  it('CAT-09 (owner walk m6): a game with NO owners reports null averages (the n=0 case)', async () => {
+    const a = await registerUser();
+    const rpg = await genreIdByName(a.token, 'RPG');
+    const game = (await createGame(a.token, { name: 'Empty Averages Game', genreIds: [rpg] })).body;
+    const res = await request(app).get(`/api/catalog/games/${game.id}`).set(authed(a.token));
+    expect(res.status).toBe(200);
+    expect(res.body.collectionsCount).toBe(0);
+    expect(res.body.avgRating).toBeNull(); // nobody has rated → null (the client omits the row)
+    expect(res.body.avgHours).toBeNull(); // no owners → null
+  });
+
+  it('CAT-09 (Murr walk-wave MAJOR): WISHLIST entries are NOT owners — they never drag AVG HOURS', async () => {
+    const a = await registerUser();
+    const player = await registerUser();
+    const w1 = await registerUser();
+    const w2 = await registerUser();
+    const rpg = await genreIdByName(a.token, 'RPG');
+    const game = (await createGame(a.token, { name: 'Wishlist Drag Game', genreIds: [rpg] })).body;
+    // one real player at 60h + two 0-hour wishlisters — the mean must be 60, never (60+0+0)/3 = 20
+    await addToCollection(player.token, game.id, 60);
+    const we1 = (await addToCollection(w1.token, game.id, 0)).entryId;
+    const we2 = (await addToCollection(w2.token, game.id, 0)).entryId;
+    await request(app).patch(`/api/me/collection/${we1}`).set(authed(w1.token)).send({ status: 'wishlist' });
+    await request(app).patch(`/api/me/collection/${we2}`).set(authed(w2.token)).send({ status: 'wishlist' });
+
+    const res = await request(app).get(`/api/catalog/games/${game.id}`).set(authed(a.token));
+    expect(res.status).toBe(200);
+    expect(res.body.avgHours).toBe(60); // the statsOf/0058 convention: a wishlister is not an owner
+  });
+
+  it('CAT-09 (Murr walk-wave MAJOR): a WISHLIST-ONLY game reports null averages, never "AVG HOURS 0"', async () => {
+    const a = await registerUser();
+    const w = await registerUser();
+    const rpg = await genreIdByName(a.token, 'RPG');
+    const game = (await createGame(a.token, { name: 'Wishlist Only Game', genreIds: [rpg] })).body;
+    const we = (await addToCollection(w.token, game.id, 0)).entryId;
+    await request(app).patch(`/api/me/collection/${we}`).set(authed(w.token)).send({ status: 'wishlist' });
+
+    const res = await request(app).get(`/api/catalog/games/${game.id}`).set(authed(a.token));
+    expect(res.status).toBe(200);
+    expect(res.body.avgHours).toBeNull(); // null → the client OMITS the row (the 0.80 display ruling)
+    expect(res.body.avgRating).toBeNull();
+  });
+
+  it('CAT-09 (owner walk m6): owners but NO ratings → avgRating null, avgHours still reported', async () => {
+    const a = await registerUser();
+    const u1 = await registerUser();
+    const rpg = await genreIdByName(a.token, 'RPG');
+    const game = (await createGame(a.token, { name: 'Unrated Averages Game', genreIds: [rpg] })).body;
+    await addToCollection(u1.token, game.id, 30);
+    const res = await request(app).get(`/api/catalog/games/${game.id}`).set(authed(a.token));
+    expect(res.status).toBe(200);
+    expect(res.body.avgRating).toBeNull(); // an owner who hasn't rated is not a rater
+    expect(res.body.avgHours).toBe(30);
+  });
+
   it('an UNKNOWN game id → 404; a malformed id → 404; unauthenticated → 401', async () => {
     const a = await registerUser();
     expect((await request(app).get(`/api/catalog/games/${randomUUID()}`).set(authed(a.token))).status).toBe(404);

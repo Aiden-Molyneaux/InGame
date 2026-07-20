@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { View, Text, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import type { CollectionItem } from '@ingame/shared';
+import type { CollectionItem, EquippedReadout } from '@ingame/shared';
 import { CardFace, parseComposition } from '../CardFace';
 import { FlatCardImage } from './FlatCardImage';
 import { ScreenButton } from '../ScreenButton';
@@ -43,6 +43,10 @@ type AdoptedRow = {
   designer: string;
   imageUrl: string | null;
   equipped: boolean;
+  // CARD-22 (OQ-146) — the server-denormalized per-slot DISPLAY labels for this adopted card. A foreign
+  // card carries no client-side composition (OQ-122 flattened-only), so its cosmetics can only be shown
+  // READ-ONLY from this label snapshot. Absent on a pre-M6 card the backfill missed → no readout.
+  equippedLabels?: EquippedReadout;
 };
 type Row = OwnedRow | AdoptedRow;
 
@@ -106,6 +110,7 @@ export function CardSwitcher({
               designer: c.designer.username,
               imageUrl: c.imageUrl,
               equipped: entry.card.id === c.id,
+              equippedLabels: c.equipped, // CARD-22 denormalized labels (never the composition)
             }
           : {
               origin: 'owned',
@@ -214,8 +219,14 @@ export function CardSwitcher({
           {/* round-5 N-B10 — the "name — PRIVATE/PUBLISHED" title is dropped: the tile's status tag and
               the card face already carry that info; the panel leads with the cosmetic readout. */}
           {selected.origin === 'adopted' ? (
-            // CARD-15 — an adopted card is the IMAGE, not the layers; no per-attribute readout to show.
-            <Text style={styles.note}>Adopted from {selected.designer} — adopted cards can't be edited.</Text>
+            // CARD-22 — a foreign adopted card has no client-side composition (OQ-122 flattened-only), so
+            // its cosmetics are shown READ-ONLY from the server's denormalized `equipped` label snapshot
+            // (never the private layers, CARD-15). The labels degrade to no-readout when the snapshot is
+            // absent (a pre-M6 card the backfill missed) — the note always stands.
+            <>
+              {selected.equippedLabels ? <EquipReadout equipped={selected.equippedLabels} /> : null}
+              <Text style={styles.note}>Adopted from {selected.designer} — adopted cards can't be edited.</Text>
+            </>
           ) : (
             <EquipReadout card={{ ...entry.card, isCustom: true }} composition={selected.composition} />
           )}

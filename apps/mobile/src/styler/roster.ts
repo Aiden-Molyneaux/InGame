@@ -167,12 +167,16 @@ export const INKS: Array<RosterItem & { color: string }> = [
 
 // ── Base palettes + the start-from sources (CARD-16 — never a blank canvas) ────────────────────
 // (exported for the Canvas ADD sheet's BASE row — one seed palette, no second source)
+// 2026-07-20 (W-6 taste pass): the five arbitrary darks became the six CURATED palette-family bases
+// below (PALETTES), so the Canvas base row and the Styler start-froms speak ONE colour voice. [0]
+// stays the indigo NEBULA base (defaultBase's incumbent, unchanged).
 export const BASE_GRADIENTS: Array<[string, string]> = [
-  ['#241a4d', '#0e0b1e'],
-  ['#0e2b26', '#08120f'],
-  ['#3a1430', '#150713'],
-  ['#12263f', '#070d16'],
-  ['#402a10', '#170e04'],
+  ['#241a4d', '#0e0b1e'], // NEBULA — cosmic indigo
+  ['#2b1206', '#0b0503'], // EMBER — warm coal
+  ['#2a1547', '#0a0713'], // HORIZON — synthwave dusk
+  ['#0e2b26', '#08120f'], // GROVE — deep forest
+  ['#2a0b2e', '#0a0514'], // ARCADE — neon violet-black
+  ['#1c1e26', '#0a0b0f'], // MONOLITH — cool graphite
 ];
 
 /** The styler's constant default plate colour (plate()/basePlate) — also what a plate RESTORES to
@@ -199,13 +203,202 @@ export function withGameTitle(comp: CardComposition, gameTitle: string): CardCom
   return { ...comp, nameplate: { ...comp.nameplate, title: want } };
 }
 
-/** The CARD-18 default face as a composition — the BaseRail's incumbent forefront. */
+/** The CARD-18 default face as a composition — the BaseRail's incumbent forefront (kept plain: the
+ *  "blank slate" escape hatch that sits LAST in the start fan; also the neutral base a preset recipe
+ *  applies onto in the styler route). */
 export function defaultBase(gameTitle: string): CardComposition {
   return {
     schemaVersion: COMPOSITION_SCHEMA_VERSION,
     base: { gradient: BASE_GRADIENTS[0]! },
     elements: [],
     nameplate: plate(gameTitle),
+  };
+}
+
+// ── CURATED PALETTE FAMILIES (W-6 taste pass, 2026-07-20) ──────────────────────────────────────
+// The old start-froms read as hideous for three reasons: (1) kit-arcade opened with a RETIRED frame
+// kind (`bracket-corners`, pulled by 0075) AND a PREMIUM effect (`scanline`, re-tagged by 0075) — so
+// "Start with this" handed the user an unowned premium DEBT on the first save, breaking CARD-16's
+// economic guarantee; (2) the element geometry was arbitrary (a huge dead-centre star, 0.008-tall
+// sliver rects) with clashing hues sampled at random from the whole palette; (3) the gradients had no
+// shared voice. The rebuild anchors every start-from (and every SURPRISE deal) to a small set of
+// COHERENT palette families: a considered gradient + 2–3 HARMONIZING accents + a matched FREE frame /
+// plate / font / effect. Every family references FREE cosmetics ONLY (verified against premium.ts —
+// no premium frame/effect/finish/font/plate), so `collectPremiumRosterIds` is empty and the cost-stack
+// is 0 for every start-from and every surprise. Card colours are literal (card CONTENT, like the
+// existing gradients — CONVENTIONS: compositions may use literal colours; themed tokens are for chrome).
+//
+// `moods` are lowercased genre names (the CollectionItem.genres vocabulary — Horror/Platformer/RPG/…);
+// `startSourcesFor(genres)` reorders the fan so the best-fit family LEADS. Nothing is ever hidden — an
+// unmatched game just keeps the curated order (a strong family still leads; DEFAULT stays last).
+
+/** A curated free-tier colour+cosmetic family. Frame/plate/font/effect are FREE roster refs (or null);
+ *  `accents` + the gradient stops are the family's whole colour vocabulary (the coherence invariant). */
+interface PaletteFamily {
+  id: string;
+  name: string;
+  kindLabel: 'TEMPLATE' | 'KIT';
+  gradient: [string, string];
+  accents: string[]; // 2–3 harmonizing hues (the dominant first)
+  ink: string; // title ink (a free colour field) — one of the accents
+  frameId: string | null; // a FREE frame roster id, or null for CLEAN (no frame)
+  fontId: string; // a FREE font roster id (clean-sans / bold-display / press-start)
+  plateShape: NameplateShape; // a FREE plate shape (never `brass` — that's premium)
+  effect?: { kind: EffectKind; intensity: number }; // a FREE effect (soft-glow/gradient-sheen/dust/vignette)
+  finish?: FinishKind; // a FREE finish (matte) — omit for STANDARD
+  moods: string[]; // lowercased genre names this family suits (genre-aware ordering)
+  /** The hand-designed element layout for this family's curated start-from card. */
+  face: CardComposition['elements'];
+}
+
+export const PALETTES: PaletteFamily[] = [
+  {
+    id: 'nebula',
+    name: 'NEBULA',
+    kindLabel: 'TEMPLATE',
+    gradient: ['#241a4d', '#0e0b1e'],
+    accents: ['#e8c14a', '#f3ecd9', '#7ad0e8'],
+    ink: '#f3ecd9',
+    frameId: null,
+    fontId: 'bold-display',
+    plateShape: 'bevel',
+    moods: ['adventure', 'rpg', 'shooter', 'metroidvania', 'simulation'],
+    // a gold crescent moon (disc + a base-fill disc offset to carve the crescent) + cream stars + a cyan spark
+    face: [
+      { type: 'ellipse', x: 0.68, y: 0.28, w: 0.34, h: 0.34, fill: '#e8c14a' },
+      { type: 'ellipse', x: 0.6, y: 0.24, w: 0.34, h: 0.34, fill: '#241a4d' },
+      { type: 'poly', shape: 'star', x: 0.26, y: 0.3, w: 0.1, h: 0.1, fill: '#f3ecd9' },
+      { type: 'poly', shape: 'star', x: 0.4, y: 0.19, w: 0.06, h: 0.06, fill: '#f3ecd9' },
+      { type: 'ellipse', x: 0.2, y: 0.48, w: 0.03, h: 0.03, fill: '#7ad0e8' },
+    ],
+  },
+  {
+    id: 'ember',
+    name: 'EMBER',
+    kindLabel: 'KIT',
+    gradient: ['#2b1206', '#0b0503'],
+    accents: ['#ff9f43', '#e8c14a', '#ff5a5a'],
+    ink: '#f3ecd9',
+    frameId: 'stub', // ticket-notch orange (free)
+    fontId: 'bold-display',
+    plateShape: 'slab',
+    effect: { kind: 'vignette', intensity: 0.5 }, // moody edge-darken (free)
+    finish: 'matte',
+    moods: ['horror', 'soulslike', 'action', 'fighting', 'roguelike'],
+    // a low ember glow + a red underglow + rising motes
+    face: [
+      { type: 'ellipse', x: 0.5, y: 0.72, w: 0.9, h: 0.5, fill: '#ff9f43', glow: true, opacity: 0.85 },
+      { type: 'ellipse', x: 0.5, y: 0.8, w: 0.6, h: 0.3, fill: '#ff5a5a', glow: true, opacity: 0.5 },
+      { type: 'ellipse', x: 0.34, y: 0.4, w: 0.04, h: 0.04, fill: '#e8c14a', glow: true },
+      { type: 'ellipse', x: 0.62, y: 0.34, w: 0.03, h: 0.03, fill: '#ff9f43', glow: true },
+      { type: 'ellipse', x: 0.5, y: 0.28, w: 0.025, h: 0.025, fill: '#e8c14a', glow: true },
+    ],
+  },
+  {
+    id: 'horizon',
+    name: 'HORIZON',
+    kindLabel: 'KIT',
+    gradient: ['#2a1547', '#0a0713'],
+    accents: ['#e85ad0', '#7ad0e8', '#e8c14a'],
+    ink: '#7ad0e8',
+    frameId: 'bubblegum', // thin-line pink (free)
+    fontId: 'bold-display',
+    plateShape: 'tab',
+    effect: { kind: 'gradient-sheen', intensity: 0.5 }, // glassy sweep (free)
+    moods: ['racing', 'platformer', 'arcade', 'rhythm'],
+    // a pink/gold sun over receding cyan horizon bars
+    face: [
+      { type: 'ellipse', x: 0.5, y: 0.36, w: 0.44, h: 0.44, fill: '#e85ad0' },
+      { type: 'ellipse', x: 0.5, y: 0.33, w: 0.28, h: 0.28, fill: '#e8c14a', opacity: 0.6 },
+      { type: 'rect', x: 0.5, y: 0.6, w: 0.9, h: 0.024, fill: '#7ad0e8' },
+      { type: 'rect', x: 0.5, y: 0.66, w: 0.7, h: 0.02, fill: '#7ad0e8', opacity: 0.8 },
+      { type: 'rect', x: 0.5, y: 0.71, w: 0.5, h: 0.016, fill: '#7ad0e8', opacity: 0.6 },
+    ],
+  },
+  {
+    id: 'grove',
+    name: 'GROVE',
+    kindLabel: 'KIT',
+    gradient: ['#0e2b26', '#08120f'],
+    accents: ['#a8c980', '#a9e34b', '#f3ecd9'],
+    ink: '#f3ecd9',
+    frameId: 'lime', // thin-line lime (free)
+    fontId: 'clean-sans',
+    plateShape: 'arch',
+    effect: { kind: 'dust', intensity: 0.4 }, // soft motes (free)
+    finish: 'matte',
+    moods: ['simulation', 'puzzle', 'adventure', 'metroidvania'],
+    // a botanical medallion: moss ring (disc + base cut) around a lime core + a cream pip
+    face: [
+      { type: 'ellipse', x: 0.5, y: 0.36, w: 0.46, h: 0.46, fill: '#a8c980' },
+      { type: 'ellipse', x: 0.5, y: 0.36, w: 0.34, h: 0.34, fill: '#0e2b26' },
+      { type: 'ellipse', x: 0.5, y: 0.36, w: 0.2, h: 0.2, fill: '#a9e34b' },
+      { type: 'poly', shape: 'diamond', x: 0.5, y: 0.36, w: 0.06, h: 0.06, fill: '#f3ecd9' },
+    ],
+  },
+  {
+    id: 'arcade',
+    name: 'ARCADE',
+    kindLabel: 'KIT',
+    gradient: ['#2a0b2e', '#0a0514'],
+    accents: ['#e85ad0', '#7ad0e8', '#e8c14a'],
+    ink: '#7ad0e8',
+    frameId: 'double-line', // silver cabinet bezel (free) — REPLACES the retired bracket-corners
+    fontId: 'press-start', // PIXEL (free)
+    plateShape: 'dogtag',
+    effect: { kind: 'soft-glow', intensity: 0.5 }, // neon bloom (free) — REPLACES the premium scanline
+    moods: ['fighting', 'arcade', 'platformer', 'action'],
+    // a bold magenta triangle + a cyan bar + gold/cyan pixel blocks
+    face: [
+      { type: 'poly', shape: 'triangle', x: 0.5, y: 0.36, w: 0.44, h: 0.4, fill: '#e85ad0' },
+      { type: 'rect', x: 0.5, y: 0.62, w: 0.56, h: 0.024, fill: '#7ad0e8' },
+      { type: 'rect', x: 0.3, y: 0.3, w: 0.06, h: 0.06, fill: '#e8c14a' },
+      { type: 'rect', x: 0.7, y: 0.44, w: 0.05, h: 0.05, fill: '#7ad0e8', opacity: 0.9 },
+    ],
+  },
+  {
+    id: 'monolith',
+    name: 'MONOLITH',
+    kindLabel: 'KIT',
+    gradient: ['#1c1e26', '#0a0b0f'],
+    accents: ['#f3ecd9', '#e8c14a'],
+    ink: '#f3ecd9',
+    frameId: 'thin-line', // fine light rule (free)
+    fontId: 'clean-sans',
+    plateShape: 'slab',
+    effect: { kind: 'vignette', intensity: 0.35 }, // restrained edge-darken (free)
+    finish: 'matte',
+    moods: ['puzzle', 'strategy', 'simulation'],
+    // a restrained gallery emblem: a thin cream outline ring (base fill + cream stroke) + a gold diamond
+    face: [
+      { type: 'ellipse', x: 0.5, y: 0.34, w: 0.4, h: 0.4, fill: '#0a0b0f', stroke: { color: '#f3ecd9', width: 0.005 } },
+      { type: 'poly', shape: 'diamond', x: 0.5, y: 0.34, w: 0.1, h: 0.1, fill: '#e8c14a' },
+    ],
+  },
+];
+
+const PALETTE_BY_ID = new Map(PALETTES.map((p) => [p.id, p]));
+
+/** Resolve a FREE frame roster id to its render attrs (null = CLEAN / no frame). Pure roster lookup —
+ *  keeps the exact kind+color+width of the basic row so `collectPremiumRosterIds` reads it as FREE. */
+function frameAttrs(frameId: string | null): { kind: FrameKind; color: string; width: number } | null {
+  if (!frameId) return null;
+  const f = FRAMES.find((x) => x.id === frameId);
+  return f && f.kind ? { kind: f.kind, color: f.color, width: f.width } : null;
+}
+
+/** Assemble a full composition from a family + an element layout (shared by the curated start-froms
+ *  and SURPRISE — the single place the free-tier chrome is stamped on, so both stay coherent + free). */
+function composeFromFamily(fam: PaletteFamily, elements: CardComposition['elements'], gameTitle: string): CardComposition {
+  const frame = frameAttrs(fam.frameId);
+  return {
+    schemaVersion: COMPOSITION_SCHEMA_VERSION,
+    base: { gradient: fam.gradient },
+    elements,
+    ...(frame ? { frame } : {}),
+    ...(fam.effect ? { effect: fam.effect } : {}),
+    ...(fam.finish ? { finish: { kind: fam.finish } } : {}),
+    nameplate: plate(gameTitle, fam.ink, fam.plateShape, fam.fontId),
   };
 }
 
@@ -216,107 +409,124 @@ export interface StartSource {
   compose: (gameTitle: string) => CardComposition;
 }
 
-/** Templates = single faces; kits arrive wearing a frame + effect bundle (COSM-02). */
-export const START_SOURCES: StartSource[] = [
-  { id: 'default', name: 'DEFAULT', kindLabel: 'DEFAULT', compose: defaultBase },
-  {
-    id: 'tpl-nebula',
-    name: 'NEBULA',
-    kindLabel: 'TEMPLATE',
-    compose: (t) => ({
-      schemaVersion: COMPOSITION_SCHEMA_VERSION,
-      base: { gradient: ['#241a4d', '#0e0b1e'] },
-      elements: [
-        { type: 'poly', shape: 'star', x: 0.5, y: 0.34, w: 0.5, h: 0.5, fill: '#e8c14a' },
-        { type: 'ellipse', x: 0.72, y: 0.2, w: 0.13, h: 0.13, fill: '#f3ecd9' },
-        { type: 'poly', shape: 'diamond', x: 0.24, y: 0.24, w: 0.1, h: 0.1, rotation: 20, fill: '#7ad0e8' },
-      ],
-      nameplate: plate(t),
-    }),
+const CURATED_SOURCES: StartSource[] = PALETTES.map((fam) => ({
+  id: fam.id,
+  name: fam.name,
+  kindLabel: fam.kindLabel,
+  compose: (t) => composeFromFamily(fam, fam.face, t),
+}));
+
+const DEFAULT_SOURCE: StartSource = { id: 'default', name: 'DEFAULT', kindLabel: 'DEFAULT', compose: defaultBase };
+
+/** Templates = single faces; kits arrive wearing a frame + effect bundle (COSM-02). Curated families
+ *  first, the plain DEFAULT last (the blank-slate escape hatch). */
+export const START_SOURCES: StartSource[] = [...CURATED_SOURCES, DEFAULT_SOURCE];
+
+/**
+ * Genre-aware ordering (W-6): score each curated family by how many of its `moods` the game's genres
+ * match, then lead with the best fit. Nothing is hidden — a zero-match game keeps the curated order,
+ * and DEFAULT always stays last. Cheap: `genres` already rides the styler route's shelf entry
+ * (CollectionItem.genres), so no new fetch. Stable (curated order breaks ties / zero scores).
+ */
+export function startSourcesFor(genres: ReadonlyArray<{ name: string }> = []): StartSource[] {
+  const wants = new Set(genres.map((g) => g.name.toLowerCase()));
+  const scored = CURATED_SOURCES.map((s, i) => {
+    const moods = PALETTE_BY_ID.get(s.id)?.moods ?? [];
+    const score = moods.reduce((n, m) => n + (wants.has(m) ? 1 : 0), 0);
+    return { s, i, score };
+  });
+  scored.sort((a, b) => b.score - a.score || a.i - b.i);
+  return [...scored.map((x) => x.s), DEFAULT_SOURCE];
+}
+
+// ── SURPRISE ME — coherent randomisation (W-6) ─────────────────────────────────────────────────
+// The old deal was pure-uniform noise: independent random fills per shape (clashing), a random frame
+// colour unrelated to them, random ink — ugly. It now deals a random CURATED FAMILY, then generates a
+// coherent element layout from that family's accents via one of a few layout archetypes. The chrome
+// (frame/plate/font/effect) is the family's — always FREE — so a deal FEELS lucky, not random, and can
+// never open a premium debt. Premium-in-surprise rule: NEVER. Families reference free cosmetics only;
+// the cost-stack of every deal is 0 (asserted in the tests), matching the start-from guarantee.
+// The combo logic is PURE with an injectable rng (`() => number` in [0,1)) so it's unit-testable.
+
+function rng01(rng: () => number, min: number, max: number): number {
+  return min + rng() * (max - min);
+}
+const clamp01 = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+
+/** The layout archetypes — each returns coherent geometry drawn ONLY from `a` (accents) + `g` (gradient
+ *  stops, for base-fill cut-outs). Pure given the rng. */
+type Archetype = (a: string[], g: [string, string], rng: () => number) => CardComposition['elements'];
+
+const ARCHETYPES: Archetype[] = [
+  // EMBLEM — a centred medallion: accent disc, base cut-out ring, inner accent core
+  (a, g, rng) => {
+    const cy = rng01(rng, 0.3, 0.4);
+    const r = rng01(rng, 0.4, 0.5);
+    return [
+      { type: 'ellipse', x: 0.5, y: cy, w: r, h: r, fill: a[0]! },
+      { type: 'ellipse', x: 0.5, y: cy, w: r * 0.68, h: r * 0.68, fill: g[0] },
+      { type: 'ellipse', x: 0.5, y: cy, w: r * 0.36, h: r * 0.36, fill: a[1 % a.length]! },
+    ];
   },
-  {
-    id: 'tpl-horizon',
-    name: 'HORIZON',
-    kindLabel: 'TEMPLATE',
-    compose: (t) => ({
-      schemaVersion: COMPOSITION_SCHEMA_VERSION,
-      base: { gradient: ['#12263f', '#070d16'] },
-      elements: [
-        { type: 'rect', x: 0.5, y: 0.55, w: 0.9, h: 0.012, fill: '#e85ad0' },
-        { type: 'rect', x: 0.5, y: 0.6, w: 0.7, h: 0.008, fill: '#7ad0e8' },
-        { type: 'ellipse', x: 0.5, y: 0.32, w: 0.34, h: 0.34, fill: '#e8c14a' },
-      ],
-      nameplate: plate(t, '#7ad0e8'),
-    }),
+  // CONSTELLATION — a hero star + scattered small stars/dots
+  (a, g, rng) => {
+    const els: CardComposition['elements'] = [
+      { type: 'poly', shape: 'star', x: rng01(rng, 0.42, 0.6), y: rng01(rng, 0.28, 0.38), w: rng01(rng, 0.24, 0.34), h: rng01(rng, 0.24, 0.34), fill: a[0]! },
+    ];
+    const n = 3 + Math.floor(rng() * 3);
+    for (let i = 0; i < n; i++) {
+      const dot = rng() < 0.5;
+      els.push(
+        dot
+          ? { type: 'ellipse', x: rng01(rng, 0.16, 0.84), y: rng01(rng, 0.14, 0.56), w: rng01(rng, 0.02, 0.05), h: rng01(rng, 0.02, 0.05), fill: a[1 % a.length]! }
+          : { type: 'poly', shape: 'star', x: rng01(rng, 0.16, 0.84), y: rng01(rng, 0.14, 0.56), w: rng01(rng, 0.05, 0.09), h: rng01(rng, 0.05, 0.09), fill: a[1 % a.length]! },
+      );
+    }
+    return els;
   },
-  {
-    id: 'kit-arcade',
-    name: 'ARCADE',
-    kindLabel: 'KIT',
-    compose: (t) => ({
-      schemaVersion: COMPOSITION_SCHEMA_VERSION,
-      base: { gradient: ['#3a1430', '#150713'] },
-      elements: [
-        { type: 'poly', shape: 'triangle', x: 0.5, y: 0.36, w: 0.42, h: 0.38, fill: '#e85ad0' },
-        { type: 'rect', x: 0.5, y: 0.62, w: 0.56, h: 0.02, fill: '#7ad0e8' },
-      ],
-      // (pixel-border retired 2026-07-09 — the kit wears cyan brackets now; ledger entry)
-      frame: { kind: 'bracket-corners', color: '#7ad0e8', width: 0.028 },
-      effect: { kind: 'scanline', intensity: 0.55 },
-      nameplate: plate(t, '#f3ecd9', 'slab', 'bold-display'),
-    }),
+  // BANNER — 2–3 stacked bars of decreasing width (alternating accents) + a poly emblem above
+  (a, g, rng) => {
+    const els: CardComposition['elements'] = [
+      { type: 'poly', shape: rng() < 0.5 ? 'triangle' : 'diamond', x: 0.5, y: rng01(rng, 0.28, 0.36), w: rng01(rng, 0.28, 0.4), h: rng01(rng, 0.28, 0.4), fill: a[0]! },
+    ];
+    const bars = 2 + Math.floor(rng() * 2);
+    for (let i = 0; i < bars; i++) {
+      els.push({ type: 'rect', x: 0.5, y: 0.58 + i * 0.06, w: clamp01(0.86 - i * 0.18, 0.3, 0.9), h: rng01(rng, 0.016, 0.026), fill: a[(i + 1) % a.length]!, opacity: clamp01(1 - i * 0.2, 0.5, 1) });
+    }
+    return els;
   },
-  {
-    id: 'kit-museum',
-    name: 'MUSEUM',
-    kindLabel: 'KIT',
-    compose: (t) => ({
-      schemaVersion: COMPOSITION_SCHEMA_VERSION,
-      base: { gradient: ['#0e2b26', '#08120f'] },
-      elements: [
-        { type: 'ellipse', x: 0.5, y: 0.38, w: 0.5, h: 0.5, fill: '#a8c980' },
-        { type: 'ellipse', x: 0.5, y: 0.38, w: 0.36, h: 0.36, fill: '#0e2b26' },
-      ],
-      frame: { kind: 'double-line', color: '#c9c5e6', width: 0.01 },
-      effect: { kind: 'vignette', intensity: 0.5 },
-      nameplate: plate(t, '#e8c14a', 'bevel'),
-    }),
+  // SCATTER — the old shape-scatter, but palette-locked so it reads coherent (small rotations, accents only)
+  (a, g, rng) => {
+    const shapes = ['star', 'diamond', 'triangle'] as const;
+    const els: CardComposition['elements'] = [];
+    const n = 3 + Math.floor(rng() * 2);
+    for (let i = 0; i < n; i++) {
+      els.push({
+        type: 'poly',
+        shape: shapes[Math.floor(rng() * shapes.length)]!,
+        x: rng01(rng, 0.24, 0.76),
+        y: rng01(rng, 0.18, 0.56),
+        w: rng01(rng, 0.12, 0.34),
+        h: rng01(rng, 0.12, 0.34),
+        rotation: Math.floor(rng01(rng, -24, 24)),
+        fill: a[i % a.length]!,
+        ...(i > 0 ? { opacity: rng01(rng, 0.7, 1) } : {}),
+      });
+    }
+    return els;
   },
 ];
 
-/** ⯒ SURPRISE ME — a fresh client-side deal from the free baseline (CARD-16; non-idempotent). */
-export function surpriseDeal(gameTitle: string): CardComposition {
-  const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)]!;
-  const colors = ['#e8c14a', '#e85ad0', '#7ad0e8', '#f3ecd9', '#a8c980'];
-  const shapes = ['star', 'diamond', 'triangle'] as const;
-  const elements: CardComposition['elements'] = [];
-  const n = 2 + Math.floor(Math.random() * 3);
-  for (let i = 0; i < n; i++) {
-    elements.push({
-      type: 'poly',
-      shape: pick([...shapes]),
-      x: 0.25 + Math.random() * 0.5,
-      y: 0.15 + Math.random() * 0.5,
-      w: 0.12 + Math.random() * 0.4,
-      h: 0.12 + Math.random() * 0.4,
-      rotation: Math.floor(Math.random() * 60) - 30,
-      fill: pick(colors),
-    });
-  }
-  // decision 0075 (P10): FRAMES/EFFECTS/FONTS now carry real premium entries — a "free baseline" deal
-  // must never hand out one (CARD-16's guarantee is economic, not just visual: a premium pick here
-  // would trip the CARD-13 reconcile gate on the very first save of an unowned card).
-  const freeFrames = FRAMES.filter((f) => f.tier !== 'premium');
-  const freeEffects = EFFECTS.filter((e) => e.kind !== 'none' && e.tier !== 'premium');
-  const freeFonts = FONTS.filter((f) => f.tier !== 'premium');
-  const frame = pick(freeFrames);
-  const effect = pick(freeEffects);
-  return {
-    schemaVersion: COMPOSITION_SCHEMA_VERSION,
-    base: { gradient: pick(BASE_GRADIENTS) },
-    elements,
-    ...(frame.kind ? { frame: { kind: frame.kind, color: frame.color, width: frame.width } } : {}),
-    effect: { kind: effect.kind, intensity: 0.4 + Math.random() * 0.4 },
-    nameplate: plate(gameTitle, pick(INKS).color, pick(['slab', 'ribbon', 'bevel'] as NameplateShape[]), pick(freeFonts).id),
-  };
+/**
+ * SURPRISE ME — deal a coherent, free-tier start card (CARD-16; non-idempotent by default). Pure given
+ * `rng` (defaults to Math.random for the app) — inject a seeded source to unit-test the invariants.
+ */
+export function surpriseDeal(gameTitle: string, rng: () => number = Math.random): CardComposition {
+  const fam = PALETTES[Math.floor(rng() * PALETTES.length)]!;
+  const archetype = ARCHETYPES[Math.floor(rng() * ARCHETYPES.length)]!;
+  const elements = archetype(fam.accents, fam.gradient, rng);
+  // keep the family's chrome (free) but jitter the effect intensity so two same-family deals differ
+  const effect = fam.effect ? { kind: fam.effect.kind, intensity: clamp01(fam.effect.intensity + rng01(rng, -0.1, 0.1), 0.2, 0.9) } : undefined;
+  const withEffect: PaletteFamily = { ...fam, effect };
+  return composeFromFamily(withEffect, elements, gameTitle);
 }

@@ -191,6 +191,11 @@ export const friendProfileSchema = publicProfileSchema
     favouriteGenreIds: z.array(z.string().uuid()),
     gamertags: z.array(gamertagViewSchema),
     friendsCount: z.number().int().nonnegative(),
+    /** CAT-07 — the friend's PUBLISHED-card count backing the {USERNAME}'S CONTRIBUTIONS teaser (the
+     *  cross-user door to `/contributor/:id`, P13). The SAME public aggregate the self `cardsPublished`
+     *  and the contributor screen count (`countPublishedByOwner`) — PUBLISHED only, never drafts/private
+     *  (no draft-existence leak). Shown-with-0, mirroring the self profile. Owner walk-ruling 2026-07-20. */
+    cardsPublished: z.number().int().nonnegative(),
     top10: z.array(friendTopTenEntrySchema),
     // ── M6 C4 (the PROF-05 board rows the P2 report deferred — parvati walk-round) ─────────────────
     // All three NULL-TOLERANT (nullable) so the client's existing parse keeps working before its own
@@ -200,6 +205,13 @@ export const friendProfileSchema = publicProfileSchema
     stats: selfStatsSchema.nullable(),
     /** DEV-02/04 — the THEIR-DEVICE payload (decision 0012). */
     device: friendDeviceSchema.nullable(),
+    /** PROF-01/05 — the friend's PINNED FAVOURITE (flattened card), or null. Owner walk-ruling
+     *  2026-07-20: the self profile has always shown the pinned favourite; the friend read must show
+     *  theirs too (read-only). Same flattened friend-view expansion as `nowPlaying` — never the owner-
+     *  private trio (notes/rating/percentComplete), never `composition` (OQ-122/CARD-15). This
+     *  supersedes the P9 friend-view-manifest ruling-4 deferral ("[pinned favourite: n/a, not on the
+     *  friend shape]"). */
+    favouriteGame: friendGameExpansionSchema.nullable(),
     /** WTP-03 — the friend's Now-Playing pin (flattened card), or null. */
     nowPlaying: friendGameExpansionSchema.nullable(),
   })

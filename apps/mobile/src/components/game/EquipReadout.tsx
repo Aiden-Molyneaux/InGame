@@ -85,12 +85,14 @@ const fontLabel = (fontId: string | undefined): string => {
 // Every slot is optional; an absent slot (or an empty `{}` from a pre-M6 card the backfill missed) is
 // simply omitted. When every slot is absent this renders NOTHING (a quiet no-readout — CARD-22 "render
 // only when present"), never a crash. The `equipped` branch takes precedence when supplied.
+// Slot names + set MATCH the own-composition branch below (Parvati walk-wave 🎨): the switcher flips
+// between adopted and own cards, so the two paths must read as ONE readout — same NAMEPLATE label,
+// and no BASE chip (the own path never shows one; base is the card's ground, not an equip slot).
 const CROSS_SLOTS: Array<[keyof EquippedLabels, string]> = [
-  ['base', 'BASE'],
   ['frame', 'FRAME'],
   ['effect', 'EFFECT'],
   ['finish', 'FINISH'],
-  ['nameplate', 'PLATE'],
+  ['nameplate', 'NAMEPLATE'],
   ['font', 'FONT'],
 ];
 

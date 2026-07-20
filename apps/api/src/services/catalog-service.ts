@@ -264,16 +264,26 @@ export async function gameDetail(actorId: string, gameId: string): Promise<GameD
   if (!game) throw new NotFoundError('Game not found.');
   const [item] = await assembleItems(actorId, [game]);
   const friendsWhoOwn = await friendsWhoOwnList(actorId, gameId);
+  // CAT-09 (owner walk m6) — the community AVERAGES for the ABOUT-tab stats block (mean rating + mean
+  // hours). Anonymous cross-user aggregates alongside the collectionsCount/friendsHaveCount already on
+  // `item`; rounded here (the serializer boundary) so the wire carries a clean 1-dp rating / integer
+  // hours. Both stay `null` when there is nothing to average (no ratings / no owners) — the client omits
+  // the row rather than show a misleading zero.
+  const averages = (await collectionRepo.communityAveragesByGame([gameId])).get(gameId);
+  const avgRating = averages?.avgRating != null ? Math.round(averages.avgRating * 10) / 10 : null;
+  const avgHours = averages?.avgHours != null ? Math.round(averages.avgHours) : null;
   // CAT-14 (M6 W-6) — the `lastEdit` attribution: the latest `game_edits` row's editor + moment
   // (a reversal row is itself an edit, so it naturally wins). ABSENT when never edited — derived,
   // no games-table change. Username via the scoped by-id read, exposed as the { userId, username }
   // allowlist only (the CAT-05 credit's F06 posture).
   const last = await gameEditRepo.latestEditForGame(gameId);
-  if (!last) return { ...item!, friendsWhoOwn };
+  if (!last) return { ...item!, friendsWhoOwn, avgRating, avgHours };
   const editorRow = await profileRepo.getOwnProfile(last.editorId);
   return {
     ...item!,
     friendsWhoOwn,
+    avgRating,
+    avgHours,
     lastEdit: {
       editor: { userId: last.editorId, username: editorRow?.username ?? 'unknown' },
       editedAt: last.editedAt.toISOString(),

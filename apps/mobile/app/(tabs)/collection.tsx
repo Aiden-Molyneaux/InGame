@@ -344,7 +344,12 @@ export default function Collection() {
           }
         />
       </View>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} scrollEnabled={!bgLocked && dragScrollEnabled}>
+      {/* stage — the relative anchor the peek-flip hint overlays. The hint is an ABSOLUTE overlay (below,
+          OUT of flow) so its first-run appearance + first-flip dismissal never reflow the shelf; before
+          this it was an in-flow strip between the hero and the list, so retiring it (or a relog re-arming
+          it) shifted the whole list — the owner's "presents just to disappear, shifting the page" jar. */}
+      <View style={styles.stage}>
+      <ScrollView testID="collection-scroll" style={styles.scroll} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} scrollEnabled={!bgLocked && dragScrollEnabled}>
         <ScrollLockContext.Provider value={scrollLockApi}>
         {/* In-place search: the query live-filters the CURRENT view + a RESULTS header (board :661). */}
         {searchOpen && q.trim() !== '' && data.collectionTotal > 0 ? (
@@ -354,10 +359,6 @@ export default function Collection() {
             active (board :711–713) and in TOP view — rendered once here, not per-view. */}
         {data.collectionTotal > 0 && view !== 'top' && q.trim() === '' && filtered.length > 0 ? (
           <NowPlayingHero hero={hero} onLogHours={onLogHours} />
-        ) : null}
-        {/* COL-12/CARD-16 — the first-run peek-flip hint (no on-face indicator; owner directive). */}
-        {showCoachmark ? (
-          <Coachmark text="Tap a card to flip it for your stats." onDismiss={() => dispatch(setCol12CoachmarkSeen(true))} />
         ) : null}
         {data.collectionTotal === 0 ? (
           <EmptyShelf onAdd={() => router.push('/add-game')} />
@@ -383,6 +384,14 @@ export default function Collection() {
         )}
         </ScrollLockContext.Provider>
       </ScrollView>
+      {/* COL-12/CARD-16 — the first-run peek-flip hint. Absolute (out of flow) so appear/dismiss is
+          layout-neutral; `box-none` lets shelf taps pass through, only the strip + GOT IT are hit. */}
+      {showCoachmark ? (
+        <View style={styles.coachOverlay} pointerEvents="box-none" testID="coachmark-overlay">
+          <Coachmark text="Tap a card to flip it for your stats." onDismiss={() => dispatch(setCol12CoachmarkSeen(true))} />
+        </View>
+      ) : null}
+      </View>
 
       {/* The ToolsBar (§2.1 · OQ-034): keycaps ACT · long-press opens the drawer. Tapping Search MORPHS
           the whole bar into a docked SearchField that lifts over the keyboard (R0-2 KeyboardLift, board
@@ -871,6 +880,12 @@ const useStyles = themedStyles((t) => ({
   errTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.accent, letterSpacing: 1 },
   errSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim },
   pad: { ...SCREEN_HEADER_PAD, gap: t.space.md }, // W-B1 — the reference geometry, now the shared constant
+  // stage — the relative anchor for the absolute peek-flip hint; fills the space between header + tools.
+  stage: { flex: 1 },
+  // the peek-flip hint overlay — pinned above the tools bar, OUT of the shelf's flow so its first-run
+  // presence + first-flip dismissal never shift the list (owner walk: the relog "present-then-disappear"
+  // jar). left/right/bottom inset by the body gutter so it reads as a docked toast, not a full-bleed bar.
+  coachOverlay: { position: 'absolute', left: t.space.lg, right: t.space.lg, bottom: t.space.lg },
   scroll: { flex: 1 },
   body: { padding: t.space.lg, gap: t.space.lg },
   // OQ-130 — filtered-to-zero "no results" beat.

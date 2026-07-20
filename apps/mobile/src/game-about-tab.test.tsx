@@ -58,6 +58,8 @@ const DETAIL: GameDetail = {
   inCollection: false,
   contributor: { userId: 'mav-1', username: 'maverick' },
   friendsWhoOwn: [],
+  avgRating: 4.2, // CAT-09 (owner walk m6) — community mean rating
+  avgHours: 57, // CAT-09 — community mean hours
 };
 
 function wrap(ui: React.ReactElement) {
@@ -74,14 +76,47 @@ describe('W-D1 ABOUT tab — from the game-detail aggregate', () => {
     };
   });
 
-  it('renders the canonical facts, genre chips, contributor credit and CAT-09 presence counts', () => {
+  it('renders the title, the EXPLICIT labeled details, the contributor credit and the community stats', () => {
     render(wrap(<AboutTab gameId="g1" onViewContributor={jest.fn()} onOpenUser={jest.fn()} />));
     expect(screen.getByText('Destiny')).toBeTruthy();
-    expect(screen.getByText('BUNGIE · 2014 · SHOOTER')).toBeTruthy();
-    expect(screen.getByText('▸ BUNGIE')).toBeTruthy(); // studio chip
+    // the labeled DETAILS rows (owner walk m6) — explicit label · value, absent fields omitted
+    expect(screen.getByText('STUDIO')).toBeTruthy();
+    expect(screen.getByText('PUBLISHER')).toBeTruthy();
+    expect(screen.getByText('RELEASE DATE')).toBeTruthy();
+    expect(screen.getByText('2014-09-09')).toBeTruthy(); // the release value
+    expect(screen.getByText('GENRES')).toBeTruthy();
+    // Bungie is BOTH the studio and the publisher here → one labeled row each (two matches)
+    expect(screen.getAllByText('Bungie')).toHaveLength(2);
     expect(screen.getByText('MAVERICK')).toBeTruthy(); // CAT-05 contributor
+    // community stats — laid out explicitly: collections + friends-have + the averages
     expect(screen.getByText('214')).toBeTruthy(); // collectionsCount
-    expect(screen.getByText('IN COLLECTIONS')).toBeTruthy();
+    expect(screen.getByText('COLLECTIONS')).toBeTruthy();
+    expect(screen.getByText('FRIENDS HAVE IT')).toBeTruthy();
+    expect(screen.getByText('4.2★')).toBeTruthy(); // avg rating
+    expect(screen.getByText('AVG RATING')).toBeTruthy();
+    expect(screen.getByText('57')).toBeTruthy(); // avg hours
+    expect(screen.getByText('AVG HOURS')).toBeTruthy();
+  });
+
+  it('Finding 1 regression — the genre renders EXACTLY ONCE (no side-by-side duplicate)', () => {
+    // the old layout rendered genres[0] in the meta subtitle AND again as a DISC-02 chip right beside
+    // it; the explicit labeled GENRES row must render each genre a single time.
+    render(wrap(<AboutTab gameId="g1" onViewContributor={jest.fn()} onOpenUser={jest.fn()} />));
+    expect(screen.getAllByText('SHOOTER')).toHaveLength(1);
+  });
+
+  it('omits the AVG RATING / AVG HOURS rows when the game has no data to average (n=0)', () => {
+    mockDetail = {
+      data: { ...DETAIL, avgRating: null, avgHours: null },
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    };
+    render(wrap(<AboutTab gameId="g1" onViewContributor={jest.fn()} onOpenUser={jest.fn()} />));
+    expect(screen.queryByText('AVG RATING')).toBeNull();
+    expect(screen.queryByText('AVG HOURS')).toBeNull();
+    // the always-present counts still render
+    expect(screen.getByText('COLLECTIONS')).toBeTruthy();
     expect(screen.getByText('FRIENDS HAVE IT')).toBeTruthy();
   });
 

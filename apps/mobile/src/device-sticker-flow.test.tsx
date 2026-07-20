@@ -1,6 +1,6 @@
 import React from 'react';
-import { Text } from 'react-native';
-import { render, screen, fireEvent, act } from '@testing-library/react-native';
+import { Pressable, Text } from 'react-native';
+import { render, screen, fireEvent, act, within } from '@testing-library/react-native';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import type { DeviceResponse } from '@ingame/shared';
@@ -70,10 +70,26 @@ let mockDevice: DeviceResponse = {
   stickerComposition: { version: 1, stickers: [] },
 } as DeviceResponse;
 
-// Probe — reads the session the editor publishes to the shell bands (the app-wide edit chrome driver).
+// Probe — reads the session the editor publishes to the shell bands (the app-wide edit chrome driver),
+// and (when a decal is selected) exposes the mutate/commit callbacks so a test can drive a MOVE gesture
+// the way the band's PanResponder would (mutate per frame → commit on release) without a real gesture.
 function SessionProbe() {
   const { session } = useStickerContext();
-  return <Text>{`session:${session ? (session.selectedId ? 'selected' : 'idle') : 'none'}`}</Text>;
+  return (
+    <>
+      <Text>{`session:${session ? (session.selectedId ? 'selected' : 'idle') : 'none'}`}</Text>
+      {session && session.selectedId ? (
+        <>
+          <Pressable accessibilityLabel="probe-mutate" onPress={() => session.mutate(session.selectedId!, { x: 0.55 })}>
+            <Text>mutate</Text>
+          </Pressable>
+          <Pressable accessibilityLabel="probe-commit" onPress={() => session.commit()}>
+            <Text>commit</Text>
+          </Pressable>
+        </>
+      ) : null}
+    </>
+  );
 }
 
 function renderEditor() {
@@ -135,6 +151,48 @@ describe('W-A7: the explicit sticker set/confirm flow (⚖ 0078)', () => {
     fireEvent.press(screen.getByText('✓ SET'));
     expect(screen.queryByText('POSITION')).toBeNull();
     expect(store.getState().prefs.stickerComposition?.stickers).toHaveLength(1);
+  });
+
+  // Owner walk (m6): the "editing device" status strip mounted/unmounted on every sticker move,
+  // jarring the screen. Root cause: the transient save-line was a bare flow-sibling that appeared at
+  // drag-start (write in-flight) and vanished when it settled, re-flowing the body twice per move. Fix:
+  // while a readout is on screen (the continuous-edit anchor) the save-line rides a fixed-height
+  // reserved slot inside the status block, so its toggle is layout-neutral.
+  it('a move sequence keeps the status block + readout stable — the save-line toggles inside a reserved slot, not as a flow sibling', async () => {
+    renderEditor();
+    focus();
+    openStickersAndPlace();
+    await act(async () => {}); // let the place-write settle to SAVED
+
+    // baseline: the status block + the live PLACING readout are on screen; no save-line at rest
+    expect(screen.getByTestId('device-status')).toBeTruthy();
+    expect(within(screen.getByTestId('device-status')).getByText(/PLACING/)).toBeTruthy();
+    expect(screen.queryByText('SAVING…')).toBeNull();
+
+    // drag START — a transform mutation flips the write in-flight
+    fireEvent.press(screen.getByLabelText('probe-mutate'));
+    // the save-line appears INSIDE the reserved status block (never as a new top-level flow sibling)…
+    expect(within(screen.getByTestId('device-status')).getByText('SAVING…')).toBeTruthy();
+    // …and the surrounding banner is unchanged: same status block, same PLACING readout
+    expect(within(screen.getByTestId('device-status')).getByText(/PLACING/)).toBeTruthy();
+
+    // drag END — commit settles the write; the save-line clears but the block + readout persist
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText('probe-commit'));
+    });
+    expect(screen.getByTestId('device-status')).toBeTruthy();
+    expect(within(screen.getByTestId('device-status')).getByText(/PLACING/)).toBeTruthy();
+    expect(screen.queryByText('SAVING…')).toBeNull();
+
+    // drag START again — the identical toggle; the status block + readout are still stable throughout
+    fireEvent.press(screen.getByLabelText('probe-mutate'));
+    expect(within(screen.getByTestId('device-status')).getByText('SAVING…')).toBeTruthy();
+    expect(within(screen.getByTestId('device-status')).getByText(/PLACING/)).toBeTruthy();
+
+    // settle the trailing write so no debounce timer outlives the test
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText('probe-commit'));
+    });
   });
 
   it('BLUR auto-commits: the edit session unpublishes (no edit chrome on other screens) and no editable state survives refocus', () => {

@@ -42,8 +42,17 @@ export function CurrencyCounter({
 }
 
 const useStyles = themedStyles((t) => ({
-  wrap: { flexDirection: 'row', alignItems: 'center' },
+  // F-1 height harmony — the keycap must FILL the header band so it reads the same height as the
+  // ScreenHead CountTag sibling (ScreenHead `right` stretches its children to HEADER_CONTENT_HEIGHT).
+  // `alignItems:'stretch'` lets the counter keycap fill this wrap's cross-size (= the band when docked
+  // in a stretched header; = natural height otherwise — context-adaptive, no magic number). Before this,
+  // `alignItems:'center'` centred the keycap at its ~24px natural height inside the 26px band, so the
+  // Pixel keycap sat ~2px shorter than the Games CountTag (owner walk regression, breaking commit c8f4fe1).
+  wrap: { flexDirection: 'row', alignItems: 'stretch' },
   tickChip: {
+    // alignSelf:'center' opts the +N flash OUT of the wrap's stretch so it stays compact (only the
+    // keycap fills the band); without it the chip would grow to the full band height.
+    alignSelf: 'center',
     marginRight: 6,
     borderWidth: 1,
     borderColor: t.brand.gold,
@@ -60,6 +69,10 @@ const useStyles = themedStyles((t) => ({
   counter: {
     flexDirection: 'row',
     alignItems: 'center',
+    // F-1 height harmony — self-declared fill: the keycap stretches to its band so it reads the SAME
+    // height as the ScreenHead CountTag sibling (both keycaps carry `alignSelf:'stretch'` — one shared
+    // fill mechanism, no per-side magic number to drift). Robust even if the wrap's alignItems changes.
+    alignSelf: 'stretch',
     gap: 4,
     backgroundColor: t.brand.gold,
     paddingHorizontal: 8,

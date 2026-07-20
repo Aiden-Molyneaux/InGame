@@ -9,7 +9,7 @@ import * as iapRepo from '../../repositories/iap-repo';
 import * as storeRepo from '../../repositories/store-repo';
 import * as economyRepo from '../../repositories/economy-repo';
 import * as entitlementRepo from '../../repositories/entitlement-repo';
-import { listFeaturedCatalog } from '../../config/cosmetics';
+import { listSpotlightCatalog } from '../../config/cosmetics';
 import { toCosmeticListItem } from '../cosmetics/cosmetic-service';
 import * as ledger from '../economy/ledger-service';
 import { getIapProvider } from './index';
@@ -258,18 +258,19 @@ const reverseRefund = mutation(
 
 /**
  * The Store front (ECON-01/07/08/10). The real-money pack ladder with per-caller `purchased` flags (the
- * consumed one-time Starter is marked purchased, ECON-10). `premiumCosmetics` = the M5 F-6 FEATURED set
- * (the board P1 "NEW THIS WEEK" grid) — the SYS-04 seed's premium ids as `CosmeticListItem`s with
- * caller-scoped `owned` flags (computed from `user_entitlements`, consistent with GET /cosmetics; a
- * batched read, never per-item). `drops` stays an honest empty (ECON-08 seasonal content is P10).
+ * consumed one-time Starter is marked purchased, ECON-10). `premiumCosmetics` = the M6 SPOTLIGHT set (the
+ * owner-curatable storefront lead, formerly the "NEW THIS WEEK" grid) — the SYS-04 seed's premium ids as
+ * `CosmeticListItem`s with caller-scoped `owned` flags (computed from `user_entitlements`, consistent with
+ * GET /cosmetics; a batched read, never per-item). `drops` stays an honest empty (ECON-08 seasonal content
+ * is P10).
  */
 export async function getStore(actorId: string): Promise<StoreResponse> {
   const products = await storeRepo.listActiveProducts();
   const purchased = await iapRepo.listOwnPurchasedProductIds(actorId);
-  const featured = listFeaturedCatalog();
+  const spotlight = listSpotlightCatalog();
   const owned = await entitlementRepo.findOwnedCosmeticIds(
     actorId,
-    featured.map((e) => e.id),
+    spotlight.map((e) => e.id),
   );
   return {
     packs: products.map((p) => ({
@@ -279,8 +280,8 @@ export async function getStore(actorId: string): Promise<StoreResponse> {
       purchased: purchased.has(p.productId),
     })),
     // the ONE cosmeticListItem mapper (cosmetic-service) — /store and /cosmetics can never drift;
-    // COSM-05 `colorCustomizable` rides automatically the day an ultimate SKU is featured (0.77).
-    premiumCosmetics: featured.map((e) => toCosmeticListItem(e, owned)),
+    // COSM-05 `colorCustomizable` rides automatically the day an ultimate SKU is spotlighted (0.77).
+    premiumCosmetics: spotlight.map((e) => toCosmeticListItem(e, owned)),
     drops: [], // TODO(P10/ECON-08): seasonal drops — the drawer renders, authoring is later
   };
 }

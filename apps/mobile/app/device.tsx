@@ -665,23 +665,41 @@ export default function DeviceEditor() {
       ) : null}
       {offline ? <OfflineStrip /> : null}
 
-      {/* C3/W-B12 — the readout renders only for the preview/placing states; otherwise nothing. */}
+      {/* C3/W-B12 — the readout renders only for the preview/placing states; otherwise nothing.
+          Owner walk (m6): while a readout is on screen — a live sticker edit or the on-shell preview —
+          the transient save-line rides a FIXED-HEIGHT reserved slot BENEATH it (styles.saveSlot). Its
+          SAVING…↔settled toggling on every drag then can't grow/shrink this status block and shove the
+          body below, which was the owner's "'editing device' banner comes up then dismisses every move,
+          jarring the screen" reflow: the save-line was a bare flow-sibling that mounted at drag-start
+          and unmounted when the write settled, re-flowing the ScrollView twice per move. The readout is
+          the continuous-edit anchor (present the whole time a decal is selected), so reserving the slot
+          under it keeps the surrounding layout stable through a full drag → release → drag sequence.
+          (The Collection peek-flip hint took the same layout-neutral treatment.) */}
       {readout ? (
-        <View style={styles.readout}>
-          <View style={[styles.dot, readout.ok && styles.dotOk]} />
-          <View style={styles.readoutText}>
-            <Text style={styles.readoutTitle}>{readout.title}</Text>
-            {readout.sub ? <Text style={styles.readoutSub}>{readout.sub}</Text> : null}
+        <View style={styles.statusBlock} testID="device-status">
+          <View style={styles.readout}>
+            <View style={[styles.dot, readout.ok && styles.dotOk]} />
+            <View style={styles.readoutText}>
+              <Text style={styles.readoutTitle}>{readout.title}</Text>
+              {readout.sub ? <Text style={styles.readoutSub}>{readout.sub}</Text> : null}
+            </View>
+          </View>
+          {/* F-13 D7 (owner round-2) — the line shows ONLY the in-flight/error states (SAVING… · NOT
+              SAVED — RETRYING · an inline error); the ok-dot on the readout signals the settled state.
+              A11y announces the transition regardless (useAnnounceOnChange above). The slot keeps its
+              height whether or not the line is present, so the toggle is layout-neutral. */}
+          <View style={styles.saveSlot}>
+            {saveState !== 'saved' ? (
+              <Text accessibilityLiveRegion="polite" style={styles.saveLine} numberOfLines={1}>
+                {saveLineText}
+              </Text>
+            ) : null}
           </View>
         </View>
-      ) : null}
-
-      {/* F-13 D7 (owner round-2) — drop the resting "SAVED LIVE" display (the whole editor autosaves;
-          announcing "saved" on every idle beat is clutter). The line now shows ONLY the in-flight/error
-          states (SAVING… · NOT SAVED — RETRYING · an inline error); the ok-dot on the readout above
-          already signals the settled/saved state. A11y still announces the transition (below). */}
-      {saveState !== 'saved' ? (
-        <Text accessibilityLiveRegion="polite" style={styles.saveLine}>
+      ) : saveState !== 'saved' ? (
+        // No readout to anchor a reserved slot (a bare shell/theme pick outside a sticker session) — the
+        // save-line stays inline; its occasional toggle here isn't the continuous-edit jar the slot targets.
+        <Text accessibilityLiveRegion="polite" style={styles.saveLine} numberOfLines={1}>
           {saveLineText}
         </Text>
       ) : null}
@@ -938,9 +956,15 @@ const useStyles = themedStyles((t) => ({
   readoutText: { gap: 2 },
   readoutTitle: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 1 },
   readoutSub: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
+  // the readout + its reserved save-line slot, grouped so the save-line toggle never reflows the body.
+  statusBlock: {},
+  // fixed-height reserved slot for the transient save-line: constant height whether the line is present
+  // or not, so SAVING…↔settled can't grow/shrink the status block mid-edit (the owner walk reflow).
+  saveSlot: { height: t.type.micro + t.space.md, justifyContent: 'flex-start' },
   saveLine: {
     fontFamily: t.font.screenSemi,
     fontSize: t.type.micro,
+    lineHeight: t.type.micro + t.space.sm, // deterministic line box so the fixed slot never clips/grows
     color: t.scr.dim,
     letterSpacing: 0.5,
     paddingHorizontal: t.space.lg,

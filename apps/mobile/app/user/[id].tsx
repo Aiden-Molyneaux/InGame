@@ -110,6 +110,26 @@ export default function UserProfile() {
       title={title}
       onBack={() => router.back()}
       trailing={<OverflowButton onPress={() => setReportOpen(true)} />}
+      // The report/block drawer mounts as a SCREEN-ROOT sibling of the scroll (PulledSheet contract) —
+      // an absolute-fill overlay rendered INSIDE the ScrollView anchors to the scroll CONTENT, so the
+      // scrim covered the viewport but the sheet docked off-screen at the bottom of the content (the
+      // owner-walk "shadows the screen but nothing appears" bug). Frame renders `overlay` outside the
+      // scroll. (Matches the collection.tsx sort/filter + card-picker sheet mounting.)
+      overlay={
+        <ReportSheet
+          visible={reportOpen}
+          target={reportTarget}
+          onClose={onReportClose}
+          onSubmit={onSubmitReport}
+          submitting={reportState.isLoading}
+          onBlock={onBlock}
+          blocking={blockState.isLoading}
+          onManageBlocks={() => {
+            setReportOpen(false);
+            router.push('/settings/blocked');
+          }}
+        />
+      }
     >
       <IdentityBlock
         username={data.username}
@@ -137,9 +157,10 @@ export default function UserProfile() {
       {isFriend ? (
         <>
           {/* W-B10 ruling 4 — SECTION ORDER mirrors the committed self profile.tsx at head
-              (identity → STATS → ACHIEVEMENTS → [pinned favourite: n/a, not on the friend shape] →
-              TOP 3 → NOW PLAYING → device), with the paired action row at the FOOT (the board's
-              bottom-tools seat). */}
+              (identity → STATS → ACHIEVEMENTS → PINNED FAVOURITE → TOP 3 → NOW PLAYING → device), with
+              the paired action row at the FOOT (the board's bottom-tools seat). PINNED FAVOURITE is now
+              served on the friend shape (owner walk-ruling 2026-07-20 — supersedes the P9 manifest
+              ruling-4 deferral that cut it "n/a, not on the friend shape"). */}
 
           {/* STATS (PROF-04 six-pack for the target · P9 fix-round) — the self-profile tile grammar over
               the C4 `stats` payload. PROF-07 percentile chips stay ABSENT (threshold-gated; the cohort/
@@ -159,10 +180,40 @@ export default function UserProfile() {
               onPress={() => router.push(`/user/${data.id}/achievements`)}
               style={({ pressed }) => [styles.achRow, pressed && { opacity: 0.82 }]}
             >
-              <Text style={styles.achCount}>{ach ? `${fmt(ach.summary.earned)} EARNED` : '—'}</Text>
+              <View style={styles.achMeta}>
+                <Text style={styles.achCount}>{ach ? `${fmt(ach.summary.earned)} EARNED` : '—'}</Text>
+              </View>
               <Text style={styles.chev}>›</Text>
             </Pressable>
           </View>
+
+          {/* {USERNAME}'S CONTRIBUTIONS teaser (CAT-07 · owner walk-ruling 2026-07-20) — the friend's
+              PUBLISHED-card count, the cross-user door into their contributor screen (/contributor/:id,
+              P13 — handles the non-self viewer). Mirrors the self profile's MY CONTRIBUTIONS teaser
+              grammar (the PUBLISHED count off the friend shape's `cardsPublished`, NOT stats.cardsDesigned
+              — never leaks draft existence). Shown-with-0 like the self (always present, no hide-on-empty).
+              Seated after ACHIEVEMENTS per the self profile's head order. */}
+          <View style={styles.section}>
+            <Text style={styles.sectionHead}>{`${data.username}'s contributions`.toUpperCase()}</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`View ${data.username}'s contributions`}
+              onPress={() => router.push(`/contributor/${data.id}`)}
+              style={({ pressed }) => [styles.achRow, pressed && { opacity: 0.82 }]}
+            >
+              <View style={styles.achMeta}>
+                <Text style={styles.achCount}>{fmt(data.cardsPublished)} CARDS DESIGNED</Text>
+                <Text style={styles.achSub}>THEIR DESIGNS &amp; GAMES ADDED</Text>
+              </View>
+              <Text style={styles.chev}>›</Text>
+            </Pressable>
+          </View>
+
+          {/* PINNED FAVOURITE (PROF-01/05 · owner walk-ruling 2026-07-20) — the friend's pinned favourite
+              off the friend shape's `favouriteGame` payload (flattened card, read-only — never the
+              owner-private notes/rating). Mirrors the self profile's PINNED FAVOURITE hero seat (between
+              ACHIEVEMENTS and TOP 3). Tap → the game page (FRIEND posture). Null (no pin) → absent. */}
+          <FriendPinnedFavourite favourite={data.favouriteGame} onOpen={(gameId) => router.push(`/game/${gameId}?via=${data.id}`)} />
 
           {/* COL-13 (decision 0050 §C) — the friend Top-3 set-pieces + VIEW TOP 10 door. The friend/full
               read now serves top10 (P5 live). A card tap → their Collection TOP view FOCUSED on that game;
@@ -218,9 +269,12 @@ export default function UserProfile() {
               onPress={() => router.push(`/user/${data.id}/collection`)}
               style={styles.doorKey}
             />
+            {/* Owner walk-ruling 2026-07-20 — COMPARE HOURS wears the WHITE/cream SECONDARY voice
+                (0069/0070 — cream on dark, white on light), not the orange accent. VIEW COLLECTION keeps
+                the primary voice as the lead door. */}
             <ScreenButton
               label="Compare hours"
-              variant="action-alt"
+              variant="secondary"
               onPress={() => router.push(`/compare/${data.id}`)}
               style={styles.doorKey}
             />
@@ -231,20 +285,6 @@ export default function UserProfile() {
         // above; the lock-well names what unlocks. Safety (Report/Block) stays in the ⋯ overflow.
         <LockWell username={data.username} />
       )}
-
-      <ReportSheet
-        visible={reportOpen}
-        target={reportTarget}
-        onClose={onReportClose}
-        onSubmit={onSubmitReport}
-        submitting={reportState.isLoading}
-        onBlock={onBlock}
-        blocking={blockState.isLoading}
-        onManageBlocks={() => {
-          setReportOpen(false);
-          router.push('/settings/blocked');
-        }}
-      />
     </Frame>
   );
 }
@@ -360,6 +400,45 @@ function FriendNowPlaying({
   );
 }
 
+// PINNED FAVOURITE — the friend's pinned favourite (flattened card; no entryId on the wire). The self-
+// profile hero grammar, read-only: the 138×193 hero card + a meta column (hours stat-line + display
+// title). No status/catalog line — the friend expansion carries only {gameId, title, hours, card}
+// (the owner-private detail lines never cross). Tap → the game page (FRIEND posture). Null → absent.
+function FriendPinnedFavourite({
+  favourite,
+  onOpen,
+}: {
+  favourite: FriendProfile['favouriteGame'];
+  onOpen: (gameId: string) => void;
+}) {
+  const styles = useStyles();
+  if (!favourite) return null;
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionHead}>PINNED FAVOURITE</Text>
+      <View style={styles.heroRow}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Open ${favourite.title}`}
+          onPress={() => onOpen(favourite.gameId)}
+        >
+          <EntryCard
+            title={favourite.title}
+            card={{ imageUrl: favourite.card.imageUrl, thumbUrl: favourite.card.thumbUrl }}
+            size="grid"
+            width={138}
+            height={193}
+          />
+        </Pressable>
+        <View style={styles.heroMeta}>
+          <Text style={styles.heroStat}>{fmt(favourite.hours)} HRS</Text>
+          <Text style={styles.heroTitle}>{favourite.title.toUpperCase()}</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
 function ProfileSkeleton() {
   return (
     <View>
@@ -379,11 +458,16 @@ function Frame({
   trailing,
   onBack,
   children,
+  overlay,
 }: {
   title: string;
   trailing?: ReactNode;
   onBack: () => void;
   children: ReactNode;
+  /** Summoned drawers (the report/block PulledSheet) — rendered as a SCREEN-ROOT SIBLING of the scroll,
+   *  never inside it. An absolute-fill overlay mounted inside the ScrollView anchors to the scroll
+   *  CONTENT (scrim covers the viewport, sheet docks off-screen) — the owner-walk overflow bug. */
+  overlay?: ReactNode;
 }) {
   const styles = useStyles();
   return (
@@ -398,9 +482,15 @@ function Frame({
         <View style={styles.retlink}>
           <TertiaryLink label="Back" chevron="leading-back" onPress={onBack} />
         </View>
-        <ScrollView style={styles.flex} contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          testID="profile-scroll"
+          style={styles.flex}
+          contentContainerStyle={styles.body}
+          showsVerticalScrollIndicator={false}
+        >
           {children}
         </ScrollView>
+        {overlay}
       </View>
     </View>
   );
@@ -438,6 +528,12 @@ const useStyles = themedStyles((t) => ({
   sectionHead: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.dim, letterSpacing: 1.5 },
   top3: { flexDirection: 'row', gap: t.space.lg, justifyContent: 'flex-start' },
   topSeat: { gap: t.space.sm, alignItems: 'center' },
+  // PINNED FAVOURITE hero (mirrors the self profile's hero grammar, read-only): the 138×193 card + a
+  // meta column (hours stat-line + display-size title). No catalog line on the friend expansion.
+  heroRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.lg },
+  heroMeta: { flex: 1, justifyContent: 'center', gap: 7 },
+  heroStat: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 2 },
+  heroTitle: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, letterSpacing: 1 },
   // P9 fix-round — the C4 trio (the self-profile grammars, read-only)
   stats: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.md },
   statCell: {
@@ -463,7 +559,12 @@ const useStyles = themedStyles((t) => ({
   nowTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5 },
   nowSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 1 },
   achRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: t.scr.panel, padding: t.space.lg },
-  achCount: { flex: 1, fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5 },
+  achMeta: { flex: 1, gap: 2 },
+  // Owner walk-ruling 2026-07-20 — the teaser count wears the SAME F-06 rung as the personal Profile
+  // (profile.tsx achCount): body (11), NOT title (15). The self stepped it DOWN a rung (N-A5); the
+  // friend count was never conformed and rendered a size too large. Byte-identical to the self style.
+  achCount: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 0.5 },
+  achSub: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
   chev: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.faint },
 
   lockWell: {

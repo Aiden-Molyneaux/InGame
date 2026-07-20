@@ -1,12 +1,12 @@
 import { Pressable, View, Text } from 'react-native';
 import { themedStyles } from '../../theme';
-import { PixelsMark } from './PixelsMark';
 
 // AisleIndex (component-map §7) — THE INDEX: the COSM-01 aisle taxonomy that closes the browse page.
-// Each row taps into its category page; the final PIXELS row is the TOP-UP door. Per-aisle COUNTS
-// render when the caller supplies them from `GET /cosmetics` (P10 store-front listing; owner-walk
-// polish 2026-07-13) — absent counts fall back to the plain chevron, so the row never blocks on the
-// library query. The free baseline is not stocked here (COSM-02).
+// Each row taps into its category page. Per-aisle COUNTS render when the caller supplies them from
+// `GET /cosmetics` (P10 store-front listing; owner-walk polish 2026-07-13) — absent counts fall back to
+// the plain chevron, so the row never blocks on the library query. The free baseline is not stocked here
+// (COSM-02). The PIXELS → TOP UP door moved OUT of The Index to the store-bottom entry points (M6
+// owner-walk — see StoreEntries) so the Index is now aisles-only.
 
 // The COSM-01 taxonomy (product-spec) — key = the cosmetic `type`, label = the aisle name.
 export const AISLES: { key: string; label: string; glyph: string }[] = [
@@ -22,11 +22,9 @@ export const AISLES: { key: string; label: string; glyph: string }[] = [
 
 export function AisleIndex({
   onAisle,
-  onTopUp,
   counts,
 }: {
   onAisle: (aisle: { key: string; label: string }) => void;
-  onTopUp: () => void;
   /** Per-aisle item counts keyed by cosmetic `type` (from GET /cosmetics). Absent → plain chevron. */
   counts?: Record<string, number>;
 }) {
@@ -51,18 +49,6 @@ export function AisleIndex({
           </Pressable>
         );
       })}
-      <Pressable
-        style={styles.row}
-        accessibilityRole="button"
-        accessibilityLabel="Pixels — top up"
-        onPress={onTopUp}
-      >
-        <PixelsMark size={12} />
-        <Text style={styles.label} numberOfLines={1}>
-          PIXELS
-        </Text>
-        <Text style={styles.topup}>TOP UP ›</Text>
-      </Pressable>
     </View>
   );
 }
@@ -89,6 +75,4 @@ const useStyles = themedStyles((t) => ({
     letterSpacing: 1,
   },
   chev: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint },
-  // F-1 fix 1 — the PIXELS → TOP UP action wears the gold economy voice (F-02), not the orange accent.
-  topup: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.value, letterSpacing: 0.5 },
 }));

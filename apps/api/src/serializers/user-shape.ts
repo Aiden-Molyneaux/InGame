@@ -99,6 +99,9 @@ export interface OtherPrincipalContext {
 export interface FriendContext extends OtherPrincipalContext {
   friendsCount: number;
   gamertags: GamertagView[];
+  /** CAT-07 (owner walk-ruling 2026-07-20) — the target's PUBLISHED-card count backing the
+   *  {USERNAME}'S CONTRIBUTIONS teaser (`countPublishedByOwner`; PUBLISHED only, never drafts). */
+  cardsPublished: number;
   /** SOC-04 (M6 P5) — the target's Top-10, FLATTENED (never `composition`, OQ-122). */
   top10: FriendTopTenEntry[];
   /** PROF-04/05 (M6 C4) — the target's six-pack (the SAME statsOf computation the self shape runs).
@@ -106,6 +109,9 @@ export interface FriendContext extends OtherPrincipalContext {
   stats: SelfStats;
   /** DEV-02/04 (M6 C4, decision 0012) — the THEIR-DEVICE payload (`shellId` is the wire name). */
   device: FriendDevice;
+  /** PROF-01/05 (owner walk-ruling 2026-07-20) — the target's PINNED FAVOURITE (flattened card), or
+   *  null. Same friend-view expansion as `nowPlaying`; supersedes the P9 manifest ruling-4 deferral. */
+  favouriteGame: FriendGameExpansion | null;
   /** WTP-03 (M6 C4) — the target's Now-Playing pin (flattened card), or null. */
   nowPlaying: FriendGameExpansion | null;
 }
@@ -138,9 +144,11 @@ export function toFriendShape(row: UserRow, ctx: FriendContext): FriendProfile {
     favouriteGenreIds: row.favouriteGenreIds,
     gamertags: ctx.gamertags,
     friendsCount: ctx.friendsCount,
+    cardsPublished: ctx.cardsPublished, // CAT-07 — {USERNAME}'S CONTRIBUTIONS teaser count (published only)
     top10: ctx.top10,
     stats: ctx.stats, // M6 C4 — PROF-04 six-pack (friend-visible aggregates, PROF-05)
     device: ctx.device, // M6 C4 — DEV-02/04 THEIR-DEVICE (decision 0012)
+    favouriteGame: ctx.favouriteGame, // PROF-01/05 — PINNED FAVOURITE (flattened card, owner walk-ruling)
     nowPlaying: ctx.nowPlaying, // M6 C4 — WTP-03 pin (flattened card)
   };
 }

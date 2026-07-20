@@ -126,18 +126,20 @@ export async function getUserProfile(
     const shelfRows = isSelf
       ? await ownCollectionAsFriendRows(actorId)
       : await friendReadRepo.listFriendCollection(actorId, targetId);
-    const [gamertags, friendsCount, cardsDesigned, adoptionsReceived, deviceFacets] = await Promise.all([
+    const [gamertags, friendsCount, cardsDesigned, adoptionsReceived, deviceFacets, cardsPublished] = await Promise.all([
       profileService.listGamertags(targetId),
       relationshipRepo.countFriends(targetId),
       cardRepo.countOwnedDesigns(targetId),
       cardRepo.totalAdoptionsForOwner(targetId), // CARD-05 clout — real since M5 (un-zeroed M6 C4)
       deviceService.facetsForUser(targetId),
+      cardRepo.countPublishedByOwner(targetId), // CAT-07 — {USERNAME}'S CONTRIBUTIONS teaser (owner walk-ruling)
     ]);
     return toFriendShape(friendRow, {
       relationship,
       mutualFriendsCount,
       friendsCount,
       gamertags,
+      cardsPublished, // CAT-07 — the friend's PUBLISHED-card count ({USERNAME}'S CONTRIBUTIONS teaser)
       top10: await resolveFriendTopTen(targetId, shelfRows),
       // M6 C4 — PROF-04 six-pack: the SAME statsOf computation the self shape runs, against the
       // TARGET's entries (friend-visible aggregates — hours/games already cross via compare/collection).
@@ -149,26 +151,32 @@ export async function getUserProfile(
         screenThemeId: deviceFacets.screenThemeId,
         stickerComposition: deviceFacets.stickerComposition,
       },
+      // PROF-01/05 (owner walk-ruling 2026-07-20) — the target's PINNED FAVOURITE, resolved from their
+      // shelf exactly like nowPlaying (flattened card, P2 resolution). Supersedes the P9 manifest
+      // ruling-4 deferral ("[pinned favourite: n/a, not on the friend shape]").
+      favouriteGame: resolveFriendPin(friendRow.favouriteGameId, shelfRows),
       // M6 C4 — WTP-03: the target's pin expanded from their shelf (flattened card, P2 resolution).
-      nowPlaying: resolveFriendNowPlaying(friendRow.nowPlayingGameId, shelfRows),
+      nowPlaying: resolveFriendPin(friendRow.nowPlayingGameId, shelfRows),
     });
   }
   return toPublicShape(target, { relationship, mutualFriendsCount });
 }
 
 /**
- * WTP-03 (M6 C4) — the target's Now-Playing pin as a friend-view expansion: title + their hours + the
- * FLATTENED card, all from the already-fetched shelf rows. Null when there is no pin OR the pinned game
- * is no longer on their shelf (a dangling pin shows a friend nothing — the pin write-path requires the
- * game be on the shelf, so this only happens after a remove; the self shape keeps a 0-hour catalog
- * fallback, a deliberate self-vs-friend divergence flagged in the C4 report).
+ * WTP-03 / PROF-01 (M6 C4 · owner walk-ruling 2026-07-20) — a target's PIN (Now-Playing OR pinned
+ * favourite) as a friend-view expansion: title + their hours + the FLATTENED card, all from the already-
+ * fetched shelf rows. Null when there is no pin OR the pinned game is no longer on their shelf (a dangling
+ * pin shows a friend nothing — the pin write-path requires the game be on the shelf, so this only happens
+ * after a remove; the self shape keeps a 0-hour catalog fallback, a deliberate self-vs-friend divergence
+ * flagged in the C4 report). Shared by nowPlaying AND favouriteGame — one resolver, no re-derivation, so
+ * the friend pins never diverge from the friend-collection card resolution (F-20 payload-side class).
  */
-function resolveFriendNowPlaying(
-  nowPlayingGameId: string | null,
+function resolveFriendPin(
+  pinGameId: string | null,
   shelfRows: FriendCollectionEntryRow[],
 ): FriendGameExpansion | null {
-  if (!nowPlayingGameId) return null;
-  const row = shelfRows.find((r) => r.game.id === nowPlayingGameId);
+  if (!pinGameId) return null;
+  const row = shelfRows.find((r) => r.game.id === pinGameId);
   if (!row) return null;
   return {
     gameId: row.game.id,

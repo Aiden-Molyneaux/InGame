@@ -1,10 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import {
   COSMETIC_CATALOG,
+  SPOTLIGHT_IDS,
+  SPOTLIGHT_FALLBACK_COUNT,
   collectCosmeticRefs,
   forceRegistryColors,
   isColorCustomizable,
   isPremiumComposition,
+  listSpotlightCatalog,
   lookupCosmeticTier,
   priceForTier,
 } from './cosmetics';
@@ -189,6 +192,40 @@ describe('COSM-05/CARD-22: the explicit composition cosmeticId — wins over inf
     ).toContain('brass');
     // a font is id-bearing — ink freedom never changes the ref
     expect(collectCosmeticRefs(comp({ nameplate: { shape: 'slab', fontId: 'pacifico', title: 'X', plate: '#000', ink: '#bada55', size: 0.05 } }))).toContain('pacifico');
+  });
+});
+
+// ── M6 owner-walk — the SPOTLIGHT storefront (owner-curatable, config-driven; was "NEW THIS WEEK") ─────
+
+describe('M6 SPOTLIGHT: owner-curatable, config-driven selection with a newest-N fallback', () => {
+  it('the launch seed is the 6-item curated set — one per showy category, all premium (visible store unchanged)', () => {
+    const spotlight = listSpotlightCatalog();
+    expect(spotlight.map((e) => e.id)).toEqual([...SPOTLIGHT_IDS]);
+    expect(spotlight).toHaveLength(6);
+    for (const e of spotlight) expect(e.tier).toBeTruthy(); // every spotlight item is premium (priced)
+    expect(spotlight.map((e) => e.type).sort()).toEqual([
+      'device_shell',
+      'effect',
+      'finish',
+      'frame',
+      'nameplate',
+      'screen_theme',
+    ]);
+  });
+
+  it('the CURATED list wins — resolving in owner-given order, skipping phantom (uncatalogued) ids', () => {
+    const out = listSpotlightCatalog(['brass', 'no-such-sku', 'marquee']);
+    expect(out.map((e) => e.id)).toEqual(['brass', 'marquee']); // order preserved, phantom dropped
+  });
+
+  it('an EMPTY (or all-stale) curated list FALLS BACK to the newest N premium entries — never blank', () => {
+    const empty = listSpotlightCatalog([]);
+    const allStale = listSpotlightCatalog(['nope-1', 'nope-2']);
+    const newestN = COSMETIC_CATALOG.filter((e) => e.tier !== null).slice(-SPOTLIGHT_FALLBACK_COUNT);
+    expect(empty.map((e) => e.id)).toEqual(newestN.map((e) => e.id));
+    expect(empty).toHaveLength(SPOTLIGHT_FALLBACK_COUNT);
+    expect(allStale.map((e) => e.id)).toEqual(newestN.map((e) => e.id));
+    for (const e of empty) expect(e.tier).toBeTruthy(); // the fallback is premium-only
   });
 });
 

@@ -38,7 +38,7 @@ export const HEADER_CONTENT_HEIGHT = 26;
 export function CountTag({ label }: { label: string }) {
   const styles = useStyles();
   return (
-    <View style={styles.count}>
+    <View style={styles.count} testID="screen-head-count">
       <Text style={styles.countText}>{label}</Text>
     </View>
   );
@@ -102,6 +102,11 @@ const useStyles = themedStyles((t) => ({
     paddingHorizontal: 8,
     paddingVertical: 5,
     justifyContent: 'center',
+    // F-1 height harmony — self-declared fill (mirrors CurrencyCounter's `counter`): both header keycaps
+    // carry `alignSelf:'stretch'` so they resolve to the SAME band height. The CurrencyCounter keycap
+    // regressed shorter when its inner wrap centred instead of filling (breaking commit c8f4fe1); pinning
+    // both to the identical fill mechanism keeps them equal and guards against a third silent drift.
+    alignSelf: 'stretch',
   },
   countText: {
     fontFamily: t.font.screenBold,

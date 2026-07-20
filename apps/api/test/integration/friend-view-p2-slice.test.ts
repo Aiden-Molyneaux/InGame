@@ -198,8 +198,8 @@ describe('COL-10/11 · F06: GET /users/:id/collection — the friend subset (no 
   });
 });
 
-describe('PROF-05 · F06 (C4): the friend/full /users/:id carries stats + device + nowPlaying; the limited shape does NOT', () => {
-  it('a FRIEND sees the six-pack stats, the THEIR-DEVICE payload, and the nowPlaying pin (flattened card)', async () => {
+describe('PROF-05 · F06 (C4): the friend/full /users/:id carries stats + device + nowPlaying + favouriteGame; the limited shape does NOT', () => {
+  it('a FRIEND sees the six-pack stats, the THEIR-DEVICE payload, the nowPlaying pin AND the pinned favourite (flattened cards)', async () => {
     const target = await seedUser();
     const friend = await seedUser();
     await makeFriends(target, friend);
@@ -208,6 +208,8 @@ describe('PROF-05 · F06 (C4): the friend/full /users/:id carries stats + device
     const cardId = await publishCard(target.token, game.id, 7);
     await equip(target.token, entryId, cardId);
     await request(app).put('/api/me/now-playing').set(authed(target.token)).send({ gameId: game.id });
+    // PROF-01/05 (owner walk-ruling 2026-07-20) — pin the SAME shelf game as the favourite.
+    await request(app).patch('/api/me').set(authed(target.token)).send({ favouriteGameId: game.id });
     await request(app).patch('/api/me/device').set(authed(target.token)).send({ screenThemeId: 'paper' });
 
     // The friend ADOPTS the target's card — proves adoptionsReceived is REAL (un-zeroed, C4 follow-up).
@@ -231,6 +233,19 @@ describe('PROF-05 · F06 (C4): the friend/full /users/:id carries stats + device
     expect(res.body.nowPlaying).toMatchObject({ gameId: game.id, title: 'C4 Pinned Game', hours: 25 });
     expect(res.body.nowPlaying.card.equipped).toEqual(EXPECTED_EQUIPPED);
     expect('composition' in res.body.nowPlaying.card).toBe(false);
+    // favouriteGame — PROF-01/05 (owner walk-ruling): the PINNED FAVOURITE, the SAME flattened friend-view
+    // expansion as nowPlaying (title + their hours + flattened equipped card — never the owner-private trio,
+    // never composition). SOC-11: no notes/rating/percentComplete ride the pin.
+    expect(res.body.favouriteGame).toMatchObject({ gameId: game.id, title: 'C4 Pinned Game', hours: 25 });
+    expect(res.body.favouriteGame.card.equipped).toEqual(EXPECTED_EQUIPPED);
+    expect('composition' in res.body.favouriteGame.card).toBe(false);
+    for (const leak of ['notes', 'rating', 'percentComplete']) {
+      expect(leak in res.body.favouriteGame).toBe(false);
+      expect(leak in res.body.favouriteGame.card).toBe(false);
+    }
+    // cardsPublished — CAT-07 (owner walk-ruling): the PUBLISHED-card count backing the {USERNAME}'S
+    // CONTRIBUTIONS teaser. The target published ONE card above → 1 (PUBLISHED only, never drafts).
+    expect(res.body.cardsPublished).toBe(1);
   });
 
   it('F06 — the LIMITED (non-friend) shape stays EXACTLY without the C4 trio', async () => {
@@ -242,18 +257,20 @@ describe('PROF-05 · F06 (C4): the friend/full /users/:id carries stats + device
       // avatarConfig is public cosmetic data (rides beside avatarUrl on the limited shape — W-4 Monogram Forge).
       ['id', 'username', 'avatarUrl', 'avatarConfig', 'memberSince', 'mutualFriendsCount', 'relationship'].sort(),
     );
-    for (const leak of ['stats', 'device', 'nowPlaying', 'top10', 'bio']) {
+    for (const leak of ['stats', 'device', 'favouriteGame', 'nowPlaying', 'top10', 'bio', 'cardsPublished']) {
       expect(leak in res.body).toBe(false);
     }
   });
 
-  it('a friend with NO device row and NO pin gets the free-default device + nowPlaying null', async () => {
+  it('a friend with NO device row and NO pins gets the free-default device + nowPlaying/favouriteGame null', async () => {
     const target = await seedUser();
     const friend = await seedUser();
     await makeFriends(target, friend);
     const res = await request(app).get(`/api/users/${target.id}`).set(authed(friend.token));
     expect(res.body.device).toMatchObject({ shellId: 'teal', screenThemeId: 'midnight' });
     expect(res.body.nowPlaying).toBeNull();
+    expect(res.body.favouriteGame).toBeNull(); // PROF-01/05 — no pinned favourite
+    expect(res.body.cardsPublished).toBe(0); // CAT-07 — no published cards → 0 (shown-with-0, never hidden)
     expect(res.body.stats).toMatchObject({ games: 0, hours: 0, friends: 1 });
   });
 });

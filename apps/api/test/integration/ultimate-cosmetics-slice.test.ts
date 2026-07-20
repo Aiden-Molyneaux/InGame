@@ -137,14 +137,14 @@ describe('COSM-05: GET /cosmetics carries the three ultimate SKUs with colorCust
     for (const item of res.body.items) expect(() => cosmeticListItemSchema.parse(item)).not.toThrow();
   });
 
-  it('GET /store premiumCosmetics stays on the SAME cosmeticListItem shape (no ultimate in the featured seed at beta)', async () => {
+  it('GET /store premiumCosmetics stays on the SAME cosmeticListItem shape (no ultimate in the spotlight seed at beta)', async () => {
     const user = await registerUser();
     const res = await request(app).get('/api/store').set(authed(user.token));
     expect(res.status).toBe(200);
     expect(res.body.premiumCosmetics.length).toBeGreaterThan(0);
     for (const item of res.body.premiumCosmetics) {
       expect(() => cosmeticListItemSchema.parse(item)).not.toThrow();
-      // the featured seed is untouched by W-5 — the flag rides /store the day an ultimate SKU is featured
+      // the spotlight seed is untouched by W-5 — the flag rides /store the day an ultimate SKU is spotlighted
       expect(item).not.toHaveProperty('colorCustomizable');
     }
     const marquee = res.body.premiumCosmetics.find((i: { id: string }) => i.id === 'marquee');

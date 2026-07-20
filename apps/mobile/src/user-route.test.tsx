@@ -58,12 +58,20 @@ const FRIEND: FriendProfile = {
   favouriteGenreIds: [],
   gamertags: [],
   friendsCount: 14,
+  cardsPublished: 12, // CAT-07 — the {USERNAME}'S CONTRIBUTIONS teaser count (owner walk-ruling 2026-07-20)
   top10: [], // P8: absorbs the concurrent P5 server-track FriendProfile.top10 addition (keeps typecheck green)
   stats: { games: 86, hours: 2400, completionPct: 71, cardsDesigned: 31, adoptionsReceived: 412, friends: 14 },
   device: {
     shellId: 'grape', // the C4 wire name (`shellId`, NOT /me/device's `activeShellId`)
     screenThemeId: 'midnight',
     stickerComposition: { version: 1, stickers: [] },
+  },
+  // PROF-01/05 (owner walk-ruling 2026-07-20) — the friend's PINNED FAVOURITE (flattened card, read-only).
+  favouriteGame: {
+    gameId: 'g-fav-1',
+    title: 'Silent Hill',
+    hours: 120,
+    card: { id: 'c-fav', imageUrl: null, thumbUrl: null, isCustom: false, isPremium: false },
   },
   nowPlaying: {
     gameId: 'g-np-1',
@@ -73,11 +81,12 @@ const FRIEND: FriendProfile = {
   },
 };
 
-// The null-trio variant — the schema keeps all three nullable; each row must render NOTHING, quietly.
+// The null-pins variant — the schema keeps every pin nullable; each row must render NOTHING, quietly.
 const FRIEND_NULL_TRIO: FriendProfile = {
   ...FRIEND,
   stats: null,
   device: null,
+  favouriteGame: null,
   nowPlaying: null,
 };
 
@@ -157,14 +166,15 @@ describe('P9 friend-profile route — the shape matrix', () => {
     expect(within(foot).getByText('14 FRIENDS · 3 MUTUAL')).toBeTruthy(); // mutuals beside friendsCount (r3)
   });
 
-  it('W-B10 r4 — the section sequence mirrors the self profile at head (STATS → ACHIEVEMENTS → NOW PLAYING → THEIR DEVICE → doors)', () => {
+  it("W-B10 r4 — the section sequence mirrors the self profile at head (STATS → ACHIEVEMENTS → {USERNAME}'S CONTRIBUTIONS → PINNED FAVOURITE → NOW PLAYING → THEIR DEVICE → doors)", () => {
     set({ data: FRIEND });
     render(wrap(<UserProfile />));
     // getAllByText returns tree order — the sequence probe. (TOP 3 absent: fixture top10 is [].)
     const seq = screen
-      .getAllByText(/^(STATS|ACHIEVEMENTS|TOP 3|NOW PLAYING|THEIR DEVICE|VIEW COLLECTION)$/)
+      .getAllByText(/^(STATS|ACHIEVEMENTS|.*CONTRIBUTIONS|PINNED FAVOURITE|TOP 3|NOW PLAYING|THEIR DEVICE|VIEW COLLECTION)$/)
       .map((el) => (Array.isArray(el.props.children) ? el.props.children.join('') : el.props.children));
-    expect(seq).toEqual(['STATS', 'ACHIEVEMENTS', 'NOW PLAYING', 'THEIR DEVICE', 'VIEW COLLECTION']);
+    // CONTRIBUTIONS seats right after ACHIEVEMENTS (mirrors the self profile's MY CONTRIBUTIONS placement).
+    expect(seq).toEqual(['STATS', 'ACHIEVEMENTS', "RIKO'S CONTRIBUTIONS", 'PINNED FAVOURITE', 'NOW PLAYING', 'THEIR DEVICE', 'VIEW COLLECTION']);
   });
 
   it('C4 trio — STATS tiles render the six-pack (percentile chips absent, M7)', () => {
@@ -199,14 +209,71 @@ describe('P9 friend-profile route — the shape matrix', () => {
     expect(mockPush).toHaveBeenCalledWith('/game/g-np-1?via=friend-1111-1111-1111-111111111111');
   });
 
-  it('C4 trio — a null trio renders NOTHING for all three rows, quietly (null-guards)', () => {
+  it('PINNED FAVOURITE (PROF-01/05 · owner walk-ruling) — renders the pinned favourite (title + hours) and taps into the game page', () => {
+    set({ data: FRIEND });
+    render(wrap(<UserProfile />));
+    expect(screen.getByText('PINNED FAVOURITE')).toBeTruthy();
+    expect(screen.getByText('SILENT HILL')).toBeTruthy();
+    expect(screen.getByText('120 HRS')).toBeTruthy();
+    fireEvent.press(screen.getByLabelText('Open Silent Hill'));
+    // FRIEND posture — the pinned-favourite handle opens the game page carrying the friend context.
+    expect(mockPush).toHaveBeenCalledWith('/game/g-fav-1?via=friend-1111-1111-1111-111111111111');
+  });
+
+  it('PINNED FAVOURITE — null (no pin) renders NOTHING, quietly (null-guard)', () => {
+    set({ data: { ...FRIEND, favouriteGame: null } });
+    render(wrap(<UserProfile />));
+    expect(screen.queryByText('PINNED FAVOURITE')).toBeNull();
+    // the rest of the friend view is untouched
+    expect(screen.getByText('NOW PLAYING')).toBeTruthy();
+    expect(screen.getByText('VIEW COLLECTION')).toBeTruthy();
+  });
+
+  it('a null trio + null favourite renders NOTHING for those rows, quietly (null-guards)', () => {
     set({ data: FRIEND_NULL_TRIO });
     render(wrap(<UserProfile />));
     expect(screen.queryByText('STATS')).toBeNull();
     expect(screen.queryByText('THEIR DEVICE')).toBeNull();
     expect(screen.queryByText('NOW PLAYING')).toBeNull();
+    expect(screen.queryByText('PINNED FAVOURITE')).toBeNull();
     // the rest of the friend view is untouched
     expect(screen.getByText('VIEW COLLECTION')).toBeTruthy();
+  });
+
+  it("{USERNAME}'S CONTRIBUTIONS teaser (CAT-07 · owner walk-ruling) — renders the PUBLISHED count and routes to the contributor screen", () => {
+    set({ data: FRIEND });
+    render(wrap(<UserProfile />));
+    expect(screen.getByText("RIKO'S CONTRIBUTIONS")).toBeTruthy(); // the possessive voice (mirrors MY CONTRIBUTIONS)
+    expect(screen.getByText('12 CARDS DESIGNED')).toBeTruthy(); // cardsPublished (published only, not drafts)
+    fireEvent.press(screen.getByLabelText("View riko's contributions"));
+    expect(mockPush).toHaveBeenCalledWith('/contributor/friend-1111-1111-1111-111111111111'); // P13 cross-user door
+  });
+
+  it('CONTRIBUTIONS teaser — shown even at ZERO (mirrors the self profile: always present, no hide-on-empty)', () => {
+    set({ data: { ...FRIEND, cardsPublished: 0 } });
+    render(wrap(<UserProfile />));
+    expect(screen.getByText("RIKO'S CONTRIBUTIONS")).toBeTruthy();
+    expect(screen.getByText('0 CARDS DESIGNED')).toBeTruthy();
+  });
+
+  it('ACHIEVEMENTS + CONTRIBUTIONS counts wear the F-06 body rung (11) like the personal Profile — NOT the oversized title rung (owner walk-ruling)', () => {
+    set({ data: FRIEND });
+    render(wrap(<UserProfile />));
+    const sizeOf = (label: string) =>
+      (Object.assign({}, ...[screen.getByText(label).props.style].flat(Infinity).filter(Boolean)) as { fontSize?: number }).fontSize;
+    // Both teaser counts share the achCount grammar; the self profile stepped this DOWN to body 11 (N-A5),
+    // the friend's was 15 (title) — the "larger than it's supposed to" bug. 11 = the F-06 body rung.
+    expect(sizeOf('0 EARNED')).toBe(11);
+    expect(sizeOf('12 CARDS DESIGNED')).toBe(sizeOf('0 EARNED')); // shared-constant identity, not a duplicated literal
+  });
+
+  it('COMPARE HOURS wears the WHITE/cream SECONDARY voice (0069/0070), not the orange accent (owner walk-ruling)', () => {
+    set({ data: FRIEND });
+    render(wrap(<UserProfile />));
+    // the label ink is the secondary voice (brand.navy #1d2a4a), NOT the action-alt accentInk (#14121f).
+    const compare = screen.getByText('COMPARE HOURS');
+    const flat: Record<string, unknown> = Object.assign({}, ...[compare.props.style].flat(Infinity).filter(Boolean));
+    expect(flat.color).toBe('#1d2a4a'); // brand.navy — the 0069 secondary/cream keycap ink
   });
 
   it('limited (non-friend) → FRIENDS ONLY lock-well + ADD FRIEND; no doors', () => {
@@ -223,6 +290,22 @@ describe('P9 friend-profile route — the shape matrix', () => {
     set({ data: FRIEND });
     render(wrap(<UserProfile />));
     expect(screen.getByLabelText('Profile options')).toBeTruthy();
+  });
+
+  it('the ⋯ overflow opens the report SHEET with CONTENT, mounted OUTSIDE the scroll (owner-walk scrim-no-content regression)', () => {
+    set({ data: FRIEND });
+    render(wrap(<UserProfile />));
+    fireEvent.press(screen.getByLabelText('Profile options'));
+    // the sheet renders real CONTENT, not just a scrim: the drawer header + a report reason + the scrim.
+    expect(screen.getByText('REPORT THIS USER')).toBeTruthy(); // PulledSheet title (reportHeader('user'))
+    expect(screen.getByText('SPAM')).toBeTruthy(); // a MOD-01 user reason row
+    expect(screen.getByLabelText('Close')).toBeTruthy(); // the scrim Pressable
+    // …and the drawer is a SCREEN-ROOT SIBLING of the scroll, NOT a descendant of it — the PulledSheet
+    // contract. An absolute-fill overlay mounted INSIDE the ScrollView anchors to the scroll CONTENT, so
+    // the scrim covered the viewport but the sheet docked off-screen (the "shadow but nothing appears" bug).
+    const scroll = screen.getByTestId('profile-scroll');
+    expect(within(scroll).queryByText('REPORT THIS USER')).toBeNull();
+    expect(within(scroll).queryByLabelText('Close')).toBeNull();
   });
 
   it('404 → the terminal Unavailable (MOD-09, no retry)', () => {

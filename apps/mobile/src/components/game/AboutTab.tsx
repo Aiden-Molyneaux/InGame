@@ -36,6 +36,8 @@ export function AboutTab({
   onViewContributor,
   onOpenUser,
   beforeFriends,
+  editing,
+  onEditingChange,
 }: {
   gameId: string;
   /** CAT-05 — the contributor credit routes to the contributor profile (app-wide designer-tap). */
@@ -46,6 +48,12 @@ export function AboutTab({
    *  list. CATALOG passes its NOT-IN-YOUR-COLLECTION band here so the section order reads
    *  info → not-in-collection (+ ADD CTA) → friends-who-own. OWN/FRIEND omit it (no band). */
   beforeFriends?: ReactNode;
+  /** Owner walk (m6) — CONTROLLED wiki-edit mode. When `onEditingChange` is supplied the facts-block
+   *  EDIT trigger is RELOCATED to the page's ⋯ overflow ("Edit catalog details") and this drives the
+   *  mode (OWN posture). When omitted the block keeps its own inline EDIT key (the W-6 behaviour —
+   *  CATALOG/FRIEND, which host no such overflow action). */
+  editing?: boolean;
+  onEditingChange?: (editing: boolean) => void;
 }) {
   const styles = useStyles();
   const { data, isLoading, isError, refetch } = useGetGameDetailQuery(gameId);
@@ -79,35 +87,20 @@ export function AboutTab({
     );
   }
 
-  const year = data.releaseDate ? data.releaseDate.slice(0, 4) : null;
-  const metaLine = [data.studio, year, data.genres[0]?.name]
-    .filter((x) => x != null && x !== '')
-    .join(' · ')
-    .toUpperCase();
-
   return (
     <View style={styles.wrap}>
-      {/* canonical facts */}
+      {/* canonical facts — the title only; the studio/publisher/release/genres now read as the EXPLICIT
+          labeled DETAILS block below (owner walk m6), so the old meta subtitle + DISC-02 chip strip
+          (which rendered the genres a SECOND time right beside the subtitle) are retired. */}
       <View style={styles.facts}>
         <Text style={styles.title}>{data.name}</Text>
-        {metaLine ? <Text style={styles.meta}>{metaLine}</Text> : null}
       </View>
 
-      {/* studio chip + genre chips (DISC-02) */}
-      {data.studio || data.genres.length > 0 ? (
-        <View style={styles.chips}>
-          {data.studio ? (
-            <View style={[styles.chip, styles.chipStudio]}>
-              <Text style={styles.chipText}>▸ {data.studio.toUpperCase()}</Text>
-            </View>
-          ) : null}
-          {data.genres.map((g) => (
-            <View key={g.id} style={styles.chip}>
-              <Text style={styles.chipText}>{g.name.toUpperCase()}</Text>
-            </View>
-          ))}
-        </View>
-      ) : null}
+      {/* CAT-13 (M6 W-6) — the facts block: the EXPLICIT labeled DETAILS list (PUBLISHER / STUDIO /
+          RELEASE / GENRES — absent fields omit their row) in read mode, the per-field EDIT rows in edit
+          mode. Owner walk (m6): edit mode is CONTROLLED by the page overflow on OWN (props threaded);
+          the inline EDIT key is retained where those props are absent (CATALOG/FRIEND). */}
+      <FactsEditBlock game={data} editing={editing} onEditingChange={onEditingChange} />
 
       {/* CAT-05 contributor credit → the contributor profile */}
       <Pressable
@@ -139,20 +132,32 @@ export function AboutTab({
         </Pressable>
       ) : null}
 
-      {/* CAT-13 (M6 W-6) — the wiki EDIT affordance on the facts block (+ the A1 young-account gate) */}
-      <FactsEditBlock game={data} />
-
-      {/* CAT-09 PresenceStats — collections + friends-have (the community-cards count reads in the CARDS tab) */}
+      {/* CAT-09 community stats (owner walk m6) — laid out EXPLICITLY: collections + friends-have (always)
+          + the community AVG RATING / AVG HOURS (each OMITTED when null — no ratings / no owners — rather
+          than a misleading zero). Anonymous cross-user aggregates; the community-cards count reads in the
+          CARDS tab. */}
       <View style={styles.presence}>
         <View style={styles.pstat}>
           <Text style={styles.pv}>{data.collectionsCount.toLocaleString('en-US')}</Text>
-          <Text style={styles.pl}>IN COLLECTIONS</Text>
+          <Text style={styles.pl}>{data.collectionsCount === 1 ? 'COLLECTION' : 'COLLECTIONS'}</Text>
         </View>
         <View style={styles.pstat}>
           <Text style={[styles.pv, styles.pvGold]}>{data.friendsHaveCount.toLocaleString('en-US')}</Text>
           {/* singularize the verb + noun at 1 — "1 FRIEND HAS IT" / "N FRIENDS HAVE IT" */}
           <Text style={styles.pl}>{data.friendsHaveCount === 1 ? 'FRIEND HAS IT' : 'FRIENDS HAVE IT'}</Text>
         </View>
+        {data.avgRating != null ? (
+          <View style={styles.pstat}>
+            <Text style={[styles.pv, styles.pvGold]}>{data.avgRating.toFixed(1)}★</Text>
+            <Text style={styles.pl}>AVG RATING</Text>
+          </View>
+        ) : null}
+        {data.avgHours != null ? (
+          <View style={styles.pstat}>
+            <Text style={styles.pv}>{data.avgHours.toLocaleString('en-US')}</Text>
+            <Text style={styles.pl}>AVG HOURS</Text>
+          </View>
+        ) : null}
       </View>
 
       {/* W-D1 D-3 — the CATALOG not-in-collection band slots HERE: after the game info, before friends */}
@@ -234,10 +239,27 @@ const FACT_LABEL: Record<EditableFactsField, string> = {
  * A1: a young (<14d, non-admin) account sees the quiet disabled gate — honest, no roadmap voice;
  * the SERVER is the enforcement.
  */
-function FactsEditBlock({ game }: { game: GameDetail }) {
+function FactsEditBlock({
+  game,
+  editing: editingProp,
+  onEditingChange,
+}: {
+  game: GameDetail;
+  editing?: boolean;
+  onEditingChange?: (editing: boolean) => void;
+}) {
   const styles = useStyles();
   const { data: me } = useGetMeQuery();
-  const [editing, setEditing] = useState(false);
+  // Owner walk (m6) — CONTROLLED vs UNCONTROLLED edit mode. Controlled (the page overflow drives it,
+  // OWN posture) when `onEditingChange` is supplied; otherwise the block owns the flag + its inline EDIT
+  // key (the unchanged W-6 CATALOG/FRIEND behaviour). Both hooks always run (F-16 — no conditional hooks).
+  const controlled = onEditingChange !== undefined;
+  const [editingLocal, setEditingLocal] = useState(false);
+  const editing = controlled ? editingProp ?? false : editingLocal;
+  const setEditing = (v: boolean) => {
+    if (controlled) onEditingChange?.(v);
+    else setEditingLocal(v);
+  };
   // the genre chips fetch only once the block is flipped open (the closed key needs no roster)
   const { data: genres } = useGetGenresQuery(undefined, { skip: !editing });
   const [submitEdit, submitState] = useSubmitGameEditMutation();
@@ -308,18 +330,43 @@ function FactsEditBlock({ game }: { game: GameDetail }) {
   }
 
   if (!editing) {
+    // Read mode — the EXPLICIT labeled DETAILS list (owner walk m6). Shown in EVERY posture (reading the
+    // facts is never gated); the inline EDIT key is appended ONLY when uncontrolled (CATALOG/FRIEND) — on
+    // OWN the trigger is RELOCATED to the page ⋯ overflow, so the key is omitted here.
     return (
-      <View style={styles.editGate}>
+      <View style={styles.editWrap}>
+        <FactReadRows game={game} />
+        {!controlled ? (
+          <View style={styles.editGate}>
+            <ScreenButton
+              label="Edit"
+              variant="secondary"
+              size="mini"
+              disabled={tooNew}
+              accessibilityLabel="Edit game facts"
+              onPress={() => setEditing(true)}
+            />
+            {/* A1 — the quiet young-account line (honest, F-06 micro, no roadmap voice) */}
+            {tooNew ? <Text style={styles.editGateNote}>EDITING UNLOCKS AFTER 14 DAYS</Text> : null}
+          </View>
+        ) : null}
+      </View>
+    );
+  }
+
+  // A1 — a young account that reached edit mode via the CONTROLLED overflow entry (the inline key path
+  // is already disabled for them). Show the honest quiet gate + an exit; the SERVER is the enforcement.
+  if (tooNew) {
+    return (
+      <View style={styles.editWrap}>
+        <Text style={styles.editGateNote}>EDITING UNLOCKS AFTER 14 DAYS</Text>
         <ScreenButton
-          label="Edit"
+          label="Done"
           variant="secondary"
           size="mini"
-          disabled={tooNew}
-          accessibilityLabel="Edit game facts"
-          onPress={() => setEditing(true)}
+          accessibilityLabel="Done editing game facts"
+          onPress={() => setEditing(false)}
         />
-        {/* A1 — the quiet young-account line (honest, F-06 micro, no roadmap voice) */}
-        {tooNew ? <Text style={styles.editGateNote}>EDITING UNLOCKS AFTER 14 DAYS</Text> : null}
       </View>
     );
   }
@@ -349,6 +396,16 @@ function FactsEditBlock({ game }: { game: GameDetail }) {
 
   return (
     <View style={styles.editWrap}>
+      {/* Owner walk (m6) — the accuracy disclaimer atop the editable state. The catalog is a shared
+          wiki (draft §3 "edits are signed in public"): the soft deterrent + the honest ask. Chrome
+          label uppercase; the guidance is sentence case (the app's info-copy voice). */}
+      <View style={styles.disclaimer} accessibilityLabel="Editing guidance">
+        <Text style={styles.disclaimerHead}>EDITING CATALOG DETAILS</Text>
+        <Text style={styles.disclaimerBody}>
+          These facts are shared with everyone. Please edit only with accurate information — your changes
+          are public and attributed to you.
+        </Text>
+      </View>
       <View style={styles.factRows}>
         <FactRow
           label={FACT_LABEL.studio}
@@ -419,6 +476,49 @@ function FactsEditBlock({ game }: { game: GameDetail }) {
   );
 }
 
+// The read-mode counterpart to the FactRow edit grammar (owner walk m6): the EXPLICIT labeled DETAILS
+// list. Each PRESENT fact is a titled `label · value` row (genres = chips in the value area); an ABSENT
+// fact omits its whole row (no empty labels). Same row grammar + labels as edit mode so toggling into
+// edit doesn't reshuffle the block. Renders nothing when the game carries no facts at all.
+function FactReadRows({ game }: { game: GameDetail }) {
+  const styles = useStyles();
+  const hasAny = Boolean(game.studio || game.publisher || game.releaseDate || game.genres.length > 0);
+  if (!hasAny) return null;
+  return (
+    <View style={styles.factRows}>
+      {game.studio ? <FactReadRow label={FACT_LABEL.studio} value={game.studio} /> : null}
+      {game.publisher ? <FactReadRow label={FACT_LABEL.publisher} value={game.publisher} /> : null}
+      {game.releaseDate ? <FactReadRow label={FACT_LABEL.releaseDate} value={game.releaseDate} /> : null}
+      {game.genres.length > 0 ? (
+        <View style={styles.factRowWrap}>
+          <View style={styles.factRow}>
+            <Text style={styles.factLabel}>{FACT_LABEL.genres}</Text>
+            <View style={styles.factGenreChips}>
+              {game.genres.map((g) => (
+                <View key={g.id} style={styles.chip}>
+                  <Text style={styles.chipText}>{g.name.toUpperCase()}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+function FactReadRow({ label, value }: { label: string; value: string }) {
+  const styles = useStyles();
+  return (
+    <View style={styles.factRowWrap}>
+      <View style={styles.factRow}>
+        <Text style={styles.factLabel}>{label}</Text>
+        <Text style={styles.factValue} numberOfLines={2}>{value}</Text>
+      </View>
+    </View>
+  );
+}
+
 // The PlayDossier row grammar (gate-5 B.8): label · value · ✎; the open editor renders BENEATH its
 // own row so opening one field never shifts the siblings.
 function FactRow({
@@ -459,8 +559,9 @@ const useStyles = themedStyles((t) => ({
   sk: { backgroundColor: t.scr.panel },
   facts: { gap: t.space.xs, alignItems: 'center' },
   title: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, textAlign: 'center', letterSpacing: 0.5 },
-  meta: { fontFamily: t.font.screenSemi, fontSize: t.type.body, color: t.scr.dim, textAlign: 'center', letterSpacing: 1 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.sm, justifyContent: 'center' },
+  // GENRES read-row chips (owner walk m6) — the value area's wrapping chip cluster, right-aligned into
+  // the label · value row so it reads as one labeled fact beside STUDIO / PUBLISHER / RELEASE.
+  factGenreChips: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: t.space.sm, justifyContent: 'flex-end' },
   chip: {
     borderWidth: 1,
     borderColor: t.scr.hairline,
@@ -469,7 +570,6 @@ const useStyles = themedStyles((t) => ({
     paddingVertical: 3,
     borderRadius: t.corner.screen, // F-07 square
   },
-  chipStudio: { borderColor: t.scr.dim },
   chipText: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
   credit: { alignSelf: 'center' },
   creditPressed: { opacity: 0.7 },
@@ -482,6 +582,19 @@ const useStyles = themedStyles((t) => ({
   editGate: { alignItems: 'center', gap: t.space.sm },
   editGateNote: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 1 },
   editWrap: { gap: t.space.md, alignItems: 'center' },
+  // Owner walk (m6) — the accuracy disclaimer box: a quiet accent-edged caution, not an alert.
+  disclaimer: {
+    alignSelf: 'stretch',
+    borderWidth: 1,
+    borderColor: t.scr.hairline,
+    borderLeftWidth: 2,
+    borderLeftColor: t.scr.accent,
+    backgroundColor: t.scr.panel,
+    padding: t.space.md,
+    gap: t.space.xs,
+  },
+  disclaimerHead: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 1 },
+  disclaimerBody: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, lineHeight: 16 },
   factRows: { alignSelf: 'stretch', borderWidth: 1, borderColor: t.scr.hairline, gap: 1, backgroundColor: t.scr.hairline },
   factRowWrap: { backgroundColor: t.scr.panel },
   factRow: {
@@ -501,7 +614,9 @@ const useStyles = themedStyles((t) => ({
   factEditorBtn: { flex: 1, paddingVertical: t.space.md },
   factErr: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.brand.alert },
   genreChips: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.md },
-  presence: { flexDirection: 'row', justifyContent: 'center', gap: t.space.xl },
+  // owner walk (m6) — up to four stats now (collections · friends-have · avg rating · avg hours), so the
+  // row WRAPS on narrow screens rather than crushing the columns together.
+  presence: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: t.space.xl, rowGap: t.space.md },
   pstat: { alignItems: 'center', gap: 2 },
   pv: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5 },
   pvGold: { color: t.scr.value },

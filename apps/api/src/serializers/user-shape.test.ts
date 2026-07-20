@@ -82,9 +82,11 @@ describe('F06: read-path privacy serializer (relationship matrix)', () => {
       mutualFriendsCount: 0,
       friendsCount: 0,
       gamertags: [],
+      cardsPublished: 0,
       top10: [],
       stats: { games: 0, hours: 0, completionPct: 0, cardsDesigned: 0, adoptionsReceived: 0, friends: 0 },
       device: { shellId: 'teal', screenThemeId: 'midnight', stickerComposition: { version: 1, stickers: [] } },
+      favouriteGame: null,
       nowPlaying: null,
     });
     expect(friendProfileSchema.parse(friend)).toEqual(friend);
@@ -103,24 +105,31 @@ describe('F06: read-path privacy serializer (relationship matrix)', () => {
     }
   });
 
-  it('friend (full) shape adds exactly bio + top10 + the C4 trio (stats/device/nowPlaying) — NO privacy (F-16/0055)', () => {
+  it('friend (full) shape adds exactly bio + top10 + cardsPublished + the C4 trio (stats/device/nowPlaying) + favouriteGame — NO privacy (F-16/0055)', () => {
+    const favCard = { id: 'default', imageUrl: null, thumbUrl: null, isCustom: false as const, isPremium: false };
     const out = toFriendShape(makeUser(), {
       relationship: 'friend',
       mutualFriendsCount: 5,
       friendsCount: 12,
       gamertags: [],
+      cardsPublished: 3, // CAT-07 — {USERNAME}'S CONTRIBUTIONS teaser count (published only)
       top10: [],
       // M6 C4 — the PROF-05 board rows (stats six-pack · THEIR-DEVICE · nowPlaying pin).
       stats: { games: 2, hours: 40, completionPct: 50, cardsDesigned: 1, adoptionsReceived: 0, friends: 12 },
       device: { shellId: 'teal', screenThemeId: 'midnight', stickerComposition: { version: 1, stickers: [] } },
+      // PROF-01/05 (owner walk-ruling) — the PINNED FAVOURITE (flattened card, same expansion as nowPlaying).
+      favouriteGame: { gameId: '22222222-2222-4222-8222-222222222222', title: 'Silent Hill', hours: 120, card: favCard },
       nowPlaying: null,
     });
     expect(friendProfileSchema.parse(out)).toEqual(out);
     expect(out.bio).toBe('collector of trophies');
     expect(out.friendsCount).toBe(12);
+    expect(out.cardsPublished).toBe(3); // CAT-07 — the {USERNAME}'S CONTRIBUTIONS teaser count rides the friend shape
     expect(out.top10).toEqual([]);
     expect(out.stats).toMatchObject({ games: 2, hours: 40 }); // C4 — PROF-04 six-pack on the friend shape
     expect(out.device).toMatchObject({ shellId: 'teal', screenThemeId: 'midnight' }); // C4 — DEV-02/04
+    expect(out.favouriteGame).toMatchObject({ title: 'Silent Hill', hours: 120 }); // PROF-01/05 pinned favourite
+    expect('composition' in out.favouriteGame!.card).toBe(false); // never the layers cross-user (OQ-122)
     expect(out.nowPlaying).toBeNull(); // C4 — WTP-03 (no pin)
     expect('email' in out).toBe(false);
     // F-16 / decision 0055 — neither cross-user shape exposes the target's own `privacy` value (the
@@ -130,7 +139,9 @@ describe('F06: read-path privacy serializer (relationship matrix)', () => {
     const limited = toPublicShape(makeUser(), { relationship: 'none', mutualFriendsCount: 0 });
     expect('stats' in limited).toBe(false);
     expect('device' in limited).toBe(false);
+    expect('favouriteGame' in limited).toBe(false);
     expect('nowPlaying' in limited).toBe(false);
+    expect('cardsPublished' in limited).toBe(false); // CAT-07 — the teaser count is friend-only (F06 allowlist)
   });
 
   it('exposes only a GENERIC staff badge publicly (PROF-09 — tier not disclosed)', () => {

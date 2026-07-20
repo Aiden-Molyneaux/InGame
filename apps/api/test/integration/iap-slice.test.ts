@@ -410,7 +410,7 @@ describe('GET /store: purchased/oneTime flags are correct per caller (ECON-10)',
     const storeA = await request(app).get('/api/store').set(authed(a.token));
     expect(storeA.status).toBe(200);
     expect(storeA.body.packs).toHaveLength(5);
-    expect(storeA.body.premiumCosmetics).toHaveLength(6); // M5 F-6 featured set (see the featured suite)
+    expect(storeA.body.premiumCosmetics).toHaveLength(6); // M6 curated spotlight set (see the spotlight suite)
     expect(storeA.body.drops).toEqual([]); // ECON-08 seasonal — still honest-empty (P10)
     type Pack = { productId: string; oneTime: boolean; purchased: boolean };
     const pack = (packs: Pack[], id: string): Pack => {
@@ -431,24 +431,24 @@ describe('GET /store: purchased/oneTime flags are correct per caller (ECON-10)',
   });
 });
 
-// ── GET /store featured (M5 F-6): the NEW-THIS-WEEK premium set + caller-scoped owned flags ─────────────
-type Featured = { id: string; type: string; name: string; tier?: string; price: number; owned: boolean };
-describe('GET /store featured (M5 F-6): premiumCosmetics is the 6-item featured set with owned flags', () => {
+// ── GET /store SPOTLIGHT (M6 owner-walk, was M5 F-6): the curated premium set + caller-scoped owned flags ─
+type Spotlight = { id: string; type: string; name: string; tier?: string; price: number; owned: boolean };
+describe('GET /store spotlight (M6): premiumCosmetics is the curated spotlight set with owned flags', () => {
   it('lists six premium cosmetics across the showy categories, all unowned for a fresh caller', async () => {
     const a = await registerUser();
     const store = await request(app).get('/api/store').set(authed(a.token));
     expect(store.status).toBe(200);
-    const featured = store.body.premiumCosmetics as Featured[];
-    expect(featured).toHaveLength(6);
-    for (const f of featured) {
-      expect(typeof f.id).toBe('string');
-      expect(typeof f.name).toBe('string');
-      expect(f.price).toBeGreaterThan(0); // every featured item is premium (priced)
-      expect(f.tier).toBeTruthy();
-      expect(f.owned).toBe(false); // a fresh caller owns none
+    const spotlight = store.body.premiumCosmetics as Spotlight[];
+    expect(spotlight).toHaveLength(6);
+    for (const s of spotlight) {
+      expect(typeof s.id).toBe('string');
+      expect(typeof s.name).toBe('string');
+      expect(s.price).toBeGreaterThan(0); // every spotlight item is premium (priced)
+      expect(s.tier).toBeTruthy();
+      expect(s.owned).toBe(false); // a fresh caller owns none
     }
     // one per showy category (frame · effect · finish · nameplate · device_shell · screen_theme).
-    expect(featured.map((f) => f.type).sort()).toEqual([
+    expect(spotlight.map((s) => s.type).sort()).toEqual([
       'device_shell',
       'effect',
       'finish',
@@ -458,21 +458,21 @@ describe('GET /store featured (M5 F-6): premiumCosmetics is the 6-item featured 
     ]);
   });
 
-  it('acquiring a featured cosmetic flips its owned flag — for that caller only (own-scoped)', async () => {
+  it('acquiring a spotlight cosmetic flips its owned flag — for that caller only (own-scoped)', async () => {
     const a = await registerUser();
     const b = await registerUser();
 
-    // BRASS (a featured nameplate, 3 PX) is affordable on the STARTING_GRANT (10 PX) with no top-up.
+    // BRASS (a spotlight nameplate, 3 PX) is affordable on the STARTING_GRANT (10 PX) with no top-up.
     const acq = await request(app).post('/api/cosmetics/brass/acquire').set(authed(a.token)).send({});
     expect(acq.status).toBe(200);
     expect(acq.body.paid).toBe(3);
 
     const storeA = await request(app).get('/api/store').set(authed(a.token));
-    const brassA = (storeA.body.premiumCosmetics as Featured[]).find((f) => f.id === 'brass');
+    const brassA = (storeA.body.premiumCosmetics as Spotlight[]).find((s) => s.id === 'brass');
     expect(brassA?.owned).toBe(true); // flipped for A
 
     const storeB = await request(app).get('/api/store').set(authed(b.token));
-    const brassB = (storeB.body.premiumCosmetics as Featured[]).find((f) => f.id === 'brass');
+    const brassB = (storeB.body.premiumCosmetics as Spotlight[]).find((s) => s.id === 'brass');
     expect(brassB?.owned).toBe(false); // B is unaffected (never another principal's ownership)
   });
 });

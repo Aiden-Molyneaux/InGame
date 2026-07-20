@@ -1,4 +1,4 @@
-import { and, count, eq, inArray, max, ne, or } from 'drizzle-orm';
+import { and, avg, count, eq, inArray, max, ne, or } from 'drizzle-orm';
 import { getDb, type Executor } from '../db/client';
 import { asActor, ownedBy } from '../db/scoped';
 import {
@@ -93,6 +93,64 @@ export async function friendsHaveCountByGame(
     )
     .groupBy(collectionEntries.gameId);
   return new Map(rows.map((r) => [r.gameId, Number(r.n)]));
+}
+
+/** The per-game community averages returned by {@link communityAveragesByGame}. `ratingCount`/
+ *  `ownerCount` are the N behind each mean so the caller can OMIT a mean with no data (the n=0 row). */
+export type GameCommunityAverages = {
+  avgRating: number | null; // AVG(rating) over raters, or null when nobody has rated
+  ratingCount: number; // how many owners have set a rating (COUNT ignores NULL ratings)
+  avgHours: number | null; // AVG(hours) over all owners, or null when the game has no owners
+  ownerCount: number; // how many OWNERS the game has — wishlist rows are NOT owners (see below)
+};
+
+/**
+ * CAT-09 (owner walk m6) — the community AVERAGES per game: the mean user rating (COL-03, 1..5) and the
+ * mean hours across owners. Both are anonymous cross-user AGGREGATES — the SYS-01-sanctioned shape
+ * (OQ-126): no individual owner's rating/hours is exposed, only the community mean + the contributing N.
+ * ONE grouped scan (no N+1): `count()` = owners, `count(rating)` = raters (SQL COUNT(col) skips NULLs),
+ * `avg(rating)` ignores unrated owners so a fresh add never drags the mean, `avg(hours)` spans all owners.
+ * A game absent from the result map (no rows) has zero owners → both means read as null at the call site.
+ * WISHLIST rows are EXCLUDED from the whole scan (Murr walk-wave MAJOR): a wishlister is not an owner —
+ * their forced-0 hours would drag AVG HOURS toward zero (5 wishlisters + 1 player@60h would read "10"),
+ * and a wishlist-only game must read null (row omitted), never a misleading "AVG HOURS 0". Matches the
+ * repo convention (statsOf excludes wishlist from hours; decision 0058 excludes it from completionPct).
+ */
+export async function communityAveragesByGame(
+  gameIds: string[],
+  exec: Executor = getDb(),
+): Promise<Map<string, GameCommunityAverages>> {
+  if (gameIds.length === 0) return new Map();
+  // SYS-01-COMMUNITY-AGGREGATE: CAT-09 — anonymous cross-user AVERAGES per game (OQ-126; reads-only +
+  // aggregate-only). The count() aggregates (owners + raters) satisfy the marker AND give the N behind
+  // each mean; the avg() means never surface a single owner's row — the aggregate is the exposure.
+  const rows = await exec
+    .select({
+      gameId: collectionEntries.gameId,
+      owners: count(),
+      raters: count(collectionEntries.rating),
+      avgRating: avg(collectionEntries.rating),
+      avgHours: avg(collectionEntries.hours),
+    })
+    .from(collectionEntries)
+    .where(and(inArray(collectionEntries.gameId, gameIds), ne(collectionEntries.status, 'wishlist')))
+    .groupBy(collectionEntries.gameId);
+  return new Map(
+    rows.map((r) => {
+      // drizzle returns pg numeric aggregates as strings (or null when the group has no non-null input).
+      const raters = Number(r.raters);
+      const owners = Number(r.owners);
+      return [
+        r.gameId,
+        {
+          ratingCount: raters,
+          avgRating: raters > 0 && r.avgRating != null ? Number(r.avgRating) : null,
+          ownerCount: owners,
+          avgHours: owners > 0 && r.avgHours != null ? Number(r.avgHours) : null,
+        },
+      ];
+    }),
+  );
 }
 
 /** The subset of `gameIds` already on the ACTOR's shelf (the add-flow own-it ✓). */

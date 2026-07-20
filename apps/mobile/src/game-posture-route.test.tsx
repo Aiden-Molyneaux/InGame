@@ -213,6 +213,8 @@ describe('W-D1 posture resolver', () => {
     render(wrap(<GamePage />));
     expect(screen.getByText('Destiny')).toBeTruthy(); // the OWN hero title
     expect(screen.getByText('REMOVE FROM COLLECTION')).toBeTruthy(); // an OWN-only action (the overflow)
+    // owner walk (m6) — the relocated wiki-edit entry rides the OWN overflow (was the ABOUT facts key)
+    expect(screen.getByText('EDIT CATALOG DETAILS')).toBeTruthy();
     // round-5 N-B9 — the PLAY action row is retired: no SWITCH CARD (the dock tab is the door) and
     // no PLAY-level SHARE (share is per-card in the CARDS tab now).
     expect(screen.queryByText('SWITCH CARD')).toBeNull();
@@ -272,6 +274,9 @@ describe('W-D1 FRIEND posture — read-only + compose', () => {
     expect(screen.getByText('REPORT THIS GAME')).toBeTruthy();
     expect(screen.queryByText('REMOVE FROM COLLECTION')).toBeNull();
     expect(screen.queryByText('SET AS NOW PLAYING')).toBeNull();
+    // owner walk (m6) — the relocated wiki-edit entry is OWN-only (the §6 read-only invariant holds on
+    // FRIEND; its ABOUT keeps the inline W-6 key, unchanged)
+    expect(screen.queryByText('EDIT CATALOG DETAILS')).toBeNull();
   });
 
   it('unowned → ADOPT their card + ADD TO COLLECTION, no compare / no VIEW YOUR COPY', () => {

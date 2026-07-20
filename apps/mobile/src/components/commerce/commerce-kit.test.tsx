@@ -11,6 +11,7 @@ import { PackTile } from './PackTile';
 import { LedgerRow } from './LedgerRow';
 import { LandedMoment } from './LandedMoment';
 import { AisleIndex } from './AisleIndex';
+import { StoreEntries } from './StoreEntries';
 import { ItemTile } from './ItemTile';
 import { UltimateChip } from './UltimateChip';
 import { HueStrip } from './HueStrip';
@@ -266,15 +267,33 @@ describe('LandedMoment (P7 — the coin drop)', () => {
 });
 
 describe('AisleIndex (§7)', () => {
-  it('lists the taxonomy and routes aisle + top-up taps', () => {
+  it('lists the taxonomy and routes aisle taps (the TOP UP door moved to StoreEntries — M6 owner-walk)', () => {
     const onAisle = jest.fn();
-    const onTopUp = jest.fn();
-    render(wrap(<AisleIndex onAisle={onAisle} onTopUp={onTopUp} />));
+    render(wrap(<AisleIndex onAisle={onAisle} />));
     expect(screen.getByText('EFFECTS')).toBeTruthy();
     fireEvent.press(screen.getByLabelText('EFFECTS'));
     expect(onAisle).toHaveBeenCalledWith({ key: 'effect', label: 'EFFECTS' });
-    fireEvent.press(screen.getByLabelText('Pixels — top up'));
+    // the Index is aisles-only now — no PIXELS / TOP UP door lives here anymore.
+    expect(screen.queryByLabelText('Pixel top-up')).toBeNull();
+    expect(screen.queryByText('PIXELS')).toBeNull();
+  });
+});
+
+describe('StoreEntries (M6 owner-walk — the two store-bottom entry points)', () => {
+  it('renders both PIXEL TOP-UP and WALLET entries and routes each tap to its own view', () => {
+    const onTopUp = jest.fn();
+    const onWallet = jest.fn();
+    render(wrap(<StoreEntries onTopUp={onTopUp} onWallet={onWallet} />));
+    expect(screen.getByText('PIXEL TOP-UP')).toBeTruthy();
+    expect(screen.getByText('WALLET')).toBeTruthy();
+
+    fireEvent.press(screen.getByLabelText('Pixel top-up'));
     expect(onTopUp).toHaveBeenCalledTimes(1);
+    expect(onWallet).not.toHaveBeenCalled();
+
+    fireEvent.press(screen.getByLabelText('Wallet'));
+    expect(onWallet).toHaveBeenCalledTimes(1);
+    expect(onTopUp).toHaveBeenCalledTimes(1); // top-up not re-fired by the wallet tap
   });
 });
 

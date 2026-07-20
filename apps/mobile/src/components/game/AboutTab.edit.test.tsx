@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { Pressable, Text } from 'react-native';
 import { render, screen, fireEvent } from '@testing-library/react-native';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
@@ -48,6 +50,8 @@ function makeDetail(overrides: Partial<GameDetail> = {}): GameDetail {
     inCollection: true,
     contributor: { userId: '00000000-0000-4000-8000-000000000002', username: 'aiden' },
     friendsWhoOwn: [],
+    avgRating: null, // CAT-09 community stats — omitted from these edit-mode suites
+    avgHours: null,
     ...overrides,
   };
 }
@@ -58,6 +62,34 @@ function renderTab() {
   return render(
     <Provider store={configureStore({ reducer: { prefs: prefsReducer } })}>
       <AboutTab gameId={mockDetail.id} onViewContributor={jest.fn()} onOpenUser={onOpenUser} />
+    </Provider>,
+  );
+}
+
+// Owner walk (m6) — the CONTROLLED entry path: the page ⋯ overflow ("Edit catalog details") turns edit
+// mode on. This harness stands in for that overflow (a trigger that flips the controlled prop), so the
+// inline facts-block key is gone and the mode is driven externally.
+function renderControlled() {
+  function Harness() {
+    const [editing, setEditing] = useState(false);
+    return (
+      <>
+        <Pressable accessibilityRole="button" onPress={() => setEditing(true)}>
+          <Text>OVERFLOW-EDIT</Text>
+        </Pressable>
+        <AboutTab
+          gameId={mockDetail.id}
+          onViewContributor={jest.fn()}
+          onOpenUser={onOpenUser}
+          editing={editing}
+          onEditingChange={setEditing}
+        />
+      </>
+    );
+  }
+  return render(
+    <Provider store={configureStore({ reducer: { prefs: prefsReducer } })}>
+      <Harness />
     </Provider>,
   );
 }
@@ -160,7 +192,8 @@ describe('CAT-13 — the facts-block EDIT mode (per-field rows, bare TextField g
     renderTab();
     fireEvent.press(screen.getByLabelText('Edit game facts'));
     fireEvent.press(screen.getByLabelText('Edit genres'));
-    // 'RPG' renders twice (the DISC-02 header chip + the editor's GenreTag) — the editor chip is last
+    // 'RPG' renders twice in edit mode (the genres row's display value + the editor's GenreTag) — the
+    // editor chip is last
     fireEvent.press(screen.getAllByText('RPG').at(-1)!); // deselect the only current genre
     fireEvent.press(screen.getByText('✓ SAVE'));
     expect(await screen.findByText('Pick at least one genre.')).toBeTruthy();
@@ -210,7 +243,10 @@ describe('A1 — the young-account quiet gate (server-enforced; this is the hone
     const key = screen.getByLabelText('Edit game facts');
     expect(key.props.accessibilityState?.disabled).toBe(true);
     fireEvent.press(key);
-    expect(screen.queryByText('STUDIO')).toBeNull(); // the flip never happens
+    // the flip never happens — no editable state (the read-only DETAILS block still shows the STUDIO row,
+    // so edit-mode is proven CLOSED by the absent disclaimer + the absent per-field pencil, not by STUDIO)
+    expect(screen.queryByText('EDITING CATALOG DETAILS')).toBeNull();
+    expect(screen.queryByLabelText('Edit studio')).toBeNull();
   });
 
   it('a young ADMIN is exempt (the key is live)', () => {
@@ -224,5 +260,45 @@ describe('A1 — the young-account quiet gate (server-enforced; this is the hone
   it('an aged (≥14d) account edits freely — no gate line', () => {
     renderTab();
     expect(screen.queryByText('EDITING UNLOCKS AFTER 14 DAYS')).toBeNull();
+  });
+});
+
+describe('Owner walk (m6) — the accuracy disclaimer on entering edit mode', () => {
+  it('the disclaimer renders atop the editable state (inline/uncontrolled entry)', () => {
+    renderTab();
+    expect(screen.queryByText('EDITING CATALOG DETAILS')).toBeNull(); // not shown until edit mode is on
+    fireEvent.press(screen.getByLabelText('Edit game facts'));
+    expect(screen.getByText('EDITING CATALOG DETAILS')).toBeTruthy();
+    expect(screen.getByText(/Please edit only with accurate information/)).toBeTruthy();
+  });
+});
+
+describe('Owner walk (m6) — CONTROLLED edit entry (relocated to the page overflow)', () => {
+  it('shows the read-only DETAILS but NO inline EDIT key — the overflow drives the mode instead', () => {
+    renderControlled();
+    // the labeled DETAILS list still reads (reading the facts is never gated) …
+    expect(screen.getByText('STUDIO')).toBeTruthy();
+    expect(screen.getByText('FromSoftware')).toBeTruthy();
+    // … but there is NO inline edit affordance on OWN — no key, no per-field pencil, no editable state
+    expect(screen.queryByLabelText('Edit game facts')).toBeNull();
+    expect(screen.queryByLabelText('Edit studio')).toBeNull();
+    expect(screen.queryByText('EDITING CATALOG DETAILS')).toBeNull();
+  });
+
+  it('the overflow trigger flips into the per-field rows + the disclaimer', () => {
+    renderControlled();
+    fireEvent.press(screen.getByText('OVERFLOW-EDIT'));
+    expect(screen.getByText('EDITING CATALOG DETAILS')).toBeTruthy();
+    expect(screen.getByText('STUDIO')).toBeTruthy();
+    expect(screen.getByText('FromSoftware')).toBeTruthy();
+  });
+
+  it('A1 — a young account that reaches the controlled entry still hits the honest gate (no rows, no disclaimer)', () => {
+    mockMe = { role: 'user', memberSince: new Date(Date.now() - 2 * 24 * 60 * 60_000).toISOString() };
+    renderControlled();
+    fireEvent.press(screen.getByText('OVERFLOW-EDIT'));
+    expect(screen.getByText('EDITING UNLOCKS AFTER 14 DAYS')).toBeTruthy();
+    expect(screen.queryByText('STUDIO')).toBeNull();
+    expect(screen.queryByText('EDITING CATALOG DETAILS')).toBeNull();
   });
 });

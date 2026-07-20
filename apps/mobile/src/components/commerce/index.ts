@@ -12,6 +12,7 @@ export { UltimateChip } from './UltimateChip';
 export { HueStrip } from './HueStrip';
 export { DailyBonusBar } from './DailyBonusBar';
 export { AisleIndex, AISLES } from './AisleIndex';
+export { StoreEntries } from './StoreEntries';
 export { PreviewStage } from './PreviewStage';
 export { LandedMoment } from './LandedMoment';
 export { ItemSheet, type StoreItem } from './ItemSheet';
