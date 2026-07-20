@@ -74,6 +74,33 @@
 - **Still deferred, recorded not claimed:** SIWA on-device E2E → first P16 EAS build · owner App-ID
   capability toggle (§6.5) · sending domain (§6.3, the P15 sitting).
 
+## W-5 Ultimate colour-cosmetics (2026-07-20, `bf9dce2`) — BOTH GATES CLOSED AT LANDING
+- **Murr ×2 (fresh-context, both NO-GO → every finding fixed+tested in the landing commit):**
+  - *Server pass:* 0 blocker · 3 HIGH-class (1 was the P2-roster pin, fixed by P2 itself) — the
+    CURATED-INK flatten floor (off-list ink under a non-flagged font = the SCRIPT-ULTIMATE
+    entitlement shipping un-bought → forces to CREAM; +5 unit tests incl. the free-font attack) ·
+    reflatten re-forces registry colours (the ops-path bypass) · fail-loud registry completeness
+    assert · probed clean: pricing integrity (registry diff purely additive), backstop trust
+    boundary, ramp legacy-identity, cross-user surface.
+  - *Client pass:* 1 HIGH — ink-RESTORE on leaving an ultimate font (published card ≠ approved
+    preview; fixed + 2 harness tests) · 3 MED (validated-resolver mount gates · case-insensitive
+    mirror compare · suite timeout) · 2 LOW (roster plateSeed invariant test · VoiceOver flat
+    labels) — all fixed. Probed clean: client↔server explicit-id mirror provably price-equal,
+    preset colour-carry trust boundary, render mirrors byte-identical, merchandising strictness.
+- **Parvati (dedicated sweep): CLEAN — 0 🚩 · 3 🎨 owner-eye** (saturated-hue eyeball on the live
+  marquee · optional featured-slot swap · base-vs-ultimate aisle co-listing first-timer read). 9/10
+  beats REACHED live, zero data created (wallet untouched, no publishes). **NOT REACHED (seed gap #3):**
+  the adopt-sheet ultimate row — no published card wears an unowned ultimate yet; joins the two
+  existing seed gaps (forged avatarConfig · adopted-from-another-designer) for the richer-seed pass.
+- **Definitive green at `bf9dce2`:** typecheck · lint 0 err · **unit 297 · integration 527 ·
+  mobile 107/762**. /health 🟢.
+- **Owner-calls parked for the next sitting:** (1) Murr server MED — the owner-DRAFT share-image path
+  exempts by flag not entitlement (unowned ultimate colour freedom exfiltratable via draft share;
+  pre-existing M5 P9 class, W-5 widens it — bless or gate); (2) HueStrip's 5 minted spectrum literals
+  (CosmeticSwatch precedent — bless consciously); (3) the 3 Parvati 🎨 above.
+- **Debt recorded:** BRASS_RAMP + CURATED_INK_COLORS duplicated api↔mobile (shared-lift candidate,
+  both sides tested) · the F-17 "additive" wording vs `.strict()` clients (documented in 0.77).
+
 ## Operational actions this pass (disk/DB state, not git — recorded here so they're not lost)
 - **Dev-DB durability net** (committed `b9e72a2`): `npm -w @ingame/api run db:backup` + `db:reset`
   auto-backs-up first. Backups in `~/ingame-db-backups/` (3 taken 2026-07-19; keeps 20). Permanent fix =
