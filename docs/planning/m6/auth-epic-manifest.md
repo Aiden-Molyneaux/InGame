@@ -1,5 +1,11 @@
 # AUTH EPIC · W-2 (email substrate + Forgot Password) + W-3 (Sign in with Apple) — build manifest
 
+> **STATUS (2026-07-19): ALL FIVE PACKETS LANDED.** P-A/P-B/P-D (server) shipped earlier
+> (e98fec4 · 3805591 · 01fae0e); P-C (forgot-password client) + P-E (SIWA client + choose-username)
+> landed this pass — Murr GO (4 MED found→fixed+regression-tested) · Parvati CLEAN (0 flags).
+> Residual owner items: the §6.3 sending domain (Resend/Cloudflare sitting) · the §6.5 App-ID
+> capability toggle · SIWA device E2E deferred to the first P16 EAS build (recorded, not claimed).
+
 > The manifest-first architecture draft for the beta auth epic (beta-feature-wave §A, W-2+W-3 —
 > "they share the auth tree, so they run as one auth epic"). **Gate: the §6 owner-nod items come
 > back signed before any packet dispatches.** Ground truth read: product-spec AUTH-01..11 ·
