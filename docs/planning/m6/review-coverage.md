@@ -62,10 +62,11 @@
   owner-device walk, structural parity fully assessed.
 - **Definitive green at `3da8ff3`:** typecheck PASS · lint 0 err · **unit 270 · integration 519 ·
   mobile 105 suites/715**.
-- **Owner-calls (bless or flip at the next sitting):** (1) a NON-401 /me failure on cold start falls
-  through to the tabs — deliberate + tested, but a pending-SIWA account can wander until reconnect;
-  (2) the usernamePending gate lives only at `/` — scheme deep-links to /(tabs) skip it (scope-consistent:
-  universal links are P15+).
+- **Owner-calls — RULED same evening (2026-07-19):** (1) NON-401 /me failure fail-open → **BLESSED**
+  (offline-first; the misleading "never wander" comment fixed to match); (2) gate scope → **FLIPPED:
+  gate every entry** — the wall now ALSO stands in the (tabs) layout (walls only on KNOWN-pending;
+  the fail-open unknown posture stays index.tsx's), +3 gate tests; (3) Parvati's CLAIM-on-taken
+  owner-eye → **advisory-only BLESSED** (matches sign-in; zero change).
 - **Follow-ups:** repo-wide pre-existing leaked-real-timer jest warnings (reproduced on the untouched
   baseline — not this epic's debt; hygiene pass candidate) · Parvati's throwaway mock-SIWA user
   `parvati_walk_1` (id e22b9c58…, dev DB) safe to delete · prod reset-code redaction CONFIRMED clean

@@ -20,10 +20,15 @@ jest.mock('expo-router', () => {
     router: mockRouter,
     // Redirect renders its target as inspectable text — the gate's decision IS the href.
     Redirect: ({ href }: { href: string }) => <RNText>{`REDIRECT:${href}`}</RNText>,
+    // Tabs renders a marker (never its screens) so the tabs-layout gate tests can assert "let through".
+    Tabs: Object.assign(() => <RNText>TABS-SHELL</RNText>, { Screen: () => null }),
   };
 });
+// The tabs layout warms the skia renderer on mount — irrelevant to the gate, heavy to import for real.
+jest.mock('./components/CardFace', () => ({ preloadComposedCard: jest.fn() }));
 
 import Index from '../app/index';
+import TabsLayout from '../app/(tabs)/_layout';
 
 // A strict-schema-valid self-shape (selfProfileSchema — getMe PARSES the response on the cold-start path).
 const SELF = (over: Record<string, unknown> = {}) =>
@@ -153,5 +158,44 @@ describe('index — the AUTH-09 usernamePending entry gate (P-E)', () => {
     renderIndex((store) => store.dispatch(setTokens({ accessToken: 'acc', refreshToken: 'ref' })));
 
     await waitFor(() => expect(screen.getByText('REDIRECT:/(tabs)/collection')).toBeTruthy());
+  });
+});
+
+// Owner ruling 2026-07-19 ("gate every entry now"): the wall ALSO stands in the (tabs) layout, so a
+// deep link straight into /(tabs)/… cannot skip it. Walls only on a KNOWN-pending self-shape — the
+// unknown/failed-/me posture (fail-open, owner-blessed the same day) stays index.tsx's concern.
+describe('(tabs) layout — the belt-and-braces usernamePending wall', () => {
+  function renderTabs(prime?: (store: ReturnType<typeof makeStore>) => void) {
+    const store = makeStore();
+    prime?.(store);
+    return render(
+      <Provider store={store}>
+        <TabsLayout />
+      </Provider>,
+    );
+  }
+
+  it('AUTH-09 — a KNOWN-pending session entering the tabs directly is WALLED → /choose-username', () => {
+    renderTabs((store) =>
+      store.dispatch(
+        setSession({ accessToken: 'acc', refreshToken: 'ref', user: SELF({ usernamePending: true }) }),
+      ),
+    );
+    expect(screen.getByText('REDIRECT:/choose-username')).toBeTruthy();
+    expect(screen.queryByText('TABS-SHELL')).toBeNull();
+  });
+
+  it('a completed session renders the tab shell', () => {
+    renderTabs((store) =>
+      store.dispatch(
+        setSession({ accessToken: 'acc', refreshToken: 'ref', user: SELF({ usernamePending: false }) }),
+      ),
+    );
+    expect(screen.getByText('TABS-SHELL')).toBeTruthy();
+  });
+
+  it('an UNKNOWN self-shape (tokens only — cold start mid-resolve) is let through, not walled', () => {
+    renderTabs((store) => store.dispatch(setTokens({ accessToken: 'acc', refreshToken: 'ref' })));
+    expect(screen.getByText('TABS-SHELL')).toBeTruthy(); // fail-open posture stays index.tsx's call
   });
 });
