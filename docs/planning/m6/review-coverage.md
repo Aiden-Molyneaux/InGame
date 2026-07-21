@@ -126,6 +126,29 @@
   gaps CLOSED: forged avatarConfig · adopted-from-another-designer · ultimate-worn card — all three
   owner-walked this session).
 
+## Walk-3 stash-3 wave (2026-07-21, `6408da7` + `7d435a7`) — BOTH GATES CLOSED AT LANDING
+- **Scope:** the mechanical trio (search-status anchor · row-body nav · InlineBanner conform) + two
+  owner-approved proposal builds (the add-game CARD FORK + ranked/paged community cards, spec 0.66 /
+  api 0.81 · the structural styler rebuild, attempt three). Ledger: [`walk3-notes.md`](walk3-notes.md) §Stash 3.
+- **Murr (fable, full diff since 93542f4): NEEDS-FIXES → every finding closed same-day** with the
+  demanded regression tests: 2 MAJOR (numeric-overflow cursor reaching SQL as a 500 — `Number.isInteger(1e21)`
+  is true; fixed via the shared `decodeOffsetCursor` keeping the silent-page-1 grammar, deduped into
+  users-service · the sort-flip loadMore race — generation guard in useContributorPaging) · 1 MINOR
+  (`.strict()` GET query → ledger-precedent strip) · the tones-follow-base approved-design gap ·
+  3 debt. 5 owner-calls ledgered (W3-G..J + the tones intent, resolved by the fix). Probed clean:
+  the empty-blocklist notInArray fence · three-key order totality · total/page filter parity ·
+  additive-param guarantee on all 4 mounts · the fork state machine · contract-0.81 honesty ·
+  styler zone tests proven to check REAL built bboxes.
+- **Parvati (opus): CLEAN — 0 🚩 · 2 🎨** (a dense TAG+MONOGRAM+BADGE deal combo · SEE-ALL/LOAD-MORE
+  seams undemoable at seed scale — richer-seed customers #4/#5). Walked END-TO-END: both fork cases
+  (populated + empty, no silent skip), the full-list TOP/NEW/terminal/adopt-gating, the structural
+  fan (TASTE: PASS) with the base-re-derive fix verified live across all 15 thumbnails, DEAL ×4
+  zone-clean, row-body nav + flip, the InlineBanner disclaimer. Every mutation reversed (incl.
+  restoring a borrowed soft-deleted game's exact deleted_at).
+- **Definitive green at `7d435a7`:** typecheck · lint 0 err · **unit 303 · integration 539 ·
+  mobile 111/828**. /health 🟢. Spec ripple: product-spec **0.66** (the add-flow completion row) ·
+  api-contract **0.81** (sort/cursor/limit + nextCursor/total, additive).
+
 ## Operational actions this pass (disk/DB state, not git — recorded here so they're not lost)
 - **Dev-DB durability net** (committed `b9e72a2`): `npm -w @ingame/api run db:backup` + `db:reset`
   auto-backs-up first. Backups in `~/ingame-db-backups/` (3 taken 2026-07-19; keeps 20). Permanent fix =

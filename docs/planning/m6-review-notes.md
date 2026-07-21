@@ -243,3 +243,58 @@ CREATED: NONE
 🚩 0 flags · 🎨 1 polish
 SCREENS: game-page 1a adopted-readout — REACHED · 1b edit-catalog-details+disclaimer — REACHED · 1c labeled-rows+genres-once — REACHED · 1d community-stats-omit — REACHED (AVG RATING star NOT-REACHED, seed) · collection 2a equal-height pills — REACHED · 2b flip-hint layout-neutral — REACHED · friend 3a pinned-favourite — NOT-REACHED (no friend has a pin seeded) · 3b contributions-teaser+route — REACHED · 3c compare-hours secondary voice — REACHED · 3d real report/block sheet — REACHED · 3e achievements 11px parity — REACHED · store 4a SPOTLIGHT+6 — REACHED · 4b index aisles-only — REACHED · 4c top-up/wallet rows route — REACHED · device 5 status-slot layout-neutral — REACHED · styler 6a 6-curated+DEFAULT+genre-fit — REACHED · 6b surprise coherent — REACHED · 6c no premium cost — REACHED
 CREATED: NONE (device sticker nudge restored to identical; coachmark flag restored)
+
+---
+
+## STASH-3 WAVE (add-game card fork · full-list route · inline gallery · structural styler · row-body nav · about-disclaimer) — 2026-07-21
+
+**Verdict:** 0 🚩 flag · 2 🎨 polish/owner-eye · 6 surfaces walked (all core beats REACHED; a few sub-items code-confirmed or NOT-REACHED on seed limits, cited). Measured vs product-spec **0.66** (add-flow completion) + api-contract **0.81** (gallery sort/cursor paging), the stash-3 source (uncommitted + local commit `6408da7`), and the app's existing grammar. Demo user (demo@ingame.app).
+**Reviewed from** the running Expo-web app (:8082, claude-in-chrome at localhost:8082) captured live, plus source read + Postgres (`local_ingame`) inspection.
+
+### 🚩 FLAG — NONE. Every stash-3 surface renders and behaves to spec.
+
+### ✅ Matches (present · placed · on-grammar — confirmed live)
+
+**1. ADD-GAME completed flow — the CARD FORK (walked END-TO-END, both cases)**
+- **Search-status jar FIXED (live-measured):** the NO-MATCHES panel is the permanent height anchor (top=150px) with the spinner as an absolute overlay; the "NONE OF THESE?"/CREATE anchor held at top=222px across settled ↔ mid-type states — typing does NOT shift the screen (the saveSlot + coachmark idioms, working).
+- **Post-add sequence:** stats/status beat ("ADDED TO YOUR SHELF" + SET A STATUS chips) → button reads **NEXT** (Next-ish, correct — a following beat) → the **CARD FORK**.
+- **Populated fork** (added *Smoke Odyssey Delta*, 1 community card): header **"ADOPT A CARD — OR DESIGN YOUR OWN"** + subtitle · **"COMMUNITY CARDS — 1"** top-6 strip (the card BY SMOKEB3740, FREE) · gold **"DESIGN YOUR OWN ›"** · **"KEEP THE DEFAULT FOR NOW"** tertiary. **DESIGN YOUR OWN → the Styler for that game (`/styler/<gameId>`) → LEAVE/DISCARD returns to the fork** (verified). **KEEP THE DEFAULT → Collection** (verified). Tapping the strip card opens the **AdoptCardSheet** (DESIGNED BY SMOKEB3740 · ADOPTED 1× · HOLD-TO-ADOPT · FREE · SHARE) — adopt affordance present (not held).
+- **Empty-community fork** (added *Skylanders*, card-less): the fork **still renders** — header + empty-case subtitle *"No community cards for this game yet — design your own in the Styler, or keep the default for now."* + DESIGN YOUR OWN + KEEP THE DEFAULT, **no strip / no SEE-ALL, no silent skip.** Confirmed.
+- **SEE ALL {N} › door — correctly ABSENT** in both the fork and inline gallery: `CommunityGallery.tsx:103` gates it on `total > items.length` (strip N: fork 6, inline 12). Seed max is 5 community cards (Destiny 2) < both, so the door hides everywhere — a **seed limitation, not a defect**. Its target route (`/game/[id]/cards?adopt=1`) was verified directly (below).
+
+**2. Full-list route `/game/[id]/cards`** — shell renders on direct-nav (COMMUNITY CARDS head + ‹ RETURN; LoadError on token-less reload = the documented in-memory-web-token artifact). Reached **populated** via in-app soft-nav (token preserved): **TOP (active) / NEW SectionSwitch toggle** · caller-visible count ("1 CARD" / "5 CARDS") · **"That's everything." terminal** at small N · provenance chips **BY YOU/YOURS · ADOPTED · FREE** (0.68 byViewer/adopted). **Adopt affordance gated by `?adopt=1`** (`cards.tsx:40` `canAdopt = adopt==='1'` → cells tappable → AdoptCardSheet; **CATALOG posture passes no adopt → `onPress` undefined, browse-only**, code-confirmed + cells render identically since the gating is on-tap). LOAD-MORE seam: N≤5 < GALLERY_PAGE(24) → single page + terminal, no LOAD MORE (correct; >24 not reachable in seed).
+
+**3. Inline gallery (game-page CARDS tab, OWN posture — Hades):** **"COMMUNITY CARDS — 1"** + **"SORT: TOP ›" → toggles to "SORT: NEW ›"** live (the SORT re-read works). SEE-ALL absent at N≤12 (correct). OWN "YOUR CARDS FOR HADES — 4" (2 drafts · adopted · DESIGN NEW) with the equipped server-label readout + adopted-lock note also present. CATALOG browse-only = the same `cards`-route `canAdopt` gate (code-confirmed; not separately walked live).
+
+**4. STYLER — the STRUCTURAL START-FROM fan (taste verdict: PASS).** Fan order exactly per `roster.ts` `START_SOURCES`: **DIAGONAL SPLIT · INSET PANEL · BANDED THIRDS** (backdrops) → **ARC BANNER** (the game's REAL title arced) · **TAG + MONOGRAM** (big monogram watermark + corner tag) · **CAPTION BLOCK** (titles) → **CENTERED EMBLEM** (ringed pixel-invader glyph = the "ringed invader") · **BADGE CLUSTER** (crown/lightning topper over a star-pipped shield = "crown-over-shield") (emblems) → **DEFAULT** last, user presets after. Each thumbnail reads as a distinct, purposeful STRUCTURE a user would reach for. **Base re-derive (the Murr fix) — VERIFIED:** changing the layer-rail BASE (indigo → white) re-derived the editor preview + all 15 frame-roster thumbnails to the new base **live**; `[gameId].tsx:503-524` feeds `currentBase = draft?.base` into the fan memo (with `currentBase` in deps) and every `START_SOURCES` compose derives tones via `tonesFromBase(base)` — **no hardcoded indigo** (the pick-a-start fan isn't re-openable mid-edit, but its tone input is that same demonstrably-re-deriving `currentBase`). **DEAL A CARD ×4:** coherent, zone-respecting (emblem lands in the layout's slot, never over the title/nameplate), varied [ARC+DIAGONAL emblem-free · INSET+BADGE+CAPTION · TAG-MONOGRAM+INSET+BADGE], one emblem-free. **LEFT via "LEAVE WITHOUT KEEPING? → DISCARD EDITS"** ("the draft is deleted") — no publishes/keeps; draft deletion confirmed (0 residue in DB).
+
+**5. COLLECTION row-body tap (SHELF view):** **card face tap → FLIPS** (shows YOUR STATS back — HOURS/COMPLETE/STATUS/CARD ARTIST — URL stays `/collection`, no nav); **row-body tap → the Game page**; a11y label **"Open {game}"**. The card is a `FlipCard` sibling of the row-body Pressable (the P13-F3 nested-press rule). *(LIST view — a separate mode — navigates the whole row incl. the static thumb, no flip, by design: `flippableView = shelf || grid`.)*
+
+**6. Game-page ABOUT edit disclaimer:** EDIT CATALOG DETAILS → the disclaimer now renders as the standard **InlineBanner** (full accent-bordered box: "EDITING CATALOG DETAILS" + *"These facts are shared with everyone. Please edit only with accurate information — your changes are public and attributed to you."*), **not the old left-bar box.** (Edit opened, nothing changed, DONE.)
+
+### 🎨 Polish / owner-eye (iteration lane — not blockers)
+- **DEAL TAG+MONOGRAM + BADGE CLUSTER co-occurrence reads dense.** When a deal draws the TAG+MONOGRAM layout (a large monogram watermark) *and* a BADGE CLUSTER emblem, the big "S" watermark and the shield sit close in the mid-face — legal (zones respected, no title/nameplate overlap) but slightly busy. Owner eye on whether monogram layouts should suppress/relocate the emblem.
+- **SEE-ALL door + LOAD-MORE seam never render with the current seed** (max 5 community cards < strip 6 / inline 12 / page 24). Both are code-correct and their target route was verified directly, but the owner can't *see* those affordances until a game carries >6/>12/>24 published cards — a seed-content gap worth a richer walk-seed if he wants them demoable.
+
+### Reachability
+- ADD-GAME: search jar ✓ · status beat ✓ · populated fork (header/strip/DESIGN-YOUR-OWN→styler→back/keep→collection/adopt-sheet) ✓ · empty fork ✓ — **REACHED** · SEE-ALL door — NOT-REACHED (seed max 5 < strip; correctly hidden, target verified directly)
+- Full-list route: shell ✓ · populated TOP/NEW/terminal/provenance ✓ · adopt-gating ?adopt=1 vs catalog ✓ (code + live) — **REACHED** · LOAD-MORE — NOT-REACHED (N<24)
+- Inline gallery: OWN SORT toggle TOP↔NEW ✓ — **REACHED** · CATALOG browse-only — code-confirmed (not separately walked) · FRIEND posture — not walked (out of focus)
+- STYLER: structural fan order + taste ✓ · base re-derive ✓ · DEAL ×4 ✓ · leave-without-keeping ✓ — **REACHED**
+- COLLECTION row-body: card-flip ✓ · row-body nav ✓ · a11y "Open {game}" ✓ — **REACHED**
+- ABOUT disclaimer InlineBanner ✓ — **REACHED**
+
+### Environment caveats (NOT app defects)
+- Direct URL nav drops the in-memory web auth token → SIGNAL LOST (documented); the full-list populated view was reached via in-app soft-nav (token preserved). The skia renderer intermittently froze `Page.captureScreenshot` (retry/JS-measurement recovered). Device frame renders landscape (phone-column proportion not assessed).
+
+### CREATED / TOUCHED — all reversed
+- **Added → removed 2 games** from demo's collection (*Smoke Odyssey Delta*, *Skylanders*; both backlog/0hrs) — removed via DB (equivalent to the standing remove path, chosen for determinism under renderer instability); **demo back to 17 games** (verified).
+- **Temporarily un-soft-deleted the junk game "Smoke Odyssey Delta"** (`7556183c…`, a prior load-harness row already `deleted_at 2026-07-19T20:47:14.616Z`) to reach the *populated* add-fork with a not-in-collection card-bearing game (every live-carded game is otherwise already in demo's collection). **Restored its exact `deleted_at` + `deleted_by` after** — net zero.
+- **Styler draft** on Smoke Odyssey Delta (START WITH THIS) → **discarded via DISCARD EDITS**; draft deleted (0 residue confirmed in DB).
+- **No purchases** (wallet 113 unchanged) · **no publishes** · **no adoptions** (AdoptCardSheet opened + closed, never held) · **no reports/blocks** · **no users created**.
+- Browser-local only: collectionView UI pref cycled (grid→list→shelf) + one card flipped — ephemeral per-browser UI state, not demo account data.
+
+### PARVATI-VERDICT: CLEAN
+🚩 0 flags · 🎨 2 polish
+SCREENS: add-game search-jar — REACHED · status-beat(NEXT) — REACHED · populated fork(header/strip/design-your-own→styler→back/keep→collection/adopt-sheet) — REACHED · empty fork(no strip, no silent skip) — REACHED · SEE-ALL door — NOT-REACHED (seed max 5 < strip 6; correctly hidden, target route verified directly) · full-list TOP/NEW/terminal/provenance — REACHED · full-list adopt-gating ?adopt=1 vs catalog — REACHED (live+code) · full-list LOAD-MORE — NOT-REACHED (N<24) · inline gallery OWN SORT TOP↔NEW — REACHED · inline CATALOG browse-only — code-confirmed · styler structural fan+taste(PASS) — REACHED · styler base-re-derive(Murr) — REACHED · styler DEAL ×4 coherent/zone-respecting/emblem-free — REACHED · styler leave-without-keeping — REACHED · collection row-body nav + card-flip + a11y "Open {game}" — REACHED · about-edit disclaimer InlineBanner — REACHED
+CREATED: 2 games added→removed (Smoke Odyssey Delta, Skylanders; demo back to 17) · junk game Smoke Odyssey Delta un-deleted→restored to exact deleted_at · styler draft discarded (0 residue) · no purchases/publishes/adoptions/users
