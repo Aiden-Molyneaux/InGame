@@ -82,10 +82,15 @@ export function CatalogGamePage({ gameId }: { gameId: string }) {
           showsVerticalScrollIndicator={false}
         >
           {section === 'cards' ? (
-            // BROWSE-ONLY (Q4) — no adopt path; the be-first door (DESIGN THE FIRST CARD) survives for an empty gallery.
+            // BROWSE-ONLY (Q4) — no adopt path; the be-first door (DESIGN THE FIRST CARD) survives for an
+            // empty gallery. 0.81: top-12 + SORT + SEE ALL like the other postures — the full list stays
+            // browse-only too (no ?adopt=1, so its cells never mount an adopt press).
             <CommunityGallery
               gameId={gameId}
               canAdopt={false}
+              top={12}
+              sortToggle
+              onSeeAll={() => router.push(`/game/${gameId}/cards`)}
               onInspect={() => {}}
               onDesignACard={() => router.push(`/styler/${gameId}`)}
               onViewDesigner={(userId) => router.push(`/contributor/${userId}`)}

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 // The CAT-07 VIEW-ALL cursor accumulation (W-1) — RTK-free on purpose (the two dedicated routes own the
 // RTK hooks; this owns only the page-fold + cursor state), so it unit-tests without pulling the store.
@@ -44,22 +44,34 @@ export function useContributorPaging<T>(
   // BEFORE paint — same reset the effect did, minus the flash.
   const [cursor, setCursor] = useState<string | null>(page1?.nextCursor ?? null);
   const [seededPage, setSeededPage] = useState(page1);
+  // The generation counter (W-1 sort-flip race): every RESET (a page1 identity change — a sort flip
+  // or an adopt-invalidation refetch) bumps it. A loadMore stamps the generation at dispatch and its
+  // resolution is DISCARDED if the generation moved in the meantime — so a STALE in-flight loadMore
+  // (fired against the OLD page1, still resolving after the reset re-seated the tail + cursor) can
+  // never append wrong-sort rows or seat a wrong-sort cursor. Bumped in the same render-phase reset
+  // as the state above (the documented "adjusting state when a prop changes" pattern); the ref is the
+  // synchronous source of truth loadMore's async resolution reads back.
+  const generationRef = useRef(0);
   if (page1 !== seededPage) {
     setSeededPage(page1);
     setTail([]);
     setMoreError(false);
     setCursor(page1?.nextCursor ?? null);
+    generationRef.current += 1;
   }
 
   const items = useMemo(() => appendUnique(page1?.items ?? [], tail, keyOf), [page1, tail, keyOf]);
 
   const loadMore = useCallback(async () => {
     if (!cursor) return;
+    const gen = generationRef.current; // stamp the generation this fetch belongs to
     try {
       const page = await fetchMore(cursor).unwrap();
+      if (gen !== generationRef.current) return; // a reset happened mid-flight — drop the stale page
       setTail((prev) => appendUnique(prev, page.items, keyOf));
       setCursor(page.nextCursor);
     } catch {
+      if (gen !== generationRef.current) return; // stale failure belongs to the old page1 — ignore it
       setMoreError(true);
     }
   }, [cursor, fetchMore, keyOf]);

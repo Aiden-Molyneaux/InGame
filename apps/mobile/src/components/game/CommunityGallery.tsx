@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
-import type { GalleryCardView } from '@ingame/shared';
+import type { GalleryCardView, GallerySort } from '@ingame/shared';
 import { themedStyles } from '../../theme';
 import { PriceChip } from '../commerce/PriceChip';
 import { Skeleton } from '../lifecycle/Skeleton';
 import { LoadError } from '../lifecycle/LoadError';
 import { SectionEmpty } from '../lifecycle/SectionEmpty';
+import { TertiaryLink } from '../TertiaryLink';
 import { FlatCardImage } from './FlatCardImage';
 import { useGetGameGalleryQuery } from '../../store/communityApi';
 
@@ -14,12 +16,22 @@ import { useGetGameGalleryQuery } from '../../store/communityApi';
 // 0072: `priceForYou` = the missing-components sum, FREE at 0). Tapping a cell opens the inspect/adopt
 // sheet (the container mounts `AdoptCardSheet` at the screen root). This is a SECTION inside a populated
 // screen, so its lifecycle states stay inline — the switcher above is never replaced.
+//
+// 0.81 (owner walk m6) — the inline gallery is a TOP-N STRIP now, per the drawn game-page mockups
+// (game-page-states.html "COMMUNITY CARDS — 41 · SORT ›" / "SEE ALL ›"): `top` caps the fetch
+// server-side (sort=top&limit=N — closing the unbounded-gallery load cliff), `sortToggle` renders the
+// head's SORT link (TOP ↔ NEW re-reads server-side), and `onSeeAll` renders the "SEE ALL {N} ›" door
+// to the full paged list (/game/[id]/cards). All props optional — a bare mount keeps the pre-0.81
+// full-set read (the add-game fork passes `top` without the toggle; the game pages pass all three).
 export function CommunityGallery({
   gameId,
   onInspect,
   onDesignACard,
   onViewDesigner,
   canAdopt = true,
+  top,
+  sortToggle = false,
+  onSeeAll,
 }: {
   gameId: string;
   onInspect: (card: GalleryCardView) => void;
@@ -35,17 +47,33 @@ export function CommunityGallery({
    * render (browsing is allowed); only the adopt affordance is gone.
    */
   canAdopt?: boolean;
+  /** Cap the strip at the server-ranked top N (sort=top&limit=N). Absent → the full-set read. */
+  top?: number;
+  /** Render the head's SORT link (TOP ↔ NEW; the mockups' "SORT ›"). Only meaningful with `top`. */
+  sortToggle?: boolean;
+  /** Render the "SEE ALL {N} ›" door (shown when the gallery holds more than the strip). */
+  onSeeAll?: () => void;
 }) {
   const styles = useStyles();
-  const { data, isLoading, isError, refetch } = useGetGameGalleryQuery(gameId);
+  const [sort, setSort] = useState<GallerySort>('top');
+  const { data, isLoading, isError, refetch } = useGetGameGalleryQuery(
+    top != null ? { gameId, sort: sortToggle ? sort : 'top', limit: top } : { gameId },
+  );
   const items = data?.items ?? [];
+  const total = data?.total ?? items.length;
 
   return (
     <View style={styles.wrap}>
       <View style={styles.head}>
         <Text style={styles.headTitle}>
-          COMMUNITY CARDS{items.length > 0 ? ` — ${items.length}` : ''}
+          COMMUNITY CARDS{total > 0 ? ` — ${total}` : ''}
         </Text>
+        {sortToggle && items.length > 0 ? (
+          <TertiaryLink
+            label={`Sort: ${sort === 'top' ? 'top' : 'new'}`}
+            onPress={() => setSort((s) => (s === 'top' ? 'new' : 'top'))}
+          />
+        ) : null}
       </View>
 
       {isLoading ? (
@@ -61,16 +89,23 @@ export function CommunityGallery({
       ) : items.length === 0 ? (
         <SectionEmpty variant="contributor-hook" onAction={onDesignACard} />
       ) : (
-        <View style={styles.grid}>
-          {items.map((card) => (
-            <GalleryCell
-              key={card.id}
-              card={card}
-              onPress={canAdopt ? () => onInspect(card) : undefined}
-              onViewDesigner={() => onViewDesigner(card.designer.userId)}
-            />
-          ))}
-        </View>
+        <>
+          <View style={styles.grid}>
+            {items.map((card) => (
+              <GalleryCell
+                key={card.id}
+                card={card}
+                onPress={canAdopt ? () => onInspect(card) : undefined}
+                onViewDesigner={() => onViewDesigner(card.designer.userId)}
+              />
+            ))}
+          </View>
+          {onSeeAll && total > items.length ? (
+            <View style={styles.seeAll}>
+              <TertiaryLink label={`See all ${total}`} onPress={onSeeAll} />
+            </View>
+          ) : null}
+        </>
       )}
     </View>
   );
@@ -79,7 +114,8 @@ export function CommunityGallery({
 // One gallery cell — flattened thumb + BY «designer» + a foot: price (or FREE / a provenance tag) +
 // AdoptCount. F-13 E4 (owner round-2): the caller's OWN published cards read "BY YOU", and cards the
 // caller has already ADOPTED wear an "ADOPTED" tag in place of a price (they already hold the grant).
-function GalleryCell({
+// EXPORTED (0.81) so the full-list route (/game/[id]/cards) renders the same cell grammar.
+export function GalleryCell({
   card,
   onPress,
   onViewDesigner,
@@ -184,6 +220,8 @@ const useStyles = themedStyles((t) => ({
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   headTitle: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.dim, letterSpacing: 2 },
   errWrap: { paddingVertical: t.space.md },
+  // 0.81 — the SEE ALL {N} › door under the top-N strip (the mockups' full-list hook).
+  seeAll: { alignItems: 'center', marginTop: t.space.sm },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.lg },
   cell: { width: 96, gap: 3 },
   credit: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5, marginTop: 3 },

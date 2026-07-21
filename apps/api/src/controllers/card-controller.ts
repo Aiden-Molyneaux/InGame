@@ -5,6 +5,7 @@ import type {
   UpdateCardRequest,
   UpdateStylePresetRequest,
 } from '@ingame/shared';
+import { gameGalleryQuerySchema } from '@ingame/shared';
 import * as cardService from '../services/card-service';
 import * as presetService from '../services/style-preset-service';
 
@@ -59,7 +60,11 @@ export async function unpublishCard(req: Request, res: Response): Promise<void> 
 }
 
 export async function getGameGallery(req: Request, res: Response): Promise<void> {
-  res.json(await cardService.listGameGallery(actorOf(req), req.params.gameId!));
+  // 0.81 — the optional sort/cursor/limit params, validated against the SHARED schema (rule 3: the
+  // schema IS the contract). A ZodError thrown here rides asyncHandler → the 422 VALIDATION_ERROR
+  // path, exactly like a body failure. Absent params keep the pre-0.81 full-set/recency read.
+  const query = gameGalleryQuerySchema.parse(req.query);
+  res.json(await cardService.listGameGallery(actorOf(req), req.params.gameId!, query));
 }
 
 export async function getTrendingCards(req: Request, res: Response): Promise<void> {

@@ -40,6 +40,32 @@ export const UPDATE_CARD_FIELDS = Object.keys(updateCardRequestSchema.shape) as 
   keyof UpdateCardRequest
 >;
 
+// ── the community-gallery query params (api-contract 0.81 — sort + cursor paging) ────────────────────
+
+/** GET /games/:gameId/cards ordering: `top` = adoption count (SQL-ranked), `new` = recency. */
+export const gallerySortSchema = z.enum(['top', 'new']);
+export type GallerySort = z.infer<typeof gallerySortSchema>;
+
+/** The full-list page size (the contributor VIEW-ALL precedent) and the server's per-request cap. */
+export const GALLERY_PAGE = 24;
+export const GALLERY_LIMIT_MAX = 60;
+
+/**
+ * GET /games/:gameId/cards query params (api-contract 0.81). ALL OPTIONAL — absent params keep the
+ * pre-0.81 behavior (the full published set, newest first), so the existing gallery mounts stay
+ * whole. `sort=top` ranks by adoption count IN SQL; `cursor` is the opaque offset cursor the response
+ * `nextCursor` hands back (the contributor VIEW-ALL grammar); `limit` bounds the page (1..60).
+ * Query strings arrive as strings, so `limit` coerces; every string is bounded (rule-3 amendment).
+ * Non-strict (stray params are stripped, not rejected) — mirrors `walletLedgerQuerySchema`, the GET
+ * precedent: a cache-buster / analytics param tacked onto the URL must not 422 a read.
+ */
+export const gameGalleryQuerySchema = z.object({
+  sort: gallerySortSchema.optional(),
+  cursor: boundedText(40).optional(),
+  limit: z.coerce.number().int().min(1).max(GALLERY_LIMIT_MAX).optional(),
+});
+export type GameGalleryQuery = z.infer<typeof gameGalleryQuerySchema>;
+
 /**
  * The CARD-24b style recipe — the CLOSED attributes only (frame · effect+intensity · finish ·
  * nameplate · title font+ink), game-agnostic (api-contract 0.51). Ids are roster ids (client

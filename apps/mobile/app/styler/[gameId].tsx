@@ -37,8 +37,8 @@ import {
   INKS,
   NAMEPLATES,
   PLATE_DEFAULT_COLOR,
+  START_SOURCES,
   defaultBase,
-  startSourcesFor,
   surpriseDeal,
   withGameTitle,
   type FrameDef,
@@ -497,14 +497,18 @@ export default function Styler() {
   }, [scheduleSave]);
 
   // ── the BaseRail sources: system bases + [CARD-24b] saved presets, merged client-side ─────────
+  // The tones of every structural start derive from the DRAFT's CURRENT base (approved design —
+  // base-derived, never a fixed indigo). Absent (a fresh pick, before any base) → the roster default.
+  // Feeding `draft?.base` into the memo deps re-composes the fan the moment the base changes.
+  const currentBase = draft?.base;
   const railEntries = useMemo<RailEntry[]>(() => {
-    // W-6: genre-aware — lead with the start-from family that best fits the game's genres (the shelf
-    // entry already carries them, no new fetch). Nothing is hidden; DEFAULT stays last.
-    const sys: RailEntry[] = startSourcesFor(entry?.genres ?? []).map((s) => ({
+    // W-6 structural rebuild: ONE fixed fan — backdrops → title layouts → emblem starts → DEFAULT.
+    // Structure is genre-neutral, so the old genre-mood reordering is retired with the palette fans.
+    const sys: RailEntry[] = START_SOURCES.map((s) => ({
       id: s.id,
       name: s.name,
       kindLabel: s.kindLabel,
-      composition: s.compose(title),
+      composition: s.compose(title, currentBase),
     }));
     const fromPresets: RailEntry[] = (presets ?? []).map((p) => ({
       id: `preset-${p.id}`,
@@ -514,10 +518,10 @@ export default function Styler() {
       composition: presetToComposition(p.style as StylePresetStyle, defaultBase(title)),
     }));
     const deal: RailEntry[] = surprise
-      ? [{ id: 'surprise', name: 'SURPRISE', kindLabel: 'KIT', composition: surprise }]
+      ? [{ id: 'surprise', name: 'DEAL', kindLabel: 'DEAL', composition: surprise }]
       : [];
     return [...deal, ...sys, ...fromPresets];
-  }, [title, presets, surprise, entry?.genres]);
+  }, [title, presets, surprise, currentBase]);
 
   // One in-flight guard for the three non-idempotent creates — a double-tap must not POST twice
   // (an orphan draft / a duplicate preset).
@@ -1193,16 +1197,16 @@ export default function Styler() {
         <Text style={styles.contextLine}>
           {title.toUpperCase()} · NEW CARD — <Text style={styles.contextBold}>PICK A START</Text>
         </Text>
-        <Text style={styles.secHead}>START FROM — BASES &amp; YOUR PRESETS</Text>
+        <Text style={styles.secHead}>START FROM — STRUCTURES &amp; YOUR PRESETS</Text>
         <BaseRail
           entries={railEntries}
           foreIndex={Math.min(foreIndex, railEntries.length - 1)}
           onFocus={setForeIndex}
-          title="Templates are single faces · kits arrive wearing a frame + effect bundle · your saved presets ride alongside"
+          title="Backdrop structures · title layouts · emblem starts — the colours stay yours · your saved presets ride alongside"
         />
         {inlineError ? <Text accessibilityLiveRegion="assertive" style={styles.inlineErr}>{inlineError}</Text> : null}
         <View style={styles.pickCtas}>
-          {/* START above SURPRISE — the forward action leads (gate-5 D.18) */}
+          {/* START above DEAL — the forward action leads (gate-5 D.18) */}
           <ScreenButton
             label={busyStart ? '…' : 'Start with this'}
             variant="add"
@@ -1210,10 +1214,10 @@ export default function Styler() {
             onPress={() => fore && void startWith(fore.composition)}
           />
           <ScreenButton
-            label="Surprise me — deal a start"
+            label="Deal a card"
             variant="secondary"
             onPress={() => {
-              setSurprise(surpriseDeal(title));
+              setSurprise(surpriseDeal(title, Math.random, currentBase));
               setForeIndex(0);
             }}
           />

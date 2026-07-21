@@ -32,6 +32,7 @@ import * as adoptionRepo from '../repositories/adoption-repo';
 import * as listRepo from '../repositories/list-repo';
 import * as profileService from './profile-service';
 import * as deviceService from './device-service';
+import { decodeOffsetCursor } from './pagination';
 import { toPublicShape, toFriendShape } from '../serializers/user-shape';
 import { ForbiddenError, NotFoundError, NotFriendsError } from '../errors/AppError';
 import { deriveEquippedLabels } from '../render/equipped-labels';
@@ -631,13 +632,6 @@ export async function getCompare(actorId: string, rawFriendId: string): Promise<
 
 // ── P2 — the CAT-07 VIEW-ALL cursor sub-routes (friend-only, PROF-03) ────────────────────────────────
 
-/** Decode an opaque offset cursor (a plain non-negative integer string); a bad cursor reads as 0. */
-function decodeCursor(cursor: string | undefined): number {
-  if (!cursor) return 0;
-  const n = Number(cursor);
-  return Number.isInteger(n) && n >= 0 ? n : 0;
-}
-
 /** Resolve the VIEW-ALL target: the non-disclosure collapse (404), then the friend-only gate (403). The
  *  VIEW-ALL detail is FRIEND-ONLY (a non-friend sees the limited base contributions shape, not this). */
 async function resolveContributionTarget(actorId: string, rawTargetId: string): Promise<string> {
@@ -672,7 +666,7 @@ export async function getContributionsCards(actorId: string, rawTargetId: string
   const ranked = published
     .map((r) => ({ row: r, adoptionCount: cardCounts.get(r.id) ?? 0 }))
     .sort((a, b) => b.adoptionCount - a.adoptionCount || a.row.id.localeCompare(b.row.id));
-  const offset = decodeCursor(cursor);
+  const offset = decodeOffsetCursor(cursor);
   const page = ranked.slice(offset, offset + VIEW_ALL_PAGE);
   const nextCursor = offset + VIEW_ALL_PAGE < ranked.length ? String(offset + VIEW_ALL_PAGE) : null;
   return { items: page.map(({ row, adoptionCount }) => toContributorCard(row, adoptionCount)), nextCursor };
@@ -692,7 +686,7 @@ export async function getContributionsGames(actorId: string, rawTargetId: string
       return row;
     })
     .sort((a, b) => b.collectionsCount - a.collectionsCount || a.gameId.localeCompare(b.gameId));
-  const offset = decodeCursor(cursor);
+  const offset = decodeOffsetCursor(cursor);
   const page = ranked.slice(offset, offset + VIEW_ALL_PAGE);
   const nextCursor = offset + VIEW_ALL_PAGE < ranked.length ? String(offset + VIEW_ALL_PAGE) : null;
   return { items: page, nextCursor };

@@ -3,6 +3,7 @@ import {
 } from '@ingame/shared';
 import type {
   CardComposition,
+  CardElement,
   EffectKind,
   FinishKind,
   FrameKind,
@@ -168,7 +169,7 @@ export const INKS: Array<RosterItem & { color: string }> = [
 // ── Base palettes + the start-from sources (CARD-16 — never a blank canvas) ────────────────────
 // (exported for the Canvas ADD sheet's BASE row — one seed palette, no second source)
 // 2026-07-20 (W-6 taste pass): the five arbitrary darks became the six CURATED palette-family bases
-// below (PALETTES), so the Canvas base row and the Styler start-froms speak ONE colour voice. [0]
+// below, so the Canvas base row and the Styler start-froms speak ONE colour voice. [0]
 // stays the indigo NEBULA base (defaultBase's incumbent, unchanged).
 export const BASE_GRADIENTS: Array<[string, string]> = [
   ['#241a4d', '#0e0b1e'], // NEBULA — cosmic indigo
@@ -215,318 +216,347 @@ export function defaultBase(gameTitle: string): CardComposition {
   };
 }
 
-// ── CURATED PALETTE FAMILIES (W-6 taste pass, 2026-07-20) ──────────────────────────────────────
-// The old start-froms read as hideous for three reasons: (1) kit-arcade opened with a RETIRED frame
-// kind (`bracket-corners`, pulled by 0075) AND a PREMIUM effect (`scanline`, re-tagged by 0075) — so
-// "Start with this" handed the user an unowned premium DEBT on the first save, breaking CARD-16's
-// economic guarantee; (2) the element geometry was arbitrary (a huge dead-centre star, 0.008-tall
-// sliver rects) with clashing hues sampled at random from the whole palette; (3) the gradients had no
-// shared voice. The rebuild anchors every start-from (and every SURPRISE deal) to a small set of
-// COHERENT palette families: a considered gradient + 2–3 HARMONIZING accents + a matched FREE frame /
-// plate / font / effect. Every family references FREE cosmetics ONLY (verified against premium.ts —
-// no premium frame/effect/finish/font/plate), so `collectPremiumRosterIds` is empty and the cost-stack
-// is 0 for every start-from and every surprise. Card colours are literal (card CONTENT, like the
-// existing gradients — CONVENTIONS: compositions may use literal colours; themed tokens are for chrome).
-//
-// `moods` are lowercased genre names (the CollectionItem.genres vocabulary — Horror/Platformer/RPG/…);
-// `startSourcesFor(genres)` reorders the fan so the best-fit family LEADS. Nothing is ever hidden — an
-// unmatched game just keeps the curated order (a strong family still leads; DEFAULT stays last).
+// ── STRUCTURAL START-FROMS (W-6 structural rebuild, 2026-07-21 — attempt three) ────────────────
+// The mood-palette fans were vetoed twice: they offered the user a PALETTE, which is ambiguous — the
+// base row already owns colour. The approved concept is STRUCTURE-FIRST: every start-from is a
+// structural skeleton a user would actually reach for as a headstart — the composition of the
+// background layers, a commonly-built text scaffold, or an emblem blank. Three families, fanned in
+// this order (DEFAULT last, the blank-slate escape hatch):
+//   BACKDROPS — full-bleed layered structure over the base (a faked "sliced background"):
+//     DIAGONAL SPLIT · INSET PANEL · BANDED THIRDS
+//   TITLE LAYOUTS — text pre-positioned where a user wants it (the decorative text is SEPARATE from
+//     the system nameplate and sits in the face above the plate band):
+//     ARC BANNER · CORNER TAG + MONOGRAM · CAPTION BLOCK
+//   EMBLEM STARTS — a composed centrepiece blank: CENTERED EMBLEM · BADGE CLUSTER
+// Colours are NOT the offer: every element colour derives from the composition's CURRENT base at
+// compose time (gradient stops — or a solid base's fill used twice — lightened/darkened via
+// tonesFromBase) plus the neutral cream line, so the panels track the user's base instead of a fixed
+// indigo. A template reads as structure, and the user recolours via the base row + per-element fills
+// afterwards. No frame / effect / finish / premium
+// font is stamped on (chrome stays the user's), which also makes every start-from + every deal
+// trivially FREE (zero cost-stack — the CARD-16 guarantee, asserted in startsources.test.ts).
+// Every template is ≤ 6 elements (no grouping exists — hand-editing must stay sane) and every
+// element carries a CARD-08 `name` so the layers rack reads as a labelled scaffold.
 
-/** A curated free-tier colour+cosmetic family. Frame/plate/font/effect are FREE roster refs (or null);
- *  `accents` + the gradient stops are the family's whole colour vocabulary (the coherence invariant). */
-interface PaletteFamily {
-  id: string;
-  name: string;
-  kindLabel: 'TEMPLATE' | 'KIT';
-  gradient: [string, string];
-  accents: string[]; // 2–3 harmonizing hues (the dominant first)
-  ink: string; // title ink (a free colour field) — one of the accents
-  frameId: string | null; // a FREE frame roster id, or null for CLEAN (no frame)
-  fontId: string; // a FREE font roster id (clean-sans / bold-display / press-start)
-  plateShape: NameplateShape; // a FREE plate shape (never `brass` — that's premium)
-  effect?: { kind: EffectKind; intensity: number }; // a FREE effect (soft-glow/gradient-sheen/dust/vignette)
-  finish?: FinishKind; // a FREE finish (matte) — omit for STANDARD
-  moods: string[]; // lowercased genre names this family suits (genre-aware ordering)
-  /** The hand-designed element layout for this family's curated start-from card. */
-  face: CardComposition['elements'];
+const CREAM = '#f3ecd9'; // the neutral line/text accent (matches the INKS cream)
+
+/** Mix `hex` toward `target` by t (channel lerp). Total: a malformed colour returns unchanged. */
+function mixHex(hex: string, target: string, t: number): string {
+  if (!/^#[0-9a-f]{6}$/i.test(hex) || !/^#[0-9a-f]{6}$/i.test(target)) return hex;
+  const ch = (s: string, i: number) => parseInt(s.slice(1 + i * 2, 3 + i * 2), 16);
+  const out = [0, 1, 2].map((i) => Math.round(ch(hex, i) + (ch(target, i) - ch(hex, i)) * t));
+  return '#' + out.map((v) => v.toString(16).padStart(2, '0')).join('');
 }
 
-export const PALETTES: PaletteFamily[] = [
+/** The base-derived structural tones — the WHOLE colour vocabulary of the templates + deals. */
+export interface StructureTones {
+  raise: string; // a panel one step above the base (lightened top stop)
+  raiseHi: string; // the brighter band / watermark tone (lightened further)
+  shade: string; // a recessed panel (darkened bottom stop)
+  line: string; // the neutral cream hairline / text colour
+}
+export function structureTones(gradient: [string, string]): StructureTones {
+  return {
+    raise: mixHex(gradient[0], '#ffffff', 0.16),
+    raiseHi: mixHex(gradient[0], '#ffffff', 0.32),
+    shade: mixHex(gradient[1], '#000000', 0.35),
+    line: CREAM,
+  };
+}
+
+/** The default base (NEBULA indigo, the incumbent forefront) — the floor a fan preview / deal
+ *  composes onto when no draft base is supplied yet (a fresh pick, before the user chooses a base). */
+export const DEFAULT_BASE: CardComposition['base'] = { gradient: BASE_GRADIENTS[0]! };
+
+/** The two gradient stops a base derives its structural tones from: a gradient base uses its stops;
+ *  a SOLID base uses its single fill for BOTH stops (so `raise` lightens it, `shade` darkens it). */
+function baseStops(base: CardComposition['base']): [string, string] {
+  return 'gradient' in base ? base.gradient : [base.fill, base.fill];
+}
+
+/** Structural tones derived from a composition's CURRENT base — the approved design (colours are
+ *  BASE-DERIVED, never a fixed indigo). Absent base → the default (a fresh pick before a base pick). */
+export function tonesFromBase(base: CardComposition['base'] = DEFAULT_BASE): StructureTones {
+  return structureTones(baseStops(base));
+}
+
+// Geometry facts the layouts are tuned to (render/buildCard.ts): elements draw in W × (H − plateH)
+// space (plate band 0.11·H at the bottom), card ratio W:H = 161:225 — so 1 unit of element-space y
+// is Y2X units of x, and a "circle" needs h ≈ 0.8·w. Text x is the CENTER; y is the BASELINE.
+const Y2X = 1.244; // (0.89 · 225/161) — converts an H'-normalized length to a W-normalized one
+const CIRC = 0.8; // h = CIRC·w renders visually circular
+const CHAR_W = 0.58; // the renderer's approx glyph-width factor (buildCard CHAR_W)
+/** The text size that fits `len` characters inside `span` (of card width), capped at `max`. */
+function fitSize(len: number, max: number, span: number): number {
+  return Math.min(max, span / Y2X / (CHAR_W * Math.max(1, len)));
+}
+
+/** A normalized exclusion rect in element space — the deal's collision vocabulary. */
+export interface StructureZone { x0: number; y0: number; x1: number; y1: number }
+
+export interface BackdropDef {
+  id: string;
+  name: string;
+  build: (t: StructureTones) => CardElement[];
+}
+export interface TitleLayoutDef {
+  id: string;
+  name: string;
+  /** The zones this layout's text occupies — a dealt emblem must never intersect one. */
+  textZones: StructureZone[];
+  /** Where a dealt emblem sits under THIS layout (centre + max width). Jitter is ±0.02 and w ≥
+   *  0.85·maxW — the slot is sized so slot ± jitter ± maxW/2 stays clear of every textZone by
+   *  construction (each emblem builds inside [±w/2] of its place). */
+  emblemSlot: { x: number; y: number; maxW: number };
+  build: (t: StructureTones, gameTitle: string) => CardElement[];
+}
+export interface EmblemDef {
+  id: string;
+  name: string;
+  /** Builds within the box [x ± w/2, y ± w/2] (the deal's zone rule leans on this envelope). */
+  build: (t: StructureTones, place: { x: number; y: number; w: number }, glyphs: { main: string; topper: string }) => CardElement[];
+}
+
+// ── Backdrops — the "sliced background" structures ─────────────────────────────────────────────
+export const BACKDROPS: BackdropDef[] = [
   {
-    id: 'nebula',
-    name: 'NEBULA',
-    kindLabel: 'TEMPLATE',
-    gradient: ['#241a4d', '#0e0b1e'],
-    accents: ['#e8c14a', '#f3ecd9', '#7ad0e8'],
-    ink: '#f3ecd9',
-    frameId: null,
-    fontId: 'bold-display',
-    plateShape: 'bevel',
-    moods: ['adventure', 'rpg', 'shooter', 'metroidvania', 'simulation'],
-    // a gold crescent moon (disc + a base-fill disc offset to carve the crescent) + cream stars + a cyan spark
-    face: [
-      { type: 'ellipse', x: 0.68, y: 0.28, w: 0.34, h: 0.34, fill: '#e8c14a' },
-      { type: 'ellipse', x: 0.6, y: 0.24, w: 0.34, h: 0.34, fill: '#241a4d' },
-      { type: 'poly', shape: 'star', x: 0.26, y: 0.3, w: 0.1, h: 0.1, fill: '#f3ecd9' },
-      { type: 'poly', shape: 'star', x: 0.4, y: 0.19, w: 0.06, h: 0.06, fill: '#f3ecd9' },
-      { type: 'ellipse', x: 0.2, y: 0.48, w: 0.03, h: 0.03, fill: '#7ad0e8' },
+    // ONE oversized rotated rect whose only on-face edge is the diagonal — the cream stroke traces
+    // it (the other three edges sit off-canvas), so it reads as a clean two-zone split.
+    id: 'diagonal-split',
+    name: 'DIAGONAL SPLIT',
+    build: (t) => [
+      { type: 'rect', x: 0.18, y: 0.5, w: 1.1, h: 2.2, rotation: 14, fill: t.raise, stroke: { color: t.line, width: 0.005 }, name: 'SPLIT PANEL' },
     ],
   },
   {
-    id: 'ember',
-    name: 'EMBER',
-    kindLabel: 'KIT',
-    gradient: ['#2b1206', '#0b0503'],
-    accents: ['#ff9f43', '#e8c14a', '#ff5a5a'],
-    ink: '#f3ecd9',
-    frameId: 'stub', // ticket-notch orange (free)
-    fontId: 'bold-display',
-    plateShape: 'slab',
-    effect: { kind: 'vignette', intensity: 0.5 }, // moody edge-darken (free)
-    finish: 'matte',
-    moods: ['horror', 'soulslike', 'action', 'fighting', 'roguelike'],
-    // a low ember glow + a red underglow + rising motes
-    face: [
-      { type: 'ellipse', x: 0.5, y: 0.72, w: 0.9, h: 0.5, fill: '#ff9f43', glow: true, opacity: 0.85 },
-      { type: 'ellipse', x: 0.5, y: 0.8, w: 0.6, h: 0.3, fill: '#ff5a5a', glow: true, opacity: 0.5 },
-      { type: 'ellipse', x: 0.34, y: 0.4, w: 0.04, h: 0.04, fill: '#e8c14a', glow: true },
-      { type: 'ellipse', x: 0.62, y: 0.34, w: 0.03, h: 0.03, fill: '#ff9f43', glow: true },
-      { type: 'ellipse', x: 0.5, y: 0.28, w: 0.025, h: 0.025, fill: '#e8c14a', glow: true },
+    // Frame-in-frame: a recessed panel wearing a cream double rule; the content area is implied.
+    id: 'inset-panel',
+    name: 'INSET PANEL',
+    build: (t) => [
+      { type: 'rect', x: 0.5, y: 0.5, w: 0.84, h: 0.86, fill: t.shade, stroke: { color: t.line, width: 0.006 }, name: 'PANEL' },
+      { type: 'rect', x: 0.5, y: 0.5, w: 0.76, h: 0.79, fill: t.shade, stroke: { color: t.line, width: 0.0025 }, opacity: 0.9, name: 'INNER RULE' },
     ],
   },
   {
-    id: 'horizon',
-    name: 'HORIZON',
-    kindLabel: 'KIT',
-    gradient: ['#2a1547', '#0a0713'],
-    accents: ['#e85ad0', '#7ad0e8', '#e8c14a'],
-    ink: '#7ad0e8',
-    frameId: 'bubblegum', // thin-line pink (free)
-    fontId: 'bold-display',
-    plateShape: 'tab',
-    effect: { kind: 'gradient-sheen', intensity: 0.5 }, // glassy sweep (free)
-    moods: ['racing', 'platformer', 'arcade', 'rhythm'],
-    // a pink/gold sun over receding cyan horizon bars
-    face: [
-      { type: 'ellipse', x: 0.5, y: 0.36, w: 0.44, h: 0.44, fill: '#e85ad0' },
-      { type: 'ellipse', x: 0.5, y: 0.33, w: 0.28, h: 0.28, fill: '#e8c14a', opacity: 0.6 },
-      { type: 'rect', x: 0.5, y: 0.6, w: 0.9, h: 0.024, fill: '#7ad0e8' },
-      { type: 'rect', x: 0.5, y: 0.66, w: 0.7, h: 0.02, fill: '#7ad0e8', opacity: 0.8 },
-      { type: 'rect', x: 0.5, y: 0.71, w: 0.5, h: 0.016, fill: '#7ad0e8', opacity: 0.6 },
-    ],
-  },
-  {
-    id: 'grove',
-    name: 'GROVE',
-    kindLabel: 'KIT',
-    gradient: ['#0e2b26', '#08120f'],
-    accents: ['#a8c980', '#a9e34b', '#f3ecd9'],
-    ink: '#f3ecd9',
-    frameId: 'lime', // thin-line lime (free)
-    fontId: 'clean-sans',
-    plateShape: 'arch',
-    effect: { kind: 'dust', intensity: 0.4 }, // soft motes (free)
-    finish: 'matte',
-    moods: ['simulation', 'puzzle', 'adventure', 'metroidvania'],
-    // a botanical medallion: moss ring (disc + base cut) around a lime core + a cream pip
-    face: [
-      { type: 'ellipse', x: 0.5, y: 0.36, w: 0.46, h: 0.46, fill: '#a8c980' },
-      { type: 'ellipse', x: 0.5, y: 0.36, w: 0.34, h: 0.34, fill: '#0e2b26' },
-      { type: 'ellipse', x: 0.5, y: 0.36, w: 0.2, h: 0.2, fill: '#a9e34b' },
-      { type: 'poly', shape: 'diamond', x: 0.5, y: 0.36, w: 0.06, h: 0.06, fill: '#f3ecd9' },
-    ],
-  },
-  {
-    id: 'arcade',
-    name: 'ARCADE',
-    kindLabel: 'KIT',
-    gradient: ['#2a0b2e', '#0a0514'],
-    accents: ['#e85ad0', '#7ad0e8', '#e8c14a'],
-    ink: '#7ad0e8',
-    frameId: 'double-line', // silver cabinet bezel (free) — REPLACES the retired bracket-corners
-    fontId: 'press-start', // PIXEL (free)
-    plateShape: 'dogtag',
-    effect: { kind: 'soft-glow', intensity: 0.5 }, // neon bloom (free) — REPLACES the premium scanline
-    moods: ['fighting', 'arcade', 'platformer', 'action'],
-    // a bold magenta triangle + a cyan bar + gold/cyan pixel blocks
-    face: [
-      { type: 'poly', shape: 'triangle', x: 0.5, y: 0.36, w: 0.44, h: 0.4, fill: '#e85ad0' },
-      { type: 'rect', x: 0.5, y: 0.62, w: 0.56, h: 0.024, fill: '#7ad0e8' },
-      { type: 'rect', x: 0.3, y: 0.3, w: 0.06, h: 0.06, fill: '#e8c14a' },
-      { type: 'rect', x: 0.7, y: 0.44, w: 0.05, h: 0.05, fill: '#7ad0e8', opacity: 0.9 },
-    ],
-  },
-  {
-    id: 'monolith',
-    name: 'MONOLITH',
-    kindLabel: 'KIT',
-    gradient: ['#1c1e26', '#0a0b0f'],
-    accents: ['#f3ecd9', '#e8c14a'],
-    ink: '#f3ecd9',
-    frameId: 'thin-line', // fine light rule (free)
-    fontId: 'clean-sans',
-    plateShape: 'slab',
-    effect: { kind: 'vignette', intensity: 0.35 }, // restrained edge-darken (free)
-    finish: 'matte',
-    moods: ['puzzle', 'strategy', 'simulation'],
-    // a restrained gallery emblem: a thin cream outline ring (base fill + cream stroke) + a gold diamond
-    face: [
-      { type: 'ellipse', x: 0.5, y: 0.34, w: 0.4, h: 0.4, fill: '#0a0b0f', stroke: { color: '#f3ecd9', width: 0.005 } },
-      { type: 'poly', shape: 'diamond', x: 0.5, y: 0.34, w: 0.1, h: 0.1, fill: '#e8c14a' },
+    // Horizontal thirds: a raised top band, a cream hairline at the break, a recessed caption bed.
+    id: 'banded-thirds',
+    name: 'BANDED THIRDS',
+    build: (t) => [
+      { type: 'rect', x: 0.5, y: 0.17, w: 1.1, h: 0.34, fill: t.raise, name: 'TOP BAND' },
+      { type: 'rect', x: 0.5, y: 0.345, w: 1.1, h: 0.008, fill: t.line, opacity: 0.9, name: 'BAND RULE' },
+      { type: 'rect', x: 0.5, y: 0.87, w: 1.1, h: 0.26, fill: t.shade, name: 'CAPTION BED' },
     ],
   },
 ];
 
-const PALETTE_BY_ID = new Map(PALETTES.map((p) => [p.id, p]));
-
-/** Resolve a FREE frame roster id to its render attrs (null = CLEAN / no frame). Pure roster lookup —
- *  keeps the exact kind+color+width of the basic row so `collectPremiumRosterIds` reads it as FREE. */
-function frameAttrs(frameId: string | null): { kind: FrameKind; color: string; width: number } | null {
-  if (!frameId) return null;
-  const f = FRAMES.find((x) => x.id === frameId);
-  return f && f.kind ? { kind: f.kind, color: f.color, width: f.width } : null;
+// ── Title layouts — text pre-positioned well ───────────────────────────────────────────────────
+/** The first A–Z0–9 of the title (the monogram glyph); 'A' when the title has none. */
+function monogramChar(gameTitle: string): string {
+  return gameTitle.toUpperCase().match(/[A-Z0-9]/)?.[0] ?? 'A';
 }
+export const TITLE_LAYOUTS: TitleLayoutDef[] = [
+  {
+    // The game title arced across the upper third (size auto-fits the length), cream, glowing,
+    // with a short rule under the apex.
+    id: 'arc-banner',
+    name: 'ARC BANNER',
+    textZones: [{ x0: 0, y0: 0.02, x1: 1, y1: 0.36 }],
+    emblemSlot: { x: 0.5, y: 0.645, maxW: 0.44 },
+    build: (t, gameTitle) => {
+      const text = gameTitle.toUpperCase().slice(0, 26);
+      return [
+        { type: 'text', x: 0.5, y: 0.2, text, size: fitSize(text.length, 0.075, 0.85), fill: t.line, arc: 40, glow: true, name: 'ARC TITLE' },
+        { type: 'rect', x: 0.5, y: 0.3, w: 0.34, h: 0.008, fill: t.line, opacity: 0.75, name: 'BANNER RULE' },
+      ];
+    },
+  },
+  {
+    // A small corner tag + one oversized letter as a luminous watermark design element.
+    id: 'monogram-tag',
+    name: 'TAG + MONOGRAM',
+    textZones: [
+      { x0: 0.44, y0: 0.22, x1: 0.9, y1: 0.72 }, // the monogram body
+      { x0: 0.02, y0: 0.04, x1: 0.62, y1: 0.18 }, // the corner tag
+    ],
+    emblemSlot: { x: 0.24, y: 0.56, maxW: 0.32 },
+    build: (t, gameTitle) => {
+      const tag = gameTitle.toUpperCase().slice(0, 14);
+      const tagSize = 0.04;
+      // text x is the CENTER — anchor the tag's left edge at 0.08 of card width
+      const tagX = 0.08 + (tag.length * tagSize * CHAR_W * Y2X) / 2;
+      return [
+        { type: 'text', x: 0.66, y: 0.66, text: monogramChar(gameTitle), size: 0.5, fill: t.raiseHi, opacity: 0.55, blend: 'screen', name: 'MONOGRAM' },
+        { type: 'text', x: tagX, y: 0.12, text: tag, size: tagSize, fill: t.line, name: 'CORNER TAG' },
+      ];
+    },
+  },
+  {
+    // Bottom-third aligned pair: the title line over a rule over a small tagline (sits just above
+    // the plate band — the plate stays the system label, this is the display text).
+    id: 'caption-block',
+    name: 'CAPTION BLOCK',
+    textZones: [{ x0: 0, y0: 0.66, x1: 1, y1: 0.93 }],
+    emblemSlot: { x: 0.5, y: 0.36, maxW: 0.5 },
+    build: (t, gameTitle) => {
+      const text = gameTitle.toUpperCase().slice(0, 28);
+      return [
+        { type: 'text', x: 0.5, y: 0.76, text, size: fitSize(text.length, 0.062, 0.84), fill: t.line, name: 'CAPTION TITLE' },
+        { type: 'rect', x: 0.5, y: 0.795, w: 0.4, h: 0.006, fill: t.line, opacity: 0.8, name: 'CAPTION RULE' },
+        { type: 'text', x: 0.5, y: 0.875, text: 'PRESS START', size: 0.032, fill: t.line, opacity: 0.7, name: 'TAGLINE' },
+      ];
+    },
+  },
+];
 
-/** Assemble a full composition from a family + an element layout (shared by the curated start-froms
- *  and SURPRISE — the single place the free-tier chrome is stamped on, so both stay coherent + free). */
-function composeFromFamily(fam: PaletteFamily, elements: CardComposition['elements'], gameTitle: string): CardComposition {
-  const frame = frameAttrs(fam.frameId);
+// ── Emblem starts — a composed centrepiece blank ───────────────────────────────────────────────
+export const EMBLEMS: EmblemDef[] = [
+  {
+    // A ringed glyph: recessed disc with a cream rule + a glowing cream icon.
+    id: 'centered-emblem',
+    name: 'CENTERED EMBLEM',
+    build: (t, p, glyphs) => [
+      { type: 'ellipse', x: p.x, y: p.y, w: p.w, h: p.w * CIRC, fill: t.shade, stroke: { color: t.line, width: 0.006 }, name: 'EMBLEM RING' },
+      { type: 'icon', iconId: glyphs.main, x: p.x, y: p.y, w: p.w * 0.5, h: p.w * 0.5 * CIRC, fill: t.line, glow: true, name: 'EMBLEM GLYPH' },
+    ],
+  },
+  {
+    // Crown-over-shield with a star pip — icons composed as one badge, not scattered.
+    id: 'badge-cluster',
+    name: 'BADGE CLUSTER',
+    build: (t, p, glyphs) => [
+      { type: 'icon', iconId: 'shield', x: p.x, y: p.y + 0.1 * p.w, w: p.w * 0.6, h: p.w * 0.48, fill: t.shade, stroke: { color: t.line, width: 0.005 }, name: 'BADGE SHIELD' },
+      { type: 'icon', iconId: glyphs.topper, x: p.x, y: p.y - 0.26 * p.w, w: p.w * 0.4, h: p.w * 0.24, fill: t.line, glow: true, name: 'BADGE TOPPER' },
+      { type: 'icon', iconId: 'star', x: p.x, y: p.y + 0.1 * p.w, w: p.w * 0.16, h: p.w * 0.13, fill: t.line, opacity: 0.9, name: 'BADGE PIP' },
+    ],
+  },
+];
+
+// The gaming-native glyph pools a deal draws from (all ESSENTIAL_ICONS ids — free, CARD-17).
+const DEAL_GLYPHS = ['invader', 'crown', 'sword', 'shield', 'dpad', 'joystick', 'trophy', 'flame'] as const;
+const DEAL_TOPPERS = ['crown', 'bolt', 'flame'] as const;
+// The fan's fixed template glyphs (deterministic previews; the deal varies them).
+const TEMPLATE_GLYPHS = { main: 'invader', topper: 'crown' } as const;
+
+/** A structural start composition: elements over the CURRENT base (the default when none is supplied),
+ *  default plate, NO chrome — structure is the offer, colour + chrome stay the user's (and the
+ *  cost-stack is trivially 0). Element tones are built from THIS base's stops by the caller, so the
+ *  card renders base-derived panels — not a fixed indigo — the moment the base changes. */
+function composeStructure(
+  elements: CardElement[],
+  gameTitle: string,
+  base: CardComposition['base'] = DEFAULT_BASE,
+): CardComposition {
   return {
     schemaVersion: COMPOSITION_SCHEMA_VERSION,
-    base: { gradient: fam.gradient },
+    base,
     elements,
-    ...(frame ? { frame } : {}),
-    ...(fam.effect ? { effect: fam.effect } : {}),
-    ...(fam.finish ? { finish: { kind: fam.finish } } : {}),
-    nameplate: plate(gameTitle, fam.ink, fam.plateShape, fam.fontId),
+    nameplate: plate(gameTitle),
   };
 }
 
 export interface StartSource {
   id: string;
   name: string;
-  kindLabel: 'DEFAULT' | 'TEMPLATE' | 'KIT' | 'PRESET';
-  compose: (gameTitle: string) => CardComposition;
+  kindLabel: 'DEFAULT' | 'BACKDROP' | 'TITLE' | 'EMBLEM';
+  /** Compose the start onto the current base (its tones derive from `base`'s stops); absent base →
+   *  the default. Pass the DRAFT's current base so the fan preview re-derives when the base changes. */
+  compose: (gameTitle: string, base?: CardComposition['base']) => CardComposition;
 }
-
-const CURATED_SOURCES: StartSource[] = PALETTES.map((fam) => ({
-  id: fam.id,
-  name: fam.name,
-  kindLabel: fam.kindLabel,
-  compose: (t) => composeFromFamily(fam, fam.face, t),
-}));
 
 const DEFAULT_SOURCE: StartSource = { id: 'default', name: 'DEFAULT', kindLabel: 'DEFAULT', compose: defaultBase };
 
-/** Templates = single faces; kits arrive wearing a frame + effect bundle (COSM-02). Curated families
- *  first, the plain DEFAULT last (the blank-slate escape hatch). */
-export const START_SOURCES: StartSource[] = [...CURATED_SOURCES, DEFAULT_SOURCE];
-
-/**
- * Genre-aware ordering (W-6): score each curated family by how many of its `moods` the game's genres
- * match, then lead with the best fit. Nothing is hidden — a zero-match game keeps the curated order,
- * and DEFAULT always stays last. Cheap: `genres` already rides the styler route's shelf entry
- * (CollectionItem.genres), so no new fetch. Stable (curated order breaks ties / zero scores).
- */
-export function startSourcesFor(genres: ReadonlyArray<{ name: string }> = []): StartSource[] {
-  const wants = new Set(genres.map((g) => g.name.toLowerCase()));
-  const scored = CURATED_SOURCES.map((s, i) => {
-    const moods = PALETTE_BY_ID.get(s.id)?.moods ?? [];
-    const score = moods.reduce((n, m) => n + (wants.has(m) ? 1 : 0), 0);
-    return { s, i, score };
-  });
-  scored.sort((a, b) => b.score - a.score || a.i - b.i);
-  return [...scored.map((x) => x.s), DEFAULT_SOURCE];
-}
-
-// ── SURPRISE ME — coherent randomisation (W-6) ─────────────────────────────────────────────────
-// The old deal was pure-uniform noise: independent random fills per shape (clashing), a random frame
-// colour unrelated to them, random ink — ugly. It now deals a random CURATED FAMILY, then generates a
-// coherent element layout from that family's accents via one of a few layout archetypes. The chrome
-// (frame/plate/font/effect) is the family's — always FREE — so a deal FEELS lucky, not random, and can
-// never open a premium debt. Premium-in-surprise rule: NEVER. Families reference free cosmetics only;
-// the cost-stack of every deal is 0 (asserted in the tests), matching the start-from guarantee.
-// The combo logic is PURE with an injectable rng (`() => number` in [0,1)) so it's unit-testable.
-
-function rng01(rng: () => number, min: number, max: number): number {
-  return min + rng() * (max - min);
-}
-const clamp01 = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
-
-/** The layout archetypes — each returns coherent geometry drawn ONLY from `a` (accents) + `g` (gradient
- *  stops, for base-fill cut-outs). Pure given the rng. */
-type Archetype = (a: string[], g: [string, string], rng: () => number) => CardComposition['elements'];
-
-const ARCHETYPES: Archetype[] = [
-  // EMBLEM — a centred medallion: accent disc, base cut-out ring, inner accent core
-  (a, g, rng) => {
-    const cy = rng01(rng, 0.3, 0.4);
-    const r = rng01(rng, 0.4, 0.5);
-    return [
-      { type: 'ellipse', x: 0.5, y: cy, w: r, h: r, fill: a[0]! },
-      { type: 'ellipse', x: 0.5, y: cy, w: r * 0.68, h: r * 0.68, fill: g[0] },
-      { type: 'ellipse', x: 0.5, y: cy, w: r * 0.36, h: r * 0.36, fill: a[1 % a.length]! },
-    ];
-  },
-  // CONSTELLATION — a hero star + scattered small stars/dots
-  (a, g, rng) => {
-    const els: CardComposition['elements'] = [
-      { type: 'poly', shape: 'star', x: rng01(rng, 0.42, 0.6), y: rng01(rng, 0.28, 0.38), w: rng01(rng, 0.24, 0.34), h: rng01(rng, 0.24, 0.34), fill: a[0]! },
-    ];
-    const n = 3 + Math.floor(rng() * 3);
-    for (let i = 0; i < n; i++) {
-      const dot = rng() < 0.5;
-      els.push(
-        dot
-          ? { type: 'ellipse', x: rng01(rng, 0.16, 0.84), y: rng01(rng, 0.14, 0.56), w: rng01(rng, 0.02, 0.05), h: rng01(rng, 0.02, 0.05), fill: a[1 % a.length]! }
-          : { type: 'poly', shape: 'star', x: rng01(rng, 0.16, 0.84), y: rng01(rng, 0.14, 0.56), w: rng01(rng, 0.05, 0.09), h: rng01(rng, 0.05, 0.09), fill: a[1 % a.length]! },
-      );
-    }
-    return els;
-  },
-  // BANNER — 2–3 stacked bars of decreasing width (alternating accents) + a poly emblem above
-  (a, g, rng) => {
-    const els: CardComposition['elements'] = [
-      { type: 'poly', shape: rng() < 0.5 ? 'triangle' : 'diamond', x: 0.5, y: rng01(rng, 0.28, 0.36), w: rng01(rng, 0.28, 0.4), h: rng01(rng, 0.28, 0.4), fill: a[0]! },
-    ];
-    const bars = 2 + Math.floor(rng() * 2);
-    for (let i = 0; i < bars; i++) {
-      els.push({ type: 'rect', x: 0.5, y: 0.58 + i * 0.06, w: clamp01(0.86 - i * 0.18, 0.3, 0.9), h: rng01(rng, 0.016, 0.026), fill: a[(i + 1) % a.length]!, opacity: clamp01(1 - i * 0.2, 0.5, 1) });
-    }
-    return els;
-  },
-  // SCATTER — the old shape-scatter, but palette-locked so it reads coherent (small rotations, accents only)
-  (a, g, rng) => {
-    const shapes = ['star', 'diamond', 'triangle'] as const;
-    const els: CardComposition['elements'] = [];
-    const n = 3 + Math.floor(rng() * 2);
-    for (let i = 0; i < n; i++) {
-      els.push({
-        type: 'poly',
-        shape: shapes[Math.floor(rng() * shapes.length)]!,
-        x: rng01(rng, 0.24, 0.76),
-        y: rng01(rng, 0.18, 0.56),
-        w: rng01(rng, 0.12, 0.34),
-        h: rng01(rng, 0.12, 0.34),
-        rotation: Math.floor(rng01(rng, -24, 24)),
-        fill: a[i % a.length]!,
-        ...(i > 0 ? { opacity: rng01(rng, 0.7, 1) } : {}),
-      });
-    }
-    return els;
-  },
+/** The structural fan: backdrops → title layouts → emblem starts → DEFAULT last (CARD-16 — never a
+ *  blank canvas; DEFAULT is the intentional plain floor). Structure is genre-neutral, so the fan is
+ *  ONE fixed, considered order — the old genre-mood reordering (startSourcesFor) is retired. */
+export const START_SOURCES: StartSource[] = [
+  ...BACKDROPS.map((b): StartSource => ({
+    id: b.id,
+    name: b.name,
+    kindLabel: 'BACKDROP',
+    compose: (gameTitle, base) => composeStructure(b.build(tonesFromBase(base)), gameTitle, base),
+  })),
+  ...TITLE_LAYOUTS.map((l): StartSource => ({
+    id: l.id,
+    name: l.name,
+    kindLabel: 'TITLE',
+    compose: (gameTitle, base) => composeStructure(l.build(tonesFromBase(base), gameTitle), gameTitle, base),
+  })),
+  ...EMBLEMS.map((e): StartSource => ({
+    id: e.id,
+    name: e.name,
+    kindLabel: 'EMBLEM',
+    compose: (gameTitle, base) =>
+      composeStructure(
+        e.build(tonesFromBase(base), { x: 0.5, y: 0.42, w: 0.52 }, TEMPLATE_GLYPHS),
+        gameTitle,
+        base,
+      ),
+  })),
+  DEFAULT_SOURCE,
 ];
 
+// ── DEAL A CARD (the SURPRISE ME rebuild — one composed hand, not thrown polygons) ─────────────
+// A deal composes ONE backdrop + ONE title layout + ONE emblem (or deliberately none, ~28%) into a
+// coherent card: shared base-derived tones, sane z-order (backdrop under emblem under text), and the
+// zone rule — the emblem lands in the title layout's `emblemSlot`, an envelope sized so it can NEVER
+// intersect that layout's `textZones` (asserted over 200 seeds in startsources.test.ts). Pure given
+// `rng`; the plan/compose split keeps the invariants unit-testable.
+
+export interface DealPlan {
+  backdropId: string;
+  layoutId: string;
+  emblemId: string | null; // null = a deliberately emblem-free deal
+  place: { x: number; y: number; w: number } | null;
+  glyphs: { main: string; topper: string } | null;
+}
+
+/** Draw a deal plan. rng call order is FIXED (backdrop → layout → emblem roll → picks → placement)
+ *  so a given seed always yields the same plan. */
+export function dealPlan(rng: () => number): DealPlan {
+  const backdrop = BACKDROPS[Math.floor(rng() * BACKDROPS.length)]!;
+  const layout = TITLE_LAYOUTS[Math.floor(rng() * TITLE_LAYOUTS.length)]!;
+  if (rng() < 0.28) {
+    return { backdropId: backdrop.id, layoutId: layout.id, emblemId: null, place: null, glyphs: null };
+  }
+  const emblem = EMBLEMS[Math.floor(rng() * EMBLEMS.length)]!;
+  const glyphs = {
+    main: DEAL_GLYPHS[Math.floor(rng() * DEAL_GLYPHS.length)]!,
+    topper: DEAL_TOPPERS[Math.floor(rng() * DEAL_TOPPERS.length)]!,
+  };
+  const slot = layout.emblemSlot;
+  const place = {
+    x: slot.x + (rng() - 0.5) * 0.04, // jitter ±0.02 — the slot envelope accounts for it
+    y: slot.y + (rng() - 0.5) * 0.04,
+    w: slot.maxW * (0.85 + rng() * 0.15),
+  };
+  return { backdropId: backdrop.id, layoutId: layout.id, emblemId: emblem.id, place, glyphs };
+}
+
+/** Realize a plan as a composition, tones derived from the CURRENT base. Z-order: backdrop under
+ *  emblem under title text. Absent base → the default (a deal from a fresh pick). */
+export function composeDeal(
+  dealtPlan: DealPlan,
+  gameTitle: string,
+  base: CardComposition['base'] = DEFAULT_BASE,
+): CardComposition {
+  const t = tonesFromBase(base);
+  const backdrop = BACKDROPS.find((b) => b.id === dealtPlan.backdropId) ?? BACKDROPS[0]!;
+  const layout = TITLE_LAYOUTS.find((l) => l.id === dealtPlan.layoutId) ?? TITLE_LAYOUTS[0]!;
+  const emblem = dealtPlan.emblemId ? EMBLEMS.find((e) => e.id === dealtPlan.emblemId) : undefined;
+  const emblemEls =
+    emblem && dealtPlan.place && dealtPlan.glyphs ? emblem.build(t, dealtPlan.place, dealtPlan.glyphs) : [];
+  return composeStructure([...backdrop.build(t), ...emblemEls, ...layout.build(t, gameTitle)], gameTitle, base);
+}
+
 /**
- * SURPRISE ME — deal a coherent, free-tier start card (CARD-16; non-idempotent by default). Pure given
- * `rng` (defaults to Math.random for the app) — inject a seeded source to unit-test the invariants.
+ * DEAL A CARD (UI copy; the export keeps its historical name — render/composition.test.ts guards it
+ * too). Deals a coherent, FREE structural start (CARD-16; non-idempotent by default). Pure given
+ * `rng` (defaults Math.random for the app) — inject a seeded source to test the invariants.
  */
-export function surpriseDeal(gameTitle: string, rng: () => number = Math.random): CardComposition {
-  const fam = PALETTES[Math.floor(rng() * PALETTES.length)]!;
-  const archetype = ARCHETYPES[Math.floor(rng() * ARCHETYPES.length)]!;
-  const elements = archetype(fam.accents, fam.gradient, rng);
-  // keep the family's chrome (free) but jitter the effect intensity so two same-family deals differ
-  const effect = fam.effect ? { kind: fam.effect.kind, intensity: clamp01(fam.effect.intensity + rng01(rng, -0.1, 0.1), 0.2, 0.9) } : undefined;
-  const withEffect: PaletteFamily = { ...fam, effect };
-  return composeFromFamily(withEffect, elements, gameTitle);
+export function surpriseDeal(
+  gameTitle: string,
+  rng: () => number = Math.random,
+  base: CardComposition['base'] = DEFAULT_BASE,
+): CardComposition {
+  return composeDeal(dealPlan(rng), gameTitle, base);
 }

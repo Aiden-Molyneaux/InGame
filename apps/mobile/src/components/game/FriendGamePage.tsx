@@ -64,7 +64,9 @@ export function FriendGamePage({
   const { data: friendCol, isLoading: friendLoading, isError: friendError, error: friendErr, refetch } =
     useGetUserCollectionQuery(via, { skip: !via });
   const { data: friendProfile } = useGetUserQuery(via, { skip: !via });
-  const { data: gallery } = useGetGameGalleryQuery(gameId, { skip: !gameId });
+  // ARCH A4 — the FULL-SET read (bare { gameId }, the pre-0.81 arg): the friend's equipped card must
+  // resolve wherever it ranks, so this lookup must NOT ride the CARDS tab's top-12 strip.
+  const { data: gallery } = useGetGameGalleryQuery({ gameId }, { skip: !gameId });
   const { data: wallet } = useGetWalletQuery();
   const [adoptCard, adoptState] = useAdoptCardMutation();
   const [addToCollection, addState] = useAddToCollectionMutation();
@@ -254,8 +256,12 @@ export function FriendGamePage({
             />
           ) : section === 'cards' ? (
             // CARDS = the community gallery ONLY (no switcher — not your shelf); adopt-capable (ECON-03).
+            // 0.81: top-12 + SORT + SEE ALL (adopt-capable full list) like the OWN posture.
             <CommunityGallery
               gameId={gameId}
+              top={12}
+              sortToggle
+              onSeeAll={() => router.push(`/game/${gameId}/cards?adopt=1`)}
               onInspect={setInspectCard}
               onDesignACard={() => router.push(`/styler/${gameId}`)}
               onViewDesigner={(userId) => router.push(`/contributor/${userId}`)}

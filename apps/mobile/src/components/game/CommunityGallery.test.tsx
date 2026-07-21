@@ -131,4 +131,108 @@ describe('CommunityGallery (§9)', () => {
     // LoadError uppercases its title; the message stays as-is.
     expect(screen.getByText(/your own cards above are unaffected/)).toBeTruthy();
   });
+
+  it('a bare mount keeps the pre-0.81 FULL-SET arg { gameId } (the ARCH-A4 lookup contract)', () => {
+    mockUseGallery.mockReturnValue({ data: { items: [FREE_CARD] }, isLoading: false, isError: false });
+    render(wrap(<CommunityGallery gameId="g1" onInspect={jest.fn()} onDesignACard={jest.fn()} onViewDesigner={jest.fn()} />));
+    expect(mockUseGallery).toHaveBeenCalledWith({ gameId: 'g1' });
+  });
+});
+
+// 0.81 (owner walk m6) — the inline gallery becomes a server-ranked TOP-N strip with the drawn
+// affordances (game-page-states "SORT ›" / "SEE ALL ›"): `top` caps the fetch (sort=top&limit=N),
+// `sortToggle` renders the head's SORT link, `onSeeAll` renders the SEE ALL {N} › full-list door.
+describe('CommunityGallery 0.81 — the top-N strip (sort toggle · SEE ALL door · honest total)', () => {
+  afterEach(() => mockUseGallery.mockReset());
+
+  it('top={12} fetches sort=top&limit=12; the head counts the TOTAL, not the strip length', () => {
+    mockUseGallery.mockReturnValue({
+      data: { items: [FREE_CARD, PRICED_CARD], total: 41, nextCursor: null },
+      isLoading: false,
+      isError: false,
+    });
+    render(
+      wrap(
+        <CommunityGallery
+          gameId="g1"
+          top={12}
+          onInspect={jest.fn()}
+          onDesignACard={jest.fn()}
+          onViewDesigner={jest.fn()}
+        />,
+      ),
+    );
+    expect(mockUseGallery).toHaveBeenCalledWith({ gameId: 'g1', sort: 'top', limit: 12 });
+    expect(screen.getByText('COMMUNITY CARDS — 41')).toBeTruthy();
+  });
+
+  it('the SORT link toggles TOP ↔ NEW and re-reads server-side (the query arg flips)', () => {
+    mockUseGallery.mockReturnValue({
+      data: { items: [FREE_CARD], total: 3, nextCursor: null },
+      isLoading: false,
+      isError: false,
+    });
+    render(
+      wrap(
+        <CommunityGallery
+          gameId="g1"
+          top={12}
+          sortToggle
+          onInspect={jest.fn()}
+          onDesignACard={jest.fn()}
+          onViewDesigner={jest.fn()}
+        />,
+      ),
+    );
+    expect(mockUseGallery).toHaveBeenLastCalledWith({ gameId: 'g1', sort: 'top', limit: 12 });
+    fireEvent.press(screen.getByText('SORT: TOP ›'));
+    expect(mockUseGallery).toHaveBeenLastCalledWith({ gameId: 'g1', sort: 'new', limit: 12 });
+    // the link reads the CURRENT sort — pressing again flips back
+    fireEvent.press(screen.getByText('SORT: NEW ›'));
+    expect(mockUseGallery).toHaveBeenLastCalledWith({ gameId: 'g1', sort: 'top', limit: 12 });
+  });
+
+  it('SEE ALL {N} › renders when the gallery holds more than the strip, and fires onSeeAll', () => {
+    const onSeeAll = jest.fn();
+    mockUseGallery.mockReturnValue({
+      data: { items: [FREE_CARD, PRICED_CARD], total: 41, nextCursor: null },
+      isLoading: false,
+      isError: false,
+    });
+    render(
+      wrap(
+        <CommunityGallery
+          gameId="g1"
+          top={2}
+          onSeeAll={onSeeAll}
+          onInspect={jest.fn()}
+          onDesignACard={jest.fn()}
+          onViewDesigner={jest.fn()}
+        />,
+      ),
+    );
+    fireEvent.press(screen.getByText('SEE ALL 41 ›'));
+    expect(onSeeAll).toHaveBeenCalledTimes(1);
+  });
+
+  it('no SEE ALL door when the strip IS the whole gallery (total == shown)', () => {
+    mockUseGallery.mockReturnValue({
+      data: { items: [FREE_CARD, PRICED_CARD], total: 2, nextCursor: null },
+      isLoading: false,
+      isError: false,
+    });
+    render(
+      wrap(
+        <CommunityGallery
+          gameId="g1"
+          top={12}
+          onSeeAll={jest.fn()}
+          onInspect={jest.fn()}
+          onDesignACard={jest.fn()}
+          onViewDesigner={jest.fn()}
+        />,
+      ),
+    );
+    expect(screen.queryByText(/SEE ALL/)).toBeNull();
+  });
 });

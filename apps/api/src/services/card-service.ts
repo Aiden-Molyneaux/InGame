@@ -29,6 +29,7 @@ import * as entitlementRepo from '../repositories/entitlement-repo';
 import * as relationshipRepo from '../repositories/relationship-repo';
 import * as profileRepo from '../repositories/profile-repo';
 import { acquireComponents } from './cosmetics/cosmetic-service';
+import { decodeOffsetCursor } from './pagination';
 import {
   AlreadyAdoptedError,
   CardEquippedError,
@@ -720,27 +721,47 @@ export async function unpublishCard(actorId: string, cardId: string): Promise<Ca
   return row;
 }
 
+/** The 0.81 gallery read options — the validated `gameGalleryQuerySchema` shape, post-controller. */
+export interface GalleryReadOptions {
+  sort?: 'top' | 'new';
+  cursor?: string;
+  limit?: number;
+}
+
 /**
  * GET /games/:gameId/cards — the community gallery: PUBLISHED cards only, flattened + attributed +
- * PERSONALIZED prices (decision 0072). Block-filtered BOTH directions (SOC-09 §0.6): a card whose
- * designer is blocked either-way with the caller vanishes from the caller's gallery. `priceForYou` is
- * the caller's missing-components sum per card.
+ * PERSONALIZED prices (decision 0072). Block-filtered BOTH directions (SOC-09 §0.6) — 0.81 pushes the
+ * exclusion INTO the SQL read (via the caller's full either-direction block set) so a paged slice is
+ * never post-filtered short. `sort=top` ranks by adoption count in SQL (the LEFT-JOIN tally — never
+ * an in-memory rank); absent params keep the pre-0.81 read (full set, newest first). The response
+ * carries `total` (the caller-visible gallery size) + `nextCursor` (offset cursor; null unpaged/last).
  */
 export async function listGameGallery(
   actorId: string,
   gameId: string,
+  opts: GalleryReadOptions = {},
 ): Promise<GameGalleryResponse> {
   if (!UUID_RE.test(gameId)) throw new NotFoundError('Game not found.');
-  const rows = await cardRepo.listPublishedDesignsForGame(gameId);
-  const visible = await filterBlockedDesigners(actorId, rows);
-  const counts = await cardRepo.adoptionCountsByCard(visible.map((r) => r.id));
+  const { sort = 'new', limit } = opts;
+  const offset = decodeOffsetCursor(opts.cursor);
+  const excludeDesignerIds = [...(await relationshipRepo.listBlockedIds(actorId))];
+  const visible = await cardRepo.listPublishedDesignsForGame(gameId, {
+    sort,
+    limit,
+    offset,
+    excludeDesignerIds,
+  });
+  const total = await cardRepo.countPublishedDesignsForGame(gameId, excludeDesignerIds);
   const owned = await ownedPremiumFor(actorId, visible.flatMap((r) => r.premiumComponentIds));
   // M5 F-13 E4 — which of these cards the caller has ACTIVELY adopted (one batched read, reusing the
   // switcher-rider resolver); drives the "ADOPTED" cell tag.
   const adopted = await adoptionRepo.adoptedDesignsByIds(actorId, visible.map((r) => r.id));
   const adoptedIds = new Set(adopted.keys());
+  const nextCursor = limit != null && offset + limit < total ? String(offset + limit) : null;
   return {
-    items: visible.map((r) => toGalleryShape(r, counts.get(r.id) ?? 0, owned, actorId, adoptedIds)),
+    items: visible.map((r) => toGalleryShape(r, r.adoptionCount, owned, actorId, adoptedIds)),
+    nextCursor,
+    total,
   };
 }
 

@@ -185,8 +185,21 @@ export const galleryCardSchema = z
   .strict();
 export type GalleryCardView = z.infer<typeof galleryCardSchema>;
 
-/** GET /games/:gameId/cards — the community gallery (published only; personalized prices). */
-export const gameGalleryResponseSchema = z.object({ items: z.array(galleryCardSchema) }).strict();
+/**
+ * GET /games/:gameId/cards — the community gallery (published only; personalized prices). 0.81 adds
+ * the paging envelope (F-17 additive; both fields optional so the schema still parses a pre-0.81
+ * body): `nextCursor` — the opaque offset cursor for the next page (`null` on the last page or an
+ * unpaged read; the contributor VIEW-ALL grammar) — and `total`, the caller-visible gallery size
+ * (block-filtered), which feeds the "COMMUNITY CARDS — N" head + the "SEE ALL {N} ›" doors even when
+ * only a top-N strip was fetched.
+ */
+export const gameGalleryResponseSchema = z
+  .object({
+    items: z.array(galleryCardSchema),
+    nextCursor: z.string().nullable().optional(),
+    total: z.number().int().nonnegative().optional(),
+  })
+  .strict();
 export type GameGalleryResponse = z.infer<typeof gameGalleryResponseSchema>;
 
 /**

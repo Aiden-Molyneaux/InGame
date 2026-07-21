@@ -320,9 +320,14 @@ function OwnGamePage({ entry }: { entry: CollectionItem }) {
                 onShare={(cardId, name) => void shareCard(cardId, name)}
                 shareBusy={shareBusy}
               />
-              {/* P8 — the community gallery (other users' published cards for this game) → adopt */}
+              {/* P8 — the community gallery (other users' published cards for this game) → adopt.
+                  0.81: a TOP-12 strip + SORT toggle + the SEE ALL {N} › door to the paged full list
+                  (the drawn game-page affordances) — no longer the whole set. */}
               <CommunityGallery
                 gameId={entry.gameId}
+                top={12}
+                sortToggle
+                onSeeAll={() => router.push(`/game/${entry.gameId}/cards?adopt=1`)}
                 onInspect={setInspectCard}
                 onDesignACard={() => router.push(`/styler/${entry.gameId}`)}
                 onViewDesigner={(userId) => router.push(`/contributor/${userId}`)}

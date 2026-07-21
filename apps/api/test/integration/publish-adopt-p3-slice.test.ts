@@ -751,3 +751,118 @@ describe('M5 F-9 E2: cross-user `components` metadata (registry-resolved, owned-
     expect('composition' in adopted).toBe(false);
   });
 });
+
+// ── api-contract 0.81 — gallery sort + cursor paging (the m6 owner-walk build) ────────────────────────
+describe('CARD-05/OQ-122 (0.81): gallery sort=top SQL rank · cursor paging · additive-param compatibility', () => {
+  /** Three published FREE cards by three designers with 2 / 1 / 0 adoptions (via real adopt calls),
+   *  plus a clean viewer. Publish order: zero → one → two (so recency = [two, one, zero]). */
+  async function seedRankedGallery() {
+    const dz = await registerUser(); // designs the 0-adoption card
+    const d1 = await registerUser();
+    const d2 = await registerUser();
+    const viewer = await registerUser();
+    const game = await seedGame(dz.token, 'Ranked Gallery RPG');
+    const zero = await publishFresh(dz.token, game.id, { seed: 80, name: 'Zero Adopts' });
+    const one = await publishFresh(d1.token, game.id, { seed: 81, name: 'One Adopt' });
+    const two = await publishFresh(d2.token, game.id, { seed: 82, name: 'Two Adopts' });
+    const ad1 = await registerUser();
+    const ad2 = await registerUser();
+    for (const [user, cardIds] of [
+      [ad1, [two.id, one.id]],
+      [ad2, [two.id]],
+    ] as const) {
+      await request(app).post('/api/me/collection').set(authed(user.token)).send({ gameId: game.id });
+      for (const cardId of cardIds) {
+        const res = await request(app).post(`/api/cards/${cardId}/adopt`).set(authed(user.token));
+        expect(res.status).toBe(200);
+      }
+    }
+    return { viewer, game, zero, one, two, designers: { dz, d1, d2 } };
+  }
+
+  it('sort=top ranks by the SQL adoption tally (LEFT-JOIN subquery) — counts ride the rows, 0-adopt cards trail', async () => {
+    const { viewer, game, zero, one, two } = await seedRankedGallery();
+    const res = await request(app).get(`/api/games/${game.id}/cards?sort=top`).set(authed(viewer.token));
+    expect(res.status).toBe(200);
+    expect(res.body.items.map((c: { id: string }) => c.id)).toEqual([two.id, one.id, zero.id]);
+    expect(res.body.items.map((c: { adoptionCount: number }) => c.adoptionCount)).toEqual([2, 1, 0]);
+    expect(res.body.total).toBe(3);
+    expect(res.body.nextCursor).toBeNull(); // unpaged (no limit) → no cursor even under sort=top
+  });
+
+  it('cursor pages of `limit` slice the ranked order; nextCursor chains to the end; total stays the full size', async () => {
+    const { viewer, game, zero, one, two } = await seedRankedGallery();
+    const page1 = await request(app)
+      .get(`/api/games/${game.id}/cards?sort=top&limit=2`)
+      .set(authed(viewer.token));
+    expect(page1.status).toBe(200);
+    expect(page1.body.items.map((c: { id: string }) => c.id)).toEqual([two.id, one.id]);
+    expect(page1.body.total).toBe(3);
+    expect(page1.body.nextCursor).toBe('2');
+
+    const page2 = await request(app)
+      .get(`/api/games/${game.id}/cards?sort=top&limit=2&cursor=${page1.body.nextCursor}`)
+      .set(authed(viewer.token));
+    expect(page2.status).toBe(200);
+    expect(page2.body.items.map((c: { id: string }) => c.id)).toEqual([zero.id]);
+    expect(page2.body.nextCursor).toBeNull(); // last page
+    expect(page2.body.total).toBe(3);
+  });
+
+  it('ADDITIVE (F-17): no params keeps the pre-0.81 read — the FULL set, newest first, nextCursor null', async () => {
+    const { viewer, game, zero, one, two } = await seedRankedGallery();
+    const res = await request(app).get(`/api/games/${game.id}/cards`).set(authed(viewer.token));
+    expect(res.status).toBe(200);
+    // recency (updatedAt desc — publish order reversed), NOT adoption rank: the 4 pre-0.81 mounts' order
+    expect(res.body.items.map((c: { id: string }) => c.id)).toEqual([two.id, one.id, zero.id]);
+    expect(res.body.nextCursor).toBeNull();
+    expect(res.body.total).toBe(3); // the additive envelope rides even unpaged (the SEE-ALL door source)
+  });
+
+  it('SOC-09: a blocked designer is excluded IN the query — the page AND the total both shrink', async () => {
+    const { viewer, game, two, designers } = await seedRankedGallery();
+    // viewer blocks the top card's designer → the paged TOP read must neither show it nor count it.
+    await getDb().insert(userBlocks).values({ blockerId: viewer.id, blockedId: designers.d2.id });
+    const res = await request(app)
+      .get(`/api/games/${game.id}/cards?sort=top&limit=2`)
+      .set(authed(viewer.token));
+    expect(res.status).toBe(200);
+    expect(res.body.items.map((c: { id: string }) => c.id)).not.toContain(two.id);
+    expect(res.body.items).toHaveLength(2); // the page stays FULL-SIZE (never post-filtered short)
+    expect(res.body.total).toBe(2);
+    expect(res.body.nextCursor).toBeNull(); // 2 visible, page of 2 → no next page
+  });
+
+  it('SYS-02: bad params refuse 422 VALIDATION_ERROR (the shared gameGalleryQuerySchema is the boundary)', async () => {
+    const { viewer, game } = await seedRankedGallery();
+    for (const qs of ['sort=hot', 'limit=0', 'limit=999', 'limit=abc']) {
+      const res = await request(app).get(`/api/games/${game.id}/cards?${qs}`).set(authed(viewer.token));
+      expect(res.status).toBe(422);
+      expect(res.body.error.code).toBe('VALIDATION_ERROR');
+    }
+  });
+
+  it('MAJOR-1: a numeric-overflow / garbage cursor reads as page-1 (200) — never a 500 on the pg bigint bind', async () => {
+    const { viewer, game, two, one } = await seedRankedGallery();
+    const page1Ids = [two.id, one.id]; // sort=top, limit=2, offset 0
+    // `1e21` / the 20-digit literal both pass boundedText(40) yet used to parse (via Number/isInteger)
+    // to a colossal offset and 500 on the SQL OFFSET bind; `abc`/`-5`/`1.5` are the plain-garbage cases.
+    for (const cursor of ['1e21', '10000000000000000000', 'abc', '-5', '1.5']) {
+      const res = await request(app)
+        .get(`/api/games/${game.id}/cards?sort=top&limit=2&cursor=${cursor}`)
+        .set(authed(viewer.token));
+      expect(res.status).toBe(200); // house grammar: garbage cursor → offset 0 → silent page 1
+      expect(res.body.items.map((c: { id: string }) => c.id)).toEqual(page1Ids);
+      expect(res.body.nextCursor).toBe('2');
+    }
+  });
+
+  it('MINOR (F-17): a stray query param is STRIPPED, not rejected — the .strict() drop mirrors the ledger precedent', async () => {
+    const { viewer, game } = await seedRankedGallery();
+    const res = await request(app)
+      .get(`/api/games/${game.id}/cards?sort=top&limit=2&_=cachebust`)
+      .set(authed(viewer.token));
+    expect(res.status).toBe(200); // the extra `_` cache-buster must not 422 a read
+    expect(res.body.items).toHaveLength(2);
+  });
+});

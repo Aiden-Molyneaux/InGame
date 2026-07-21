@@ -4,8 +4,17 @@ import type {
   TrendingCardsResponse,
   OkResponse,
 } from '@ingame/shared';
+import type { GallerySort } from '@ingame/shared';
 import { gameGalleryResponseSchema, adoptResponseSchema, trendingCardsResponseSchema } from '@ingame/shared';
 import { api } from './api';
+
+/** The 0.81 gallery read arg — a bare { gameId } keeps the pre-0.81 full-set/recency read. */
+export interface GameGalleryArgs {
+  gameId: string;
+  sort?: GallerySort;
+  limit?: number;
+  cursor?: string;
+}
 
 // P8 community endpoints (M5 · decision 0072/0073 · api-contract 0.60/0.61). These are INJECTED into the
 // base `api` slice from a separate file — the concurrent styler/canvas/device track owns api.ts, so this
@@ -22,10 +31,23 @@ const communityApi = api
     endpoints: (build) => ({
       // GET /games/:gameId/cards — other users' PUBLISHED cards for a game, personalized `priceForYou`
       // (the caller's missing-components sum, decision 0072), block-filtered (SOC-09). Parsed at the seam.
-      getGameGallery: build.query<GameGalleryResponse, string>({
-        query: (gameId) => `/games/${gameId}/cards`,
+      // 0.81 — the arg widens to { gameId, sort?, limit?, cursor? }: `sort=top` is the SQL adoption
+      // rank; `limit` fetches a top-N strip (the fork/inline galleries) or a 24-page (the full list);
+      // `cursor` pages via the lazy hook (the contributor VIEW-ALL grammar). A bare { gameId } keeps
+      // the pre-0.81 full-set read (the FriendGamePage ARCH-A4 equipped-card lookup depends on it).
+      // Each distinct arg is its own cache entry; all entries for a game share the per-game tag, so an
+      // adopt invalidation refreshes strip + page-1 + full-set reads together.
+      getGameGallery: build.query<GameGalleryResponse, GameGalleryArgs>({
+        query: ({ gameId, sort, limit, cursor }) => {
+          const params = new URLSearchParams();
+          if (sort) params.set('sort', sort);
+          if (limit != null) params.set('limit', String(limit));
+          if (cursor) params.set('cursor', cursor);
+          const qs = params.toString();
+          return `/games/${gameId}/cards${qs ? `?${qs}` : ''}`;
+        },
         transformResponse: (raw): GameGalleryResponse => gameGalleryResponseSchema.parse(raw),
-        providesTags: (_res, _err, gameId) => [{ type: 'CommunityCards', id: gameId }],
+        providesTags: (_res, _err, { gameId }) => [{ type: 'CommunityCards', id: gameId }],
       }),
 
       // POST /cards/:id/adopt — atomic acquire of the card's missing premium components + the free design
@@ -85,6 +107,7 @@ const communityApi = api
 
 export const {
   useGetGameGalleryQuery,
+  useLazyGetGameGalleryQuery,
   useAdoptCardMutation,
   useGetTrendingCardsQuery,
   useBlockUserMutation,

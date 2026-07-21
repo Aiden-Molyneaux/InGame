@@ -18,6 +18,7 @@ import { GenreTag } from '../src/components/GenreTag';
 import { InlineBanner } from '../src/components/InlineBanner';
 import { CommunityGallery } from '../src/components/game/CommunityGallery';
 import { AdoptCardSheet, type AdoptOutcome } from '../src/components/game/AdoptCardSheet';
+import { TertiaryLink } from '../src/components/TertiaryLink';
 
 import { COLLECTION_STATUSES, STATUS_LABEL } from '../src/constants/collection';
 import { theme, themedStyles } from '../src/theme';
@@ -43,11 +44,13 @@ import { useGetGameGalleryQuery, useAdoptCardMutation } from '../src/store/commu
 // suggestions · CREATE ANYWAY = dedupOverride; an exact match never overrides). Per-field 422
 // details render under their inputs (B1/W4). The full celebration/report beats ride their milestones.
 //
-// W-D Wave D (OQ-136 / W-C10) — the card step LANDS: after the add creates the collection ENTRY, an
-// ADOPT step surfaces the game's community gallery so the user can adopt one card onto the fresh entry
-// (add-then-adopt: `adoptCard(cardId)` — the server resolves the caller's just-created entry for the
-// card's game, so no entryId plumbing), OR take the implicit blank default (SKIP). No community cards →
-// the step auto-advances (nothing to adopt). Then the COL-02 status beat, unchanged.
+// W-D Wave D (OQ-136 / W-C10), REORDERED at the m6 owner walk: after the add creates the collection
+// ENTRY, the flow reads stats → the COL-02 STATUS BEAT → the card FORK ("adopt a card or design your
+// own"): a TOP-6-by-adoption strip (adopt via the M5 AdoptCardSheet — `adoptCard(cardId)` GRANTS the
+// design to the adopter's library and is ENTRY-INDEPENDENT: it does NOT equip the just-created entry —
+// equipping a design onto an entry is a separate switcher action) · SEE ALL {N} › (the paged full
+// list) · DESIGN YOUR OWN › (the Styler) · keep-the-default (tertiary). An empty/errored gallery renders the fork WITHOUT the strip
+// (design + keep-default stand) — the old silent auto-advance is retired.
 
 const SEARCH_DEBOUNCE_MS = 350;
 
@@ -344,52 +347,57 @@ function FocusedMeta({ item }: { item: CatalogItem }) {
   );
 }
 
-// ── the post-add flow (W-D Wave D) — the ADOPT step, then the COL-02 status beat ──────────────────
-// Sequenced AFTER the add resolves (the entry exists, so adopt targets it): adopt a community card →
-// SET A STATUS → Done. The adopt step is skipped in place when the game has no community cards.
+// ── the post-add flow (W-D Wave D · reordered at the m6 owner walk) ───────────────────────────────
+// Sequenced AFTER the add resolves (the entry exists, so adopt targets it): the ADDED stats + the
+// COL-02 STATUS BEAT first, THEN the card screen — an adopt-or-design FORK (owner ruling: the status
+// beat moves BEFORE the card step; the card step never silently auto-advances again). The fork ends
+// the flow (onDone → router.back() to Collection) or hands off to the Styler.
 function AddedFlow({ item, onDone }: { item: CollectionItem; onDone: () => void }) {
-  const [stage, setStage] = useState<'adopt' | 'status'>('adopt');
-  const goStatus = useCallback(() => setStage('status'), []);
-  return stage === 'adopt' ? (
-    <AdoptStep item={item} onNext={goStatus} />
+  const [stage, setStage] = useState<'status' | 'cards'>('status');
+  const goCards = useCallback(() => setStage('cards'), []);
+  return stage === 'status' ? (
+    <StatusBeat item={item} onNext={goCards} />
   ) : (
-    <StatusBeat item={item} onDone={onDone} />
+    <CardForkStep item={item} onDone={onDone} />
   );
 }
 
-// ── the community-cards ADOPT step (OQ-136) ───────────────────────────────────────────────────────
-// The M5 AdoptCardSheet flow, reused verbatim onto the freshly-added entry. `adoptCard(cardId)` needs no
-// entryId — the server resolves the caller's entry for the card's game (the one the add just created),
-// so add-then-adopt sequences onto the new entry by construction. A game with NO community cards (empty
-// or errored gallery) has nothing to adopt → the step auto-advances (the implicit blank default). SKIP
-// takes the same blank default explicitly. Share/block/report are full-game-page concerns, not the add
-// flow — the sheet's secondary hooks are quiet no-ops here (adopt is the one action that matters).
-function AdoptStep({ item, onNext }: { item: CollectionItem; onNext: () => void }) {
+// The fork's curated strip size — the server-ranked TOP 6 by adoption (sort=top&limit=6), not the
+// whole gallery (the owner's "top ~6" ruling; the full list rides the SEE ALL door).
+const FORK_STRIP_N = 6;
+
+// ── the card FORK step (OQ-136, reshaped at the m6 owner walk) ────────────────────────────────────
+// "Adopt a card or design your own": a curated TOP-6-by-adoption strip (server-ranked — never the
+// whole gallery) with four doors — adopt-from-strip (the M5 AdoptCardSheet: `adoptCard(cardId)` needs
+// no entryId because adoption is ENTRY-INDEPENDENT — it GRANTS the design to the adopter's library, it
+// does NOT resolve or equip the just-created collection entry; equipping a design onto an entry is a
+// separate switcher action) · SEE ALL {N} › (the paged full list) · DESIGN YOUR OWN › (the Styler's
+// normal per-game entry — the entry the add just created makes it work) · keep-the-default (tertiary, ends
+// the flow). A game with NO community cards NO LONGER auto-advances silently (the owner never saw the
+// old step): the fork still renders, minus the strip/see-all — DESIGN YOUR OWN + keep-default stand.
+// A gallery error degrades the same way (the doors never depend on the fetch). Share/block/report are
+// full-game-page concerns — the sheet's secondary hooks stay quiet no-ops here.
+function CardForkStep({ item, onDone }: { item: CollectionItem; onDone: () => void }) {
   const styles = useStyles();
   const router = useRouter();
-  const { data: gallery, isLoading, isError } = useGetGameGalleryQuery(item.gameId);
+  // The SAME arg the strip's CommunityGallery uses (top=FORK_STRIP_N → { sort:'top', limit:N }), so
+  // RTK dedupes the two subscriptions into ONE cache entry / one network read.
+  const { data: gallery, isLoading, isError } = useGetGameGalleryQuery({
+    gameId: item.gameId,
+    sort: 'top',
+    limit: FORK_STRIP_N,
+  });
   const { data: wallet } = useGetWalletQuery();
   const [adoptCard, adoptState] = useAdoptCardMutation();
   const [inspectCard, setInspectCard] = useState<GalleryCardView | null>(null);
   // a ref (not state) — the sheet's Done reads it in the same tick a fast adopt→Done could fire, and it
   // never needs to re-render the step (adopt settles inside the sheet).
   const didAdopt = useRef(false);
-  const advanced = useRef(false);
 
-  const cards = gallery?.items ?? [];
-  const noCards = !isLoading && (isError || cards.length === 0);
-
-  // No community cards → nothing to adopt: advance straight through (once — guarded against onNext
-  // identity churn and the brief loaded-empty frame).
-  useEffect(() => {
-    if (noCards && !advanced.current) {
-      advanced.current = true;
-      onNext();
-    }
-  }, [noCards, onNext]);
+  const hasCards = !isError && (gallery?.items.length ?? 0) > 0;
 
   // Reuse the game-page adopt mapping (0072/0073): the container owns the RTK mutation; the sheet owns
-  // the confirm + result UX. Success settles IN PLACE (M5 G5) — its Done door advances the add flow.
+  // the confirm + result UX. Success settles IN PLACE (M5 G5) — its Done door ends the add flow.
   async function onAdopt(): Promise<AdoptOutcome> {
     if (!inspectCard) return { ok: false, code: 'ERROR' };
     try {
@@ -406,8 +414,8 @@ function AdoptStep({ item, onNext }: { item: CollectionItem; onNext: () => void 
     }
   }
 
-  // Loading (or the one-frame no-cards gate before the effect advances) — a quiet spinner, no empty state.
-  if (isLoading || noCards) {
+  // The strip fetch's quiet gate — the fork's doors render the moment the read settles (either way).
+  if (isLoading) {
     return (
       <View style={[styles.body, styles.adoptGate]}>
         <ActivityIndicator color={theme.brand.accent} />
@@ -422,30 +430,44 @@ function AdoptStep({ item, onNext }: { item: CollectionItem; onNext: () => void 
           <GameCard title={item.title} size="grid" />
           <Text style={styles.addedTitle}>ADDED TO YOUR SHELF</Text>
         </View>
-        <Text style={styles.railHead}>ADOPT A CARD FOR IT?</Text>
+        <Text style={styles.railHead}>ADOPT A CARD — OR DESIGN YOUR OWN</Text>
         <Text style={styles.adoptSub}>
-          The community has already designed cards for this game. Adopt one now, or keep the default and
-          style your own later.
+          {hasCards
+            ? 'Give the new game a face: adopt one of the community’s cards, or design your own in the Styler.'
+            : 'No community cards for this game yet — design your own in the Styler, or keep the default for now.'}
         </Text>
-        {/* the M5 community gallery (populated — the empty/error paths auto-advanced above) → adopt */}
-        <CommunityGallery
-          gameId={item.gameId}
-          onInspect={setInspectCard}
-          onDesignACard={() => router.push(`/styler/${item.gameId}`)}
-          onViewDesigner={(userId) => router.push(`/contributor/${userId}`)}
+        {hasCards ? (
+          // the TOP-6 strip (the same cache entry as the step's own read) + its SEE ALL {N} › door
+          <CommunityGallery
+            gameId={item.gameId}
+            top={FORK_STRIP_N}
+            onSeeAll={() => router.push(`/game/${item.gameId}/cards?adopt=1`)}
+            onInspect={setInspectCard}
+            onDesignACard={() => router.push(`/styler/${item.gameId}`)}
+            onViewDesigner={(userId) => router.push(`/contributor/${userId}`)}
+          />
+        ) : null}
+        {/* DESIGN YOUR OWN — the gold card-creating grammar (F-02); the Styler's normal per-game entry */}
+        <ScreenButton
+          label="Design your own ›"
+          variant="add"
+          onPress={() => router.push(`/styler/${item.gameId}`)}
+          block
         />
-        <ScreenButton label="Skip — keep the default card" variant="secondary" onPress={onNext} block />
+        <View style={styles.keepDefault}>
+          <TertiaryLink label="Keep the default for now" chevron="none" onPress={onDone} dim />
+        </View>
       </ScrollView>
 
       {/* the adopt sheet — a screen-root sibling of the ScrollView (never in-scroll; PulledSheet docks
-          to the routed screen). Done after a successful adopt advances; a plain cancel just closes it. */}
+          to the routed screen). Done after a successful adopt ends the flow; a plain cancel closes it. */}
       <AdoptCardSheet
         card={inspectCard}
         visible={inspectCard !== null}
         balance={wallet?.balance ?? 0}
         onClose={() => {
           setInspectCard(null);
-          if (didAdopt.current) onNext();
+          if (didAdopt.current) onDone();
         }}
         onAdopt={onAdopt}
         adopting={adoptState.isLoading}
@@ -465,7 +487,8 @@ function AdoptStep({ item, onNext }: { item: CollectionItem; onNext: () => void 
 }
 
 // ── the COL-02 status beat (chips OFF-card — no stamps on art) ────────────────────────────────────
-function StatusBeat({ item, onDone }: { item: CollectionItem; onDone: () => void }) {
+// First in the post-add sequence now (m6 owner reorder): stats → SET A STATUS → Next → the card fork.
+function StatusBeat({ item, onNext }: { item: CollectionItem; onNext: () => void }) {
   const styles = useStyles();
   const [updateEntry, state] = useUpdateEntryMutation();
   const [status, setStatus] = useState<CollectionStatus>(item.status);
@@ -475,7 +498,7 @@ function StatusBeat({ item, onDone }: { item: CollectionItem; onDone: () => void
     try {
       await updateEntry({ entryId: item.entryId, status: next }).unwrap();
     } catch {
-      setStatus(item.status); // quiet revert — the beat is advisory, DONE closes either way
+      setStatus(item.status); // quiet revert — the beat is advisory, NEXT advances either way
     }
   }
 
@@ -491,7 +514,7 @@ function StatusBeat({ item, onDone }: { item: CollectionItem; onDone: () => void
           <GenreTag key={s} label={STATUS_LABEL[s]} selected={status === s} onPress={() => void pick(s)} />
         ))}
       </View>
-      <ScreenButton label={state.isLoading ? '…' : 'Done'} onPress={onDone} block />
+      <ScreenButton label={state.isLoading ? '…' : 'Next'} onPress={onNext} block />
     </ScrollView>
   );
 }
@@ -697,9 +720,10 @@ const useStyles = themedStyles((t) => ({
   },
   addedWrap: { alignItems: 'center', gap: t.space.lg, paddingVertical: t.space.lg },
   addedTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.brand.success, letterSpacing: 2 },
-  // W-D Wave D — the adopt step's quiet gate (loading / no-cards auto-skip) + its lead copy.
+  // W-D Wave D / m6 fork — the card step's quiet loading gate + its lead copy + the tertiary door.
   adoptGate: { alignItems: 'center', justifyContent: 'center', paddingVertical: t.space.xxl },
   adoptSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, lineHeight: 16 },
+  keepDefault: { alignItems: 'center', paddingVertical: t.space.sm },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: t.space.md },
   field: { gap: t.space.xs },
   fieldLabel: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },

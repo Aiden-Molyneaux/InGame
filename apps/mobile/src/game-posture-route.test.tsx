@@ -99,11 +99,31 @@ jest.mock('./components/game/AboutTab', () => ({
     );
   },
 }));
-// the gallery stand-in ECHOES `canAdopt` so the Q4 browse-only guard is observable at the seam
+// the gallery stand-in ECHOES `canAdopt` (the Q4 browse-only guard) + the 0.81 strip posture
+// (top / sortToggle) and exposes the SEE ALL door so each posture's full-list routing is observable
 jest.mock('./components/game/CommunityGallery', () => ({
-  CommunityGallery: ({ canAdopt }: { canAdopt?: boolean }) => {
-    const { Text } = require('react-native');
-    return <Text>{`GALLERY canAdopt=${canAdopt !== false}`}</Text>;
+  CommunityGallery: ({
+    canAdopt,
+    top,
+    sortToggle,
+    onSeeAll,
+  }: {
+    canAdopt?: boolean;
+    top?: number;
+    sortToggle?: boolean;
+    onSeeAll?: () => void;
+  }) => {
+    const { Text, Pressable, View } = require('react-native');
+    return (
+      <View>
+        <Text>{`GALLERY canAdopt=${canAdopt !== false} top=${top ?? 'ALL'} sortToggle=${sortToggle === true}`}</Text>
+        {onSeeAll ? (
+          <Pressable accessibilityLabel="gallery-see-all" onPress={onSeeAll}>
+            <Text>GALLERY-SEE-ALL</Text>
+          </Pressable>
+        ) : null}
+      </View>
+    );
   },
 }));
 // PulledSheet renders its children inline so the FRIEND overflow's buttons are queryable
@@ -223,6 +243,15 @@ describe('W-D1 posture resolver', () => {
     expect(screen.queryByText(/RIKO’S FACE/)).toBeNull();
   });
 
+  it('0.81 — OWN CARDS tab: an adopt-capable top-12 strip whose SEE ALL routes to the adopt-capable full list', () => {
+    mockCollection = { data: { items: [MY_ENTRY] } as unknown as CollectionResponse, isLoading: false, isError: false, refetch: jest.fn() };
+    render(wrap(<GamePage />));
+    fireEvent.press(screen.getByLabelText('tab-cards'));
+    expect(screen.getByText('GALLERY canAdopt=true top=12 sortToggle=true')).toBeTruthy();
+    fireEvent.press(screen.getByLabelText('gallery-see-all'));
+    expect(mockPush).toHaveBeenCalledWith('/game/g1/cards?adopt=1');
+  });
+
   it('FRIEND — ?via present → the friend posture (their read-only face), even when you also own it', () => {
     mockParams = { id: 'g1', via: 'friend-1' };
     mockCollection = { data: { items: [MY_ENTRY] } as unknown as CollectionResponse, isLoading: false, isError: false, refetch: jest.fn() }; // Q2: FRIEND wins
@@ -316,10 +345,17 @@ describe('W-D1 FRIEND posture — read-only + compose', () => {
     expect(mockReplace).toHaveBeenCalledWith('/game/g1'); // drops `via` → re-renders OWN
   });
 
-  it('CARDS tab = the community gallery (adopt-capable), never your switcher', () => {
+  it('CARDS tab = the community gallery (adopt-capable), never your switcher — 0.81: a top-12 strip with SORT', () => {
     render(wrap(<GamePage />));
     fireEvent.press(screen.getByLabelText('tab-cards'));
-    expect(screen.getByText('GALLERY canAdopt=true')).toBeTruthy();
+    expect(screen.getByText('GALLERY canAdopt=true top=12 sortToggle=true')).toBeTruthy();
+  });
+
+  it('0.81 — the FRIEND gallery SEE ALL door routes to the ADOPT-capable full list', () => {
+    render(wrap(<GamePage />));
+    fireEvent.press(screen.getByLabelText('tab-cards'));
+    fireEvent.press(screen.getByLabelText('gallery-see-all'));
+    expect(mockPush).toHaveBeenCalledWith('/game/g1/cards?adopt=1');
   });
 });
 
@@ -331,9 +367,16 @@ describe('W-D1 CATALOG posture — ADD + PLAY locked + Q4 no-adopt', () => {
     expect(screen.getByText('PLAY-LOCKED')).toBeTruthy();
   });
 
-  it('CARDS is BROWSE-ONLY — the gallery gets canAdopt=false (Q4: no adopting a game you don’t own)', () => {
+  it('CARDS is BROWSE-ONLY — the gallery gets canAdopt=false (Q4: no adopting a game you don’t own) — 0.81: top-12 strip', () => {
     render(wrap(<GamePage />));
     fireEvent.press(screen.getByLabelText('tab-cards'));
-    expect(screen.getByText('GALLERY canAdopt=false')).toBeTruthy();
+    expect(screen.getByText('GALLERY canAdopt=false top=12 sortToggle=true')).toBeTruthy();
+  });
+
+  it('0.81 — the CATALOG gallery SEE ALL door routes to the BROWSE-ONLY full list (no ?adopt=1)', () => {
+    render(wrap(<GamePage />));
+    fireEvent.press(screen.getByLabelText('tab-cards'));
+    fireEvent.press(screen.getByLabelText('gallery-see-all'));
+    expect(mockPush).toHaveBeenCalledWith('/game/g1/cards');
   });
 });

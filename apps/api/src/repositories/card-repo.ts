@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray, ne, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, isNotNull, ne, notInArray, type SQL } from 'drizzle-orm';
 import { getDb, type Executor } from '../db/client';
 import { asActor, ownedBy } from '../db/scoped';
 import {
@@ -214,18 +214,105 @@ const PUBLIC_COLUMNS = {
   designerUsername: users.username,
 } as const;
 
-/** GET /games/:gameId/cards — the community gallery: every PUBLISHED card for one game, newest first. */
+/** The gallery read options (api-contract 0.81) — all optional so the bare call keeps the pre-0.81
+ *  behavior (full set, newest first). `excludeDesignerIds` pushes the SOC-09 block-filter INTO the
+ *  query so a paged slice is never post-filtered short. */
+export interface GalleryListOptions {
+  /** `top` = adoption count (the SQL LEFT-JOIN rank below) · `new` (default) = recency. */
+  sort?: 'top' | 'new';
+  /** Page size; absent = the whole set (the pre-0.81 read). */
+  limit?: number;
+  /** Offset (decoded from the opaque cursor); ignored without meaning when 0. */
+  offset?: number;
+  /** SOC-09 §0.6 — designers blocked either-way with the caller, excluded in SQL. */
+  excludeDesignerIds?: string[];
+}
+
+/** A gallery row + its public adoption count (ridden out of the ranking join — one query, no N+1). */
+export type RankedPublishedDesignRow = PublishedDesignRow & { adoptionCount: number };
+
+/**
+ * GET /games/:gameId/cards — the community gallery: PUBLISHED cards for one game. 0.81: the adoption
+ * count rides a LEFT JOIN to a grouped `card_adoptions` subquery, so `sort=top` RANKS IN SQL (never
+ * in memory — the trending docstring's "would be ideal" join, built). Postgres sorts NULL as LARGER
+ * than any value (DESC = NULLS FIRST), so a bare `desc(count)` would rank never-adopted cards (no
+ * tally row) FIRST — and a raw-SQL `coalesce`/`NULLS LAST` is banned in repos (rule-02 fails it
+ * closed). The fix is a leading has-tally boolean key: `desc(isNotNull(tally))` puts adopted cards
+ * (true) ahead, the count ranks within them, and the all-NULL trailing group falls through to the id
+ * tiebreak (asc — the trending tiebreak). The default `new` sort keeps the pre-0.81 newest-first
+ * order (id asc tiebreak added for stable paging).
+ */
 export async function listPublishedDesignsForGame(
   gameId: string,
+  opts: GalleryListOptions = {},
   exec: Executor = getDb(),
-): Promise<PublishedDesignRow[]> {
+): Promise<RankedPublishedDesignRow[]> {
+  const { sort = 'new', limit, offset = 0, excludeDesignerIds = [] } = opts;
+  // SYS-01-COMMUNITY-AGGREGATE — an anonymous cross-user COUNT per card (the public AdoptCount,
+  // decision 0072/0024): a grouped tally over `card_adoptions`, never a row read, never an adopter id.
+  const adoptionTally = exec
+    .select({
+      cardDesignId: cardAdoptions.cardDesignId,
+      adoptions: count().as('adoptions'),
+    })
+    .from(cardAdoptions)
+    .groupBy(cardAdoptions.cardDesignId)
+    .as('adoption_tally');
+  const order =
+    sort === 'top'
+      ? [
+          desc(isNotNull(adoptionTally.cardDesignId)), // has-a-tally first (PG DESC is NULLS FIRST — see above)
+          desc(adoptionTally.adoptions),
+          asc(cardDesigns.id),
+        ]
+      : [desc(cardDesigns.updatedAt), asc(cardDesigns.id)];
   // SYS-01-PUBLIC-READ — cross-user gallery: published cards only, flattened image urls, never composition.
-  return exec
-    .select(PUBLIC_COLUMNS)
+  const base = exec
+    .select({ ...PUBLIC_COLUMNS, adoptionCount: adoptionTally.adoptions })
     .from(cardDesigns)
     .innerJoin(users, eq(users.id, cardDesigns.ownerId))
-    .where(publishedOnly(eq(cardDesigns.gameId, gameId)))
-    .orderBy(desc(cardDesigns.updatedAt));
+    .leftJoin(adoptionTally, eq(adoptionTally.cardDesignId, cardDesigns.id))
+    .where(
+      publishedOnly(
+        excludeDesignerIds.length > 0
+          ? (and(
+              eq(cardDesigns.gameId, gameId),
+              notInArray(cardDesigns.ownerId, excludeDesignerIds),
+            ) as SQL)
+          : eq(cardDesigns.gameId, gameId),
+      ),
+    )
+    .orderBy(...order)
+    .offset(offset);
+  const rows = await (limit != null ? base.limit(limit) : base);
+  // The LEFT JOIN reads NULL (not 0) for a never-adopted card; count() itself arrives as a bigint.
+  return rows.map((r) => ({ ...r, adoptionCount: Number(r.adoptionCount ?? 0) }));
+}
+
+/**
+ * The caller-visible gallery size for one game (block-filtered like the list read) — feeds `total`
+ * + the `nextCursor` computation (api-contract 0.81). Same predicates as the list, COUNT only.
+ */
+export async function countPublishedDesignsForGame(
+  gameId: string,
+  excludeDesignerIds: string[] = [],
+  exec: Executor = getDb(),
+): Promise<number> {
+  // SYS-01-PUBLIC-READ — cross-user gallery COUNT: published-only predicate, no row payload at all.
+  const rows = await exec
+    .select({ n: count() })
+    .from(cardDesigns)
+    .where(
+      publishedOnly(
+        excludeDesignerIds.length > 0
+          ? (and(
+              eq(cardDesigns.gameId, gameId),
+              notInArray(cardDesigns.ownerId, excludeDesignerIds),
+            ) as SQL)
+          : eq(cardDesigns.gameId, gameId),
+      ),
+    );
+  return Number(rows[0]?.n ?? 0);
 }
 
 /** Resolve one PUBLISHED card by id (the adopt target) — null when unknown OR not published. */
