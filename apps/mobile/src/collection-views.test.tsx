@@ -152,7 +152,36 @@ describe('COL-07 walk2-B7: shelf rows carry the List-view chevron', () => {
     renderView('shelf');
     const chevrons = screen.getAllByText('›');
     expect(chevrons).toHaveLength(mockItems.length);
-    fireEvent.press(chevrons[1]!); // row 2 → Game 2
+    fireEvent.press(chevrons[1]!); // row 2 → Game 2 (the chevron press bubbles to the row-body button)
     expect(mockPush).toHaveBeenCalledWith('/game/g2');
+  });
+});
+
+describe('Owner walk (m6): the whole shelf row-body navigates; the card face still flips', () => {
+  it('a tap on the row BODY (not the card) opens the Game page', () => {
+    renderView('shelf');
+    // the row-body is ONE button labeled "Open {title}" (a sibling of the card slot, not its ancestor)
+    fireEvent.press(screen.getByLabelText('Open Game 2'));
+    expect(mockPush).toHaveBeenCalledWith('/game/g2');
+  });
+
+  it('a tap on the CARD face flips it and does NOT navigate (nested-Pressable trap avoided)', () => {
+    renderView('shelf');
+    // the FlipCard front tap-layer is its own labeled control ("{title} card"); a tap flips it, so its
+    // label swaps to the stats back — and it must NOT reach the row-body navigate (P13-F3: RN-web routes
+    // a nested press to the OUTER responder — proven safe here because the card is a SIBLING, not nested).
+    expect(screen.getByLabelText('Game 2 card')).toBeTruthy();
+    fireEvent.press(screen.getByLabelText('Game 2 card'));
+    expect(mockPush).not.toHaveBeenCalled(); // flipped, never navigated
+    expect(screen.queryByLabelText('Game 2 card')).toBeNull(); // the front label is gone — it turned to the back
+  });
+
+  it('the card slot is NOT a descendant of the row-body navigate button (no button-in-button)', () => {
+    const { within } = require('@testing-library/react-native');
+    renderView('shelf');
+    // the card's tap-layer control lives OUTSIDE the "Open Game 2" button — the structural guarantee
+    // that lets the card win its own tap on RN-web (and keeps the web tree free of nested <button>s).
+    const rowButton = screen.getByLabelText('Open Game 2');
+    expect(within(rowButton).queryByLabelText('Game 2 card')).toBeNull();
   });
 });

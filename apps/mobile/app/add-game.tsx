@@ -179,12 +179,27 @@ function SearchMode({
             <Text style={styles.railHead}>
               {searchState.isFetching ? 'MATCHING…' : `${results.length} ${results.length === 1 ? 'MATCH' : 'MATCHES'}`}
             </Text>
-            {searchState.isFetching ? (
-              <ActivityIndicator color={theme.brand.accent} />
-            ) : results.length === 0 ? (
-              <View style={styles.noneWrap}>
-                <Text style={styles.noneTitle}>NO MATCHES</Text>
-                <Text style={styles.noneSub}>Not in the community catalog yet — be the one who adds it.</Text>
+            {searchState.isFetching || results.length === 0 ? (
+              // Owner walk (m6) — the fetch↔no-matches swap must not reflow the create hook below. The
+              // NO MATCHES panel is the height ANCHOR: always laid out (its box reserves the space in
+              // BOTH states); while a fetch is in flight it's held invisible + SR-hidden and the spinner
+              // rides an ABSOLUTE overlay over it (out of flow — adds no height). Settled + empty → the
+              // same panel simply becomes visible. Byte-identical surrounding structure, no magic-number
+              // slot height (the device saveSlot / collection coachmark-overlay idioms, combined).
+              <View style={styles.statusSlot}>
+                <View
+                  style={[styles.noneWrap, searchState.isFetching && styles.statusAnchorHidden]}
+                  aria-hidden={searchState.isFetching}
+                  importantForAccessibility={searchState.isFetching ? 'no-hide-descendants' : 'auto'}
+                >
+                  <Text style={styles.noneTitle}>NO MATCHES</Text>
+                  <Text style={styles.noneSub}>Not in the community catalog yet — be the one who adds it.</Text>
+                </View>
+                {searchState.isFetching ? (
+                  <View style={styles.statusOverlay} pointerEvents="none">
+                    <ActivityIndicator color={theme.brand.accent} />
+                  </View>
+                ) : null}
               </View>
             ) : (
               <>
@@ -662,6 +677,12 @@ const useStyles = themedStyles((t) => ({
   metaPresence: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 1, textAlign: 'center' },
   metaInspect: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1, textAlign: 'center', marginTop: 2 },
   metaInspectPressed: { opacity: 0.6 },
+  // Owner walk (m6) — the search results-status slot: the NO MATCHES panel anchors the height; the
+  // fetch spinner rides statusOverlay (absolute → out of flow) so the fetch↔no-matches swap can't jar
+  // the create hook below. statusAnchorHidden holds the anchor invisible-but-laid-out during a fetch.
+  statusSlot: { position: 'relative' },
+  statusAnchorHidden: { opacity: 0 },
+  statusOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
   noneWrap: { gap: t.space.sm, padding: t.space.lg, backgroundColor: t.scr.panel },
   noneTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
   noneSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, lineHeight: 16 },

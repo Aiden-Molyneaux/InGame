@@ -587,19 +587,24 @@ function ShelfView({ items, flippedIds, onToggle, onNavigate }: { items: Collect
                 height={193}
               />
             </View>
-            <View style={styles.heroMeta}>
-              <Text style={styles.heroStat}>{statLine(i)}</Text>
-              <Text style={styles.heroTitle}>{i.title.toUpperCase()}</Text>
-              <Text style={styles.heroCatalog}>{catalogLine(i)}</Text>
-            </View>
-            {/* walk2 B7 ⚖ — the shelf row gains the List view's chevron (the quick-entry affordance →
-                the Game page); the card face keeps its flip. Same right-edge placement + style. */}
+            {/* Owner walk (m6) — the WHOLE row-body (meta + chevron) press-navigates to the Game page,
+                not just the chevron; the card face keeps its own flip tap. This Pressable is a SIBLING
+                of the card slot, NEVER its ancestor: RN-web routes a nested press to the OUTER responder
+                (P13-F3 — the CommunityGallery sibling-Pressable fix), so keeping the card outside this
+                button is what lets the card's own tap still win (flip, not navigate). One button per row
+                ("Open {game}"); the card face is its own labeled control. (walk2 B7 folded the chevron
+                in — same affordance, now the whole body carries it.) */}
             <Pressable
+              style={styles.rowBody}
               accessibilityRole="button"
               accessibilityLabel={`Open ${i.title}`}
               onPress={() => onNavigate(i.gameId)}
-              hitSlop={10}
             >
+              <View style={styles.heroMeta}>
+                <Text style={styles.heroStat}>{statLine(i)}</Text>
+                <Text style={styles.heroTitle}>{i.title.toUpperCase()}</Text>
+                <Text style={styles.heroCatalog}>{catalogLine(i)}</Text>
+              </View>
               <Text style={styles.chev}>›</Text>
             </Pressable>
           </View>
@@ -937,6 +942,8 @@ const useStyles = themedStyles((t) => ({
     borderColor: t.scr.hairline,
   },
   heroCard: { width: 138, height: 193 }, // mockup `.gcard.hero-size`
+  // Owner walk (m6) — the shelf row-body: the meta + chevron as ONE navigate button beside the card.
+  rowBody: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 14 },
   heroMeta: { flex: 1, justifyContent: 'center', gap: 7 },
   heroEyebrow: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 2 },
   heroStat: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 2 },

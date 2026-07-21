@@ -6,6 +6,7 @@ import { Avatar } from '../Avatar';
 import { GenreTag } from '../GenreTag';
 import { ScreenButton } from '../ScreenButton';
 import { TextField } from '../TextField';
+import { InlineBanner } from '../InlineBanner';
 import { LoadError } from '../lifecycle/LoadError';
 import { useGetGameDetailQuery, useSubmitGameEditMutation } from '../../store/catalogRailsApi';
 import { useGetFriendsWhoOwnQuery } from '../../store/friendApi';
@@ -398,13 +399,19 @@ function FactsEditBlock({
     <View style={styles.editWrap}>
       {/* Owner walk (m6) — the accuracy disclaimer atop the editable state. The catalog is a shared
           wiki (draft §3 "edits are signed in public"): the soft deterrent + the honest ask. Chrome
-          label uppercase; the guidance is sentence case (the app's info-copy voice). */}
-      <View style={styles.disclaimer} accessibilityLabel="Editing guidance">
-        <Text style={styles.disclaimerHead}>EDITING CATALOG DETAILS</Text>
-        <Text style={styles.disclaimerBody}>
-          These facts are shared with everyone. Please edit only with accurate information — your changes
-          are public and attributed to you.
-        </Text>
+          label uppercase; the guidance is sentence case (the app's info-copy voice).
+          Rendered with InlineBanner (component-map §6; decision 0042 named it THE in-flow notice — the
+          same primitive carries the CAT-03 dedup warn on the Add-Game create form). The prior bespoke
+          hairline + accent-left-bar box was a one-off pattern found nowhere else in the app; same
+          approved copy, the app's established dress. Stretch wrapper — editWrap centres its children,
+          and this banner (like the factRows below) spans the column. */}
+      <View style={styles.disclaimerWrap}>
+        <InlineBanner title="Editing catalog details">
+          <Text style={styles.disclaimerBody}>
+            These facts are shared with everyone. Please edit only with accurate information — your changes
+            are public and attributed to you.
+          </Text>
+        </InlineBanner>
       </View>
       <View style={styles.factRows}>
         <FactRow
@@ -582,18 +589,10 @@ const useStyles = themedStyles((t) => ({
   editGate: { alignItems: 'center', gap: t.space.sm },
   editGateNote: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 1 },
   editWrap: { gap: t.space.md, alignItems: 'center' },
-  // Owner walk (m6) — the accuracy disclaimer box: a quiet accent-edged caution, not an alert.
-  disclaimer: {
-    alignSelf: 'stretch',
-    borderWidth: 1,
-    borderColor: t.scr.hairline,
-    borderLeftWidth: 2,
-    borderLeftColor: t.scr.accent,
-    backgroundColor: t.scr.panel,
-    padding: t.space.md,
-    gap: t.space.xs,
-  },
-  disclaimerHead: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 1 },
+  // Owner walk (m6) — the accuracy disclaimer now rides the InlineBanner primitive (decision 0042).
+  // The wrapper only stretches it to the column (editWrap centres its children); the banner owns its
+  // own accent outline / panel / padding. The body copy keeps the app's sentence-case info voice.
+  disclaimerWrap: { alignSelf: 'stretch' },
   disclaimerBody: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, lineHeight: 16 },
   factRows: { alignSelf: 'stretch', borderWidth: 1, borderColor: t.scr.hairline, gap: 1, backgroundColor: t.scr.hairline },
   factRowWrap: { backgroundColor: t.scr.panel },
