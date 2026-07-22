@@ -10,7 +10,13 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.aidenmolyneaux.ingame",
-      "usesAppleSignIn": true
+      "usesAppleSignIn": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
+      }
     },
     "android": {
       "package": "com.aidenmolyneaux.ingame"
@@ -24,6 +30,13 @@
       "expo-secure-store",
       "expo-font",
       "expo-apple-authentication"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e0c1989a-f01a-4c6c-965d-87d9be8ddee6"
+      }
+    },
+    "owner": "aidenmolyneaux"
   }
 }

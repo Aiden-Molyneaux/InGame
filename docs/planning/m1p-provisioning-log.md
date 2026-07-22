@@ -18,6 +18,9 @@
 - Apple **App ID registered** (developer.apple.com → Identifiers) with **Sign in with Apple ON**
   (SIWA — the M2 server support's client half will want it), Apple Pay OFF (IAP ≠ Apple Pay;
   digital currency must use IAP).
+  - **Correction (2026-07-22):** the SIWA capability was in fact **not** enabled on the App ID —
+    the owner found it unchecked and enabled + saved it during the EAS/SIWA sitting below. The
+    identifier itself was verified correct (`com.aidenmolyneaux.ingame`).
 
 ### Apple Developer / App Store Connect
 - **Apple Developer Program**: enrolled (pre-existing).
@@ -57,6 +60,37 @@
 - **Products + `default` Offering**: the five SKUs imported / packaged. *(Verify the offering shows
   all five packages on next dashboard visit — last step of the sitting.)*
 
+### EAS / iOS dev build / SIWA E2E (2026-07-22, Claude-guided owner sitting)
+- **App ID SIWA capability enabled + saved** (was NOT actually on — see correction above);
+  identifier confirmed `com.aidenmolyneaux.ingame`, matching `app.json` and the server's
+  `APPLE_BUNDLE_ID` default. Native SIWA needs only this capability (no Service ID/key — that's
+  the web-OAuth flavor).
+- **eas-cli installed** (global, 21.0.2); **EAS project created + linked**: id
+  `e0c1989a-f01a-4c6c-965d-87d9be8ddee6`, owner `aidenmolyneaux` (written into
+  `apps/mobile/app.json` by `eas init`).
+- **`apps/mobile/eas.json` created** — `development` profile (`developmentClient: true`,
+  `distribution: internal`) + a minimal `production` profile for the P16 TestFlight lane.
+  `expo-dev-client` added to `apps/mobile/package.json` by the build flow.
+- **Owner's iPhone registered** — UDID `00008150-001804D1228A401C`, Apple Team `CQZGXPKBVU`
+  (Individual). EAS-managed iOS credentials generated: dist cert (exp. 2027-07-22) + AdHoc
+  provisioning profile (portal ID `M62A8VG437`) — stored on Expo's servers, non-interactive
+  rebuilds work without Apple login.
+- **Dev builds**: build 1 `9600e906` (dead on arrival — see gotcha) → **build 2 `f9c012e6`
+  (the good one)**, installed on the owner's iPhone.
+  - **The ATS gotcha (cost ~1 h):** SDK 54 dev builds ship
+    `NSAllowsArbitraryLoads:false / NSAllowsLocalNetworking:true` — iOS does NOT count
+    Tailscale's CGNAT `100.x` as "local", so every cleartext call (Metro AND the `:4000` API)
+    was vetoed before touching the network; LAN URLs separately hung on the Windows firewall
+    (Wi-Fi = Public profile). Fix: `ios.infoPlist.NSAppTransportSecurity.NSAllowsArbitraryLoads:
+    true` in `app.json` + rebuild. Verified in the shipped `.ipa` (both builds also verified to
+    carry the `com.apple.developer.applesignin` entitlement).
+- **✅ SIWA VERIFIED END TO END (2026-07-22):** dev build → Metro `:8082` over Tailscale → the
+  native Apple button rendered → real Apple sheet → API (real verifier, `APPLE_VERIFIER=apple` in
+  `apps/api/.env.dev`) verified the identity token via Apple's remote JWKS (nonce-bound, `aud` =
+  bundle id) → `usernamePending` → choose-username → in the app. Server evidence:
+  `funnel:"signup", method:"apple"` in the API log. The real verifier was also negatively tested:
+  it 401s the stub's forgeable `mock.*` tokens.
+
 ### Google Play (VERIFIED — updated 2026-07-19 from owner report)
 - **Enrollment 2026-07-12**: personal developer account, $25 paid, identity verification submitted.
 - **✅ IDENTITY VERIFICATION COMPLETE + ANDROID DEVICE IN HAND (owner-confirmed 2026-07-18):** "a fully
@@ -76,6 +110,7 @@
 | RevenueCat webhook auth secret | **doesn't exist yet** — invented at P2b (`REVENUECAT_WEBHOOK_AUTH`) |
 | Sandbox tester credentials | Owner's password manager |
 | Google Play / RevenueCat dashboards | Owner's Google/RevenueCat logins |
+| EAS iOS dist cert + provisioning profile | Expo's servers (EAS-managed; `eas credentials`), account `aidenmolyneaux` |
 
 ---
 
@@ -98,7 +133,9 @@
 | 13 | **EU DSA trader declaration** (or exclude EU) | M8 launch checklist | Trader = public contact info on the EU store; consider PO box / exclude EU |
 | 14 | **Cloudflare R2 + CDN storage** | before the M6 beta | m5-build-task §0.5 — local-disk StorageProvider until then |
 | 15 | **APNs/FCM push credentials** | M7 (push) | The remaining M1-P roadmap line |
-| 16 | **EAS signing/build setup** | first device-build need (M6 beta at latest) | Bundle IDs now exist for both stores |
+| 16 | ~~EAS signing/build setup~~ **✅ DONE 2026-07-22** (iOS) | — | eas.json + EAS project + iOS credentials + dev build `f9c012e6`; SIWA E2E verified. Android EAS build still unconfigured (owed with the Play lane) |
+| 17 | **Scope `NSAllowsArbitraryLoads` OUT of production builds** | M8 pre-submission | Set 2026-07-22 for the dev-build loop (Tailscale is non-"local" to ATS); an App-Review flag if shipped. Prod API is HTTPS anyway |
+| 18 | **TestFlight internal (P16)** | next iOS distribution step | Foundation now in place: `production` profile stubbed in eas.json; needs `eas build --profile production` + App Store Connect TestFlight setup |
 
 ---
 
