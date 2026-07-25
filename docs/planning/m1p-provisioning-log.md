@@ -98,6 +98,47 @@
   side of RevenueCat (P2b), G-J, and the sandbox pass. **FLAG:** the specific Android device MODEL was not
   reported — capture it here when known (needed only for the QA record, not blocking).
 
+### Domain + Cloudflare + Resend email sending (the AUTH-12 sitting — 2026-07-25, Claude-guided)
+- **⚠️ `ingame.app` IS NOT OURS — headline finding of the sitting.** RDAP: registered 2025-09-25 by a
+  third party via **Sav.com** (registrant privacy-redacted); the apex serves a **Spaceship marketplace
+  for-sale lander (offer-only, min US$1,000)**. Every `ingame.app` string in the repo was an
+  aspirational placeholder. Decision: **register a different domain**, not negotiate (pre-revenue;
+  the app name "InGame" + bundle id are unaffected — no domain needed to match).
+- **✅ `ingamehq.com` REGISTERED 2026-07-25** via **Cloudflare Registrar** (at-cost **$10.46/yr**,
+  renews same; WHOIS privacy included; owner's Cloudflare account, aidenmolyneaux@hotmail.com).
+  Runner-ups checked live: `getingame.com`/`ingameapp.com`/`ingame.club`/`ingame.fun` taken;
+  `ingame.games` available at $26.20/yr; `playingame.app` $14.20/yr. This domain is now the app's
+  infrastructure home: email sending (this sitting) · invite links (SOC-10) · ToS/Privacy pages
+  (store-required) · API host + R2 (P15).
+- **DNS zone lives on Cloudflare** (registrar = DNS host, nameservers `isaac`/`kristin.ns.cloudflare.com`,
+  Free plan). NOTE: a stray **`ingame.app` zone** was added to the Cloudflare account earlier in the
+  sitting (before the ownership discovery) — it can never activate (we don't control the registrar);
+  delete it on next dashboard visit.
+- **✅ Resend account created** (login: the owner's `aidenmolyneaux@hotmail.com` account, free tier —
+  3,000/mo, 100/day cap; provider ruling AUTH-12 owner-nod #1 re-confirmed 2026-07-25 by an
+  8-provider verified-pricing comparison: Resend free tier + best DX wins at beta; **Postmark
+  ($15/mo, best-in-class transactional deliverability, no daily cap) is the named fallback** if
+  reset-code deliverability ever shows cracks — the EmailProvider seam makes the swap ~one file).
+- **✅ Sending domain `mail.ingamehq.com` added in Resend** (region us-east-1) + **all 4 DNS records
+  added in Cloudflare** (all **DNS only** — never proxied, the mail-record rule) and **verified
+  resolving on public DNS (1.1.1.1), DKIM byte-exact**:
+  | Type | Name (zone-relative) | Content |
+  |---|---|---|
+  | TXT | `resend._domainkey.mail` | `p=MIGf…` (DKIM, 216-char RSA key) |
+  | MX | `send.mail` | `feedback-smtp.us-east-1.amazonses.com` (prio 10) |
+  | TXT | `send.mail` | `v=spf1 include:amazonses.com ~all` |
+  | TXT | `_dmarc.mail` | `v=DMARC1; p=none;` (observe-only, per the auth-epic manifest) |
+- **✅ Resend domain VERIFIED 2026-07-25** ("Domain verified: Your domain is ready to send emails" —
+  green ~4 min after the records landed). **The task milestone is met**; `mail.ingamehq.com` can send.
+- **⚠️ CODE RIPPLE OWED (do NOT hand-edit mid-provisioning):** the repo's `ingame.app` placeholders
+  must repoint to `ingamehq.com` — `EMAIL_FROM` default (`apps/api/src/config/env.ts` →
+  `InGame <no-reply@mail.ingamehq.com>`), `INVITE_LINK_BASE` default (`https://ingamehq.com/i`),
+  `.env.example` comments, + a docs sweep for `ingame.app` mentions. Until then the env vars must be
+  set explicitly wherever the API runs.
+- **Registration-verification emails stay stub/log-only** even after the key lands (deliberate
+  email-service allowlist — nothing redeems that token in-app yet). Password-RESET codes are the one
+  real sender at beta.
+
 ---
 
 ## 2. Where every credential lives (no values here — locations only)
@@ -111,6 +152,9 @@
 | Sandbox tester credentials | Owner's password manager |
 | Google Play / RevenueCat dashboards | Owner's Google/RevenueCat logins |
 | EAS iOS dist cert + provisioning profile | Expo's servers (EAS-managed; `eas credentials`), account `aidenmolyneaux` |
+| Cloudflare account (ingamehq.com registrar + DNS + future R2) | Owner's Cloudflare login (aidenmolyneaux@hotmail.com) |
+| Resend dashboard | Owner's Resend login (aidenmolyneaux@hotmail.com) |
+| `RESEND_API_KEY` | **doesn't exist yet** — owner creates in Resend → password manager + `apps/api/.env.dev` (local test) / host secret store (prod). Never repo, never chat |
 
 ---
 
@@ -131,11 +175,14 @@
 | 11 | **W-8BEN line 10 / treaty-article review** | M8 (with #10's accountant) | Filed blank = standard treatment; confirm Article VII vs XII posture before real revenue |
 | 12 | **IAP review screenshots** (clear "Missing Metadata" → "Ready to Submit") | M8 pre-submission | Needs the built Store screen (M5 P6) to screenshot |
 | 13 | **EU DSA trader declaration** (or exclude EU) | M8 launch checklist | Trader = public contact info on the EU store; consider PO box / exclude EU |
-| 14 | **Cloudflare R2 + CDN storage** | before the M6 beta | m5-build-task §0.5 — local-disk StorageProvider until then |
+| 14 | **Cloudflare R2 + CDN storage** | before the M6 beta | m5-build-task §0.5 — local-disk StorageProvider until then. **Unblocked 2026-07-25: the Cloudflare account + `ingamehq.com` zone now exist** |
 | 15 | **APNs/FCM push credentials** | M7 (push) | The remaining M1-P roadmap line |
 | 16 | ~~EAS signing/build setup~~ **✅ DONE 2026-07-22** (iOS) | — | eas.json + EAS project + iOS credentials + dev build `f9c012e6`; SIWA E2E verified. Android EAS build still unconfigured (owed with the Play lane) |
 | 17 | **Scope `NSAllowsArbitraryLoads` OUT of production builds** | M8 pre-submission | Set 2026-07-22 for the dev-build loop (Tailscale is non-"local" to ATS); an App-Review flag if shipped. Prod API is HTTPS anyway |
 | 18 | **TestFlight internal (P16)** | next iOS distribution step | Foundation now in place: `production` profile stubbed in eas.json; needs `eas build --profile production` + App Store Connect TestFlight setup |
+| 19 | **Create `RESEND_API_KEY`** (domain already Verified ✅) | ASAP (~2 min, owner) | API Keys → `ingame-server`, Sending access, scoped to `mail.ingamehq.com` → password manager + `.env.dev`. Env trio: `EMAIL_PROVIDER=resend` · `RESEND_API_KEY=…` · `EMAIL_FROM="InGame <no-reply@mail.ingamehq.com>"` (⚠️ set explicitly — the code default still says mail.ingame.app until #20). NOTE: `loadEnv` hard-throws in ANY env if `EMAIL_PROVIDER=resend` with an empty key |
+| 20 | **Repoint `ingame.app` placeholders → `ingamehq.com` in code/docs** | next code pass on `m6` | `EMAIL_FROM` default (env.ts:195) · `INVITE_LINK_BASE` default (env.ts:201) · `.env.example` · docs sweep. Small mechanical diff; not done mid-provisioning |
+| 21 | **Delete the stray `ingame.app` zone from Cloudflare** + optional live-send test | next dashboard visit | The zone can never activate (domain is a third party's). Live-send test = set the env trio in `.env.dev`, restart API, reset password to a real inbox, then revert `EMAIL_PROVIDER=stub` — or defer to the P15 deployed API |
 
 ---
 
