@@ -13,13 +13,18 @@ customization, a cosmetic economy, friends, and achievements. This is **v2 / gre
 5. **If you see a clearly better approach, say so before implementing.** Explain the tradeoff in 2–4 bullets. If the current request is still reasonable, proceed unless the alternative avoids serious risk or wasted work.
 
 ## Current state
-**Two concurrent phases as of 2026-06-30.** (1) **Design** — still closing out boards under
-`docs/design/` (design-spec is live); the **design-phase workflow rules below apply to *design* work**.
-(2) **Build — M1 is entering.** Gate **G-A is signed** ([`0046`](docs/decisions/0046-m1-entry-architecture-lock-in.md)
-LOCKED + [`CONVENTIONS.md`](CONVENTIONS.md)); the monorepo scaffold (Expo client + Express API) runs
-**in OpenCode** per [`docs/planning/m1-scaffold-task.md`](docs/planning/m1-scaffold-task.md). **Code work
-follows [`CONVENTIONS.md`](CONVENTIONS.md)** (the rulebook every PR is held to) — *not* the design-phase
-HTML/SCREEN-STATUS workflow. The active deliverables still live under `docs/`.
+**Build — M6 in flight on branch `m6` (as of 2026-07-25).** M1–M5 are **CLOSED and merged**; M6's
+13 buildable packets are **BUILT + reviewed** (entry gate: decisions
+[`0076`](docs/decisions/0076-m6-entry-gate-rulings.md)/[`0077`](docs/decisions/0077-m6-ach-starter-content.md)),
+and the current mode is **owner acceptance walks + fix waves**. **Code work follows
+[`CONVENTIONS.md`](CONVENTIONS.md)** (the rulebook every PR is held to); the design-phase workflow
+below applies only when a design board is actually being drafted.
+- **The M6 working set** (ground here before milestone work):
+  [`docs/planning/m6-review-notes.md`](docs/planning/m6-review-notes.md) is the ledger (what
+  landed, which gates recorded); walk findings accumulate in `docs/planning/m6/walk*-notes.md`
+  stashes; the owner's live acceptance route is
+  [`docs/planning/m6/acceptance-suite-w4-to-now.md`](docs/planning/m6/acceptance-suite-w4-to-now.md);
+  per-epic manifests/receipts sit alongside in [`docs/planning/m6/`](docs/planning/m6/).
 - **The over-arching plan** (design → market): [`docs/planning/road-to-market.md`](docs/planning/road-to-market.md)
   (slide view: `road-to-market-deck.html`).
 - **Project health:** [`docs/PROJECT-HEALTH.md`](docs/PROJECT-HEALTH.md) — a generated dashboard; run
@@ -99,13 +104,13 @@ test-after for UI once screens settle. Tooling: Vitest · Jest + React Native Te
 supertest + Testcontainers (Postgres) · Maestro · GitHub Actions.
 
 ## Build / run
-**M1 scaffold merged; M2 (auth + first vertical slice) in progress** (built in OpenCode). The stack +
-invariants are locked in [`0046`](docs/decisions/0046-m1-entry-architecture-lock-in.md); the rulebook is
+**M1–M5 merged; M6 in flight on `m6`** (M1/M2 were built in OpenCode; M3 onward in Claude Code). The
+stack + invariants are locked in [`0046`](docs/decisions/0046-m1-entry-architecture-lock-in.md); the rulebook is
 [`CONVENTIONS.md`](CONVENTIONS.md); CI is the six-check spine ([`testing-strategy.md`](docs/spec/testing-strategy.md) §7);
-M1/M2 build briefs live in [`docs/planning/`](docs/planning/). **Client:** Expo **SDK 54** (RN 0.81.5 / React 19.1 —
-pinned to match iOS Expo Go, decision [`0053`](docs/decisions/0053-expo-sdk-54-bump.md)); dev loop is Expo web
-(`npm -w @ingame/mobile run web`, phone viewport) + Expo Go on device. Concrete `npm` scripts + the seed/mock
-data layer get documented here as they settle.
+milestone briefs/manifests live in [`docs/planning/`](docs/planning/). **Client:** Expo **SDK 54** (RN 0.81.5 / React 19.1,
+decision [`0053`](docs/decisions/0053-expo-sdk-54-bump.md)); dev loop is Expo web
+(`npm -w @ingame/mobile run web`, phone viewport) + **the EAS dev client on device** (it replaced
+Expo Go 2026-07-22 — see the M1-P section below; JS still streams live from Metro).
 
 ### The dev stack (how agents run & test the app — decision 0060)
 One **standing, shared, restart-safe** stack. Do NOT hand-build parallel services; run the supervisor:
@@ -140,6 +145,15 @@ pre-warms the web bundle. Logs/pidfiles live in `.devstack/` (gitignored).
   parallel API — `PORT=4001` + a disposable DB; kill it after (task-stop orphans the tsx child —
   find it with `netstat -ano | findstr :4001`).
 Login: `demo@ingame.app` / `InGameDemo1!` (the idempotent `npm -w @ingame/api run db:seed-dev` shelf).
+
+### Seed & load-harness layer (apps/api/scripts/)
+- **Demo shelf:** `npm -w @ingame/api run db:seed-dev` — idempotent, owns the demo account above.
+- **Walk seeds** (richer acceptance-walk data): `walk-seed.ts` + `walk-seed-rich.ts` — write through
+  the REAL service layer, **strictly additive `walkseed_*` users, never touch demo/curator rows**;
+  safe to re-run. Run: `npm -w @ingame/api exec tsx --env-file=.env.dev scripts/walk-seed-rich.ts`.
+- **Card-volume load harness:** `vol-seed.ts` / `vol-measure.ts` against a **disposable** DB + a
+  `:4001` parallel API (never the shared stack) — method + findings in
+  [`docs/planning/m6/load-harness-notes.md`](docs/planning/m6/load-harness-notes.md).
 
 ### Device builds & store provisioning (M1-P state)
 The register is [`docs/planning/m1p-provisioning-log.md`](docs/planning/m1p-provisioning-log.md)
