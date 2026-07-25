@@ -141,6 +141,22 @@ pre-warms the web bundle. Logs/pidfiles live in `.devstack/` (gitignored).
   find it with `netstat -ano | findstr :4001`).
 Login: `demo@ingame.app` / `InGameDemo1!` (the idempotent `npm -w @ingame/api run db:seed-dev` shelf).
 
+### Device builds & store provisioning (M1-P state)
+The register is [`docs/planning/m1p-provisioning-log.md`](docs/planning/m1p-provisioning-log.md)
+(§3 = the owed table; **§4 = the iOS dev-build rebuild/install/connect runbook**) — read it before
+any store/IAP/device-build work; never re-ask recorded state.
+- **iOS: EAS lane LIVE** (2026-07-22) — `apps/mobile/eas.json` (development + production
+  profiles), EAS project `e0c1989a`, owner's iPhone registered, EAS-managed credentials
+  (non-interactive rebuilds work). **The dev client replaces Expo Go on device** — JS streams
+  from Metro; rebuild only on native-layer changes (runbook §4). **SIWA verified E2E** on build
+  `f9c012e6`; `apps/api/.env.dev` runs the REAL Apple verifier (`APPLE_VERIFIER=apple` — the
+  stub's `mock.*` tokens now 401 against the dev API). Still owed: ATS scope-out before store
+  builds (#17), TestFlight P16 (#18).
+- **Android: accounts ready, no build lane yet** — Play Console verified + a physical device in
+  hand (2026-07-18), but the Play app record, RevenueCat Play app, and the eas.json android
+  section are all owed (log §3 #3–#5). P2b (`react-native-purchases`) will force the first
+  Android (and a new iOS) dev build.
+
 ## Model selection for workflows & subagents (owner directive, 2026-07-09)
 Rankings, higher = better. Cost reflects what the owner actually pays, not list price.
 Intelligence is how hard a problem you can hand the model unsupervised. Taste covers UI/UX,

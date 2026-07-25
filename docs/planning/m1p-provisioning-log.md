@@ -139,7 +139,49 @@
 
 ---
 
-## 4. The process, for repetition (Google Play will follow the same shape)
+## 4. Runbook — iOS dev build: rebuild + install + connect
+
+> The dev client (build `f9c012e6`) is the device dev lane — it REPLACES Expo Go for InGame
+> (same live-from-Metro workflow, but with our native modules + entitlements compiled in).
+> JS/TS changes stream in live and never need a rebuild.
+
+**Rebuild only when the NATIVE layer changes:** a new native dependency (e.g.
+`react-native-purchases` at P2b), `app.json` ios/android config or plugins, entitlements,
+icons/splash. If in doubt: pure `src/`/`app/` code = no rebuild.
+
+**1. Rebuild** (~5 min, cloud; no Mac, no Apple login — credentials are EAS-managed):
+```
+cd apps/mobile
+eas build --profile development --platform ios
+```
+Non-interactive works too (agents can run it): add `--non-interactive --no-wait`.
+
+**2. Install on the iPhone** (replaces the old app in place; the device UDID is already in the
+provisioning profile):
+- Open the build page the CLI prints (or find it: `eas build:list --platform ios --limit 1`)
+  **on the phone** — expo.dev → ingame → Builds → latest → **Install**. The CLI also prints a QR
+  that deep-links the same page.
+
+**3. Connect to Metro:**
+- Owner lane: `npx expo start --dev-client` in `apps/mobile` (**:8081**). Agents' standing
+  Metro is **:8082** (never restart the owner's :8081).
+- In the dev app: pick the server from the list, or **Enter URL manually** →
+  `http://<machine-IP>:8081` (or `:8082`). Both the Tailscale IP (`100.x`) and the LAN IP work —
+  dev builds carry `NSAllowsArbitraryLoads: true` (owed #17 scopes it out of store builds).
+  Prefer the Tailscale IP: LAN inbound may be blocked by the Windows firewall (Wi-Fi = Public
+  profile).
+- The API stays on `:4000` per the dev stack; `apps/mobile/.env` already points at it.
+
+**Gotchas already paid for** (don't re-derive): iOS treats Tailscale `100.x` as NON-local under
+ATS — a build without the `NSAllowsArbitraryLoads` override fails *instantly* on any cleartext
+URL (that was dead build 1, `9600e906`). "Immediate failure" = ATS or dead Metro; "hangs then
+fails" = firewall. Ground-truth test from the phone's Safari: `http://<ip>:8082/status` +
+`http://<ip>:4000/api/health`.
+
+**Android:** no EAS Android lane yet — comes with the Play work (owed #3–#5; add an android
+section to eas.json + `eas build --profile development --platform android` then).
+
+## 5. The process, for repetition (Google Play will follow the same shape)
 
 Apple took ~90 min of owner-clicking, Fable-guided: **register App ID → Paid Apps agreement
 (banking + W-8BEN; defer regional tax forms) → app record → In-App Purchase key → sandbox tester →
