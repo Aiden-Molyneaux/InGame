@@ -130,6 +130,12 @@
   | TXT | `_dmarc.mail` | `v=DMARC1; p=none;` (observe-only, per the auth-epic manifest) |
 - **✅ Resend domain VERIFIED 2026-07-25** ("Domain verified: Your domain is ready to send emails" —
   green ~4 min after the records landed). **The task milestone is met**; `mail.ingamehq.com` can send.
+- **✅ LIVE-SEND VERIFIED 2026-07-25 (same sitting):** `RESEND_API_KEY` created + installed in
+  `apps/api/.env.dev`; API flipped to `EMAIL_PROVIDER=resend`, a real password-reset **6-digit code
+  arrived in the owner's inbox** end to end (W-2 client → AUTH-04 code mint → AUTH-12 email-service →
+  ResendProvider → mail.ingamehq.com → inbox). `.env.dev` then **reverted to stub** (console codes)
+  for the normal dev loop — the flip recipe is commented in `.env.dev`. ⚠️ Standing rule while live:
+  never trigger a reset for `demo@ingame.app` (third-party domain → hard bounce → reputation dent).
 - **~~⚠️ CODE RIPPLE OWED~~ ✅ DONE 2026-07-25 (owed row #20):** the repo's `ingame.app` placeholders
   repointed to `ingamehq.com` — `EMAIL_FROM` default (`apps/api/src/config/env.ts` →
   `InGame <no-reply@mail.ingamehq.com>`), `INVITE_LINK_BASE` default (`https://ingamehq.com/i`),
@@ -155,7 +161,7 @@
 | EAS iOS dist cert + provisioning profile | Expo's servers (EAS-managed; `eas credentials`), account `aidenmolyneaux` |
 | Cloudflare account (ingamehq.com registrar + DNS + future R2) | Owner's Cloudflare login (aidenmolyneaux@hotmail.com) |
 | Resend dashboard | Owner's Resend login (aidenmolyneaux@hotmail.com) |
-| `RESEND_API_KEY` | **doesn't exist yet** — owner creates in Resend → password manager + `apps/api/.env.dev` (local test) / host secret store (prod). Never repo, never chat |
+| `RESEND_API_KEY` | `apps/api/.env.dev` (gitignored; installed + live-send-proven 2026-07-25). Prod copy → the API host's secret store at P15/G-C. Never repo, never chat |
 
 ---
 
@@ -181,9 +187,9 @@
 | 16 | ~~EAS signing/build setup~~ **✅ DONE 2026-07-22** (iOS) | — | eas.json + EAS project + iOS credentials + dev build `f9c012e6`; SIWA E2E verified. Android EAS build still unconfigured (owed with the Play lane) |
 | 17 | **Scope `NSAllowsArbitraryLoads` OUT of production builds** | M8 pre-submission | Set 2026-07-22 for the dev-build loop (Tailscale is non-"local" to ATS); an App-Review flag if shipped. Prod API is HTTPS anyway |
 | 18 | **TestFlight internal (P16)** | next iOS distribution step | Foundation now in place: `production` profile stubbed in eas.json; needs `eas build --profile production` + App Store Connect TestFlight setup |
-| 19 | **Create `RESEND_API_KEY`** (domain already Verified ✅) | ASAP (~2 min, owner) | API Keys → `ingame-server`, Sending access, scoped to `mail.ingamehq.com` → password manager + `.env.dev`. Env trio: `EMAIL_PROVIDER=resend` · `RESEND_API_KEY=…` · `EMAIL_FROM="InGame <no-reply@mail.ingamehq.com>"` (#20 done 2026-07-25 — the code default is now mail.ingamehq.com, so EMAIL_FROM may be omitted). NOTE: `loadEnv` hard-throws in ANY env if `EMAIL_PROVIDER=resend` with an empty key |
+| 19 | ~~Create `RESEND_API_KEY`~~ **✅ DONE 2026-07-25** — key in `.env.dev`, **live send proven** (real reset code → owner's inbox; §1) | — | Remaining prod half: copy the key + `EMAIL_PROVIDER=resend` into the API host's secret store at **P15/G-C** (`EMAIL_FROM` may be omitted since #20 — code default is now mail.ingamehq.com; the server fail-closes at boot without provider+key, the designed reminder). `loadEnv` hard-throws in ANY env if `EMAIL_PROVIDER=resend` with an empty key |
 | 20 | ~~Repoint `ingame.app` placeholders → `ingamehq.com` in code/docs~~ **✅ DONE 2026-07-25** (on `m6`) | — | `EMAIL_FROM` + `INVITE_LINK_BASE` defaults (env.ts) · `.env.example` · ResendProvider comment · email tests · product-spec 0.67 (AUTH-12) · auth-epic-manifest annotated. Seed/demo logins (`demo@ingame.app`, `rival@`, `walkseed_*@`, mockup `aiden@`) deliberately KEPT — local-only fixtures, never sent mail; `com.ingame.app` bundle-id history also untouched |
-| 21 | **Delete the stray `ingame.app` zone from Cloudflare** + optional live-send test | next dashboard visit | The zone can never activate (domain is a third party's). Live-send test = set the env trio in `.env.dev`, restart API, reset password to a real inbox, then revert `EMAIL_PROVIDER=stub` — or defer to the P15 deployed API |
+| 21 | **Delete the stray `ingame.app` zone from Cloudflare** | next dashboard visit (~1 min) | The zone can never activate (domain is a third party's); harmless but clutter. ~~Live-send test~~ ✅ **done 2026-07-25** — flip recipe now commented in `.env.dev`; dev loop reverted to stub/console codes |
 
 ---
 
