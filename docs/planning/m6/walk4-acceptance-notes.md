@@ -98,6 +98,12 @@ two phases? the mod queue joins later) · auth model (the PROF-09 role model exi
 MOD-10 audit logging for privileged writes) · hosting shape (a separate web surface beside the API?) ·
 what's genuinely needed pre-beta vs deferrable). Owner sits on the proposal before any build.
 
+> **→ PROPOSAL DELIVERED 2026-07-26:** [`p7-admin-console-proposal.md`](p7-admin-console-proposal.md)
+> — one console two phases (P7 ops now, M7 verbs later; the §10 operator tool stays distinct), external
+> Vite SPA on Cloudflare Pages against a new `/admin/*` router, pre-beta v1 = auth spine + Spotlight
+> curation (config→`server_settings`) + read-only stats + read-only reports/feedback + Sentry link-out.
+> 6 owner questions inside (headline: the MOD-04 in-app-vs-external home needs a spec ruling). OWNER SITTING.
+
 ## Rulings recorded this walk (close the W3 batch)
 - **W3-A** → **RE-RULED, unify**: overflow on ALL postures + Report from catalog (= P4-b).
 - **W3-B** per-relog hint: **blessed** (no action). · **W3-D** device readout: **keep** (no action).
