@@ -29,12 +29,20 @@ Stardew** card owned by walkseed_ultimate.
 - [ ] Grab the 6-digit code from the **API console** (the stub provider logs it: `stub email "sent"` — I can read it to you live). Enter a **wrong** code first. **PASS:** inline "That code is invalid or has expired," stays on S2.
 - [ ] Watch the **RESEND IN {n}s** cooldown tick, then resend. Enter the real code → **S3** → new password (≥8) → **the seal** ("ALL SET / PASSWORD UPDATED / Return to sign in"). **PASS:** whole loop works; the seal offers a clean return.
 - [ ] *Enumeration check:* try a **nonexistent** email at S1. **PASS:** it advances identically (never reveals the account doesn't exist).
-- 🔒 *Owed before real emails send:* the Resend sending-domain setup (your sitting item). Today the code only reaches the log, not an inbox.
+- ✅ **Sending domain CLOSED (2026-07-25):** `mail.ingamehq.com` verified in Resend (DKIM/SPF/MX/DMARC,
+  DNS-only) and a **real reset code was live-delivered** to an inbox. (`ingame.app` turned out to be
+  for-sale at $1k — the product domain is now **ingamehq.com**, registered via Cloudflare Registrar,
+  placeholders repointed in 284992f / spec 0.67.) The local dev loop is deliberately back on the stub
+  (codes → the API log); real sending resumes when prod env exists at P15.
 
-### 1.2 · Sign in with Apple + choose-username ⚠🔒
-- [ ] Sign-in (signin mode) → look for the **"OR CONTINUE WITH"** divider + black **Sign in with Apple** button.
-- ⚠ **On web/Expo Go the button is intentionally absent** (iOS-native-only). You can only truly accept SIWA on an **EAS dev build**, and that needs the **App-ID capability toggle** (your ~5-min sitting item). 🔒
-- [ ] *Choose-username (reachable via a mock-Apple dev token, or accept on the EAS build):* type a name → the **advisory line** (CHECKING… / AVAILABLE / NOT AVAILABLE / NOT ALLOWED) → **Claim handle**. **PASS:** advisory updates live; CLAIM stays pressable even on "NOT AVAILABLE" (by design — the server is the real check); the `usernamePending` gate walls a half-finished account here from every entry.
+### 1.2 · Sign in with Apple + choose-username — ✅ **ACCEPTED 2026-07-22 (provisioning session)**
+- [x] **SIWA E2E verified on the real device** (EAS dev build f9c012e6): real Apple sheet → remote-JWKS
+  verifier (nonce-bound, aud=bundle id) → **choose-username** → in-app; server logged `funnel:"signup",
+  method:"apple"`. The real verifier also **401s mock tokens** (the security half proven). App-ID
+  capability ON; device registered; TestFlight deliberately deferred to pair with the API deploy.
+- Optional re-walk on your phone: the dev build is installed — the Apple button renders there (still
+  correctly absent on web). ⚠ *Dev note:* `apps/api/.env.dev` currently runs `APPLE_VERIFIER=apple`,
+  so agent mock-token sign-ins 401 until it's flipped back to stub; email sign-ins unaffected.
 
 ---
 
@@ -78,7 +86,10 @@ Stardew** card owned by walkseed_ultimate.
 ### 5.1 · About — edit via the overflow + disclaimer + age-gate
 - [ ] On the OWN game page → the **"⋯"** overflow (top-right) → **"Edit catalog details"** → jumps to ABOUT in edit mode.
 - [ ] **PASS:** the accuracy disclaimer renders as the standard **InlineBanner** (accent-bordered — *not* the old bespoke left-bar box you flagged); copy encourages accurate edits.
-- ⚠🔒 *Age-gate:* editing needs the account ≥ **14 days** old. If the demo account is younger it shows "EDITING UNLOCKS AFTER 14 DAYS" — accept the gate copy, but the edit fields themselves need an aged (or admin) account.
+- ✅ *Age-gate: NOW OPEN* — the demo account (created 2026-07-02) has aged past 14 days, so the **edit
+  fields themselves are exercisable**: edit a field (e.g. PUBLISHER), save, see the wiki-live change +
+  the **EDITED BY … attribution** appear. (A younger account would see "EDITING UNLOCKS AFTER 14 DAYS" —
+  that copy was already accepted.)
 - 🤔 *Consideration W3-A:* on CATALOG/FRIEND postures the EDIT key stays **inline** (those pages have no overflow). Bless the posture split, or ask me to grow a catalog overflow.
 
 ### 5.2 · About — labeled details
