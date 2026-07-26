@@ -86,10 +86,11 @@ extended `apps/api/src/render/brass-ramp.test.ts` ·
 - **Mobile:** builder's counted run 830/831 (the 1 = the known P5-j contention flake, 11/11 in
   isolation); a later full run exited 0 (uncounted — a stderr-redirect mistake). **A final counted
   run is owed at landing** (it also covers the fix-round's 4 new jest tests).
-- **Integration:** two parallel-mode attempts failed 26/27 files on **hook-timeout storms — machine
-  CPU starvation, not code** (§6; 0 product-test failures in evidence; foundation-slice + a 20-test
-  slice passed under load). A **serial run** (`--no-file-parallelism`) is in flight and cruising
-  post-VM-suspension. Landing requires its green.
+- **Integration: GREEN — 539/539 tests, 27/27 files** (serial `--no-file-parallelism` run, 1315s,
+  witnessed complete 2026-07-26 after the VM suspension). The two earlier parallel-mode attempts that
+  failed 26/27 files were **hook-timeout storms from machine CPU starvation, not code** (§6) — the
+  count matches the last recorded suite size exactly. The gate is satisfied on the CURRENT tree; if
+  the reviewer's STEP-2 findings change any code, integration re-runs (parallel mode is fine now).
 - **Parvati: DARK all session** — claude-in-chrome tools never appeared (subagents saw the same;
   the forbidden preview pane was not used). Handling → the reviewer (§7).
 
