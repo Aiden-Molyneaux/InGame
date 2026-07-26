@@ -3,7 +3,7 @@ import type { EmailMessage, EmailProvider } from './EmailProvider';
 // AUTH-12 — the real transport: Resend (owner-nod #1), via the plain HTTPS API. Deliberately NO SDK
 // dependency (the jose/zero-dep posture): one fetch POST per send. The API key + from-address are
 // owner-provisioned (SYS-03; RESEND_API_KEY in the host secret store, never the repo) and the sending
-// domain (mail.ingame.app — SPF/DKIM) is the paired owner sitting item.
+// domain (mail.ingamehq.com — SPF/DKIM) is verified in Resend (the 2026-07-25 owner sitting).
 
 const RESEND_ENDPOINT = 'https://api.resend.com/emails';
 

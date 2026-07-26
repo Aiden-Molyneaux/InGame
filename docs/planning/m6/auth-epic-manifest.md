@@ -64,7 +64,8 @@ calls — replaces the direct `stubEmailer` import at auth-service.ts:27):
   floor: an unconfigured mail path must fail loudly, never silently swallow password resets).
 - `RESEND_API_KEY` — owner-provisioned secret (host secret store, never repo).
 - `EMAIL_FROM` — default placeholder `InGame <no-reply@mail.ingame.app>`; real value follows the
-  domain sitting.
+  domain sitting. *[2026-07-25 outcome: `ingame.app` proved third-party-owned — the sitting landed
+  on **`mail.ingamehq.com`** and the code default was repointed (m1p log, owed row #20).]*
 
 **Fail posture at the call sites (the AUTH-11 subtlety):** on the reset-request path, a provider
 send-failure is **caught + Sentry'd and the response stays neutral 200** — throwing only on the
@@ -75,7 +76,9 @@ the send; there is no "unconfigured prod limps along" state — loadEnv already 
 **Sending domain (owner sitting item — pairs with the P15 Cloudflare sitting):** Resend account +
 verified sending domain (recommend the subdomain **`mail.ingame.app`** — keeps apex reputation
 clean), SPF + DKIM records (+ DMARC `p=none` to start) added in the Cloudflare DNS panel. ~15 min,
-owner-only (M1-P provisioning pattern; agents do NOT provision).
+owner-only (M1-P provisioning pattern; agents do NOT provision). *[2026-07-25 outcome: the sitting
+ran — but `ingame.app` is a third party's for-sale domain, so the verified sending domain is
+**`mail.ingamehq.com`** (apex `ingamehq.com`, Cloudflare Registrar). Same subdomain rationale.]*
 
 ---
 
@@ -272,7 +275,8 @@ unsure + QA-friction line); commit names the IDs.
 2. **Code-vs-link: 6-digit code** (recommended §2 — pre-universal-links deep links are brittle;
    amends AUTH-04's "emailed link" wording).
 3. **Sending domain** — recommend `mail.ingame.app`; SPF + DKIM (+ DMARC p=none) in Cloudflare.
-   **Sitting item — pairs with the P15 Cloudflare sitting.**
+   **Sitting item — pairs with the P15 Cloudflare sitting.** *[Done 2026-07-25 as
+   `mail.ingamehq.com` — `ingame.app` isn't ours; see the m1p provisioning log.]*
 4. **SIWA linking policy** — confirm the built AUTH-09 posture: auto-link on Apple-**verified**
    matching email, else fresh account; **no unlink surface at beta**.
 5. **App-ID capability** — toggle Sign in with Apple on `com.aidenmolyneaux.ingame` (~5 min,

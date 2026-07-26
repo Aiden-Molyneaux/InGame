@@ -130,11 +130,12 @@
   | TXT | `_dmarc.mail` | `v=DMARC1; p=none;` (observe-only, per the auth-epic manifest) |
 - **✅ Resend domain VERIFIED 2026-07-25** ("Domain verified: Your domain is ready to send emails" —
   green ~4 min after the records landed). **The task milestone is met**; `mail.ingamehq.com` can send.
-- **⚠️ CODE RIPPLE OWED (do NOT hand-edit mid-provisioning):** the repo's `ingame.app` placeholders
-  must repoint to `ingamehq.com` — `EMAIL_FROM` default (`apps/api/src/config/env.ts` →
+- **~~⚠️ CODE RIPPLE OWED~~ ✅ DONE 2026-07-25 (owed row #20):** the repo's `ingame.app` placeholders
+  repointed to `ingamehq.com` — `EMAIL_FROM` default (`apps/api/src/config/env.ts` →
   `InGame <no-reply@mail.ingamehq.com>`), `INVITE_LINK_BASE` default (`https://ingamehq.com/i`),
-  `.env.example` comments, + a docs sweep for `ingame.app` mentions. Until then the env vars must be
-  set explicitly wherever the API runs.
+  `.env.example`, ResendProvider comment, email tests, + the docs sweep (product-spec 0.67 AUTH-12;
+  auth-epic-manifest annotated). Seed/demo logins (`demo@ingame.app` etc.) deliberately kept —
+  local-only fixtures.
 - **Registration-verification emails stay stub/log-only** even after the key lands (deliberate
   email-service allowlist — nothing redeems that token in-app yet). Password-RESET codes are the one
   real sender at beta.
@@ -180,8 +181,8 @@
 | 16 | ~~EAS signing/build setup~~ **✅ DONE 2026-07-22** (iOS) | — | eas.json + EAS project + iOS credentials + dev build `f9c012e6`; SIWA E2E verified. Android EAS build still unconfigured (owed with the Play lane) |
 | 17 | **Scope `NSAllowsArbitraryLoads` OUT of production builds** | M8 pre-submission | Set 2026-07-22 for the dev-build loop (Tailscale is non-"local" to ATS); an App-Review flag if shipped. Prod API is HTTPS anyway |
 | 18 | **TestFlight internal (P16)** | next iOS distribution step | Foundation now in place: `production` profile stubbed in eas.json; needs `eas build --profile production` + App Store Connect TestFlight setup |
-| 19 | **Create `RESEND_API_KEY`** (domain already Verified ✅) | ASAP (~2 min, owner) | API Keys → `ingame-server`, Sending access, scoped to `mail.ingamehq.com` → password manager + `.env.dev`. Env trio: `EMAIL_PROVIDER=resend` · `RESEND_API_KEY=…` · `EMAIL_FROM="InGame <no-reply@mail.ingamehq.com>"` (⚠️ set explicitly — the code default still says mail.ingame.app until #20). NOTE: `loadEnv` hard-throws in ANY env if `EMAIL_PROVIDER=resend` with an empty key |
-| 20 | **Repoint `ingame.app` placeholders → `ingamehq.com` in code/docs** | next code pass on `m6` | `EMAIL_FROM` default (env.ts:195) · `INVITE_LINK_BASE` default (env.ts:201) · `.env.example` · docs sweep. Small mechanical diff; not done mid-provisioning |
+| 19 | **Create `RESEND_API_KEY`** (domain already Verified ✅) | ASAP (~2 min, owner) | API Keys → `ingame-server`, Sending access, scoped to `mail.ingamehq.com` → password manager + `.env.dev`. Env trio: `EMAIL_PROVIDER=resend` · `RESEND_API_KEY=…` · `EMAIL_FROM="InGame <no-reply@mail.ingamehq.com>"` (#20 done 2026-07-25 — the code default is now mail.ingamehq.com, so EMAIL_FROM may be omitted). NOTE: `loadEnv` hard-throws in ANY env if `EMAIL_PROVIDER=resend` with an empty key |
+| 20 | ~~Repoint `ingame.app` placeholders → `ingamehq.com` in code/docs~~ **✅ DONE 2026-07-25** (on `m6`) | — | `EMAIL_FROM` + `INVITE_LINK_BASE` defaults (env.ts) · `.env.example` · ResendProvider comment · email tests · product-spec 0.67 (AUTH-12) · auth-epic-manifest annotated. Seed/demo logins (`demo@ingame.app`, `rival@`, `walkseed_*@`, mockup `aiden@`) deliberately KEPT — local-only fixtures, never sent mail; `com.ingame.app` bundle-id history also untouched |
 | 21 | **Delete the stray `ingame.app` zone from Cloudflare** + optional live-send test | next dashboard visit | The zone can never activate (domain is a third party's). Live-send test = set the env trio in `.env.dev`, restart API, reset password to a real inbox, then revert `EMAIL_PROVIDER=stub` — or defer to the P15 deployed API |
 
 ---

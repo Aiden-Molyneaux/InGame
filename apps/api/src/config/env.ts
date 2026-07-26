@@ -63,8 +63,8 @@ export interface ApiEnv {
   emailProvider: string;
   /** AUTH-12 — the Resend API key (owner-provisioned, host secret store; SYS-03). Empty on the stub lane. */
   resendApiKey: string;
-  /** AUTH-12 — the From header (`EMAIL_FROM`). Placeholder default; the real value follows the
-   * mail.ingame.app domain sitting (SPF/DKIM, owner-provisioned). */
+  /** AUTH-12 — the From header (`EMAIL_FROM`). Default = the verified Resend sending domain
+   * (mail.ingamehq.com — SPF/DKIM live, the 2026-07-25 owner sitting; m1p-provisioning-log). */
   emailFrom: string;
   /**
    * AUTH-03/09 (auth-epic P-D) — the Apple identity-token verifier selection ('stub' default OUTSIDE
@@ -192,13 +192,13 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): ApiEnv {
     iapProvider: resolveIapProvider(nodeEnv, source.IAP_PROVIDER),
     emailProvider: resolveEmailProvider(nodeEnv, source.EMAIL_PROVIDER, source.RESEND_API_KEY),
     resendApiKey: source.RESEND_API_KEY ?? '',
-    emailFrom: source.EMAIL_FROM ?? 'InGame <no-reply@mail.ingame.app>',
+    emailFrom: source.EMAIL_FROM ?? 'InGame <no-reply@mail.ingamehq.com>',
     appleVerifier: resolveAppleVerifier(nodeEnv, source.APPLE_VERIFIER),
     appleBundleId: source.APPLE_BUNDLE_ID ?? 'com.aidenmolyneaux.ingame',
     revenueCatWebhookAuth: source.REVENUECAT_WEBHOOK_AUTH ?? '',
     // SOC-10 — the invite-link base (no trailing slash needed; the service joins with '/'). The P15
     // landing owns the real route; this placeholder keeps the seam functional in dev/test.
-    inviteLinkBase: (source.INVITE_LINK_BASE ?? 'https://ingame.app/i').replace(/\/+$/, ''),
+    inviteLinkBase: (source.INVITE_LINK_BASE ?? 'https://ingamehq.com/i').replace(/\/+$/, ''),
     // AUTH-01 (decision 0076 §0.9) — default ON; only the literal string 'false' turns it off.
     breachCheckEnabled: (source.BREACH_CHECK_ENABLED ?? 'true').toLowerCase() !== 'false',
   };

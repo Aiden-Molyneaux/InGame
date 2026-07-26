@@ -47,7 +47,7 @@ describe('loadEnv — the EMAIL provider production floor (AUTH-12 fail-closed)'
   it("outside production, unset defaults to 'stub' (dev/test posture) + EMAIL_FROM has its placeholder", () => {
     const env = loadEnv({ ...BASE, NODE_ENV: 'development' });
     expect(env.emailProvider).toBe('stub');
-    expect(env.emailFrom).toBe('InGame <no-reply@mail.ingame.app>');
+    expect(env.emailFrom).toBe('InGame <no-reply@mail.ingamehq.com>');
   });
 });
 
@@ -111,7 +111,7 @@ describe('ResendProvider — the plain-fetch HTTP shape (no SDK)', () => {
   it('POSTs api.resend.com/emails with bearer auth + {from,to,subject,text}', async () => {
     const fetchMock = vi.fn(async () => new Response('{}', { status: 200 }));
     vi.stubGlobal('fetch', fetchMock);
-    const provider = new ResendProvider({ apiKey: 're_key', from: 'InGame <no-reply@mail.ingame.app>' });
+    const provider = new ResendProvider({ apiKey: 're_key', from: 'InGame <no-reply@mail.ingamehq.com>' });
     await provider.send({ to: 'a@example.com', subject: 'Hello', text: 'body', html: '<p>body</p>' });
 
     expect(fetchMock).toHaveBeenCalledOnce();
@@ -120,7 +120,7 @@ describe('ResendProvider — the plain-fetch HTTP shape (no SDK)', () => {
     expect(init.method).toBe('POST');
     expect((init.headers as Record<string, string>).Authorization).toBe('Bearer re_key');
     expect(JSON.parse(init.body as string)).toEqual({
-      from: 'InGame <no-reply@mail.ingame.app>',
+      from: 'InGame <no-reply@mail.ingamehq.com>',
       to: ['a@example.com'],
       subject: 'Hello',
       text: 'body',
