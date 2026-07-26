@@ -25,6 +25,15 @@ scaling-suite runs (`load-harness-notes.md` — the 4 known cliffs are prime sus
 | P1-b | **MARQUEE ULTIMATE does not take the picker colour** — recolouring works in the picker but the rendered marquee frame doesn't change. Owner: "swap it or fix it." | The W-5 draft claimed "frame = zero render change" (frames consume `frame.color`) — evidently the *marquee kind's* draw path has hardcoded treatment (check `buildCard.ts` marquee branch on BOTH api+mobile). Fix the render to consume `frame.color` for the marquee kind (legacy base-marquee must stay pixel-identical — the registry colour IS the legacy colour, same trick as the brass ramp), or if genuinely unfixable, propose the SKU swap to the owner. |
 | P1-c | **Friend's profile identity is missing on their ACHIEVEMENTS page** — but is present on their Contributions page. | The cross-user achievements route lacks the identity header the contributor route carries. Conform it. |
 
+> **→ P1 BUILT + LANDED 2026-07-26 (`dbb45ca`) — Murr closed · fresh-eyes review closed · Parvati pending.**
+> P1-a root cause was broader than the walk found (ALL 7 non-default fonts fell back on server renders;
+> registry now mirrors mobile; dev-DB reflatten 45/45, backup first). P1-b got the clean fix — the
+> owner's fix-vs-swap decision was never needed (registry gold → legacy track pixel-identically).
+> P1-c closed THREE sites: friend achievements + self achievements (Murr) + the FRIENDS-tab
+> RequestsBanner (takeover review). Review also surfaced: invite-sender / blocked-list / friends-who-own
+> response shapes never carried `avatarConfig` (server-side W-4 gap) → Batch-2 lane. Gate record:
+> [`review-coverage.md`](review-coverage.md) §Walk-4 Batch 1.
+
 ### P2 — the Add-Game flow rework (owner: "put some serious thought into making this user friendly")
 Design-think FIRST (short proposal → owner nod → build). The pieces:
 - **P2-a (the core)**: adopting a card during the Add-Game fork should END the flow — equip the adopted

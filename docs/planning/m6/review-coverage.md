@@ -149,6 +149,38 @@
   mobile 111/828**. /health 🟢. Spec ripple: product-spec **0.66** (the add-flow completion row) ·
   api-contract **0.81** (sort/cursor/limit + nextCursor/total, additive).
 
+## Walk-4 Batch 1 — the P1 bug fixes (2026-07-26, `dbb45ca`) — MURR CLOSED · FRESH-EYES REVIEW CLOSED · PARVATI PENDING
+- **Scope:** the owner's three reproduced bugs — P1-a (server flatten rendered EVERY non-default font
+  as chakra-petch; the full typeface registry now mirrors mobile, `pacifico-ultimate` alias included;
+  dev-DB reflatten run 45/45, backup `local_ingame_2026-07-26T16-22-20.sql` first) · P1-b (marquee
+  track parameterized from `frame.color`, registry gold → legacy `#6b5c28` pixel-identically) ·
+  P1-c (+bis) achievements identity threading. Opus builder; ledger: walk4-acceptance-notes §P1.
+- **Murr (fable, fresh-context): NEEDS-FIXES → fix round CLOSED.** The MAJOR: `marqueeTrackColor(undefined)`
+  TypeError → publish/share 500 on a hand-crafted composition omitting `frame.color` (the `.passthrough()`
+  envelope; the colour-force backstop deliberately skips colour-customizable designs) — guarded in BOTH
+  buildCard copies + the same-class pre-existing `brassPlateRamp` hole (`nameplate.plate` omissible the
+  same way) guarded identically, all with attack tests. 1 minor deferred owner-eye (the live MarqueeChase
+  light stays warm-gold by design). Fix-round provenance: the four guard edits + P1-c-bis were implemented
+  by the ORCHESTRATOR per Murr's prescription (recorded honestly in the wave receipt §3) — specifically
+  re-verified by the takeover session's fresh-eyes review below.
+- **Fresh-eyes takeover review (fable, 2026-07-26 — receipt §7 Job 1): ALL CLAIMS VERIFIED.**
+  (a) the 4 orchestrator guards correct + api↔mobile parity exact; (b) pixel-identity PROVEN incl. the
+  inference path — a smuggled base-marquee colour still resolves to base `marquee` → colour-forced to
+  registry → legacy track (the raw-composition live-preview smuggle is the pre-existing accepted W-5
+  posture, no new hole); (c) reflatten spot-checked by EYE — the demo_curator_m3 Hollow Knight PNG
+  renders Pacifico + custom ink `#efb20a` per its composition; (d) the IdentityBlock call-site sweep
+  found the assumed THIRD site: the FRIENDS-tab RequestsBanner dropped the `avatarConfig` its payload
+  carries → **P1-c-ter fixed in the landing commit** + 3 tests. ALSO surfaced (recorded, NOT fixed here):
+  `inviteSenderSchema` · `blockedPersonSchema` · `friendWhoOwnsSchema` never carried `avatarConfig` at
+  all (server-side W-4 completion gap, `.strict()` shapes) → queued as a Batch-2 lane.
+- **Definitive green at `dbb45ca`:** typecheck PASS · lint 0 err · **unit 316/316 (36 files) ·
+  mobile 112 suites/835 counted · integration 539/539 (27 files)** — integration witnessed on this tree
+  at `9c13b69` (serial run post-VM-suspension; the two earlier 26/27 parallel failures were machine CPU
+  starvation — see the qa-runbook machine-load entry); the only code delta after the witness is
+  mobile-client (friends.tsx + jest), outside the integration surface.
+- **Parvati: pending** — the takeover session attempts the sweep next (claude-in-chrome); if the tools
+  are absent again: PARVATI DARK — owed at the owner's return (precedent stands).
+
 ## Operational actions this pass (disk/DB state, not git — recorded here so they're not lost)
 - **Dev-DB durability net** (committed `b9e72a2`): `npm -w @ingame/api run db:backup` + `db:reset`
   auto-backs-up first. Backups in `~/ingame-db-backups/` (3 taken 2026-07-19; keeps 20). Permanent fix =

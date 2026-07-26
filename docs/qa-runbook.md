@@ -151,6 +151,23 @@ under Promoted.
 - **Verified:** 2026-07-18 (chased a phantom parse error through two needless test rewrites before
   running it correctly — 2/2 green) · **Hits:** 1
 
+## Mass integration beforeAll hook-timeouts + healthy docker + ONE surviving suite ⇒ check MACHINE LOAD first
+- **Symptom:** a parallel integration run fails 26/27 files, every failure the same `Hook timed out in
+  120000ms` in `beforeAll` (Testcontainers Postgres start); docker itself is healthy (`docker ps` fine,
+  the dev DB container untouched); ONE suite — whichever won the race — runs green; a re-run fails the
+  same way with a different survivor. Also elevated same-day flakiness (socket resets, jest contention).
+- **Diagnosis:** machine-wide CPU starvation, not code and not docker: a heavyweight neighbour process
+  (here `vmware-vmx`, the owner's work CAD VM, holding ~3 cores at 100%) starves 26 concurrent
+  container starts past the hook timeout. The failure pattern — uniform infra-stage timeouts with a
+  single survivor — is the signature that distinguishes it from a real regression (which fails specific
+  suites at the TEST stage, not all-but-one at the hook stage).
+- **Fix:** check load FIRST — `Get-Process | Sort-Object CPU -Descending | Select-Object -First 5` (or
+  Task Manager) and look for a non-dev hog (`vmware-vmx`, encoders, indexers). Suspend/stop it (the
+  owner suspended the VM), then re-run; parallel mode is fine again. If the hog can't be stopped, run
+  serial: `npm run test:integration -- --no-file-parallelism` (~22 min but immune to the start storm).
+  Never diagnose 26/27 hook-timeouts as a code regression before ruling out machine load.
+- **Verified:** 2026-07-26 · **Hits:** 1 *(walk-4 Batch-1 verify; serial run then witnessed 539/539)*
+
 ## Promoted (owned by `doctor` — run `node scripts/dev-stack.mjs doctor`)
 
 - Postgres container down → `doctor` **db :5432** check.

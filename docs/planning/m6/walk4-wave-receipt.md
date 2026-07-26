@@ -94,6 +94,20 @@ extended `apps/api/src/render/brass-ramp.test.ts` ·
 - **Parvati: DARK all session** — claude-in-chrome tools never appeared (subagents saw the same;
   the forbidden preview pane was not used). Handling → the reviewer (§7).
 
+> **§5b · BATCH 1 LANDED — the takeover session (fable orchestrator, 2026-07-26, commit `dbb45ca`).**
+> The §7 Job-1 review ran BEFORE landing (owner's takeover directive): all claims verified — the 4
+> guards correct + copy-parity exact; pixel-identity proven including the inference path (a smuggled
+> base-marquee colour still colour-forces to registry; the raw-composition live-preview smuggle is the
+> pre-existing accepted W-5 posture); the reflatten spot-checked by eye (the demo_curator_m3 Hollow
+> Knight PNG renders Pacifico + `#efb20a` ink per its composition); records honest. The assumed THIRD
+> P1-c site was REAL: the FRIENDS-tab RequestsBanner dropped the `avatarConfig` its payload carries →
+> fixed in the landing commit (P1-c-ter) + 3 tests. NEW finding recorded, queued (not fixed in Batch 1):
+> `inviteSenderSchema`/`blockedPersonSchema`/`friendWhoOwnsSchema` never carried `avatarConfig` at all —
+> a server-side W-4 completion gap → added to Batch 2 as its own lane. **Final gates at `dbb45ca`:
+> typecheck PASS · lint 0 err · unit 316/316 (36f) · mobile 112 suites/835 counted · integration
+> 539/539 witnessed (9c13b69; only mobile-client code changed after the witness).** The owed qa-runbook
+> machine-load entry is filed. Records: review-coverage §Walk-4 Batch 1 + the ledger §P1 disposition.
+
 ## 6 · Environment events & operational actions (disk/DB state — don't re-learn these the hard way)
 
 - **A Murr agent died silently** (task vanished, 0-byte transcript, no notification). Recovery:
@@ -133,8 +147,8 @@ return** in review-coverage (the precedent exists) and say so loudly in your rep
 
 | Order | Lane | Notes |
 |---|---|---|
-| next | **Batch 1 landing** | serial-integration green + counted mobile + final typecheck/lint → explicit-pathspec commit + push → review-coverage + ledger dispositions + the qa-runbook entry → reviewer dispatch |
-| then | **Batch 2:** P3 (opus) ∥ P4 (opus) ∥ P5 (sonnet) | the ledger's §P3/§P4/§P5 items. P5 touches sign-in.tsx (#27 copy) — **preserve, never commit, the owner's prefill**; #26/#27 stay AUTH-11 enumeration-neutral; P5-j = the jest timeout bump. Combined Murr + verify at landing. |
+| ~~next~~ ✅ | **Batch 1 landing — DONE** (`dbb45ca`, §5b) | review-before-landing ran; gates green + witnessed; records filed; pushed with the two receipt commits |
+| then | **Batch 2:** P3 (opus) ∥ P4 (opus) ∥ P5 (sonnet) ∥ **avatarConfig shape-completion** | the ledger's §P3/§P4/§P5 items. P5 touches sign-in.tsx (#27 copy) — **preserve, never commit, the owner's prefill**; #26/#27 stay AUTH-11 enumeration-neutral; P5-j = the jest timeout bump. NEW lane (takeover review finding): thread `avatarConfig` through the invite-sender / blocked-list / friends-who-own response shapes + serializers + client render + api-contract ripple. Combined Murr + verify at landing. |
 | then | **Batch 3:** P2 build (opus) ∥ P6 fixes (opus/fable) | P2 per the nodded proposal §4 incl. ALL doc ripples (product-spec CAT-02/CAT-03/0.66-row · api-contract genre note · design-spec/SCREEN-STATUS P2-d · `/health` after). **⚠ P2 overlaps P4 on `AdoptCardSheet.tsx` + `cards.tsx` — P2 dispatches only after P4 lands.** P6 = R1+R2+R4+R7 only, with before/after receipts where measurable. |
 | chore | api font-deps declaration (§4.3) | small lockfile commit |
 | END | update THIS doc + the ledger dispositions; final wave receipt to the owner | |
