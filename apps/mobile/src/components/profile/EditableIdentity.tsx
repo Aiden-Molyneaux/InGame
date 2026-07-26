@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
-import type { SelfProfile, GenresResponse, Platform, PatchMeRequest, CreateGamertagRequest } from '@ingame/shared';
+import type { SelfProfile, GenresResponse, Platform, PatchMeRequest, CreateGamertagRequest, AvatarConfig } from '@ingame/shared';
 import { BIO_MAX } from '@ingame/shared';
 import { themedStyles } from '../../theme';
 import { Avatar } from '../Avatar';
@@ -14,6 +14,12 @@ import { ScreenButton } from '../ScreenButton';
 // frame, D-2: the beta avatar; the full DESIGNER stays product-spec PROF-08 §10) · username (PROF-06
 // cooldown + MOD-07 screening 422) · bio (140 counter) · genres (controlled list) · gamertags
 // (add/remove, PROF-02). Privacy rides Settings (D-3), not here.
+//
+// walk-4 P3-a — with the forge open THIS avatar is the forge's live preview (the forge draws no head
+// of its own any more): it wears the in-progress config until the forge closes, then falls back to
+// server truth. walk-4 P3-c — the USERNAME is the ONE field that opts OUT of the per-field autosave:
+// it takes a deliberate SAVE (owner ruling — an accidental blur used to burn the PROF-06 30-day
+// rename cooldown). Every other field keeps the OQ-034 commit-as-you-go grammar.
 
 // A field commit resolves ok, or fails with per-field messages (the VALIDATION_ERROR `details` map by
 // path) and/or a generic message.
@@ -46,8 +52,15 @@ export function EditableIdentity({
   const [bio, setBio] = useState(me.bio ?? '');
   const [usernameErr, setUsernameErr] = useState<string | null>(null);
   const [bioErr, setBioErr] = useState<string | null>(null);
+  // P3-c — the deliberate-save state machine for the username alone: `saving` while the PATCH is in
+  // flight, `savedName` = the last name we successfully committed (so the confirm row retires the
+  // instant the save lands, without waiting on the /me re-read).
+  const [savingUsername, setSavingUsername] = useState(false);
+  const [savedName, setSavedName] = useState<string | null>(null);
   // D-2 — the ✎ opens the W-4 Monogram Forge inline (replacing the deferred "designer coming" note).
   const [forgeOpen, setForgeOpen] = useState(false);
+  // P3-a — the forge's in-progress config; the identity avatar below wears it while the forge is open.
+  const [preview, setPreview] = useState<AvatarConfig | null>(null);
 
   // gamertag-add draft
   const [gtPlatform, setGtPlatform] = useState<Platform>('pc');
@@ -57,12 +70,34 @@ export function EditableIdentity({
   // PROF-06 — username change cooldown (usernameNextChangeAt is a future ISO date, or null = allowed now).
   const cooldownActive = me.usernameNextChangeAt != null && new Date(me.usernameNextChangeAt) > new Date();
 
+  // P3-c — the username's display states. DIRTY (any unsaved divergence from the served name, an
+  // emptied field included — so CANCEL is always reachable) raises the confirm row; a name we just
+  // saved is NOT dirty even if the /me cache hasn't caught up yet. SAVEABLE additionally requires a
+  // non-empty draft: a blank name gets a greyed SAVE beside a live CANCEL, never a dead end.
+  const usernameDraft = username.trim();
+  const usernameDirty = usernameDraft !== me.username && usernameDraft !== savedName;
+  const usernameSaveable = usernameDirty && usernameDraft.length > 0;
+  const usernameJustSaved = savedName != null && usernameDraft === savedName;
+
+  // P3-c — the ONLY path that renames: an explicit SAVE press. Never a blur.
   async function commitUsername() {
     const next = username.trim();
-    if (next === me.username || next.length === 0) return; // nothing to save
+    if (!usernameSaveable || savingUsername) return; // nothing to save / already in flight
     setUsernameErr(null);
-    const r = await onPatchMe({ username: next });
-    if (!r.ok) setUsernameErr(r.fieldErrors?.username ?? r.message ?? 'Couldn’t save your username.');
+    setSavingUsername(true);
+    try {
+      const r = await onPatchMe({ username: next });
+      if (r.ok) setSavedName(next);
+      else setUsernameErr(r.fieldErrors?.username ?? r.message ?? 'Couldn’t save your username.');
+    } finally {
+      setSavingUsername(false);
+    }
+  }
+
+  // P3-c — discard the edit and put the served name back (the accident's escape hatch).
+  function cancelUsername() {
+    setUsername(me.username);
+    setUsernameErr(null);
   }
 
   async function commitBio() {
@@ -96,17 +131,29 @@ export function EditableIdentity({
           accessibilityRole="button"
           accessibilityLabel="Edit avatar"
           accessibilityState={{ expanded: forgeOpen }}
-          onPress={() => setForgeOpen((v) => !v)}
+          onPress={() => {
+            // P3-a — closing drops the preview so the avatar snaps back to server truth.
+            setForgeOpen((v) => !v);
+            setPreview(null);
+          }}
           style={styles.avatarPress}
         >
-          <Avatar username={me.username} avatarUrl={me.avatarUrl} avatarConfig={me.avatarConfig} size={64} />
+          {/* P3-a — THE preview. While the forge is open this wears its in-progress config (and
+              deliberately ignores `avatarUrl`: the forge edits the MONOGRAM, so the monogram is what
+              must react). Closed, it's plain server truth. */}
+          <Avatar
+            username={me.username}
+            avatarUrl={forgeOpen ? null : me.avatarUrl}
+            avatarConfig={forgeOpen ? (preview ?? me.avatarConfig) : me.avatarConfig}
+            size={64}
+          />
           <View style={styles.cbadge}>
             <Text style={styles.cbadgeGlyph}>✎</Text>
           </View>
         </Pressable>
         <View style={styles.avatarMeta}>
           <Text style={styles.editHint}>YOUR MONOGRAM</Text>
-          <Text style={styles.avatarNote}>{forgeOpen ? 'Close the forge when you’re done.' : 'Tap the pencil to forge your colours, letters and frame.'}</Text>
+          <Text style={styles.avatarNote}>{forgeOpen ? 'Your edits preview here — tap the pencil when you’re done.' : 'Tap the pencil to forge your colours, letters and frame.'}</Text>
         </View>
       </View>
 
@@ -115,6 +162,7 @@ export function EditableIdentity({
           username={me.username}
           config={me.avatarConfig}
           onCommit={(avatarConfig) => onPatchMe({ avatarConfig })}
+          onPreview={setPreview}
         />
       ) : null}
 
@@ -125,19 +173,54 @@ export function EditableIdentity({
         <TextField
           label="Username"
           value={username}
-          onChangeText={setUsername}
-          onBlur={commitUsername}
-          editable={!cooldownActive}
+          onChangeText={(v) => {
+            setUsername(v);
+            setUsernameErr(null); // typing retires the last rejection (P3-c)
+          }}
+          // P3-c — NO onBlur commit. Tapping away is not consent to spend the 30-day cooldown.
+          editable={!cooldownActive && !savingUsername}
           autoCapitalize="none"
           error={usernameErr}
         />
+        {/* P3-c — the deliberate-save confirm row, raised only by a real unsaved change. It hugs the
+            field by reclaiming the TextField's reserved error-slot slack (the N-A4 grammar), so the
+            slot still holds a shown error without reflowing the section. */}
+        {usernameDirty && !cooldownActive ? (
+          <View style={styles.usernameConfirm}>
+            <ScreenButton
+              label={savingUsername ? 'Saving…' : 'Save username'}
+              accessibilityLabel="Save username"
+              variant="primary"
+              onPress={() => void commitUsername()}
+              disabled={savingUsername || !usernameSaveable}
+              style={styles.usernameKey}
+            />
+            <ScreenButton
+              label="Cancel"
+              accessibilityLabel="Cancel username change"
+              variant="secondary"
+              onPress={cancelUsername}
+              disabled={savingUsername}
+              style={styles.usernameKey}
+            />
+          </View>
+        ) : null}
         {cooldownActive ? (
           // N-A1 — the PROF-06 time-gate wears the screen ACCENT (orange) for salience.
           <Text style={[styles.usernameNote, styles.usernameNoteGate]}>
             NEXT CHANGE {formatWhen(me.usernameNextChangeAt)} · ONCE / 30 DAYS
           </Text>
+        ) : usernameDirty ? (
+          // P3-c — name the STAKE at the moment of the change, not in the abstract. This branch always
+          // sits UNDER the confirm row (dirty ⇒ not cooled down), so it drops the note's negative top
+          // — that slack belongs to the row now, and re-taking it would ride up into the keys.
+          <Text style={[styles.usernameNote, styles.usernameNoteGate, styles.usernameNoteUnderKeys]}>
+            TAP SAVE TO CONFIRM · ONCE / 30 DAYS
+          </Text>
+        ) : usernameJustSaved ? (
+          <Text style={[styles.usernameNote, styles.usernameNoteOk]}>✓ USERNAME SAVED</Text>
         ) : (
-          <Text style={styles.usernameNote}>A–Z, 0–9, _ · SAVES WHEN YOU TAP AWAY</Text>
+          <Text style={styles.usernameNote}>A–Z, 0–9, _ · CHANGES NEED A DELIBERATE SAVE</Text>
         )}
       </View>
 
@@ -267,6 +350,13 @@ const useStyles = themedStyles((t) => {
   },
   // N-A1 — the PROF-06 time-gate note recolours to the screen ACCENT (orange) for salience.
   usernameNoteGate: { color: t.scr.accent },
+  // P3-c — the settled confirmation (the one green note in the editor; the house success token).
+  usernameNoteOk: { color: t.brand.success },
+  // P3-c — the SAVE/CANCEL pair. Same negative top as the note (N-A4): reclaim the TextField's
+  // reserved error slot so the row reads as belonging to the field it saves.
+  usernameConfirm: { flexDirection: 'row', gap: t.space.sm, marginTop: -t.space.sm },
+  usernameKey: { flex: 1 },
+  usernameNoteUnderKeys: { marginTop: 0 },
   avatarRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.lg },
   avatarPress: { position: 'relative' },
   // the ✎ corner badge (board `.cbadge` — punched-out ring, method A)

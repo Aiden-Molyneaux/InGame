@@ -122,6 +122,11 @@ function renderScreen() {
 const availabilityCalls = () => calls.filter((c) => c.key === 'availability');
 const patchCalls = () => calls.filter((c) => c.key === 'patchMe');
 
+// walk-4 P5-j — several cases here chain a debounce + a couple of `waitFor`s; past the 5s default
+// under a loaded parallel run (the same known flake class styler-ultimate-colors.test.tsx hit).
+// Generous, not masking.
+jest.setTimeout(20000);
+
 describe('choose-username — the AUTH-09 completion screen (P-E)', () => {
   it('AUTH-11 — the availability check is DEBOUNCED: rapid typing yields one call, for the final candidate', async () => {
     routes.availability = { status: 200, body: { available: true } };

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { View, Text, Animated, AccessibilityInfo, Pressable } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import { ShareGlyph } from '../ShareGlyph';
 import { CardFace } from '../CardFace';
 import { ScreenButton } from '../ScreenButton';
 import { theme, themedStyles, useTheme } from '../../theme';
@@ -14,17 +14,7 @@ import type { CardComposition } from '../../render/composition';
 // honestly 0 (nobody's adopted it yet); a re-kept design shows its real number, not a frozen literal.
 
 // E7a (M5 F-9) — the KEEP flow gains the CARD-21 share affordance for the just-kept card (owner may
-// share a PRIVATE card of their own). The mark mirrors the PrintRitual's ShareGlyph (a HOUSE inline SVG
-// up-arrow-out-of-a-tray), never a Unicode/emoji arrow.
-function ShareGlyph({ size = 11, color }: { size?: number; color: string }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M5 12 V20 H19 V12" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-      <Path d="M12 3.5 V14" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-      <Path d="M8 7 L12 3.5 L16 7" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-    </Svg>
-  );
-}
+// share a PRIVATE card of their own). The mark is the shared ShareGlyph (walk-4 Murr consolidation).
 
 export function KeepBeat({
   title,

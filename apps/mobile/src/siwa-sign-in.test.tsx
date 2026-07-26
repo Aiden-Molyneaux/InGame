@@ -79,6 +79,7 @@ interface RecordedCall {
 
 let appleRoute: ResponseSpec;
 let loginRoute: ResponseSpec;
+let registerRoute: ResponseSpec;
 let calls: RecordedCall[];
 
 function fetchResponse(spec: ResponseSpec) {
@@ -102,6 +103,7 @@ const realFetch = global.fetch;
 beforeEach(() => {
   appleRoute = { status: 200, body: {} };
   loginRoute = { status: 200, body: {} };
+  registerRoute = { status: 200, body: {} };
   calls = [];
   jest.clearAllMocks();
   isAvailableAsync.mockResolvedValue(true);
@@ -118,6 +120,7 @@ beforeEach(() => {
     // AUTH-09 email-fork coverage — /auth/login rides the same fetch mock so `submit()`'s
     // usernamePending routing can be exercised alongside the Apple flow in this same suite.
     if (req.url.includes('/auth/login')) return fetchResponse(loginRoute);
+    if (req.url.includes('/auth/register')) return fetchResponse(registerRoute);
     return fetchResponse({ status: 200, body: { ok: true } });
   });
   global.fetch = fetchMock as unknown as typeof fetch;
@@ -269,6 +272,29 @@ describe('sign-in — Sign in with Apple (AUTH-03/09, P-E)', () => {
     expect(store.getState().auth.user?.usernamePending).toBe(true);
   });
 
+  it('walk-4 P5-i (finding #27) — email login AUTH_FAILED shows humane, enumeration-neutral copy, not the raw server string', async () => {
+    loginRoute = {
+      status: 401,
+      body: { error: { code: 'AUTH_FAILED', message: 'Authentication failed.' } },
+    };
+    const { store } = renderSignIn();
+    fireEvent.changeText(screen.getByLabelText('Email'), 'player@example.com');
+    fireEvent.changeText(screen.getByLabelText('Password'), 'wrongpassword');
+    fireEvent.press(screen.getByText('SIGN IN'));
+
+    await waitFor(() =>
+      expect(
+        screen.getByText('That email and password don’t match. Check both, or reset your password.'),
+      ).toBeTruthy(),
+    );
+    // the raw server copy never reaches the screen — and AUTH-11 stays intact: this SAME copy shows
+    // whether the password is wrong or the account doesn't exist (the server's one AUTH_FAILED covers
+    // both), and it isn't attached to either field.
+    expect(screen.queryByText('Authentication failed.')).toBeNull();
+    expect(store.getState().auth.accessToken).toBeNull();
+    expect(mockRouter.replace).not.toHaveBeenCalled();
+  });
+
   it('AUTH-03 — a rapid double-tap on Apple bails synchronously via the in-flight guard, and re-arms after settling', async () => {
     const first = deferred<{ identityToken: string | null }>();
     signInAsync.mockReturnValueOnce(first.promise);
@@ -334,5 +360,68 @@ describe('sign-in — Sign in with Apple (AUTH-03/09, P-E)', () => {
       expect(screen.getByText('Apple didn’t return an identity token. Please try again.')).toBeTruthy(),
     );
     expect(appleCall()).toBeUndefined();
+  });
+
+  // walk-4 P5-h class (the sign-in CREATE-mode site) — registration shares the passwordSchema strength
+  // floor with the password-reset confirm (auth-service.ts assertPasswordNotBreached / passwordSchema),
+  // so the same generic zod too_small copy the forgot-password S3 step already maps ("Must be at least
+  // 8 characters." → "Password must be at least 8 characters.") used to reach this screen raw. AUTH-11
+  // stays intact — this is a shape-validation 422, never an account-existence signal.
+  it('walk-4 P5-h — CREATE-mode: a too-short password reads "Password must be at least 8 characters." (mirrors forgot-password S3)', async () => {
+    registerRoute = {
+      status: 422,
+      body: {
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Validation failed.',
+          details: [{ path: 'password', message: 'Must be at least 8 characters.' }],
+        },
+      },
+    };
+    renderSignIn();
+    fireEvent.press(screen.getByText('CREATE ACCOUNT')); // swap-footer toggle → create mode
+    fireEvent.changeText(screen.getByLabelText('Email'), 'player@example.com');
+    // a 2-char handle stays under USERNAME_CHECK_MIN (3) so the W3 advisory debounce never schedules —
+    // sidesteps an unrelated post-teardown timer warning; the availability check isn't under test here.
+    fireEvent.changeText(screen.getByLabelText('Username'), 'ab');
+    fireEvent.changeText(screen.getByLabelText('Password'), 'short1');
+    fireEvent.press(screen.getByRole('checkbox')); // AUTH-10 acceptance — un-gates submit
+    fireEvent.press(screen.getByText('CREATE ACCOUNT')); // now the submit button
+
+    await waitFor(() =>
+      expect(screen.getByText('Password must be at least 8 characters.')).toBeTruthy(),
+    );
+    // the raw, field-less server copy never reaches the screen unprefixed
+    expect(screen.queryByText('Must be at least 8 characters.')).toBeNull();
+  });
+
+  it('walk-4 P5-h — CREATE-mode: the breach-specific copy is left verbatim (never re-prefixed with "Password")', async () => {
+    registerRoute = {
+      status: 422,
+      body: {
+        error: {
+          code: 'VALIDATION_ERROR',
+          reason: 'password_breached',
+          message: 'That password has appeared in a known data breach — please choose a different one.',
+          details: [{ path: 'password', message: 'That password has appeared in a known data breach.' }],
+        },
+      },
+    };
+    renderSignIn();
+    fireEvent.press(screen.getByText('CREATE ACCOUNT'));
+    fireEvent.changeText(screen.getByLabelText('Email'), 'player@example.com');
+    // a 2-char handle stays under USERNAME_CHECK_MIN (3) so the W3 advisory debounce never schedules —
+    // sidesteps an unrelated post-teardown timer warning; the availability check isn't under test here.
+    fireEvent.changeText(screen.getByLabelText('Username'), 'ab');
+    fireEvent.changeText(screen.getByLabelText('Password'), 'password1');
+    fireEvent.press(screen.getByRole('checkbox'));
+    fireEvent.press(screen.getByText('CREATE ACCOUNT'));
+
+    await waitFor(() =>
+      expect(screen.getByText('That password has appeared in a known data breach.')).toBeTruthy(),
+    );
+    expect(
+      screen.queryByText('Password that password has appeared in a known data breach.'),
+    ).toBeNull();
   });
 });

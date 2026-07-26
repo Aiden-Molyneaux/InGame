@@ -2,7 +2,7 @@ import { and, desc, eq, inArray, or } from 'drizzle-orm';
 import type { Relationship } from '@ingame/shared';
 import { getDb, type Executor } from '../db/client';
 import { asActor, ownedBy } from '../db/scoped';
-import { friendRequests, friendships, userBlocks, users, type FriendshipRow } from '../db/schema';
+import { friendRequests, friendships, userBlocks, users, type FriendshipRow, type UserRow } from '../db/schema';
 
 // Read-only relationship / block substrate for the GET /users/:id privacy engine (SOC-01/09; PROF-03).
 // M2 builds these READS + seed helpers ONLY — the friend request/accept + block/unblock ENDPOINTS are
@@ -120,6 +120,8 @@ export interface BlockedSummary {
   userId: string;
   username: string;
   avatarUrl: string | null;
+  /** PROF-08 (W-4) — the blocked-list row's forged monogram; null ⇒ the default. Public-safe cosmetic. */
+  avatarConfig: UserRow['avatarConfig'];
   blockedAt: Date;
 }
 
@@ -140,6 +142,7 @@ export async function listBlockedSummaries(
       userId: users.id,
       username: users.username,
       avatarUrl: users.avatarUrl,
+      avatarConfig: users.avatarConfig,
       blockedAt: userBlocks.createdAt,
     })
     .from(userBlocks)

@@ -25,6 +25,7 @@ const PERSON = {
   userId: 'aaaaaaaa-1111-4111-8111-111111111111',
   username: 'riko_test',
   avatarUrl: null,
+  avatarConfig: null as null | { bg: string; ink: string; glyph?: string; frame?: string },
   blockedAt: '2026-06-09T12:00:00.000Z',
 };
 
@@ -58,5 +59,16 @@ describe('Blocked users page (P12 · SOC-09 · settings-states S6)', () => {
     mockBlocks = { data: undefined, isLoading: false, isError: true };
     render(wrap(<Blocked />));
     expect(screen.getByText('SIGNAL LOST')).toBeTruthy();
+  });
+
+  // Walk-4 takeover review (the P1-c class, the blocked-list site) — blockedPersonSchema never carried
+  // avatarConfig, so a blocked person's forged monogram rendered as the plain default initials here.
+  // The configured Avatar carries the "<username> monogram" a11y label (the landed requests-banner
+  // precedent); a null config (the PERSON fixture above) keeps the default (unlabelled) box.
+  it('a blocked person with a forged avatarConfig renders the monogram (not the default)', () => {
+    const forged = { ...PERSON, avatarConfig: { bg: '#2a1f4d', ink: '#e8c14a', glyph: 'RK', frame: 'ring' } };
+    mockBlocks = { data: { blocks: [forged] }, isLoading: false, isError: false };
+    render(wrap(<Blocked />));
+    expect(screen.getByLabelText('riko_test monogram')).toBeTruthy();
   });
 });

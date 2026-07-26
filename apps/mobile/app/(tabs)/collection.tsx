@@ -384,14 +384,18 @@ export default function Collection() {
         )}
         </ScrollLockContext.Provider>
       </ScrollView>
-      {/* COL-12/CARD-16 — the first-run peek-flip hint. Absolute (out of flow) so appear/dismiss is
-          layout-neutral; `box-none` lets shelf taps pass through, only the strip + GOT IT are hit. */}
+      </View>
+
+      {/* COL-12/CARD-16 — the first-run peek-flip hint. Walk-4 P5-a: no floating elements in this
+          design language, so the hint is docked as an in-flow strip directly ABOVE the tools/add bar
+          (not an absolute overlay). It still lives OUTSIDE the scrollable stage — appearing/dismissing
+          it only grows/shrinks this strip's own slot, so the shelf/grid below never reflows (the
+          walk-3 "dismiss moved 0 of 35 cards" bar holds without needing position: absolute). */}
       {showCoachmark ? (
-        <View style={styles.coachOverlay} pointerEvents="box-none" testID="coachmark-overlay">
+        <View style={styles.coachStrip} testID="coachmark-overlay">
           <Coachmark text="Tap a card to flip it for your stats." onDismiss={() => dispatch(setCol12CoachmarkSeen(true))} />
         </View>
       ) : null}
-      </View>
 
       {/* The ToolsBar (§2.1 · OQ-034): keycaps ACT · long-press opens the drawer. Tapping Search MORPHS
           the whole bar into a docked SearchField that lifts over the keyboard (R0-2 KeyboardLift, board
@@ -422,7 +426,7 @@ export default function Collection() {
           </View>
         </KeyboardLift>
       ) : (
-        <View style={styles.tools}>
+        <View style={styles.tools} testID="collection-tools-bar">
           <ToolButton
             icon={<SearchIcon />}
             label="Search"
@@ -885,12 +889,13 @@ const useStyles = themedStyles((t) => ({
   errTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.accent, letterSpacing: 1 },
   errSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim },
   pad: { ...SCREEN_HEADER_PAD, gap: t.space.md }, // W-B1 — the reference geometry, now the shared constant
-  // stage — the relative anchor for the absolute peek-flip hint; fills the space between header + tools.
+  // stage — fills the space between header + tools; the scrollable shelf/grid lives here alone.
   stage: { flex: 1 },
-  // the peek-flip hint overlay — pinned above the tools bar, OUT of the shelf's flow so its first-run
-  // presence + first-flip dismissal never shift the list (owner walk: the relog "present-then-disappear"
-  // jar). left/right/bottom inset by the body gutter so it reads as a docked toast, not a full-bleed bar.
-  coachOverlay: { position: 'absolute', left: t.space.lg, right: t.space.lg, bottom: t.space.lg },
+  // walk-4 P5-a — the peek-flip hint is a docked, in-flow strip directly above the tools bar (no
+  // floating elements). It sits OUTSIDE stage (not inside the ScrollView), so its own mount/unmount
+  // never touches the shelf/grid's layout — the walk-3 "dismiss shifted the list" jar stays fixed
+  // without relying on absolute positioning.
+  coachStrip: {},
   scroll: { flex: 1 },
   body: { padding: t.space.lg, gap: t.space.lg },
   // OQ-130 — filtered-to-zero "no results" beat.

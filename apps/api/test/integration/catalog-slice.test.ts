@@ -510,6 +510,7 @@ describe('CAT-05/09/09c (M6 W-C5): GET /catalog/games/:id — the game-detail ag
     expect(res.body.inCollection).toBe(false); // a does NOT own it
     expect(res.body.friendsWhoOwn).toHaveLength(1); // CAT-09c named list
     expect(res.body.friendsWhoOwn[0]).toMatchObject({ userId: friend.id, username: friend.username, hours: 42 });
+    expect(res.body.friendsWhoOwn[0].avatarConfig).toBeNull(); // PROF-08 — rides the aggregate too (same helper as the focused route)
   });
 
   it('inCollection reflects whether the CALLER owns it (flips true once added)', async () => {

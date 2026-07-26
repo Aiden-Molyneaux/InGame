@@ -29,16 +29,28 @@ type Mode = 'signin' | 'create';
 
 // B1 (api-contract 0.46) — split an API error into the top-line message + the sanitized per-field
 // details (W4 grammar: field errors render under their inputs; the top line covers the rest).
+// `code` rides along too (walk-4 P5-i) so a caller can key off the error CODE (e.g. AUTH_FAILED)
+// instead of string-matching the server's message.
 type ApiErrorPayload = {
-  error?: { message?: string; details?: { path: string; message: string }[] };
+  error?: { code?: string; reason?: string; message?: string; details?: { path: string; message: string }[] };
 };
-function errParts(e: unknown): { message: string; fields: Record<string, string> } {
+function errParts(e: unknown): {
+  code?: string;
+  reason?: string;
+  message: string;
+  fields: Record<string, string>;
+} {
   const err = (e as { data?: ApiErrorPayload })?.data?.error;
   const fields: Record<string, string> = {};
   for (const d of err?.details ?? []) {
     if (d.path && !fields[d.path]) fields[d.path] = d.message;
   }
-  return { message: err?.message ?? 'Something went wrong. Please try again.', fields };
+  return {
+    code: err?.code,
+    reason: err?.reason,
+    message: err?.message ?? 'Something went wrong. Please try again.',
+    fields,
+  };
 }
 
 const USERNAME_CHECK_MIN = 3;
@@ -190,10 +202,28 @@ export default function SignIn() {
       // password-reset their relay email, then email-signed-in) completes its handle before the tabs.
       router.replace(session.user.usernamePending ? '/choose-username' : '/(tabs)/collection');
     } catch (e) {
-      const { message, fields } = errParts(e);
+      const { code, reason, message, fields } = errParts(e);
+      // P5-h (the forgot-password S3 precedent) — CREATE (registration) shares the passwordSchema
+      // strength floor with the reset confirm (auth-service.ts), so the same generic zod too_small
+      // message lands here ("Must be at least 8 characters.") without naming which field it's about;
+      // front it with "Password" so the inline error reads standalone. The breach-specific reason
+      // (`password_breached`) already reads standalone on its own — left verbatim, never re-prefixed.
+      if (mode === 'create' && reason !== 'password_breached' && fields.password) {
+        fields.password = `Password ${fields.password.charAt(0).toLowerCase()}${fields.password.slice(1)}`;
+      }
       setFieldErrors(fields);
       // W4 — field errors live under their inputs; the top line only carries what has no field.
-      setError(Object.keys(fields).length > 0 ? null : message);
+      if (Object.keys(fields).length > 0) {
+        setError(null);
+      } else if (mode === 'signin' && code === 'AUTH_FAILED') {
+        // walk-4 P5-i (walk finding #27) — the server's neutral AUTH_FAILED copy ("Authentication
+        // failed.") read as cold and unhelpful. This still stays AUTH-11 enumeration-neutral: a
+        // wrong password and an unknown/unverified account all share the ONE AUTH_FAILED code (see
+        // NEUTRAL_AUTH_FAILED_MESSAGE in packages/shared), so this copy never says which case it is.
+        setError('That email and password don’t match. Check both, or reset your password.');
+      } else {
+        setError(message);
+      }
     }
   }
 

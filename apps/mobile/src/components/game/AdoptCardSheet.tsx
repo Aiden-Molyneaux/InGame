@@ -4,8 +4,7 @@ import type { GalleryCardView, AdoptResponse } from '@ingame/shared';
 import { PulledSheet } from '../PulledSheet';
 import { ConfirmSheet } from '../ConfirmSheet';
 import { ScreenButton } from '../ScreenButton';
-import { TertiaryLink } from '../TertiaryLink';
-import { themedStyles } from '../../theme';
+import { themedStyles, useTheme } from '../../theme';
 import { useReducedMotion } from '../../a11y/useReducedMotion';
 import { BuyBar } from '../commerce/BuyBar';
 import { HoldFillButton } from '../commerce/HoldFillButton';
@@ -16,6 +15,8 @@ import { PixelsMark } from '../commerce/PixelsMark';
 import { OwnedTag } from '../commerce/Tags';
 import { UltimateChip } from '../commerce/UltimateChip';
 import { FlatCardImage } from './FlatCardImage';
+import { EquipReadout } from './EquipReadout';
+import { ShareGlyph } from '../ShareGlyph';
 import { AdoptCount } from './CommunityGallery';
 
 // The outcome the container hands back from POST /cards/:id/adopt (the container owns the RTK mutation;
@@ -33,6 +34,16 @@ export type AdoptOutcome =
 // (G5 — a settle beat, no toast) with the acquire celebration (G6 AcquireBeat). FREE cards take the
 // standard (non-gold, G1) tap → a purchase-toned confirm with no debit line. Block-the-designer
 // (SOC-09-light) is the ⋯ / long-press on the credit.
+//
+// WALK-4 P4-c/P4-d (owner acceptance walk) — this drawer is where an adopter decides, so it now says
+// what it is and shows what's on offer:
+//   • the drawer is titled CARD PREVIEW (it was an unlabeled sheet that opened out of the strip);
+//   • the card renders at `hero` (224×313), not `pick` — the card IS the subject of the preview;
+//   • the CARD-22 equipped readout (FRAME· / EFFECT· / NAMEPLATE· / FONT· chips) rides under the card,
+//     the SAME EquipReadout the own-cards rail shows — "what am I buying" is the cosmetic identity, and
+//     the premium-components list below it stays the price half (the two answer different questions);
+//   • SHARE conforms to the PUBLISH ritual's treatment (ShareGlyph + accent micro row) — the old
+//     `↗ Share` TertiaryLink shipped a Unicode arrow that renders as an emoji on some platforms.
 export function AdoptCardSheet({
   card,
   visible,
@@ -72,6 +83,7 @@ export function AdoptCardSheet({
   shareBusy?: boolean;
 }) {
   const styles = useStyles();
+  const t = useTheme();
   const reduceMotion = useReducedMotion();
   const [confirming, setConfirming] = useState(false); // the FREE-path (reduce-motion) confirm gate
   const [outcome, setOutcome] = useState<Exclude<AdoptOutcome, { ok: true }> | null>(null);
@@ -108,18 +120,30 @@ export function AdoptCardSheet({
 
   return (
     <>
-      <PulledSheet visible={visible && !confirming} onClose={onClose}>
+      {/* P4-c — the `hero` card needs room: the drawer takes 0.85 of the well instead of the default
+          0.75 so the bigger preview doesn't push the BuyBar a screenful down. Still a drawer (the page
+          shows above it), still scrolls within its cap (F-8 E3). */}
+      <PulledSheet visible={visible && !confirming} onClose={onClose} maxFraction={0.85}>
+        {/* P4-c (1/3) — the drawer names itself. CARD PREVIEW is the sheet title (the PulledSheet
+            `title` grammar, F-06 15/ls-1) and the card's identity drops to the eyebrow beneath it; the
+            ✕ keeps its place on the title row so closing never moves. */}
         <View style={styles.head}>
-          <Text style={styles.headTitle} numberOfLines={1}>
-            COMMUNITY CARD — <Text style={styles.headName}>{card.name.toUpperCase()}</Text>
-          </Text>
+          <View style={styles.headText}>
+            <Text style={styles.headTitle}>CARD PREVIEW</Text>
+            <Text style={styles.headSub} numberOfLines={1}>
+              COMMUNITY CARD — <Text style={styles.headName}>{card.name.toUpperCase()}</Text>
+            </Text>
+          </View>
           <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={8}>
             <Text style={styles.close}>✕</Text>
           </Pressable>
         </View>
 
+        {/* P4-c (2/3) — `hero` (224×313), the largest card size in the app: a preview drawer whose card
+            rendered at the same 138px as a picker cell wasn't previewing anything. The sheet scrolls
+            within its cap (F-8 E3), so the taller card costs reach, not access. */}
         <View style={styles.cardWrap}>
-          <FlatCardImage title={card.name} imageUrl={card.imageUrl} thumbUrl={card.thumbUrl} size="pick" />
+          <FlatCardImage title={card.name} imageUrl={card.imageUrl} thumbUrl={card.thumbUrl} size="hero" />
         </View>
 
         {/* P13 (E8a) — the DESIGNED-BY credit now routes to the contributor profile (the app-wide
@@ -224,6 +248,17 @@ export function AdoptCardSheet({
           </View>
         ) : (
           <>
+            {/* P4-c (3/3) — the CARD-22 equipped readout: WHAT THIS CARD WEARS, in the same chips the
+                own-cards rail uses (the switcher flips between adopted and own cards, so the two must
+                read as ONE readout). Server-denormalized display labels ride the gallery payload
+                already — never the composition (OQ-122/CARD-15). Absent/empty → renders nothing. */}
+            {card.equipped ? (
+              <View style={styles.equipBlock}>
+                <Text style={styles.compHead}>EQUIPPED ON THIS CARD</Text>
+                <EquipReadout equipped={card.equipped} />
+              </View>
+            ) : null}
+
             {/* the reconcile-style component list (E1/E2) — what the card is built from, with swatches */}
             {components.length > 0 ? (
               <View style={styles.componentBlock}>
@@ -295,19 +330,25 @@ export function AdoptCardSheet({
         )}
 
         {!adopted ? (
-          <>
-            {/* F-13 E7 (owner round-2) — SHARE is a quiet clickable LINK (TertiaryLink grammar), not a
-                full cream button; it's a secondary action beside the primary adopt, not a peer key. */}
-            <View style={styles.actions}>
-              <TertiaryLink
-                label={shareBusy ? 'Sharing…' : '↗ Share'}
-                chevron="none"
-                onPress={() => {
-                  if (!shareBusy) onShare();
-                }}
-              />
-            </View>
-          </>
+          // P4-d — SHARE conforms to the PUBLISH ritual's treatment (PrintRitual's settled block): the
+          // ShareGlyph + an accent micro label in one pressable row. It stays QUIET (F-13 E7: a
+          // secondary action beside the primary adopt, never a peer key) — what changes is the DRESS:
+          // a proper stroke glyph instead of the `↗` arrow, and the publish flow's exact voice.
+          <View style={styles.actions}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Share this card"
+              onPress={() => {
+                if (!shareBusy) onShare();
+              }}
+              disabled={shareBusy}
+              hitSlop={6}
+              style={({ pressed }) => [styles.shareRow, pressed && styles.sharePressed]}
+            >
+              <ShareGlyph size={11} color={t.scr.accent} />
+              <Text style={styles.shareLabel}>{shareBusy ? 'SHARING…' : 'SHARE THIS CARD'}</Text>
+            </Pressable>
+          </View>
         ) : null}
       </PulledSheet>
 
@@ -327,8 +368,12 @@ export function AdoptCardSheet({
 }
 
 const useStyles = themedStyles((t) => ({
-  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: t.space.sm, gap: t.space.md },
-  headTitle: { flex: 1, fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
+  // P4-c — the titled head: CARD PREVIEW (the drawer's own name, PulledSheet `title` grammar) over the
+  // dim COMMUNITY CARD — {NAME} eyebrow, with ✕ held on the title row.
+  head: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingBottom: t.space.sm, gap: t.space.md },
+  headText: { flex: 1, gap: 2 },
+  headTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
+  headSub: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
   headName: { color: t.scr.ink },
   close: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.dim },
   cardWrap: { alignItems: 'center', paddingVertical: t.space.sm },
@@ -346,7 +391,9 @@ const useStyles = themedStyles((t) => ({
   ovfItemPressed: { opacity: 0.7 },
   ovfItemText: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 0.8 },
   ovfItemDanger: { color: t.brand.alert },
-  // ── the component list (reconcile anatomy) ──
+  // ── P4-c the equipped readout (the cosmetic identity half) ──
+  equipBlock: { marginTop: t.space.md, gap: t.space.sm },
+  // ── the component list (reconcile anatomy — the price half) ──
   componentBlock: { marginTop: t.space.md, gap: t.space.sm },
   compHead: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
   list: { gap: t.space.sm },
@@ -383,6 +430,10 @@ const useStyles = themedStyles((t) => ({
   ownedBar: { marginTop: t.space.md, padding: t.space.md, backgroundColor: t.scr.panel, borderWidth: 1, borderColor: t.scr.hairline },
   ownedText: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.ink, letterSpacing: 0.5 },
   unavailText: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
-  // F-13 E7 — SHARE is a left-aligned quiet link now, not a full-width button row.
+  // F-13 E7 — SHARE is a left-aligned quiet row, not a full-width button.
   actions: { flexDirection: 'row', alignItems: 'center', gap: t.space.md, marginTop: t.space.md },
+  // P4-d — the publish-ritual share treatment, token-for-token (PrintRitual `shareRow`/`shareDoorLive`).
+  shareRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.sm },
+  sharePressed: { opacity: 0.7 },
+  shareLabel: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accent, letterSpacing: 0.5 },
 }));

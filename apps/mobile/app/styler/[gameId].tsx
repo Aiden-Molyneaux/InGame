@@ -502,8 +502,9 @@ export default function Styler() {
   // Feeding `draft?.base` into the memo deps re-composes the fan the moment the base changes.
   const currentBase = draft?.base;
   const railEntries = useMemo<RailEntry[]>(() => {
-    // W-6 structural rebuild: ONE fixed fan — backdrops → title layouts → emblem starts → DEFAULT.
-    // Structure is genre-neutral, so the old genre-mood reordering is retired with the palette fans.
+    // W-6 structural rebuild: ONE fixed fan — DEFAULT (walk-4 P5-c: moved first) → backdrops →
+    // title layouts → emblem starts. Structure is genre-neutral, so the old genre-mood reordering
+    // is retired with the palette fans.
     const sys: RailEntry[] = START_SOURCES.map((s) => ({
       id: s.id,
       name: s.name,

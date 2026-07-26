@@ -79,7 +79,7 @@ export default function InviteLanding() {
           </View>
         ) : (
           <View style={styles.land}>
-            <Avatar username={data.sender.username} avatarUrl={data.sender.avatarUrl} size={50} />
+            <Avatar username={data.sender.username} avatarUrl={data.sender.avatarUrl} avatarConfig={data.sender.avatarConfig} size={50} />
             <Text style={styles.eyebrow}>{eyebrowFor(data.relationship, sent)}</Text>
             <Text style={styles.name}>{data.sender.username}</Text>
             <Text style={styles.sub}>{subFor(data.relationship, sent)}</Text>

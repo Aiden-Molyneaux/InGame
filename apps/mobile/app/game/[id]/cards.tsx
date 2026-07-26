@@ -10,6 +10,7 @@ import { TertiaryLink } from '../../../src/components/TertiaryLink';
 import { ScreenButton } from '../../../src/components/ScreenButton';
 import { Skeleton } from '../../../src/components/lifecycle/Skeleton';
 import { LoadError } from '../../../src/components/lifecycle/LoadError';
+import { Toast } from '../../../src/components/lifecycle/Toast';
 import { useContributorPaging } from '../../../src/components/contributor/useContributorPaging';
 import { useGetWalletQuery } from '../../../src/store/api';
 import {
@@ -17,6 +18,7 @@ import {
   useLazyGetGameGalleryQuery,
   useAdoptCardMutation,
 } from '../../../src/store/communityApi';
+import { useShareCard } from '../../../src/components/game/useShareCard';
 import { themedStyles } from '../../../src/theme';
 import { SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../../../src/components/ScreenHead';
 
@@ -49,6 +51,10 @@ export default function GameCardsList() {
   const { data: wallet } = useGetWalletQuery();
   const [adoptCard, adoptState] = useAdoptCardMutation();
   const [inspectCard, setInspectCard] = useState<GalleryCardView | null>(null);
+  const [toast, setToast] = useState<{ message: string; tone: 'success' | 'error' } | null>(null);
+  // Walk-4 P4-d — the preview drawer's SHARE is a real affordance now, so this surface must actually
+  // share (it passed a no-op before, which the conformed treatment would have turned into a lying key).
+  const { shareBusy, shareCard } = useShareCard((message) => setToast({ tone: 'error', message }));
 
   // Adapt the 0.81 envelope (optional nextCursor) to the paging hook's Page shape — memoized so the
   // hook's page-1 identity reset only fires on a REAL new payload, never a render.
@@ -170,13 +176,18 @@ export default function GameCardsList() {
           setInspectCard(null);
           router.push('/store?view=topup');
         }}
-        onShare={() => {}}
+        onShare={() => {
+          if (inspectCard) void shareCard(inspectCard.id, inspectCard.name);
+        }}
+        shareBusy={shareBusy}
         onBlock={() => setInspectCard(null)}
         onViewContributor={(userId) => {
           setInspectCard(null);
           router.push(`/contributor/${userId}`);
         }}
       />
+
+      {toast ? <Toast message={toast.message} tone={toast.tone} onDismiss={() => setToast(null)} /> : null}
     </View>
   );
 }

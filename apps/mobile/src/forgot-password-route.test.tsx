@@ -111,6 +111,11 @@ async function advanceToPassword(proof = 'PROOF-TOKEN-XYZ') {
   await waitFor(() => expect(screen.getByText(/Almost done/)).toBeTruthy());
 }
 
+// walk-4 P5-j — the 3-step machine chains several `waitFor`s per test (and one runs 30 fake-timer
+// ticks); past the 5s default under a loaded parallel run (the same known flake class
+// styler-ultimate-colors.test.tsx hit). Generous, not masking.
+jest.setTimeout(20000);
+
 describe('forgot-password — the 3-step reset machine (AUTH-04)', () => {
   it('AUTH-04 — happy path: email → code → password → success → sign-in', async () => {
     routes.request = { status: 200, body: { ok: true } };
@@ -211,6 +216,57 @@ describe('forgot-password — the 3-step reset machine (AUTH-04)', () => {
     expect(screen.queryByLabelText('New password')).toBeNull();
   });
 
+  it('S3 — a too-short-password rejection is prefixed to name the field (walk-4 P5-h, finding #26)', async () => {
+    routes.request = { status: 200, body: { ok: true } };
+    routes.confirm = {
+      status: 422,
+      body: {
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Must be at least 8 characters.',
+          details: [{ path: 'password', message: 'Must be at least 8 characters.' }],
+        },
+      },
+    };
+    renderScreen();
+    await advanceToCode();
+    await advanceToPassword();
+
+    // long enough to pass the CLIENT gate (canSet) so the press actually reaches the server mock —
+    // the scenario under test is the server rejecting it anyway (the client mapping, not reachability).
+    fireEvent.changeText(screen.getByLabelText('New password'), 'password1');
+    fireEvent.press(screen.getByText('SET PASSWORD'));
+    // the server's generic zod copy ("Must be at least 8 characters.") never says WHICH field — the
+    // client fronts it with "Password" so the inline error reads standalone.
+    await waitFor(() => expect(screen.getByText('Password must be at least 8 characters.')).toBeTruthy());
+  });
+
+  it('S3 — a breached password surfaces breach-specific copy, distinct from the length message (walk-4 P5-h)', async () => {
+    routes.request = { status: 200, body: { ok: true } };
+    routes.confirm = {
+      status: 422,
+      body: {
+        error: {
+          code: 'VALIDATION_ERROR',
+          reason: 'password_breached',
+          message: 'That password has appeared in a known data breach — please choose a different one.',
+          details: [{ path: 'password', message: 'That password has appeared in a known data breach.' }],
+        },
+      },
+    };
+    renderScreen();
+    await advanceToCode();
+    await advanceToPassword();
+
+    fireEvent.changeText(screen.getByLabelText('New password'), 'password1');
+    fireEvent.press(screen.getByText('SET PASSWORD'));
+    await waitFor(() =>
+      expect(screen.getByText('That password has appeared in a known data breach.')).toBeTruthy(),
+    );
+    // never collapses to the generic length copy
+    expect(screen.queryByText('Password must be at least 8 characters.')).toBeNull();
+  });
+
   it('AUTH-04 — the reset PROOF never lands in the redux store (component-state only)', async () => {
     routes.request = { status: 200, body: { ok: true } };
     const { store } = renderScreen();
@@ -223,6 +279,17 @@ describe('forgot-password — the 3-step reset machine (AUTH-04)', () => {
     const snapshot = JSON.stringify(store.getState());
     expect(snapshot).not.toContain('SECRET-PROOF-DO-NOT-PERSIST');
     expect(store.getState().auth.accessToken).toBeNull();
+  });
+
+  it('S2 — the resend row aligns "Didn\'t get it?" and the resend control on a shared text baseline (walk-4 P5-g, finding #25)', async () => {
+    const { StyleSheet } = require('react-native');
+    routes.request = { status: 200, body: { ok: true } };
+    renderScreen();
+    await advanceToCode();
+    // the row wraps BOTH the body-size label and the smaller Resend link/countdown; `baseline` (not
+    // `center`) is what keeps a mixed-size text row from drifting off its shared baseline.
+    const flat = StyleSheet.flatten(screen.getByTestId('resend-row').props.style);
+    expect(flat.alignItems).toBe('baseline');
   });
 
   it('S2 — RESEND is cooldown-gated after a send, then re-fires the request once the cooldown elapses', async () => {

@@ -32,7 +32,7 @@ import {
   withoutSticker,
   type StickerTransform,
 } from '../src/components/device/stickerGeometry';
-import { placingReadout, previewSub } from '../src/components/device/deviceCopy';
+import { placingReadout } from '../src/components/device/deviceCopy';
 import { themedStyles, useTheme } from '../src/theme';
 import { useAnnounceOnChange } from '../src/a11y/announce';
 import {
@@ -94,10 +94,11 @@ export default function DeviceEditor() {
   const liveCompRef = useRef(liveComposition);
   liveCompRef.current = liveComposition;
 
-  // STICKERS (D4/D5) — the selected placement + the D5 on-shell preview toggle. `setSession` publishes
-  // the edit affordances UP to the shell's plastic-band layers (they own the gestures; ARCH 2).
+  // STICKERS (D4) — the selected placement. `setSession` publishes the edit affordances UP to the
+  // shell's plastic-band layers (they own the gestures; ARCH 2). The D5 "on-shell preview" toggle
+  // (walk-4 P5-b) was retired: the live device frame wrapping this screen already shows every placed
+  // decal the instant it's placed, so a separate preview mode was redundant with the editor itself.
   const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null);
-  const [previewing, setPreviewing] = useState(false);
   const { setSession } = useStickerContext();
 
   const { data: device, isLoading, isError, refetch } = useGetDeviceQuery();
@@ -247,11 +248,9 @@ export default function DeviceEditor() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [device]);
 
-  // ── section switch — carries preview state (walk 1); clears the transient switch beat + the sticker
-  // selection / on-shell preview (both are STICKERS-local) ───────────────────────────────────────────
+  // ── section switch — clears the transient switch beat + the sticker selection (STICKERS-local) ──────
   const changeSection = useCallback((s: DeviceSection) => {
     setSelectedStickerId(null);
-    setPreviewing(false);
     setSection(s);
   }, []);
 
@@ -453,17 +452,16 @@ export default function DeviceEditor() {
     }, []),
   );
 
-  // Publish the edit session to the shell's plastic bands while STICKERS is active + NOT previewing +
-  // FOCUSED (W-A7 — a blurred editor publishes nothing; D5 preview hides the handles/zones the same
-  // way). Cleared on section change / preview / blur / unmount.
+  // Publish the edit session to the shell's plastic bands while STICKERS is active + FOCUSED (W-A7 —
+  // a blurred editor publishes nothing). Cleared on section change / blur / unmount.
   useEffect(() => {
-    if (focused && section === 'stickers' && !previewing) {
+    if (focused && section === 'stickers') {
       setSession({ selectedId: selectedStickerId, select: setSelectedStickerId, mutate: mutateSticker, commit: commitNow });
     } else {
       setSession(null);
     }
     return () => setSession(null);
-  }, [focused, section, previewing, selectedStickerId, mutateSticker, commitNow, setSession]);
+  }, [focused, section, selectedStickerId, mutateSticker, commitNow, setSession]);
 
   // ── LOOKS: apply · save · delete ─────────────────────────────────────────────────────────────────
   // Apply = the ONE pipeline (walk 5): the snapshot's three facets swap in one PATCH; the optimistic
@@ -518,10 +516,9 @@ export default function DeviceEditor() {
   // getDevice query back to isLoading, React saw "Rendered fewer hooks than expected" and crashed the
   // whole tree (which in turn broke the profile signOut's router.replace — the F-16 logout crash).
   // rules-of-hooks: no hook may sit after a conditional return. (react-hooks lint doesn't cover app/.)
-  const stickerCount = liveComposition.stickers.length;
-  // the decal whose TransformBox + stepper rows show (STICKERS · not previewing · one selected).
+  // the decal whose TransformBox + stepper rows show (STICKERS · one selected).
   const selectedSticker =
-    section === 'stickers' && !previewing
+    section === 'stickers'
       ? liveComposition.stickers.find((s) => s.id === selectedStickerId) ?? null
       : null;
 
@@ -544,23 +541,18 @@ export default function DeviceEditor() {
   // C3 → walk2 W-B12 (owner ruling): the default "EDITING YOUR DEVICE" line AND the D2 "SWITCHED —
   // «shell» WRAP" beat readout are REMOVED (unnecessary chrome — the live device frame above IS the
   // state; completes the F-21 tail, whose r6 already dropped the beat's was→now MiniDevice pair). The
-  // readout row now renders ONLY for the two informative states — the D5 on-shell preview and the
-  // live PLACING transform line — and otherwise the space collapses cleanly.
-  const readout: { title: string; sub?: string; ok?: boolean } | null = previewing
+  // D5 on-shell-preview readout went the same way (walk-4 P5-b — same "the frame above already shows
+  // it" reasoning). The readout row now renders ONLY for the live PLACING transform line, and
+  // otherwise the space collapses cleanly.
+  const readout: { title: string; sub?: string; ok?: boolean } | null = selectedSticker
     ? {
-        title: 'YOUR DEVICE — AS IT WEARS',
-        sub: previewSub(SHELL_NAMES[liveShellId], SCREEN_THEME_NAMES[liveThemeId], stickerCount),
-        ok: true,
+        title: placingReadout(
+          STICKER_ASSET_BY_ID[selectedSticker.assetId]?.name ?? 'DECAL',
+          selectedSticker.scale,
+          selectedSticker.rotation,
+        ),
       }
-    : selectedSticker
-      ? {
-          title: placingReadout(
-            STICKER_ASSET_BY_ID[selectedSticker.assetId]?.name ?? 'DECAL',
-            selectedSticker.scale,
-            selectedSticker.rotation,
-          ),
-        }
-      : null;
+    : null;
 
   // CARD-16 live-region (0044 §105): the save-state line (SAVING… / NOT SAVED — RETRYING / an
   // inline error / SAVED LIVE — the inline error is folded in) is an async result the user can't see
@@ -647,26 +639,13 @@ export default function DeviceEditor() {
       onSection={changeSection}
       headRight={<CurrencyCounter balance={balance} onPress={() => router.push('/store')} />}
     >
-      {previewTheme && !previewing ? (
+      {previewTheme ? (
         <DevicePreviewStrip name={SCREEN_THEME_NAMES[previewTheme]} onExit={exitPreview} />
-      ) : null}
-      {previewing ? (
-        <View style={styles.onShellStrip}>
-          <Text style={styles.onShellLabel}>◉ ON-SHELL PREVIEW — HOW IT WEARS</Text>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Edit"
-            onPress={() => setPreviewing(false)}
-            hitSlop={8}
-          >
-            <Text style={styles.onShellEdit}>EDIT ◅</Text>
-          </Pressable>
-        </View>
       ) : null}
       {offline ? <OfflineStrip /> : null}
 
-      {/* C3/W-B12 — the readout renders only for the preview/placing states; otherwise nothing.
-          Owner walk (m6): while a readout is on screen — a live sticker edit or the on-shell preview —
+      {/* C3/W-B12 — the readout renders only for the live-placing state; otherwise nothing.
+          Owner walk (m6): while a readout is on screen — a live sticker edit —
           the transient save-line rides a FIXED-HEIGHT reserved slot BENEATH it (styles.saveSlot). Its
           SAVING…↔settled toggling on every drag then can't grow/shrink this status block and shove the
           body below, which was the owner's "'editing device' banner comes up then dismisses every move,
@@ -754,65 +733,44 @@ export default function DeviceEditor() {
         ) : section === 'stickers' ? (
           <>
             <Text style={styles.secTitle}>STICKERS</Text>
-            {previewing ? (
-              <View style={styles.stickerBody}>
-                <Text style={styles.secSub}>
-                  This is how your device wears it.
-                </Text>
-                <View style={styles.previewRow}>
-                  <View style={styles.flexSpacer} />
-                  <ScreenButton label="◅ Keep editing" variant="primary" size="mini" onPress={() => setPreviewing(false)} />
-                  <ScreenButton label="Done" variant="secondary" size="mini" onPress={goBack} />
-                </View>
-              </View>
-            ) : (
-              // W-A7 tap-away — a tap on the body's empty space (not captured by the tray/rail/stepper
-              // Pressables) commits the in-progress placement, mirroring the band layer's empty-tap
-              // deselect. Display wrapper only — hidden from the SR (the DONE key is the a11y path).
-              <Pressable
-                style={styles.stickerBody}
-                onPress={doneEditingSticker}
-                accessible={false}
-                importantForAccessibility="no"
-              >
-                <Text style={styles.secSub}>
-                  Tap a decal to place it on the forehead plastic. The screen &amp; the nav keys stay clear.
-                </Text>
-                <StickerTray onPick={placeSticker} atCap={!canPlace(liveComposition.stickers, 'forehead')} />
-                {/* the placed-decal rail (owner 2026-07-12) — select a sticker to transform it */}
-                <StickerRail
-                  stickers={liveComposition.stickers}
-                  selectedId={selectedStickerId}
-                  onSelect={setSelectedStickerId}
+            {/* W-A7 tap-away — a tap on the body's empty space (not captured by the tray/rail/stepper
+                Pressables) commits the in-progress placement, mirroring the band layer's empty-tap
+                deselect. Display wrapper only — hidden from the SR (the DONE key is the a11y path).
+                walk-4 P5-b retired the "On-shell preview" toggle here: the live device frame wrapping
+                this screen already shows every placed decal the instant it lands, so a separate
+                preview mode added a step without adding information. */}
+            <Pressable
+              style={styles.stickerBody}
+              onPress={doneEditingSticker}
+              accessible={false}
+              importantForAccessibility="no"
+            >
+              <Text style={styles.secSub}>
+                Tap a decal to place it on the forehead plastic. The screen &amp; the nav keys stay clear.
+              </Text>
+              <StickerTray onPick={placeSticker} atCap={!canPlace(liveComposition.stickers, 'forehead')} />
+              {/* the placed-decal rail (owner 2026-07-12) — select a sticker to transform it */}
+              <StickerRail
+                stickers={liveComposition.stickers}
+                selectedId={selectedStickerId}
+                onSelect={setSelectedStickerId}
+              />
+              {selectedSticker ? (
+                <StickerSteppers
+                  sticker={selectedSticker}
+                  mutate={mutateSticker}
+                  commit={commitNow}
+                  onDone={doneEditingSticker}
+                  onDelete={() => deleteSticker(selectedSticker.id)}
+                  // guard the re-zone against the target zone's cap — else a move to a full band
+                  // 422s and wedges the pipeline (murr M1). Only rendered while chin is enabled.
+                  canReZone={canPlace(
+                    liveComposition.stickers,
+                    selectedSticker.zone === 'forehead' ? 'chin' : 'forehead',
+                  )}
                 />
-                {selectedSticker ? (
-                  <StickerSteppers
-                    sticker={selectedSticker}
-                    mutate={mutateSticker}
-                    commit={commitNow}
-                    onDone={doneEditingSticker}
-                    onDelete={() => deleteSticker(selectedSticker.id)}
-                    // guard the re-zone against the target zone's cap — else a move to a full band
-                    // 422s and wedges the pipeline (murr M1). Only rendered while chin is enabled.
-                    canReZone={canPlace(
-                      liveComposition.stickers,
-                      selectedSticker.zone === 'forehead' ? 'chin' : 'forehead',
-                    )}
-                  />
-                ) : null}
-                {stickerCount > 0 ? (
-                  <ScreenButton
-                    label="◉ On-shell preview"
-                    variant="secondary"
-                    size="mini"
-                    onPress={() => {
-                      setSelectedStickerId(null);
-                      setPreviewing(true);
-                    }}
-                  />
-                ) : null}
-              </Pressable>
-            )}
+              ) : null}
+            </Pressable>
           </>
         ) : (
           <>
@@ -981,22 +939,10 @@ const useStyles = themedStyles((t) => ({
     borderRadius: t.corner.screen,
     marginTop: t.space.sm,
   },
-  // STICKERS (D4/D5)
+  // STICKERS (D4)
   // breathing room between the STICKERS panel's stacked pieces (owner 2026-07-12 — the section read
-  // too crowded); the tray/rail/steppers/preview each get a clear gap.
+  // too crowded); the tray/rail/steppers each get a clear gap.
   stickerBody: { gap: t.space.lg, paddingTop: t.space.sm },
-  onShellStrip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: t.scr.accent,
-    paddingHorizontal: t.space.lg,
-    paddingVertical: t.space.sm,
-  },
-  onShellLabel: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accentInk, letterSpacing: 1 },
-  onShellEdit: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.accentInk, letterSpacing: 1 },
-  previewRow: { flexDirection: 'row', alignItems: 'center', gap: t.space.md, paddingTop: t.space.md },
-  flexSpacer: { flex: 1 },
   // LOOKS (D6)
   looksHead: {
     fontFamily: t.font.screenBold,

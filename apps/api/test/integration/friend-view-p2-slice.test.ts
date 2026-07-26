@@ -333,7 +333,21 @@ describe('CAT-09c: GET /catalog/games/:id/friends-who-own — the named list', (
     expect(res.status).toBe(200);
     expect(res.body.friendsWhoOwn).toHaveLength(1);
     expect(res.body.friendsWhoOwn[0]).toMatchObject({ userId: friend.id, username: friend.username, hours: 20 });
+    expect(res.body.friendsWhoOwn[0].avatarConfig).toBeNull(); // PROF-08 — no config set on this friend
     expect(res.body.count).toBe(1);
+  });
+
+  // PROF-08 (W-4 Monogram Forge) — avatarConfig rides beside avatarUrl on the CAT-09c named row.
+  // Walk-4 takeover review found friendWhoOwnsSchema had never picked it up.
+  it('PROF-08: a named friend with a forged avatarConfig carries it on the row', async () => {
+    const me = await seedUser();
+    const cfg = { bg: '#2a1f4d', ink: '#e8c14a', glyph: 'FR', frame: 'ring' as const };
+    const friend = await seedUser({ avatarConfig: cfg });
+    await makeFriends(me, friend);
+    const game = await seedGame(me.token, 'Forged Owner Game');
+    await addToCollection(friend.token, game.id, 5);
+    const res = await request(app).get(`/api/catalog/games/${game.id}/friends-who-own`).set(authed(me.token));
+    expect(res.body.friendsWhoOwn[0].avatarConfig).toEqual(cfg);
   });
 
   it('SOC-09: a blocked (ex-)friend who owns the game is absent (the block severs the friendship)', async () => {

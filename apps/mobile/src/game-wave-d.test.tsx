@@ -19,14 +19,17 @@ const mockQueue = jest.fn(() => ({ unwrap: () => Promise.resolve({}) }));
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), navigate: jest.fn() }),
 }));
-// W-6 — AboutTab now also reads me (the A1 pre-gate) + genres (the chip editor); undefined keeps
-// the EDIT key live and inert — this suite doesn't exercise the edit mode (AboutTab.edit.test.tsx does).
+// W-6 — AboutTab also reads me (the A1 pre-gate) + genres (the chip editor); both are inert here —
+// this suite doesn't exercise the edit mode (AboutTab.edit.test.tsx does).
 jest.mock('./store/api', () => ({
   useAddToCollectionMutation: () => [mockAdd, { isLoading: false }],
   useGetMeQuery: () => ({ data: undefined }),
   useGetGenresQuery: () => ({ data: undefined }),
 }));
 jest.mock('./store/queueApi', () => ({ useAddQueueItemMutation: () => [mockQueue, { isLoading: false }] }));
+// Walk-4 P4-b — CATALOG now hosts the ⋯ overflow's MOD-01 report path; the mutation is inert here
+// (the base `api` slice is mocked away above, so the real reportApi module can't inject endpoints).
+jest.mock('./store/reportApi', () => ({ useSubmitReportMutation: () => [jest.fn(), { isLoading: false }] }));
 // AboutTab is REAL (D-3 order) — mock ONLY its data hooks. The game-detail result is SWITCHABLE so F1
 // can drive the loading / error branches (the CATALOG band must survive a facts-fetch failure).
 const GAME_DETAIL = {

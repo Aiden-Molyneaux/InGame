@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react-native';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import prefsReducer from '../store/prefsSlice';
-import { ScreenHead } from './ScreenHead';
+import { ScreenHead, HEADER_CONTENT_HEIGHT } from './ScreenHead';
 import { CurrencyCounter } from './commerce/CurrencyCounter';
 
 const store = configureStore({ reducer: { prefs: prefsReducer } });
@@ -52,5 +52,8 @@ describe('ScreenHead', () => {
     // …and neither pins a divergent fixed height that would defeat the stretch (the drift vector)
     expect(countChip.height).toBeUndefined();
     expect(counter.height).toBeUndefined();
+    // walk-4 P3-d — the counter's own floor IS this band, so the stretch here changes nothing and
+    // the unstretched heads (Store/Device/Styler) land on the identical height.
+    expect(counter.minHeight).toBe(HEADER_CONTENT_HEIGHT);
   });
 });

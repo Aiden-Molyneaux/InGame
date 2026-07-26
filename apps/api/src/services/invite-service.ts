@@ -101,7 +101,12 @@ export async function resolveInvite(
 
   return {
     token,
-    sender: { userId: sender.id, username: sender.username, avatarUrl: sender.avatarUrl },
+    sender: {
+      userId: sender.id,
+      username: sender.username,
+      avatarUrl: sender.avatarUrl,
+      avatarConfig: sender.avatarConfig, // PROF-08 (W-4) — public-safe; the resolver may be a stranger
+    },
     relationship,
     prefilledRequest: { toUserId: sender.id },
   };

@@ -16,7 +16,19 @@ let mockDetail: { data?: GameDetail; isLoading: boolean; isError: boolean; refet
   isError: false,
   refetch: jest.fn(),
 };
-let mockFriendsWhoOwn: { data?: { friendsWhoOwn: Array<{ userId: string; username: string; avatarUrl: string | null; hours?: number }>; count: number }; isLoading: boolean } = {
+let mockFriendsWhoOwn: {
+  data?: {
+    friendsWhoOwn: Array<{
+      userId: string;
+      username: string;
+      avatarUrl: string | null;
+      avatarConfig?: { bg: string; ink: string; glyph?: string; frame?: string } | null;
+      hours?: number;
+    }>;
+    count: number;
+  };
+  isLoading: boolean;
+} = {
   data: { friendsWhoOwn: [], count: 0 },
   isLoading: false,
 };
@@ -71,7 +83,7 @@ describe('W-D1 ABOUT tab — from the game-detail aggregate', () => {
   beforeEach(() => {
     mockDetail = { data: DETAIL, isLoading: false, isError: false, refetch: jest.fn() };
     mockFriendsWhoOwn = {
-      data: { friendsWhoOwn: [{ userId: 'v1', username: 'vanta', avatarUrl: null, hours: 182 }], count: 3 },
+      data: { friendsWhoOwn: [{ userId: 'v1', username: 'vanta', avatarUrl: null, avatarConfig: null, hours: 182 }], count: 3 },
       isLoading: false,
     };
   });
@@ -133,6 +145,24 @@ describe('W-D1 ABOUT tab — from the game-detail aggregate', () => {
     expect(screen.getByText('FRIENDS WHO OWN IT — 3')).toBeTruthy();
     fireEvent.press(screen.getByLabelText("Open vanta's profile"));
     expect(onOpenUser).toHaveBeenCalledWith('v1');
+  });
+
+  // Walk-4 takeover review (the P1-c class, the CAT-09c site) — friendWhoOwnsSchema never carried
+  // avatarConfig, so a friend's forged monogram rendered as the plain default initials here. The row
+  // now threads avatarConfig through to <Avatar>; the configured Avatar carries the "<username>
+  // monogram" a11y label (the landed requests-banner precedent), the default carries none.
+  it('a friend-who-owns row with a forged avatarConfig renders the monogram (not the default)', () => {
+    mockFriendsWhoOwn = {
+      data: {
+        friendsWhoOwn: [
+          { userId: 'v1', username: 'vanta', avatarUrl: null, avatarConfig: { bg: '#2a1f4d', ink: '#e8c14a', glyph: 'VN', frame: 'ring' }, hours: 182 },
+        ],
+        count: 1,
+      },
+      isLoading: false,
+    };
+    render(wrap(<AboutTab gameId="g1" onViewContributor={jest.fn()} onOpenUser={jest.fn()} />));
+    expect(screen.getByLabelText('vanta monogram')).toBeTruthy();
   });
 
   it('a game-detail load error surfaces an inline retry (never a crash)', () => {

@@ -71,16 +71,74 @@ describe('EditableIdentity (W-C4 · in-place per-field commit)', () => {
     await waitFor(() => expect(onPatchMe).toHaveBeenCalledWith({ bio: 'new bio text' }));
   });
 
-  it('username commits on blur; a MOD-07 screening 422 surfaces inline under the field', async () => {
-    const onPatchMe = jest
-      .fn<Promise<SaveOutcome>, unknown[]>()
-      .mockResolvedValue({ ok: false, fieldErrors: { username: 'That name isn’t allowed.' } });
-    renderEditor({ onPatchMe });
-    const u = screen.getByLabelText('Username');
-    fireEvent.changeText(u, 'newname');
-    fireEvent(u, 'blur');
-    await waitFor(() => expect(onPatchMe).toHaveBeenCalledWith({ username: 'newname' }));
-    expect(await screen.findByText('That name isn’t allowed.')).toBeTruthy();
+  // ── walk-4 P3-c — the USERNAME opts out of the autosave. Owner: an accidental edit that saves on
+  // blur "bites in the ass" — the PROF-06 rename cooldown makes the accident expensive. RED before
+  // the fix (the field carried an onBlur commit).
+  describe('P3-c — the username takes a deliberate save', () => {
+    it('editing + BLURRING the username saves NOTHING (no PATCH on tap-away)', () => {
+      const onPatchMe = jest.fn<Promise<SaveOutcome>, unknown[]>().mockResolvedValue({ ok: true });
+      renderEditor({ onPatchMe });
+      const u = screen.getByLabelText('Username');
+      fireEvent.changeText(u, 'oopsIBrushedIt');
+      fireEvent(u, 'blur');
+      expect(onPatchMe).not.toHaveBeenCalled();
+    });
+
+    it('the confirm row appears only on a real change, and SAVE is what renames', async () => {
+      const onPatchMe = jest.fn<Promise<SaveOutcome>, unknown[]>().mockResolvedValue({ ok: true });
+      renderEditor({ onPatchMe });
+      expect(screen.queryByLabelText('Save username')).toBeNull(); // clean → no confirm row
+      const u = screen.getByLabelText('Username');
+      fireEvent.changeText(u, 'newname');
+      expect(screen.getByText(/TAP SAVE TO CONFIRM/)).toBeTruthy(); // the stake, named at the moment
+      fireEvent.press(screen.getByLabelText('Save username'));
+      await waitFor(() => expect(onPatchMe).toHaveBeenCalledWith({ username: 'newname' }));
+      // the row retires the instant the save lands (it does not wait on the /me re-read)
+      await waitFor(() => expect(screen.queryByLabelText('Save username')).toBeNull());
+      expect(screen.getByText('✓ USERNAME SAVED')).toBeTruthy();
+    });
+
+    it('CANCEL discards the edit and puts the served name back — still no PATCH', () => {
+      const onPatchMe = jest.fn<Promise<SaveOutcome>, unknown[]>().mockResolvedValue({ ok: true });
+      renderEditor({ onPatchMe });
+      const u = screen.getByLabelText('Username');
+      fireEvent.changeText(u, 'newname');
+      fireEvent.press(screen.getByLabelText('Cancel username change'));
+      expect(screen.getByLabelText('Username').props.value).toBe('demo');
+      expect(screen.queryByLabelText('Save username')).toBeNull();
+      expect(onPatchMe).not.toHaveBeenCalled();
+    });
+
+    it('an EMPTIED field keeps CANCEL reachable and greys SAVE (never a dead end)', () => {
+      const onPatchMe = jest.fn<Promise<SaveOutcome>, unknown[]>().mockResolvedValue({ ok: true });
+      renderEditor({ onPatchMe });
+      fireEvent.changeText(screen.getByLabelText('Username'), '');
+      const save = screen.getByLabelText('Save username');
+      expect(save.props.accessibilityState.disabled).toBe(true);
+      fireEvent.press(save);
+      expect(onPatchMe).not.toHaveBeenCalled(); // a blank name can never be committed
+      fireEvent.press(screen.getByLabelText('Cancel username change'));
+      expect(screen.getByLabelText('Username').props.value).toBe('demo');
+    });
+
+    it('a MOD-07 screening 422 surfaces inline and the confirm row STAYS (the edit isn’t lost)', async () => {
+      const onPatchMe = jest
+        .fn<Promise<SaveOutcome>, unknown[]>()
+        .mockResolvedValue({ ok: false, fieldErrors: { username: 'That name isn’t allowed.' } });
+      renderEditor({ onPatchMe });
+      fireEvent.changeText(screen.getByLabelText('Username'), 'newname');
+      fireEvent.press(screen.getByLabelText('Save username'));
+      await waitFor(() => expect(onPatchMe).toHaveBeenCalledWith({ username: 'newname' }));
+      expect(await screen.findByText('That name isn’t allowed.')).toBeTruthy();
+      expect(screen.getByLabelText('Save username')).toBeTruthy(); // retryable, not stranded
+    });
+
+    it('the PROF-06 cooldown branch shows no confirm row at all (nothing to confirm)', () => {
+      const future = new Date(Date.now() + 5 * 86400_000).toISOString();
+      renderEditor({ me: ME({ usernameNextChangeAt: future }) });
+      expect(screen.queryByLabelText('Save username')).toBeNull();
+      expect(screen.getByText(/NEXT CHANGE/)).toBeTruthy();
+    });
   });
 
   it('PROF-06 cooldown: a future usernameNextChangeAt disables the field + shows the microcopy', () => {
@@ -140,6 +198,38 @@ describe('EditableIdentity (W-C4 · in-place per-field commit)', () => {
   const flatStyle = (node: { props: { style?: unknown } }): Record<string, unknown> =>
     Object.assign({}, ...[node.props.style ?? {}].flat(Infinity).filter(Boolean));
 
+  // ── walk-4 P3-a — ONE avatar, and it's the live preview. RED before the fix: the forge drew its own
+  // head, so the same user's monogram (the "DE" initials) was on screen TWICE while it was open.
+  describe('P3-a — the identity avatar is the forge preview', () => {
+    it('opening the forge leaves exactly ONE monogram on screen', () => {
+      renderEditor();
+      expect(screen.getAllByText('DE')).toHaveLength(1); // closed
+      fireEvent.press(screen.getByLabelText('Edit avatar'));
+      expect(screen.getAllByText('DE')).toHaveLength(1); // open — still one head, not two
+    });
+
+    it('a forge edit repaints THAT avatar live — even a pick the contrast guard refuses to save', async () => {
+      const onPatchMe = jest.fn<Promise<SaveOutcome>, unknown[]>().mockResolvedValue({ ok: true });
+      renderEditor({ onPatchMe });
+      fireEvent.press(screen.getByLabelText('Edit avatar'));
+      // black INK on the dark default background — unreadable, so the guard holds the PATCH…
+      fireEvent.press(screen.getAllByLabelText('Use #000000')[1]!);
+      // …but the user must SEE what they picked: the identity avatar wears the in-progress config.
+      await waitFor(() => expect(flatStyle(screen.getByText('DE')).color).toBe('#000000'));
+      expect(screen.getByText(/hard to read/i)).toBeTruthy();
+      expect(onPatchMe).not.toHaveBeenCalled();
+    });
+
+    it('closing the forge drops the preview — the avatar returns to server truth', () => {
+      renderEditor();
+      fireEvent.press(screen.getByLabelText('Edit avatar'));
+      fireEvent.press(screen.getAllByLabelText('Use #000000')[1]!);
+      expect(flatStyle(screen.getByText('DE')).color).toBe('#000000');
+      fireEvent.press(screen.getByLabelText('Edit avatar')); // close
+      expect(flatStyle(screen.getByText('DE')).color).toBe(SCR.accent); // the served default monogram
+    });
+  });
+
   it('N-A1 — the PROF-06 time-gate note wears the screen accent (orange) for salience', () => {
     const future = new Date(Date.now() + 5 * 86400_000).toISOString();
     renderEditor({ me: ME({ usernameNextChangeAt: future }) });
@@ -149,7 +239,8 @@ describe('EditableIdentity (W-C4 · in-place per-field commit)', () => {
 
   it('N-A1 — the non-cooldown format hint stays dim, not accent', () => {
     renderEditor(); // usernameNextChangeAt: null → the no-cooldown format-hint branch
-    const hint = screen.getByText(/SAVES WHEN YOU TAP AWAY/);
+    // P3-c retired the "SAVES WHEN YOU TAP AWAY" promise — the field no longer does that.
+    const hint = screen.getByText(/DELIBERATE SAVE/);
     expect(flatStyle(hint).color).toBe(SCR.dim);
   });
 

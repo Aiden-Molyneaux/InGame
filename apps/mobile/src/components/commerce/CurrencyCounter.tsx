@@ -1,5 +1,6 @@
 import { Pressable, View, Text } from 'react-native';
 import { themedStyles, theme } from '../../theme';
+import { HEADER_CONTENT_HEIGHT } from '../ScreenHead';
 import { PixelsMark } from './PixelsMark';
 
 // CurrencyCounter (component-map §7) — the persistent header PX counter (a gold keycap; F-02 economy).
@@ -73,6 +74,14 @@ const useStyles = themedStyles((t) => ({
     // height as the ScreenHead CountTag sibling (both keycaps carry `alignSelf:'stretch'` — one shared
     // fill mechanism, no per-side magic number to drift). Robust even if the wrap's alignItems changes.
     alignSelf: 'stretch',
+    // walk-4 P3-d — ONE SIZE ON EVERY PAGE. `alignSelf:'stretch'` only resolves to the header band
+    // where a host STRETCHES it: Collection/Profile dock the counter in ScreenHead's stretched
+    // trailing cluster (26px), while Store/Device/Styler drop it into a plain centred head row, where
+    // it fell back to its ~24px natural height — the two-pixel drift the owner walked. The floor is
+    // the counter's OWN business, so it travels with the component instead of being re-declared at
+    // each call-site: minHeight (not height) so the Collection stretch still governs and the
+    // count-chip sibling's equal-band invariant is untouched (ScreenHead.test.tsx pins it).
+    minHeight: HEADER_CONTENT_HEIGHT,
     gap: 4,
     backgroundColor: t.brand.gold,
     paddingHorizontal: 8,

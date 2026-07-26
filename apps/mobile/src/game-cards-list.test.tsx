@@ -53,13 +53,40 @@ jest.mock('./store/communityApi', () => ({
   useLazyGetGameGalleryQuery: () => [mockTrigger, { isFetching: false }],
   useAdoptCardMutation: () => [mockAdopt, { isLoading: false }],
 }));
-// Stub the sheet (the hold-to-adopt UX is its own tested surface) — visible+card renders a marker.
+// Walk-4 P4-d — the preview drawer's SHARE is a real affordance now, so this route wires the real
+// share path (token from the auth slice + the off-store shareCardImage helper). Both are stood in.
+jest.mock('./store/hooks', () => ({ useAppSelector: () => 'tok', useAppDispatch: () => jest.fn() }));
+const mockShare = jest.fn(() => Promise.resolve('shared'));
+jest.mock('./store/shareCard', () => ({ shareCardImage: (...a: unknown[]) => mockShare(...(a as [])) }));
+// Stub the sheet (the hold-to-adopt UX is its own tested surface) — visible+card renders a marker,
+// plus a SHARE proxy so the route's share wiring is observable without the drawer's internals.
 jest.mock('./components/game/AdoptCardSheet', () => {
   const React2 = require('react');
-  const { Text } = require('react-native');
+  const { Text, Pressable } = require('react-native');
   return {
-    AdoptCardSheet: ({ card, visible }: { card: { name: string } | null; visible: boolean }) =>
-      visible && card ? React2.createElement(Text, null, `ADOPT SHEET — ${card.name}`) : null,
+    AdoptCardSheet: ({
+      card,
+      visible,
+      onShare,
+      shareBusy,
+    }: {
+      card: { name: string } | null;
+      visible: boolean;
+      onShare: () => void;
+      shareBusy?: boolean;
+    }) =>
+      visible && card
+        ? React2.createElement(
+            React2.Fragment,
+            null,
+            React2.createElement(Text, null, `ADOPT SHEET — ${card.name}`),
+            React2.createElement(
+              Pressable,
+              { accessibilityLabel: 'sheet-share', onPress: onShare },
+              React2.createElement(Text, null, shareBusy ? 'SHEET-SHARING' : 'SHEET-SHARE'),
+            ),
+          )
+        : null,
   };
 });
 
@@ -162,5 +189,21 @@ describe('adopt capability — the ?adopt=1 display gate (W-D1 Q4 carried to the
     renderList();
     fireEvent.press(screen.getByLabelText(/Alpha by nova/i));
     expect(screen.queryByText(/ADOPT SHEET/)).toBeNull();
+  });
+});
+
+describe('Walk-4 P4-d — the preview drawer’s SHARE actually shares from this surface', () => {
+  it('the sheet’s share runs the authenticated share path for THAT card (it was a no-op before)', async () => {
+    mockPage1 = {
+      data: { items: [CARD('c1', 'Alpha')], total: 1, nextCursor: null },
+      isLoading: false,
+      isError: false,
+    };
+    renderList();
+    fireEvent.press(screen.getByLabelText(/Alpha by nova/i));
+    fireEvent.press(screen.getByLabelText('sheet-share'));
+    expect(mockShare).toHaveBeenCalledWith('c1', 'Alpha', 'tok');
+    // let the share promise settle so the busy flag clears inside act()
+    expect(await screen.findByText('SHEET-SHARE')).toBeTruthy();
   });
 });

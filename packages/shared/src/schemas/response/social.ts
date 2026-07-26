@@ -70,6 +70,10 @@ export const blockedPersonSchema = z
     userId: z.string().uuid(),
     username: z.string(),
     avatarUrl: z.string().url().nullable(),
+    // PROF-08 (W-4 Monogram Forge) — rides beside avatarUrl so the blocked-list row renders the forged
+    // monogram (public-safe cosmetic; the block itself stays undisclosed to the OTHER party — this is
+    // the blocker's own read). Null ⇒ the default monogram.
+    avatarConfig: avatarConfigSchema.nullable(),
     blockedAt: z.string(),
   })
   .strict();

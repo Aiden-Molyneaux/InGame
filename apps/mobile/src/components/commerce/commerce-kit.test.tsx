@@ -1,8 +1,10 @@
+import { StyleSheet } from 'react-native';
 import { act, render, fireEvent, screen } from '@testing-library/react-native';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import type { LedgerEntry, StorePack } from '@ingame/shared';
 import prefsReducer from '../../store/prefsSlice';
+import { HEADER_CONTENT_HEIGHT } from '../ScreenHead';
 import { CurrencyCounter } from './CurrencyCounter';
 import { DailyBonusBar } from './DailyBonusBar';
 import { PriceChip } from './PriceChip';
@@ -45,6 +47,20 @@ describe('CurrencyCounter (§7)', () => {
     expect(screen.getByText('+30')).toBeTruthy();
     render(wrap(<CurrencyCounter balance={-3} />));
     expect(screen.getByLabelText('-3 pixels — open wallet')).toBeTruthy();
+  });
+
+  // walk-4 P3-d (owner) — the PX counter must be ONE size on EVERY page. Collection/Profile dock it
+  // in ScreenHead's STRETCHED trailing cluster (the 26px band); Store/Device/Styler drop it into a
+  // plain centred head row, where `alignSelf:'stretch'` resolves to nothing and it fell back to its
+  // ~24px natural height. The floor now travels WITH the component, so no host can shrink it — and
+  // it stays a floor (not a fixed height), so the stretched band still governs on Collection and the
+  // count-chip equal-height invariant (ScreenHead.test.tsx) is untouched. RED before the fix.
+  it('P3-d — the keycap carries the header-band floor itself, in an UNSTRETCHED host', () => {
+    render(wrap(<CurrencyCounter balance={27} />)); // the Store/Device/Styler posture
+    const counter = StyleSheet.flatten(screen.getByLabelText('27 pixels — open wallet').props.style);
+    expect(counter.minHeight).toBe(HEADER_CONTENT_HEIGHT);
+    expect(counter.alignSelf).toBe('stretch'); // …and the band fill mechanism is unchanged
+    expect(counter.height).toBeUndefined(); // never a divergent FIXED height (the drift vector)
   });
 });
 

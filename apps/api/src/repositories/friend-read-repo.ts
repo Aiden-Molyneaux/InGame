@@ -165,6 +165,8 @@ export interface FriendWhoOwns {
   userId: string;
   username: string;
   avatarUrl: string | null;
+  /** PROF-08 (W-4) — the named row's forged monogram; null ⇒ the default. Public-safe cosmetic. */
+  avatarConfig: UserRow['avatarConfig'];
   hours: number;
 }
 
@@ -187,6 +189,7 @@ export async function friendsWhoOwnGame(
       userId: users.id,
       username: users.username,
       avatarUrl: users.avatarUrl,
+      avatarConfig: users.avatarConfig,
       hours: collectionEntries.hours,
     })
     .from(collectionEntries)

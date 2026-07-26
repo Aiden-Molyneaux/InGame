@@ -187,14 +187,15 @@ export default function UserProfile() {
             </Pressable>
           </View>
 
-          {/* {USERNAME}'S CONTRIBUTIONS teaser (CAT-07 · owner walk-ruling 2026-07-20) — the friend's
+          {/* CONTRIBUTIONS teaser (CAT-07 · owner walk-ruling 2026-07-20; walk-4 P5-e dropped the
+              "{NAME}'S" prefix — redundant, we're already on their profile) — the friend's
               PUBLISHED-card count, the cross-user door into their contributor screen (/contributor/:id,
               P13 — handles the non-self viewer). Mirrors the self profile's MY CONTRIBUTIONS teaser
               grammar (the PUBLISHED count off the friend shape's `cardsPublished`, NOT stats.cardsDesigned
               — never leaks draft existence). Shown-with-0 like the self (always present, no hide-on-empty).
               Seated after ACHIEVEMENTS per the self profile's head order. */}
           <View style={styles.section}>
-            <Text style={styles.sectionHead}>{`${data.username}'s contributions`.toUpperCase()}</Text>
+            <Text style={styles.sectionHead}>CONTRIBUTIONS</Text>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`View ${data.username}'s contributions`}

@@ -18,6 +18,8 @@ import { GenreTag } from '../src/components/GenreTag';
 import { InlineBanner } from '../src/components/InlineBanner';
 import { CommunityGallery } from '../src/components/game/CommunityGallery';
 import { AdoptCardSheet, type AdoptOutcome } from '../src/components/game/AdoptCardSheet';
+import { useShareCard } from '../src/components/game/useShareCard';
+import { Toast } from '../src/components/lifecycle/Toast';
 import { TertiaryLink } from '../src/components/TertiaryLink';
 
 import { COLLECTION_STATUSES, STATUS_LABEL } from '../src/constants/collection';
@@ -375,8 +377,8 @@ const FORK_STRIP_N = 6;
 // normal per-game entry — the entry the add just created makes it work) · keep-the-default (tertiary, ends
 // the flow). A game with NO community cards NO LONGER auto-advances silently (the owner never saw the
 // old step): the fork still renders, minus the strip/see-all — DESIGN YOUR OWN + keep-default stand.
-// A gallery error degrades the same way (the doors never depend on the fetch). Share/block/report are
-// full-game-page concerns — the sheet's secondary hooks stay quiet no-ops here.
+// A gallery error degrades the same way (the doors never depend on the fetch). SHARE is real here
+// (useShareCard — walk-4 Murr); block/report stay full-game-page concerns, quiet no-ops on the fork.
 function CardForkStep({ item, onDone }: { item: CollectionItem; onDone: () => void }) {
   const styles = useStyles();
   const router = useRouter();
@@ -390,6 +392,10 @@ function CardForkStep({ item, onDone }: { item: CollectionItem; onDone: () => vo
   const { data: wallet } = useGetWalletQuery();
   const [adoptCard, adoptState] = useAdoptCardMutation();
   const [inspectCard, setInspectCard] = useState<GalleryCardView | null>(null);
+  // Walk-4 Murr fix — the sheet's SHARE is a real dressed affordance (P4-d), so this fourth caller
+  // must actually share too (it passed a no-op, leaving a dead key on the fork's preview drawer).
+  const [toast, setToast] = useState<{ message: string; tone: 'success' | 'error' } | null>(null);
+  const { shareBusy, shareCard } = useShareCard((message) => setToast({ tone: 'error', message }));
   // a ref (not state) — the sheet's Done reads it in the same tick a fast adopt→Done could fire, and it
   // never needs to re-render the step (adopt settles inside the sheet).
   const didAdopt = useRef(false);
@@ -475,13 +481,17 @@ function CardForkStep({ item, onDone }: { item: CollectionItem; onDone: () => vo
           didAdopt.current = true;
         }}
         onTopUp={() => router.push('/store?view=topup')}
-        onShare={() => {}}
+        onShare={() => {
+          if (inspectCard) void shareCard(inspectCard.id, inspectCard.name);
+        }}
+        shareBusy={shareBusy}
         onBlock={() => setInspectCard(null)}
         onViewContributor={(userId) => {
           setInspectCard(null);
           router.push(`/contributor/${userId}`);
         }}
       />
+      {toast ? <Toast message={toast.message} tone={toast.tone} onDismiss={() => setToast(null)} /> : null}
     </>
   );
 }

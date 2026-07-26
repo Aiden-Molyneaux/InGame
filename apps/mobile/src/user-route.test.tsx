@@ -58,7 +58,7 @@ const FRIEND: FriendProfile = {
   favouriteGenreIds: [],
   gamertags: [],
   friendsCount: 14,
-  cardsPublished: 12, // CAT-07 — the {USERNAME}'S CONTRIBUTIONS teaser count (owner walk-ruling 2026-07-20)
+  cardsPublished: 12, // CAT-07 — the CONTRIBUTIONS teaser count (owner walk-ruling 2026-07-20)
   top10: [], // P8: absorbs the concurrent P5 server-track FriendProfile.top10 addition (keeps typecheck green)
   stats: { games: 86, hours: 2400, completionPct: 71, cardsDesigned: 31, adoptionsReceived: 412, friends: 14 },
   device: {
@@ -166,15 +166,15 @@ describe('P9 friend-profile route — the shape matrix', () => {
     expect(within(foot).getByText('14 FRIENDS · 3 MUTUAL')).toBeTruthy(); // mutuals beside friendsCount (r3)
   });
 
-  it("W-B10 r4 — the section sequence mirrors the self profile at head (STATS → ACHIEVEMENTS → {USERNAME}'S CONTRIBUTIONS → PINNED FAVOURITE → NOW PLAYING → THEIR DEVICE → doors)", () => {
+  it('W-B10 r4 — the section sequence mirrors the self profile at head (STATS → ACHIEVEMENTS → CONTRIBUTIONS → PINNED FAVOURITE → NOW PLAYING → THEIR DEVICE → doors)', () => {
     set({ data: FRIEND });
     render(wrap(<UserProfile />));
     // getAllByText returns tree order — the sequence probe. (TOP 3 absent: fixture top10 is [].)
     const seq = screen
-      .getAllByText(/^(STATS|ACHIEVEMENTS|.*CONTRIBUTIONS|PINNED FAVOURITE|TOP 3|NOW PLAYING|THEIR DEVICE|VIEW COLLECTION)$/)
+      .getAllByText(/^(STATS|ACHIEVEMENTS|CONTRIBUTIONS|PINNED FAVOURITE|TOP 3|NOW PLAYING|THEIR DEVICE|VIEW COLLECTION)$/)
       .map((el) => (Array.isArray(el.props.children) ? el.props.children.join('') : el.props.children));
     // CONTRIBUTIONS seats right after ACHIEVEMENTS (mirrors the self profile's MY CONTRIBUTIONS placement).
-    expect(seq).toEqual(['STATS', 'ACHIEVEMENTS', "RIKO'S CONTRIBUTIONS", 'PINNED FAVOURITE', 'NOW PLAYING', 'THEIR DEVICE', 'VIEW COLLECTION']);
+    expect(seq).toEqual(['STATS', 'ACHIEVEMENTS', 'CONTRIBUTIONS', 'PINNED FAVOURITE', 'NOW PLAYING', 'THEIR DEVICE', 'VIEW COLLECTION']);
   });
 
   it('C4 trio — STATS tiles render the six-pack (percentile chips absent, M7)', () => {
@@ -240,10 +240,10 @@ describe('P9 friend-profile route — the shape matrix', () => {
     expect(screen.getByText('VIEW COLLECTION')).toBeTruthy();
   });
 
-  it("{USERNAME}'S CONTRIBUTIONS teaser (CAT-07 · owner walk-ruling) — renders the PUBLISHED count and routes to the contributor screen", () => {
+  it('CONTRIBUTIONS teaser (CAT-07 · owner walk-ruling; walk-4 P5-e dropped the possessive "{NAME}\'S" prefix — redundant, already on their profile) — renders the PUBLISHED count and routes to the contributor screen', () => {
     set({ data: FRIEND });
     render(wrap(<UserProfile />));
-    expect(screen.getByText("RIKO'S CONTRIBUTIONS")).toBeTruthy(); // the possessive voice (mirrors MY CONTRIBUTIONS)
+    expect(screen.getByText('CONTRIBUTIONS')).toBeTruthy();
     expect(screen.getByText('12 CARDS DESIGNED')).toBeTruthy(); // cardsPublished (published only, not drafts)
     fireEvent.press(screen.getByLabelText("View riko's contributions"));
     expect(mockPush).toHaveBeenCalledWith('/contributor/friend-1111-1111-1111-111111111111'); // P13 cross-user door
@@ -252,7 +252,7 @@ describe('P9 friend-profile route — the shape matrix', () => {
   it('CONTRIBUTIONS teaser — shown even at ZERO (mirrors the self profile: always present, no hide-on-empty)', () => {
     set({ data: { ...FRIEND, cardsPublished: 0 } });
     render(wrap(<UserProfile />));
-    expect(screen.getByText("RIKO'S CONTRIBUTIONS")).toBeTruthy();
+    expect(screen.getByText('CONTRIBUTIONS')).toBeTruthy();
     expect(screen.getByText('0 CARDS DESIGNED')).toBeTruthy();
   });
 

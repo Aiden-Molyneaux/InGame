@@ -75,7 +75,8 @@ function renderView(view: CollectionView, coachmarkSeen = false) {
 
 // A stable snapshot of the shelf's structural nodes — the hero eyebrow + every card label + every
 // row chevron + every title. If the peek-flip hint participated in the shelf's flow, toggling it
-// would add/remove a node here; an absolute overlay leaves it byte-identical.
+// would add/remove a node here; docking it outside the scrollable stage (walk-4 P5-a) leaves it
+// byte-identical whether the hint is an in-flow strip or, previously, an absolute overlay.
 const HINT = 'Tap a card to flip it for your stats.';
 function shelfShape() {
   return {
@@ -119,7 +120,8 @@ describe('COL-12/CARD-16: the peek-flip hint is layout-neutral (owner walk — t
     const withoutHint = shelfShape();
 
     // the hint added/removed NOTHING from the shelf's flow — appearing or dismissing it (and the
-    // relog that re-arms it) cannot shift the list, because the hint lives in an absolute overlay.
+    // relog that re-arms it) cannot shift the list, because the hint is docked OUTSIDE the stage
+    // (a sibling above the tools bar), never a descendant of the scrollable shelf/grid.
     expect(withoutHint).toEqual(withHint);
     // sanity: a genuinely populated shelf underlay the comparison (one chevron per row)
     expect(withHint.chevrons).toBe(mockItems.length);
@@ -136,14 +138,32 @@ describe('COL-12/CARD-16: the peek-flip hint is layout-neutral (owner walk — t
     expect(within(scroll).queryByText(HINT)).toBeNull();
   });
 
-  it('renders the hint in an absolute overlay (out of flow) — the mechanism that kills the jar', () => {
+  it('docks the hint as an in-flow strip directly above the tools bar (walk-4 P5-a: no floating elements)', () => {
     const { StyleSheet } = require('react-native');
-    renderView('shelf', false);
-    // the strip is present (helpful — kept) but its container is taken OUT of the shelf's layout flow,
-    // so it can never reflow the list. If a refactor drops it back inline, this pins the regression.
+    const rendered = renderView('shelf', false);
     expect(screen.getByText(HINT)).toBeTruthy();
-    const overlay = StyleSheet.flatten(screen.getByTestId('coachmark-overlay').props.style);
-    expect(overlay.position).toBe('absolute');
+    // no more absolute-overlay mechanism — the strip is a normal in-flow sibling now (docked, not floating)
+    const strip = StyleSheet.flatten(screen.getByTestId('coachmark-overlay').props.style);
+    expect(strip.position).not.toBe('absolute');
+    // "directly above the tools bar": walking the rendered host tree, the strip's testID appears
+    // BEFORE the tools bar's testID — pins the docking position without pinning exact adjacency.
+    const ids: string[] = [];
+    const collect = (node: unknown): void => {
+      if (!node) return;
+      if (Array.isArray(node)) {
+        node.forEach(collect);
+        return;
+      }
+      const n = node as { props?: { testID?: string }; children?: unknown };
+      if (n.props?.testID) ids.push(n.props.testID);
+      if (n.children) collect(n.children);
+    };
+    collect(rendered.toJSON());
+    const stripIndex = ids.indexOf('coachmark-overlay');
+    const toolsIndex = ids.indexOf('collection-tools-bar');
+    expect(stripIndex).toBeGreaterThanOrEqual(0);
+    expect(toolsIndex).toBeGreaterThanOrEqual(0);
+    expect(stripIndex).toBeLessThan(toolsIndex);
   });
 });
 

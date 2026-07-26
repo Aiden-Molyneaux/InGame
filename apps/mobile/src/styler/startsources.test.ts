@@ -88,18 +88,18 @@ describe('structural start-froms — all valid, all free (zero cost-stack)', () 
     expect(comp.nameplate?.title).toBe('SOME GAME');
   });
 
-  it('the fan is structures → title layouts → emblems → DEFAULT last (6–9 strong options)', () => {
+  it('the fan is DEFAULT first → structures → title layouts → emblems (walk-4 P5-c; 6–9 strong options)', () => {
     const labels = START_SOURCES.map((s) => s.kindLabel);
     expect(labels).toEqual([
+      'DEFAULT',
       ...BACKDROPS.map(() => 'BACKDROP'),
       ...TITLE_LAYOUTS.map(() => 'TITLE'),
       ...EMBLEMS.map(() => 'EMBLEM'),
-      'DEFAULT',
     ]);
     const curated = START_SOURCES.filter((s) => s.kindLabel !== 'DEFAULT');
     expect(curated.length).toBeGreaterThanOrEqual(6);
     expect(curated.length).toBeLessThanOrEqual(9);
-    expect(START_SOURCES[START_SOURCES.length - 1]!.id).toBe('default');
+    expect(START_SOURCES[0]!.id).toBe('default');
   });
 
   it('every icon a template or deal can reference exists in ESSENTIAL_ICONS', () => {

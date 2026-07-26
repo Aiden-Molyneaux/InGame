@@ -25,7 +25,7 @@ import { useSheetLocked } from '../../src/components/SheetLock';
 // shareCard rides src/store/ beside mockReceipt.ts (the non-slice helper precedent) — also a Metro
 // constraint: the standing :8082 watcher does not see a BRAND-NEW top-level src/ directory without a
 // restart (observed 2026-07-13; new files in existing dirs resolve fine — qa-runbook candidate).
-import { shareCardImage } from '../../src/store/shareCard';
+import { useShareCard } from '../../src/components/game/useShareCard';
 import { theme, themedStyles, useTheme } from '../../src/theme';
 import { steppedRectPath } from '../../src/theme/steppedPath';
 import {
@@ -40,7 +40,6 @@ import {
   useBlockUserMutation,
 } from '../../src/store/communityApi';
 import { useSubmitReportMutation, type CreateReportRequest } from '../../src/store/reportApi';
-import { useAppSelector } from '../../src/store/hooks';
 import { SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../../src/components/ScreenHead';
 
 // GamePage — the W-D1 posture RESOLVER (§3.1 · design-spec §2.4b / §4.2). ONE route `/game/[id]` adapts
@@ -123,10 +122,8 @@ function OwnGamePage({ entry }: { entry: CollectionItem }) {
   const [deleteCard, deleteCardState] = useDeleteCardMutation();
   const [adoptCard, adoptState] = useAdoptCardMutation();
   const [blockUser, blockState] = useBlockUserMutation();
-  // Share bytes are fetched off-store (round-2 bug 6): the access token rides to `shareCardImage` and
-  // a plain local busy flag drives the button state (no RTK query cache holds the Blob).
-  const shareToken = useAppSelector((s) => s.auth.accessToken);
-  const [shareBusy, setShareBusy] = useState(false);
+  // P8 share (CARD-21) — the shared off-store handler (walk-4 Murr consolidation, useShareCard).
+  const { shareBusy, shareCard } = useShareCard((message) => setToast({ tone: 'error', message }));
 
   // Reset per-game view state when the game changes — expo-router RE-RENDERS (does not remount) a dynamic
   // route on param change, so a mid-edit draft/section would bleed across games if a future surface adds
@@ -227,22 +224,6 @@ function OwnGamePage({ entry }: { entry: CollectionItem }) {
       const err = e as { status?: unknown };
       if (err?.status === 'FETCH_ERROR' || err?.status === 'TIMEOUT_ERROR') return 'offline';
       return 'error';
-    }
-  }
-
-  // ── P8 share (CARD-21) — fetch the branded PNG (authenticated) and present it (web opens/saves;
-  // native best-effort). A not-published / moderation-hidden card → a quiet "unavailable".
-  async function shareCard(cardId: string, title: string) {
-    setShareBusy(true);
-    try {
-      const res = await shareCardImage(cardId, title, shareToken);
-      if (res === 'unavailable') {
-        setToast({ tone: 'error', message: 'Sharing isn’t available for this card yet.' });
-      }
-    } catch {
-      setToast({ tone: 'error', message: 'This card can’t be shared yet.' });
-    } finally {
-      setShareBusy(false);
     }
   }
 

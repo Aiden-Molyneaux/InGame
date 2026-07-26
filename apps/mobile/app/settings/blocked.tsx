@@ -76,7 +76,7 @@ export default function Blocked() {
               <View style={styles.group}>
                 {blocks.map((b, i) => (
                   <View key={b.userId} style={[styles.row, i > 0 && styles.rowDivided]}>
-                    <Avatar username={b.username} avatarUrl={resolveMediaUrl(b.avatarUrl)} size={34} />
+                    <Avatar username={b.username} avatarUrl={resolveMediaUrl(b.avatarUrl)} avatarConfig={b.avatarConfig} size={34} />
                     <View style={styles.meta}>
                       <Text style={styles.name}>{b.username.toUpperCase()}</Text>
                       <Text style={styles.date}>BLOCKED {formatBlockedAt(b.blockedAt)}</Text>

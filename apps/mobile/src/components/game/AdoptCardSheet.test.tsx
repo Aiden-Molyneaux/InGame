@@ -1,3 +1,4 @@
+import { StyleSheet } from 'react-native';
 import { render, fireEvent, screen, act } from '@testing-library/react-native';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
@@ -204,12 +205,57 @@ describe('AdoptCardSheet (P8 · SOC-11 · M5 F-9 E1 — the styler-buy anatomy)'
     expect(screen.queryByText('⋯')).toBeNull();
   });
 
-  it('F-13 E7 — SHARE is a quiet link (TertiaryLink), firing onShare', () => {
+  // ── walk-4 P4-c/P4-d — the drawer is a PREVIEW: it names itself, shows the card big, and says what
+  // the card wears; SHARE wears the publish flow's treatment instead of a Unicode arrow. ───────────
+  it('P4-c — the drawer is titled CARD PREVIEW, with the card identity as the eyebrow', () => {
+    renderSheet();
+    expect(screen.getByText('CARD PREVIEW')).toBeTruthy();
+    expect(screen.getByText(/COMMUNITY CARD —/)).toBeTruthy();
+    expect(screen.getByText('RIVAL CUT')).toBeTruthy();
+  });
+
+  it('P4-c — the card renders at the HERO size (224×313), not the old 138px pick', () => {
+    renderSheet();
+    const img = screen.getByLabelText('Rival Cut card');
+    const style = StyleSheet.flatten(img.props.style) as { width?: number; height?: number };
+    expect(style.width).toBe(224);
+    expect(style.height).toBe(313);
+  });
+
+  it('P4-c — the CARD-22 equipped labels render as the shared EquipReadout chips', () => {
+    renderSheet({
+      card: { ...PRICED, equipped: { frame: 'MARQUEE ULTIMATE', effect: 'SCANLINE', nameplate: 'BRASS', font: 'SLAB' } },
+    });
+    expect(screen.getByText('EQUIPPED ON THIS CARD')).toBeTruthy();
+    // the readout's own chip grammar: KEY · VALUE (the same chips the own-cards rail shows)
+    expect(screen.getByText(/^FRAME · /)).toBeTruthy();
+    expect(screen.getByText('MARQUEE ULTIMATE')).toBeTruthy();
+    expect(screen.getByText('SCANLINE')).toBeTruthy();
+    expect(screen.getByText('BRASS')).toBeTruthy();
+    // the PRICE half stays — the two blocks answer different questions
+    expect(screen.getByText('PREMIUM COMPONENTS — ACQUIRED WITH THE CARD')).toBeTruthy();
+  });
+
+  it('P4-c — a card with no equipped snapshot renders NO readout block (quiet absence)', () => {
+    renderSheet(); // PRICED carries no `equipped`
+    expect(screen.queryByText('EQUIPPED ON THIS CARD')).toBeNull();
+  });
+
+  it('P4-d — SHARE is the publish-ritual treatment (glyph + accent row), firing onShare', () => {
     const onShare = jest.fn();
     renderSheet({ onShare });
-    const share = screen.getByText('↗ SHARE'); // TertiaryLink uppercases
-    fireEvent.press(share);
+    expect(screen.queryByText('↗ SHARE')).toBeNull(); // the emoji-prone Unicode arrow is gone
+    fireEvent.press(screen.getByLabelText('Share this card'));
     expect(onShare).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('SHARE THIS CARD')).toBeTruthy();
+  });
+
+  it('P4-d — a share in flight reads SHARING… and cannot be re-fired', () => {
+    const onShare = jest.fn();
+    renderSheet({ onShare, shareBusy: true });
+    expect(screen.getByText('SHARING…')).toBeTruthy();
+    fireEvent.press(screen.getByLabelText('Share this card'));
+    expect(onShare).not.toHaveBeenCalled();
   });
 
   // P12 — the ⋯ overflow. Back-compat: no onReport → ⋯ opens the block confirm directly.

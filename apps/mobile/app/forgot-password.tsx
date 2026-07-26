@@ -47,15 +47,18 @@ function parseErr(e: unknown): {
   reason?: string;
   message: string;
   fieldMsg?: string;
+  fieldPath?: string;
 } {
   const rejected = e as { status?: number | string; data?: ApiErrorPayload };
   const err = rejected?.data?.error;
+  const detail = err?.details?.[0];
   return {
     status: typeof rejected?.status === 'number' ? rejected.status : undefined,
     code: err?.code,
     reason: err?.reason,
     message: err?.message ?? 'Something went wrong. Please try again.',
-    fieldMsg: err?.details?.[0]?.message,
+    fieldMsg: detail?.message,
+    fieldPath: detail?.path,
   };
 }
 
@@ -165,7 +168,7 @@ export default function ForgotPassword() {
       setResetToken(null); // proof spent — drop it
       setStep('done');
     } catch (e) {
-      const { status, reason, message, fieldMsg } = parseErr(e);
+      const { status, reason, message, fieldMsg, fieldPath } = parseErr(e);
       if (reason === 'invalid_token') {
         setResetToken(null);
         setCode('');
@@ -173,8 +176,16 @@ export default function ForgotPassword() {
         setError('That code expired — request a new one.');
       } else if (status === 429) {
         setError('Too many requests — wait a moment and try again.');
+      } else if (reason === 'password_breached') {
+        // walk-4 P5-h (finding #26) — already breach-specific from the server, distinct from a length
+        // miss; named explicitly here so the two never collapse to one generic string.
+        setFieldError(fieldMsg ?? message);
+      } else if (fieldPath === 'password' && fieldMsg) {
+        // a zod shape miss (too short) — the server's generic copy ("Must be at least 8 characters.")
+        // never names WHICH field it's about; front it with "Password" so the inline error under the
+        // field reads standalone (walk-4 P5-h, finding #26: "Password must be at least 8 characters.").
+        setFieldError(`Password ${fieldMsg.charAt(0).toLowerCase()}${fieldMsg.slice(1)}`);
       } else {
-        // password_breached (reason) or a zod length miss both carry a `password` field detail.
         setFieldError(fieldMsg ?? message);
       }
     }
@@ -261,7 +272,7 @@ export default function ForgotPassword() {
             />
             {error ? <Text style={styles.error}>{error}</Text> : null}
             <ScreenButton label={busy ? '…' : 'Verify code'} onPress={verify} disabled={!canVerify} block />
-            <View style={styles.resendRow}>
+            <View style={styles.resendRow} testID="resend-row">
               <Text style={styles.resendText}>Didn&apos;t get it?</Text>
               {resendLeft > 0 ? (
                 <Text style={styles.resendWait}>RESEND IN {resendLeft}S</Text>
@@ -346,7 +357,11 @@ const useStyles = themedStyles((t) => ({
     color: t.brand.alert,
     textAlign: 'center',
   },
-  resendRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: t.space.xs },
+  // walk-4 P5-g (walk finding #25) — "Didn't get it?" (body, 11) and the Resend link/RESEND IN countdown
+  // (micro, 9) are different font sizes; centering them by BOX height (the old `alignItems: 'center'`)
+  // let the smaller text drift off the larger text's true baseline. `baseline` is the established fix
+  // for a mixed-size text row elsewhere in this app (TextField's labelRow, CardSwitcher's sectionRow).
+  resendRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'baseline', gap: t.space.xs },
   resendText: {
     fontFamily: t.font.screen,
     fontSize: t.type.body, // 11

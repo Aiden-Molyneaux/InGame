@@ -1,5 +1,5 @@
 import React from 'react';
-import { render as rtlRender, screen, fireEvent } from '@testing-library/react-native';
+import { render as rtlRender, screen, fireEvent, waitFor } from '@testing-library/react-native';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import prefsReducer from './store/prefsSlice';
@@ -77,6 +77,11 @@ jest.mock('./store/communityApi', () => ({
   useGetGameGalleryQuery: () => mockGallery,
   useAdoptCardMutation: () => [mockAdopt, { isLoading: false }],
 }));
+// Walk-4 Murr fix — the fork sheet's SHARE is real now (the fourth useShareCard caller): the hook
+// reads the auth token off the store and shares off-store; both stood in here.
+jest.mock('./store/hooks', () => ({ useAppSelector: () => 'tok', useAppDispatch: () => jest.fn() }));
+const mockShareImage = jest.fn(async (..._a: unknown[]) => 'shared' as const);
+jest.mock('./store/shareCard', () => ({ shareCardImage: (...a: unknown[]) => mockShareImage(...a) }));
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush, back: mockBack, replace: jest.fn() }),
 }));
@@ -88,12 +93,17 @@ jest.mock('./components/game/AdoptCardSheet', () => {
   const React2 = require('react');
   const { View, Text, Pressable } = require('react-native');
   return {
-    AdoptCardSheet: ({ card, visible, onAdopt, onAdopted, onClose }: any) =>
+    AdoptCardSheet: ({ card, visible, onAdopt, onAdopted, onClose, onShare }: any) =>
       visible && card
         ? React2.createElement(
             View,
             null,
             React2.createElement(Text, null, `ADOPT SHEET — ${card.name}`),
+            React2.createElement(
+              Pressable,
+              { accessibilityLabel: 'sheet-share', onPress: onShare },
+              React2.createElement(Text, null, 'SHEET SHARE'),
+            ),
             React2.createElement(
               Pressable,
               {
@@ -131,6 +141,7 @@ beforeEach(() => {
   mockAdopt.mockClear();
   mockPush.mockClear();
   mockBack.mockClear();
+  mockShareImage.mockClear();
   mockGallery = { data: { items: [] }, isLoading: false, isError: false };
 });
 
@@ -182,6 +193,16 @@ describe('m6 card FORK: adopt-from-strip · SEE ALL · DESIGN YOUR OWN · keep-t
     expect(screen.getByText('SEE ALL 9 ›')).toBeTruthy();
     expect(screen.getByText('DESIGN YOUR OWN ›')).toBeTruthy();
     expect(screen.getByText('KEEP THE DEFAULT FOR NOW')).toBeTruthy();
+  });
+
+  it('the fork sheet’s SHARE runs the real authenticated share for THAT card (walk-4 Murr — it was a no-op)', async () => {
+    mockGallery = { data: { items: [FREE_CARD], total: 1 }, isLoading: false, isError: false };
+    renderAddGame();
+    await addAndReachFork();
+
+    fireEvent.press(screen.getByLabelText(/Neon Elden by nova/i));
+    fireEvent.press(await screen.findByLabelText('sheet-share'));
+    await waitFor(() => expect(mockShareImage).toHaveBeenCalledWith('c1', 'Neon Elden', 'tok'));
   });
 
   it('SEE ALL routes to the adopt-capable full list; DESIGN YOUR OWN routes to the Styler', async () => {

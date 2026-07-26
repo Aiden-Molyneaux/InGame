@@ -305,10 +305,22 @@ describe('SOC-10 / AUTH-LOOKUP: GET /invites/:token — resolve', () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
       token,
-      sender: { userId: sender.id, username: sender.username, avatarUrl: null },
+      sender: { userId: sender.id, username: sender.username, avatarUrl: null, avatarConfig: null },
       relationship: 'none',
       prefilledRequest: { toUserId: sender.id },
     });
+  });
+
+  // PROF-08 (W-4 Monogram Forge) — avatarConfig rides beside avatarUrl on the resolved sender summary
+  // even for an UNAUTHENTICATED resolve (a stranger opening the link): it's a public-safe cosmetic, no
+  // gate needed. Walk-4 takeover review found this shape had never picked it up.
+  it('PROF-08: a sender with a forged avatarConfig carries it on the resolve, even unauthenticated', async () => {
+    const cfg = { bg: '#2a1f4d', ink: '#e8c14a', glyph: 'HM', frame: 'ring' as const };
+    const sender = await seedUser({ avatarConfig: cfg });
+    const { token } = await mint(sender);
+    const res = await request(app).get(`/api/invites/${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.sender.avatarConfig).toEqual(cfg);
   });
 
   it('an AUTHENTICATED already-friend resolve carries relationship friend (not a duplicate ADD)', async () => {

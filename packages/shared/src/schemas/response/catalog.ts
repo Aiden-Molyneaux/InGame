@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { avatarConfigSchema } from '../avatar-config';
 
 // RESPONSE/VIEW schemas for the catalog (api-contract 0.47) — owned by the F06 serializer side of
 // the split (decision 0051/F23). The client binds RTK Query types to these via z.infer (F31).
@@ -59,6 +60,9 @@ export const friendWhoOwnsSchema = z
     userId: z.string().uuid(),
     username: z.string(),
     avatarUrl: z.string().url().nullable(),
+    // PROF-08 (W-4 Monogram Forge) — rides beside avatarUrl so a friends-who-own row renders the
+    // friend's forged monogram. Public-safe cosmetic; null ⇒ the default monogram.
+    avatarConfig: avatarConfigSchema.nullable(),
     hours: z.number().int().nonnegative().optional(), // PROF-03-gated (present when the friend exposes it)
   })
   .strict();

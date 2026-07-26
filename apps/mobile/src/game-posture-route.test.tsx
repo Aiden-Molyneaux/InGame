@@ -59,6 +59,12 @@ jest.mock('./store/queueApi', () => ({
   useAddQueueItemMutation: () => [jest.fn(() => ({ unwrap: () => Promise.resolve({}) })), { isLoading: false }],
 }));
 jest.mock('./store/reportApi', () => ({ useSubmitReportMutation: () => [jest.fn(), { isLoading: false }] }));
+// walk-4 P4-b — CATALOG reads the game-detail aggregate for the report target's NAME (a cache hit in
+// the app; AboutTab subscribes to the same key). AboutTab itself is stood in below.
+jest.mock('./store/catalogRailsApi', () => ({
+  useGetGameDetailQuery: () => ({ data: { id: 'g1', name: 'Destiny' }, isLoading: false, isError: false, refetch: jest.fn() }),
+  useSubmitGameEditMutation: () => [jest.fn(), { isLoading: false }],
+}));
 jest.mock('./store/hooks', () => ({ useAppSelector: () => 'tok', useAppDispatch: () => jest.fn() }));
 jest.mock('./store/shareCard', () => ({ shareCardImage: jest.fn() }));
 jest.mock('./components/SheetLock', () => ({ useSheetLocked: () => false }));
@@ -299,13 +305,13 @@ describe('W-D1 FRIEND posture — read-only + compose', () => {
     // "NOTES · RATING / PRIVATE" block is retired); the privacy is stated in the note below the hero.
     expect(screen.queryByText('NOTES · RATING')).toBeNull();
     expect(screen.getByText(/stay private/)).toBeTruthy();
-    // read-only: the overflow carries ONLY report — never a mutation of their entry
+    // read-only: the overflow carries NO mutation of their entry
     expect(screen.getByText('REPORT THIS GAME')).toBeTruthy();
     expect(screen.queryByText('REMOVE FROM COLLECTION')).toBeNull();
     expect(screen.queryByText('SET AS NOW PLAYING')).toBeNull();
-    // owner walk (m6) — the relocated wiki-edit entry is OWN-only (the §6 read-only invariant holds on
-    // FRIEND; its ABOUT keeps the inline W-6 key, unchanged)
-    expect(screen.queryByText('EDIT CATALOG DETAILS')).toBeNull();
+    // walk-4 P4-b (owner re-ruling, supersedes W3-A) — FRIEND's overflow GAINS the CAT-13 wiki-edit
+    // entry: it edits the SHARED catalog record, not their entry, so the §6 invariant is untouched.
+    expect(screen.getByText('EDIT CATALOG DETAILS')).toBeTruthy();
   });
 
   it('unowned → ADOPT their card + ADD TO COLLECTION, no compare / no VIEW YOUR COPY', () => {
@@ -378,5 +384,46 @@ describe('W-D1 CATALOG posture — ADD + PLAY locked + Q4 no-adopt', () => {
     fireEvent.press(screen.getByLabelText('tab-cards'));
     fireEvent.press(screen.getByLabelText('gallery-see-all'));
     expect(mockPush).toHaveBeenCalledWith('/game/g1/cards');
+  });
+});
+
+// Walk-4 P4-b (owner re-ruling, supersedes W3-A) — the ⋯ overflow exists on ALL THREE postures, and
+// CATALOG's carries the two actions true of a game you don't own: REPORT (the owner ruled reporting
+// SHOULD be reachable from catalog view — MOD-01 already covers "catalog entries") + the CAT-13 wiki
+// EDIT. The PulledSheet stand-in renders its children inline, so the rows are queryable directly.
+describe('Walk-4 P4-b — the ⋯ overflow on every posture', () => {
+  it('CATALOG grows an overflow carrying REPORT + EDIT CATALOG DETAILS', () => {
+    render(wrap(<GamePage />)); // empty collection, no via
+    expect(screen.getByLabelText('Game options')).toBeTruthy();
+    expect(screen.getByText('REPORT THIS GAME')).toBeTruthy();
+    expect(screen.getByText('EDIT CATALOG DETAILS')).toBeTruthy();
+    // …and nothing that would mutate an entry the caller doesn't have
+    expect(screen.queryByText('REMOVE FROM COLLECTION')).toBeNull();
+    expect(screen.queryByText('SET AS NOW PLAYING')).toBeNull();
+  });
+
+  // Walk-4 Murr fix — ADD flips CATALOG → OWN (this page unmounts), which would silently discard an
+  // in-progress typed edit; the band hides while edit mode is live. RED before the fix.
+  it('CATALOG: entering EDIT CATALOG DETAILS hides the ADD band (ADD would unmount the in-progress edit)', () => {
+    render(wrap(<GamePage />)); // CATALOG
+    expect(screen.getByText('+ ADD TO COLLECTION')).toBeTruthy();
+    fireEvent.press(screen.getByText('EDIT CATALOG DETAILS'));
+    expect(screen.queryByText('+ ADD TO COLLECTION')).toBeNull();
+  });
+
+  it('every posture has the ⋯ key (OWN · FRIEND · CATALOG)', () => {
+    render(wrap(<GamePage />)); // CATALOG
+    expect(screen.getByLabelText('Game options')).toBeTruthy();
+    screen.unmount();
+
+    mockCollection = { data: { items: [MY_ENTRY] } as unknown as CollectionResponse, isLoading: false, isError: false, refetch: jest.fn() };
+    render(wrap(<GamePage />)); // OWN
+    expect(screen.getByLabelText('Game options')).toBeTruthy();
+    screen.unmount();
+
+    mockParams = { id: 'g1', via: 'friend-1' };
+    mockUserCollection = { data: FRIEND_COL, isLoading: false, isError: false, refetch: jest.fn() };
+    render(wrap(<GamePage />)); // FRIEND
+    expect(screen.getByLabelText('Game options')).toBeTruthy();
   });
 });

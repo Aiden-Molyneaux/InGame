@@ -49,10 +49,10 @@ export function AboutTab({
    *  list. CATALOG passes its NOT-IN-YOUR-COLLECTION band here so the section order reads
    *  info → not-in-collection (+ ADD CTA) → friends-who-own. OWN/FRIEND omit it (no band). */
   beforeFriends?: ReactNode;
-  /** Owner walk (m6) — CONTROLLED wiki-edit mode. When `onEditingChange` is supplied the facts-block
-   *  EDIT trigger is RELOCATED to the page's ⋯ overflow ("Edit catalog details") and this drives the
-   *  mode (OWN posture). When omitted the block keeps its own inline EDIT key (the W-6 behaviour —
-   *  CATALOG/FRIEND, which host no such overflow action). */
+  /** Walk-4 P4-b — CONTROLLED wiki-edit mode, the ONLY entry: every posture (OWN · FRIEND · CATALOG)
+   *  hosts the ⋯ overflow's "Edit catalog details" row and drives this flag. The inline W-6 facts-block
+   *  EDIT key is RETIRED everywhere (owner re-ruling, supersedes W3-A). Omitting these props leaves the
+   *  tab read-only — a host with no overflow simply offers no edit entry. */
   editing?: boolean;
   onEditingChange?: (editing: boolean) => void;
 }) {
@@ -99,8 +99,8 @@ export function AboutTab({
 
       {/* CAT-13 (M6 W-6) — the facts block: the EXPLICIT labeled DETAILS list (PUBLISHER / STUDIO /
           RELEASE / GENRES — absent fields omit their row) in read mode, the per-field EDIT rows in edit
-          mode. Owner walk (m6): edit mode is CONTROLLED by the page overflow on OWN (props threaded);
-          the inline EDIT key is retained where those props are absent (CATALOG/FRIEND). */}
+          mode. Walk-4 P4-b: edit mode is CONTROLLED by the page ⋯ overflow in EVERY posture — the
+          inline EDIT key is retired (see the prop doc above). */}
       <FactsEditBlock game={data} editing={editing} onEditingChange={onEditingChange} />
 
       {/* CAT-05 contributor credit → the contributor profile */}
@@ -194,7 +194,7 @@ function FriendsWhoOwnSection({ gameId, onOpenUser }: { gameId: string; onOpenUs
               onPress={() => onOpenUser(r.userId)}
               style={({ pressed }) => [styles.fwoRow, pressed && styles.fwoRowPressed]}
             >
-              <Avatar username={r.username} avatarUrl={r.avatarUrl} size={30} />
+              <Avatar username={r.username} avatarUrl={r.avatarUrl} avatarConfig={r.avatarConfig} size={30} />
               <Text style={styles.fwoName} numberOfLines={1}>{r.username.toUpperCase()}</Text>
               <View style={styles.fwoSpacer} />
               {r.hours !== undefined ? <Text style={styles.fwoHours}>{r.hours.toLocaleString('en-US')} HRS</Text> : null}
@@ -230,11 +230,11 @@ const FACT_LABEL: Record<EditableFactsField, string> = {
 };
 
 /**
- * CAT-13 (M6 W-6) — the facts-block EDIT mode. One cream EDIT key (secondary/mini, 0069 button
- * convention) flips the block into the PlayDossier row grammar (gate-5 B.8 + N-B8): each field is a
- * titled row; tapping ✎ opens THAT field's editor in place without shifting the others; the input is
- * the `bare` TextField (the row titles the field and owns the error line); each save submits JUST
- * that field (one request per row — the server's one-field-per-request contract) and closes the row.
+ * CAT-13 (M6 W-6) — the facts-block EDIT mode. The page ⋯ overflow's "Edit catalog details" row flips
+ * the block into the PlayDossier row grammar (gate-5 B.8 + N-B8; walk-4 P4-b retired the inline key):
+ * each field is a titled row; tapping ✎ opens THAT field's editor in place without shifting the others;
+ * the input is the `bare` TextField (the row titles the field and owns the error line); each save
+ * submits JUST that field (one request per row — the server's one-field-per-request contract).
  * Genres reuse add-game's GenreTag chip toggle against GET /genres. Refusals (`screened` ·
  * `no_change` · `unknown_genre` · 429 · ACCOUNT_TOO_NEW) render on the row's own error line.
  * A1: a young (<14d, non-admin) account sees the quiet disabled gate — honest, no roadmap voice;
@@ -242,7 +242,7 @@ const FACT_LABEL: Record<EditableFactsField, string> = {
  */
 function FactsEditBlock({
   game,
-  editing: editingProp,
+  editing = false,
   onEditingChange,
 }: {
   game: GameDetail;
@@ -251,16 +251,9 @@ function FactsEditBlock({
 }) {
   const styles = useStyles();
   const { data: me } = useGetMeQuery();
-  // Owner walk (m6) — CONTROLLED vs UNCONTROLLED edit mode. Controlled (the page overflow drives it,
-  // OWN posture) when `onEditingChange` is supplied; otherwise the block owns the flag + its inline EDIT
-  // key (the unchanged W-6 CATALOG/FRIEND behaviour). Both hooks always run (F-16 — no conditional hooks).
-  const controlled = onEditingChange !== undefined;
-  const [editingLocal, setEditingLocal] = useState(false);
-  const editing = controlled ? editingProp ?? false : editingLocal;
-  const setEditing = (v: boolean) => {
-    if (controlled) onEditingChange?.(v);
-    else setEditingLocal(v);
-  };
+  // Walk-4 P4-b — the mode is CONTROLLED, always: the host page's ⋯ overflow owns the flag. A host that
+  // threads neither prop simply never opens edit mode (read-only facts) — there is no inline key left.
+  const setEditing = (v: boolean) => onEditingChange?.(v);
   // the genre chips fetch only once the block is flipped open (the closed key needs no roster)
   const { data: genres } = useGetGenresQuery(undefined, { skip: !editing });
   const [submitEdit, submitState] = useSubmitGameEditMutation();
@@ -332,31 +325,16 @@ function FactsEditBlock({
 
   if (!editing) {
     // Read mode — the EXPLICIT labeled DETAILS list (owner walk m6). Shown in EVERY posture (reading the
-    // facts is never gated); the inline EDIT key is appended ONLY when uncontrolled (CATALOG/FRIEND) — on
-    // OWN the trigger is RELOCATED to the page ⋯ overflow, so the key is omitted here.
+    // facts is never gated). Walk-4 P4-b: NO inline EDIT key — the page ⋯ overflow is the one door.
     return (
       <View style={styles.editWrap}>
         <FactReadRows game={game} />
-        {!controlled ? (
-          <View style={styles.editGate}>
-            <ScreenButton
-              label="Edit"
-              variant="secondary"
-              size="mini"
-              disabled={tooNew}
-              accessibilityLabel="Edit game facts"
-              onPress={() => setEditing(true)}
-            />
-            {/* A1 — the quiet young-account line (honest, F-06 micro, no roadmap voice) */}
-            {tooNew ? <Text style={styles.editGateNote}>EDITING UNLOCKS AFTER 14 DAYS</Text> : null}
-          </View>
-        ) : null}
       </View>
     );
   }
 
-  // A1 — a young account that reached edit mode via the CONTROLLED overflow entry (the inline key path
-  // is already disabled for them). Show the honest quiet gate + an exit; the SERVER is the enforcement.
+  // A1 — a young account that reached edit mode via the overflow entry. Show the honest quiet gate +
+  // an exit; the SERVER is the enforcement.
   if (tooNew) {
     return (
       <View style={styles.editWrap}>
@@ -585,8 +563,7 @@ const useStyles = themedStyles((t) => ({
   // CAT-14 — the EDITED BY attribution: dim, body-11 (F-06), the ADDED-BY register (draft §3).
   editedByText: { fontFamily: t.font.screenSemi, fontSize: t.type.body, color: t.scr.dim, letterSpacing: 0.5, textAlign: 'center' },
   editedByName: { fontFamily: t.font.screenBold, color: t.scr.ink },
-  // CAT-13 — the facts-block EDIT affordance + the A1 quiet young-account gate.
-  editGate: { alignItems: 'center', gap: t.space.sm },
+  // CAT-13 — the A1 quiet young-account gate (the inline EDIT key it used to sit beside is retired, P4-b).
   editGateNote: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 1 },
   editWrap: { gap: t.space.md, alignItems: 'center' },
   // Owner walk (m6) — the accuracy disclaimer now rides the InlineBanner primitive (decision 0042).
@@ -620,8 +597,10 @@ const useStyles = themedStyles((t) => ({
   pv: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 0.5 },
   pvGold: { color: t.scr.value },
   pl: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1 },
-  // friends-who-own
-  fwoBlock: { gap: t.space.sm },
+  // friends-who-own — walk-4 P4-a: the owner asked for MORE AIR between the CAT-09 stats row (or the
+  // CATALOG band that follows it) and this section, so the block adds its own top margin ON TOP of the
+  // tab's section gap (12 + 16 = 28). It reads as its own section instead of crowding the stats.
+  fwoBlock: { gap: t.space.sm, marginTop: t.space.xl },
   fwoHead: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 2 },
   fwoEmpty: { fontFamily: t.font.screen, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.3 },
   fwoList: { gap: t.space.sm },

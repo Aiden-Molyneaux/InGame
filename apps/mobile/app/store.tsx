@@ -482,7 +482,8 @@ function BrowseView({
 
       <Text style={styles.secTitle}>THE INDEX — ALL AISLES</Text>
       <AisleIndex onAisle={onAisle} counts={aisleCounts} />
-      <Text style={styles.baseHint}>The free baseline isn&apos;t sold here — it lives in the editors.</Text>
+      {/* walk-4 P5-d — the free-baseline hint dropped from the FRONT page: it repeats once per aisle
+          (AisleView below) so the front page doesn't need to say it too. */}
 
       {/* M6 owner-walk — the two store-bottom entry points (StoreEntries), in the Index row grammar: the
           Pixel Top-Up door (moved here from The Index) + an explicit Wallet door. Navigation only. */}

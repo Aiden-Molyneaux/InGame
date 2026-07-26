@@ -11,10 +11,9 @@ export function placingReadout(name: string, scale: number, rotation: number): s
   return `PLACING — ${name} (${Math.round(scale * 100)}% · ${Math.round(rotation)}°)`;
 }
 
-/** The D5 on-shell-preview sub-line: "N STICKERS · «SHELL» · «THEME»". */
-export function previewSub(shellName: string, themeName: string, stickerCount: number): string {
-  return `${stickersLabel(stickerCount)} · ${shellName} · ${themeName}`;
-}
+// walk-4 P5-b (owner ruling) — the D5 on-shell-preview readout is retired (the live device frame
+// already shows every placed decal, so a separate preview mode was redundant); its formatter,
+// previewSub, went with it — the same fate W-B12 gave editReadoutSub/switchReadout above.
 
 /** The Profile MY DEVICE strip (C1): title + sub. The sticker segment only shows when N > 0. */
 export function deviceStripCopy(

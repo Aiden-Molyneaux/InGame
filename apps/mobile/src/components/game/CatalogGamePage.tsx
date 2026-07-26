@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text, Pressable, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { CommunityGallery } from './CommunityGallery';
 import { AboutTab } from './AboutTab';
 import { GameTabDock, type GameSection } from './GameTabDock';
+import { ReportSheet, type ReportTarget, type ReportActionOutcome } from '../report/ReportSheet';
+import { PulledSheet } from '../PulledSheet';
 import { ScreenButton } from '../ScreenButton';
 import { TertiaryLink } from '../TertiaryLink';
 import { Toast } from '../lifecycle/Toast';
 import { themedStyles } from '../../theme';
 import { useAddToCollectionMutation } from '../../store/api';
 import { useAddQueueItemMutation } from '../../store/queueApi';
+import { useGetGameDetailQuery } from '../../store/catalogRailsApi';
+import { useSubmitReportMutation, type CreateReportRequest } from '../../store/reportApi';
 import { SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../ScreenHead';
 
 // CatalogGamePage (W-D1 · game-page board M6) — the CATALOG posture of the adaptive Game page: a game you
@@ -35,13 +39,24 @@ export function CatalogGamePage({ gameId }: { gameId: string }) {
 
   const [addToCollection, addState] = useAddToCollectionMutation();
   const [addQueueItem, queueState] = useAddQueueItemMutation();
+  const [submitReport, reportState] = useSubmitReportMutation();
+  // Walk-4 P4-b — the ⋯ overflow needs the game's NAME for the report target. The aggregate is already
+  // in cache (AboutTab subscribes to the same key), so this is a free read, not a second round-trip.
+  const { data: detail } = useGetGameDetailQuery(gameId);
   const [section, setSection] = useState<GameSection>('about'); // ABOUT default; PLAY is locked
   const [queued, setQueued] = useState(false);
+  const [overflowOpen, setOverflowOpen] = useState(false);
+  // Walk-4 P4-b — the wiki-edit mode, driven by the overflow (the inline ABOUT key is retired).
+  const [editingCatalog, setEditingCatalog] = useState(false);
+  const [reportTarget, setReportTarget] = useState<ReportTarget | null>(null);
   const [toast, setToast] = useState<{ message: string; tone: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
     setSection('about');
     setQueued(false);
+    setOverflowOpen(false);
+    setEditingCatalog(false);
+    setReportTarget(null);
     setToast(null);
   }, [gameId]);
 
@@ -65,12 +80,35 @@ export function CatalogGamePage({ gameId }: { gameId: string }) {
       });
     }
   }
+  // P12 (MOD-01) — the same mapping the OWN/FRIEND postures use: offline vs a genuine failure → Toast.
+  async function onSubmitReport(req: CreateReportRequest): Promise<ReportActionOutcome> {
+    try {
+      await submitReport(req).unwrap();
+      return 'ok';
+    } catch (e) {
+      const err = e as { status?: unknown };
+      if (err?.status === 'FETCH_ERROR' || err?.status === 'TIMEOUT_ERROR') return 'offline';
+      return 'error';
+    }
+  }
 
   return (
     <View style={styles.flex}>
       <View style={styles.screen}>
         <View style={styles.head}>
           <Text style={styles.title} accessibilityRole="header">GAME</Text>
+          {/* Walk-4 P4-b (owner re-ruling, supersedes W3-A) — the ⋯ overflow now exists on ALL THREE
+              postures. CATALOG's carries the two actions that are true of a game you don't own: the
+              MOD-01 REPORT (the owner ruled report SHOULD be reachable from catalog view) and the
+              CAT-13 wiki EDIT. No entry mutations exist here, so there is nothing else to carry. */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Game options"
+            onPress={() => setOverflowOpen(true)}
+            hitSlop={8}
+          >
+            <Text style={styles.ovf}>⋯</Text>
+          </Pressable>
         </View>
         <View style={styles.retlink}>
           <TertiaryLink label="Return to collection" chevron="leading-back" onPress={() => router.back()} />
@@ -103,7 +141,13 @@ export function CatalogGamePage({ gameId }: { gameId: string }) {
               gameId={gameId}
               onViewContributor={(userId) => router.push(`/contributor/${userId}`)}
               onOpenUser={(userId) => router.push(`/user/${userId}`)}
+              editing={editingCatalog}
+              onEditingChange={setEditingCatalog}
+              // Walk-4 Murr fix — the ADD band hides while catalog-edit mode is live: ADD flips this
+              // page to the OWN posture (CatalogGamePage unmounts), which would silently discard an
+              // in-progress typed edit. One deliberate mode at a time; Done/tab-leave restores the band.
               beforeFriends={
+                editingCatalog ? undefined : (
                 <View style={styles.band}>
                   <Text style={styles.bandHead}>NOT IN YOUR COLLECTION</Text>
                   <Text style={styles.bandSub}>Add it to track your play, design its card, and compare with friends.</Text>
@@ -127,14 +171,54 @@ export function CatalogGamePage({ gameId }: { gameId: string }) {
                     />
                   </View>
                 </View>
+                )
               }
             />
           )}
         </ScrollView>
 
         {/* PLAY locked (board M6/M8) — an inline padlock; not reachable until you own the game */}
-        <GameTabDock value={section} onChange={setSection} lockPlay />
+        <GameTabDock
+          value={section}
+          onChange={(s) => {
+            if (s !== 'about') setEditingCatalog(false); // the edit mode is ABOUT-scoped
+            setSection(s);
+          }}
+          lockPlay
+        />
       </View>
+
+      {/* overlays at the screen root (PulledSheet contract) */}
+      <PulledSheet visible={overflowOpen} onClose={() => setOverflowOpen(false)} title="Game options">
+        <ScreenButton
+          label="Edit catalog details"
+          variant="secondary"
+          onPress={() => {
+            setOverflowOpen(false);
+            setSection('about');
+            setEditingCatalog(true);
+          }}
+          block
+        />
+        <ScreenButton
+          label="Report this game"
+          variant="secondary"
+          onPress={() => {
+            setOverflowOpen(false);
+            setReportTarget({ type: 'game', id: gameId, name: detail?.name ?? 'this game' });
+          }}
+          block
+        />
+      </PulledSheet>
+
+      <ReportSheet
+        visible={reportTarget !== null}
+        target={reportTarget}
+        onClose={() => setReportTarget(null)}
+        onSubmit={onSubmitReport}
+        submitting={reportState.isLoading}
+        onError={(message) => setToast({ tone: 'error', message })}
+      />
 
       {toast ? <Toast message={toast.message} tone={toast.tone} onDismiss={() => setToast(null)} /> : null}
     </View>
@@ -146,6 +230,8 @@ const useStyles = themedStyles((t) => ({
   screen: { flex: 1, backgroundColor: t.scr.bg },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', ...SCREEN_HEADER_PAD },
   title: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.ink, letterSpacing: 1.5 },
+  // P4-b — the ⋯ key, identical to the OWN/FRIEND headers (same glyph, size, optical lift).
+  ovf: { fontFamily: t.font.screenBold, fontSize: t.type.display, color: t.scr.dim, marginTop: -6 },
   retlink: { ...RETURN_SEAM_PAD },
   body: { paddingHorizontal: t.space.lg, paddingBottom: t.space.xl, gap: t.space.lg },
 

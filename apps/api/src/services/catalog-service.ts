@@ -246,6 +246,7 @@ async function friendsWhoOwnList(actorId: string, gameId: string): Promise<Frien
     userId: r.userId,
     username: r.username,
     avatarUrl: r.avatarUrl,
+    avatarConfig: r.avatarConfig, // PROF-08 (W-4) — the named row's forged monogram
     hours: r.hours, // PROF-03: exposed to a friend at M6 (the per-facet hide toggle is a future seam)
   }));
 }

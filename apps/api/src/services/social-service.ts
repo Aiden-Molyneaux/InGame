@@ -350,6 +350,7 @@ export async function listBlocks(actorId: string): Promise<BlocksListResponse> {
       userId: b.userId,
       username: b.username,
       avatarUrl: b.avatarUrl,
+      avatarConfig: b.avatarConfig, // PROF-08 (W-4) — the blocked-list row's forged monogram
       blockedAt: b.blockedAt.toISOString(),
     })),
   };

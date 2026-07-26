@@ -205,8 +205,8 @@ export function withGameTitle(comp: CardComposition, gameTitle: string): CardCom
 }
 
 /** The CARD-18 default face as a composition — the BaseRail's incumbent forefront (kept plain: the
- *  "blank slate" escape hatch that sits LAST in the start fan; also the neutral base a preset recipe
- *  applies onto in the styler route). */
+ *  "blank slate" quiet start that sits FIRST in the start fan, walk-4 P5-c; also the neutral base a
+ *  preset recipe applies onto in the styler route). */
 export function defaultBase(gameTitle: string): CardComposition {
   return {
     schemaVersion: COMPOSITION_SCHEMA_VERSION,
@@ -220,8 +220,8 @@ export function defaultBase(gameTitle: string): CardComposition {
 // The mood-palette fans were vetoed twice: they offered the user a PALETTE, which is ambiguous — the
 // base row already owns colour. The approved concept is STRUCTURE-FIRST: every start-from is a
 // structural skeleton a user would actually reach for as a headstart — the composition of the
-// background layers, a commonly-built text scaffold, or an emblem blank. Three families, fanned in
-// this order (DEFAULT last, the blank-slate escape hatch):
+// background layers, a commonly-built text scaffold, or an emblem blank. Three families, fanned
+// after DEFAULT (walk-4 P5-c — the quiet slate moved FIRST, off the incumbent LAST placement):
 //   BACKDROPS — full-bleed layered structure over the base (a faked "sliced background"):
 //     DIAGONAL SPLIT · INSET PANEL · BANDED THIRDS
 //   TITLE LAYOUTS — text pre-positioned where a user wants it (the decorative text is SEPARATE from
@@ -465,10 +465,13 @@ export interface StartSource {
 
 const DEFAULT_SOURCE: StartSource = { id: 'default', name: 'DEFAULT', kindLabel: 'DEFAULT', compose: defaultBase };
 
-/** The structural fan: backdrops → title layouts → emblem starts → DEFAULT last (CARD-16 — never a
- *  blank canvas; DEFAULT is the intentional plain floor). Structure is genre-neutral, so the fan is
- *  ONE fixed, considered order — the old genre-mood reordering (startSourcesFor) is retired. */
+/** The structural fan: DEFAULT first (walk-4 P5-c owner ruling — the quiet slate is the reachable
+ *  head of the fan, not a buried escape hatch), then backdrops → title layouts → emblem starts
+ *  (CARD-16 — DEFAULT is the intentional plain floor, still always present). Structure is
+ *  genre-neutral, so the fan is ONE fixed, considered order — the old genre-mood reordering
+ *  (startSourcesFor) is retired. */
 export const START_SOURCES: StartSource[] = [
+  DEFAULT_SOURCE,
   ...BACKDROPS.map((b): StartSource => ({
     id: b.id,
     name: b.name,
@@ -492,7 +495,6 @@ export const START_SOURCES: StartSource[] = [
         base,
       ),
   })),
-  DEFAULT_SOURCE,
 ];
 
 // ── DEAL A CARD (the SURPRISE ME rebuild — one composed hand, not thrown polygons) ─────────────

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { relationshipSchema } from '../common';
+import { avatarConfigSchema } from '../avatar-config';
 
 // RESPONSE/VIEW schemas for the SOC-10 invite surfaces (POST /me/invites · GET /invites/:token). The
 // invite token is a BEARER credential (an unguessable server-random secret): it is returned to the
@@ -38,6 +39,10 @@ export const inviteSenderSchema = z
     userId: z.string().uuid(),
     username: z.string(),
     avatarUrl: z.string().url().nullable(),
+    // PROF-08 (W-4 Monogram Forge) — rides beside avatarUrl so the resolved invite renders the sender's
+    // forged monogram (a stranger may be resolving — avatarConfig is a public-safe cosmetic, no gate
+    // needed). Null ⇒ the default monogram.
+    avatarConfig: avatarConfigSchema.nullable(),
   })
   .strict();
 export type InviteSender = z.infer<typeof inviteSenderSchema>;

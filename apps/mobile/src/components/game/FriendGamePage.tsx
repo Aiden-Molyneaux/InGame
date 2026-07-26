@@ -20,14 +20,13 @@ import { Skeleton } from '../lifecycle/Skeleton';
 import { LoadError } from '../lifecycle/LoadError';
 import { Unavailable } from '../lifecycle/Unavailable';
 import { useSheetLocked } from '../SheetLock';
-import { shareCardImage } from '../../store/shareCard';
+import { useShareCard } from './useShareCard';
 import { themedStyles } from '../../theme';
 import { useGetWalletQuery } from '../../store/api';
 import { useGetUserCollectionQuery, useGetUserQuery } from '../../store/friendApi';
 import { useGetGameGalleryQuery, useAdoptCardMutation, useBlockUserMutation } from '../../store/communityApi';
 import { useAddToCollectionMutation } from '../../store/api';
 import { useSubmitReportMutation, type CreateReportRequest } from '../../store/reportApi';
-import { useAppSelector } from '../../store/hooks';
 import { SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../ScreenHead';
 
 // FriendGamePage (W-D1 · game-page board M7) — the FRIEND posture of the adaptive Game page: a friend's
@@ -44,7 +43,8 @@ import { SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../ScreenHead';
 //   ABOUT — the shared game-detail fill (identical to OWN/CATALOG).
 //
 // READ-ONLY invariants (§6): no EDIT/LOG-HOURS/remove/now-playing on a friend's game; the ⋯ overflow
-// carries only REPORT (the game), never a mutation of their entry. Composes client-side (ARCH A3): the
+// carries REPORT (the game) + the walk-4 P4-b CAT-13 "Edit catalog details" (the SHARED wiki record —
+// not their entry), never a mutation of THEIR data. Composes client-side (ARCH A3): the
 // friend's collection item (by gameId) + MY entry (`myEntry`, for compare + iOwn) + the gallery (adopt lookup).
 export function FriendGamePage({
   gameId,
@@ -72,23 +72,27 @@ export function FriendGamePage({
   const [addToCollection, addState] = useAddToCollectionMutation();
   const [blockUser, blockState] = useBlockUserMutation();
   const [submitReport, reportState] = useSubmitReportMutation();
-  const shareToken = useAppSelector((s) => s.auth.accessToken);
-
   const [section, setSection] = useState<GameSection>('play');
   const [added, setAdded] = useState(false);
   const [overflowOpen, setOverflowOpen] = useState(false);
+  // Walk-4 P4-b — the CAT-13 wiki-edit mode, driven by this page's ⋯ overflow (the inline ABOUT key is
+  // retired everywhere). Editing the CATALOG facts is not a mutation of THEIR entry, so the §6
+  // read-only invariant is untouched: the shared game record belongs to no one.
+  const [editingCatalog, setEditingCatalog] = useState(false);
   // ONE inspect sheet drives BOTH adopt paths (ADOPT THEIR CARD on PLAY + a CARDS-gallery cell tap).
   const [inspectCard, setInspectCard] = useState<GalleryCardView | null>(null);
   const [blockCard, setBlockCard] = useState<GalleryCardView | null>(null);
   const [reportTarget, setReportTarget] = useState<ReportTarget | null>(null);
   const [toast, setToast] = useState<{ message: string; tone: 'success' | 'error' } | null>(null);
-  const [shareBusy, setShareBusy] = useState(false);
+  // P8 share (CARD-21) — the shared off-store handler (walk-4 Murr consolidation, useShareCard).
+  const { shareBusy, shareCard } = useShareCard((message) => setToast({ tone: 'error', message }));
 
   // Reset per-game view state when the game (or the friend) changes — expo-router re-renders this route.
   useEffect(() => {
     setSection('play');
     setAdded(false);
     setOverflowOpen(false);
+    setEditingCatalog(false);
     setInspectCard(null);
     setBlockCard(null);
     setReportTarget(null);
@@ -158,18 +162,6 @@ export function FriendGamePage({
       return 'error';
     }
   }
-  async function shareCard(cardId: string, title: string) {
-    setShareBusy(true);
-    try {
-      const res = await shareCardImage(cardId, title, shareToken);
-      if (res === 'unavailable') setToast({ tone: 'error', message: 'Sharing isn’t available for this card yet.' });
-    } catch {
-      setToast({ tone: 'error', message: 'This card can’t be shared yet.' });
-    } finally {
-      setShareBusy(false);
-    }
-  }
-
   // ── lifecycle / edge (mirrors the retired SOC-11 screen) ──────────────────────────────────────────
   if (friendLoading) {
     return (
@@ -271,11 +263,19 @@ export function FriendGamePage({
               gameId={gameId}
               onViewContributor={(userId) => router.push(`/contributor/${userId}`)}
               onOpenUser={(userId) => router.push(`/user/${userId}`)}
+              editing={editingCatalog}
+              onEditingChange={setEditingCatalog}
             />
           )}
         </ScrollView>
 
-        <GameTabDock value={section} onChange={setSection} />
+        <GameTabDock
+          value={section}
+          onChange={(s) => {
+            if (s !== 'about') setEditingCatalog(false); // the edit mode is ABOUT-scoped
+            setSection(s);
+          }}
+        />
       </View>
 
       {/* overlays at the screen root (PulledSheet contract) — the same ECON-03 adopt sheet for both paths */}
@@ -312,6 +312,18 @@ export function FriendGamePage({
       />
 
       <PulledSheet visible={overflowOpen} onClose={() => setOverflowOpen(false)} title="Game options">
+        {/* Walk-4 P4-b — the CAT-13 edit entry joins FRIEND's report-only overflow (owner re-ruling).
+            It edits the SHARED catalog record, never their entry — the read-only invariant holds. */}
+        <ScreenButton
+          label="Edit catalog details"
+          variant="secondary"
+          onPress={() => {
+            setOverflowOpen(false);
+            setSection('about');
+            setEditingCatalog(true);
+          }}
+          block
+        />
         <ScreenButton
           label="Report this game"
           variant="secondary"

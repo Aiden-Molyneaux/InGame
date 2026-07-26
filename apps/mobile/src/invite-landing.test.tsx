@@ -30,10 +30,10 @@ import InviteLanding from '../app/invite/[token]';
 const store = configureStore({ reducer: { prefs: prefsReducer } });
 const wrap = (ui: React.ReactElement) => <Provider store={store}>{ui}</Provider>;
 
-function resolved(relationship: Relationship): ResolveInviteResponse {
+function resolved(relationship: Relationship, avatarConfig: ResolveInviteResponse['sender']['avatarConfig'] = null): ResolveInviteResponse {
   return {
     token: 'tok-123',
-    sender: { userId: 'sender-1', username: 'hollowmatt', avatarUrl: null },
+    sender: { userId: 'sender-1', username: 'hollowmatt', avatarUrl: null, avatarConfig },
     relationship,
     prefilledRequest: { toUserId: 'sender-1' },
   };
@@ -74,5 +74,25 @@ describe('InviteLanding — SOC-10 relationship-aware one-tap ADD', () => {
     mockResolveState = { isLoading: false, isError: true, error: { status: 409 } };
     render(wrap(<InviteLanding />));
     expect(screen.getByText('LINK EXPIRED OR INVALID')).toBeTruthy();
+  });
+
+  // Walk-4 takeover review (the P1-c class, the invite-resolve site) — inviteSenderSchema never carried
+  // avatarConfig, so the sender's forged monogram rendered as the plain default initials on this landing.
+  // The configured Avatar carries the "<username> monogram" a11y label (the landed requests-banner
+  // precedent); a null config keeps the default (unlabelled) box.
+  it('a sender with a forged avatarConfig renders the monogram (not the default)', () => {
+    mockResolveState = {
+      data: resolved('none', { bg: '#2a1f4d', ink: '#e8c14a', glyph: 'HM', frame: 'ring' }),
+      isLoading: false,
+      isError: false,
+    };
+    render(wrap(<InviteLanding />));
+    expect(screen.getByLabelText('hollowmatt monogram')).toBeTruthy();
+  });
+
+  it('a config-less sender keeps the default monogram', () => {
+    mockResolveState = { data: resolved('none'), isLoading: false, isError: false };
+    render(wrap(<InviteLanding />));
+    expect(screen.queryByLabelText('hollowmatt monogram')).toBeNull();
   });
 });

@@ -59,6 +59,8 @@ export function ColorField({
   recents = [],
   cardColors = [],
   swatches = [],
+  open,
+  onOpenChange,
 }: {
   value: string;
   onChange: (hex: string) => void;
@@ -67,6 +69,14 @@ export function ColorField({
   cardColors?: string[];
   /** Quick swatches inside the opened picker (COSM-05 ink unlock: the curated INKS ride here). */
   swatches?: string[];
+  /** P3-b — OPTIONAL single-open coordination for a parent holding several fields (the Monogram
+   *  Forge's bg + ink pair). Omit it and the field stays fully self-governed (every existing
+   *  call-site). Supplied: flipping it to `false` COLLAPSES an expanded picker through the same path
+   *  a manual CLOSE takes (final pick committed, settle timer cleared) — but silently, so the
+   *  parent's own "which one is up" state isn't clobbered by the close it just asked for. */
+  open?: boolean;
+  /** Reports a USER-driven expand/collapse (never the parent-driven collapse above). */
+  onOpenChange?: (open: boolean) => void;
 }) {
   const fieldStyles = useFieldStyles();
   const [mode, setMode] = useState<'closed' | 'picker' | 'card'>('closed');
@@ -95,12 +105,30 @@ export function ColorField({
       onCommit(hex);
     }, 500);
   };
-  const closePicker = () => {
+  // the shared collapse (no report) — the parent-driven path uses this directly so the close it
+  // asked for doesn't echo back as a state change.
+  const collapse = () => {
     clearSettle();
     onCommit?.(value); // record the final picked colour the instant the picker closes
     setMode('closed');
   };
+  const closePicker = () => {
+    collapse();
+    onOpenChange?.(false);
+  };
   useEffect(() => clearSettle, []); // never leave a timer running past unmount
+  // P3-b — a parent that owns single-open coordination collapses this field by flipping `open` false.
+  // Refs keep the effect keyed on `open` ALONE: re-running it on every render (collapse/mode close
+  // over fresh values each pass) would fire a commit per keystroke elsewhere in the form.
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
+  const collapseRef = useRef(collapse);
+  collapseRef.current = collapse;
+  useEffect(() => {
+    if (open === false && modeRef.current === 'picker') collapseRef.current();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the `open` FLIP only; the
+    // collapse + current mode are read through refs (always fresh, never a dep).
+  }, [open]);
   const swatch = (c: string, key: string, onPress: () => void) => {
     const selected = c.toLowerCase() === value.toLowerCase();
     return (
@@ -139,7 +167,10 @@ export function ColorField({
       <View style={fieldStyles.buttons}>
         <Btn label={mode === 'picker' ? 'CLOSE PICKER' : 'PICK COLOUR'} on={mode === 'picker'} onPress={() => {
           if (mode === 'picker') closePicker();
-          else setMode('picker');
+          else {
+            setMode('picker');
+            onOpenChange?.(true); // P3-b — tell the parent which field is up
+          }
         }} />
         {cardColors.length ? (
           <Btn label={mode === 'card' ? 'CLOSE' : 'FROM CARD'} glyph={<EyedropperGlyph />} on={mode === 'card'} onPress={() => setMode((m) => (m === 'card' ? 'closed' : 'card'))} />

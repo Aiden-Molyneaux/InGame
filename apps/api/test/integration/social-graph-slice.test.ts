@@ -155,10 +155,23 @@ describe('SOC-08: the list reads (GET /me/friends · /me/friends/requests · /me
     expect(res.status).toBe(200);
     expect(res.body.blocks).toHaveLength(1);
     expect(res.body.blocks[0]).toMatchObject({ userId: target.id, username: target.username });
+    expect(res.body.blocks[0].avatarConfig).toBeNull(); // PROF-08 — no config set on this target
     expect(typeof res.body.blocks[0].blockedAt).toBe('string');
     // The blocked user does NOT see the block (non-disclosure, other direction).
     const other = await request(app).get('/api/me/blocks').set(authed(target.token));
     expect(other.body.blocks).toHaveLength(0);
+  });
+
+  // PROF-08 (W-4 Monogram Forge) — avatarConfig rides beside avatarUrl on the blocked-list row (public-
+  // safe cosmetic; the block itself stays undisclosed to the OTHER party — this is the blocker's own
+  // read). Walk-4 takeover review found blockedPersonSchema had never picked it up.
+  it('PROF-08: a blocked person with a forged avatarConfig carries it on the blocked-list row', async () => {
+    const me = await seedUser();
+    const cfg = { bg: '#2a1f4d', ink: '#e8c14a', glyph: 'TG', frame: 'ring' as const };
+    const target = await seedUser({ avatarConfig: cfg });
+    await request(app).post('/api/me/blocks').set(authed(me.token)).send({ userId: target.id });
+    const res = await request(app).get('/api/me/blocks').set(authed(me.token));
+    expect(res.body.blocks[0].avatarConfig).toEqual(cfg);
   });
 });
 
