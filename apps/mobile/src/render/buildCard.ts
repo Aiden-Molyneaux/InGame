@@ -589,7 +589,9 @@ function frameNodes(
   }
   if (kind === 'marquee') {
     // the DIM gilded track (the static keyframe); the live MarqueeChase runs a bright light around it.
-    return [band('frame', undefined, '#6b5c28')];
+    // COSM-05 (walk-4 P1-b): the track derives from frame.color so MARQUEE ULTIMATE recolours — the
+    // registry gold maps to the legacy #6b5c28 pixel-identically (marqueeTrackColor).
+    return [band('frame', undefined, marqueeTrackColor(frame.color))];
   }
   // thin-line + the default: the solid band
   return [band('frame')];
@@ -617,13 +619,50 @@ const clamp255 = (n: number): number => Math.max(0, Math.min(255, Math.round(n))
 const toHex = (r: number, g: number, b: number): string =>
   `#${[r, g, b].map((c) => clamp255(c).toString(16).padStart(2, '0')).join('')}`;
 
+// ── COSM-05 (M6 walk-4 fix P1-b) — the parameterized marquee track ─────────────────────────────────
+// The MARQUEE frame's static keyframe is a DIM gilded track (the live MarqueeChase runs a bright light
+// around it). Pre-fix, the track was HARD-CODED `#6b5c28` and ignored `frame.color` entirely — so
+// recolouring a MARQUEE ULTIMATE frame changed the picker but not the render (the owner's bug). Same
+// trick as the brass ramp: the base/ultimate marquee both carry the REGISTRY colour `#e8c14a` (the
+// styler roster default), which maps to the legacy dim track `#6b5c28` EXACTLY (pixel-identity — the
+// legacy dim track is NOT a uniform scale of the registry gold, so the default is matched, not
+// re-derived); any OTHER (recoloured ultimate) colour derives a proportionally-dimmed track.
+
+/** The registry marquee colour (styler roster `marquee`/`marquee-ultimate` default) → its legacy track. */
+export const MARQUEE_REGISTRY_COLOR = '#e8c14a';
+export const MARQUEE_LEGACY_TRACK = '#6b5c28';
+// The per-channel dim ratio measured from the legacy pair (#6b5c28 / #e8c14a ≈ 0.46/0.48/0.54); a
+// recoloured track scales the chosen colour by these so a bright pick reads as the same DIM gilded band.
+const MARQUEE_DIM = [0x6b / 0xe8, 0x5c / 0xc1, 0x28 / 0x4a] as const;
+
+/**
+ * The DIM gilded track colour for a chosen marquee frame colour (pure, total). The registry gold
+ * `#e8c14a` returns the EXACT legacy track `#6b5c28` (pixel-identity by construction); any other colour
+ * is dimmed per-channel by the measured legacy ratio. An unparseable or MISSING colour degrades to the
+ * legacy track (never a crash, never a black band) — `frame.color` rides the passthrough envelope and is
+ * never boundary-validated, and the entitlement backstop deliberately skips colour-customizable designs,
+ * so a hand-crafted document can reach this with no colour at all.
+ */
+export function marqueeTrackColor(frameColor: unknown): string {
+  if (typeof frameColor !== 'string') return MARQUEE_LEGACY_TRACK;
+  const m = /^#?([0-9a-f]{6})$/i.exec(frameColor.trim());
+  if (!m) return MARQUEE_LEGACY_TRACK;
+  const hex = m[1]!.toLowerCase();
+  if (`#${hex}` === MARQUEE_REGISTRY_COLOR) return MARQUEE_LEGACY_TRACK;
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16)) as [number, number, number];
+  return toHex(r * MARQUEE_DIM[0], g * MARQUEE_DIM[1], b * MARQUEE_DIM[2]);
+}
+
 /**
  * The 3 brass gradient stops for a chosen plate colour — lighten / base / darken (pure, total). The
  * registry gold `#c9971f` returns the EXACT legacy stops (pixel-identity by construction — the legacy
  * highlight/shadow pair is not a uniform transform of its base, so the default is matched, not
- * re-derived); an unparseable colour degrades to the legacy gold (never a crash, never a black plate).
+ * re-derived); an unparseable or MISSING colour degrades to the legacy gold (never a crash, never a
+ * black plate) — `nameplate.plate` rides the passthrough envelope like `frame.color`, so a hand-crafted
+ * ultimate document can reach this with no colour at all.
  */
-export function brassPlateRamp(plateColor: string): [string, string, string] {
+export function brassPlateRamp(plateColor: unknown): [string, string, string] {
+  if (typeof plateColor !== 'string') return [...BRASS_RAMP];
   const m = /^#?([0-9a-f]{6})$/i.exec(plateColor.trim());
   if (!m) return [...BRASS_RAMP];
   const hex = m[1]!.toLowerCase();

@@ -19,8 +19,12 @@ let mockAch: { data?: MeAchievementsResponse; isLoading: boolean; isError: boole
 const mockBack = jest.fn();
 const mockPush = jest.fn();
 
+// The /me read — settable so the P1-c-bis identity test can vary avatarConfig/memberSince. Defaults
+// to the plain shape the pre-existing matrix tests assume.
+let mockMe: unknown = { id: 'me', username: 'maverick', avatarUrl: null };
+
 jest.mock('./store/achievementsApi', () => ({ useGetMyAchievementsQuery: () => mockAch }));
-jest.mock('./store/api', () => ({ useGetMeQuery: () => ({ data: { id: 'me', username: 'maverick', avatarUrl: null } }) }));
+jest.mock('./store/api', () => ({ useGetMeQuery: () => ({ data: mockMe }) }));
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush, back: mockBack, replace: jest.fn(), navigate: jest.fn() }),
 }));
@@ -68,6 +72,7 @@ describe('P11 self achievements route — the state matrix', () => {
   beforeEach(() => {
     mockBack.mockReset();
     mockPush.mockReset();
+    mockMe = { id: 'me', username: 'maverick', avatarUrl: null };
   });
 
   it('L1 — loading renders the skeleton frame', () => {
@@ -160,5 +165,22 @@ describe('P11 self achievements route — the state matrix', () => {
     set({ isError: true });
     render(wrap(<Achievements />));
     expect(screen.getByText('RETRY')).toBeTruthy();
+  });
+
+  // ── P1-c-bis (walk-4 fix, Murr find) — the SELF page had the same defect as the friend page: only
+  // username + avatarUrl reached <IdentityBlock>, dropping the Monogram Forge config (a forged avatar
+  // rendered as the default box) and memberSince. Fails pre-fix (the queries return null). ──
+  it('P1-c-bis — the identity header carries the forged monogram + MEMBER SINCE (matching the profile tab)', () => {
+    set({ data: FULL });
+    mockMe = {
+      id: 'me',
+      username: 'maverick',
+      avatarUrl: null,
+      avatarConfig: { bg: '#2a1f4d', ink: '#e8c14a', glyph: 'MV', frame: 'ring' },
+      memberSince: '2025-11-03T00:00:00Z',
+    };
+    render(wrap(<Achievements />));
+    expect(screen.getByLabelText('maverick monogram')).toBeTruthy();
+    expect(screen.getByText(/MEMBER SINCE/)).toBeTruthy();
   });
 });

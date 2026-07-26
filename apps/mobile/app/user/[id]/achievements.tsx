@@ -66,7 +66,13 @@ export default function FriendAchievements() {
   if (isLocked(data)) {
     return (
       <Frame backLabel={backLabel} onBack={() => router.back()}>
-        <IdentityBlock username={username} avatarUrl={user?.avatarUrl} staff={user && 'staff' in user ? user.staff : undefined} />
+        <IdentityBlock
+          username={username}
+          avatarUrl={user?.avatarUrl}
+          avatarConfig={user?.avatarConfig}
+          memberSince={user?.memberSince}
+          staff={user && 'staff' in user ? user.staff : undefined}
+        />
         <Section title="Summary">
           <View style={styles.stats}>
             <StatCell value={data.summary.earned} label="Earned" />
@@ -101,7 +107,13 @@ export default function FriendAchievements() {
   // P3 — friend earned-only.
   return (
     <Frame backLabel={backLabel} onBack={() => router.back()} overlay={sheet}>
-      <IdentityBlock username={username} avatarUrl={user?.avatarUrl} staff={user && 'staff' in user ? user.staff : undefined} />
+      <IdentityBlock
+        username={username}
+        avatarUrl={user?.avatarUrl}
+        avatarConfig={user?.avatarConfig}
+        memberSince={user?.memberSince}
+        staff={user && 'staff' in user ? user.staff : undefined}
+      />
       {earned.length > 0 ? (
         <Section title="Earned" action={<TertiaryLink label="View all" onPress={() => setView('earned')} />}>
           <Grid items={earned.slice(0, 6)} onOpen={open} />

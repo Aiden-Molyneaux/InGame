@@ -99,7 +99,7 @@ export default function Achievements() {
   // ── the trophy case (root) ─────────────────────────────────────────────────────────────────────────
   return (
     <Frame backLabel="Return to profile" onBack={() => router.back()} overlay={<AchievementSheet detail={detail} onClose={() => setDetail(null)} />}>
-      <IdentityBlock username={username} avatarUrl={me?.avatarUrl} />
+      <IdentityBlock username={username} avatarUrl={me?.avatarUrl} avatarConfig={me?.avatarConfig} memberSince={me?.memberSince} />
 
       <Section title="Summary">
         <View style={styles.stats}>

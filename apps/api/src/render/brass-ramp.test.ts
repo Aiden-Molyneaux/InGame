@@ -82,4 +82,12 @@ describe('COSM-05/CARD-15: the brass ramp — parameterized, legacy pixel-identi
     // deterministic
     expect(brassPlateRamp('#8a2be2')).toEqual(brassPlateRamp('#8a2be2'));
   });
+
+  it('a MISSING plate on an ultimate brass document degrades to the legacy gold ramp — never a crash', () => {
+    // `nameplate.plate` rides the passthrough envelope like `frame.color` — a hand-crafted ultimate
+    // document can omit it entirely (the same class as the marquee-track guard).
+    expect(brassPlateRamp(undefined)).toEqual(LEGACY_STOPS);
+    expect(brassPlateRamp(null)).toEqual(LEGACY_STOPS);
+    expect(plateGradientColors(brassComp({ cosmeticId: 'brass-ultimate', plate: undefined }))).toEqual(LEGACY_STOPS);
+  });
 });

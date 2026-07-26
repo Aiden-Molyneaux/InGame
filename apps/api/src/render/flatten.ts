@@ -47,6 +47,41 @@ export interface FlattenResult {
   thumb: Buffer;
 }
 
+// P1-a (walk-4 fix) — the fontId → [expo-google-fonts package, TTF subpath] registry. Mirrors the
+// mobile `useCardSkiaCtx` face registration (apps/mobile/src/render/CardComposition.tsx) one-for-one,
+// WEIGHTS included, so the server flatten draws the SAME face the live editor does. `clean-sans` is
+// first (it doubles as the module-wide fallback face + the share-composite footer font).
+export const FONT_FILES: ReadonlyArray<readonly [fontId: string, pkg: string, ttf: string]> = [
+  ['clean-sans', '@expo-google-fonts/chakra-petch', '700Bold/ChakraPetch_700Bold.ttf'],
+  ['bold-display', '@expo-google-fonts/paytone-one', '400Regular/PaytoneOne_400Regular.ttf'],
+  ['press-start', '@expo-google-fonts/press-start-2p', '400Regular/PressStart2P_400Regular.ttf'],
+  ['bitter', '@expo-google-fonts/bitter', '700Bold/Bitter_700Bold.ttf'],
+  ['space-mono', '@expo-google-fonts/space-mono', '700Bold/SpaceMono_700Bold.ttf'],
+  ['pacifico', '@expo-google-fonts/pacifico', '400Regular/Pacifico_400Regular.ttf'],
+  ['stencil', '@expo-google-fonts/allerta-stencil', '400Regular/AllertaStencil_400Regular.ttf'],
+];
+
+/**
+ * Build the fontId → typeface registry the flatten passes as `ctx.typefaces`. `loadFace(pkg, ttf)`
+ * loads (and may fail per-font → returns undefined). Each font is registered independently — a missing
+ * TTF degrades ONLY that fontId to the buildCard fallback, never the whole flatten. `pacifico-ultimate`
+ * (the W-5 SCRIPT ULTIMATE SKU — its own cosmetic id, same Pacifico face) aliases the pacifico face,
+ * mirroring the mobile registration. Pure w.r.t. the injected loader — the P1-a regression target.
+ */
+export function buildTypefaceRegistry(
+  loadFace: (pkg: string, ttf: string) => unknown,
+): Record<string, any> {
+  const typefaces: Record<string, any> = {};
+  for (const [fontId, pkg, ttf] of FONT_FILES) {
+    const face = loadFace(pkg, ttf);
+    if (face) typefaces[fontId] = face;
+  }
+  // COSM-05 (W-5/0080) — SCRIPT ULTIMATE (`pacifico-ultimate`) is its own SKU id (the composition
+  // `fontId` IS the cosmetic id) but draws the same Pacifico face.
+  if (typefaces['pacifico']) typefaces['pacifico-ultimate'] = typefaces['pacifico'];
+  return typefaces;
+}
+
 /**
  * CARD-11 (owner ruling 2026-07-15): a card's nameplate TITLE TEXT is ALWAYS the game title —
  * system-derived, never user-authored. Only the title's font + ink (and the plate cosmetic) are
@@ -91,10 +126,10 @@ async function getSkiaCtx(): Promise<any> {
     } = hs;
     const { Skia } = getSkiaExports();
 
-    // Best-effort nameplate/text typeface (the same free font the M4 spike used). Absent → the
-    // renderer degrades text/plate gracefully (the F21 posture); it never crashes the flatten.
+    // Best-effort nameplate/text typefaces. Absent → the renderer degrades text/plate gracefully
+    // (the F21 posture); it never crashes the flatten.
     //
-    // The font MUST be resolved through node module resolution — NOT `process.cwd()`. The API's
+    // The fonts MUST be resolved through node module resolution — NOT `process.cwd()`. The API's
     // dev/prod scripts run with cwd = `apps/api` (npm `-w @ingame/api run …` sets the script cwd to
     // the workspace dir), but `@expo-google-fonts/*` is HOISTED to the repo-root `node_modules`, so a
     // cwd-relative read hit `apps/api/node_modules/…` → ENOENT → the catch swallowed it → `typeface`
@@ -102,14 +137,29 @@ async function getSkiaCtx(): Promise<any> {
     // elements): the plate band rendered but the card name never did (owner round-2 bug 1). Resolving
     // the package.json via `require` (the same createRequire the skia libs use) finds the hoisted font
     // regardless of cwd.
-    let typeface: any;
-    try {
-      const pkgJson = require.resolve('@expo-google-fonts/chakra-petch/package.json');
-      const ttf = readFileSync(join(dirname(pkgJson), '700Bold/ChakraPetch_700Bold.ttf'));
-      typeface = Skia.Typeface.MakeFreeTypeFaceFromData(Skia.Data.fromBytes(new Uint8Array(ttf)));
-    } catch {
-      typeface = undefined;
-    }
+    //
+    // P1-a (walk-4 fix): buildCard resolves a per-element / per-nameplate face from `ctx.typefaces[fontId]`
+    // and falls back to `ctx.typeface` only when that map has no entry. The server previously populated
+    // ONLY `typeface` (chakra-petch) and NEVER `typefaces`, so EVERY non-default font — the 4 premium
+    // fonts (bitter · space-mono · pacifico · stencil), the free bold-display/press-start, AND the W-5
+    // SCRIPT ULTIMATE (`pacifico-ultimate`) — silently rendered in chakra-petch on the flatten (the owner
+    // saw the right ink but a fallback font face). `buildTypefaceRegistry` (below) MIRRORS the mobile
+    // `useCardSkiaCtx` fontId→face registration one-for-one; each font loads independently so a single
+    // missing/unreadable TTF degrades ONLY that fontId to the chakra-petch fallback, never the flatten.
+    const loadFace = (pkg: string, ttfSubpath: string): any => {
+      try {
+        const pkgJson = require.resolve(`${pkg}/package.json`);
+        const ttf = readFileSync(join(dirname(pkgJson), ttfSubpath));
+        return Skia.Typeface.MakeFreeTypeFaceFromData(Skia.Data.fromBytes(new Uint8Array(ttf)));
+      } catch {
+        return undefined;
+      }
+    };
+
+    const typefaces = buildTypefaceRegistry(loadFace);
+    // clean-sans stays the module-wide fallback (`typeface`) — the same free font the M4 spike used +
+    // the share-composite footer draws with.
+    const typeface = typefaces['clean-sans'];
 
     return {
       makeOffscreenSurface,
@@ -126,6 +176,7 @@ async function getSkiaCtx(): Promise<any> {
         RadialGradient,
         Skia,
         typeface,
+        typefaces,
       },
     };
   })();

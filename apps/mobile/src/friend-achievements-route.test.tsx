@@ -14,10 +14,13 @@ let mockAch: { data?: UserAchievementsResponse; isLoading: boolean; isError: boo
   isError: false,
   refetch: jest.fn(),
 };
+// The friend-user read (GET /users/:id) — settable so the P1-c identity tests can vary avatarConfig/
+// memberSince. Defaults to the plain riko shape the pre-existing lifecycle tests assume.
+let mockUser: unknown = { id: 'riko-id', username: 'riko', avatarUrl: null };
 const mockBack = jest.fn();
 
 jest.mock('./store/achievementsApi', () => ({ useGetUserAchievementsQuery: () => mockAch }));
-jest.mock('./store/friendApi', () => ({ useGetUserQuery: () => ({ data: { id: 'riko-id', username: 'riko', avatarUrl: null } }) }));
+jest.mock('./store/friendApi', () => ({ useGetUserQuery: () => ({ data: mockUser }) }));
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), back: mockBack, replace: jest.fn(), navigate: jest.fn() }),
   useLocalSearchParams: () => ({ id: 'riko-id' }),
@@ -45,7 +48,10 @@ function set(over: Partial<typeof mockAch>) {
 }
 
 describe('P11 friend achievements route', () => {
-  beforeEach(() => mockBack.mockReset());
+  beforeEach(() => {
+    mockBack.mockReset();
+    mockUser = { id: 'riko-id', username: 'riko', avatarUrl: null };
+  });
 
   it('L1 — loading renders the skeleton frame', () => {
     set({ isLoading: true });
@@ -109,5 +115,43 @@ describe('P11 friend achievements route', () => {
     fireEvent.press(screen.getByText('VIEW ALL ›'));
     expect(screen.getByText(/prestige first/)).toBeTruthy();
     expect(screen.getByText('‹ ACHIEVEMENTS')).toBeTruthy();
+  });
+
+  // ── P1-c (walk-4 fix) — the friend identity header must carry the SAME facets the Contributions
+  // page does. Pre-fix the page passed ONLY avatarUrl + staff to <IdentityBlock>, DROPPING the
+  // Monogram Forge config (a friend's forged avatar rendered as the plain default initials → the
+  // "identity missing" the owner saw) and memberSince (no MEMBER SINCE line). These fail pre-fix. ──
+  const RIKO_FORGED = {
+    id: 'riko-id',
+    username: 'riko',
+    avatarUrl: null,
+    // PROF-08 monogram forge — a distinct glyph + colour pair; the configured Avatar labels itself
+    // "<username> monogram" (vs the default box, which has no such label).
+    avatarConfig: { bg: '#2a1f4d', ink: '#e8c14a', glyph: 'RK', frame: 'ring' },
+    memberSince: '2025-11-03T00:00:00Z',
+  };
+
+  it('P1-c — renders the friend Monogram Forge avatar (avatarConfig threaded, not dropped to default initials)', () => {
+    set({ data: FRIEND });
+    mockUser = RIKO_FORGED;
+    render(wrap(<FriendAchievements />));
+    // the CONFIGURED monogram identifies itself; pre-fix (no avatarConfig prop) the Avatar fell back to
+    // the default box, which carries NO accessibility label — so this query returned null.
+    expect(screen.getByLabelText('riko monogram')).toBeTruthy();
+  });
+
+  it('P1-c — renders MEMBER SINCE from the user shape (memberSince threaded, matching Contributions)', () => {
+    set({ data: FRIEND });
+    mockUser = RIKO_FORGED;
+    render(wrap(<FriendAchievements />));
+    expect(screen.getByText(/MEMBER SINCE/)).toBeTruthy();
+  });
+
+  it('P1-c — the privacy-limited (locked) view also carries the full identity header', () => {
+    set({ data: LOCKED });
+    mockUser = RIKO_FORGED;
+    render(wrap(<FriendAchievements />));
+    expect(screen.getByLabelText('riko monogram')).toBeTruthy();
+    expect(screen.getByText(/MEMBER SINCE/)).toBeTruthy();
   });
 });

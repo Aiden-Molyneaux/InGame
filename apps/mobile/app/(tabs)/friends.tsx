@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { useRouter } from 'expo-router';
-import type { FeedItem } from '@ingame/shared';
+import type { FeedItem, PersonSummary } from '@ingame/shared';
 import { ScreenHead, SCREEN_HEADER_PAD } from '../../src/components/ScreenHead';
 import { TertiaryLink } from '../../src/components/TertiaryLink';
 import { ScreenButton } from '../../src/components/ScreenButton';
@@ -113,7 +113,7 @@ export default function Friends() {
           <ColdStart onFind={goHub} />
         ) : (
           <>
-            {incoming.length > 0 ? <RequestsBanner count={incoming.length} names={incoming.map((r) => r.person.username)} onPress={goHub} /> : null}
+            {incoming.length > 0 ? <RequestsBanner count={incoming.length} people={incoming.map((r) => r.person)} onPress={goHub} /> : null}
 
             {/* the friends rail (roster peek → ALL FRIENDS) */}
             <View style={styles.sec}>
@@ -185,15 +185,18 @@ export default function Friends() {
   );
 }
 
-// The pending-requests banner — the SOC-08 fast-path into the hub.
-function RequestsBanner({ count, names, onPress }: { count: number; names: string[]; onPress: () => void }) {
+// The pending-requests banner — the SOC-08 fast-path into the hub. Consumes the full PersonSummary
+// (walk-4 review, the P1-c class): the stacked mini-avatars ride avatarUrl + avatarConfig so a
+// requester's FORGED monogram renders, not the derived-initials default. Exported for its test.
+export function RequestsBanner({ count, people, onPress }: { count: number; people: PersonSummary[]; onPress: () => void }) {
   const styles = useStyles();
+  const names = people.map((p) => p.username);
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={`${count} friend requests`} onPress={onPress} style={styles.banner}>
       <View style={styles.bannerStack}>
-        {names.slice(0, 2).map((n, i) => (
-          <View key={n + i} style={[styles.stackAv, i > 0 && styles.stackOverlap]}>
-            <Avatar username={n} size={30} />
+        {people.slice(0, 2).map((p, i) => (
+          <View key={p.userId} style={[styles.stackAv, i > 0 && styles.stackOverlap]}>
+            <Avatar username={p.username} avatarUrl={p.avatarUrl} avatarConfig={p.avatarConfig} size={30} />
           </View>
         ))}
       </View>
