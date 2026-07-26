@@ -83,9 +83,6 @@ const BASES: Array<[string, string]> = [
   ['#4a1225', '#1e060d'],
 ];
 const ACCENTS = ['#7ad0e8', '#e8c14a', '#5ad0a0', '#e8895a', '#8a9be8', '#e85a8a'];
-const POLY: Array<'star' | 'diamond' | 'triangle' | 'pentagon' | 'hexagon' | 'octagon'> = [
-  'hexagon', 'star', 'triangle', 'pentagon', 'diamond', 'octagon',
-];
 
 function layout(variant: number, accent: string): Record<string, unknown>[] {
   switch (variant % 6) {

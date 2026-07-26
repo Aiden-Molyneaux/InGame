@@ -95,6 +95,14 @@ receipts, then fix the top offenders. Fold into/alongside the scaling-suite runs
 (`load-harness-notes.md` cliffs are prime suspects — esp. full-shelf refetch-per-mutation churn).
 Also answer the owner's question honestly: how much of this is dev-runtime vs real.
 
+> **→ INVESTIGATION DELIVERED 2026-07-26:** [`perf-investigation.md`](perf-investigation.md) — 7 ranked
+> causes; verdict **mostly dev**: the RTK dev-only immutable/serializable middleware deep-scans the whole
+> store per action, and its measured tax grows 1.7 → 230 ms/action as the cache accrues (0.00 ms in prod
+> posture) — that curve × the refetch-per-mutation action bursts matches "progressive + reload-fixes-it"
+> exactly. Real cliffs underneath (refetch fan-out · unvirtualized shelf canvases · unfocused infinite
+> motion loops · max-age=0 thumbs) are sub-threshold at N=18 but real at N≥200. Decisive test = a
+> release-build 30-min soak. Fix cut → owner. Cleared: timers/listeners, redux-persist, polling.
+
 ### P7 — the ADMIN CONSOLE (design proposal → owner sitting; no blind build)
 Owner (from 6.1): Spotlight curation belongs in an **admin console hosted OUTSIDE the app** — "hosting
 all the functionalities I'll need to configure server settings and monitor other statistics from the
