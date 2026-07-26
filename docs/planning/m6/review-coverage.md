@@ -178,8 +178,18 @@
   at `9c13b69` (serial run post-VM-suspension; the two earlier 26/27 parallel failures were machine CPU
   starvation — see the qa-runbook machine-load entry); the only code delta after the witness is
   mobile-client (friends.tsx + jest), outside the integration surface.
-- **Parvati: pending** — the takeover session attempts the sweep next (claude-in-chrome); if the tools
-  are absent again: PARVATI DARK — owed at the owner's return (precedent stands).
+- **Parvati (takeover session, 2026-07-26): RAN — CLEAN, 0 🚩 · 0 🎨.** claude-in-chrome came back this
+  session (NOT dark). Sweep per the receipt §7 Job 2, hidden-tab lane (CDP clicks no-op'd → the F-17
+  synthetic-pointer recipe drove everything; captures intermittently froze → runbook class, hits++):
+  (1) friend achievements `walkseed_avatar` — the FORGED monogram (pink bg / cyan `W4` / ring) +
+  MEMBER SINCE JUL 2026 render, SCREENSHOT — the owner's P1-c repro fixed on screen; (2) self
+  achievements — `DE` default monogram (demo has no forge config — correct) + MEMBER SINCE + full
+  summary, text-verified (capture froze); (3) the teal marquee ultimate (walkseed Stardew) — the
+  SERVER full.png shows the track dimmed to teal (≈`#086b63`, not the legacy gold-brown) AND the
+  game-page community drawer's LIVE mobile render shows the same teal track, SCREENSHOT (readout:
+  FRAME · MARQUEE ULTIMATE; components list ✓ OWNED); (4) the re-flattened Hollow Knight share
+  image — Pacifico face + `#efb20a` ink verified by eye on the PNG; served 200 `image/png` at the
+  identical byte size. Zero mutations (navigational taps only). Batch-1 gates are now BOTH closed.
 
 ## Operational actions this pass (disk/DB state, not git — recorded here so they're not lost)
 - **Dev-DB durability net** (committed `b9e72a2`): `npm -w @ingame/api run db:backup` + `db:reset`
