@@ -191,6 +191,36 @@
   image — Pacifico face + `#efb20a` ink verified by eye on the PNG; served 200 `image/png` at the
   identical byte size. Zero mutations (navigational taps only). Batch-1 gates are now BOTH closed.
 
+## Walk-4 Batch 2 (2026-07-26, `e4d3b7c`) — MURR CLOSED (re-verify SOUND) · PARVATI OWED
+- **Scope:** four parallel lanes on the shared tree — **P3** forge/profile (opus) · **P4** game page
+  (opus) · **P5** polish 9/10 (sonnet; P5-f = OWNER-CALL, the W-B10 door-row ruling) · the takeover
+  review's **avatarConfig shape completion** (sonnet; api-contract **0.82**). Dispositions per packet:
+  the ledger §P3/§P4/§P5 blocks. MOD-01 checked: NO spec ripple owed (reporting was never
+  posture-qualified; design-spec §4.2 already draws the overflow — the build came INTO conformance).
+- **Murr (fable, fresh-context, full tree diff): NEEDS-FIXES → fix round → RE-MURR SOUND.** The major:
+  add-game's fork sheet still passed a no-op `onShare` under P4-d's dressed SHARE row (a dead key) —
+  closed by extracting the triplicated share handler into `useShareCard` (one hook, four callers) +
+  wiring add-game with a Toast. Minors closed: the forge's NO-CHANGE guard (picker-switch no longer
+  PATCHes an unchosen config — worst case was a default-monogram user silently gaining an explicit
+  blob) · the CATALOG ADD band hides during edit mode (ADD flips posture → CatalogGamePage unmounts →
+  a typed edit silently discarded). Debt paid in the same round: ShareGlyph consolidated (3 private
+  copies → `src/components/ShareGlyph.tsx`). Fix-round provenance: ORCHESTRATOR-implemented per Murr's
+  prescriptions; the RE-MURR pass (fable, fresh-context) verified all four closures + swept for
+  leftovers and returned **SOUND** (9 suites/88 tests witnessed in its own run; probed enumeration in
+  its report). Debt recorded not paid: the report outcome-mapper triplication · AboutTab's ignored
+  `gameDetail.friendsWhoOwn` · the pre-existing choose-username timer leak · CAT-13/14 formalization.
+- **Owner-calls parked (ledger §P3/§P4/§P5 blocks):** P5-f collections-teaser vs the W-B10 door-row ·
+  the drawer maxFraction 0.85 · A1 gate discloses past the door · photo-avatar hidden while the forge
+  is open · P5-i copy breadth (one neutral code fronts all AUTH_FAILED causes) · the no-change guard's
+  "can't freeze the default as an explicit config" semantic · SAVE/CANCEL full-size · LETTERS autosave.
+- **Definitive green at `e4d3b7c` (all witnessed this session):** typecheck PASS · lint 0 err ·
+  **unit 316/316 (36f) · integration 542/542 (27f, parallel, 653s — the 539→542 delta = the shape
+  lane's 3 new tests) · mobile 113 suites/875 counted**. The owner's sign-in prefill stayed
+  uncommitted (partial-stage; the committed file carries zero credential strings — verified).
+- **Parvati: OWED for Batch 2** — the batch landed verified-by-test; the visual pass (forge one-avatar
+  flow · CATALOG overflow · the CARD PREVIEW drawer · the coach strip) rides a follow-up sweep this
+  session if the browser lane stays up, else the owner's return walk.
+
 ## Operational actions this pass (disk/DB state, not git — recorded here so they're not lost)
 - **Dev-DB durability net** (committed `b9e72a2`): `npm -w @ingame/api run db:backup` + `db:reset`
   auto-backs-up first. Backups in `~/ingame-db-backups/` (3 taken 2026-07-19; keeps 20). Permanent fix =

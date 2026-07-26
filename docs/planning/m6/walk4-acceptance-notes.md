@@ -69,6 +69,18 @@ Design-think FIRST (short proposal → owner nod → build). The pieces:
 - **P3-d**: the **Pixel counter must be one size across ALL pages**, matching the Collection screen's.
   (Cross-page CurrencyCounter conformance; mind the walk-3 equal-height-band fix on Collection.)
 
+> **→ P3 BUILT + LANDED with Batch 2 (2026-07-26) — see review-coverage §Walk-4 Batch 2.** All four
+> items: one-avatar live preview (identity avatar IS the preview) · single-open pickers (additive
+> `open`/`onOpenChange` on the shared ColorField, default byte-identical) · deliberate username save
+> (autosave removed for username ONLY; SAVE/CANCEL row w/ pending·error·saved states) · counter size
+> normalized centrally (`minHeight` = the ScreenHead band; the walk-3 equal-height fix preserved).
+> Murr fix-round added the NO-CHANGE guard (switching pickers without picking no longer PATCHes an
+> unchosen config). OWNER-EYE: SAVE/CANCEL are full-size keys (`size="mini"` is a one-word quiet-down) ·
+> the forge LETTERS field still autosaves (the ruling named the username only) · a photo-avatar user's
+> image hides while the forge is open (deliberate — the monogram being edited must show; inert until
+> the §10 designer ships) · the no-change guard makes "freeze the default look as an explicit config"
+> unreachable (consistent with "any change becomes a real config" — bless consciously).
+
 ### P4 — Game page (5.1 / 5.5)
 - **P4-a**: "Friends who own it" needs more vertical space from the stats block above it.
 - **P4-b** (**supersedes the earlier W3-A "bless the split"** — the owner re-ruled): the **⋯ overflow
@@ -81,6 +93,18 @@ Design-think FIRST (short proposal → owner nod → build). The pieces:
   already ride the payload — render the EquipReadout in the drawer) so adopters know what they're buying.
 - **P4-d**: the SHARE button on the card preview "is still garbage" — conform it to the Publish-flow
   share treatment (find the publish share UI and reuse), and **replace emojis with glyph icons**.
+
+> **→ P4 BUILT + LANDED with Batch 2 (2026-07-26) — see review-coverage §Walk-4 Batch 2.** All four
+> items: fwo spacing · the ⋯ overflow on ALL postures (CATALOG gains Report + Edit w/ full MOD-01
+> wiring; FRIEND's gains Edit; inline W-6 EDIT keys retired — FactsEditBlock always-controlled) ·
+> the drawer reworked (hero card 224×313 · CARD PREVIEW header · EquipReadout of the CARD-22 labels) ·
+> SHARE conformed to the PrintRitual treatment (shared ShareGlyph — no emoji arrows) + the dead share
+> handlers on the cards list AND the add-game fork wired real (Murr major → the shared `useShareCard`
+> hook, four callers). **MOD-01 verdict: NO spec ripple owed** (the spec never posture-qualified
+> reporting; design-spec §4.2 already draws the overflow unqualified — the build came INTO conformance).
+> Murr fix-round also hid the ADD band during catalog-edit (ADD flips posture and would silently
+> discard a typed edit). OWNER-EYE: the drawer sheet's maxFraction 0.75→0.85 (drop the card to `grid`
+> size if it reads too tall) · the A1 14-day gate now discloses PAST the overflow door, not before it.
 
 ### P5 — Small polish (one lane, mechanical)
 | id | Item |
@@ -95,6 +119,23 @@ Design-think FIRST (short proposal → owner nod → build). The pieces:
 | P5-h | Walk finding #26: password-validation messages must name the rule — length miss → "Password must be at least 8 characters."; HIBP hit → breach-specific copy. |
 | P5-i | Walk finding #27: sign-in "Authentication failed" → neutral-but-human copy ("That email and password don't match. Check both, or reset your password.") — MUST stay enumeration-neutral (AUTH-11): never distinguish wrong-password from no-account. |
 | P5-j | Auth test hygiene: bump the forgot-password/choose-username jest suite timeouts (the parallel-contention flake class). |
+
+> **→ P5 BUILT + LANDED with Batch 2 (2026-07-26): 9 of 10 — see review-coverage §Walk-4 Batch 2.**
+> a·b·c·d·e·g·h·i·j done (b retired the whole unreachable on-shell-preview feature, not just the
+> button; h ALSO mirrored onto sign-in CREATE-mode via the shape lane; i keys off the error CODE,
+> AUTH-11-neutral by construction). **P5-f = OWNER-CALL, not built:** there IS no COLLECTIONS section
+> on the friend profile — collection access is the FOOT door-row primary, a deliberate W-B10 ruling;
+> inventing a mid-body teaser would be new unspecified UI contradicting it. Decide: new teaser section,
+> or bless the asymmetry (the conservative path taken). ALSO LANDED with Batch 2 — the takeover
+> review's avatarConfig shape completion: invite-resolve sender · blocked-list rows · friends-who-own
+> rows now carry `avatarConfig` end-to-end (api-contract 0.82). OWNER-EYE (from Murr): the P5-i copy
+> "That email and password don't match" also fronts SIWA-only/unverified accounts (one neutral code
+> covers all — imprecise, never leaky). DEBT recorded: the report outcome-mapper is copy-pasted in
+> three game-page hosts (extract `mapReportOutcome` when next touched) · AboutTab still ignores
+> `gameDetail.friendsWhoOwn` for the focused read (W-D1 consolidation candidate) · the choose-username
+> standalone run leaks a pre-existing debounce timer (repo-wide leaked-timer class) · CAT-13/14 have
+> no design-spec/component-map formalization (standing debt). The cards-list fake `onBlock` (closes
+> the sheet, blocks nothing) folds into the P2 build's scope — it owns that file next.
 
 ### P6 — the performance investigation (the Big Note)
 Profile the degradation: reproduce on the dev build (or web longevity session), capture where the time
