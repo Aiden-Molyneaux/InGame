@@ -43,6 +43,13 @@ Design-think FIRST (short proposal → owner nod → build). The pieces:
 - **P2-d**: Create-button prominence: no-match search → gold Create (as today); search WITH valid
   matches → the Create affordance de-emphasizes to a link-type button.
 
+> **→ PROPOSAL DELIVERED 2026-07-26:** [`p2-addgame-proposal.md`](p2-addgame-proposal.md) — one
+> invariant (three questions asked exactly once: WHICH GAME · WHAT STATUS · WHAT FACE; every
+> face-answer ends in the Collection wearing it); adopt chains the COL-06 equip client-side; the fork
+> only renders over a default-faced entry (W3-J unreachable); W3-I fixed via a `resetKey` tail-keep;
+> found 3 extra incoherences (strip-adopt never equips · design-KEEP strands on the game page ·
+> "NONE OF THESE?" at zero matches). No server change; ~260 lines / 7 files. 4 open choices → owner.
+
 ### P3 — Profile / Monogram Forge (3.1)
 - **P3-a**: the avatar renders TWICE with the forge open (identity avatar + forge preview) — rework so
   one avatar is the live preview (e.g. the identity avatar IS the preview; drop the inner head).
