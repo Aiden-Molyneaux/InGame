@@ -45,7 +45,9 @@ jest.mock('./store/communityApi', () => ({
   useGetGameGalleryQuery: () => ({ data: { items: [] }, isLoading: false, isError: false }),
   useAdoptCardMutation: () => [jest.fn(() => ({ unwrap: () => Promise.resolve({}) })), { isLoading: false }],
 }));
-jest.mock('expo-router', () => ({ useRouter: () => ({ push: jest.fn(), back: jest.fn(), replace: jest.fn() }) }));
+jest.mock('expo-router', () => ({
+  useRouter: () => ({ push: jest.fn(), back: jest.fn(), replace: jest.fn(), dismissTo: jest.fn() }),
+}));
 
 import AddGame from '../app/add-game';
 import { ScreenButton } from './components/ScreenButton';
@@ -123,7 +125,10 @@ describe('CAT-02 walk2-B8: the create-this-game prompt is GOLD + pixel-stepped (
   it('a query with no match renders the create prompt as ScreenButton/add (the gold stepped grammar)', () => {
     const { UNSAFE_getAllByType } = renderAddGame();
     fireEvent.changeText(screen.getByPlaceholderText('Search the catalog'), 'Elden');
-    expect(screen.getByText('NONE OF THESE?')).toBeTruthy();
+    // walk-4 P2-d — the "NONE OF THESE?" lead is DROPPED in the no-matches state (there are no
+    // "these"); the gold stepped key itself is unchanged and still the B8 grammar. The lead + a quiet
+    // TertiaryLink are the WITH-MATCHES presentation (add-game-search-status.test.tsx owns that pair).
+    expect(screen.queryByText('NONE OF THESE?')).toBeNull();
     const create = UNSAFE_getAllByType(ScreenButton).find((b) =>
       String(b.props.label).startsWith('Create'),
     );

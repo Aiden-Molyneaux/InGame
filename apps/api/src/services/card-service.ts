@@ -611,8 +611,14 @@ export async function publishCard(actorId: string, cardId: string): Promise<Card
   const storage = getStorage();
   const fullKey = fullImageKey(cardId);
   const thumbKey = `cards/${cardId}/thumb.png`;
-  const imageUrl = await storage.put(fullKey, full, 'image/png');
-  const thumbUrl = await storage.put(thumbKey, thumb, 'image/png');
+  // Walk-4 Murr (batch-3 major) — the /media mount now serves far-future Cache-Control (P6/R7), which
+  // treats a URL's bytes as immutable in every client cache. But unpublish → edit → republish rewrites
+  // these SAME keys in place (copy-on-write folds the draft back onto the origin id), so the stored
+  // URLs must VERSION by composition hash (the regenerate-thumbs `?v=` law): a republished face is a
+  // new URL; the old one may stay cached forever — nothing references it again.
+  const bust = `?v=${current.compositionHash}`; // `v<schema>-<16 hex>` — short, URL-safe, fully discriminating
+  const imageUrl = (await storage.put(fullKey, full, 'image/png')) + bust;
+  const thumbUrl = (await storage.put(thumbKey, thumb, 'image/png')) + bust;
 
   // ── The publish write (tx: re-validate the race-sensitive gates + write) ─────────────────────────
   try {

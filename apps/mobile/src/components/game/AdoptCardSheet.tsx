@@ -58,6 +58,7 @@ export function AdoptCardSheet({
   onReport,
   onViewContributor,
   shareBusy = false,
+  settleNote,
 }: {
   card: GalleryCardView | null;
   visible: boolean;
@@ -72,15 +73,24 @@ export function AdoptCardSheet({
   onAdopted: (result: AdoptResponse, card: GalleryCardView) => void;
   onTopUp: () => void;
   onShare: () => void;
-  /** Open the destructive block confirm for this card's designer (container-owned; the ⋯ overflow). */
-  onBlock: () => void;
+  /** Open the destructive block confirm for this card's designer (container-owned; the ⋯ overflow).
+   *  OPTIONAL (walk-4 P2): a surface that cannot host the block confirm passes NOTHING — with neither
+   *  `onBlock` nor `onReport` the ⋯ affordance is ABSENT. An absent affordance is honest; a ⋯ that
+   *  quietly closes the sheet and blocks nobody is not (the add-game fork shipped exactly that). */
+  onBlock?: () => void;
   /** P12 (MOD-01) — report this published card. When set, the ⋯ overflow becomes a REPORT / BLOCK menu;
-   *  when absent, ⋯ opens the block confirm directly (back-compat). */
+   *  when absent (but `onBlock` is set), ⋯ opens the block confirm directly (back-compat). */
   onReport?: () => void;
   /** P13 (E8a) — tapping the DESIGNED-BY credit routes to that contributor's profile (container closes
    *  the sheet then navigates). Block stays on the ⋯ overflow. */
   onViewContributor: (userId: string) => void;
   shareBusy?: boolean;
+  /** Walk-4 P2 — override the success-settle sub-line. The default reads "it's in your switcher —
+   *  equip it any time", which is the truth on the game page. In the ADD-GAME flow the container
+   *  chains the COL-06 equip right after the adopt, so the settle must say the card is ON the new
+   *  entry (or, if that best-effort equip failed, say so quietly). Container-supplied so the sheet
+   *  keeps no flow knowledge. */
+  settleNote?: string;
 }) {
   const styles = useStyles();
   const t = useTheme();
@@ -171,11 +181,11 @@ export function AdoptCardSheet({
             )}
             <AdoptCount count={card.adoptionCount} />
           </Pressable>
-          {card.byViewer ? null : (
+          {card.byViewer || (!onBlock && !onReport) ? null : (
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={onReport ? `Report or block ${card.designer.username}` : `Block ${card.designer.username}`}
-              onPress={() => (onReport ? setMenuOpen((v) => !v) : onBlock())}
+              onPress={() => (onReport ? setMenuOpen((v) => !v) : onBlock?.())}
               hitSlop={8}
             >
               <Text style={styles.ovf}>⋯</Text>
@@ -198,17 +208,19 @@ export function AdoptCardSheet({
             >
               <Text style={styles.ovfItemText}>⚑ REPORT THIS CARD</Text>
             </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Block ${card.designer.username}`}
-              onPress={() => {
-                setMenuOpen(false);
-                onBlock();
-              }}
-              style={({ pressed }) => [styles.ovfItem, styles.ovfItemDivided, pressed && styles.ovfItemPressed]}
-            >
-              <Text style={[styles.ovfItemText, styles.ovfItemDanger]}>⊘ BLOCK DESIGNER</Text>
-            </Pressable>
+            {onBlock ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Block ${card.designer.username}`}
+                onPress={() => {
+                  setMenuOpen(false);
+                  onBlock();
+                }}
+                style={({ pressed }) => [styles.ovfItem, styles.ovfItemDivided, pressed && styles.ovfItemPressed]}
+              >
+                <Text style={[styles.ovfItemText, styles.ovfItemDanger]}>⊘ BLOCK DESIGNER</Text>
+              </Pressable>
+            ) : null}
           </View>
         ) : null}
 
@@ -220,7 +232,7 @@ export function AdoptCardSheet({
               <Text style={styles.okIc}>✓</Text>
               <View style={styles.okTx}>
                 <Text style={styles.okTitle}>ADOPTED — {card.name.toUpperCase()}</Text>
-                <Text style={styles.okSub}>It’s in your switcher now — equip it any time.</Text>
+                <Text style={styles.okSub}>{settleNote ?? 'It’s in your switcher now — equip it any time.'}</Text>
               </View>
             </View>
             <ScreenButton label="Done" variant="primary" onPress={onClose} block />
@@ -232,7 +244,10 @@ export function AdoptCardSheet({
           </View>
         ) : outcome?.code === 'ALREADY_ADOPTED' ? (
           <View style={styles.ownedBar}>
-            <Text style={styles.ownedText}>✓ YOU ALREADY HAVE THIS CARD — it&apos;s in your switcher.</Text>
+            {/* Walk-4 Murr fix — in the ADD FLOW the container treats an existing grant as the face
+                answer (it chains the same best-effort equip) and re-words this via settleNote; every
+                other surface keeps the standing switcher copy. */}
+            <Text style={styles.ownedText}>{settleNote ?? '✓ YOU ALREADY HAVE THIS CARD — it’s in your switcher.'}</Text>
           </View>
         ) : outcome?.code === 'NOT_PUBLISHED' ? (
           <View style={styles.ownedBar}>

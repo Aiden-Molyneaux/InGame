@@ -45,6 +45,7 @@ export function PrintRitual({
   cardsDesigned,
   adoptionCount,
   onDone,
+  doneLabel,
   onShare,
 }: {
   title: string;
@@ -56,6 +57,9 @@ export function PrintRitual({
   /** D-iii — how many users have adopted THIS design (all-time AdoptCount); 0 for a first publish. */
   adoptionCount: number;
   onDone: () => void;
+  /** Walk-4 P2 — the add flow ends on the SHELF, so its container re-words the exit; default = the
+   *  standing game-page copy. */
+  doneLabel?: string;
   /** CARD-21 share (P9) — absent, the door renders as the deferred "arrives with sharing" line. */
   onShare?: () => void;
 }) {
@@ -281,7 +285,7 @@ export function PrintRitual({
             <Text style={styles.shareDoorLive}>SHARE THIS CARD</Text>
           </Pressable>
         ) : null}
-        <ScreenButton label="Done — back to the game" onPress={onDone} block />
+        <ScreenButton label={doneLabel ?? 'Done — back to the game'} onPress={onDone} block />
       </Animated.View>
     </View>
   );

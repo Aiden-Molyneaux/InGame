@@ -511,7 +511,20 @@ describe('decision 0047 (walk): published thumbs are PLATELESS; the regeneration
     await storage.put(thumbKey, staleBytes, 'image/png');
     expect((await storage.get(thumbKey))!.equals(plateless)).toBe(false); // now stale
 
-    // The pre-regeneration wire URL (unbusted — the pre-fix client cache key).
+    // The pre-regeneration wire URL. P6-R7 (walk-4): publish now HASH-BUSTS every stored URL, so the
+    // genuinely PRE-FIX (unbusted) row this backfill targets is MANUFACTURED — strip the query off the
+    // stored thumb_url to simulate the historical state. (A hash-busted row is post-fix by definition:
+    // the backfill re-renders it harmlessly and its `includes('?')` guard leaves the URL alone.)
+    {
+      const { getDb } = await import('../../src/db/client');
+      const { cardDesigns } = await import('../../src/db/schema');
+      const { eq } = await import('drizzle-orm');
+      const [row] = await getDb().select({ thumbUrl: cardDesigns.thumbUrl }).from(cardDesigns).where(eq(cardDesigns.id, cardId));
+      await getDb()
+        .update(cardDesigns)
+        .set({ thumbUrl: row!.thumbUrl!.split('?')[0]! })
+        .where(eq(cardDesigns.id, cardId));
+    }
     const viewer = await seedUser();
     const before = await request(app).get(`/api/games/${game.id}/cards`).set(authed(viewer.token));
     const urlBefore = before.body.items[0].thumbUrl as string;

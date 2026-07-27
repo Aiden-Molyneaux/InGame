@@ -23,6 +23,7 @@ export function KeepBeat({
   adoptionCount,
   pxSpent = 0,
   onDone,
+  doneLabel,
   onEditArt,
   onShare,
 }: {
@@ -34,6 +35,9 @@ export function KeepBeat({
   /** CARD-13 — PX spent acquiring premium components as part of this KEEP (0 = none rode along). */
   pxSpent?: number;
   onDone: () => void;
+  /** Walk-4 P2 — the add flow ends on the SHELF, so its container re-words the exit; default = the
+   *  standing game-page copy. */
+  doneLabel?: string;
   /** The Canvas door (§3.4) — absent, the door renders as the disabled "arrives later" line. */
   onEditArt?: () => void;
   /** E7a (M5 F-9) — CARD-21 share of the just-kept card; absent → the deferred "arrives" line. */
@@ -113,7 +117,7 @@ export function KeepBeat({
         </Pressable>
       ) : null}
 
-      <ScreenButton label="Done — back to the game" onPress={onDone} block />
+      <ScreenButton label={doneLabel ?? 'Done — back to the game'} onPress={onDone} block />
     </View>
   );
 }

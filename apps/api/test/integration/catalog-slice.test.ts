@@ -160,14 +160,25 @@ describe('CAT-02/05: POST /catalog/games — create a canonical entry', () => {
     expect(res.body.releaseDate).toBe('2020-09-17');
   });
 
-  it('rejects a missing name / empty genreIds → 422 with field details (SYS-02/B1)', async () => {
+  it('rejects a missing name → 422 with field details (SYS-02/B1); NAME is the only required field', async () => {
     const a = await registerUser();
     const rpg = await genreIdByName(a.token, 'RPG');
     const noName = await createGame(a.token, { genreIds: [rpg] });
     expect(noName.status).toBe(422);
     expect(noName.body.error.code).toBe('VALIDATION_ERROR');
-    const noGenres = await createGame(a.token, { name: 'Celeste', genreIds: [] });
-    expect(noGenres.status).toBe(422);
+  });
+
+  // WALK-4 P2-c (product-spec 0.68 / api-contract 0.83) — CAT-02 always read "name (required),
+  // genre(s), studio/developer (optional)…": genres were never marked required. The M3 build resolved
+  // that ambiguity as `genreIds .min(1)` and it blocked the create form; an empty array now CREATES.
+  // CAT-13 wiki editing adds the genres later, and the game page already omits absent detail rows.
+  it('CAT-02: an EMPTY genreIds CREATES the entry → 201 with no genres (genres are optional)', async () => {
+    const a = await registerUser();
+    const res = await createGame(a.token, { name: 'Celeste', genreIds: [] });
+    expect(res.status).toBe(201);
+    expect(res.body.name).toBe('Celeste');
+    expect(res.body.genres).toEqual([]);
+    expect(res.body.contributor).toEqual({ userId: a.id, username: a.username });
   });
 
   it('rejects an UNKNOWN genreId → 422 (CAT-04 controlled list is authoritative)', async () => {

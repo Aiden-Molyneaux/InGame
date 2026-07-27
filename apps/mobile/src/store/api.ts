@@ -29,6 +29,7 @@ import {
   type NowPlayingRequest,
   type OkResponse,
   type CardDesignView,
+  cardDesignSchema,
   type CreateCardRequest,
   type UpdateCardRequest,
   type MyCardsResponse,
@@ -235,6 +236,17 @@ export const api = createApi({
       invalidatesTags: ['Collection', 'Me', 'Catalog', 'MeAchievements'], // counts + own-it flags move too (CAT-09)
       transformResponse: (raw): CollectionItem => collectionItemSchema.parse(raw),
     }),
+    // P6/R2 (perf-investigation §R2 · fix-wave #3) — the three everyday shelf writes PATCH the cached
+    // shelf instead of invalidating it. `'Collection'` is provided by ONE query (`getCollection`,
+    // unpaginated + zod-reparsed), and it is subscribed by screens that never unmount — both tabs plus
+    // every game page retained on the stack — so each invalidation cost a full-shelf GET + a re-parse +
+    // brand-new object identities for every row, which defeats FlipCard's/EntryCard's memos and hands a
+    // new composition prop to every live skia canvas on the shelf. Patching keeps the SAME identities for
+    // untouched rows, so only the row that actually changed re-renders. Every patch either mirrors the
+    // server's own write exactly (see each recipe) or is reconciled from the response, and every
+    // optimistic one has a rollback. The non-'Collection' tags are UNCHANGED — 'Me' (profile stats +
+    // nowPlaying), 'Catalog' (CAT-09 own-it flags) and 'MeAchievements' (W-A8 on-action celebration)
+    // still invalidate exactly as before; only the full-shelf refetch is gone.
     updateEntry: build.mutation<CollectionItem, { entryId: string } & UpdateCollectionEntryRequest>({
       query: ({ entryId, ...body }) => ({
         url: `/me/collection/${entryId}`,
@@ -242,15 +254,104 @@ export const api = createApi({
         body,
       }),
       // MeAchievements (W-A8) — a status update (→ beaten) triggers a12 beaten_path.
-      invalidatesTags: ['Collection', 'Me', 'MeAchievements'],
+      // Walk-4 Murr (batch-3 major) — an EQUIP keeps the full 'Collection' invalidation: the P2 add-flow
+      // chains this equip right after an adopt/publish, whose OWN 'Collection' invalidation dispatches a
+      // slow full-shelf GET in the same beat; without a post-equip refetch, that pre-equip snapshot can
+      // land LAST and wholesale-replace the reconciled cache (patches are never re-applied) — the new
+      // entry would visibly wear the DEFAULT card after the settle said otherwise. Equips are rare
+      // (never the log-hours/autosave hot path), and the invalidation is dispatched after the PATCH
+      // fulfils, which serializes the refetch AFTER the equip by construction. Plain field updates keep
+      // the R2 no-refetch posture.
+      invalidatesTags: (_r, _e, arg) =>
+        arg.activeCardDesignId !== undefined ? ['Me', 'MeAchievements', 'Collection'] : ['Me', 'MeAchievements'],
+      // F31 — the reconcile inserts into a zod-parsed cache, so the response parses at the seam too
+      // (shape drift throws loudly instead of corrupting the cache silently).
+      transformResponse: (raw): CollectionItem => collectionItemSchema.parse(raw),
+      async onQueryStarted({ entryId, ...body }, { dispatch, queryFulfilled }) {
+        // The OPTIMISTIC half covers the plain COL-02/03/05 fields only — each is stored verbatim by
+        // collection-service.updateEntry, so the patch is exactly what the server will do. The COL-06
+        // equip (`activeCardDesignId`) is deliberately NOT optimistic: the `card` rider is server-
+        // resolved (own design → adopted → CARD-18 default stub), so it lands in the reconcile below.
+        const optimistic = dispatch(
+          api.util.updateQueryData('getCollection', undefined, (draft) => {
+            const item = draft.items.find((i) => i.entryId === entryId);
+            if (!item) return;
+            if (body.status !== undefined) item.status = body.status;
+            if (body.hours !== undefined) item.hours = body.hours;
+            if (body.percentComplete !== undefined) item.percentComplete = body.percentComplete;
+            if (body.ownedSince !== undefined) item.ownedSince = body.ownedSince;
+            if (body.rating !== undefined) item.rating = body.rating;
+            if (body.notes !== undefined) item.notes = body.notes;
+          }),
+        );
+        try {
+          // PATCH /me/collection/:entryId returns the FULL updated item (the same assembleItem the
+          // list serializer uses), so the reconcile gives the row byte-identical data to what a
+          // refetch would have produced — including the equipped card rider — for zero extra requests.
+          const { data } = await queryFulfilled;
+          dispatch(
+            api.util.updateQueryData('getCollection', undefined, (draft) => {
+              const idx = draft.items.findIndex((i) => i.entryId === entryId);
+              if (idx !== -1) draft.items[idx] = data;
+            }),
+          );
+        } catch {
+          // Undo, then HEAL with a refetch (walk-4 Murr minor — perf-investigation's own directive:
+          // "keep invalidation as the fallback on error"). Path-based undo misbehaves under OVERLAPPING
+          // in-flight mutations (the failed one's inverse patches clobber the survivor's state); errors
+          // are rare, so the healing refetch costs nothing on the hot path and restores server truth.
+          optimistic.undo(); // a 422 (hours cap / unequippable design) or a dropped connection
+          dispatch(api.util.invalidateTags(['Collection']));
+        }
+      },
     }),
     removeEntry: build.mutation<OkResponse, string>({
       query: (entryId) => ({ url: `/me/collection/${entryId}`, method: 'DELETE' }),
-      invalidatesTags: ['Collection', 'Me', 'Catalog'],
+      invalidatesTags: ['Me', 'Catalog'],
+      // Applied ON SUCCESS, not optimistically — deliberately. Removal is only ever triggered from the
+      // game page, which awaits the mutation and then `router.back()`s; dropping the row early would
+      // pull the entry out from under the OWN posture while the request is still in flight and flash
+      // the CATALOG posture for the round-trip. Same visible ordering as the old invalidation, minus
+      // the refetch. (The shelf's own totals move with it — the server drops one entry, no re-sort.)
+      async onQueryStarted(entryId, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          dispatch(
+            api.util.updateQueryData('getCollection', undefined, (draft) => {
+              const idx = draft.items.findIndex((i) => i.entryId === entryId);
+              if (idx === -1) return;
+              draft.items.splice(idx, 1);
+              draft.total = Math.max(0, draft.total - 1);
+              draft.collectionTotal = Math.max(0, draft.collectionTotal - 1);
+            }),
+          );
+        } catch {
+          /* nothing was applied — the shelf still holds the entry, exactly as before */
+        }
+      },
     }),
     setNowPlaying: build.mutation<OkResponse, NowPlayingRequest>({
       query: (body) => ({ url: '/me/now-playing', method: 'PUT', body }),
-      invalidatesTags: ['Collection', 'Me'],
+      invalidatesTags: ['Me'],
+      // WTP-03 is a SINGLE pin stored on the profile (`profile.now_playing_game_id`), and the shelf's
+      // per-item `nowPlaying` is derived from it (`item.gameId === nowPlayingGameId`) — so mirroring the
+      // server means setting the flag on the pinned game and clearing it everywhere else. `gameId: null`
+      // clears the pin. Optimistic (the ▶ NOW tag is what the tap is FOR) with an undo on failure.
+      async onQueryStarted({ gameId }, { dispatch, queryFulfilled }) {
+        const optimistic = dispatch(
+          api.util.updateQueryData('getCollection', undefined, (draft) => {
+            for (const item of draft.items) item.nowPlaying = item.gameId === gameId;
+          }),
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          // Undo + heal (walk-4 Murr minor): an A→B pin race where A fails AFTER B applied would
+          // otherwise undo(A) into a two-pins state (`hero` picks the wrong row). See updateEntry.
+          optimistic.undo(); // e.g. 422 not_in_collection — the pin is left exactly as it was
+          dispatch(api.util.invalidateTags(['Collection']));
+        }
+      },
     }),
 
     // ── cards + style presets (CARD-14/24, COL-06 — decision 0066 / api 0.53) ─────────────────
@@ -268,11 +369,40 @@ export const api = createApi({
     }),
     // The CARD-24a AUTOSAVE. It DOES invalidate (murr F1 — the stale-cache resume destroyed edits:
     // a cached getMyCards row served the OLD composition on re-entry, and the next autosave
-    // overwrote the new one on the server). The PATCH is debounced ~1.2s, so the refetch cost is a
-    // couple of small GETs per editing PAUSE — personal scale; simple beats clever here.
+    // overwrote the new one on the server). The PATCH is debounced ~1.2s, so that costs a couple of
+    // small card GETs per editing PAUSE — personal scale; simple beats clever here. What is NOT small
+    // is the shelf, so its half of the refresh moved from a refetch to a patch (P6/R2, below).
     updateCard: build.mutation<CardDesignView, { cardId: string } & UpdateCardRequest>({
       query: ({ cardId, ...body }) => ({ url: `/cards/${cardId}`, method: 'PATCH', body }),
-      invalidatesTags: ['Cards', 'Collection'], // Collection — the equipped card's rider (murr F4)
+      // P6/R2 — 'Cards' invalidation UNCHANGED (murr F1: a stale getMyCards row served the OLD
+      // composition on re-entry and the next autosave overwrote the new one). 'Collection' is NARROWED
+      // to the equipped-card case: the shelf only cares about this design when it is the rider on one of
+      // its rows (murr F4), and then only for the fields the rider carries — so patch that ONE row from
+      // the PATCH's authoritative response instead of refetching all N. When the edited design is
+      // equipped nowhere (the common styler case — a draft/unequipped card), the shelf is untouched and
+      // the ~1.2s-debounced autosave stops firing a full-shelf GET per editing PAUSE.
+      invalidatesTags: ['Cards'],
+      // F31 (walk-4 Murr minor) — the rider copy below writes into a zod-parsed cache; parse the PATCH
+      // response at the seam so shape drift throws loudly instead of corrupting the shelf silently.
+      transformResponse: (raw): CardDesignView => cardDesignSchema.parse(raw),
+      async onQueryStarted({ cardId }, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(
+            api.util.updateQueryData('getCollection', undefined, (draft) => {
+              const item = draft.items.find((i) => i.card.id === cardId);
+              if (!item) return; // not equipped anywhere — nothing on the shelf shows this design
+              item.card.name = data.name;
+              item.card.composition = data.composition; // the owner renders the rider LIVE (0066 §2)
+              item.card.imageUrl = data.imageUrl;
+              item.card.thumbUrl = data.thumbUrl;
+              item.card.isPremium = data.isPremium;
+            }),
+          );
+        } catch {
+          /* the autosave owns its own retry (styler); a failed PATCH changed nothing to mirror */
+        }
+      },
     }),
     savePrivateCard: build.mutation<CardDesignView, string>({
       query: (cardId) => ({ url: `/cards/${cardId}/save-private`, method: 'POST' }),

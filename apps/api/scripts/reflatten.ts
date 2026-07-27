@@ -41,6 +41,12 @@ async function main(): Promise<void> {
 
   const storage = getStorage();
   console.log(`reflatten: ${rows.length} card(s) with stored renders`);
+  // Walk-4 Murr / P6-R7 — the /media mount now serves far-future Cache-Control, so rewriting bytes
+  // at the SAME key would pin every client on the stale render for up to a year. A reflatten changes
+  // the BYTES without changing the composition (the renderer changed), so the composition-hash bust
+  // publish uses can't discriminate — stamp the run instead: every regenerated row's stored URLs get
+  // a fresh `?v=r<runStamp>` (the regenerate-thumbs law: bytes rewritten ⇒ URL must move).
+  const runStamp = Date.now().toString(36);
   let ok = 0;
   for (const row of rows) {
     try {
@@ -50,15 +56,16 @@ async function main(): Promise<void> {
       const { full, thumb } = await flattenComposition(
         withGameTitle(forceRegistryColors(row.composition), row.gameTitle),
       );
-      await storage.put(`cards/${row.id}/full.png`, full, 'image/png');
-      await storage.put(`cards/${row.id}/thumb.png`, thumb, 'image/png');
+      const imageUrl = (await storage.put(`cards/${row.id}/full.png`, full, 'image/png')) + `?v=r${runStamp}`;
+      const thumbUrl = (await storage.put(`cards/${row.id}/thumb.png`, thumb, 'image/png')) + `?v=r${runStamp}`;
+      await db.update(cardDesigns).set({ imageUrl, thumbUrl }).where(eq(cardDesigns.id, row.id));
       ok += 1;
       console.log(`  ✓ ${row.name} (${row.id}) — full ${full.length}B / thumb ${thumb.length}B`);
     } catch (e) {
       console.error(`  ✗ ${row.name} (${row.id}) FAILED:`, (e as Error).message);
     }
   }
-  console.log(`reflatten: done — ${ok}/${rows.length} regenerated`);
+  console.log(`reflatten: done — ${ok}/${rows.length} regenerated (urls re-stamped ?v=r${runStamp})`);
 }
 
 main()

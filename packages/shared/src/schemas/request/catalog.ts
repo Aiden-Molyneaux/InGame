@@ -31,7 +31,11 @@ export const isoDateSchema = z
 export const createGameRequestSchema = z
   .object({
     name: boundedText(GAME_NAME_MAX).pipe(z.string().min(1)),
-    genreIds: z.array(z.string().uuid()).min(1).max(GAME_GENRES_MAX), // CAT-04 controlled list
+    // CAT-04 controlled list. NOT required (product-spec 0.68, walk-4 P2-c): CAT-02 always read
+    // "name (required), genre(s), studio/developer (optional)…" — genres were never marked required;
+    // the M3 build resolved that ambiguity as `.min(1)` and it blocked the create form. An empty
+    // array is valid; CAT-13 wiki editing adds genres later.
+    genreIds: z.array(z.string().uuid()).max(GAME_GENRES_MAX),
     studio: boundedText(GAME_FIELD_MAX).pipe(z.string().min(1)).optional(),
     publisher: boundedText(GAME_FIELD_MAX).pipe(z.string().min(1)).optional(),
     releaseDate: isoDateSchema.optional(),

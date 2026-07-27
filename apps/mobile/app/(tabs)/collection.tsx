@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, Pressable, BackHandler, Keyboard, Platform } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, Pressable, BackHandler, Keyboard, Platform, Animated, StyleSheet } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import type { CollectionItem, CollectionStatus, GenreView } from '@ingame/shared';
@@ -20,6 +20,7 @@ import { CurrencyCounter } from '../../src/components/commerce';
 import { TertiaryLink } from '../../src/components/TertiaryLink';
 import { KeyboardLift } from '../../src/components/KeyboardLift';
 import { COLLECTION_STATUSES, STATUS_LABEL } from '../../src/constants/collection';
+import { useReducedMotion } from '../../src/a11y/useReducedMotion';
 import { theme, themedStyles, useTheme } from '../../src/theme';
 import { useAppDispatch, useAppSelector } from '../../src/store/hooks';
 import { setCollectionView, setCol12CoachmarkSeen, type CollectionView } from '../../src/store/prefsSlice';
@@ -140,7 +141,10 @@ const catalogLine = (i: CollectionItem) =>
 export default function Collection() {
   const router = useRouter();
   // COL-13 — a Top-3/VIEW-TOP-10 door can deep-link into the TOP view FOCUSED on a game (decision 0050 §C).
-  const params = useLocalSearchParams<{ focus?: string }>();
+  // walk-4 P2 (OC-3) — `justAdded=<entryId>` is the one-shot the ADD flow lands with: the shelf scrolls
+  // that entry into view and pulses it for ~1.5s. Landing alone doesn't deliver the owner's "the new
+  // entry is VISIBLE" — the default sort is MY ORDER, where a fresh add can sit well below the fold.
+  const params = useLocalSearchParams<{ focus?: string; justAdded?: string }>();
   const dispatch = useAppDispatch();
   const view = useAppSelector((s) => s.prefs.collectionView);
   const col12CoachmarkSeen = useAppSelector((s) => s.prefs.col12CoachmarkSeen);
@@ -176,6 +180,63 @@ export default function Collection() {
   // (PulledSheet contract / F-15: an absolute-fill overlay inside a scroll anchors to the scroll CONTENT
   // — top-pinned, wrong size, clipped results). SelfTopView (in-scroll) only requests open.
   const [topPickerOpen, setTopPickerOpen] = useState(false);
+
+  // ── walk-4 P2 (OC-3) — the JUST-ADDED landing: scroll the new entry into view + pulse it ────────
+  // One-shot by construction: the param is consumed into local state on arrival and immediately
+  // cleared off the URL (`setParams`), so a re-render, a tab round-trip or a relog can't re-fire it.
+  const scrollRef = useRef<ScrollView>(null);
+  const [justAdded, setJustAdded] = useState<string | null>(null);
+  const justAddedIdRef = useRef<string | null>(null); // the mark, readable from layout callbacks
+  const listAnchorYRef = useRef(0); // the list block's y inside the scroll content
+  const didScrollRef = useRef(false); // the scroll fires once per landing
+  // Walk-4 Murr (batch-3 major) — EVERY row reports its y into this map, continuously. The marked row
+  // usually mounted MINUTES ago (the add-time refetch landed on the retained tab), and attaching a
+  // handler to an already-laid-out view fires NO native layout event (they fire on metric CHANGE) —
+  // a landing that waited for one hung forever with the pulse playing off-screen. rn-web's
+  // ResizeObserver fires on observe-start, which masked exactly this on the :8082 lane. With the map,
+  // landing scrolls from the recorded position; a genuinely cold mount still lands via the row's own
+  // first report below.
+  const rowYsRef = useRef(new Map<string, number>());
+  const scrollToJustAdded = useCallback((id: string) => {
+    if (didScrollRef.current) return;
+    const rowY = rowYsRef.current.get(id);
+    if (rowY === undefined) return; // not laid out yet — the row's own report retries
+    didScrollRef.current = true;
+    scrollRef.current?.scrollTo({ y: Math.max(0, listAnchorYRef.current + rowY - 12), animated: true });
+  }, []);
+  // The clear timer lives in a REF, not the effect's cleanup: clearing the param immediately re-runs
+  // this effect, and a cleanup-owned timer would be cancelled by that very re-run — leaving the mark
+  // on forever. Re-armed per arrival, cleared only on unmount.
+  const markTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    const id = params.justAdded;
+    if (!id) return;
+    didScrollRef.current = false;
+    justAddedIdRef.current = id;
+    setJustAdded(id);
+    router.setParams({ justAdded: undefined });
+    if (markTimerRef.current) clearTimeout(markTimerRef.current);
+    markTimerRef.current = setTimeout(() => setJustAdded(null), JUST_ADDED_MS);
+    // The retained-tab mainline: the row's y is already in the map — scroll now (a frame later, so a
+    // same-commit cold mount gets its first layout report in before the lookup).
+    requestAnimationFrame(() => scrollToJustAdded(id));
+  }, [params.justAdded, router, scrollToJustAdded]);
+  useEffect(
+    () => () => {
+      if (markTimerRef.current) clearTimeout(markTimerRef.current);
+    },
+    [],
+  );
+  // Every row's report: record the y (relative to its stack; the stacks sit at y=0 inside the list
+  // block, whose own y comes from the anchor's onLayout — anchorY + rowY = the content offset), and
+  // if THIS row is the fresh add that hasn't been scrolled to yet, land on it (the cold-mount path).
+  const onRowLayout = useCallback(
+    (entryId: string, rowY: number) => {
+      rowYsRef.current.set(entryId, rowY);
+      if (entryId === justAddedIdRef.current) scrollToJustAdded(entryId);
+    },
+    [scrollToJustAdded],
+  );
 
   const items = useMemo(() => data?.items ?? [], [data]);
   const hero = items.find((i) => i.nowPlaying) ?? null;
@@ -349,7 +410,7 @@ export default function Collection() {
           this it was an in-flow strip between the hero and the list, so retiring it (or a relog re-arming
           it) shifted the whole list — the owner's "presents just to disappear, shifting the page" jar. */}
       <View style={styles.stage}>
-      <ScrollView testID="collection-scroll" style={styles.scroll} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} scrollEnabled={!bgLocked && dragScrollEnabled}>
+      <ScrollView ref={scrollRef} testID="collection-scroll" style={styles.scroll} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} scrollEnabled={!bgLocked && dragScrollEnabled}>
         <ScrollLockContext.Provider value={scrollLockApi}>
         {/* In-place search: the query live-filters the CURRENT view + a RESULTS header (board :661). */}
         {searchOpen && q.trim() !== '' && data.collectionTotal > 0 ? (
@@ -360,28 +421,48 @@ export default function Collection() {
         {data.collectionTotal > 0 && view !== 'top' && q.trim() === '' && filtered.length > 0 ? (
           <NowPlayingHero hero={hero} onLogHours={onLogHours} />
         ) : null}
+        {/* walk-4 P2 — the list block's own anchor. It replaces exactly ONE contentContainer child with
+            ONE child, so the container's `gap` is untouched; its onLayout y is the offset the
+            just-added scroll-to adds the row's in-stack y to. */}
+        <View onLayout={(e) => (listAnchorYRef.current = e.nativeEvent.layout.y)}>
         {data.collectionTotal === 0 ? (
           <EmptyShelf onAdd={() => router.push('/add-game')} />
         ) : filtered.length === 0 ? (
           // OQ-130 — filters/search matched nothing but the shelf isn't empty.
           <NoResults onClear={clearAll} />
         ) : view === 'list' ? (
-          <ListView items={filtered} />
+          <ListView items={filtered} justAdded={justAdded} onRowLayout={onRowLayout} />
         ) : view === 'top' ? (
           // COL-13 — the curated Top-10 over the FULL shelf (curation is independent of sort/filter).
+          // No just-added treatment here: TOP is a curated 10, and a fresh add is not in it.
           <SelfTopView
             collectionItems={items}
             arranging={topArranging}
-           
+
             onOpenPicker={() => setTopPickerOpen(true)}
             focusGameId={params.focus}
             onOpenGame={openGame}
           />
         ) : view === 'grid' ? (
-          <GridView items={filtered} flippedIds={flippedIds} onToggle={toggleFlip} onNavigate={openGame} />
+          <GridView
+            items={filtered}
+            flippedIds={flippedIds}
+            onToggle={toggleFlip}
+            onNavigate={openGame}
+            justAdded={justAdded}
+            onRowLayout={onRowLayout}
+          />
         ) : (
-          <ShelfView items={filtered} flippedIds={flippedIds} onToggle={toggleFlip} onNavigate={openGame} />
+          <ShelfView
+            items={filtered}
+            flippedIds={flippedIds}
+            onToggle={toggleFlip}
+            onNavigate={openGame}
+            justAdded={justAdded}
+            onRowLayout={onRowLayout}
+          />
         )}
+        </View>
         </ScrollLockContext.Provider>
       </ScrollView>
       </View>
@@ -561,19 +642,74 @@ type FlipProps = {
   onNavigate: (gameId: string) => void;
 };
 
+// ── walk-4 P2 (OC-3) — the JUST-ADDED landing treatment ────────────────────────────────────────────
+// How long the new entry stays marked after the add flow lands (the OC-3 "~1.5s highlight pulse").
+const JUST_ADDED_MS = 1500;
+
+/** Shared by shelf/grid/list: which row is the fresh add + the continuous per-row y reports (every
+ *  row, every layout — the scroll-to reads the recorded position; see the parent's rowYsRef). */
+type JustAddedProps = {
+  justAdded: string | null;
+  onRowLayout: (entryId: string, rowY: number) => void;
+};
+
+// The pulse itself — an ABSOLUTE-FILL accent outline over the row. Absolute so it adds no height and
+// shifts nothing (the same layout-stability rule the coachmark strip and the search status slot obey):
+// a row that grows a border when it's marked would jog the whole shelf. Three quick beats over the
+// ~1.5s window, then it unmounts with the state — self-terminating, never an idle loop (P6 lane).
+// Reduce-motion (§104) holds a steady outline for the same window instead of pulsing.
+function JustAddedPulse({ entryId }: { entryId: string }) {
+  const t = useTheme();
+  const reduceMotion = useReducedMotion();
+  const opacity = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    if (reduceMotion) return;
+    const beat = () =>
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 0.25, duration: 250, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1, duration: 250, useNativeDriver: true }),
+      ]);
+    const anim = Animated.sequence([beat(), beat(), beat()]);
+    anim.start();
+    return () => anim.stop();
+  }, [opacity, reduceMotion]);
+  return (
+    <Animated.View
+      testID={`just-added-${entryId}`}
+      pointerEvents="none"
+      style={[
+        StyleSheet.absoluteFill,
+        { borderWidth: 2, borderColor: t.scr.accent },
+        reduceMotion ? null : { opacity },
+      ]}
+    />
+  );
+}
+
 // SHELF (decision 0061 — the showcase / "flip through your binder"): a stack where EVERY entry gets
 // the hero treatment (full face + stat-line · title · catalog line). LOG HOURS stays hero-exclusive
 // (the NowPlayingHero above, rendered by the parent). Now-playing chrome is hero-only (W-B6) — the
 // stack rows carry no NOW tag.
 // COL-12: the card is now a FlipCard (tap → flip · long-press / VIEW GAME → the Game page); the meta
 // beside it stays display-only labels (the quick scan lives beside the full peek, board :1377).
-function ShelfView({ items, flippedIds, onToggle, onNavigate }: { items: CollectionItem[] } & FlipProps) {
+function ShelfView({
+  items,
+  flippedIds,
+  onToggle,
+  onNavigate,
+  justAdded,
+  onRowLayout,
+}: { items: CollectionItem[] } & FlipProps & JustAddedProps) {
   const styles = useStyles();
   return (
     <View style={styles.shelf}>
       <View style={styles.shelfStack}>
         {items.map((i) => (
-          <View key={i.entryId} style={styles.stackRow}>
+          <View
+            key={i.entryId}
+            style={styles.stackRow}
+            onLayout={(e) => onRowLayout(i.entryId, e.nativeEvent.layout.y)}
+          >
             {/* cardSlot — GRID PARITY (the round-9 fix): the identical FlipCard renders the turn
                 perfectly in the grid, whose cell is a card-tight box, and broke ONLY here in the wide
                 shelf row where the mis-drawn mid-turn svg (owner's recording) could sweep across the
@@ -611,6 +747,7 @@ function ShelfView({ items, flippedIds, onToggle, onNavigate }: { items: Collect
               </View>
               <Text style={styles.chev}>›</Text>
             </Pressable>
+            {i.entryId === justAdded ? <JustAddedPulse entryId={i.entryId} /> : null}
           </View>
         ))}
       </View>
@@ -621,13 +758,24 @@ function ShelfView({ items, flippedIds, onToggle, onNavigate }: { items: Collect
 // GRID (decision 0061 — compact browsing): a two-per-row grid of bare card FACES (never cropped,
 // F-01), ▶ NOW in-flow on the pinned face; no per-row meta. The hero renders above (parent).
 // COL-12: each face is a FlipCard (tap → flip · long-press / VIEW GAME → the Game page).
-function GridView({ items, flippedIds, onToggle, onNavigate }: { items: CollectionItem[] } & FlipProps) {
+function GridView({
+  items,
+  flippedIds,
+  onToggle,
+  onNavigate,
+  justAdded,
+  onRowLayout,
+}: { items: CollectionItem[] } & FlipProps & JustAddedProps) {
   const styles = useStyles();
   return (
     <View style={styles.shelf}>
       <View style={styles.gridWrap}>
         {items.map((i) => (
-          <View key={i.entryId} style={styles.gridCol}>
+          <View
+            key={i.entryId}
+            style={styles.gridCol}
+            onLayout={(e) => onRowLayout(i.entryId, e.nativeEvent.layout.y)}
+          >
             {/* raw handlers — same memo rule as the shelf rows. */}
             <FlipCard
               item={i}
@@ -636,6 +784,7 @@ function GridView({ items, flippedIds, onToggle, onNavigate }: { items: Collecti
               onNavigate={onNavigate}
               style={styles.fluidCard}
             />
+            {i.entryId === justAdded ? <JustAddedPulse entryId={i.entryId} /> : null}
           </View>
         ))}
       </View>
@@ -645,7 +794,11 @@ function GridView({ items, flippedIds, onToggle, onNavigate }: { items: Collecti
 
 // LIST (management scan): dense strip rows — thumb + title + HRS · STATUS + chevron
 // → the Game page (the tap-target is M4). The always-visible per-row stats mode; hero above (parent).
-function ListView({ items }: { items: CollectionItem[] }) {
+function ListView({
+  items,
+  justAdded,
+  onRowLayout,
+}: { items: CollectionItem[] } & JustAddedProps) {
   const router = useRouter(); // CARD-23 NAVIGATE — the list row is the Game-page tap-target (M4 §3.1)
   const styles = useStyles();
   return (
@@ -658,6 +811,7 @@ function ListView({ items }: { items: CollectionItem[] }) {
             accessibilityRole="button"
             accessibilityLabel={`Open ${i.title}`}
             onPress={() => router.push(`/game/${i.gameId}`)}
+            onLayout={(e) => onRowLayout(i.entryId, e.nativeEvent.layout.y)}
           >
             <EntryCard title={i.title} card={i.card} size="thumb" />
             <View style={styles.stripMeta}>
@@ -672,6 +826,7 @@ function ListView({ items }: { items: CollectionItem[] }) {
               <Text style={styles.rowSub}>{statLine(i)}</Text>
             </View>
             <Text style={styles.chev}>›</Text>
+            {i.entryId === justAdded ? <JustAddedPulse entryId={i.entryId} /> : null}
           </Pressable>
         ))}
       </View>

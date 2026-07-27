@@ -9,7 +9,7 @@ import { SpaceMono_700Bold } from '@expo-google-fonts/space-mono';
 import { Pacifico_400Regular } from '@expo-google-fonts/pacifico';
 import { AllertaStencil_400Regular } from '@expo-google-fonts/allerta-stencil';
 import { buildCardElements, buildBedElements, buildOverlayElements, buildCellStrip, buildBaseStrip, buildCompositionStrip, type SkiaCtx, type StripCell } from './buildCard';
-import { AnimatedCardLayer, hasMotion } from './animated';
+import { AnimatedCardLayer, hasMotion, useSurfaceFocused } from './animated';
 import type { CardComposition as Comp } from './composition';
 
 // CardComposition (CARD-15) — the react-native-skia consumer of the shared render module. The live
@@ -63,11 +63,16 @@ export function CardComposition({
   animate?: boolean;
 }) {
   const ctx = useCardSkiaCtx();
+  // P6/R4 (walk-4 Murr fix) — the focus gate lives HERE, in the host tree, because Canvas children run
+  // under skia's own reconciler root where NavigationContext is unreachable (a gate inside the layer
+  // would silently never fire). A blurred screen simply doesn't mount the motion layer; skia re-renders
+  // its children on host re-render, and the layer's loop cleanup cancels on unmount.
+  const focused = useSurfaceFocused();
   // The static tree + (where the surface opts in) the additive motion overlay. `animate` is an
   // EXPLICIT per-surface opt-in (owner iteration 2026-07-09 — the old ≥180px width heuristic left
   // every out-of-Styler surface static): hero/detail surfaces pass it, grids and tiles never do,
   // so the clock budget stays one-or-two animated cards per screen by construction.
-  const motion = animate && effect && hasMotion(composition);
+  const motion = animate && effect && focused && hasMotion(composition);
   return (
     <Canvas style={{ width, height }}>
       {buildCardElements(composition, width, height, ctx, effect)}
@@ -187,6 +192,9 @@ export function ProofPrint({
   onFlattenError?: (e: unknown) => void;
 }) {
   const ctx = useCardSkiaCtx();
+  // P6/R4 (walk-4 Murr fix) — host-side focus gate; see CardComposition. The PROOF's motion overlay
+  // must not tick while its screen is blurred/stack-retained.
+  const focused = useSurfaceFocused();
   const [uri, setUri] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const typefaceReady = !!ctx.typeface;
@@ -219,8 +227,9 @@ export function ProofPrint({
       )}
       <Canvas pointerEvents="none" style={StyleSheet.absoluteFill}>
         {buildOverlayElements(composition, width, height, ctx)}
-        {hasMotion(composition) ? (
-          // the PROOF is the one bed-size print on screen — it always animates when the kinds do
+        {focused && hasMotion(composition) ? (
+          // the PROOF is the one bed-size print on screen — it animates when the kinds do AND the
+          // screen is focused (P6/R4 — the host-side gate; see CardComposition)
           <AnimatedCardLayer composition={composition} width={width} height={height} />
         ) : null}
       </Canvas>

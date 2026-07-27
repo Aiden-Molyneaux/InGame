@@ -28,11 +28,21 @@ export function appendUnique<T>(prev: T[], page: T[], keyOf: (item: T) => string
  * fresh `page1` (initial load / a Contributions invalidation) RESETS the accumulated tail + re-seats the
  * cursor; `loadMore` folds the next page in (deduped). `fetchMore(cursor)` is the route's lazy trigger,
  * already bound to the userId. The rendered list = page-1 head + the deduped tail.
+ *
+ * W3-I (walk-4 P2, OC-1) — the optional `resetKey` names WHAT this list is (e.g. `gameId:sort`). With
+ * it, a page-1 identity change under the SAME key is treated as a REFRESH of the head, not a new list:
+ * the accumulated tail + the cursor SURVIVE. That is the adopt case — `adoptCard` invalidates the
+ * `CommunityCards` tag, page 1 refetches, and before this the whole deep-scrolled tail collapsed back
+ * to page 1 (the owner's "the list snaps to the top after adopting"). `appendUnique` already dedupes the
+ * overlap between the refreshed head and the kept tail; residual offset drift on the kept tail is the
+ * already-blessed W3-H class. Only a REAL key change (sort flip / different game) — or the FIRST real
+ * page1 — resets. Callers that pass no `resetKey` keep the original reset-on-every-page1 behavior.
  */
 export function useContributorPaging<T>(
   page1: Page<T> | undefined,
   fetchMore: (cursor: string) => { unwrap: () => Promise<Page<T>> },
   keyOf: (item: T) => string,
+  resetKey?: string,
 ): { items: T[]; hasMore: boolean; moreError: boolean; loadMore: () => Promise<void> } {
   const [tail, setTail] = useState<T[]>([]);
   const [moreError, setMoreError] = useState(false);
@@ -52,12 +62,21 @@ export function useContributorPaging<T>(
   // as the state above (the documented "adjusting state when a prop changes" pattern); the ref is the
   // synchronous source of truth loadMore's async resolution reads back.
   const generationRef = useRef(0);
+  const [seededKey, setSeededKey] = useState(resetKey);
   if (page1 !== seededPage) {
+    // W3-I: a same-key page-1 REFRESH keeps the tail + cursor (no reset, no generation bump — an
+    // in-flight loadMore is still valid for this same list). The first real page1 always seats
+    // (seededPage undefined), and a key change is a genuinely different list.
+    const sameList =
+      resetKey !== undefined && page1 !== undefined && seededPage !== undefined && resetKey === seededKey;
     setSeededPage(page1);
-    setTail([]);
-    setMoreError(false);
-    setCursor(page1?.nextCursor ?? null);
-    generationRef.current += 1;
+    setSeededKey(resetKey);
+    if (!sameList) {
+      setTail([]);
+      setMoreError(false);
+      setCursor(page1?.nextCursor ?? null);
+      generationRef.current += 1;
+    }
   }
 
   const items = useMemo(() => appendUnique(page1?.items ?? [], tail, keyOf), [page1, tail, keyOf]);

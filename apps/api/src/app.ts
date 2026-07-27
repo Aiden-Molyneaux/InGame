@@ -25,6 +25,37 @@ import { wireAchievementsEngine } from './achievements/engine';
 import { mediaRoot, MEDIA_URL_PREFIX, PUBLIC_MEDIA_PREFIXES } from './storage';
 import { join } from 'node:path';
 
+/**
+ * P6/R7 (perf-investigation §R7 · fix-wave #5, server half) — the far-future cache posture for the
+ * public flattened renders. `express.static`'s default is `Cache-Control: public, max-age=0`, i.e. every
+ * remount of every thumb pays a conditional GET before the (unchanged) bytes are reused — pure waste for
+ * content that is immutable by design, and it multiplies with gallery/feed scale.
+ *
+ * WHY THIS IS SAFE HERE: a card's render lives at a per-card key (`cards/<cardId>/full.png|thumb.png`),
+ * and a committed design is never edited in place — CARD-24a copy-on-write mints a NEW card id (and so a
+ * new key) for any edit of a private/published card, and CARD-20 unpublish leaves the bytes alone for the
+ * adopters. So a given URL's bytes do not change through any product path.
+ *
+ * THE HONEST CAVEAT (reflatten staleness): MAINTENANCE paths *do* rewrite in place —
+ * `apps/api/scripts/reflatten.ts` and `src/db/regenerate-thumbs.ts` re-render every stored card at the
+ * SAME keys. regenerate-thumbs already busts the URL for exactly this reason (`THUMB_URL_BUSTER = '?v=2'`,
+ * and it states the law: "NEVER change a served image's content under an unchanged URL without busting");
+ * `reflatten.ts` does NOT bust today, which was harmless under max-age=0 and is NOT under a year. Any
+ * in-place rewrite must now bump the stored url (a `?v=N` marker — the static mount is path-keyed, so the
+ * query never reaches the file lookup while every client treats it as a new URL).
+ *
+ * `immutable` is deliberately OMITTED: ETag/Last-Modified stay on, so a client that DOES revalidate (a
+ * browser hard-reload on the :8082 dev lane, a CDN purge probe) can still pick up rewritten bytes. That
+ * escape hatch is worth more than the last revalidation round-trip until the R2/CDN move (decision 0073
+ * §0.5) enforces the bust discipline at the edge.
+ */
+export const MEDIA_STATIC_OPTIONS = {
+  maxAge: '1y',
+  immutable: false,
+  etag: true,
+  lastModified: true,
+} as const;
+
 // The Express app factory. All paths mount under `/api` (api-contract base). The error middleware is
 // registered LAST so every thrown AppError / ZodError is mapped to the fixed envelope.
 export function createApp(): Express {
@@ -57,7 +88,7 @@ export function createApp(): Express {
   // resolves authz before proxying the cached bytes (a private card's share image must never become
   // publicly fetchable just because its owner generated it once).
   for (const prefix of PUBLIC_MEDIA_PREFIXES) {
-    app.use(`${MEDIA_URL_PREFIX}/${prefix}`, express.static(join(mediaRoot(), prefix)));
+    app.use(`${MEDIA_URL_PREFIX}/${prefix}`, express.static(join(mediaRoot(), prefix), MEDIA_STATIC_OPTIONS));
   }
 
   app.use(

@@ -1,10 +1,12 @@
 import { useCallback, useMemo, useState } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import type { GalleryCardView, GallerySort } from '@ingame/shared';
+import type { CreateReportRequest, GalleryCardView, GallerySort } from '@ingame/shared';
 import { GALLERY_PAGE } from '@ingame/shared';
 import { GalleryCell } from '../../../src/components/game/CommunityGallery';
 import { AdoptCardSheet, type AdoptOutcome } from '../../../src/components/game/AdoptCardSheet';
+import { ReportSheet, type ReportTarget, type ReportActionOutcome } from '../../../src/components/report/ReportSheet';
+import { ConfirmSheet } from '../../../src/components/ConfirmSheet';
 import { SectionSwitch } from '../../../src/components/SectionSwitch';
 import { TertiaryLink } from '../../../src/components/TertiaryLink';
 import { ScreenButton } from '../../../src/components/ScreenButton';
@@ -12,12 +14,14 @@ import { Skeleton } from '../../../src/components/lifecycle/Skeleton';
 import { LoadError } from '../../../src/components/lifecycle/LoadError';
 import { Toast } from '../../../src/components/lifecycle/Toast';
 import { useContributorPaging } from '../../../src/components/contributor/useContributorPaging';
-import { useGetWalletQuery } from '../../../src/store/api';
+import { useGetWalletQuery, useUpdateEntryMutation } from '../../../src/store/api';
 import {
   useGetGameGalleryQuery,
   useLazyGetGameGalleryQuery,
   useAdoptCardMutation,
+  useBlockUserMutation,
 } from '../../../src/store/communityApi';
+import { useSubmitReportMutation } from '../../../src/store/reportApi';
 import { useShareCard } from '../../../src/components/game/useShareCard';
 import { themedStyles } from '../../../src/theme';
 import { SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../../../src/components/ScreenHead';
@@ -32,14 +36,21 @@ import { SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../../../src/components/Scre
 // Adopt capability rides `?adopt=1` (a DISPLAY affordance only — the server is the enforcement
 // boundary for adoption; CARD-04/ECON-03): the OWN/FRIEND galleries + the add-game fork pass it, the
 // CATALOG posture (browse-only, W-D1 Q4) does not — its cells render as plain Views, no adopt path.
+//
+// WALK-4 P2 — the ADD-FLOW context. `?entryId=` arrives ONLY from the add-game fork's SEE-ALL door and
+// means "this list is the add flow's WHAT FACE question": an adopt here chains the COL-06 equip onto
+// that entry and the sheet's Done DISMISSES THE WHOLE ADD STACK to the Collection, so the fork is never
+// revisited (the W3-J lying "keep the default for now" becomes unreachable). Without it — the game-page
+// door — the surface behaves exactly as before.
 const keyOf = (c: GalleryCardView) => c.id;
 
 export default function GameCardsList() {
-  const { id, adopt } = useLocalSearchParams<{ id: string; adopt?: string }>();
+  const { id, adopt, entryId } = useLocalSearchParams<{ id: string; adopt?: string; entryId?: string }>();
   const router = useRouter();
   const styles = useStyles();
   const gameId = id ?? '';
   const canAdopt = adopt === '1';
+  const addFlowEntryId = entryId && entryId.length > 0 ? entryId : null;
 
   // Hooks ALL unconditional (F-16) — the lifecycle returns sit below every hook.
   const [sort, setSort] = useState<GallerySort>('top');
@@ -50,8 +61,15 @@ export default function GameCardsList() {
   const [trigger, moreState] = useLazyGetGameGalleryQuery();
   const { data: wallet } = useGetWalletQuery();
   const [adoptCard, adoptState] = useAdoptCardMutation();
+  const [updateEntry] = useUpdateEntryMutation(); // P2 — the chained COL-06 equip (add-flow only)
+  const [blockUser, blockState] = useBlockUserMutation();
+  const [submitReport, reportState] = useSubmitReportMutation();
   const [inspectCard, setInspectCard] = useState<GalleryCardView | null>(null);
+  const [blockCard, setBlockCard] = useState<GalleryCardView | null>(null); // the SOC-09-light confirm
+  const [reportTarget, setReportTarget] = useState<ReportTarget | null>(null); // MOD-01
   const [toast, setToast] = useState<{ message: string; tone: 'success' | 'error' } | null>(null);
+  const [settleNote, setSettleNote] = useState<string | undefined>(undefined);
+  const [adoptedInFlow, setAdoptedInFlow] = useState(false); // P2 — the sheet's Done ends the add flow
   // Walk-4 P4-d — the preview drawer's SHARE is a real affordance now, so this surface must actually
   // share (it passed a no-op before, which the conformed treatment would have turned into a lying key).
   const { shareBusy, shareCard } = useShareCard((message) => setToast({ tone: 'error', message }));
@@ -71,7 +89,11 @@ export default function GameCardsList() {
     }),
     [trigger, gameId, sort],
   );
-  const paging = useContributorPaging<GalleryCardView>(page1, fetchMore, keyOf);
+  // W3-I (P2/OC-1) — the resetKey names the list. `adoptCard` invalidates the CommunityCards tag, so
+  // the page-1 subscription refetches under the SAME key; without this the whole accumulated tail
+  // collapsed and a deep-scrolled reader was thrown back to page 1 the moment they adopted. A real key
+  // change (sort flip / different game) still resets.
+  const paging = useContributorPaging<GalleryCardView>(page1, fetchMore, keyOf, `${gameId}:${sort}`);
   const total = data?.total ?? paging.items.length;
 
   // The game-page adopt mapping (0072/0073) — the container owns the mutation, the sheet the UX.
@@ -85,9 +107,65 @@ export default function GameCardsList() {
       if (err?.status === 'FETCH_ERROR' || err?.status === 'TIMEOUT_ERROR') return { ok: false, code: 'OFFLINE' };
       const code = err?.data?.error?.code;
       if (code === 'INSUFFICIENT_BALANCE') return { ok: false, code: 'INSUFFICIENT_BALANCE', shortBy: err?.data?.error?.shortBy ?? 0 };
-      if (code === 'ALREADY_ADOPTED') return { ok: false, code: 'ALREADY_ADOPTED' };
+      if (code === 'ALREADY_ADOPTED') {
+        // Walk-4 Murr fix — in the ADD FLOW an existing grant IS a face answer: chain the same
+        // best-effort equip (onAdopted) so the flow still ends wearing it instead of dead-ending.
+        if (addFlowEntryId && inspectCard) void onAdopted(undefined, inspectCard);
+        return { ok: false, code: 'ALREADY_ADOPTED' };
+      }
       if (code === 'NOT_PUBLISHED') return { ok: false, code: 'NOT_PUBLISHED' };
       return { ok: false, code: 'ERROR' };
+    }
+  }
+
+  // P2-a — in the ADD FLOW the adopt chains the COL-06 equip onto the entry the flow just created, then
+  // the sheet's Done ends the flow. Best-effort: a refused equip only re-words the settle (the grant is
+  // held, the card waits in the switcher) — it never traps the user mid-flow. Outside the add flow this
+  // is a no-op and the sheet keeps its standing "it's in your switcher" settle.
+  async function onAdopted(_result: unknown, card: GalleryCardView) {
+    if (!addFlowEntryId) return;
+    setAdoptedInFlow(true);
+    setSettleNote('It’s on your shelf — this game wears it now.');
+    try {
+      await updateEntry({ entryId: addFlowEntryId, activeCardDesignId: card.id }).unwrap();
+    } catch {
+      setSettleNote('It’s in your switcher — equip it on this game whenever you like.');
+    }
+  }
+
+  // The sheet's ✕/Done. In the add flow a SUCCESSFUL adopt ends the whole flow (dismiss the add stack
+  // → the Collection, carrying the one-shot justAdded); anything else just closes the drawer.
+  function closeSheet() {
+    setInspectCard(null);
+    if (addFlowEntryId && adoptedInFlow) {
+      router.dismissTo({ pathname: '/(tabs)/collection', params: { justAdded: addFlowEntryId } });
+    }
+  }
+
+  // SOC-09-light — block the designer (the game page's wiring, mirrored: this surface shipped a ⋯ that
+  // closed the sheet and blocked nobody).
+  async function doBlock() {
+    if (!blockCard) return;
+    const designer = blockCard.designer.username;
+    try {
+      await blockUser(blockCard.designer.userId).unwrap();
+      setToast({ tone: 'success', message: `${designer}'s cards are hidden from your community views.` });
+      setInspectCard(null); // the gallery refetches (CommunityCards invalidated) — their cards vanish
+    } catch {
+      setToast({ tone: 'error', message: `Couldn't block ${designer} right now. Please try again.` });
+    }
+    setBlockCard(null);
+  }
+
+  // MOD-01 — the report submit mapping (the game page's, verbatim: offline vs a genuine failure).
+  async function onSubmitReport(req: CreateReportRequest): Promise<ReportActionOutcome> {
+    try {
+      await submitReport(req).unwrap();
+      return 'ok';
+    } catch (e) {
+      const err = e as { status?: unknown };
+      if (err?.status === 'FETCH_ERROR' || err?.status === 'TIMEOUT_ERROR') return 'offline';
+      return 'error';
     }
   }
 
@@ -168,10 +246,11 @@ export default function GameCardsList() {
         card={inspectCard}
         visible={inspectCard !== null}
         balance={wallet?.balance ?? 0}
-        onClose={() => setInspectCard(null)}
+        onClose={closeSheet}
         onAdopt={onAdopt}
         adopting={adoptState.isLoading}
-        onAdopted={() => {}}
+        onAdopted={(result, card) => void onAdopted(result, card)}
+        settleNote={settleNote}
         onTopUp={() => {
           setInspectCard(null);
           router.push('/store?view=topup');
@@ -180,11 +259,44 @@ export default function GameCardsList() {
           if (inspectCard) void shareCard(inspectCard.id, inspectCard.name);
         }}
         shareBusy={shareBusy}
-        onBlock={() => setInspectCard(null)}
+        // walk-4 P2 (the folded-in extra) — REAL block/report, the game page's wiring mirrored. This
+        // surface used to pass `onBlock={() => setInspectCard(null)}`: a ⋯ that closed the drawer and
+        // blocked nobody, with no report row at all.
+        onBlock={() => {
+          if (inspectCard) setBlockCard(inspectCard);
+        }}
+        onReport={() => {
+          if (inspectCard) {
+            const c = inspectCard;
+            setInspectCard(null); // one drawer at a time — close before raising the report sheet
+            setReportTarget({ type: 'card', id: c.id, name: c.name });
+          }
+        }}
         onViewContributor={(userId) => {
           setInspectCard(null);
           router.push(`/contributor/${userId}`);
         }}
+      />
+
+      {/* SOC-09-light — the destructive block confirm at the screen root (decision 0073 §0.6) */}
+      <ConfirmSheet
+        visible={blockCard !== null}
+        title={`Block ${blockCard?.designer.username ?? ''}?`}
+        message="Their cards leave your community views. This doesn't remove a card you already adopted — your copy stays."
+        confirmLabel="Block"
+        busy={blockState.isLoading}
+        onConfirm={() => void doBlock()}
+        onClose={() => setBlockCard(null)}
+      />
+
+      {/* MOD-01 — the report drawer (card targets only on this surface) */}
+      <ReportSheet
+        visible={reportTarget !== null}
+        target={reportTarget}
+        onClose={() => setReportTarget(null)}
+        onSubmit={onSubmitReport}
+        submitting={reportState.isLoading}
+        onError={(message) => setToast({ tone: 'error', message })}
       />
 
       {toast ? <Toast message={toast.message} tone={toast.tone} onDismiss={() => setToast(null)} /> : null}

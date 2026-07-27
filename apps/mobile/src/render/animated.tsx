@@ -1,4 +1,5 @@
-import { useEffect, useMemo } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useSyncExternalStore } from 'react';
+import { NavigationContext } from '@react-navigation/native';
 import { Group, Circle, Rect, LinearGradient, BlurMask, Skia } from '@shopify/react-native-skia';
 import {
   useSharedValue,
@@ -35,6 +36,40 @@ export function hasMotion(c: CardComposition): boolean {
     c.finish?.kind === 'holographic' ||
     c.finish?.kind === 'metallic'
   );
+}
+
+/**
+ * P6/R4 (perf-investigation §R4 · fix-wave #2) — is the SCREEN this surface sits on focused?
+ *
+ * Every motion layer below runs a `withRepeat(…, -1)` UI-thread loop forever, and the opt-in surfaces
+ * live on screens that never unmount (the tabs are kept mounted by design) or that pile up on the stack
+ * (each pushed game page keeps its hero). Nothing gated motion on focus, so a blurred tab's and every
+ * stack-retained screen's loops kept ticking — a permanent per-frame cost that grows as a session
+ * accumulates screens. Gating here (ONE place) rather than per-surface covers every `animate` caller —
+ * `withRepeat` exists nowhere else in the client — and can't drift as surfaces are added.
+ *
+ * This is deliberately NOT `@react-navigation/native`'s `useIsFocused()`: that hook calls
+ * `useNavigation()`, which THROWS outside a navigator. Reading the context directly degrades instead —
+ * no navigation context (a card rendered in a test, a preview harness, or any future non-screen host)
+ * reads as FOCUSED, i.e. exactly today's behavior. A focused screen is therefore bit-identical to before;
+ * only the blurred case changes.
+ */
+export function useSurfaceFocused(): boolean {
+  const navigation = useContext(NavigationContext);
+  const subscribe = useCallback(
+    (onChange: () => void) => {
+      if (!navigation) return () => {};
+      const offFocus = navigation.addListener('focus', onChange);
+      const offBlur = navigation.addListener('blur', onChange);
+      return () => {
+        offFocus();
+        offBlur();
+      };
+    },
+    [navigation],
+  );
+  const getSnapshot = useCallback(() => (navigation ? navigation.isFocused() : true), [navigation]);
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
 /** A shared value looping 0→1 forever at a linear rate; cancelled on unmount. */
@@ -172,6 +207,14 @@ export function AnimatedCardLayer({
   height: number;
 }) {
   const reduce = useReducedMotion();
+  // P6/R4 — the FOCUS gate does NOT live here (walk-4 Murr major): this layer renders inside a skia
+  // <Canvas>, whose children run under skia's OWN react-reconciler root — host React context (incl.
+  // NavigationContext) never crosses that boundary, so a context read here always sees `undefined`
+  // and the gate would be a silent no-op. The gate lives HOST-SIDE: the two Canvas hosts
+  // (CardComposition · the PROOF print) call `useSurfaceFocused()` in the host tree and simply don't
+  // mount this layer while blurred — unmounting runs `useLoopPhase`'s cleanup, cancelling every loop.
+  // (`useReducedMotion` is safe here: Reanimated reads a module-level accessibility listener, not
+  // React context, so it works across reconciler roots.)
   const u = cardStepUnit(width); // F-18: match the card's proportional silhouette (was fixed W>=96?6:3)
   const clip = useMemo(() => Skia.Path.MakeFromSVGString(steppedRectPath(width, height, u)), [width, height, u]);
   if (reduce) return null;

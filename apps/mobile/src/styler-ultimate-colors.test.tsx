@@ -68,9 +68,14 @@ jest.mock('./store/api', () => ({
   usePublishCardMutation: () => mockPublishTuple,
 }));
 
+// walk-4 P2 (OC-4) — `?from=add` marks a session entered from the add-game fork; the params are
+// mutable so the exit-topology describe at the foot can set it. Default = the standing entry.
+let mockParams: { gameId: string; cardId?: string; from?: string; entryId?: string } = { gameId: 'g1', cardId: 'c1' };
+const mockReplace = jest.fn();
+const mockDismissTo = jest.fn();
 jest.mock('expo-router', () => ({
-  useLocalSearchParams: () => ({ gameId: 'g1', cardId: 'c1' }),
-  useRouter: () => ({ push: jest.fn(), back: jest.fn(), replace: jest.fn() }),
+  useLocalSearchParams: () => mockParams,
+  useRouter: () => ({ push: jest.fn(), back: jest.fn(), replace: mockReplace, dismissTo: mockDismissTo }),
 }));
 
 // The skia consumers stay hermetic (the AttributeSection.test precedent) — the tile strip and the
@@ -118,6 +123,9 @@ jest.setTimeout(20000);
 beforeEach(() => {
   jest.useFakeTimers();
   mockUpdateCard.mockClear();
+  mockReplace.mockClear();
+  mockDismissTo.mockClear();
+  mockParams = { gameId: 'g1', cardId: 'c1' };
 });
 afterEach(() => {
   act(() => {
@@ -272,5 +280,56 @@ describe('COSM-05: preview-then-acquire at the 10-PX ultimate band (CARD-13 unch
     expect(screen.getByText('PREMIUM COMPONENTS')).toBeTruthy(); // the PulledSheet title, uppercased
     expect(screen.getByText('TOTAL')).toBeTruthy();
     expect(screen.getByText(/(HOLD TO BUY|BUY|CONFIRM) · 10 PX/)).toBeTruthy();
+  });
+});
+
+// ── WALK-4 P2 (OC-4) — where a COMMITTED Styler session ENDS ───────────────────────────────────────
+// The add-game fork's DESIGN YOUR OWN door pushes `/styler/:gameId?from=add`. KEEP already equips the
+// card (COL-06), so it IS the add flow's "what face" answer — and the P2 invariant says every
+// face-answer ends on the SHELF wearing it, not on the game page with the add stack still open
+// underneath (backing out of which resurfaced a fork asking an answered question — the W3-J lie).
+// Entered any other way, the standing `replace(/game/:id)` landing is untouched.
+describe('walk-4 P2 (OC-4): the Styler commit exit', () => {
+  async function keepIt() {
+    renderStyler();
+    fireEvent.press(await screen.findByText('SAVE ▸'));
+    fireEvent.press(screen.getByLabelText('Keep — equip it ◆'));
+    await act(async () => {
+      await Promise.resolve();
+    });
+  }
+
+  it('from the ADD FLOW, KEEP’s beat ends in the Collection with the new entry marked (shelf-worded exit)', async () => {
+    mockParams = { gameId: 'g1', cardId: 'c1', from: 'add' };
+    await keepIt();
+    // the exit copy is honest about WHERE it lands (walk-4 doneLabel fix): shelf, not the game page
+    expect(screen.queryByText('DONE — BACK TO THE GAME')).toBeNull();
+    fireEvent.press(await screen.findByText('DONE — BACK TO YOUR SHELF'));
+    expect(mockDismissTo).toHaveBeenCalledWith({
+      pathname: '/(tabs)/collection',
+      params: { justAdded: 'e1' },
+    });
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it('the route-carried entryId takes PRECEDENCE over the shelf-cache lookup (Murr debt fix)', async () => {
+    // Honest scope (Murr re-verify): this harness's shelf mock is warm, so this pins param-PRECEDENCE
+    // (e-route beats the cache's e1) — the true cold-cache walk (empty shelf → KEEP/publish/exit still
+    // work off the param) is recorded ledger debt, not proven here.
+    mockParams = { gameId: 'g1', cardId: 'c1', from: 'add', entryId: 'e-route' };
+    await keepIt();
+    fireEvent.press(await screen.findByText('DONE — BACK TO YOUR SHELF'));
+    expect(mockDismissTo).toHaveBeenCalledWith({
+      pathname: '/(tabs)/collection',
+      params: { justAdded: 'e-route' },
+    });
+  });
+
+  it('entered normally, KEEP keeps its standing game-page landing (nothing else moves)', async () => {
+    mockParams = { gameId: 'g1', cardId: 'c1' };
+    await keepIt();
+    fireEvent.press(await screen.findByText('DONE — BACK TO THE GAME'));
+    expect(mockReplace).toHaveBeenCalledWith('/game/g1');
+    expect(mockDismissTo).not.toHaveBeenCalled();
   });
 });

@@ -28,11 +28,39 @@ const rootReducer = combineReducers({
   [api.reducerPath]: api.reducer,
 });
 
+// P6/R1 (perf-investigation §R1 · fix-wave #1) — SCOPE the dev-only state-invariant middleware OFF the
+// RTK Query cache. `immutableCheck` and `serializableCheck` DEEP-WALK the whole store on EVERY dispatched
+// action in dev; the store is dominated by `state.api`, which GROWS all session (a per-arg entry per
+// visited gallery/friend/search/feed, pinned by any still-mounted subscriber). That made every dispatch —
+// and RTKQ fires a burst of them per interaction — progressively slower, which is the owner's
+// "30 minutes to sluggish, a reload fixes it" symptom (the reload empties the cache). Measured here on
+// V8 with realistic payloads (phone-Hermes is a further 2-6x worse):
+//
+//   cached state              before    after (this fix)   prod posture
+//   collection N=18 only      1.09 ms     0.05 ms            0.00 ms
+//   standing tab set, N=18    3.63 ms     0.01 ms            0.00 ms
+//   standing set + N=200     16.97 ms     0.01 ms            0.00 ms
+//   standing set + N=2000   139.77 ms     0.04 ms            0.00 ms
+//
+// SCOPED, not disabled: `ignoredPaths: [api.reducerPath]` PRUNES the walk at the `api` key (RTK's
+// trackProperties/detectMutations and findNonSerializableValue all `continue` before recursing into an
+// ignored path), so `auth` + `prefs` — the slices WE write reducers for, where an accidental mutation or
+// a non-serializable value is a real bug — keep BOTH guard-rails at ~zero cost. The RTK cache is written
+// only by RTK itself (immer-managed) and holds JSON off the wire, so the checks never had anything to
+// catch there. The ACTION half of the serializable check is untouched (it still inspects every dispatched
+// action, incl. RTKQ payloads) — that cost is per-action-size, not cache-size, so it isn't progressive.
+// PRODUCTION IS UNCHANGED BY CONSTRUCTION: both middlewares compile to a pass-through when
+// NODE_ENV === 'production' (RTK createImmutableStateInvariantMiddleware/createSerializableStateInvariantMiddleware),
+// so this only ever alters a DEV build's posture.
 export const store = configureStore({
   reducer: rootReducer,
   middleware: (getDefault) =>
     getDefault({
-      serializableCheck: { ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER] },
+      immutableCheck: { ignoredPaths: [api.reducerPath] },
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+        ignoredPaths: [api.reducerPath],
+      },
     }).concat(api.middleware),
 });
 

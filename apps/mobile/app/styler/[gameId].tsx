@@ -116,7 +116,19 @@ function plateAttrsFor(
 }
 
 export default function Styler() {
-  const { gameId, cardId } = useLocalSearchParams<{ gameId: string; cardId?: string }>();
+  // WALK-4 P2 (OC-4) — `?from=add` marks a Styler session entered from the ADD-GAME fork's DESIGN YOUR
+  // OWN door. It changes exactly one thing: where a COMMITTED session ENDS. KEEP already equips the
+  // card (COL-06), and publish commits it, so those are the add flow's "what face" answer — they must
+  // land on the SHELF wearing it (the P2 invariant), not on the game page with the add flow still
+  // half-open underneath. Every other exit (✕ discard · SAVE PRIVATE · KEEP AS DRAFT) equipped nothing,
+  // so it still `router.back()`s to the fork, where "keep the default for now" is still TRUE.
+  const { gameId, cardId, from, entryId: addFlowParamEntryId } = useLocalSearchParams<{
+    gameId: string;
+    cardId?: string;
+    from?: string;
+    entryId?: string;
+  }>();
+  const fromAddFlow = from === 'add';
   const router = useRouter();
   const { setActive: setBreakout } = useBreakout();
   const styles = useStyles();
@@ -148,6 +160,13 @@ export default function Styler() {
 
   const entry = useMemo(() => shelf?.items.find((i) => i.gameId === gameId), [shelf, gameId]);
   const title = entry?.title ?? 'GAME';
+  // Walk-4 Murr (debt fix) — the add flow's entry id comes from the ROUTE (the fork just created the
+  // entry and passed it), with the shelf-cache lookup only as a fallback: if the add-time refetch
+  // failed (offline blip), `entry` is undefined and the equip/exit guards would silently resurrect the
+  // stranded pre-P2 topology. The param is authoritative for the flow that minted it.
+  const addFlowEntryId = fromAddFlow
+    ? ((addFlowParamEntryId && addFlowParamEntryId.length > 0 ? addFlowParamEntryId : undefined) ?? entry?.entryId ?? null)
+    : null;
 
   const [mode, setMode] = useState<Mode>(cardId ? 'edit' : 'pick');
   // The Canvas is a POSTURE of this session, not a route — the draft, autosave timer, snapshot and
@@ -556,8 +575,12 @@ export default function Styler() {
   }
 
   // ── outcomes (OQ-108 labels; state-walks 5–7) ─────────────────────────────────────────────────
+  // Walk-4 Murr (re-verify minor) — KEEP's equip target prefers the route-carried add-flow entry id
+  // over the shelf-cache lookup, same as publish/exit: a cold cache (failed add-time refetch) must not
+  // silently no-op the KEEP tap.
+  const keepEntryId = addFlowEntryId ?? entry?.entryId ?? null;
   async function keep() {
-    if (!cardRow || !entry) return;
+    if (!cardRow || !keepEntryId) return;
     setSaveOpen(false);
     setBusyKeep(true);
     setInlineError(null);
@@ -611,7 +634,7 @@ export default function Styler() {
       pastRef.current = [];
       futureRef.current = [];
       setHistVersion((v) => v + 1);
-      await updateEntry({ entryId: entry.entryId, activeCardDesignId: commitTarget }).unwrap();
+      await updateEntry({ entryId: keepEntryId, activeCardDesignId: commitTarget }).unwrap();
       // discard the throwaway copy AFTER the origin is committed + equipped — never before, so a
       // failure above leaves the copy intact and no work is lost.
       if (copyToDiscard) void deleteCard(copyToDiscard);
@@ -778,6 +801,16 @@ export default function Styler() {
       setCreatedHere(false);
       setExplicitSave(true);
       if (copyToDiscard) void deleteCard(copyToDiscard);
+      // WALK-4 P2 — in the ADD FLOW, publishing IS the flow's "what face" answer, and the invariant is
+      // that every face-answer ends on the shelf WEARING it. Publish deliberately does NOT equip in the
+      // standing flow (you may publish a card you don't wear), so this equip is add-flow-only and
+      // BEST-EFFORT: a failure never touches the celebration or the exit — the card is published either
+      // way and one switcher tap equips it.
+      if (addFlowEntryId) {
+        await updateEntry({ entryId: addFlowEntryId, activeCardDesignId: commitTarget })
+          .unwrap()
+          .catch(() => {});
+      }
       setPosture('styler'); // leave the workshop; the ritual is a full-screen moment
       setMode('published');
     } catch (e) {
@@ -817,6 +850,26 @@ export default function Styler() {
     } catch {
       // a not-yet-flattened / transient failure stays quiet — the celebration must not error out
     }
+  }
+
+  // WALK-4 P2 (OC-4) — where a COMMITTED session lands. Standing behavior: `replace(/game/:id)` — the
+  // celebration hands you to the game page. In the ADD FLOW that stranded the user: the add stack was
+  // still underneath, so backing out resurfaced a fork asking "adopt or design?" over an entry that
+  // already wore the kept card, exit-labelled "keep the default for now" (the W3-J lie, harder). So in
+  // the add flow a commit DISMISSES the whole add stack to the Collection, carrying the one-shot
+  // `justAdded` — the same ending every other face-answer gets.
+  function exitAfterCommit() {
+    if (addFlowEntryId) {
+      router.dismissTo({ pathname: '/(tabs)/collection', params: { justAdded: addFlowEntryId } });
+      return;
+    }
+    if (fromAddFlow) {
+      // Param missing AND cache cold (shouldn't happen — the door always passes entryId now): still
+      // end the flow on the shelf rather than resurrect the stranded add stack; only the pulse is lost.
+      router.dismissTo('/(tabs)/collection');
+      return;
+    }
+    router.replace(`/game/${gameId}`);
   }
 
   // ── door 1: ✕ — leave WITHOUT keeping (gate-5 D.23/24) ────────────────────────────────────────
@@ -1148,14 +1201,16 @@ export default function Styler() {
   // ── kept (P7 KeepBeat) ────────────────────────────────────────────────────────────────────────
   if (mode === 'kept' && draft) {
     return (
-      <Frame onBack={() => router.replace(`/game/${gameId}`)} closeGlyph="✕" saveLine={null}>
+      <Frame onBack={exitAfterCommit} closeGlyph="✕" saveLine={null}>
         <KeepBeat
           title={title}
           composition={draft}
           cardsDesigned={me?.stats.cardsDesigned ?? null}
           adoptionCount={committedAdoptions}
           pxSpent={pxSpent}
-          onDone={() => router.replace(`/game/${gameId}`)}
+          onDone={exitAfterCommit}
+          // Walk-4 P2 — the add flow's commit lands on the SHELF, so the exit says so honestly.
+          doneLabel={fromAddFlow ? 'Done — back to your shelf' : undefined}
           onEditArt={() => {
             // the Canvas door goes live (§3.4): back onto the SAME document, canvas posture
             setMode('edit');
@@ -1172,14 +1227,16 @@ export default function Styler() {
   // ── published (P8 PrintRitual — the Canvas publish celebration) ───────────────────────────────
   if (mode === 'published' && draft) {
     return (
-      <Frame onBack={() => router.replace(`/game/${gameId}`)} closeGlyph="✕" saveLine={null}>
+      <Frame onBack={exitAfterCommit} closeGlyph="✕" saveLine={null}>
         <PrintRitual
           title={title}
           composition={draft}
           imageUrl={publishedImageUrl}
           cardsDesigned={me?.stats.cardsDesigned ?? null}
           adoptionCount={committedAdoptions}
-          onDone={() => router.replace(`/game/${gameId}`)}
+          onDone={exitAfterCommit}
+          // Walk-4 P2 — the add flow's commit lands on the SHELF, so the exit says so honestly.
+          doneLabel={fromAddFlow ? 'Done — back to your shelf' : undefined}
           onShare={cardRow ? () => void sharePublished(cardRow.id, title) : undefined}
         />
       </Frame>

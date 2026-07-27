@@ -45,9 +45,18 @@ jest.mock('./store/listsApi', () => ({
   useRerankListMutation: () => [jest.fn(), {}],
 }));
 const mockPush = jest.fn();
+const mockSetParams = jest.fn();
+// walk-4 P2 (OC-3) — the ADD flow lands here with a one-shot `justAdded=<entryId>`.
+let mockRouteParams: { focus?: string; justAdded?: string } = {};
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush, back: jest.fn(), replace: jest.fn(), navigate: jest.fn() }),
-  useLocalSearchParams: () => ({}),
+  useRouter: () => ({
+    push: mockPush,
+    back: jest.fn(),
+    replace: jest.fn(),
+    navigate: jest.fn(),
+    setParams: mockSetParams,
+  }),
+  useLocalSearchParams: () => mockRouteParams,
   useFocusEffect: () => {},
 }));
 // FlipCard renders REAL (its own suite proves it jest-safe) so the B6 shelf assertion pins the actual
@@ -86,7 +95,11 @@ function shelfShape() {
   };
 }
 
-beforeEach(() => mockPush.mockClear());
+beforeEach(() => {
+  mockPush.mockClear();
+  mockSetParams.mockClear();
+  mockRouteParams = {};
+});
 
 describe('COL-07 walk2-B6: now-playing chrome is HERO-ONLY', () => {
   it('list view — the hero carries the pin; rows have NO ▶ NOW inline tag', () => {
@@ -203,5 +216,36 @@ describe('Owner walk (m6): the whole shelf row-body navigates; the card face sti
     // that lets the card win its own tap on RN-web (and keeps the web tree free of nested <button>s).
     const rowButton = screen.getByLabelText('Open Game 2');
     expect(within(rowButton).queryByLabelText('Game 2 card')).toBeNull();
+  });
+});
+
+// WALK-4 P2 (OC-3) — the JUST-ADDED landing. The add flow ends by dismissing its whole stack to this
+// screen carrying `justAdded=<entryId>`; the shelf marks that entry (a ~1.5s pulse) and scrolls it into
+// view, because the default MY ORDER sort can bury a fresh add below the fold. It is a ONE-SHOT: the
+// param is consumed into local state and cleared off the URL immediately, so nothing re-fires it.
+describe('walk-4 P2: the just-added landing marks the new entry', () => {
+  it('marks EXACTLY the landed entry — in shelf, grid and list alike', () => {
+    mockRouteParams = { justAdded: 'e2' };
+    for (const view of ['shelf', 'grid', 'list'] as const) {
+      const r = renderView(view);
+      expect(screen.getByTestId('just-added-e2')).toBeTruthy();
+      expect(screen.queryByTestId('just-added-e1')).toBeNull();
+      expect(screen.queryByTestId('just-added-e3')).toBeNull();
+      r.unmount();
+    }
+  });
+
+  it('consumes the param one-shot (cleared off the URL on arrival)', () => {
+    mockRouteParams = { justAdded: 'e2' };
+    renderView('shelf');
+    expect(mockSetParams).toHaveBeenCalledWith({ justAdded: undefined });
+  });
+
+  it('marks nothing when the flow did not land here (the standing case)', () => {
+    mockRouteParams = {};
+    renderView('shelf');
+    expect(screen.queryByTestId('just-added-e1')).toBeNull();
+    expect(screen.queryByTestId('just-added-e2')).toBeNull();
+    expect(mockSetParams).not.toHaveBeenCalled();
   });
 });

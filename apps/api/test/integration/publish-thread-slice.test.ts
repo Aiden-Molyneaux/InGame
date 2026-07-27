@@ -124,8 +124,11 @@ describe('CARD-15/CARD-04 spike: publish→gallery→adopt (the full thread, cro
       .set(authed(a.token));
     expect(published.status).toBe(200);
     expect(published.body.status).toBe('published');
-    expect(published.body.imageUrl).toMatch(/^\/media\/cards\/.+\/full\.png$/);
-    expect(published.body.thumbUrl).toMatch(/^\/media\/cards\/.+\/thumb\.png$/);
+    // Walk-4 Murr / P6-R7 — the stored URLs VERSION by composition hash (?v=…): /media serves
+    // far-future Cache-Control, and unpublish→edit→republish rewrites the same keys, so a republished
+    // face must be a NEW URL (the regenerate-thumbs law).
+    expect(published.body.imageUrl).toMatch(/^\/media\/cards\/.+\/full\.png\?v=v\d+-[0-9a-f]{16}$/);
+    expect(published.body.thumbUrl).toMatch(/^\/media\/cards\/.+\/thumb\.png\?v=v\d+-[0-9a-f]{16}$/);
 
     // the flattened PNGs exist on disk AND are served (unauthenticated) over /media ───────────────────
     expect(existsSync(join(mediaDir, 'cards', card.id, 'full.png'))).toBe(true);

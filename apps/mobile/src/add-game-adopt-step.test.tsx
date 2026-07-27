@@ -4,15 +4,18 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import prefsReducer from './store/prefsSlice';
 
-// W-D Wave D (OQ-136 / W-C10), reshaped at the m6 owner walk — the post-add flow:
+// W-D Wave D (OQ-136 / W-C10) → the m6 owner walk → WALK-4 P2 (the nodded exit-topology rework):
 //   • the search/rail INSPECT chevron routes to /game/[id] (the adaptive Game page; CATALOG when unowned)
-//   • REORDER: add → stats + the COL-02 STATUS BEAT first → NEXT → the card FORK (was card-step-first)
-//   • the FORK: "adopt a card — or design your own" — a TOP-6 strip (sort=top&limit=6) + the doors:
-//     adopt-from-strip (AdoptCardSheet — adopt GRANTS the design, entry-independent; it does not equip
-//     the new entry) · SEE ALL {N} › (the paged full list) ·
-//     DESIGN YOUR OWN › (the Styler) · keep-the-default (tertiary → ends the flow)
-//   • an EMPTY/errored gallery no longer auto-advances silently: the fork renders minus the strip
-//     (DESIGN YOUR OWN + keep-default stand)
+//   • add → stats + the COL-02 STATUS BEAT → NEXT → the card FORK
+//   • THE INVARIANT: the flow asks WHICH GAME · WHAT STATUS · WHAT FACE exactly once each, and every
+//     FACE-answer ENDS the flow in the Collection wearing the answer:
+//       – strip adopt → the container chains the COL-06 equip onto the new entry → Done ends the flow
+//         via `dismissTo` the Collection with the one-shot `justAdded`
+//       – a FAILED equip is not a wall: the flow still ends, the settle just says so
+//       – SEE ALL carries the add-flow context (?adopt=1&entryId=…) · DESIGN YOUR OWN carries ?from=add
+//       – keep-the-default / a plain sheet cancel leave the face UNANSWERED (the fork legitimately stands)
+//   • an EMPTY/errored gallery still renders the fork minus the strip (no silent auto-advance)
+//   • the fork's sheet carries NO block affordance (it shipped a ⋯ that blocked nobody — walk-4 P2)
 
 const CATALOG_ITEM = (id: string, name: string, over: Record<string, unknown> = {}) => ({
   id,
@@ -28,7 +31,7 @@ const CATALOG_ITEM = (id: string, name: string, over: Record<string, unknown> = 
   ...over,
 });
 
-// the CollectionItem the add resolves to (only gameId/title/status are read downstream)
+// the CollectionItem the add resolves to (only entryId/gameId/title/status are read downstream)
 const ADDED = { entryId: 'e1', gameId: 'p1', title: 'Elden Ring', status: 'backlog' };
 
 // one FREE community card for game p1 (GalleryCardView — the fields the gallery cell + sheet read)
@@ -57,8 +60,14 @@ let mockGallery: {
 };
 const mockAdd = jest.fn(() => ({ unwrap: () => Promise.resolve(ADDED) }));
 const mockAdopt = jest.fn(() => ({ unwrap: () => Promise.resolve({ granted: [], totalPaid: 0, balance: 500 }) }));
+// The COL-06 equip the adopt chains (PATCH /me/collection/:entryId { activeCardDesignId }).
+let equipFails = false;
+const mockUpdateEntry = jest.fn(() => ({
+  unwrap: () => (equipFails ? Promise.reject(new Error('nope')) : Promise.resolve({})),
+}));
 const mockPush = jest.fn();
 const mockBack = jest.fn();
+const mockDismissTo = jest.fn();
 
 jest.mock('./store/api', () => ({
   useGetGenresQuery: () => ({ data: { items: [] } }),
@@ -67,7 +76,7 @@ jest.mock('./store/api', () => ({
   useLazySearchCatalogQuery: () => [jest.fn(), { isFetching: false, data: undefined }],
   useCreateGameMutation: () => [jest.fn(), { isLoading: false }],
   useAddToCollectionMutation: () => [mockAdd, { isLoading: false }],
-  useUpdateEntryMutation: () => [jest.fn(() => ({ unwrap: () => Promise.resolve({}) })), { isLoading: false }],
+  useUpdateEntryMutation: () => [mockUpdateEntry, { isLoading: false }],
 }));
 jest.mock('./store/catalogRailsApi', () => ({
   useGetNewReleasesQuery: () => ({ data: { items: [] } }),
@@ -83,22 +92,31 @@ jest.mock('./store/hooks', () => ({ useAppSelector: () => 'tok', useAppDispatch:
 const mockShareImage = jest.fn(async (..._a: unknown[]) => 'shared' as const);
 jest.mock('./store/shareCard', () => ({ shareCardImage: (...a: unknown[]) => mockShareImage(...a) }));
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush, back: mockBack, replace: jest.fn() }),
+  useRouter: () => ({ push: mockPush, back: mockBack, replace: jest.fn(), dismissTo: mockDismissTo }),
 }));
 
 // Stub the AdoptCardSheet so the adopt/close wiring is drivable without its hold-to-adopt gesture. The
 // REAL CommunityGallery still renders (so "the step renders the gallery" is genuine); this shim only
 // stands in for the sheet's confirm UX and calls back through the container's onAdopt/onAdopted/onClose.
+// It also EXPOSES the settle note + whether a block affordance was wired, which are contract now.
 jest.mock('./components/game/AdoptCardSheet', () => {
   const React2 = require('react');
   const { View, Text, Pressable } = require('react-native');
   return {
-    AdoptCardSheet: ({ card, visible, onAdopt, onAdopted, onClose, onShare }: any) =>
+    AdoptCardSheet: ({ card, visible, onAdopt, onAdopted, onClose, onShare, onBlock, settleNote }: any) =>
       visible && card
         ? React2.createElement(
             View,
             null,
             React2.createElement(Text, null, `ADOPT SHEET — ${card.name}`),
+            settleNote ? React2.createElement(Text, null, `SETTLE — ${settleNote}`) : null,
+            onBlock
+              ? React2.createElement(
+                  Pressable,
+                  { accessibilityLabel: 'sheet-block', onPress: onBlock },
+                  React2.createElement(Text, null, 'SHEET BLOCK'),
+                )
+              : null,
             React2.createElement(
               Pressable,
               { accessibilityLabel: 'sheet-share', onPress: onShare },
@@ -139,9 +157,12 @@ function renderAddGame() {
 beforeEach(() => {
   mockAdd.mockClear();
   mockAdopt.mockClear();
+  mockUpdateEntry.mockClear();
   mockPush.mockClear();
   mockBack.mockClear();
+  mockDismissTo.mockClear();
   mockShareImage.mockClear();
+  equipFails = false;
   mockGallery = { data: { items: [] }, isLoading: false, isError: false };
 });
 
@@ -152,6 +173,12 @@ async function addAndReachFork() {
   fireEvent.press(await screen.findByText('NEXT'));
   expect(await screen.findByText('ADOPT A CARD — OR DESIGN YOUR OWN')).toBeTruthy();
 }
+
+/** The one end-of-flow shape: the WHOLE add stack dismissed to the Collection + the justAdded one-shot. */
+const ENDS_IN_COLLECTION = {
+  pathname: '/(tabs)/collection',
+  params: { justAdded: 'e1' },
+};
 
 describe('W-D Q3: the Add-Game INSPECT chevron', () => {
   it('routes the focused search/rail card to the adaptive Game page /game/[id]', () => {
@@ -205,19 +232,31 @@ describe('m6 card FORK: adopt-from-strip · SEE ALL · DESIGN YOUR OWN · keep-t
     await waitFor(() => expect(mockShareImage).toHaveBeenCalledWith('c1', 'Neon Elden', 'tok'));
   });
 
-  it('SEE ALL routes to the adopt-capable full list; DESIGN YOUR OWN routes to the Styler', async () => {
+  it('the fork sheet wires NO block affordance — a ⋯ that blocked nobody is worse than none (walk-4 P2)', async () => {
+    mockGallery = { data: { items: [FREE_CARD], total: 1 }, isLoading: false, isError: false };
+    renderAddGame();
+    await addAndReachFork();
+
+    fireEvent.press(screen.getByLabelText(/Neon Elden by nova/i));
+    expect(await screen.findByLabelText('sheet-share')).toBeTruthy(); // the sheet IS open…
+    expect(screen.queryByLabelText('sheet-block')).toBeNull(); // …and carries no block door
+  });
+
+  it('SEE ALL carries the ADD-FLOW CONTEXT (entryId); DESIGN YOUR OWN carries from=add', async () => {
     mockGallery = { data: { items: [FREE_CARD], total: 9 }, isLoading: false, isError: false };
     renderAddGame();
     await addAndReachFork();
 
     fireEvent.press(screen.getByText('SEE ALL 9 ›'));
-    expect(mockPush).toHaveBeenCalledWith('/game/p1/cards?adopt=1');
+    expect(mockPush).toHaveBeenCalledWith('/game/p1/cards?adopt=1&entryId=e1');
 
     fireEvent.press(screen.getByText('DESIGN YOUR OWN ›'));
-    expect(mockPush).toHaveBeenCalledWith('/styler/p1');
+    // entryId rides BOTH design doors too (Murr re-verify minor) — the styler's equip/exit must not
+    // hang on a shelf-cache lookup a failed refetch can leave cold.
+    expect(mockPush).toHaveBeenCalledWith('/styler/p1?from=add&entryId=e1');
   });
 
-  it('adopting from the strip sequences onto the new entry; the sheet Done ENDS the flow (back to Collection)', async () => {
+  it('P2-a: adopting CHAINS the COL-06 equip onto the new entry; Done ENDS the flow in the Collection', async () => {
     mockGallery = { data: { items: [FREE_CARD], total: 1 }, isLoading: false, isError: false };
     renderAddGame();
     await addAndReachFork();
@@ -226,23 +265,77 @@ describe('m6 card FORK: adopt-from-strip · SEE ALL · DESIGN YOUR OWN · keep-t
     fireEvent.press(screen.getByLabelText(/Neon Elden by nova/i));
     fireEvent.press(await screen.findByLabelText('do-adopt'));
 
-    // adopt targets the CARD only (`adoptCard(cardId)`) — adoption is entry-independent: it grants the
-    // design to the adopter's library, it does not resolve or equip the just-created collection entry
+    // adopt targets the CARD only (`adoptCard(cardId)` — adoption is entry-independent)…
     expect(mockAdopt).toHaveBeenCalledWith('c1');
+    // …so the CONTAINER chains the equip that makes the new entry actually wear it (COL-06).
+    await waitFor(() =>
+      expect(mockUpdateEntry).toHaveBeenCalledWith({ entryId: 'e1', activeCardDesignId: 'c1' }),
+    );
+    // and the settle says so, instead of the game-page "it's in your switcher" voice
+    expect(await screen.findByText(/SETTLE — It’s on your shelf/)).toBeTruthy();
 
-    // the sheet's Done after a successful adopt ends the flow → router.back() to Collection
-    fireEvent.press(await screen.findByLabelText('sheet-done'));
-    expect(mockBack).toHaveBeenCalled();
+    // Done ends the WHOLE flow: dismiss the add stack → the Collection, carrying the justAdded one-shot
+    fireEvent.press(screen.getByLabelText('sheet-done'));
+    expect(mockDismissTo).toHaveBeenCalledWith(ENDS_IN_COLLECTION);
+    expect(mockBack).not.toHaveBeenCalled();
   });
 
-  it('keep-the-default ENDS the flow without adopting', async () => {
+  it('an ALREADY-ADOPTED card still answers WHAT FACE — the equip chains and Done ends the flow (Murr fix)', async () => {
+    // The grant provably exists (adopted earlier via Discover / a friend's gallery / a remove→re-add
+    // loop) — pre-fix this dead-ended on "it's in your switcher" with the invariant unmet.
+    mockGallery = { data: { items: [FREE_CARD], total: 1 }, isLoading: false, isError: false };
+    mockAdopt.mockImplementationOnce(() => ({
+      unwrap: () => Promise.reject({ data: { error: { code: 'ALREADY_ADOPTED' } } }),
+    }));
+    renderAddGame();
+    await addAndReachFork();
+
+    fireEvent.press(screen.getByLabelText(/Neon Elden by nova/i));
+    fireEvent.press(await screen.findByLabelText('do-adopt'));
+
+    await waitFor(() =>
+      expect(mockUpdateEntry).toHaveBeenCalledWith({ entryId: 'e1', activeCardDesignId: 'c1' }),
+    );
+    fireEvent.press(screen.getByLabelText('sheet-done'));
+    expect(mockDismissTo).toHaveBeenCalledWith(ENDS_IN_COLLECTION);
+  });
+
+  it('a FAILED equip is never a wall — the flow still ends in the Collection, the settle just says so', async () => {
+    equipFails = true;
+    mockGallery = { data: { items: [FREE_CARD], total: 1 }, isLoading: false, isError: false };
+    renderAddGame();
+    await addAndReachFork();
+
+    fireEvent.press(screen.getByLabelText(/Neon Elden by nova/i));
+    fireEvent.press(await screen.findByLabelText('do-adopt'));
+    expect(await screen.findByText(/SETTLE — It’s in your switcher/)).toBeTruthy();
+
+    fireEvent.press(screen.getByLabelText('sheet-done'));
+    expect(mockDismissTo).toHaveBeenCalledWith(ENDS_IN_COLLECTION);
+  });
+
+  it('a plain sheet CANCEL (no adopt) leaves the face unanswered — the fork stands, nothing ends', async () => {
+    mockGallery = { data: { items: [FREE_CARD], total: 1 }, isLoading: false, isError: false };
+    renderAddGame();
+    await addAndReachFork();
+
+    fireEvent.press(screen.getByLabelText(/Neon Elden by nova/i));
+    fireEvent.press(await screen.findByLabelText('sheet-done')); // closed without adopting
+    expect(mockDismissTo).not.toHaveBeenCalled();
+    expect(mockUpdateEntry).not.toHaveBeenCalled();
+    // the fork is still on screen, and its keep-the-default label is therefore still TRUE
+    expect(screen.getByText('KEEP THE DEFAULT FOR NOW')).toBeTruthy();
+  });
+
+  it('keep-the-default ENDS the flow without adopting or equipping', async () => {
     mockGallery = { data: { items: [FREE_CARD], total: 1 }, isLoading: false, isError: false };
     renderAddGame();
     await addAndReachFork();
 
     fireEvent.press(screen.getByText('KEEP THE DEFAULT FOR NOW'));
-    expect(mockBack).toHaveBeenCalled();
+    expect(mockDismissTo).toHaveBeenCalledWith(ENDS_IN_COLLECTION);
     expect(mockAdopt).not.toHaveBeenCalled();
+    expect(mockUpdateEntry).not.toHaveBeenCalled();
   });
 
   it('an EMPTY community renders the fork minus the strip — NO silent auto-advance', async () => {
@@ -256,7 +349,7 @@ describe('m6 card FORK: adopt-from-strip · SEE ALL · DESIGN YOUR OWN · keep-t
     // no strip, no SEE ALL (nothing to see)
     expect(screen.queryByText(/COMMUNITY CARDS/)).toBeNull();
     expect(screen.queryByText(/SEE ALL/)).toBeNull();
-    expect(mockBack).not.toHaveBeenCalled();
+    expect(mockDismissTo).not.toHaveBeenCalled();
   });
 
   it('an ERRORED gallery degrades exactly like empty (the doors never depend on the fetch)', async () => {

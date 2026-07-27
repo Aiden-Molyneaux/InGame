@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isoDateSchema } from './catalog';
+import { createGameRequestSchema, isoDateSchema } from './catalog';
 
 // CAT-02 releaseDate / ownedSince — a plain calendar date. The regex fixes the shape; the refine must
 // reject calendar-IMPOSSIBLE dates (Feb-31) rather than let Date.parse roll them over — else Postgres'
@@ -21,5 +21,33 @@ describe('CAT-02 isoDateSchema — calendar validity', () => {
     expect(isoDateSchema.safeParse('2026-13-01').success).toBe(false);
     expect(isoDateSchema.safeParse('2026-00-10').success).toBe(false);
     expect(isoDateSchema.safeParse('not-a-date').success).toBe(false);
+  });
+});
+
+// CAT-02 (walk-4 P2-c, product-spec 0.68 / api-contract 0.83) — only `name` is required. The M3 build
+// had read the spec row's unmarked "genre(s)" as required (`.min(1)`), which blocked the create form;
+// an EMPTY array is valid now. The field itself is still required in the body (send `[]`), the CAT-04
+// controlled-list check still runs server-side on any ids present, and the cap still bites.
+describe('CAT-02 createGameRequestSchema — genres are optional', () => {
+  const uuid = '11111111-1111-4111-8111-111111111111';
+
+  it('accepts an EMPTY genreIds', () => {
+    expect(createGameRequestSchema.safeParse({ name: 'Celeste', genreIds: [] }).success).toBe(true);
+  });
+
+  it('still accepts genres when given, and still refuses a non-uuid id', () => {
+    expect(createGameRequestSchema.safeParse({ name: 'Celeste', genreIds: [uuid] }).success).toBe(true);
+    expect(createGameRequestSchema.safeParse({ name: 'Celeste', genreIds: ['rpg'] }).success).toBe(false);
+  });
+
+  it('still requires a name, still caps the list, still refuses unknown keys (.strict)', () => {
+    expect(createGameRequestSchema.safeParse({ genreIds: [] }).success).toBe(false);
+    expect(createGameRequestSchema.safeParse({ name: '', genreIds: [] }).success).toBe(false);
+    expect(
+      createGameRequestSchema.safeParse({ name: 'Celeste', genreIds: Array(9).fill(uuid) }).success,
+    ).toBe(false);
+    expect(
+      createGameRequestSchema.safeParse({ name: 'Celeste', genreIds: [], createdBy: uuid }).success,
+    ).toBe(false);
   });
 });
