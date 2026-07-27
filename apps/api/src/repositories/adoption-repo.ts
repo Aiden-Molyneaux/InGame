@@ -22,6 +22,22 @@ function activeOnly(extra: SQL): SQL {
   return and(isNull(cardAdoptions.revokedAt), extra) as SQL;
 }
 
+/**
+ * MOD-08 takedown (M6 P7, decision 0081) — the adopter-facing CARD reads additionally exclude a
+ * moderation-hidden design. This is the deliberate EXCEPTION to "adopters keep their card": the spec's
+ * MOD-08 row says a moderation/legal pull hides affected cards and they "fall back per the
+ * default-card guarantee (CARD-18)" — which is exactly what excluding the row here produces (the
+ * equipped rider finds nothing and resolves to the default face). The GRANT itself is untouched (no
+ * row revoked, no entitlement clawed back), so a restore brings the adopter's card straight back.
+ *
+ * Only the three reads that JOIN `card_designs` take this predicate — the grant-only reads
+ * (findMyAdoption / revoke / reactivate) must keep working on a taken-down card, or an adopter could
+ * neither un-adopt nor re-adopt it.
+ */
+function visibleDesignOnly(extra: SQL): SQL {
+  return and(isNull(cardDesigns.moderationHiddenAt), extra) as SQL;
+}
+
 export interface AdoptionInsert {
   cardDesignId: string;
   gameId: string;
@@ -165,7 +181,13 @@ export async function findAdoptedDesign(
     .from(cardAdoptions)
     .innerJoin(cardDesigns, eq(cardDesigns.id, cardAdoptions.cardDesignId))
     .innerJoin(users, eq(users.id, cardDesigns.ownerId))
-    .where(ownedBy(actor, cardAdoptions.adopterId, activeOnly(eq(cardAdoptions.cardDesignId, cardDesignId))))
+    .where(
+      ownedBy(
+        actor,
+        cardAdoptions.adopterId,
+        activeOnly(visibleDesignOnly(eq(cardAdoptions.cardDesignId, cardDesignId))),
+      ),
+    )
     .limit(1);
   return rows[0] ?? null;
 }
@@ -189,7 +211,13 @@ export async function listAdoptedDesignsForGame(
     .from(cardAdoptions)
     .innerJoin(cardDesigns, eq(cardDesigns.id, cardAdoptions.cardDesignId))
     .innerJoin(users, eq(users.id, cardDesigns.ownerId))
-    .where(ownedBy(actor, cardAdoptions.adopterId, activeOnly(eq(cardAdoptions.gameId, gameId))))
+    .where(
+      ownedBy(
+        actor,
+        cardAdoptions.adopterId,
+        activeOnly(visibleDesignOnly(eq(cardAdoptions.gameId, gameId))),
+      ),
+    )
     .orderBy(desc(cardAdoptions.createdAt));
 }
 
@@ -211,7 +239,11 @@ export async function adoptedDesignsByIds(
     .innerJoin(cardDesigns, eq(cardDesigns.id, cardAdoptions.cardDesignId))
     .innerJoin(users, eq(users.id, cardDesigns.ownerId))
     .where(
-      ownedBy(actor, cardAdoptions.adopterId, activeOnly(inArray(cardAdoptions.cardDesignId, cardDesignIds))),
+      ownedBy(
+        actor,
+        cardAdoptions.adopterId,
+        activeOnly(visibleDesignOnly(inArray(cardAdoptions.cardDesignId, cardDesignIds))),
+      ),
     );
   return new Map(rows.map((r) => [r.id, r]));
 }

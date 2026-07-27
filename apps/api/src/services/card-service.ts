@@ -887,14 +887,15 @@ export const adoptCard = mutation(
 // persists" pattern) · any authenticated user for a PUBLISHED card (it's public by design, CARD-15).
 // Unknown / not-yours-to-share → the same 404 (no existence oracle).
 //
-// MODERATION GATE — FLAGGED: CARD-21/MOD-02/08 call for refusing moderation-hidden cards
-// indistinguishably. `card_designs` carries NO `moderation_status` column yet (MOD-08 takedown is
-// unbuilt — grep confirms no takedown/admin-hide code path exists anywhere in apps/api today; the
-// product-spec data-model line is aspirational, not yet migrated). This endpoint therefore gates ONLY
-// on what the schema actually has (`status` + ownership + adoption). When MOD-08 lands its column +
-// takedown path, this is the seam to extend: a hidden card must refuse here the same way it already
-// would need to refuse in the gallery/adopt paths (open-questions.md candidate — surfaced in the P9
-// receipt, not silently assumed).
+// MODERATION GATE — CLOSED (M6 P7, decision 0081; this is the seam the P9 receipt flagged and left
+// open). `card_designs.moderation_hidden_at` now exists and a MOD-08 takedown stamps it. All three
+// share branches refuse a hidden card INDISTINGUISHABLY from an unknown id (the same 404):
+//   • the PUBLISHED branch — `findPublishedDesignById` goes through `publishedOnly`, which now
+//     requires `moderation_hidden_at IS NULL`;
+//   • the ADOPTED branch — the adopter-facing reads carry `visibleDesignOnly` (CARD-18 fallback);
+//   • the OWNER's own branch — checked explicitly below, because ownership legitimately bypasses
+//     `publishedOnly`. A pulled card must not stay externally shareable by its own designer; that is
+//     precisely what a moderation/legal pull is for.
 
 /**
  * GET /cards/:id/share-image (CARD-21). Resolves WHO may share first (authz before any cache read —
@@ -917,6 +918,7 @@ export async function getShareImage(actorId: string, cardId: string): Promise<Bu
   let gameTitle: string | null = null;
 
   const owned = await cardRepo.findOwnedDesign(actorId, cardId);
+  if (owned?.moderationHiddenAt) throw designNotFound(); // MOD-08 — a pulled card is not shareable
   if (owned) {
     const me = await profileRepo.getOwnProfile(actorId);
     designerUsername = me?.username ?? '';

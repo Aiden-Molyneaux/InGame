@@ -53,5 +53,15 @@ export default tseslint.config(
       globals: { ...globals.node },
     },
   },
+  {
+    // The admin console (apps/admin — the decision-0081 external SPA) is BROWSER code, unlike every
+    // other tree this config covers. Unlike apps/mobile it is NOT ignored: it has no separate
+    // toolchain, so the root pass is its only general lint. Vitest globals ride along because the
+    // console's tests run with `globals: true` (its vite.config.ts).
+    files: ['apps/admin/**/*.{ts,tsx}'],
+    languageOptions: {
+      globals: { ...globals.browser, ...globals.vitest },
+    },
+  },
   prettier,
 );

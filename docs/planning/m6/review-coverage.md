@@ -271,6 +271,43 @@
   Zero mutations. 🎨 one polish note: the gallery cell's a11y label composes as "…already adopted to
   adopt…" (awkward grammar, pre-existing class — the accessibility-labels hygiene pile).
 
+## P7 admin console v1 (2026-07-27) — SERVER + SPA — MURR CLOSED (re-verify SOUND) · owner-ruled build
+- **Scope (the settlement sitting's rulings):** the ONE-console architecture (decision **0081**;
+  product-spec **0.69** MOD-04 re-scoped; api-contract **0.84** — seven `/admin/*` rows + the admin
+  auth-class block) — auth spine (`requireAdminTier`, tier read from the USER ROW per request —
+  revocation-effective) · Spotlight → `server_settings` kv (audited PUT; DB → seed → newest-N) ·
+  stats + crude DAU (`users.lastSeenAt`, throttled after-response stamp) · reports viewer (SYS-11
+  feedback capture doesn't exist → **OQ-160**) · MOD-08 takedown + restore (`moderation_hidden_at`
+  separate from `status`; adopters fall back per CARD-18, grants untouched) · the `apps/admin` SPA
+  (`@ingame/admin`, Vite/React — Ops section live, Moderation/Operator stubbed per the ruling).
+  Migration **0025** applied to the dev DB (backup `local_ingame_2026-07-27T15-03-26.sql` first).
+  A **fifth SYS-01 read class** (`SYS-01-ADMIN-OP`, lint-confined to admin-repo.ts) — decision 0081 §5.
+- **Murr (fable, fresh-context, THOROUGH mode on authz — two independent probes): NEEDS-FIXES —
+  3 MAJORS → fix round → RE-MURR SOUND.** The majors, all one class: the "hidden means hidden" claim
+  forgot THREE public card surfaces — trending (`listPublishedForTrending` used the raw status
+  literal), the contributor surfaces (`listPublishedByOwner`), and a FRIEND's view of an adopter's
+  shelf (the `listFriendCollection` join carried no moderation predicate) — all now route through
+  `publishedOnly()` / the join's `isNull`, pinned by a three-seam regression test (pre-pull sanity +
+  post-pull absence per leg, invert-verified). Minors closed: the ledger-attribution + cardsPublished
+  count filters · audit/event now fire ONLY on a real transition (the double-submit no-second-row
+  claim is finally ASSERTED against the audit table) · the SPA refresh single-flight (the Spotlight
+  Promise.all made the token-family burn deterministic) + its concurrent-401 test · the reports
+  cursor derives from page size · the non-overlapping-401 rotated-bearer window · the reports filter
+  race (epoch guard). The AUTHZ WALL ITSELF held both probes: 7/7 routes double-walled, tier nesting
+  enforced, fail-closed on malformed shapes, the fifth door lint-confined with a red-on-abuse fixture.
+- **Owner-eye (recorded, not blocking):** the designer's own `/me/cards` shows a pulled card with NO
+  hidden indicator until MOD-13 (M7) — consistent with the v1 ruling, bless consciously · a
+  taken-down composition still blocks identical re-publishes (deliberate) · the reports queue acts on
+  `targetId` blind (no admin single-card read — the recorded api-contract question) · console tokens
+  in sessionStorage (documented tradeoff). DEBT recorded: the two minor-tier seam filters + the
+  restore-of-never-hidden path ship without their own asserts · `errors.ts`'s session-bounce coupling ·
+  offset-append duplicate rows on the reports table under concurrent new reports.
+- **Definitive green (witnessed, final tree):** typecheck PASS · lint 0 err (custom 0/0) ·
+  **unit 331/331 (38f) · integration 576/576 FULL (28f — incl. the 33-test admin slice) ·
+  mobile 923/923 (untouched) · admin SPA 19/19**. /health 🟢.
+- **Parvati/console smoke:** the live console walk (self-grant → vite → claude-in-chrome) runs at
+  landing; the app-side surfaces are untouched by P7.
+
 ## Operational actions this pass (disk/DB state, not git — recorded here so they're not lost)
 - **Dev-DB durability net** (committed `b9e72a2`): `npm -w @ingame/api run db:backup` + `db:reset`
   auto-backs-up first. Backups in `~/ingame-db-backups/` (3 taken 2026-07-19; keeps 20). Permanent fix =

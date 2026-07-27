@@ -204,6 +204,14 @@ MOD-10 audit logging for privileged writes) · hosting shape (a separate web sur
 what's genuinely needed pre-beta vs deferrable). Owner sits on the proposal before any build.
 
 > **→ PROPOSAL DELIVERED 2026-07-26:** [`p7-admin-console-proposal.md`](p7-admin-console-proposal.md)
+> **→ P7 v1 BUILT + LANDED (2026-07-27, the settlement sitting's build) — see review-coverage §P7.**
+> Server (auth spine · Spotlight-to-DB · stats+DAU · reports viewer · MOD-08 takedown/restore) + the
+> `apps/admin` SPA (Ops live; Moderation/Operator stubbed). Murr thorough-mode found 3 majors (the
+> forgotten moderation seams) — closed + regression-pinned; re-Murr SOUND. Decision 0081 · spec 0.69 ·
+> api 0.84 · migration 0025 (dev DB migrated, backup first) · OQ-160 (no SYS-11 feedback capture).
+> The original proposal below stands as the design record; the sitting's rulings amended it (one SPA
+> with THREE sections — the §10 operator tool folds in; takedown pulled forward; crude DAU included).
+
 > — one console two phases (P7 ops now, M7 verbs later; the §10 operator tool stays distinct), external
 > Vite SPA on Cloudflare Pages against a new `/admin/*` router, pre-beta v1 = auth spine + Spotlight
 > curation (config→`server_settings`) + read-only stats + read-only reports/feedback + Sentry link-out.

@@ -60,6 +60,20 @@ const PUBLISHED_PREDICATE_RE = /['"]published['"]|\bpublishedOnly\s*\(/;
 // marker → auditable at the gate-3 seam review; the payload allowlist is the serializer's (toFriendShape).
 const FRIEND_READ_RE = /\/\/\s*SYS-01-FRIEND-READ\b/;
 const FRIEND_PREDICATE_RE = /['"]accepted['"]|\bfriendScoped\s*\(/;
+// SYS-01-ADMIN-OP (M6 P7 / decision 0081 — the FIFTH access class, and the only one that admits a
+// WRITE): the admin console reads ACROSS users (aggregate stats · the reports queue) and performs the
+// one privileged cross-user write v1 ships (the MOD-08 card takedown). No row predicate can express
+// "the caller is a tier-N admin", so unlike the other four doors this marker carries NO in-statement
+// predicate — its guard is CONFINEMENT plus the layers above it:
+//   • FILE-CONFINED to `repositories/admin-repo.ts` — the marker cannot grant a bypass anywhere else
+//     (the same containment pattern as SYS-01-AUTH-LOOKUP; a misuse fixture proves it).
+//   • Every route reaching that file is behind `requireAdminTier(n)` (auth/admin.ts) and is covered by
+//     the STANDING admin-class authz sweep (plain user → 403, unauthenticated → 401).
+//   • Every write through it also writes a MOD-10 `admin_audit_log` row in the same transaction.
+// That trade is recorded in decision 0081 §"the fifth door" — it is a deliberate, auditable widening,
+// not an oversight. Keep the file tiny: everything in admin-repo.ts is reviewable in one sitting.
+const ADMIN_OP_RE = /\/\/\s*SYS-01-ADMIN-OP\b/;
+const isAdminOpFile = (path) => /(^|\/)repositories\/admin-repo\.[mc]?tsx?$/.test(path);
 // The composition-exclusion guarantee (OQ-122/CARD-15/0066 §2 — P3 finishes the lint work): a
 // SYS-01-PUBLIC-READ read must NEVER select the private `composition` column (cross-user viewers get
 // the flattened image only). The regex matches a `.composition` column ref but NOT `.compositionHash`
@@ -138,6 +152,7 @@ export default {
           hasAggregateCall: AGGREGATE_CALL_RE.test(codeWindow),
           hasPublicReadComment: PUBLIC_READ_RE.test(pOrigWindow),
           hasFriendReadComment: FRIEND_READ_RE.test(pOrigWindow),
+          hasAdminOpComment: ADMIN_OP_RE.test(origWindow),
         };
       };
 
@@ -191,6 +206,9 @@ export default {
         const selectsComposition = marksPublicRead && COMPOSITION_SELECT_RE.test(statement);
         const hasPublicRead = marksPublicRead && hasPublishedPredicate;
         const hasFriendRead = marksFriendRead && FRIEND_PREDICATE_RE.test(statement);
+        // The ADMIN console's cross-user reads + the one MOD-08 write — file-confined to admin-repo.ts
+        // (see the marker's contract above). Predicate-less by nature; the gate is requireAdminTier.
+        const hasAdminOp = isAdminOpFile(file.path) && w.hasAdminOpComment;
         // The composition-exclusion guarantee: a PUBLIC read that selects `composition` is NEVER
         // exempt — the private layers must not cross to another principal (CARD-15 / 0066 §2). Flag it
         // explicitly (a clear message) and skip the generic check (one violation, not two).
@@ -208,7 +226,8 @@ export default {
           !hasAuthLookup &&
           !hasCommunityAggregate &&
           !hasPublicRead &&
-          !hasFriendRead
+          !hasFriendRead &&
+          !hasAdminOp
         ) {
           const kind = READ_VERBS.has(verb) ? 'read' : verb === 'insert' || verb === 'into' ? 'upserted' : 'modified';
           violations.push({

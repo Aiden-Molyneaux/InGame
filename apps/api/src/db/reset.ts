@@ -21,9 +21,11 @@ export async function resetDb(): Promise<void> {
   // named explicitly. `achievement_definitions` is GLOBAL content (no user FK — survives the CASCADE
   // like `genres`), but the ACH seed is per-test fixture data (P6 slices seed exactly the defs they
   // exercise), so it is truncated explicitly for clean per-test isolation (the CASCADE clears the
-  // dependent user_achievements first).
+  // dependent user_achievements first). `server_settings` (M6 P7) is the same shape of problem — a
+  // GLOBAL config kv with no user FK — and an admin-console test that curates the Spotlight would
+  // otherwise leak that curation into every later test in the file, so it is named here too.
   await db.execute(
-    sql`TRUNCATE TABLE users, admin_audit_log, domain_events, achievement_definitions RESTART IDENTITY CASCADE`,
+    sql`TRUNCATE TABLE users, admin_audit_log, domain_events, achievement_definitions, server_settings RESTART IDENTITY CASCADE`,
   );
 }
 

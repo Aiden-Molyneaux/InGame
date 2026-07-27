@@ -628,3 +628,48 @@ export async function ok(exec, actorId, targetId) {
     }
   });
 });
+
+// M6 P7 (decision 0081) — the FIFTH door, SYS-01-ADMIN-OP. It is the only marker that admits a WRITE
+// and carries no in-statement predicate, so its ONLY structural guard is file confinement. These
+// tests are that guard's proof.
+describe('rule-02 SYS-01-ADMIN-OP marker (admin-repo-confined)', () => {
+  const adminBody = (marker) => `
+import { count, eq } from 'drizzle-orm';
+import { users, cardDesigns } from '../db/schema';
+export async function stats(exec) {
+  ${marker}
+  return exec.select({ total: count() }).from(users);
+}
+export async function hide(exec, cardId) {
+  ${marker}
+  return exec.update(cardDesigns).set({ moderationHiddenAt: new Date() }).where(eq(cardDesigns.id, cardId));
+}
+`;
+
+  it('EXEMPTS marked cross-user reads AND the one privileged write inside admin-repo.ts', () => {
+    const v = run([
+      file('apps/api/src/repositories/admin-repo.ts', adminBody('// SYS-01-ADMIN-OP: console read')),
+    ]);
+    expect(v).toHaveLength(0);
+  });
+
+  it('does NOT exempt the same marked access in ANY other repository (fails closed)', () => {
+    const v = run([
+      file('apps/api/src/repositories/profile-repo.ts', adminBody('// SYS-01-ADMIN-OP: console read')),
+    ]);
+    expect(v.length).toBeGreaterThan(0);
+  });
+
+  it('still flags UNMARKED cross-user access inside admin-repo.ts itself', () => {
+    const v = run([file('apps/api/src/repositories/admin-repo.ts', adminBody(''))]);
+    expect(v.length).toBeGreaterThan(0);
+  });
+
+  it('rejects the on-disk ADMIN-OP misuse fixture (marker outside admin-repo)', () => {
+    const dir = join(process.cwd(), 'fixtures', 'bad-pr-corpus', 'rule-02-scoping');
+    const all = collectFiles([dir], { exts: ['.ts'], cwd: process.cwd() });
+    const fixture = all.filter((f) => f.path.endsWith('admin-op-elsewhere-repo.ts'));
+    expect(fixture, 'admin-op-elsewhere-repo.ts missing from the corpus').toHaveLength(1);
+    expect(run(fixture).length, 'the misplaced ADMIN-OP marker was not flagged').toBeGreaterThan(0);
+  });
+});

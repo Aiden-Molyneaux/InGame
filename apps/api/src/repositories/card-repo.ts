@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, inArray, isNotNull, ne, notInArray, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, isNotNull, isNull, ne, notInArray, type SQL } from 'drizzle-orm';
 import { getDb, type Executor } from '../db/client';
 import { asActor, ownedBy } from '../db/scoped';
 import {
@@ -173,9 +173,20 @@ export async function countOwnedDesigns(
 // predicate is textually present. The payload is an EXPLICIT public-column allowlist (never
 // `composition`); the service serializes it through `toPublicShape`.
 
-/** The OQ-122 visibility predicate — `status = 'published'`, AND-ed with an optional extra clause. */
+/**
+ * The OQ-122 visibility predicate — `status = 'published'`, AND-ed with an optional extra clause.
+ *
+ * M6 P7 (MOD-08, decision 0081): it ALSO requires `moderation_hidden_at IS NULL`. Putting the
+ * takedown filter HERE — in the one helper every public read already had to go through — is what makes
+ * "hidden means hidden" true of the gallery, trending, the by-id publish read, adopt, and the public
+ * share path in a single edit, instead of six call sites that could drift. The `'published'` literal
+ * stays present so the rule-02 lint's PUBLIC-READ predicate check still recognizes it.
+ */
 export function publishedOnly(extra?: SQL): SQL {
-  const pub = eq(cardDesigns.status, 'published');
+  const pub = and(
+    eq(cardDesigns.status, 'published'),
+    isNull(cardDesigns.moderationHiddenAt),
+  ) as SQL;
   return extra ? (and(pub, extra) as SQL) : pub;
 }
 
@@ -428,7 +439,9 @@ export async function designNamesByIds(
     .select({ id: cardDesigns.id, name: cardDesigns.name, username: users.username })
     .from(cardDesigns)
     .innerJoin(users, eq(users.id, cardDesigns.ownerId))
-    .where(and(inArray(cardDesigns.id, cardIds), eq(cardDesigns.status, 'published')));
+    // MOD-08 (P7 Murr minor) — a card pulled FOR its name must not keep rendering that name on
+    // adopters' ledger boards; absent → the caller's generic degrade.
+    .where(and(inArray(cardDesigns.id, cardIds), publishedOnly()));
   return new Map(rows.map((r) => [r.id, { name: r.name, designerUsername: r.username }]));
 }
 
@@ -588,7 +601,9 @@ export async function listPublishedForTrending(
     .from(cardDesigns)
     .innerJoin(users, eq(users.id, cardDesigns.ownerId))
     .innerJoin(games, eq(games.id, cardDesigns.gameId))
-    .where(eq(cardDesigns.status, 'published'))
+    // MOD-08 (P7 Murr major) — publishedOnly, not the raw status literal: a pulled card must not rank
+    // on trending (the docstring's own claim; this was the forgotten site).
+    .where(publishedOnly())
     .orderBy(desc(cardDesigns.updatedAt));
 }
 
@@ -603,7 +618,8 @@ export async function countPublishedByOwner(
   const rows = await exec
     .select({ n: count() })
     .from(cardDesigns)
-    .where(ownedBy(actor, cardDesigns.ownerId, eq(cardDesigns.status, 'published')));
+    // MOD-08 (P7 Murr minor) — the public cardsPublished count agrees with the visible list.
+    .where(ownedBy(actor, cardDesigns.ownerId, publishedOnly()));
   return Number(rows[0]?.n ?? 0);
 }
 
@@ -648,5 +664,6 @@ export async function listPublishedByOwner(
     .from(cardDesigns)
     .innerJoin(users, eq(users.id, cardDesigns.ownerId))
     .innerJoin(games, eq(games.id, cardDesigns.gameId))
-    .where(ownedBy(actor, cardDesigns.ownerId, eq(cardDesigns.status, 'published')));
+    // MOD-08 (P7 Murr major) — a pulled card leaves the contributor surfaces too (signature/top/view-all).
+    .where(ownedBy(actor, cardDesigns.ownerId, publishedOnly()));
 }

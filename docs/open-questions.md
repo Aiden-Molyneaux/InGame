@@ -16,6 +16,17 @@
 
 ## Open
 
+- OQ-160: **SYS-11 in-app feedback capture is unbuilt — the admin console's feedback viewer is owed with it.**
+  Found while building the P7 admin console v1 (decision 0081): the ruled v1 cut included a read-only
+  "reports **& feedback**" viewer, but SYS-11's capture side does not exist anywhere — no
+  `feedback_submissions` table, no `POST /feedback` route, no client entry (grep-confirmed across
+  `apps/api/src`, `packages/shared`, `apps/mobile`). Only `reports` (MOD-01, capture-only since M6 P7)
+  is real. The console v1 therefore ships **`GET /admin/reports` only**; `GET /admin/feedback` was
+  deliberately NOT built rather than faked against an empty source. Whoever builds SYS-11 capture (the
+  Settings entry · the type enum · the SYS-05 bucket · the opaque `log_ref` bundle, OQ-060) should add
+  the console's viewer in the same pass — it is a ~30-line read on the pattern `/admin/reports`
+  already establishes. (2026-07-27) [behavior] deferred
+
 - OQ-159: **Wave-audit residual code-robustness lows (deferred, non-blocking).** Captured from the Murr wave
   audit (`waw38brwv`), the walk2 audit (agent `ac83ae79bfcc75d00`), and the re-Murr verify (agent
   `aab36fc085b8d47d9`) — none reopens a shipped fix; all beta-acceptable, filed so they're not lost:

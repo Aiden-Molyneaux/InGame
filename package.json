@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "stack": "node scripts/dev-stack.mjs",
-    "typecheck": "tsc -b tsconfig.json && tsc --noEmit -p apps/mobile/tsconfig.json",
+    "typecheck": "tsc -b tsconfig.json && tsc --noEmit -p apps/mobile/tsconfig.json && tsc --noEmit -p apps/admin/tsconfig.json",
     "build": "tsc -b tsconfig.json",
     "lint": "eslint . && npm run lint:custom && npm run lint:mobile",
     "lint:eslint": "eslint .",
@@ -26,6 +26,7 @@
     "test:unit": "vitest run --project unit",
     "test:integration": "vitest run --project integration",
     "test:mobile": "npm -w @ingame/mobile run test",
+    "test:admin": "npm -w @ingame/admin run test",
     "db:generate": "npm -w @ingame/api run db:generate",
     "db:migrate": "npm -w @ingame/api run db:migrate",
     "ci": "npm run typecheck && npm run lint && npm run test:unit && npm run test:integration && npm run lint:bundle && npm run build"

@@ -151,7 +151,11 @@ export async function listFriendCollection(
     .from(collectionEntries)
     .innerJoin(friendships, friendScoped(actorId, collectionEntries.userId))
     .innerJoin(games, eq(games.id, collectionEntries.gameId))
-    .leftJoin(cardDesigns, eq(cardDesigns.id, collectionEntries.activeCardDesignId))
+    // MOD-08 (P7 Murr major) — the moderation predicate rides the JOIN: a pulled equipped card yields
+    // null card columns and the serializer's default-face path takes over, so a FRIEND's view of the
+    // shelf falls back exactly like the adopter's own (a legal pull can't be visible to one and not
+    // the other).
+    .leftJoin(cardDesigns, and(eq(cardDesigns.id, collectionEntries.activeCardDesignId), isNull(cardDesigns.moderationHiddenAt)))
     .leftJoin(users, eq(users.id, cardDesigns.ownerId))
     .where(eq(collectionEntries.userId, targetId))
     .orderBy(asc(collectionEntries.position));

@@ -69,6 +69,12 @@ export const users = pgTable('users', {
     onDelete: 'set null',
   }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  // M6 P7 (admin console v1, decision 0081) — the CRUDE presence stamp backing the console's `dau24h`
+  // tile. Written by the auth middleware at MOST once per ~15 minutes per user (never per request, see
+  // auth/last-seen.ts), best-effort and never blocking a request. Deliberately NOT analytics: true
+  // DAU/MAU/retention rides the PostHog work on the ACH-08 event spine (road-to-market §7). NULL ⇒
+  // never seen since the column landed.
+  lastSeenAt: timestamp('last_seen_at', { withTimezone: true }),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
 }, (table) => ({
   // OQ-124 — case-INSENSITIVE username uniqueness enforced on the generated case-fold column. The
@@ -640,6 +646,14 @@ export const cardDesigns = pgTable(
       (): AnyPgColumn => cardDesigns.id,
       { onDelete: 'set null' },
     ),
+    // MOD-08 moderation takedown (M6 P7 admin console v1, decision 0081) — the moderation-hidden
+    // state. NULL ⇒ visible; a timestamp ⇒ pulled by an admin (POST /admin/cards/:id/takedown). It is
+    // deliberately SEPARATE from `status`: a takedown must not rewrite the designer's own lifecycle
+    // (a restored card returns to exactly the status it had). Enforced at TWO seams — `publishedOnly`
+    // (every public/gallery/adopt/share read) and the adopted-design reads (so an adopter's equipped
+    // card FALLS BACK per the CARD-18 default-card guarantee, which is MOD-08's stated exception).
+    // The actor + reason live on the MOD-10 `admin_audit_log` row, not here.
+    moderationHiddenAt: timestamp('moderation_hidden_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -1103,6 +1117,25 @@ export const reports = pgTable(
     targetIdx: index('reports_target_idx').on(table.targetType, table.targetId),
   }),
 );
+
+/**
+ * `server_settings` — the tiny GLOBAL key/value store for owner-curated, live-tunable server config
+ * (M6 P7 admin console v1, decision 0081). GLOBAL (on the F32 manifest — server configuration, not
+ * per-user state; the same class as `store_products`). One row per setting key; `value` is jsonb so a
+ * setting can be a list, a number, or an object without a migration per lever.
+ *
+ * FIRST (and, at v1, ONLY) key: **`spotlight_ids`** — the SYS-04 Spotlight curation (ECON-01/COSM-01).
+ * The read order is DB → the `SPOTLIGHT_IDS` config seed → the newest-N fallback: the config constant
+ * becomes the SEED/fallback, so GET /store behaves EXACTLY as before until an admin writes a row.
+ * Writes ride `PUT /admin/spotlight` (Admin IV) and are MOD-10 audited (`spotlight.update`).
+ */
+export const serverSettings = pgTable('server_settings', {
+  key: text('key').primaryKey(),
+  value: jsonb('value').notNull().$type<unknown>(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type ServerSettingRow = typeof serverSettings.$inferSelect;
 
 export type QueueItemRow = typeof queueItems.$inferSelect;
 export type NewQueueItemRow = typeof queueItems.$inferInsert;

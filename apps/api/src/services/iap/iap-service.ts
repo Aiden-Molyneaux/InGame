@@ -9,7 +9,7 @@ import * as iapRepo from '../../repositories/iap-repo';
 import * as storeRepo from '../../repositories/store-repo';
 import * as economyRepo from '../../repositories/economy-repo';
 import * as entitlementRepo from '../../repositories/entitlement-repo';
-import { listSpotlightCatalog } from '../../config/cosmetics';
+import { resolveSpotlightCatalog } from '../admin/spotlight-service';
 import { toCosmeticListItem } from '../cosmetics/cosmetic-service';
 import * as ledger from '../economy/ledger-service';
 import { getIapProvider } from './index';
@@ -267,7 +267,10 @@ const reverseRefund = mutation(
 export async function getStore(actorId: string): Promise<StoreResponse> {
   const products = await storeRepo.listActiveProducts();
   const purchased = await iapRepo.listOwnPurchasedProductIds(actorId);
-  const spotlight = listSpotlightCatalog();
+  // M6 P7 (decision 0081) — the Spotlight now resolves DB-first (server_settings['spotlight_ids'] →
+  // the SPOTLIGHT_IDS config seed → the newest-N fallback), so the owner curates it live from the
+  // admin console instead of by redeploying config. Identical output until an admin writes.
+  const spotlight = await resolveSpotlightCatalog();
   const owned = await entitlementRepo.findOwnedCosmeticIds(
     actorId,
     spotlight.map((e) => e.id),

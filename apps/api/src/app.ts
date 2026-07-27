@@ -21,6 +21,8 @@ import { queueRoutes } from './routes/queue-routes';
 import { listRoutes } from './routes/list-routes';
 import { achievementRoutes } from './routes/achievement-routes';
 import { reportRoutes } from './routes/report-routes';
+import { adminRoutes } from './routes/admin-routes';
+import { presenceStamp } from './http/presence';
 import { wireAchievementsEngine } from './achievements/engine';
 import { mediaRoot, MEDIA_URL_PREFIX, PUBLIC_MEDIA_PREFIXES } from './storage';
 import { join } from 'node:path';
@@ -75,6 +77,9 @@ export function createApp(): Express {
   );
   app.use(requestId);
   app.use(devCors()); // OQ-120 — dev-only; a no-op unless DEV_CORS_ORIGINS is set
+  // M6 P7 (decision 0081) — the `users.last_seen_at` presence stamp behind the admin console's crude
+  // DAU. Runs AFTER the response is sent and detached, so it is off the request path entirely.
+  app.use(presenceStamp);
 
   app.get('/api/health', (_req, res) => {
     res.json({ ok: true });
@@ -112,6 +117,7 @@ export function createApp(): Express {
       ...listRoutes,
       ...achievementRoutes,
       ...reportRoutes,
+      ...adminRoutes,
     ]),
   );
 

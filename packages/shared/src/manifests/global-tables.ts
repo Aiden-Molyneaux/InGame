@@ -26,6 +26,13 @@ export const GLOBAL_TABLES = [
   // content every user reads the same (like games/cosmetics); the PER-USER progress lives in the
   // user-owned `user_achievements` (owner key = user_id → fails closed, scoped by asActor).
   'achievement_definitions',
+  // M6 P7 (admin console v1, decision 0081) — the owner-curated SERVER CONFIG kv (`spotlight_ids` at
+  // v1). GLOBAL by nature: it is server configuration, not per-user state (the same class as
+  // `store_products`), it carries NO owner column, and every caller reads the SAME row via GET /store.
+  // Reads are internal (the store read); WRITES are gated at the ROUTE by requireAdminTier(4) and are
+  // MOD-10 audited — the wall is authorization, not actor-scoping.
+  // (NOTE: no apostrophes in this file. The rule-2 lint parses the array with a single-quote regex.)
+  'server_settings',
 ] as const;
 
 export type GlobalTable = (typeof GLOBAL_TABLES)[number];

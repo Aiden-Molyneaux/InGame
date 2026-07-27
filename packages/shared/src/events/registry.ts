@@ -101,6 +101,15 @@ export const DOMAIN_EVENT_TYPES = [
   // its reversal row (a revert IS an edit — the history stays append-only). Payload = { field } (+
   // { revertedEditId } on a reversal) — the field name is the pinned enum, ids only; the old/new VALUES
   // stay off the event spine (user text never rides it, F18/MOD-07 — read them off the row).
+  // M6 P7 admin console v1 (decision 0081 — the `/admin/*` router's privileged WRITES; MOD-08/10,
+  // SYS-04). Each of these ALSO writes a MOD-10 `admin_audit_log` row in the same transaction (the
+  // audit row is the oversight record; the event is the spine's copy). Append at the END.
+  'admin.spotlight_updated', // SYS-04/ECON-01 — PUT /admin/spotlight replaced the curated Spotlight list.
+  // Payload = { count } only: WHICH ids were curated is an editorial decision the audit row + the
+  // settings row already hold; the event spine stays minimal (F18).
+  'admin.card_taken_down', // MOD-08 — POST /admin/cards/:id/takedown hid a card (adopters fall back per
+  // CARD-18). Payload = { cardId } — the REASON is moderator-facing text and stays off the spine (F18).
+  'admin.card_restored', // MOD-08/MOD-02 — POST /admin/cards/:id/restore lifted a takedown. Payload = { cardId }.
 ] as const;
 
 export type DomainEventType = (typeof DOMAIN_EVENT_TYPES)[number];

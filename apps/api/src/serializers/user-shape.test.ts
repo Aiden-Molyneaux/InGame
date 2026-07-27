@@ -34,6 +34,7 @@ function makeUser(over: Partial<UserRow> = {}): UserRow {
     usernameChangedAt: null,
     nowPlayingGameId: null,
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
+    lastSeenAt: null, // M6 P7 presence stamp — never serialized to any shape (admin-console only)
     deletedAt: null,
     ...over,
   };

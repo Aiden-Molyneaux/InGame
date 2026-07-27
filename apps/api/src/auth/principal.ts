@@ -6,6 +6,10 @@ import { verifyAccessToken } from './tokens';
 // as `Authorization: Bearer <accessToken>`; it is verified (signature + issuer + expiry) and its `sub`
 // becomes the actor id. The server resolves the actor from this principal ONLY — it never trusts an id
 // in the request body. An invalid / expired / malformed token → a NEUTRAL AuthFailedError (401).
+//
+// (M6 P7 — the `users.last_seen_at` presence stamp behind the admin console's crude DAU deliberately
+// does NOT live here: it rides an app-level after-response middleware, `http/presence.ts`, so it costs
+// nothing on the request path and this file keeps no database dependency at all.)
 export const resolvePrincipal: RequestHandler = (req, _res, next) => {
   const header = req.header('authorization') ?? '';
   const match = /^Bearer\s+(.+)$/i.exec(header);

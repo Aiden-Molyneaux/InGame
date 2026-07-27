@@ -176,6 +176,13 @@
       "when": 1784432257546,
       "tag": "0024_spooky_sabretooth",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1785162965347,
+      "tag": "0025_eminent_doctor_faustus",
+      "breakpoints": true
     }
   ]
 }
