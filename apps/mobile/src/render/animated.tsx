@@ -83,8 +83,36 @@ function useLoopPhase(duration: number): SharedValue<number> {
   return p;
 }
 
+// ── The marquee light's colour (owner sitting 2026-07-27 — reverses the warm-bulb deferral): the
+// chasing LIGHT tints from `frame.color` so a recoloured MARQUEE ULTIMATE reads as ONE tinted frame,
+// not a warm bulb on a foreign track. Same registry-pin trick as the track: the base/registry gold
+// `#e8c14a` returns the EXACT legacy pair (glow `#fff2b0` · core `#ffffff` — pixel-identical, the
+// lighten ratios are measured from that pair and are non-uniform), any other colour lightens
+// per-channel toward white; missing/unparseable degrades to the legacy pair (never a dark light). ──
+export const MARQUEE_LIGHT_LEGACY = { glow: '#fff2b0', core: '#ffffff' } as const;
+// Per-channel lighten-toward-white ratios measured from the legacy pair (#e8c14a → #fff2b0).
+const GLOW_LIGHTEN = [23 / 23, 49 / 62, 102 / 181] as const;
+const CORE_LIGHTEN = 0.85; // the hot core keeps a whisper of the hue (registry pins pure white)
+const lighten = (c: number, k: number): number => Math.max(0, Math.min(255, Math.round(c + (255 - c) * k)));
+const hexOf = (rgb: number[]): string => `#${rgb.map((c) => c.toString(16).padStart(2, '0')).join('')}`;
+
+/** The chase light's glow+core for a marquee frame colour (pure, total — the marqueeTrackColor twin). */
+export function marqueeLightColors(frameColor: unknown): { glow: string; core: string } {
+  if (typeof frameColor !== 'string') return { ...MARQUEE_LIGHT_LEGACY };
+  const m = /^#?([0-9a-f]{6})$/i.exec(frameColor.trim());
+  if (!m) return { ...MARQUEE_LIGHT_LEGACY };
+  const hex = m[1]!.toLowerCase();
+  if (`#${hex}` === '#e8c14a') return { ...MARQUEE_LIGHT_LEGACY };
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16)) as [number, number, number];
+  return {
+    glow: hexOf([lighten(r, GLOW_LIGHTEN[0]), lighten(g, GLOW_LIGHTEN[1]), lighten(b, GLOW_LIGHTEN[2])]),
+    core: hexOf([lighten(r, CORE_LIGHTEN), lighten(g, CORE_LIGHTEN), lighten(b, CORE_LIGHTEN)]),
+  };
+}
+
 /** A bright light chasing the card's rectangular border (MARQUEE frame). */
-function MarqueeChase({ W, H }: { W: number; H: number }) {
+function MarqueeChase({ W, H, color }: { W: number; H: number; color?: unknown }) {
+  const { glow, core } = marqueeLightColors(color);
   const phase = useLoopPhase(2400);
   const inset = Math.max(2, W * 0.014);
   const transform = useDerivedValue(() => {
@@ -114,10 +142,10 @@ function MarqueeChase({ W, H }: { W: number; H: number }) {
   const r = Math.max(4, W * 0.03);
   return (
     <Group transform={transform}>
-      <Circle cx={0} cy={0} r={r} color="#fff2b0">
+      <Circle cx={0} cy={0} r={r} color={glow}>
         <BlurMask blur={Math.max(3, W * 0.03)} style="solid" />
       </Circle>
-      <Circle cx={0} cy={0} r={Math.max(2, W * 0.014)} color="#ffffff" />
+      <Circle cx={0} cy={0} r={Math.max(2, W * 0.014)} color={core} />
     </Group>
   );
 }
@@ -220,7 +248,7 @@ export function AnimatedCardLayer({
   if (reduce) return null;
 
   const layers: React.ReactNode[] = [];
-  if (composition.frame?.kind === 'marquee') layers.push(<MarqueeChase key="marquee" W={width} H={height} />);
+  if (composition.frame?.kind === 'marquee') layers.push(<MarqueeChase key="marquee" W={width} H={height} color={composition.frame?.color} />);
   if (composition.effect?.kind === 'embers') layers.push(<EmberRise key="embers" W={width} H={height} />);
   if (composition.effect?.kind === 'frost') layers.push(<SheenSweep key="frost" W={width} H={height} color="rgba(207,234,255,0.4)" duration={3500} />);
   if (composition.finish?.kind === 'holographic') layers.push(<SheenSweep key="holo" W={width} H={height} color="rgba(255,255,255,0.45)" duration={2400} />);

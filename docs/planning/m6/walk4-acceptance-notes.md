@@ -220,6 +220,48 @@ what's genuinely needed pre-beta vs deferrable). Owner sits on the proposal befo
 - **Parked-2** HueStrip literals: **blessed**. · **Parked-3** aisle co-listing: **dropped** (didn't bother the owner).
 - **Copy-1** AVG RATING wording: **accepted**. · Older parked polish (H/HRS · ▶NOW): **accepted as-is**.
 
+## The walk-4 SETTLEMENT SITTING (owner, 2026-07-27) — every parked item ruled
+
+**BLESSED AS BUILT (no change):** SAVE/CANCEL full-size · forge LETTERS autosave · the no-change
+guard's can't-freeze-default semantic · photo-avatar hidden while the forge is open (revisit-free) ·
+the drawer at 0.85 + hero card · the A1 gate disclosing past the overflow door · the fork sheet's
+absent ⋯ · publish-from-add-flow equips (the OC-4 judgment ratified) · removeEntry non-optimistic ·
+the P5-i copy breadth.
+
+**CHANGES ORDERED (the sitting's fix batch):**
+1. **Marquee chase light TINTS from `frame.color`** (reverses the Murr-minor deferral): the live
+   light derives from the frame colour (lightened), with the registry-gold base marquee keeping the
+   current warm-gold/white look pixel-identically (the same registry-pin trick as the track).
+2. **P2-d mid-fetch**: refetching FROM a settled-with-matches state HOLDS the quiet TertiaryLink
+   until results settle (no gold flash per keystroke).
+3. **P5-f RESOLVED — the real nit was the DOUBLE "View all":** the friend profile's ACHIEVEMENTS
+   section drops its "View all" (the Achievements page it lands on keeps its own). The W-B10
+   door-row asymmetry itself is fine; no collections teaser is wanted.
+
+> **→ THE SITTING'S FIX BATCH BUILT + MURRED (2026-07-27).** Murr (fable, proportional): NEEDS-FIXES —
+> 1 major, ON THE TEST not the code: the View-all regression guard queried the raw label while
+> TertiaryLink renders `VIEW ALL ›` (a can't-fail assertion; Murr proved it by reverting the file) →
+> corrected + honestly invert-checked (fails pre-fix now). Debt paid same round: the justifications
+> ledger restored to a one-line raw-UTF-8 insertion (the re-serialize had churned all 70 lines) · the
+> padding "deterministic" test deleted. TWO OWNER-EYE NOTES for the next walk: (1) the derived glow's
+> red channel saturates to 255 (the gold-measured ratio) — a COOL marquee pick gets a warm pink-white
+> light, faithful to the ruling but eyeball the first blue/teal recolour; (2) while refetching from a
+> settled-with-matches search there is now NO spinner in the slot (the stale fan + "MATCHING…" header
+> carry the in-flight signal) — intended, but a visible delta worth one glance.
+
+**P7 RULED — BUILD APPROVED (v1 now, against the dev stack):**
+- **Home: ONE external SPA, THREE tier-gated sections** — Ops (now) · Moderation (M7) · Operator
+  (money/config/governance, behind a sudo re-auth gate, when the need arrives). The §10 operator
+  tool FOLDS INTO the same SPA as its third section (supersedes the proposal's two-surface split);
+  the app keeps only the PROF-09 badge (+ an optional deep-link later). **MOD-04's in-app wording is
+  re-scoped accordingly — a product-spec ripple owed at the P7 build's doc pass.**
+- **v1 cut: the five rows + CARD TAKEDOWN (MOD-08) pulled forward** as the beta's one UGC safety
+  valve (second audited write). Plus **crude DAU** (`users.lastSeenAt` + a middleware stamp) and
+  **Spotlight → a `server_settings` kv** with audited `GET/PUT /admin/spotlight`.
+- **Self-grant:** a documented runbook SQL line (out-of-band per 0033). **Timing:** build against
+  dev now; deploy to Cloudflare Pages when P15/G-C lands.
+- **Prefill:** the walking phase continues — the sign-in `__DEV__` prefill stays uncommitted.
+
 ## Standing environment notes for the executing session
 - `apps/api/.env.dev` runs `APPLE_VERIFIER=apple` (post-SIWA-E2E) — agent mock-token sign-ins 401
   until flipped back to `stub`; email sign-ins unaffected. Flip it if a dev flow needs mock SIWA.

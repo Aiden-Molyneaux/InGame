@@ -177,6 +177,17 @@ describe('P9 friend-profile route — the shape matrix', () => {
     expect(seq).toEqual(['STATS', 'ACHIEVEMENTS', 'CONTRIBUTIONS', 'PINNED FAVOURITE', 'NOW PLAYING', 'THEIR DEVICE', 'VIEW COLLECTION']);
   });
 
+  it('the ACHIEVEMENTS head carries NO "View all" — the teaser ROW is the door (owner sitting 2026-07-27, P5-f)', () => {
+    set({ data: FRIEND });
+    render(wrap(<UserProfile />));
+    // the Achievements PAGE keeps its own View all; the profile header doubling it was the nit.
+    // TertiaryLink renders `${label.toUpperCase()} ›` — assert the RENDERED text (Murr: the raw-label
+    // query matched nothing in either world and could never fail).
+    expect(screen.queryByText('VIEW ALL ›')).toBeNull();
+    // the row-door stands: the whole teaser row navigates
+    expect(screen.getByLabelText(`View ${FRIEND.username}'s achievements`)).toBeTruthy();
+  });
+
   it('C4 trio — STATS tiles render the six-pack (percentile chips absent, M7)', () => {
     set({ data: FRIEND });
     render(wrap(<UserProfile />));

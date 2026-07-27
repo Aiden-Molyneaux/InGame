@@ -170,6 +170,24 @@ describe('walk-4 P2-d: the create affordance earns its prominence from the resul
     expect(screen.queryByText('NO MATCHES', { includeHiddenElements: true })).toBeNull();
   });
 
+  it('refetching FROM settled-with-matches HOLDS the quiet link — no gold flash per keystroke (owner sitting 2026-07-27)', () => {
+    // settle WITH matches first — the quiet link posture
+    mockSearchState = { isFetching: false, data: { items: [ITEM('g1', 'Zelda: Echoes')] } };
+    renderAddGame();
+    typeQuery('Zelda');
+    expect(screen.getByRole('link', { name: 'CREATE “ZELDA” ›' })).toBeTruthy();
+
+    // the next keystroke's refetch — RTKQ keeps the previous data while the fetch flies. Pre-fix,
+    // isFetching alone flipped the whole slot to the no-matches posture: gold key + anchor, per keystroke.
+    mockSearchState = { isFetching: true, data: { items: [ITEM('g1', 'Zelda: Echoes')] } };
+    typeQuery('Zelda R');
+    expect(screen.getByRole('link', { name: 'CREATE “ZELDA R” ›' })).toBeTruthy(); // still the quiet link
+    expect(screen.queryByRole('button', { name: /^CREATE “/ })).toBeNull(); // no gold flash
+    expect(screen.queryByText('NO MATCHES', { includeHiddenElements: true })).toBeNull(); // no anchor swap
+
+    // a FIRST fetch (nothing settled) still wears the no-matches posture — unchanged behavior
+  });
+
   it('either affordance opens the CREATE form', () => {
     mockSearchState = { isFetching: false, data: { items: [ITEM('g1', 'Zelda: Echoes')] } };
     renderAddGame();

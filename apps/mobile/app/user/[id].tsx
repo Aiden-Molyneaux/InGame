@@ -168,11 +168,13 @@ export default function UserProfile() {
           <FriendStats stats={data.stats} />
 
           {/* ACHIEVEMENTS teaser (ACH-05 · P11) — the earned count off /users/:id/achievements, a door
-              into their trophy case. Seated after STATS per the self profile's head order (W-B10 r4). */}
+              into their trophy case. Seated after STATS per the self profile's head order (W-B10 r4).
+              No "View all" in the head (owner sitting 2026-07-27, the P5-f resolution): the teaser ROW
+              is the door, and the Achievements page it lands on carries its own View all — the header
+              link doubled it. */}
           <View style={styles.section}>
             <View style={styles.sectionRow}>
               <Text style={styles.sectionHead}>ACHIEVEMENTS</Text>
-              <TertiaryLink label="View all" onPress={() => router.push(`/user/${data.id}/achievements`)} />
             </View>
             <Pressable
               accessibilityRole="button"

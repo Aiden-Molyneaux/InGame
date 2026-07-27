@@ -217,10 +217,17 @@ function SearchMode({
   useEffect(() => setForeIndex(0), [querying, searchState.data]);
   const safeFore = results.length > 0 ? Math.min(foreIndex, results.length - 1) : 0;
   const focused = results[safeFore] ?? null;
-  // The NO-MATCHES posture — settled-with-nothing OR mid-fetch (the fetch rides the same slot behind
-  // the spinner overlay). Drives BOTH the status slot and the P2-d create prominence, so the two can
-  // never disagree and the swap can never reflow.
-  const noMatches = searchState.isFetching || results.length === 0;
+  // The NO-MATCHES posture — drives BOTH the status slot and the P2-d create prominence, so the two
+  // can never disagree and the swap can never reflow. P2-d refinement (owner sitting 2026-07-27):
+  // refetching FROM a settled-with-matches state HOLDS the previous posture (the quiet create link +
+  // the stale fan — RTKQ keeps `data` until replaced), so typing never flashes the gold key per
+  // keystroke; only a first fetch (nothing settled) or a settled-empty result wears no-matches.
+  const hadMatchesRef = useRef(false);
+  useEffect(() => {
+    if (!querying) hadMatchesRef.current = false; // a cleared query starts the next search fresh
+    else if (!searchState.isFetching) hadMatchesRef.current = results.length > 0;
+  }, [querying, searchState.isFetching, results.length]);
+  const noMatches = searchState.isFetching ? !hadMatchesRef.current : results.length === 0;
 
   // The shared per-item add (any rail's ADD, or the search fan's) — routes through onAdded to the
   // COL-02 status beat exactly as before; tags the acting id for the in-flight/error affordance.

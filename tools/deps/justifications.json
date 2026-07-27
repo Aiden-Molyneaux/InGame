@@ -1,5 +1,6 @@
 {
   "//": "CONVENTIONS rule 8 ledger — the written justification for every workspace dependency (runtime OR dev). Surfaced at milestone exit for the 30-second G-M owner glance (decision 0051/F44). Internal @ingame/* packages are auto-justified. Format: name → why needed · why no stdlib/existing path · provenance.",
+  "@react-navigation/native": "The navigation engine expo-router already runs on (hoisted transitively); declared because the P6/R4 focus gate (src/render/animated.tsx useSurfaceFocused) imports NavigationContext directly — rule 8: declare what you import. No new install, the version pins what expo-router resolves. Provenance: the React Navigation team (expo-router’s own dependency).",
   "typescript": "The language + tsc typecheck/build (CI six-check steps 1 & 6). No stdlib equivalent. Provenance: Microsoft.",
   "tsx": "Run TS entrypoints (dev server, db:migrate, db:reset, drizzle scripts) without a build step. Avoids a compile-to-JS dance in M1. Provenance: privatenumber/esbuild.",
   "typescript-eslint": "TypeScript-aware ESLint integration + recommended rules (lint step). Provenance: typescript-eslint org.",
