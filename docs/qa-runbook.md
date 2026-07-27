@@ -168,6 +168,18 @@ under Promoted.
   Never diagnose 26/27 hook-timeouts as a code regression before ruling out machine load.
 - **Verified:** 2026-07-26 · **Hits:** 1 *(walk-4 Batch-1 verify; serial run then witnessed 539/539)*
 
+## Background test runs piped through `tail` swallow the failure details
+- **Symptom:** a backgrounded full-suite run (`npm run test:integration 2>&1 | tail -25` +
+  run_in_background) reports "2 failed" but the output file holds ONLY the summary lines — the
+  failing test names/assertions are gone, forcing scoped re-runs to rediscover which files failed.
+- **Diagnosis:** the pipe through `tail` truncates by construction; backgrounding captures the
+  pipeline's stdout, i.e. tail's.
+- **Fix:** background the BARE command (no pipe) — the harness writes the full output to the task
+  file; read the tail of THAT with Read/`tail` afterwards. Reserve pipes for foreground runs where
+  the full scrollback was already displayed.
+- **Verified:** 2026-07-26 · **Hits:** 1 *(walk-4 Batch-3 verify — cost two scoped re-runs to re-find
+  the 0047 backfill failure)*
+
 ## Promoted (owned by `doctor` — run `node scripts/dev-stack.mjs doctor`)
 
 - Postgres container down → `doctor` **db :5432** check.

@@ -254,10 +254,22 @@
   **unit 323/323 (37f — the media-cache-headers suite green standalone; its 4 "skips" in one earlier
   run were concurrency contention with the parallel integration run, noted honestly) · integration
   543/543 (27f, FULL suite) · mobile 115 suites/918 counted**.
-- **Parvati: OWED for Batches 2+3 together** — one combined visual sweep (forge · game-page overflow ·
-  CARD PREVIEW drawer · coach strip · the add-flow exit topology · the justAdded pulse) rides next if
-  the browser lane cooperates, else the owner's return walk. The dismissTo device-witness (3 call
-  sites) + the justAdded scroll on device are the two owner-walk checks explicitly owed.
+- **Parvati (combined Batches 2+3 sweep, takeover session): RAN — CLEAN on every reachable leg, 0 🚩.**
+  (1) the FORGE — screenshot: ONE avatar (the identity block IS the preview, "Your edits preview
+  here"), the P3-c "CHANGES NEED A DELIBERATE SAVE" microcopy live, and P3-b pinned visually (opened
+  BACKGROUND then INK → exactly ONE picker open). **BONUS LIVE PROBE of the Murr no-change guard:**
+  opened both pickers and closed WITHOUT picking, then read the DB — demo's `avatar_config` is still
+  NULL (pre-fix that exact gesture PATCHed an unchosen blob). (2) the CARD PREVIEW drawer —
+  screenshot: the new header, the HERO-size card, the EQUIPPED ON THIS CARD readout (FRAME · MARQUEE
+  ULTIMATE · EFFECT · SOFT GLOW · NAMEPLATE · SLAB · FONT · CHAKRA), the components list, and the
+  SHARE THIS CARD row (P4-d treatment). (3) the Collection renders healthy on the final tree; the
+  coach strip is correctly RETIRED in this browser profile (seen-flag persisted — the docked
+  placement is jest-pinned). NOT browser-walkable, recorded honestly: the CATALOG overflow (demo owns
+  all 16 seeded games — no catalog posture reachable without a shelf mutation; jest pins the ⋯ on all
+  postures) · the add-flow exit + justAdded pulse (DEVICE-owed along with the dismissTo witness — the
+  two explicit owner-walk checks) · the auth-screen copy legs (jest-pinned, AUTH-11 code-verified).
+  Zero mutations. 🎨 one polish note: the gallery cell's a11y label composes as "…already adopted to
+  adopt…" (awkward grammar, pre-existing class — the accessibility-labels hygiene pile).
 
 ## Operational actions this pass (disk/DB state, not git — recorded here so they're not lost)
 - **Dev-DB durability net** (committed `b9e72a2`): `npm -w @ingame/api run db:backup` + `db:reset`

@@ -150,8 +150,34 @@ return** in review-coverage (the precedent exists) and say so loudly in your rep
 | ~~next~~ ✅ | **Batch 1 landing — DONE** (`dbb45ca`, §5b) | review-before-landing ran; gates green + witnessed; records filed; pushed with the two receipt commits |
 | ~~then~~ ✅ | **Batch 2 — DONE** (`e4d3b7c`) | P3 + P4 + P5 (9/10; P5-f OWNER-CALL) + the avatarConfig shape completion (api-contract 0.82). Murr NEEDS-FIXES → orchestrator fix round (useShareCard consolidation · forge no-change guard · edit-mode ADD suppression · ShareGlyph dedup) → **re-Murr SOUND**. Green witnessed: typecheck · lint 0 · unit 316 · integration 542/542 · mobile 113/875. The owner's sign-in prefill preserved uncommitted (partial-stage, zero credential strings in the commit). Records: review-coverage §Walk-4 Batch 2 + the ledger blocks. |
 | ~~then~~ ✅ | **Batch 3 — DONE** | P2 (all four OC rulings; docs: product-spec 0.68 · api-contract 0.83 · design-spec 0.61 · SCREEN-STATUS · 00-INDEX) ∥ P6 (R1+R2+R4+R7-server; R1 receipt 139.77→0.04 ms/action @N=2000; **expo-image deferred to the P2b rebuild** — it would crash the walking phone build). Murr found **4 majors** (headline: the R4 gate was a silent no-op across skia's reconciler boundary; the P2×P6 equip-vs-refetch race) → fix round → re-Murr SOUND → 2 residual minors closed. Green witnessed: typecheck · lint 0 · unit 323 · **integration 543/543 full** · mobile 115/918. Records: review-coverage §Walk-4 Batch 3 + ledger §P2/§P6 blocks. |
-| chore | api font-deps declaration (§4.3) | small lockfile commit |
-| END | update THIS doc + the ledger dispositions; final wave receipt to the owner | |
+| ~~chore~~ ✅ | deps declared (rule-08) | @expo-google-fonts/* in the api + @react-navigation/native in mobile (the P6/R4 gate's import) |
+| ~~END~~ ✅ | **WAVE COMPLETE** — §10 below is the closing state | |
+
+## 10 · WAVE COMPLETE — the takeover session's closing state (2026-07-26)
+
+**Every buildable packet of the walk-4 wave is BUILT, MURRED, VERIFIED, and PUSHED.** The session:
+Batch 1 (P1 bugs + the fresh-eyes review's third-site fix) → the Parvati Batch-1 sweep (browser lane
+ALIVE — ran CLEAN, screenshots) → Batch 2 (P3 · P4 · P5 9/10 · the avatarConfig shape completion;
+Murr → fix round → re-Murr SOUND) → Batch 3 (P2 exit topology with all doc ripples · P6 R1+R2+R4+
+R7-server; Murr found 4 MAJORS incl. two that only a fresh adversary would catch — the skia-boundary
+no-op gate and the P2×P6 equip race — all closed, re-Murr SOUND) → the combined Parvati 2+3 sweep
+(CLEAN on every reachable leg; the forge no-change guard LIVE-PROBED against the DB) → the rule-08
+deps chore. **Final green (witnessed): typecheck · lint 0 err · unit 323/323 · integration 543/543
+FULL · mobile 115 suites/918.** /health 🟢. Doc versions now: product-spec 0.68 · api-contract 0.83 ·
+design-spec 0.61.
+
+**Owed to the OWNER'S RETURN (the complete list):**
+1. **Device walk checks (the two explicit ones):** the `dismissTo` add-flow endings (3 call sites;
+   statically verified to the router internals, not device-witnessed) · the `justAdded` scroll-to on
+   a buried MY-ORDER row. Plus the walk-4 owner-eye piles in the ledger's §P1–§P6 blocks (headline:
+   the drawer's 0.85 max-height · publish-from-add-flow equips · P2-d's mid-fetch gold flash ·
+   SAVE/CANCEL sizing · the A1 gate disclosing past the door).
+2. **OWNER-CALLS parked:** P5-f (collections View-all vs the W-B10 door-row ruling) · P7 (sitting) ·
+   the R7 client half (expo-image rides the P2b rebuild) · R3+R5 (pre-beta wave + release soak).
+3. **The sign-in `__DEV__` prefill** stays working-tree-only (never committed; revert word is yours).
+4. Deferred debt recorded in the ledger blocks (scroll-mechanism test · transformResponse seam tests ·
+   the true cold-cache styler walk · report-mapper triplication · the a11y "already adopted to adopt"
+   grammar · buildCard api↔mobile dedup · sticker-packs ghost aisle).
 
 **Deferred, recorded-not-claimed:** R3+R5 (pre-beta perf wave + release-build soak) · the MarqueeChase
 bloom colour (Murr minor — owner-eye) · the black-track WYSIWYG note (owner-eye) · P7 (owner sitting) ·
