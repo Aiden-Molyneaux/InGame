@@ -305,8 +305,16 @@
 - **Definitive green (witnessed, final tree):** typecheck PASS · lint 0 err (custom 0/0) ·
   **unit 331/331 (38f) · integration 576/576 FULL (28f — incl. the 33-test admin slice) ·
   mobile 923/923 (untouched) · admin SPA 19/19**. /health 🟢.
-- **Parvati/console smoke:** the live console walk (self-grant → vite → claude-in-chrome) runs at
-  landing; the app-side surfaces are untouched by P7.
+- **LIVE CONSOLE SMOKE (post-landing, 2026-07-27): PASS.** demo_curator_m3 self-granted `admin/4` on
+  the dev DB (the 0081 runbook line — LEFT GRANTED, the owner's console account; revoke is one line).
+  Vite detached on :5173 (hoisted bin; logs in `.devstack/admin-vite*.log`) — LEFT RUNNING for the
+  owner. Walked via claude-in-chrome: sign-in gate → **Stats** (screenshot: real dev-DB aggregates —
+  32 users · 45 published/22 adoptions · 16 games · 42 entries/1,142 hrs · 441 PX with the ledger
+  breakdown · 1 open report; the DAU tile read 1, proving the lastSeenAt stamp fired live; the
+  crude-DAU caveat on screen) → the three-section rail exactly as ruled (Ops LIVE · Moderation M7 ·
+  Operator LATER "behind a sudo re-auth gate") + identity `ADMIN IV · PLATFORM` → **Spotlight**
+  (text-verified: the SEED posture badge, the 6-row curation list, reorder/remove, explicit Save,
+  the audited-write note; NOTHING saved — read-only smoke).
 
 ## Operational actions this pass (disk/DB state, not git — recorded here so they're not lost)
 - **Dev-DB durability net** (committed `b9e72a2`): `npm -w @ingame/api run db:backup` + `db:reset`
