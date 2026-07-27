@@ -18,6 +18,13 @@
     "reflatten": "tsx --env-file=.env.dev scripts/reflatten.ts"
   },
   "dependencies": {
+    "@expo-google-fonts/allerta-stencil": "^0.4.1",
+    "@expo-google-fonts/bitter": "^0.4.1",
+    "@expo-google-fonts/chakra-petch": "^0.4.1",
+    "@expo-google-fonts/pacifico": "^0.4.1",
+    "@expo-google-fonts/paytone-one": "^0.4.2",
+    "@expo-google-fonts/press-start-2p": "^0.4.1",
+    "@expo-google-fonts/space-mono": "^0.4.2",
     "@ingame/shared": "*",
     "@node-rs/argon2": "^2.0.2",
     "@sentry/node": "^8.55.2",
