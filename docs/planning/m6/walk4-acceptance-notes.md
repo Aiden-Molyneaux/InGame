@@ -59,6 +59,25 @@ Design-think FIRST (short proposal → owner nod → build). The pieces:
 > found 3 extra incoherences (strip-adopt never equips · design-KEEP strands on the game page ·
 > "NONE OF THESE?" at zero matches). No server change; ~260 lines / 7 files. 4 open choices → owner.
 
+> **→ P2 BUILT + LANDED with Batch 3 (2026-07-26) — see review-coverage §Walk-4 Batch 3.** The full
+> nodded topology: fork/SEE-ALL adopt chains the COL-06 equip (best-effort, never a wall) · every
+> face-answer ends in the Collection via `router.dismissTo` carrying the one-shot `justAdded`
+> (scroll-to + 1.5s pulse, OC-3) · styler door carries `from=add&entryId=` and KEEP/publish end on the
+> shelf with an honest "back to your shelf" exit · name-lock (locked-but-live row, tap→search, OC-2) ·
+> genres optional (schema+client+spec, CAT-02) · P2-d create prominence on the shared noMatches
+> predicate (walk-#18 anchor discipline held). Docs rippled by the lane: product-spec 0.68 ·
+> api-contract 0.83 · design-spec 0.61 · SCREEN-STATUS · 00-INDEX. EXTRAS: cards.tsx's fake block
+> wired REAL (block+report mirror the game page); the fork sheet's ⋯ made honestly ABSENT (no
+> confirm-drawer host mid-flow); ALREADY_ADOPTED now ANSWERS the face question (Murr — the grant
+> exists, so the equip chains and the flow ends wearing it). OWNER-EYE: `dismissTo` is
+> statically-verified against expo-router 6.0.24 internals but not device-witnessed — worth one
+> 30-second walk check (three call sites) · publish-from-add-flow ALSO equips (builder judgment beyond
+> the proposal's letter; OC-4's invariant implies it — bless or revert) · P2-d's mid-fetch gold flash
+> per keystroke from a settled-with-matches state (proposal-conformant; taste call) · no block/report
+> on the fork's top-6 strip (SEE ALL/game page carry them) · `add-game-states.html` now stale as an
+> implements-from (recorded in SCREEN-STATUS). DEBT: the true cold-cache styler walk is
+> param-covered but not test-proven (the harness's shelf mock is warm — honest rename applied).
+
 ### P3 — Profile / Monogram Forge (3.1)
 - **P3-a**: the avatar renders TWICE with the forge open (identity avatar + forge preview) — rework so
   one avatar is the live preview (e.g. the identity avatar IS the preview; drop the inner head).
@@ -152,6 +171,27 @@ Also answer the owner's question honestly: how much of this is dev-runtime vs re
 > exactly. Real cliffs underneath (refetch fan-out · unvirtualized shelf canvases · unfocused infinite
 > motion loops · max-age=0 thumbs) are sub-threshold at N=18 but real at N≥200. Decisive test = a
 > release-build 30-min soak. Fix cut → owner. Cleared: timers/listeners, redux-persist, polling.
+
+> **→ P6 FIX CUT BUILT + LANDED with Batch 3 (2026-07-26): R1+R2+R4+R7-server — see review-coverage
+> §Walk-4 Batch 3.** R1: the dev middleware SCOPED via ignoredPaths on the api slice (receipt: 139.77
+> → 0.04 ms/action at N=2000; auth/prefs still guarded; prod unchanged by construction). R2:
+> updateEntry/setNowPlaying optimistic with undo+HEAL-refetch on error; removeEntry applied-on-success
+> (deliberate — the game page awaits then backs; owner may flip it in three lines); updateCard's
+> Collection invalidation narrowed to an equipped-rider patch; four full-shelf refetches eliminated
+> (the styler autosave no longer fires a shelf GET per editing pause). ⚠ THE EQUIP CASE keeps the full
+> invalidation (Murr major — the P2 equip chain raced the adopt's own refetch; the post-fulfilment
+> refetch serializes it). R4: motion loops focus-gated HOST-SIDE (Murr major — a gate inside the skia
+> Canvas reads no React context: skia runs its own reconciler root; the original build was a silent
+> no-op) — blur unmounts the layer, unmount cancels the loop. R7 SERVER half: /media far-future
+> Cache-Control + the stored render URLs now VERSION (`?v=<compositionHash>` at publish; reflatten
+> re-stamps + updates rows) closing the unpublish→edit→republish same-key hole (Murr major); ETag kept,
+> `immutable` omitted. **R7 CLIENT half (expo-image) DEFERRED — ORCHESTRATOR RULING:** not in the
+> owner's dev-client build; a native import would crash the walking phone; piggybacks the P2b EAS
+> rebuild. R3+R5 remain deferred to the pre-beta wave per the owner's cut. OWNER-EYE: `@react-navigation/
+> native` is consumed (hoisted) but undeclared in apps/mobile/package.json — declared in the wave's
+> rule-08 chore · the release-build soak (the decisive dev-vs-real experiment) still rides R3/R5's wave.
+> DEBT: a scroll-mechanism test for the justAdded landing (the pulse half is covered; the map/rAF
+> scroll math is not) · an invalid-response test pinning the two new transformResponse parse seams.
 
 ### P7 — the ADMIN CONSOLE (design proposal → owner sitting; no blind build)
 Owner (from 6.1): Spotlight curation belongs in an **admin console hosted OUTSIDE the app** — "hosting

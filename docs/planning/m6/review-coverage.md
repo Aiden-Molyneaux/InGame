@@ -221,6 +221,44 @@
   flow · CATALOG overflow · the CARD PREVIEW drawer · the coach strip) rides a follow-up sweep this
   session if the browser lane stays up, else the owner's return walk.
 
+## Walk-4 Batch 3 (2026-07-26) — P2 exit topology × P6 perf cut — MURR CLOSED (re-verify SOUND) · PARVATI OWED
+- **Scope:** two parallel opus lanes — **P2** the nodded add-game exit topology (all four OC rulings;
+  doc ripples executed: product-spec **0.68** · api-contract **0.83** · design-spec **0.61** ·
+  SCREEN-STATUS · 00-INDEX) + the cards.tsx fake-block wire-real extra · **P6** the approved fix cut
+  R1+R2+R4+R7-server (expo-image DEFERRED to the P2b rebuild — orchestrator ruling; R3/R5 stay
+  deferred per the owner's cut). Dispositions + owner-eye lists: the ledger §P2/§P6 blocks.
+- **Murr (fable, fresh-context, combined diff): NEEDS-FIXES — 4 MAJORS — → fix round → RE-MURR SOUND.**
+  The majors, all mechanism-proven: (1) the R4 focus gate was a SILENT NO-OP — skia's Canvas children
+  run under skia's own reconciler root, so the in-layer NavigationContext read never fired → HOISTED
+  host-side (CardComposition/ProofPrint gate the layer's mount; the rewritten test suite pins the
+  boundary honestly); (2) the P2 equip chain RACED the adopt/commit's own full-shelf refetch (the
+  blind two-lane seam — a pre-equip snapshot could land last and the new entry visibly wore the
+  default) → the equip case now deliberately re-invalidates 'Collection' post-fulfilment (serialized
+  by construction; plain updates keep the no-refetch win); (3) unpublish→edit→republish rewrote PNGs
+  at the SAME key under the new far-future headers → the stored render URLs now VERSION
+  (`?v=<compositionHash>` at publish; reflatten re-stamps `?v=r<run>` + updates rows); (4) the
+  justAdded scroll-to hung on an onLayout that never fires on an already-laid-out row → every row
+  reports its y continuously (rowYsRef) and landing scrolls from the map (rAF), the row's own report
+  covering cold mounts. Minors closed: undo+HEAL-refetch on both optimistic catches ·
+  ALREADY_ADOPTED now answers the face question (equip chains; settleNote re-words the sheet) ·
+  transformResponse zod-parses on updateEntry/updateCard. Debt paid: the styler add-flow rides the
+  ROUTE-carried entryId (both design doors pass it; KEEP/publish/exit prefer it over the shelf cache)
+  + honest doneLabel ("back to your shelf") on KeepBeat/PrintRitual. The RE-MURR verified all
+  closures SOUND and found 2 residual minors (the standalone design door missing entryId · keep()'s
+  cache-hanging guard) — BOTH CLOSED same round, suites re-witnessed. Fix-round provenance:
+  ORCHESTRATOR-implemented per Murr's prescriptions (the standing walk-4 pattern).
+- **Integration-test premise updates (not product bugs):** publish-thread's URL-shape pin now expects
+  the versioned form; the 0047 plateless-backfill test MANUFACTURES its pre-fix unbusted row (fresh
+  publishes are hash-busted by design; the backfill's `includes('?')` guard handles both).
+- **Definitive green (all witnessed this session, final tree):** typecheck PASS · lint 0 err ·
+  **unit 323/323 (37f — the media-cache-headers suite green standalone; its 4 "skips" in one earlier
+  run were concurrency contention with the parallel integration run, noted honestly) · integration
+  543/543 (27f, FULL suite) · mobile 115 suites/918 counted**.
+- **Parvati: OWED for Batches 2+3 together** — one combined visual sweep (forge · game-page overflow ·
+  CARD PREVIEW drawer · coach strip · the add-flow exit topology · the justAdded pulse) rides next if
+  the browser lane cooperates, else the owner's return walk. The dismissTo device-witness (3 call
+  sites) + the justAdded scroll on device are the two owner-walk checks explicitly owed.
+
 ## Operational actions this pass (disk/DB state, not git — recorded here so they're not lost)
 - **Dev-DB durability net** (committed `b9e72a2`): `npm -w @ingame/api run db:backup` + `db:reset`
   auto-backs-up first. Backups in `~/ingame-db-backups/` (3 taken 2026-07-19; keeps 20). Permanent fix =
