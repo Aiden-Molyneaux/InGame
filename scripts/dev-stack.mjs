@@ -260,6 +260,25 @@ async function doctor() {
   check('INFO', 'phone Metro :8081', true,
     phone ? "up (owner's lane — NEVER touch)" : 'down (fine — owner not running it)', null);
 
+  // api node binary — the FIREWALL class (qa-runbook, Hits 2 → promoted 2026-07-27): agent shells
+  // resolve node via the C:\nvm4w\nodejs junction, which has NO inbound allow rule — an API respawned
+  // from one passes every LOCAL health check while Windows Firewall silently drops the PHONE's
+  // requests to :4000. The allow rules cover the AppData nvm binaries only.
+  if (api && process.platform === 'win32') {
+    let apiExe = null;
+    try {
+      const apiPid = fs.readFileSync(path.join(ROOT, '.devstack', 'api.pid'), 'utf8').trim();
+      apiExe = execFileSync('powershell', ['-NoProfile', '-Command', `(Get-Process -Id ${apiPid}).Path`],
+        { encoding: 'utf8' }).trim();
+    } catch { /* pidfile stale or process gone — the api :4000 check already covers dead */ }
+    if (apiExe) {
+      const blocked = /nvm4w/i.test(apiExe);
+      check('WARN', 'api node binary', !blocked,
+        blocked ? `running under ${apiExe} — NO firewall allow rule; the PHONE cannot reach :4000 (local curls still pass)` : 'firewall-allowed node path',
+        'restart the API from the allowed binary: taskkill /PID (Get-Content .devstack/api.pid) /T /F, then "C:/Users/aiden.molyneaux/AppData/Local/nvm/v20.19.6/node.exe" scripts/dev-stack.mjs up (with that dir prefixed to PATH)');
+    }
+  }
+
   // orphaned parallel API from destructive-DB testing
   const orphan = await tcpUp(4001);
   check('WARN', 'orphan :4001', !orphan,

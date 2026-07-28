@@ -54,7 +54,12 @@ under Promoted.
 - **Diagnosis:** Windows Firewall. The Wi-Fi is on the **Public** profile and the inbound allow rules for node cover only specific binaries (`%LOCALAPPDATA%\nvm\v20.19.6\node.exe` — the owner's terminal spawns). Agent shells resolve node via the **`C:\nvm4w\nodejs` junction**, which has NO rule → inbound to :8082/:4000 is dropped → Expo Go can't fetch a manifest and quietly falls back to its per-project cached bundle, replaying stale code. A local curl does not prove the phone can connect.
 - **Fix:** restart the stack from the allowed binary:
   `"C:/Users/aiden.molyneaux/AppData/Local/nvm/v20.19.6/node.exe" scripts/dev-stack.mjs up` (with the same dir prefixed to PATH so npm/expo children inherit it). Verify with `(Get-Process -Id <pid-of-:8082>).Path` — it must be the appdata nvm path, not `C:\nvm4w\...`. (Durable alternative, owner-only: add a firewall allow rule for `C:\nvm4w\nodejs\node.exe`.)
-- **Verified:** 2026-07-06 · **Hits:** 1
+- **Verified:** 2026-07-27 · **Hits:** 2 → **PROMOTED (done):** `doctor` now checks the :4000
+  process's binary path (`api node binary` — WARNs on the `nvm4w` junction with the exact restart
+  fix). *The 2026-07-27 re-hit's new wrinkle: an AGENT restarting the shared API mid-session (e.g.
+  to reload env) silently respawns it under the blocked junction binary — every LOCAL check stays
+  green while the phone is firewalled out. If an agent must restart the API, it must relaunch via
+  the allowed AppData nvm node (the doctor fix line has the exact command).*
 - **⚠ Correction (2026-07-08):** the "Expo Go connects via `exp://…:8082`" line is wrong — :8082 is **web-only** (`--web`). Device tests need a **native** Metro on **:8081** (see "Device (Expo Go) tests need a NATIVE Metro"). The firewall/allowed-node lesson here still applies to the shared **API :4000** the phone must reach.
 
 ## Metro won't start — expo-cli dies with "Body is unusable: Body has already been read"
