@@ -298,3 +298,22 @@ CREATED: NONE (device sticker nudge restored to identical; coachmark flag restor
 🚩 0 flags · 🎨 2 polish
 SCREENS: add-game search-jar — REACHED · status-beat(NEXT) — REACHED · populated fork(header/strip/design-your-own→styler→back/keep→collection/adopt-sheet) — REACHED · empty fork(no strip, no silent skip) — REACHED · SEE-ALL door — NOT-REACHED (seed max 5 < strip 6; correctly hidden, target route verified directly) · full-list TOP/NEW/terminal/provenance — REACHED · full-list adopt-gating ?adopt=1 vs catalog — REACHED (live+code) · full-list LOAD-MORE — NOT-REACHED (N<24) · inline gallery OWN SORT TOP↔NEW — REACHED · inline CATALOG browse-only — code-confirmed · styler structural fan+taste(PASS) — REACHED · styler base-re-derive(Murr) — REACHED · styler DEAL ×4 coherent/zone-respecting/emblem-free — REACHED · styler leave-without-keeping — REACHED · collection row-body nav + card-flip + a11y "Open {game}" — REACHED · about-edit disclaimer InlineBanner — REACHED
 CREATED: 2 games added→removed (Smoke Odyssey Delta, Skylanders; demo back to 17) · junk game Smoke Odyssey Delta un-deleted→restored to exact deleted_at · styler draft discarded (0 residue) · no purchases/publishes/adoptions/users
+
+## 2026-08-01 — the PRE-BETA PERF WAVE lands (R3+R5) + the new-box takeover
+- **Machine:** development moved to the new PC (repo migrated C:→X: mid-session by the sibling
+  setup; the move killed the API/Metro/DB-container processes — all recovered, dev-DB contents
+  verified intact: 14 walkseed users · 72 designs · ADawg's 5; backup chain started
+  `local_ingame_2026-08-01T14-11-52.sql`). gh CLI installed+authed; push lane proven. Sign-in
+  `__DEV__` prefill re-created (stays uncommitted). New runbook entry: doctor's :5432 false-green.
+- **R3+R5 BUILT + LANDED** (`e642c01` build · `dc0809a` Murr fix round · hygiene/docs at landing):
+  the collection FlatList windowing + freezeOnBlur (root Stack + Tabs). Murr round 1 found 3 MAJORS
+  (the W-A7 freeze regression on forward-nav · the R4 brake riding a deferred render · the stale
+  scrollToIndex retry crash) — all closed, RE-MURR SOUND; Parvati web-lane CLEAN; full gate section
+  in review-coverage §"Pre-beta perf wave". Green witnessed: 907/907 vitest · 930 mobile · 19
+  admin · typecheck/lint clean.
+- **Owner's device residue (fold into walk-5):** the W-A7 forward-nav probe (STICKERS+selection →
+  STORE → clean → return → re-publish) · blurred-marquee frame cost · big-shelf landing + mid-landing
+  view switch · the unfired-landing-never-expires beat (owner-eye).
+- **Also this session:** G-C/P15 provisioning prompt drafted (`docs/planning/m6/
+  gc-provisioning-prompt.md`, delivered to the owner) · owner's pre-beta list mapped to lanes
+  (iOS walk-5 · Android lane→parity walk · load harness post-landing · RevenueCat/launch session).

@@ -328,3 +328,51 @@
 ## Recipe for Parvati captures (qa-runbook)
 API healthy (`dev-stack up` + `doctor` green) → claude-in-chrome at `http://localhost:8082` → login
 `demo@ingame.app` / `InGameDemo1!` → **wait ~3–4s per screen to settle** → screenshot. NOT the Claude_Browser preview pane.
+
+## Pre-beta perf wave — R3 shelf virtualization + R5 freezeOnBlur (2026-08-01) — MURR CLOSED (re-verify SOUND) · Parvati web-lane CLEAN
+- **Scope (P6 §6 rows 4/6, the owner's pre-beta cut):** collection shelf/grid/list moved from
+  ScrollView+.map() to ONE windowed FlatList (initialNumToRender 10 · maxToRenderPerBatch 8 ·
+  windowSize 7; TOP + empty shelf keep ScrollView; NoResults via ListEmptyComponent so matched↔zero
+  never remounts canvases; flattened-thumb far rows NOT built — recorded follow-up seam) ·
+  `justAdded` landing rebuilt on scrollToIndex · `freezeOnBlur: true` on the root Stack AND the Tabs
+  navigator. FlipCard/CardFace/EntryCard untouched. Commits `e642c01` (build) + `dc0809a` (fix round).
+- **Murr (fable, fresh-context) round 1: NEEDS-FIXES — 3 MAJORS** → fix round → **RE-MURR SOUND.**
+  The majors: (1) freeze deferred the device sticker-session un-publish render → W-A7 back on
+  forward-nav — now IMPERATIVE in the blur cleanup + a monotonic `focusTick` forcing re-publish on
+  refocus (the coalesced-boolean trap); (2) the R4 motion gate's unmount rode the same deferred
+  render → blurred `withRepeat` loops could tick under freeze — loops hoisted into ONE
+  AnimatedCardLayer-owned effect, braked imperatively by blur/focus listeners (idempotent `running`
+  flag; `isFocused()` park on blurred mounts; embers' 8 motes share one phase — was already lockstep);
+  (3) the 120ms scrollToIndex retry replayed a captured index into a `key={view}` remounted list →
+  invariant crash — retry now recomputes index+cols at fire time, pending timeout dies on view
+  change, re-land guarded by `prevViewRef`. Minors closed: the 1.5s mark timer arms at landing-fire
+  (slow fetch keeps its OC-3 scroll); `didScrollRef` after the non-null-list check. DEBT PAID:
+  landing machinery → `useJustAddedLanding` hook; RESULTS head deduped. All four new tests
+  invert-verified by Murr (imperative-brake trio + the stale-retry index-99 guard).
+- **OWNER-EYE (recorded, not blocking):** an unfired landing never expires — add under an excluding
+  filter, clear the filter minutes later → the shelf yanks-to + pulses the entry (defensible OC-3;
+  bound the open window ~30s if unwanted) · scroll resets to top on a view switch (list remount) ·
+  a card left flipped animates its flip-back on tab RETURN (deferred render — the R5 beat) ·
+  landing+view-switch can double-issue the same scrollToIndex target (idempotent).
+- **Parvati (web lane :8082, claude-in-chrome, 2026-08-01): CLEAN on every reachable leg** — driven
+  per the runbook's hidden-tab posture (a11y tree + synthetic pointers + network reads; screenshots
+  intermittent). REACHED: shelf windowing LIVE-CONFIRMED (exactly 10 of 18 rows mounted, badge
+  "18 GAMES", hint overlay present) · all four views cycle (shelf→grid 18 cells→list rows→TOP
+  ScrollView lane) and shelf restores at 10 windowed rows · search matched(1 OF 18 + RESULTS
+  head)→zero(NO MATCHES + CLEAR, same list, no lane switch)→matched restore · sign-in prefill
+  (restored this session) fills+submits · achievement celebration over collection · zero console
+  errors all session. NOT-REACHED (device-only, the walk-5 list): freeze-vs-blur ordering (the
+  W-A7 forward-nav probe: /device STICKERS + selection → STORE keycap → bands clean → return →
+  chrome re-publishes) · motion-brake frame cost on a blurred marquee · real scrollToIndex
+  measurement/momentum on a big shelf incl. mid-landing view switch. Environment events this run:
+  the documented direct-URL SIGNAL LOST (401 → re-login recovered) · the doctor :5432 false-green
+  (new runbook entry) · one hygiene fix — `media-cache-headers.test.ts` beforeAll 10s→30s (cold
+  ./app import ~8s solo; flaked under full-suite contention on this box; passed solo, then full
+  suite green).
+- **Definitive green (witnessed, final tree):** typecheck PASS (3 projects) · lint 0 err (1
+  pre-existing warning) · **unit+integration 907/907 FULL (66 files, vitest workspace) · mobile 116
+  suites / 930 (+4 new: brake trio, stale-retry) · admin SPA 19/19**.
+- **Deferred, recorded-not-claimed:** flattened-thumb far rows (needs the published-vs-draft split —
+  owner look) · R7-client expo-image (rides P2b) · jest "worker force-exited" hygiene (pre-existing,
+  suites named in the builder report) · the RTL hidden-element `CARD:` query weakness (test-hygiene
+  pass someday).

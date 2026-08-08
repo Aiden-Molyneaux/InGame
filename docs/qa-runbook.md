@@ -242,3 +242,19 @@ sequence via javascript_tool instead; it makes the hidden-tab lane fully drivabl
 - **Diagnosis:** the Claude_Browser *preview pane's* screenshot renderer is broken in this environment (it also can't attach to the standing Metro on :8082 — CLAUDE.md). It's the CAPTURE path, not the app or the network (once the API is healthy the page loads fine). Separately, RN-web keeps a rAF render loop busy briefly during load/route transitions, so a capture fired immediately also fails ("page busy / script injection timed out").
 - **Fix:** view/screenshot the running app via **claude-in-chrome** (real Chrome + extension) at `http://localhost:8082`, and **`wait` ~3–4s for the RN-web page to settle** before `screenshot`. Recipe: load the core tools (ToolSearch `select:mcp__claude-in-chrome__{tabs_context_mcp,navigate,computer,read_page,tabs_create_mcp}`) → tabs_context_mcp{createIfEmpty} → navigate `http://localhost:8082` → wait 3s → screenshot. This is the standing path for Parvati captures. Demo login `demo@ingame.app` / `InGameDemo1!`.
 - **Verified:** 2026-07-19 · **Hits:** 1
+
+## doctor "db" check FALSE-GREEN — a native postgres on :5432 masks a dead dev-DB container
+- **Symptom:** `doctor` reports `OK db :5432 — postgres answering` while `ingame-dev-db` is actually
+  **Exited** — the API boots but every DB-backed query fails (web shows SIGNAL LOST; `/api/health`
+  can still pass), and `doctor`'s migration-drift line reads "skipped (could not read
+  drizzle.__drizzle_migrations)" — that skip IS the tell.
+- **Diagnosis:** the dev-DB container maps host **:5433**→5432, but this machine (the 2026-08-01
+  new box) also runs a NATIVE PostgreSQL service listening on **:5432** (`Get-NetTCPConnection
+  -LocalPort 5432` → a `postgres` PID outside docker). doctor probes :5432 and greets the wrong
+  server. Any box with a system postgres reproduces this.
+- **Fix:** trust the drift-skip tell, then `docker ps -a --format '{{.Names}} {{.Status}}'` — if
+  `ingame-dev-db` is Exited: `docker start ingame-dev-db` (non-destructive; the volume holds the
+  data). Durable fix candidate for promotion (0065 ladder): doctor's db probe should target the
+  CONTAINER (`docker exec ingame-dev-db pg_isready`) or host :5433, not bare :5432.
+- **Verified:** 2026-08-01 · **Hits:** 1 *(post-repo-migration recovery; container had exited 255
+  when the C:→X: move killed its sibling processes)*
