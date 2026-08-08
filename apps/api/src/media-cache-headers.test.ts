@@ -28,7 +28,9 @@ beforeAll(async () => {
   process.env.MEDIA_DIR = dir; // mediaRoot() reads it when createApp mounts the static dirs
   const { createApp } = await import('./app');
   app = createApp();
-});
+  // The cold ./app import alone takes ~8s under a loaded parallel run — the default 10s hook
+  // timeout flakes on machine contention (observed 2026-08-01, full-suite runs on the new box).
+}, 30_000);
 
 afterAll(async () => {
   delete process.env.MEDIA_DIR;
