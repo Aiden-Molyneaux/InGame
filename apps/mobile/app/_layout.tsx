@@ -53,6 +53,18 @@ function ThemedStack() {
         headerShown: false,
         contentStyle: { backgroundColor: t.scr.bg },
         animation: 'none',
+        // R5 (P6 §6 row 4) — retained stack screens FREEZE while blurred (react-freeze via
+        // react-native-screens): a push chain (game → contributor → user → …) keeps every
+        // intermediate screen mounted with live query subscriptions, and without freeze each RTK
+        // invalidation re-rendered the whole retained chain (the R2 fan-out multiplier). Freeze
+        // stops the re-renders only — effects/timers/unmount-cleanups are untouched, so the styler
+        // autosave (setTimeout-driven flush) and the device editor's exit flush (unmount cleanup)
+        // fire exactly as before; deferred state renders catch up on refocus. Verified against the
+        // P6 "Checked and CLEARED" effect list. unmountOnBlur was considered for the heavy
+        // FlowTakeovers (styler/device) and deliberately NOT applied: it isn't a native-stack
+        // option, and unmounting a blurred styler would destroy the live edit session (draft +
+        // undo history) — freeze gives the render-cost win without that risk.
+        freezeOnBlur: true,
       }}
     />
   );

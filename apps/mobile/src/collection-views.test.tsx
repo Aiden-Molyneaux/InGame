@@ -25,7 +25,9 @@ const CI = (n: number, nowPlaying = false) => ({
   nowPlaying,
   card: CARD,
 });
-const mockItems = [CI(1, true), CI(2), CI(3)];
+// Mutable so the R3 windowing tests can seed a LARGE shelf; reset to the standing 3 per test.
+const defaultItems = () => [CI(1, true), CI(2), CI(3)];
+let mockItems = defaultItems();
 
 jest.mock('./store/api', () => ({
   useGetCollectionQuery: () => ({
@@ -48,14 +50,20 @@ const mockPush = jest.fn();
 const mockSetParams = jest.fn();
 // walk-4 P2 (OC-3) — the ADD flow lands here with a one-shot `justAdded=<entryId>`.
 let mockRouteParams: { focus?: string; justAdded?: string } = {};
+// ONE stable router object (lazy — the mock factory is hoisted above the fns above): expo-router's
+// real `router` is referentially stable, and the landing effect deps on it — a per-render fresh
+// object re-armed the one-shot landing every render (an artifact impossible in the app, where
+// setParams also clears the param; the R3 scroll-count assertions need the honest identity).
+let mockRouterSingleton: Record<string, unknown> | undefined;
 jest.mock('expo-router', () => ({
-  useRouter: () => ({
-    push: mockPush,
-    back: jest.fn(),
-    replace: jest.fn(),
-    navigate: jest.fn(),
-    setParams: mockSetParams,
-  }),
+  useRouter: () =>
+    (mockRouterSingleton ??= {
+      push: (...a: unknown[]) => mockPush(...a),
+      back: jest.fn(),
+      replace: jest.fn(),
+      navigate: jest.fn(),
+      setParams: (...a: unknown[]) => mockSetParams(...a),
+    }),
   useLocalSearchParams: () => mockRouteParams,
   useFocusEffect: () => {},
 }));
@@ -99,6 +107,7 @@ beforeEach(() => {
   mockPush.mockClear();
   mockSetParams.mockClear();
   mockRouteParams = {};
+  mockItems = defaultItems();
 });
 
 describe('COL-07 walk2-B6: now-playing chrome is HERO-ONLY', () => {
@@ -247,5 +256,62 @@ describe('walk-4 P2: the just-added landing marks the new entry', () => {
     expect(screen.queryByTestId('just-added-e1')).toBeNull();
     expect(screen.queryByTestId('just-added-e2')).toBeNull();
     expect(mockSetParams).not.toHaveBeenCalled();
+  });
+});
+
+// R3 (P6 §6 row 6) — the shelf is WINDOWED (FlatList), and the just-added landing rides
+// scrollToIndex (the windowed mechanism; the old per-row y-map only covered MOUNTED rows). These
+// pin the two seams the virtualization change opened — this is the ledger's deferred
+// "scroll-mechanism test" debt, paid where jest can reach it (real momentum/measure behavior needs
+// a device and stays with the owner walk).
+describe('R3: the shelf is windowed and the landing scroll uses scrollToIndex', () => {
+  const { act } = require('@testing-library/react-native');
+  const { FlatList } = require('react-native');
+
+  it('a large shelf mounts only the initial window, never all N rows', () => {
+    mockItems = Array.from({ length: 40 }, (_, k) => CI(k + 1, k === 0));
+    renderView('shelf');
+    // One chevron per MOUNTED shelf row (the row cards themselves are aria-hidden inside FlipCard —
+    // RTL's hidden filter excludes them — so the chevron is the countable row probe). jest fires no
+    // layout events, so the FlatList renders exactly its initialNumToRender window: 10 rows. The
+    // pre-R3 ScrollView+.map() mounted all 40 — if this count ever equals N again, the windowing
+    // regressed (or the params moved: then re-pin deliberately).
+    expect(screen.queryAllByText('›')).toHaveLength(10);
+    // the full shelf still REPORTS its true size (windowing is render-only, never data truncation)
+    expect(screen.getByText('40 GAMES')).toBeTruthy();
+  });
+
+  it('the landing scrolls via scrollToIndex with the entry index (shelf: 1 column)', () => {
+    jest.useFakeTimers();
+    const spy = jest.spyOn(FlatList.prototype, 'scrollToIndex').mockImplementation(() => {});
+    try {
+      mockRouteParams = { justAdded: 'e3' };
+      renderView('shelf');
+      act(() => {
+        jest.advanceTimersByTime(50); // the landing's one-frame rAF beat
+      });
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(expect.objectContaining({ index: 2 }));
+    } finally {
+      spy.mockRestore();
+      jest.useRealTimers();
+    }
+  });
+
+  it('the grid landing divides by the column count (scrollToIndex takes ROW indexes under numColumns)', () => {
+    jest.useFakeTimers();
+    const spy = jest.spyOn(FlatList.prototype, 'scrollToIndex').mockImplementation(() => {});
+    try {
+      mockRouteParams = { justAdded: 'e3' }; // item index 2 → grid row 1 (two per row)
+      renderView('grid');
+      act(() => {
+        jest.advanceTimersByTime(50);
+      });
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(expect.objectContaining({ index: 1 }));
+    } finally {
+      spy.mockRestore();
+      jest.useRealTimers();
+    }
   });
 });

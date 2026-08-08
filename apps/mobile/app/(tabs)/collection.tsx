@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, Pressable, BackHandler, Keyboard, Platform, Animated, StyleSheet } from 'react-native';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, ScrollView, FlatList, ActivityIndicator, Pressable, BackHandler, Keyboard, Platform, Animated, StyleSheet, type ListRenderItemInfo } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import type { CollectionItem, CollectionStatus, GenreView } from '@ingame/shared';
@@ -184,26 +184,42 @@ export default function Collection() {
   // ── walk-4 P2 (OC-3) — the JUST-ADDED landing: scroll the new entry into view + pulse it ────────
   // One-shot by construction: the param is consumed into local state on arrival and immediately
   // cleared off the URL (`setParams`), so a re-render, a tab round-trip or a relog can't re-fire it.
-  const scrollRef = useRef<ScrollView>(null);
+  const listRef = useRef<FlatList<CollectionItem>>(null);
   const [justAdded, setJustAdded] = useState<string | null>(null);
-  const justAddedIdRef = useRef<string | null>(null); // the mark, readable from layout callbacks
-  const listAnchorYRef = useRef(0); // the list block's y inside the scroll content
+  const justAddedIdRef = useRef<string | null>(null); // the mark, readable from async callbacks
   const didScrollRef = useRef(false); // the scroll fires once per landing
-  // Walk-4 Murr (batch-3 major) — EVERY row reports its y into this map, continuously. The marked row
-  // usually mounted MINUTES ago (the add-time refetch landed on the retained tab), and attaching a
-  // handler to an already-laid-out view fires NO native layout event (they fire on metric CHANGE) —
-  // a landing that waited for one hung forever with the pulse playing off-screen. rn-web's
-  // ResizeObserver fires on observe-start, which masked exactly this on the :8082 lane. With the map,
-  // landing scrolls from the recorded position; a genuinely cold mount still lands via the row's own
-  // first report below.
-  const rowYsRef = useRef(new Map<string, number>());
+  // R3 (P6 §6 row 6) — the shelf is WINDOWED now, so a far row may simply not be mounted and the old
+  // Walk-4 Murr per-row y-report map (a ScrollView mechanism: native layout events fire on metric
+  // CHANGE only, so an already-laid-out row never re-reported — the map recorded every row
+  // continuously to cover the retained-tab landing) has no rows to report from outside the window.
+  // scrollToIndex asks the LIST for the position instead: it works for unmounted rows, and
+  // onScrollToIndexFailed (below) covers the not-yet-measured case with an estimated offset + retry.
+  const filteredRef = useRef<CollectionItem[]>([]); // render-synced below (after the filtered memo)
+  const viewRef = useRef(view);
+  viewRef.current = view;
   const scrollToJustAdded = useCallback((id: string) => {
     if (didScrollRef.current) return;
-    const rowY = rowYsRef.current.get(id);
-    if (rowY === undefined) return; // not laid out yet — the row's own report retries
+    const idx = filteredRef.current.findIndex((i) => i.entryId === id);
+    if (idx < 0) return; // not in the loaded shelf yet — the filtered-change effect below retries
     didScrollRef.current = true;
-    scrollRef.current?.scrollTo({ y: Math.max(0, listAnchorYRef.current + rowY - 12), animated: true });
+    // Under numColumns the list's items are ROWS — scrollToIndex takes the row index, not the item's.
+    const cols = viewRef.current === 'grid' ? 2 : 1;
+    listRef.current?.scrollToIndex({ index: Math.floor(idx / cols), viewOffset: 12, animated: true });
   }, []);
+  // The unmeasured-target fallback (fresh mount, or a target far outside the window): jump to the
+  // estimated offset so the window advances and measures, then retry the precise landing. Only our
+  // own scrollToJustAdded ever calls scrollToIndex, so this converges on the one marked row.
+  const onScrollToIndexFailed = useCallback(
+    (info: { index: number; averageItemLength: number }) => {
+      listRef.current?.scrollToOffset({ offset: info.averageItemLength * info.index, animated: true });
+      setTimeout(() => {
+        if (justAddedIdRef.current != null) {
+          listRef.current?.scrollToIndex({ index: info.index, viewOffset: 12, animated: true });
+        }
+      }, 120);
+    },
+    [],
+  );
   // The clear timer lives in a REF, not the effect's cleanup: clearing the param immediately re-runs
   // this effect, and a cleanup-owned timer would be cancelled by that very re-run — leaving the mark
   // on forever. Re-armed per arrival, cleared only on unmount.
@@ -216,9 +232,12 @@ export default function Collection() {
     setJustAdded(id);
     router.setParams({ justAdded: undefined });
     if (markTimerRef.current) clearTimeout(markTimerRef.current);
-    markTimerRef.current = setTimeout(() => setJustAdded(null), JUST_ADDED_MS);
-    // The retained-tab mainline: the row's y is already in the map — scroll now (a frame later, so a
-    // same-commit cold mount gets its first layout report in before the lookup).
+    markTimerRef.current = setTimeout(() => {
+      setJustAdded(null);
+      justAddedIdRef.current = null; // the mark window also bounds the scroll retries (no late jumps)
+    }, JUST_ADDED_MS);
+    // The retained-tab mainline: the shelf data already holds the entry — scroll now (a frame later,
+    // so a same-commit cold mount has the list mounted before the scroll issues).
     requestAnimationFrame(() => scrollToJustAdded(id));
   }, [params.justAdded, router, scrollToJustAdded]);
   useEffect(
@@ -226,16 +245,6 @@ export default function Collection() {
       if (markTimerRef.current) clearTimeout(markTimerRef.current);
     },
     [],
-  );
-  // Every row's report: record the y (relative to its stack; the stacks sit at y=0 inside the list
-  // block, whose own y comes from the anchor's onLayout — anchorY + rowY = the content offset), and
-  // if THIS row is the fresh add that hasn't been scrolled to yet, land on it (the cold-mount path).
-  const onRowLayout = useCallback(
-    (entryId: string, rowY: number) => {
-      rowYsRef.current.set(entryId, rowY);
-      if (entryId === justAddedIdRef.current) scrollToJustAdded(entryId);
-    },
-    [scrollToJustAdded],
   );
 
   const items = useMemo(() => data?.items ?? [], [data]);
@@ -337,6 +346,55 @@ export default function Collection() {
     }
     return out;
   }, [items, q, statusFilter, genreFilter, sortKey, sortAsc]);
+  filteredRef.current = filtered; // render-synced for the just-added scroll (index lookup at call time)
+
+  // The cold-mount landing retry: the param effect can consume `justAdded` before the shelf data
+  // lands (the query is still in flight behind the isLoading return) — when the entry appears in
+  // `filtered`, land on it. Replaces the old per-row layout-report retry, which needed a mounted row.
+  useEffect(() => {
+    if (justAddedIdRef.current != null && !didScrollRef.current) scrollToJustAdded(justAddedIdRef.current);
+  }, [filtered, scrollToJustAdded]);
+
+  // ── R3 (P6 §6 row 6) — the windowed shelf: per-view row renderers for the FlatList. Hooks, so they
+  // live ABOVE the isLoading/isError early returns. `renderRow`'s identity changing on flip/mark
+  // state is what re-renders the visible cells; the memoized row components below then bail for
+  // every row whose own {item, flipped, marked} didn't change — the same "a tap re-renders only the
+  // tapped card" contract the unwindowed .map() rows kept (round-4 device flicker report). ────────
+  const renderRow = useCallback(
+    ({ item }: ListRenderItemInfo<CollectionItem>) => {
+      const marked = item.entryId === justAdded;
+      if (view === 'list') return <ListRow item={item} marked={marked} onNavigate={openGame} />;
+      if (view === 'grid') {
+        return (
+          <GridCell
+            item={item}
+            flipped={flippedIds.has(item.entryId)}
+            marked={marked}
+            onToggle={toggleFlip}
+            onNavigate={openGame}
+          />
+        );
+      }
+      return (
+        <ShelfRow
+          item={item}
+          flipped={flippedIds.has(item.entryId)}
+          marked={marked}
+          onToggle={toggleFlip}
+          onNavigate={openGame}
+        />
+      );
+    },
+    [view, flippedIds, justAdded, toggleFlip, openGame],
+  );
+  const keyExtractor = useCallback((i: CollectionItem) => i.entryId, []);
+  // The inter-row gap rides an explicit separator, NEVER `gap` on the content container: the
+  // virtualized list interleaves its own spacer/cell wrapper children there, and a container gap
+  // would add phantom spacing around them as the window moves.
+  const RowSeparator = useCallback(
+    () => <View style={view === 'list' ? styles.listSepGap : styles.rowSepGap} />,
+    [view, styles],
+  );
 
   if (isLoading) {
     return (
@@ -405,66 +463,88 @@ export default function Collection() {
           }
         />
       </View>
-      {/* stage — the relative anchor the peek-flip hint overlays. The hint is an ABSOLUTE overlay (below,
-          OUT of flow) so its first-run appearance + first-flip dismissal never reflow the shelf; before
-          this it was an in-flow strip between the hero and the list, so retiring it (or a relog re-arming
-          it) shifted the whole list — the owner's "presents just to disappear, shifting the page" jar. */}
+      {/* stage — the space between header + tools; the scrollable shelf/grid lives here alone.
+          R3 (P6 §6 row 6): TWO lanes. The N-scaling browse views (shelf · grid · list) render through
+          a WINDOWED FlatList — the pre-R3 ScrollView+.map() mounted all N FlipCards at once (N live
+          skia canvases + N SVG backs, load-harness cliff #1). The bounded views (TOP's curated 10 ·
+          the empty shelf) keep a plain ScrollView. NoResults rides the FlatList's ListEmptyComponent,
+          NOT a lane switch — typing a query that oscillates matched↔zero must never remount the list
+          (a lane swap would rebuild every visible canvas per keystroke). */}
       <View style={styles.stage}>
-      <ScrollView ref={scrollRef} testID="collection-scroll" style={styles.scroll} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} scrollEnabled={!bgLocked && dragScrollEnabled}>
-        <ScrollLockContext.Provider value={scrollLockApi}>
-        {/* In-place search: the query live-filters the CURRENT view + a RESULTS header (board :661). */}
-        {searchOpen && q.trim() !== '' && data.collectionTotal > 0 ? (
-          <Text style={styles.resultsHead}>RESULTS — TITLE · DEVELOPER · PUBLISHER</Text>
-        ) : null}
-        {/* The Now-Playing hero persists across the browse modes (0061) but YIELDS while a query is
-            active (board :711–713) and in TOP view — rendered once here, not per-view. */}
-        {data.collectionTotal > 0 && view !== 'top' && q.trim() === '' && filtered.length > 0 ? (
-          <NowPlayingHero hero={hero} onLogHours={onLogHours} />
-        ) : null}
-        {/* walk-4 P2 — the list block's own anchor. It replaces exactly ONE contentContainer child with
-            ONE child, so the container's `gap` is untouched; its onLayout y is the offset the
-            just-added scroll-to adds the row's in-stack y to. */}
-        <View onLayout={(e) => (listAnchorYRef.current = e.nativeEvent.layout.y)}>
-        {data.collectionTotal === 0 ? (
-          <EmptyShelf onAdd={() => router.push('/add-game')} />
-        ) : filtered.length === 0 ? (
+      <ScrollLockContext.Provider value={scrollLockApi}>
+      {view === 'top' || data.collectionTotal === 0 ? (
+        <ScrollView testID="collection-scroll" style={styles.scroll} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} scrollEnabled={!bgLocked && dragScrollEnabled}>
+          {/* In-place search: the query live-filters the CURRENT view + a RESULTS header (board :661). */}
+          {searchOpen && q.trim() !== '' && data.collectionTotal > 0 ? (
+            <Text style={styles.resultsHead}>RESULTS — TITLE · DEVELOPER · PUBLISHER</Text>
+          ) : null}
+          {data.collectionTotal === 0 ? (
+            <EmptyShelf onAdd={() => router.push('/add-game')} />
+          ) : filtered.length === 0 ? (
+            // OQ-130 — filters/search matched nothing but the shelf isn't empty (TOP lane too).
+            <NoResults onClear={clearAll} />
+          ) : (
+            // COL-13 — the curated Top-10 over the FULL shelf (curation is independent of sort/filter).
+            // No just-added treatment here: TOP is a curated 10, and a fresh add is not in it.
+            <SelfTopView
+              collectionItems={items}
+              arranging={topArranging}
+              onOpenPicker={() => setTopPickerOpen(true)}
+              focusGameId={params.focus}
+              onOpenGame={openGame}
+            />
+          )}
+        </ScrollView>
+      ) : (
+        <FlatList
+          ref={listRef}
+          // numColumns cannot change on a live list (RN invariant) — the view switch remounts it.
+          // Each view is a wholly different subtree anyway (the old lane unmounted ShelfView and
+          // mounted GridView), so the cost profile is unchanged; the scroll offset resets to top on
+          // a view switch (the one behavior delta — flips already reset there too).
+          key={view}
+          testID="collection-scroll"
+          style={styles.scroll}
+          contentContainerStyle={styles.listBody}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          scrollEnabled={!bgLocked && dragScrollEnabled}
+          data={filtered}
+          keyExtractor={keyExtractor}
+          renderItem={renderRow}
+          numColumns={view === 'grid' ? 2 : 1}
+          columnWrapperStyle={view === 'grid' ? styles.gridRow : undefined}
+          ItemSeparatorComponent={RowSeparator}
+          // The windowing policy (owner-eye): ~10 rows up front (two screensful of shelf rows; a
+          // comfortable first paint for the shorter list strips), batches of 8, a 7-viewport window
+          // (≈21 shelf rows resident) — at today's N=18 everything sits inside the window (zero
+          // visual change); at N=200+ the resident canvas count is capped near ~21 instead of N.
+          // removeClippedSubviews stays the RN platform default (Android on, iOS off) — forcing it
+          // on iOS re-opens the rasterize/transform surfaces the flip rounds hardened.
+          initialNumToRender={10}
+          maxToRenderPerBatch={8}
+          windowSize={7}
+          onScrollToIndexFailed={onScrollToIndexFailed}
+          ListHeaderComponent={
+            // In-place search RESULTS header + the Now-Playing hero (persists across the browse
+            // modes, 0061, but YIELDS while a query is active — board :711–713). One wrapper so an
+            // absent header contributes no phantom margin.
+            (searchOpen && q.trim() !== '') || (q.trim() === '' && filtered.length > 0) ? (
+              <View style={styles.listHead}>
+                {searchOpen && q.trim() !== '' ? (
+                  <Text style={styles.resultsHead}>RESULTS — TITLE · DEVELOPER · PUBLISHER</Text>
+                ) : null}
+                {q.trim() === '' && filtered.length > 0 ? (
+                  <NowPlayingHero hero={hero} onLogHours={onLogHours} />
+                ) : null}
+              </View>
+            ) : null
+          }
           // OQ-130 — filters/search matched nothing but the shelf isn't empty.
-          <NoResults onClear={clearAll} />
-        ) : view === 'list' ? (
-          <ListView items={filtered} justAdded={justAdded} onRowLayout={onRowLayout} />
-        ) : view === 'top' ? (
-          // COL-13 — the curated Top-10 over the FULL shelf (curation is independent of sort/filter).
-          // No just-added treatment here: TOP is a curated 10, and a fresh add is not in it.
-          <SelfTopView
-            collectionItems={items}
-            arranging={topArranging}
-
-            onOpenPicker={() => setTopPickerOpen(true)}
-            focusGameId={params.focus}
-            onOpenGame={openGame}
-          />
-        ) : view === 'grid' ? (
-          <GridView
-            items={filtered}
-            flippedIds={flippedIds}
-            onToggle={toggleFlip}
-            onNavigate={openGame}
-            justAdded={justAdded}
-            onRowLayout={onRowLayout}
-          />
-        ) : (
-          <ShelfView
-            items={filtered}
-            flippedIds={flippedIds}
-            onToggle={toggleFlip}
-            onNavigate={openGame}
-            justAdded={justAdded}
-            onRowLayout={onRowLayout}
-          />
-        )}
-        </View>
-        </ScrollLockContext.Provider>
-      </ScrollView>
+          ListEmptyComponent={<NoResults onClear={clearAll} />}
+        />
+      )}
+      </ScrollLockContext.Provider>
       </View>
 
       {/* COL-12/CARD-16 — the first-run peek-flip hint. Walk-4 P5-a: no floating elements in this
@@ -635,23 +715,23 @@ function NowPlayingHero({ hero, onLogHours }: { hero: CollectionItem | null; onL
   );
 }
 
-// The COL-12 flip wiring shared by shelf + grid: which entries are flipped + the tap/navigate handlers.
-type FlipProps = {
-  flippedIds: Set<string>;
-  onToggle: (entryId: string) => void;
+// The COL-12 flip + walk-4 just-added wiring shared by the windowed rows. Each row takes per-row
+// BOOLEANS (`flipped`, `marked`) — never the whole Set/mark — so the row memo below can bail for
+// every row a flip/mark change doesn't touch (the round-4 "a tap re-renders only the tapped card"
+// contract, now enforced one level higher than FlipCard's own memo).
+type RowProps = {
+  item: CollectionItem;
+  marked: boolean; // this row is the fresh add — wear the JustAddedPulse
   onNavigate: (gameId: string) => void;
+};
+type FlipRowProps = RowProps & {
+  flipped: boolean;
+  onToggle: (entryId: string) => void;
 };
 
 // ── walk-4 P2 (OC-3) — the JUST-ADDED landing treatment ────────────────────────────────────────────
 // How long the new entry stays marked after the add flow lands (the OC-3 "~1.5s highlight pulse").
 const JUST_ADDED_MS = 1500;
-
-/** Shared by shelf/grid/list: which row is the fresh add + the continuous per-row y reports (every
- *  row, every layout — the scroll-to reads the recorded position; see the parent's rowYsRef). */
-type JustAddedProps = {
-  justAdded: string | null;
-  onRowLayout: (entryId: string, rowY: number) => void;
-};
 
 // The pulse itself — an ABSOLUTE-FILL accent outline over the row. Absolute so it adds no height and
 // shifts nothing (the same layout-stability rule the coachmark strip and the search status slot obey):
@@ -686,153 +766,101 @@ function JustAddedPulse({ entryId }: { entryId: string }) {
   );
 }
 
-// SHELF (decision 0061 — the showcase / "flip through your binder"): a stack where EVERY entry gets
-// the hero treatment (full face + stat-line · title · catalog line). LOG HOURS stays hero-exclusive
-// (the NowPlayingHero above, rendered by the parent). Now-playing chrome is hero-only (W-B6) — the
-// stack rows carry no NOW tag.
-// COL-12: the card is now a FlipCard (tap → flip · long-press / VIEW GAME → the Game page); the meta
+// SHELF row (decision 0061 — the showcase / "flip through your binder"): EVERY entry gets the hero
+// treatment (full face + stat-line · title · catalog line). LOG HOURS stays hero-exclusive (the
+// NowPlayingHero, rendered by the list header). Now-playing chrome is hero-only (W-B6) — the stack
+// rows carry no NOW tag.
+// COL-12: the card is a FlipCard (tap → flip · long-press / VIEW GAME → the Game page); the meta
 // beside it stays display-only labels (the quick scan lives beside the full peek, board :1377).
-function ShelfView({
-  items,
-  flippedIds,
-  onToggle,
-  onNavigate,
-  justAdded,
-  onRowLayout,
-}: { items: CollectionItem[] } & FlipProps & JustAddedProps) {
+const ShelfRow = memo(function ShelfRow({ item, flipped, marked, onToggle, onNavigate }: FlipRowProps) {
   const styles = useStyles();
   return (
-    <View style={styles.shelf}>
-      <View style={styles.shelfStack}>
-        {items.map((i) => (
-          <View
-            key={i.entryId}
-            style={styles.stackRow}
-            onLayout={(e) => onRowLayout(i.entryId, e.nativeEvent.layout.y)}
-          >
-            {/* cardSlot — GRID PARITY (the round-9 fix): the identical FlipCard renders the turn
-                perfectly in the grid, whose cell is a card-tight box, and broke ONLY here in the wide
-                shelf row where the mis-drawn mid-turn svg (owner's recording) could sweep across the
-                sibling meta text. The slot recreates the grid's structure: a REAL (overflow:'hidden' →
-                never flattened), card-sized, CLIPPING native ancestor — nothing the turning card paints
-                can cross a masksToBounds boundary onto the row, by construction. Handlers passed RAW
-                (an inline closure would defeat FlipCard's memo — the round-4 all-rows redraw). */}
-            <View style={styles.cardSlot} collapsable={false}>
-              <FlipCard
-                item={i}
-                flipped={flippedIds.has(i.entryId)}
-                onToggle={onToggle}
-                onNavigate={onNavigate}
-                width={138}
-                height={193}
-              />
-            </View>
-            {/* Owner walk (m6) — the WHOLE row-body (meta + chevron) press-navigates to the Game page,
-                not just the chevron; the card face keeps its own flip tap. This Pressable is a SIBLING
-                of the card slot, NEVER its ancestor: RN-web routes a nested press to the OUTER responder
-                (P13-F3 — the CommunityGallery sibling-Pressable fix), so keeping the card outside this
-                button is what lets the card's own tap still win (flip, not navigate). One button per row
-                ("Open {game}"); the card face is its own labeled control. (walk2 B7 folded the chevron
-                in — same affordance, now the whole body carries it.) */}
-            <Pressable
-              style={styles.rowBody}
-              accessibilityRole="button"
-              accessibilityLabel={`Open ${i.title}`}
-              onPress={() => onNavigate(i.gameId)}
-            >
-              <View style={styles.heroMeta}>
-                <Text style={styles.heroStat}>{statLine(i)}</Text>
-                <Text style={styles.heroTitle}>{i.title.toUpperCase()}</Text>
-                <Text style={styles.heroCatalog}>{catalogLine(i)}</Text>
-              </View>
-              <Text style={styles.chev}>›</Text>
-            </Pressable>
-            {i.entryId === justAdded ? <JustAddedPulse entryId={i.entryId} /> : null}
-          </View>
-        ))}
+    <View style={styles.stackRow}>
+      {/* cardSlot — GRID PARITY (the round-9 fix): the identical FlipCard renders the turn
+          perfectly in the grid, whose cell is a card-tight box, and broke ONLY here in the wide
+          shelf row where the mis-drawn mid-turn svg (owner's recording) could sweep across the
+          sibling meta text. The slot recreates the grid's structure: a REAL (overflow:'hidden' →
+          never flattened), card-sized, CLIPPING native ancestor — nothing the turning card paints
+          can cross a masksToBounds boundary onto the row, by construction. Handlers passed RAW
+          (an inline closure would defeat FlipCard's memo — the round-4 all-rows redraw). */}
+      <View style={styles.cardSlot} collapsable={false}>
+        <FlipCard
+          item={item}
+          flipped={flipped}
+          onToggle={onToggle}
+          onNavigate={onNavigate}
+          width={138}
+          height={193}
+        />
       </View>
+      {/* Owner walk (m6) — the WHOLE row-body (meta + chevron) press-navigates to the Game page,
+          not just the chevron; the card face keeps its own flip tap. This Pressable is a SIBLING
+          of the card slot, NEVER its ancestor: RN-web routes a nested press to the OUTER responder
+          (P13-F3 — the CommunityGallery sibling-Pressable fix), so keeping the card outside this
+          button is what lets the card's own tap still win (flip, not navigate). One button per row
+          ("Open {game}"); the card face is its own labeled control. (walk2 B7 folded the chevron
+          in — same affordance, now the whole body carries it.) */}
+      <Pressable
+        style={styles.rowBody}
+        accessibilityRole="button"
+        accessibilityLabel={`Open ${item.title}`}
+        onPress={() => onNavigate(item.gameId)}
+      >
+        <View style={styles.heroMeta}>
+          <Text style={styles.heroStat}>{statLine(item)}</Text>
+          <Text style={styles.heroTitle}>{item.title.toUpperCase()}</Text>
+          <Text style={styles.heroCatalog}>{catalogLine(item)}</Text>
+        </View>
+        <Text style={styles.chev}>›</Text>
+      </Pressable>
+      {marked ? <JustAddedPulse entryId={item.entryId} /> : null}
     </View>
   );
-}
+});
 
-// GRID (decision 0061 — compact browsing): a two-per-row grid of bare card FACES (never cropped,
-// F-01), ▶ NOW in-flow on the pinned face; no per-row meta. The hero renders above (parent).
+// GRID cell (decision 0061 — compact browsing): two-per-row bare card FACES (never cropped, F-01);
+// no per-row meta. The hero renders in the list header.
 // COL-12: each face is a FlipCard (tap → flip · long-press / VIEW GAME → the Game page).
-function GridView({
-  items,
-  flippedIds,
-  onToggle,
-  onNavigate,
-  justAdded,
-  onRowLayout,
-}: { items: CollectionItem[] } & FlipProps & JustAddedProps) {
+const GridCell = memo(function GridCell({ item, flipped, marked, onToggle, onNavigate }: FlipRowProps) {
   const styles = useStyles();
   return (
-    <View style={styles.shelf}>
-      <View style={styles.gridWrap}>
-        {items.map((i) => (
-          <View
-            key={i.entryId}
-            style={styles.gridCol}
-            onLayout={(e) => onRowLayout(i.entryId, e.nativeEvent.layout.y)}
-          >
-            {/* raw handlers — same memo rule as the shelf rows. */}
-            <FlipCard
-              item={i}
-              flipped={flippedIds.has(i.entryId)}
-              onToggle={onToggle}
-              onNavigate={onNavigate}
-              style={styles.fluidCard}
-            />
-            {i.entryId === justAdded ? <JustAddedPulse entryId={i.entryId} /> : null}
-          </View>
-        ))}
-      </View>
+    <View style={styles.gridCol}>
+      {/* raw handlers — same memo rule as the shelf rows. */}
+      <FlipCard item={item} flipped={flipped} onToggle={onToggle} onNavigate={onNavigate} style={styles.fluidCard} />
+      {marked ? <JustAddedPulse entryId={item.entryId} /> : null}
     </View>
   );
-}
+});
 
-// LIST (management scan): dense strip rows — thumb + title + HRS · STATUS + chevron
-// → the Game page (the tap-target is M4). The always-visible per-row stats mode; hero above (parent).
-function ListView({
-  items,
-  justAdded,
-  onRowLayout,
-}: { items: CollectionItem[] } & JustAddedProps) {
-  const router = useRouter(); // CARD-23 NAVIGATE — the list row is the Game-page tap-target (M4 §3.1)
+// LIST row (management scan): dense strip — thumb + title + HRS · STATUS + chevron → the Game page
+// (CARD-23 NAVIGATE — the list row is the Game-page tap-target, M4 §3.1). The always-visible
+// per-row stats mode; hero in the list header.
+const ListRow = memo(function ListRow({ item, marked, onNavigate }: RowProps) {
   const styles = useStyles();
   return (
-    <View style={styles.shelf}>
-      <View style={styles.listStack}>
-        {items.map((i) => (
-          <Pressable
-            key={i.entryId}
-            style={styles.strip}
-            accessibilityRole="button"
-            accessibilityLabel={`Open ${i.title}`}
-            onPress={() => router.push(`/game/${i.gameId}`)}
-            onLayout={(e) => onRowLayout(i.entryId, e.nativeEvent.layout.y)}
-          >
-            <EntryCard title={i.title} card={i.card} size="thumb" />
-            <View style={styles.stripMeta}>
-              <View style={styles.stripTitleRow}>
-                <Text style={styles.stripTitle} numberOfLines={1}>
-                  {i.title.toUpperCase()}
-                </Text>
-                {/* walk2 B6 ⚖ (owner ruling 2026-07-17, 0078) — the ▶ NOW inline tag is GONE from list
-                    rows: now-playing renders in the HERO ONLY; the entry stays as a plain row. The board
-                    drew the inline tag (collection-states :681) — the ruling supersedes it (0078 ripple). */}
-              </View>
-              <Text style={styles.rowSub}>{statLine(i)}</Text>
-            </View>
-            <Text style={styles.chev}>›</Text>
-            {i.entryId === justAdded ? <JustAddedPulse entryId={i.entryId} /> : null}
-          </Pressable>
-        ))}
+    <Pressable
+      style={styles.strip}
+      accessibilityRole="button"
+      accessibilityLabel={`Open ${item.title}`}
+      onPress={() => onNavigate(item.gameId)}
+    >
+      <EntryCard title={item.title} card={item.card} size="thumb" />
+      <View style={styles.stripMeta}>
+        <View style={styles.stripTitleRow}>
+          <Text style={styles.stripTitle} numberOfLines={1}>
+            {item.title.toUpperCase()}
+          </Text>
+          {/* walk2 B6 ⚖ (owner ruling 2026-07-17, 0078) — the ▶ NOW inline tag is GONE from list
+              rows: now-playing renders in the HERO ONLY; the entry stays as a plain row. The board
+              drew the inline tag (collection-states :681) — the ruling supersedes it (0078 ripple). */}
+        </View>
+        <Text style={styles.rowSub}>{statLine(item)}</Text>
       </View>
-    </View>
+      <Text style={styles.chev}>›</Text>
+      {marked ? <JustAddedPulse entryId={item.entryId} /> : null}
+    </Pressable>
   );
-}
+});
 
 // TOP (COL-13) is now the curated Top-10 view-mode — see SelfTopView in components/collection/TopCurated.tsx
 // (the hours-sorted placeholder that lived here was retired at M6 P10 when /me/lists went live).
@@ -1091,7 +1119,14 @@ const useStyles = themedStyles((t) => ({
     justifyContent: 'center',
   },
   resultsHead: { fontFamily: t.font.screenBold, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 1.5 },
-  shelf: { gap: t.space.lg },
+  // R3 — the windowed list's chrome. The content container carries padding ONLY (no `gap` — the
+  // virtualized cells/spacers are its direct children; spacing rides the explicit separators).
+  listBody: { padding: t.space.lg },
+  // header (results head + hero) → first row: the same lg beat the old `body` gap gave it.
+  listHead: { gap: t.space.lg, marginBottom: t.space.lg },
+  rowSepGap: { height: t.space.lg }, // shelf rows + grid rows (the old shelfStack gap / gridWrap rowGap)
+  listSepGap: { height: t.space.sm + 1 }, // list strips (the old listStack gap)
+  gridRow: { justifyContent: 'space-between' }, // the grid's column wrapper (the old gridWrap axis)
   hero: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1120,8 +1155,6 @@ const useStyles = themedStyles((t) => ({
   nudgeTitle: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.ink, letterSpacing: 1 },
   nudgeSub: { fontFamily: t.font.screen, fontSize: t.type.body, color: t.scr.dim, lineHeight: 16 },
   empty: { alignItems: 'flex-start', gap: t.space.lg, padding: t.space.xl, backgroundColor: t.scr.panel },
-  // SHELF stack (decision 0061) — each entry a hero-treatment row (card + meta beside), board `.shelf-stack`.
-  shelfStack: { gap: t.space.lg },
   // COL-12 round-9 — the card's grid-parity slot: real (overflow prevents flattening), card-tight,
   // clipping. The masksToBounds boundary is what keeps the turning card's paint off the row's meta text.
   cardSlot: { width: 138, height: 193, overflow: 'hidden' },
@@ -1135,11 +1168,9 @@ const useStyles = themedStyles((t) => ({
     borderColor: t.scr.hairline,
   },
   // GRID (decision 0061) — two-per-row bare card faces (board `.grid` 1fr/1fr).
-  gridWrap: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: t.space.lg },
   gridCol: { width: '48%' },
   fluidCard: { width: '100%', height: 'auto', aspectRatio: 63 / 88 }, // mockup `.grid-size`
-  // LIST — dense strip rows (board `.list-stack` gap 9 / `.strip`).
-  listStack: { gap: t.space.sm + 1 },
+  // LIST — dense strip rows (board `.strip`; the stack gap rides listSepGap).
   strip: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -20,7 +20,14 @@ export default function TabsLayout() {
   if (usernamePending) return <Redirect href="/choose-username" />;
   return (
     <Tabs
-      screenOptions={{ headerShown: false }}
+      // R5 (P6 §6 row 4) — the tabs are the app's PERMANENT query subscribers (they never unmount,
+      // by design, and each holds shelf/profile/discover subscriptions): freezeOnBlur stops a
+      // blurred tab re-rendering on every RTK invalidation (the R2 fan-out) — renders defer and
+      // catch up on refocus. Blur-time cleanups (Keyboard.dismiss, the COL-12 flip reset) fire on
+      // the blur event BEFORE the freeze, and timers/effects keep running — only rendering pauses.
+      // One visible consequence (verified, accepted): a card left flipped renders its flip-back on
+      // RETURN to the tab (the reset's render is deferred) instead of animating while hidden.
+      screenOptions={{ headerShown: false, freezeOnBlur: true }}
       tabBar={() => null}
     >
       <Tabs.Screen name="collection" />
