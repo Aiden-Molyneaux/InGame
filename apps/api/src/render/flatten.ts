@@ -110,10 +110,14 @@ async function getSkiaCtx(): Promise<any> {
     const { LoadSkiaWeb } = require('@shopify/react-native-skia/lib/commonjs/web/LoadSkiaWeb');
     await LoadSkiaWeb();
     const hs = require('@shopify/react-native-skia/lib/commonjs/headless');
+    // The sksg scene-graph root, required directly (same lib/commonjs seam as `headless` above).
+    // The headless entrypoint's own `drawOffscreen` is NOT used: it constructs its SkiaSGRoot on a
+    // module-private Skia handle we can't wrap, so the paints/shaders/mask-filters the sksg replay
+    // allocates through it can never be tracked or freed — see the lifecycle block below.
+    const { SkiaSGRoot } = require('@shopify/react-native-skia/lib/commonjs/sksg/Reconciler');
     const {
       getSkiaExports,
       makeOffscreenSurface,
-      drawOffscreen,
       Group,
       Fill,
       Rect,
@@ -163,7 +167,7 @@ async function getSkiaCtx(): Promise<any> {
 
     return {
       makeOffscreenSurface,
-      drawOffscreen,
+      SkiaSGRoot,
       builderCtx: {
         Group,
         Fill,
@@ -183,14 +187,123 @@ async function getSkiaCtx(): Promise<any> {
   return skiaCtxPromise;
 }
 
-async function renderOne(w: number, h: number, composition: CardComposition): Promise<Buffer> {
+// ── CanvasKit-WASM object lifecycle (the load-harness ~680-flatten crash fuse) ───────────────────────
+// CanvasKit objects (Surface · Image · Paint · Path · Font · Shader · …) are embind handles into the
+// WASM heap: JS GC never frees them, so every PER-RENDER allocation must be `.delete()`d explicitly or
+// the heap fills until canvaskit hard-aborts (`RuntimeError: Aborted()` at ~684–690 cumulative flattens
+// — the 2026-08-01 load-harness MEASUREMENT-TABLE, reproduced 4×). Ownership ground truth (canvaskit-wasm
+// typings + the JsiSk web wrappers this module runs on):
+//   • Every JsiSk wrapper exposes `dispose()` → `ref.delete()` and stamps `__typename__` — the tracker's
+//     disposable signature. For JS-backed values (Matrix/Point/Rect/Data) `dispose()` is a no-op, so
+//     blanket disposal is safe.
+//   • `Skia.Data.fromBytes` wraps the JS bytes (NO wasm copy); `MakeImageFromEncoded` /
+//     `MakeFreeTypeFaceFromData` copy INTO the heap — the returned Image/Typeface owns its own copy.
+//   • `image.encodeToBytes()` hands back JS bytes and `Buffer.from` copies again — the snapshot is
+//     deletable the moment encode returns.
+//   • `surface.getCanvas()` is owned by the surface (never deleted separately); `surface.dispose()`
+//     frees the raster. (Node has no OffscreenCanvas → MakeOffscreen is a CPU `CanvasKit.MakeSurface`:
+//     ~2.5MB full / ~0.5MB thumb of wasm heap per undeleted surface — the dominant leak term.)
+//   • The PROCESS-WIDE singletons — the CanvasKit instance, the JsiSk API object, and the boot-loaded
+//     typeface registry (`builderCtx.typeface(s)`) — are NEVER deleted; only per-render allocations are.
+// The sksg replay itself allocates natives through whatever Skia handle its root is given (the
+// DrawingContext paint pool, gradient shaders, blur mask-filters — none freed by the library), so each
+// render passes ONE tracked facade of the Skia API into BOTH buildCardElements and its own SkiaSGRoot:
+// every factory result carrying the disposable signature is registered and deleted in the `finally`,
+// error paths included. Rendered output is untouched — the facade forwards every call verbatim.
+
+interface SkiaDisposable {
+  dispose: () => void;
+  __typename__: string;
+}
+
+const isSkiaDisposable = (o: unknown): o is SkiaDisposable =>
+  !!o &&
+  typeof o === 'object' &&
+  typeof (o as SkiaDisposable).dispose === 'function' &&
+  typeof (o as SkiaDisposable).__typename__ === 'string';
+
+/**
+ * Wrap the JsiSk `Skia` API (and, recursively, its sub-factories — `Skia.Path`, `Skia.Shader`, …) so
+ * that every native object returned by a factory call is handed to `register`. Calls forward verbatim
+ * (`this` = the unwrapped factory), non-disposable results (colors, numbers, null) pass through
+ * untracked. Exported for the lifecycle unit test only.
+ */
+export function trackSkia(skiaApi: any, register: (o: SkiaDisposable) => void): any {
+  const wrap = (target: any): any =>
+    new Proxy(target, {
+      get(t, prop) {
+        const v = t[prop];
+        if (typeof v === 'function') {
+          return (...args: any[]) => {
+            const result = v.apply(t, args);
+            if (isSkiaDisposable(result)) register(result);
+            return result;
+          };
+        }
+        if (v && typeof v === 'object') return wrap(v);
+        return v;
+      },
+    });
+  return wrap(skiaApi);
+}
+
+/**
+ * The one render mechanism: `plan` receives a per-render builderCtx whose `Skia` is the tracked facade
+ * and returns the surface dimensions + element tree; the tree is mounted on a private SkiaSGRoot (built
+ * on the SAME facade, so the replay's own paint/shader allocations are tracked too), drawn, snapshotted,
+ * and PNG-encoded. The `finally` deterministically deletes every tracked allocation, the snapshot, and
+ * the surface — on success AND on every error path.
+ */
+async function renderElementToPng(
+  plan: (builderCtx: any) => { w: number; h: number; tree: any },
+): Promise<Buffer> {
   const skia = await getSkiaCtx();
-  const surface = skia.makeOffscreenSurface(w, h);
+  const allocations = new Set<SkiaDisposable>();
+  const trackedSkia = trackSkia(skia.builderCtx.Skia, (o) => allocations.add(o));
+  let surface: any;
+  let snapshot: any;
+  let root: any;
+  try {
+    const { w, h, tree } = plan({ ...skia.builderCtx, Skia: trackedSkia });
+    surface = skia.makeOffscreenSurface(w, h);
+    root = new skia.SkiaSGRoot(trackedSkia);
+    await root.render(tree);
+    root.drawOnCanvas(surface.getCanvas());
+    surface.flush();
+    snapshot = surface.makeImageSnapshot();
+    return Buffer.from(snapshot.encodeToBytes());
+  } finally {
+    // Unmount BEFORE freeing natives so the reconciler never touches a deleted handle.
+    if (root) await (root.unmount() as Promise<unknown>).catch(() => undefined);
+    // Each dispose is individually guarded: one bad handle must never leak the rest of the batch.
+    try {
+      snapshot?.dispose();
+    } catch {
+      /* already freed */
+    }
+    for (const o of allocations) {
+      try {
+        o.dispose();
+      } catch {
+        /* already freed */
+      }
+    }
+    try {
+      surface?.dispose();
+    } catch {
+      /* already freed */
+    }
+  }
+}
+
+async function renderOne(w: number, h: number, composition: CardComposition): Promise<Buffer> {
   // withEffect=true bakes the STATIC effect/finish keyframe into the still image — the gallery/detail
   // view is a flattened PNG, not a live canvas (OQ-138), so the card must look complete on its own.
-  const tree = buildCardElements(composition, w, h, skia.builderCtx, true);
-  const image = await skia.drawOffscreen(surface, tree);
-  return Buffer.from(image.encodeToBytes());
+  return renderElementToPng((builderCtx) => ({
+    w,
+    h,
+    tree: buildCardElements(composition, w, h, builderCtx, true),
+  }));
 }
 
 /**
@@ -259,35 +372,37 @@ export async function compositeShareImage(
   attribution: { designerUsername: string },
 ): Promise<Buffer> {
   const h = createElement;
-  const skia = await getSkiaCtx();
-  const { Skia, Group, Rect, Text, Image, typeface } = skia.builderCtx;
-  const baseImage = Skia.Image.MakeImageFromEncoded(Skia.Data.fromBytes(new Uint8Array(basePng)));
-  if (!baseImage) throw new Error('CARD-21: could not decode the base render for the share composite.');
-  const w = baseImage.width();
-  const cardH = baseImage.height();
-  const surface = skia.makeOffscreenSurface(w, cardH + SHARE_FOOTER_H);
+  // Everything allocated here (the decoded base image, the two footer fonts) goes through the tracked
+  // builderCtx.Skia, so renderElementToPng's finally deletes it — decode-failure path included. The
+  // `typeface` itself is the boot singleton and stays alive.
+  return renderElementToPng((builderCtx) => {
+    const { Skia, Group, Rect, Text, Image, typeface } = builderCtx;
+    const baseImage = Skia.Image.MakeImageFromEncoded(Skia.Data.fromBytes(new Uint8Array(basePng)));
+    if (!baseImage)
+      throw new Error('CARD-21: could not decode the base render for the share composite.');
+    const w = baseImage.width();
+    const cardH = baseImage.height();
 
-  const children: any[] = [
-    h(Image, { key: 'base', x: 0, y: 0, width: w, height: cardH, image: baseImage, fit: 'fill' }),
-    h(Rect, { key: 'band', x: 0, y: cardH, width: w, height: SHARE_FOOTER_H, color: SHARE_BG }),
-    h(Rect, { key: 'rule', x: 0, y: cardH, width: w, height: 1, color: SHARE_RULE }),
-  ];
-  if (typeface) {
-    const markFont = Skia.Font(typeface, 12);
-    const attrFont = Skia.Font(typeface, 9);
-    children.push(
-      h(Text, { key: 'mark', x: 10, y: cardH + 17, text: 'MADE IN INGAME', font: markFont, color: SHARE_MARK_COLOR }),
-      h(Text, {
-        key: 'attr',
-        x: 10,
-        y: cardH + 31,
-        text: `CARD ARTIST ${attribution.designerUsername.toUpperCase()}`,
-        font: attrFont,
-        color: SHARE_ATTRIBUTION_COLOR,
-      }),
-    );
-  }
-  const tree = h(Group, {}, ...children);
-  const image = await skia.drawOffscreen(surface, tree);
-  return Buffer.from(image.encodeToBytes());
+    const children: any[] = [
+      h(Image, { key: 'base', x: 0, y: 0, width: w, height: cardH, image: baseImage, fit: 'fill' }),
+      h(Rect, { key: 'band', x: 0, y: cardH, width: w, height: SHARE_FOOTER_H, color: SHARE_BG }),
+      h(Rect, { key: 'rule', x: 0, y: cardH, width: w, height: 1, color: SHARE_RULE }),
+    ];
+    if (typeface) {
+      const markFont = Skia.Font(typeface, 12);
+      const attrFont = Skia.Font(typeface, 9);
+      children.push(
+        h(Text, { key: 'mark', x: 10, y: cardH + 17, text: 'MADE IN INGAME', font: markFont, color: SHARE_MARK_COLOR }),
+        h(Text, {
+          key: 'attr',
+          x: 10,
+          y: cardH + 31,
+          text: `CARD ARTIST ${attribution.designerUsername.toUpperCase()}`,
+          font: attrFont,
+          color: SHARE_ATTRIBUTION_COLOR,
+        }),
+      );
+    }
+    return { w, h: cardH + SHARE_FOOTER_H, tree: h(Group, {}, ...children) };
+  });
 }
