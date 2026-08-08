@@ -187,7 +187,8 @@ under Promoted.
 
 ## Promoted (owned by `doctor` — run `node scripts/dev-stack.mjs doctor`)
 
-- Postgres container down → `doctor` **db :5432** check.
+- Postgres container down / a native :5432 postgres masking it → `doctor` **db container** check
+  (in-container `pg_isready`; a port listener alone can no longer green the row).
 - API :4000 dead / unhealthy → `doctor` **api :4000** check (restart-safe; env in `apps/api/.env.dev`).
 - Web login CORS-blocked → `doctor` **api CORS env** check (`DEV_CORS_ORIGINS` must include `http://localhost:8082`, OQ-120).
 - Phone broken after Metro restart → `doctor` **.env.local trap** check (`apps/mobile/.env.local` must NOT exist).
@@ -248,7 +249,7 @@ sequence via javascript_tool instead; it makes the hidden-tab lane fully drivabl
   **Exited** — the API boots but every DB-backed query fails (web shows SIGNAL LOST; `/api/health`
   can still pass), and `doctor`'s migration-drift line reads "skipped (could not read
   drizzle.__drizzle_migrations)" — that skip IS the tell.
-- **Diagnosis:** the dev-DB container maps host **:5433**→5432, but this machine (the 2026-08-01
+- **Diagnosis:** the dev-DB container maps host **:5433**→5432, but this machine (the 2026-08-08
   new box) also runs a NATIVE PostgreSQL service listening on **:5432** (`Get-NetTCPConnection
   -LocalPort 5432` → a `postgres` PID outside docker). doctor probes :5432 and greets the wrong
   server. Any box with a system postgres reproduces this.
@@ -256,5 +257,10 @@ sequence via javascript_tool instead; it makes the hidden-tab lane fully drivabl
   `ingame-dev-db` is Exited: `docker start ingame-dev-db` (non-destructive; the volume holds the
   data). Durable fix candidate for promotion (0065 ladder): doctor's db probe should target the
   CONTAINER (`docker exec ingame-dev-db pg_isready`) or host :5433, not bare :5432.
-- **Verified:** 2026-08-01 · **Hits:** 1 *(post-repo-migration recovery; container had exited 255
-  when the C:→X: move killed its sibling processes)*
+- **PROMOTED to `doctor`** (2026-08-08, Hits 2 — the second hit was a Docker Desktop crash the same
+  day): `dbUp` now probes `pg_isready` IN-CONTAINER (a native :5432 postgres can no longer green the
+  row), the FAIL row names the container state with the exact `docker start` fix, and the
+  migration-drift fix hint derives DATABASE_URL from `.env.dev` (a hardcoded :5432 would have aimed
+  `db:migrate` at the native postgres).
+- **Verified:** 2026-08-08 · **Hits:** 2 *(post-repo-migration recovery — container exited 255 when
+  the C:→X: move killed its sibling processes; then a same-day Docker Desktop crash/restart)*

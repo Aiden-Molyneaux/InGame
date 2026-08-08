@@ -11,7 +11,8 @@
 //                                        never touches the docker DB or externally-launched procs.
 //
 // Services it manages:
-//   db     docker container `ingame-dev-db` (Postgres :5432) — started via `docker start` if stopped
+//   db     docker container `ingame-dev-db` (Postgres; host port varies by machine — probed
+//          in-container, never by port) — started via `docker start` if stopped
 //   api    npm -w @ingame/api run dev:local  (env from apps/api/.env.dev — restart-safe JWT secret)
 //   metro  npm -w @ingame/mobile run web -- --port 8082  (the agent/browser lane; the owner's
 //          phone Metro on :8081 is NEVER touched by this script)
@@ -81,7 +82,28 @@ async function waitFor(label, checkFn, timeoutMs, logFile) {
 
 // --- health checks -------------------------------------------------------------------------
 
-const dbUp = () => tcpUp(5432);
+// The dev DB is the CONTAINER, not "whatever answers on a port": a machine can run a NATIVE
+// postgres on :5432 (observed 2026-08-08, Hits 2 — doctor false-greened while ingame-dev-db sat
+// Exited after a Docker Desktop crash; promoted from qa-runbook "doctor db check FALSE-GREEN").
+// Probe pg_isready INSIDE the container so only the real dev DB can pass.
+const dbUp = async () => {
+  try {
+    execFileSync('docker', ['exec', DB_CONTAINER, 'pg_isready', '-U', 'ingame', '-q'],
+      { timeout: 8000, stdio: 'pipe' });
+    return true;
+  } catch {
+    return false;
+  }
+};
+// Raw container state, for doctor's failure-mode split ('exited' vs daemon-unreachable).
+const dbContainerState = () => {
+  try {
+    return execFileSync('docker', ['inspect', '-f', '{{.State.Status}}', DB_CONTAINER],
+      { encoding: 'utf8', timeout: 8000, stdio: 'pipe' }).trim();
+  } catch {
+    return null;
+  }
+};
 const apiUp = async () => (await httpGet(API_HEALTH, 2500))?.ok === true;
 // Generous timeout: a Metro mid-build can be slow to answer /status without being down.
 const metroUp = async () =>
@@ -177,11 +199,19 @@ async function doctor() {
   const rows = [];
   const check = (sev, name, ok, detail, fix) => rows.push({ sev, name, ok, detail, fix });
 
-  // db
+  // db — container-probed (a native :5432 postgres must not green this row)
   const db = await dbUp();
-  check('FAIL', 'db :5432', db,
-    db ? 'postgres answering' : 'no listener on :5432',
-    `node scripts/dev-stack.mjs up  (starts docker ${DB_CONTAINER}; still failing -> is Docker Desktop running?)`);
+  const dbState = db ? 'running' : dbContainerState();
+  check('FAIL', 'db container', db,
+    db ? `${DB_CONTAINER} answering (pg_isready in-container)`
+      : dbState === 'exited'
+        ? `${DB_CONTAINER} EXITED — a Docker Desktop restart/crash takes it down; data survives in the volume`
+        : dbState
+          ? `${DB_CONTAINER} state: ${dbState}`
+          : `docker daemon unreachable or ${DB_CONTAINER} missing`,
+    dbState === 'exited'
+      ? `docker start ${DB_CONTAINER}  (non-destructive), then node scripts/dev-stack.mjs doctor`
+      : `node scripts/dev-stack.mjs up  (starts docker ${DB_CONTAINER}; still failing -> is Docker Desktop running?)`);
 
   // api
   const api = await apiUp();
@@ -194,6 +224,14 @@ async function doctor() {
   // after any feature wave that generates migrations without applying them to local_ingame (2026-07-19).
   if (db) {
     let drift = false, migDetail, migFix = null;
+    // Read the env URL OUTSIDE the drift try — a failed .env.dev read must not masquerade as
+    // "could not read drizzle.__drizzle_migrations" (murr minor, promotion pass).
+    let envUrl = null;
+    try {
+      envUrl = fs.existsSync(API_ENV_DEV)
+        ? fs.readFileSync(API_ENV_DEV, 'utf8').match(/^DATABASE_URL=(.+)$/m)?.[1]?.trim() ?? null
+        : null;
+    } catch { /* envUrl stays null; the hint below degrades to guidance, never a guessed URL */ }
     try {
       const onDisk = fs.readdirSync(path.join(ROOT, 'apps', 'api', 'drizzle')).filter((f) => /^\d+_.*\.sql$/.test(f)).length;
       const applied = parseInt(execFileSync('docker',
@@ -201,7 +239,12 @@ async function doctor() {
         { encoding: 'utf8', timeout: 8000 }).trim(), 10);
       drift = Number.isFinite(applied) && onDisk > applied;
       migDetail = drift ? `dev DB behind: ${applied} applied, ${onDisk} on disk — the API 500s "column ... does not exist"` : `in sync (${applied}/${onDisk} applied)`;
-      migFix = 'DATABASE_URL=postgres://ingame:ingame@localhost:5432/local_ingame npm -w @ingame/api run db:migrate';
+      // The container's HOST port varies by machine (:5433 on the 2026-08 box, where a hardcoded
+      // :5432 would aim db:migrate at the NATIVE postgres) — so never guess a URL: use .env.dev's
+      // or tell the agent to supply it.
+      migFix = envUrl
+        ? `DATABASE_URL=${envUrl} npm -w @ingame/api run db:migrate`
+        : 'set DATABASE_URL from apps/api/.env.dev (no guessed default — see the db-container runbook entry), then npm -w @ingame/api run db:migrate';
     } catch {
       migDetail = 'skipped (could not read drizzle.__drizzle_migrations)';
     }
@@ -364,7 +407,7 @@ async function up() {
 
   // 1. Postgres (docker container)
   if (await dbUp()) {
-    say('db: already up (:5432)');
+    say(`db: already up (container ${DB_CONTAINER})`);
   } else {
     say(`db: starting docker container ${DB_CONTAINER}...`);
     await new Promise((resolve, reject) =>
@@ -372,7 +415,7 @@ async function up() {
         err ? reject(new Error(`docker start failed: ${stderr || err.message}. Is Docker Desktop running?`)) : resolve()
       )
     );
-    if (!(await waitFor('postgres :5432', dbUp, 30000))) process.exit(1);
+    if (!(await waitFor(`postgres (container ${DB_CONTAINER})`, dbUp, 30000))) process.exit(1);
     say('db: up');
   }
 
