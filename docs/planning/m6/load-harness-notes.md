@@ -49,6 +49,35 @@ full + thumb PNGs to disk. Measured on this shared box **while the owner was wal
 ## 2. Measurement table (against :4001, per tier)
 
 <!-- MEASUREMENT-TABLE -->
+**Filled 2026-08-01 (the post-R3/R5 re-run — new box, idle; `ingame-volload-db` :5434 disposable
+container + :4001 API; all torn down):**
+
+| tier | entries | coll_cold_ms | coll_warm_med_ms | coll_KB | bytes/entry | nextCursor | me_cold_ms | me_warm_med_ms | me_KB |
+|---|---|---|---|---|---|---|---|---|---|
+| 50 | 50 | 28.8 | 16.8 | 67.5 | 1383 | null | 18.8 | 14.1 | 0.5 |
+| 200 | 200 | 28.3 | 42.1 | 270.5 | 1385 | null | 13.3 | 12.2 | 0.5 |
+| 1000 | 1000 | 164.4 | 162.0 | 1354.8 | 1387 | null | 17.5 | 16.4 | 0.5 |
+| 2000 | 2000 | 155.1 | 184.8 | 2711.0 | 1388 | null | 27.7 | 25.1 | 0.5 |
+
+**Re-run findings vs the sections below:**
+- **Cliff #3 (image caching) — CLOSED by the P6 wave:** `/media` now serves
+  `Cache-Control: public, max-age=31536000` + ETag/Last-Modified (`MEDIA_STATIC_OPTIONS`,
+  app.ts:54-59; `immutable` deliberately omitted so in-place rewrites revalidate) with `?v=` URL
+  versioning. Measured live (5.6ms / 25.2KB thumb).
+- **Cliff #2 (`/me/collection` unpaginated) — UNCHANGED, still the worst:** `nextCursor: null` at
+  every tier, ~1.39KB/entry linear payload, cold 164ms @ N=1000. The server cursor/limit seam
+  remains the fix (R3 client virtualization landed 2026-08-01 caps the CLIENT cost only).
+- **`/me` equipped fan-out — architectural waste confirmed, no latency cliff at ≤2000** (13–28ms;
+  single indexed read is cheap locally). Fix before cross-user surfaces compound it.
+- **NEW — the CanvasKit flatten ceiling:** `render/flatten.ts` never `.delete()`s CanvasKit
+  Surface/Image objects (renderOne :186-194, compositeShareImage :257-293); the WASM heap fills and
+  the PROCESS hard-aborts (`RuntimeError: Aborted()` from canvaskit-wasm) at ~684–690 cumulative
+  flattens — reproduced 4× at the same range. This is the API's own publish path: a long-lived
+  production API has a ~680-publish crash fuse, and any in-process batch reflatten/backfill hits it
+  in minutes. Flagged 2026-08-01 for a fix packet (explicit `.delete()` lifecycle or per-batch
+  process recycling).
+- Flatten throughput 3.8–4.2 cards/s on the idle new box (the §4 ~2.8/s was laptop contention, not
+  a code floor).
 _(filled in after the seed + measure pass completes)_
 
 ### Scaling shape of the read paths (what to read from the table)
