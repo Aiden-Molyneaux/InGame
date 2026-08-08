@@ -183,7 +183,13 @@ async function getSkiaCtx(): Promise<any> {
         typefaces,
       },
     };
-  })();
+  })().catch((err) => {
+    // A transient first-touch failure (a wasm fetch/instantiation blip) must not poison the cache
+    // forever: evict the rejected promise before rethrowing so the NEXT flatten retries the load —
+    // otherwise every publish/share 500s until a process restart.
+    skiaCtxPromise = null;
+    throw err;
+  });
   return skiaCtxPromise;
 }
 
@@ -210,6 +216,11 @@ async function getSkiaCtx(): Promise<any> {
 // render passes ONE tracked facade of the Skia API into BOTH buildCardElements and its own SkiaSGRoot:
 // every factory result carrying the disposable signature is registered and deleted in the `finally`,
 // error paths included. Rendered output is untouched — the facade forwards every call verbatim.
+// THE FACADE BOUNDARY (known debt): tracked = factory calls made THROUGH the facade (and its
+// sub-factories); natives created by METHODS ON RESULTS — e.g. `path.copy()`,
+// `effect.makeShaderWithChildren(...)` — are NOT tracked, so a future cosmetic that reaches for those
+// (path trimming, a runtime-shader finish) re-arms the crash fuse. Neither is reachable from today's
+// composition schema (verified in the 8d20b66 audit).
 
 interface SkiaDisposable {
   dispose: () => void;
@@ -252,9 +263,10 @@ export function trackSkia(skiaApi: any, register: (o: SkiaDisposable) => void): 
  * and returns the surface dimensions + element tree; the tree is mounted on a private SkiaSGRoot (built
  * on the SAME facade, so the replay's own paint/shader allocations are tracked too), drawn, snapshotted,
  * and PNG-encoded. The `finally` deterministically deletes every tracked allocation, the snapshot, and
- * the surface — on success AND on every error path.
+ * the surface — on success AND on every error path. Exported for the wiring smoke test only
+ * (flatten-wiring.test.ts) — production callers are renderOne / compositeShareImage.
  */
-async function renderElementToPng(
+export async function renderElementToPng(
   plan: (builderCtx: any) => { w: number; h: number; tree: any },
 ): Promise<Buffer> {
   const skia = await getSkiaCtx();
@@ -271,7 +283,12 @@ async function renderElementToPng(
     root.drawOnCanvas(surface.getCanvas());
     surface.flush();
     snapshot = surface.makeImageSnapshot();
-    return Buffer.from(snapshot.encodeToBytes());
+    // The JsiSk wrapper already throws on a falsy encode result; this guard keeps the failure TYPED
+    // if that wrapper behavior ever changes (F21 posture: a broken encode must surface as an error,
+    // never as a misleading Buffer.from(null) TypeError or a corrupt PNG).
+    const png = snapshot.encodeToBytes();
+    if (!png) throw new Error('flatten: PNG encode failed (encodeToBytes returned no bytes).');
+    return Buffer.from(png);
   } finally {
     // Unmount BEFORE freeing natives so the reconciler never touches a deleted handle.
     if (root) await (root.unmount() as Promise<unknown>).catch(() => undefined);
