@@ -314,4 +314,36 @@ describe('R3: the shelf is windowed and the landing scroll uses scrollToIndex', 
       jest.useRealTimers();
     }
   });
+
+  it('a failed scroll RECOMPUTES at retry time — a stale captured index is never replayed (Murr major 3)', () => {
+    jest.useFakeTimers();
+    const scrollToIndex = jest.spyOn(FlatList.prototype, 'scrollToIndex').mockImplementation(() => {});
+    const scrollToOffset = jest.spyOn(FlatList.prototype, 'scrollToOffset').mockImplementation(() => {});
+    try {
+      mockRouteParams = { justAdded: 'e3' };
+      renderView('shelf');
+      act(() => {
+        jest.advanceTimersByTime(50); // the landing fires (index 2)
+      });
+      // The list reports the target unmeasured, carrying a STALE index (the shape left behind by a
+      // view-switch remount or a shrunken refetch). The old code replayed 99 verbatim after 120ms —
+      // a VirtualizedList range-invariant throw inside a setTimeout (uncaught).
+      const list = screen.UNSAFE_getByType(FlatList);
+      act(() => {
+        (list.props as { onScrollToIndexFailed: (i: { index: number; averageItemLength: number }) => void })
+          .onScrollToIndexFailed({ index: 99, averageItemLength: 100 });
+      });
+      expect(scrollToOffset).toHaveBeenCalledWith(expect.objectContaining({ offset: 9900 })); // the estimated advance
+      act(() => {
+        jest.advanceTimersByTime(130); // the recompute retry
+      });
+      const calls = scrollToIndex.mock.calls.map((c) => (c[0] as { index: number }).index);
+      expect(calls.at(-1)).toBe(2); // recomputed against the CURRENT list at fire time
+      expect(calls).not.toContain(99); // the stale index never reaches the list
+    } finally {
+      scrollToIndex.mockRestore();
+      scrollToOffset.mockRestore();
+      jest.useRealTimers();
+    }
+  });
 });

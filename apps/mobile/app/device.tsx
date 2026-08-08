@@ -434,26 +434,41 @@ export default function DeviceEditor() {
     commitNow();
   }, [commitNow]);
 
-  // W-A7 blur auto-commit — leaving the Device editor (back/nav) commits the current placement and,
-  // via the `focusedRef` gate on the session publish below, UNPUBLISHES the edit session: expo-router
-  // keeps this screen MOUNTED while blurred, so before this gate the shell's plastic bands kept their
-  // edit chrome (zones/handles) on every OTHER screen — the owner's "leave with stickers still
-  // editable". A ref (not state) so the blur cleanup never depends on re-render timing.
+  // W-A7 blur auto-commit — leaving the Device editor (back/nav) commits the current placement and
+  // UNPUBLISHES the edit session: expo-router keeps this screen MOUNTED while blurred, so before
+  // this gate the shell's plastic bands kept their edit chrome (zones/handles) on every OTHER
+  // screen — the owner's "leave with stickers still editable".
+  //
+  // R5 freeze fix (Murr, e642c01 major 1) — the un-publish must be IMPERATIVE, not render-chained:
+  // under `freezeOnBlur` the setFocused(false) render (and the session effect it drives) DEFERS
+  // until refocus, so a FORWARD nav (ShellNav → Store, etc.) from STICKERS with a selection would
+  // leave the session published — edit chrome with a live mutate/commit API painted over the next
+  // screen (W-A7 back through the freeze path). `setSession` lives in the ROOT provider (outside
+  // the frozen subtree), so calling it here clears the shell immediately; the session effect below
+  // stays the render-path owner (its deferred setSession(null) pass is idempotent). Back-pop was
+  // already safe (unmount → effect cleanup). The focus side bumps a monotonic TICK: after a frozen
+  // blur→refocus round-trip the coalesced `focused` state can land back at `true` unchanged, so a
+  // boolean alone would leave the effect un-re-run and the session imperatively cleared but never
+  // re-published — the tick always changes, forcing the re-publish on every refocus.
   const [focused, setFocused] = useState(true);
+  const [focusTick, setFocusTick] = useState(0);
   const doneRef = useRef(doneEditingSticker);
   doneRef.current = doneEditingSticker;
   useFocusEffect(
     useCallback(() => {
       setFocused(true);
+      setFocusTick((t) => t + 1);
       return () => {
         doneRef.current(); // commit the in-progress placement — never carry an editable state out
         setFocused(false);
+        setSession(null); // imperative un-publish — never rides the (freeze-deferrable) render chain
       };
-    }, []),
+    }, [setSession]),
   );
 
   // Publish the edit session to the shell's plastic bands while STICKERS is active + FOCUSED (W-A7 —
-  // a blurred editor publishes nothing). Cleared on section change / blur / unmount.
+  // a blurred editor publishes nothing). Cleared on section change / blur / unmount; `focusTick`
+  // re-runs it on every refocus (see above — `focused` alone can coalesce to unchanged).
   useEffect(() => {
     if (focused && section === 'stickers') {
       setSession({ selectedId: selectedStickerId, select: setSelectedStickerId, mutate: mutateSticker, commit: commitNow });
@@ -461,7 +476,7 @@ export default function DeviceEditor() {
       setSession(null);
     }
     return () => setSession(null);
-  }, [focused, section, selectedStickerId, mutateSticker, commitNow, setSession]);
+  }, [focused, focusTick, section, selectedStickerId, mutateSticker, commitNow, setSession]);
 
   // ── LOOKS: apply · save · delete ─────────────────────────────────────────────────────────────────
   // Apply = the ONE pipeline (walk 5): the snapshot's three facets swap in one PATCH; the optimistic

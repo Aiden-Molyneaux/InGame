@@ -138,13 +138,131 @@ const statLine = (i: CollectionItem) => `${i.hours} HRS · ${STATUS_LABEL[i.stat
 const catalogLine = (i: CollectionItem) =>
   [i.developer, i.releaseYear, i.genres[0]?.name].filter(Boolean).join(' · ').toUpperCase();
 
+// ── walk-4 P2 (OC-3) — the JUST-ADDED landing, ONE hook owning the whole mechanism ────────────────
+// The add flow ends by dismissing its stack to the Collection carrying a one-shot
+// `justAdded=<entryId>`: the shelf MARKS that entry (the ~1.5s pulse) and SCROLLS it into view (the
+// default MY ORDER sort can bury a fresh add below the fold). One-shot by construction: the param is
+// consumed into local state on arrival and immediately cleared off the URL (`setParams`), so a
+// re-render, a tab round-trip or a relog can't re-fire it.
+//
+// R3 (P6 §6 row 6): the shelf is WINDOWED — a far row may simply not be mounted, so the scroll rides
+// `scrollToIndex` (the list computes the position; the retired Walk-4 Murr per-row y-report map only
+// ever saw MOUNTED rows) with an estimated-offset + RECOMPUTE retry for the unmeasured case.
+function useJustAddedLanding(view: CollectionView, filtered: CollectionItem[]) {
+  const router = useRouter();
+  const params = useLocalSearchParams<{ justAdded?: string }>();
+  const listRef = useRef<FlatList<CollectionItem>>(null);
+  const [justAdded, setJustAdded] = useState<string | null>(null); // the mark rows render the pulse from
+  const justAddedIdRef = useRef<string | null>(null); // the open landing, readable from async callbacks
+  const didScrollRef = useRef(false); // the scroll fires once per landing (retries re-open it deliberately)
+  const markTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Render-synced refs so every (possibly delayed) scroll computes against the CURRENT list.
+  const filteredRef = useRef(filtered);
+  filteredRef.current = filtered;
+  const viewRef = useRef(view);
+  viewRef.current = view;
+
+  const scrollToJustAdded = useCallback((id: string) => {
+    if (didScrollRef.current) return;
+    const list = listRef.current;
+    if (list == null) return; // no windowed list mounted (TOP/empty lane) — the flag stays honest, a later lane may land it
+    const idx = filteredRef.current.findIndex((i) => i.entryId === id);
+    if (idx < 0) return; // not in the loaded shelf yet — the filtered effect below retries
+    didScrollRef.current = true;
+    // Under numColumns the list's items are ROWS — scrollToIndex takes the row index, not the item's.
+    const cols = viewRef.current === 'grid' ? 2 : 1;
+    list.scrollToIndex({ index: Math.floor(idx / cols), viewOffset: 12, animated: true });
+    // The ~1.5s mark window starts when the landing actually FIRES (the entry exists, the scroll is
+    // issued) — not at param arrival: a fetch slower than the window used to lose the scroll AND the
+    // pulse entirely (OC-3's "the new entry is VISIBLE" silently unmet on slow networks). The timer
+    // lives in a REF (re-armed per fire, cleared on unmount) — a cleanup-owned timer dies to
+    // unrelated effect re-runs.
+    if (markTimerRef.current) clearTimeout(markTimerRef.current);
+    markTimerRef.current = setTimeout(() => {
+      setJustAdded(null);
+      justAddedIdRef.current = null; // closes the landing — bounds every retry lane below
+    }, JUST_ADDED_MS);
+  }, []);
+
+  // The unmeasured-target fallback (fresh mount, or a target far outside the window): jump to the
+  // estimated offset so the window advances and measures, then RE-LAND through scrollToJustAdded —
+  // which recomputes the index + column count against the list as it exists AT FIRE TIME. Replaying
+  // the captured `info.index` was a crash: a view switch inside the landing window REMOUNTS the list
+  // (key={view}; grid halves the row count) and a refetch can shrink `filtered`, so the stale index
+  // could violate the VirtualizedList range invariant inside a setTimeout — an uncaught throw.
+  const onScrollToIndexFailed = useCallback(
+    (info: { index: number; averageItemLength: number }) => {
+      listRef.current?.scrollToOffset({ offset: info.averageItemLength * info.index, animated: true });
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = setTimeout(() => {
+        const id = justAddedIdRef.current;
+        if (id == null) return; // the landing closed — no late jumps
+        didScrollRef.current = false; // re-open the one-shot for THIS recomputed attempt
+        scrollToJustAdded(id);
+      }, 120);
+    },
+    [scrollToJustAdded],
+  );
+
+  // Param arrival — consume the one-shot and open the landing.
+  useEffect(() => {
+    const id = params.justAdded;
+    if (!id) return;
+    didScrollRef.current = false;
+    justAddedIdRef.current = id;
+    setJustAdded(id); // rows wear the pulse only once the entry actually renders
+    router.setParams({ justAdded: undefined });
+    // The retained-tab mainline: the shelf data already holds the entry — scroll a frame later (so a
+    // same-commit cold mount has the list mounted before the scroll issues).
+    requestAnimationFrame(() => scrollToJustAdded(id));
+  }, [params.justAdded, router, scrollToJustAdded]);
+
+  // The cold-mount retry: the param can be consumed before the shelf data lands (the query is still
+  // in flight behind the screen's isLoading return) — when the entry appears in `filtered`, land on
+  // it. Replaces the old per-row layout-report retry, which needed a mounted row.
+  useEffect(() => {
+    if (justAddedIdRef.current != null && !didScrollRef.current) scrollToJustAdded(justAddedIdRef.current);
+  }, [filtered, scrollToJustAdded]);
+
+  // A view switch REMOUNTS the list (key={view}) — a pending recompute-retry aimed at the OLD
+  // list's geometry must die with it; an open landing then re-lands on the NEW list (fresh index,
+  // fresh column count, a frame later so the remounted list's ref is attached). `prevViewRef` keeps
+  // the mount run inert — this lane is for view CHANGES only (the param/filtered effects own mount).
+  const prevViewRef = useRef(view);
+  useEffect(() => {
+    if (prevViewRef.current !== view) {
+      prevViewRef.current = view;
+      const openId = justAddedIdRef.current;
+      if (openId != null) {
+        didScrollRef.current = false;
+        requestAnimationFrame(() => {
+          if (justAddedIdRef.current === openId) scrollToJustAdded(openId);
+        });
+      }
+    }
+    return () => {
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    };
+  }, [view, scrollToJustAdded]);
+
+  // Unmount — both timers die with the screen.
+  useEffect(
+    () => () => {
+      if (markTimerRef.current) clearTimeout(markTimerRef.current);
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    },
+    [],
+  );
+
+  return { listRef, justAdded, onScrollToIndexFailed };
+}
+
 export default function Collection() {
   const router = useRouter();
-  // COL-13 — a Top-3/VIEW-TOP-10 door can deep-link into the TOP view FOCUSED on a game (decision 0050 §C).
-  // walk-4 P2 (OC-3) — `justAdded=<entryId>` is the one-shot the ADD flow lands with: the shelf scrolls
-  // that entry into view and pulses it for ~1.5s. Landing alone doesn't deliver the owner's "the new
-  // entry is VISIBLE" — the default sort is MY ORDER, where a fresh add can sit well below the fold.
-  const params = useLocalSearchParams<{ focus?: string; justAdded?: string }>();
+  // COL-13 — a Top-3/VIEW-TOP-10 door can deep-link into the TOP view FOCUSED on a game (decision
+  // 0050 §C). The `justAdded` one-shot is consumed by useJustAddedLanding above, not here.
+  const params = useLocalSearchParams<{ focus?: string }>();
   const dispatch = useAppDispatch();
   const view = useAppSelector((s) => s.prefs.collectionView);
   const col12CoachmarkSeen = useAppSelector((s) => s.prefs.col12CoachmarkSeen);
@@ -180,72 +298,6 @@ export default function Collection() {
   // (PulledSheet contract / F-15: an absolute-fill overlay inside a scroll anchors to the scroll CONTENT
   // — top-pinned, wrong size, clipped results). SelfTopView (in-scroll) only requests open.
   const [topPickerOpen, setTopPickerOpen] = useState(false);
-
-  // ── walk-4 P2 (OC-3) — the JUST-ADDED landing: scroll the new entry into view + pulse it ────────
-  // One-shot by construction: the param is consumed into local state on arrival and immediately
-  // cleared off the URL (`setParams`), so a re-render, a tab round-trip or a relog can't re-fire it.
-  const listRef = useRef<FlatList<CollectionItem>>(null);
-  const [justAdded, setJustAdded] = useState<string | null>(null);
-  const justAddedIdRef = useRef<string | null>(null); // the mark, readable from async callbacks
-  const didScrollRef = useRef(false); // the scroll fires once per landing
-  // R3 (P6 §6 row 6) — the shelf is WINDOWED now, so a far row may simply not be mounted and the old
-  // Walk-4 Murr per-row y-report map (a ScrollView mechanism: native layout events fire on metric
-  // CHANGE only, so an already-laid-out row never re-reported — the map recorded every row
-  // continuously to cover the retained-tab landing) has no rows to report from outside the window.
-  // scrollToIndex asks the LIST for the position instead: it works for unmounted rows, and
-  // onScrollToIndexFailed (below) covers the not-yet-measured case with an estimated offset + retry.
-  const filteredRef = useRef<CollectionItem[]>([]); // render-synced below (after the filtered memo)
-  const viewRef = useRef(view);
-  viewRef.current = view;
-  const scrollToJustAdded = useCallback((id: string) => {
-    if (didScrollRef.current) return;
-    const idx = filteredRef.current.findIndex((i) => i.entryId === id);
-    if (idx < 0) return; // not in the loaded shelf yet — the filtered-change effect below retries
-    didScrollRef.current = true;
-    // Under numColumns the list's items are ROWS — scrollToIndex takes the row index, not the item's.
-    const cols = viewRef.current === 'grid' ? 2 : 1;
-    listRef.current?.scrollToIndex({ index: Math.floor(idx / cols), viewOffset: 12, animated: true });
-  }, []);
-  // The unmeasured-target fallback (fresh mount, or a target far outside the window): jump to the
-  // estimated offset so the window advances and measures, then retry the precise landing. Only our
-  // own scrollToJustAdded ever calls scrollToIndex, so this converges on the one marked row.
-  const onScrollToIndexFailed = useCallback(
-    (info: { index: number; averageItemLength: number }) => {
-      listRef.current?.scrollToOffset({ offset: info.averageItemLength * info.index, animated: true });
-      setTimeout(() => {
-        if (justAddedIdRef.current != null) {
-          listRef.current?.scrollToIndex({ index: info.index, viewOffset: 12, animated: true });
-        }
-      }, 120);
-    },
-    [],
-  );
-  // The clear timer lives in a REF, not the effect's cleanup: clearing the param immediately re-runs
-  // this effect, and a cleanup-owned timer would be cancelled by that very re-run — leaving the mark
-  // on forever. Re-armed per arrival, cleared only on unmount.
-  const markTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    const id = params.justAdded;
-    if (!id) return;
-    didScrollRef.current = false;
-    justAddedIdRef.current = id;
-    setJustAdded(id);
-    router.setParams({ justAdded: undefined });
-    if (markTimerRef.current) clearTimeout(markTimerRef.current);
-    markTimerRef.current = setTimeout(() => {
-      setJustAdded(null);
-      justAddedIdRef.current = null; // the mark window also bounds the scroll retries (no late jumps)
-    }, JUST_ADDED_MS);
-    // The retained-tab mainline: the shelf data already holds the entry — scroll now (a frame later,
-    // so a same-commit cold mount has the list mounted before the scroll issues).
-    requestAnimationFrame(() => scrollToJustAdded(id));
-  }, [params.justAdded, router, scrollToJustAdded]);
-  useEffect(
-    () => () => {
-      if (markTimerRef.current) clearTimeout(markTimerRef.current);
-    },
-    [],
-  );
 
   const items = useMemo(() => data?.items ?? [], [data]);
   const hero = items.find((i) => i.nowPlaying) ?? null;
@@ -346,14 +398,9 @@ export default function Collection() {
     }
     return out;
   }, [items, q, statusFilter, genreFilter, sortKey, sortAsc]);
-  filteredRef.current = filtered; // render-synced for the just-added scroll (index lookup at call time)
 
-  // The cold-mount landing retry: the param effect can consume `justAdded` before the shelf data
-  // lands (the query is still in flight behind the isLoading return) — when the entry appears in
-  // `filtered`, land on it. Replaces the old per-row layout-report retry, which needed a mounted row.
-  useEffect(() => {
-    if (justAddedIdRef.current != null && !didScrollRef.current) scrollToJustAdded(justAddedIdRef.current);
-  }, [filtered, scrollToJustAdded]);
+  // walk-4 P2 (OC-3) — the JUST-ADDED landing (the whole mechanism lives in the one hook below).
+  const { listRef, justAdded, onScrollToIndexFailed } = useJustAddedLanding(view, filtered);
 
   // ── R3 (P6 §6 row 6) — the windowed shelf: per-view row renderers for the FlatList. Hooks, so they
   // live ABOVE the isLoading/isError early returns. `renderRow`'s identity changing on flip/mark
@@ -448,6 +495,13 @@ export default function Collection() {
           ? `${filtered.length} OF ${total} ${games(total)}`
           : `${total} ${games(total)}`;
 
+  // In-place search: the query live-filters the CURRENT view + a RESULTS header (board :661) —
+  // computed ONCE, worn by whichever lane renders.
+  const resultsHead =
+    searchOpen && q.trim() !== '' && data.collectionTotal > 0 ? (
+      <Text style={styles.resultsHead}>RESULTS — TITLE · DEVELOPER · PUBLISHER</Text>
+    ) : null;
+
   return (
     <View style={styles.screen}>
       <View style={styles.pad}>
@@ -474,10 +528,7 @@ export default function Collection() {
       <ScrollLockContext.Provider value={scrollLockApi}>
       {view === 'top' || data.collectionTotal === 0 ? (
         <ScrollView testID="collection-scroll" style={styles.scroll} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} scrollEnabled={!bgLocked && dragScrollEnabled}>
-          {/* In-place search: the query live-filters the CURRENT view + a RESULTS header (board :661). */}
-          {searchOpen && q.trim() !== '' && data.collectionTotal > 0 ? (
-            <Text style={styles.resultsHead}>RESULTS — TITLE · DEVELOPER · PUBLISHER</Text>
-          ) : null}
+          {resultsHead}
           {data.collectionTotal === 0 ? (
             <EmptyShelf onAdd={() => router.push('/add-game')} />
           ) : filtered.length === 0 ? (
@@ -526,14 +577,12 @@ export default function Collection() {
           windowSize={7}
           onScrollToIndexFailed={onScrollToIndexFailed}
           ListHeaderComponent={
-            // In-place search RESULTS header + the Now-Playing hero (persists across the browse
-            // modes, 0061, but YIELDS while a query is active — board :711–713). One wrapper so an
-            // absent header contributes no phantom margin.
-            (searchOpen && q.trim() !== '') || (q.trim() === '' && filtered.length > 0) ? (
+            // The RESULTS header + the Now-Playing hero (persists across the browse modes, 0061,
+            // but YIELDS while a query is active — board :711–713). One wrapper so an absent header
+            // contributes no phantom margin.
+            resultsHead != null || (q.trim() === '' && filtered.length > 0) ? (
               <View style={styles.listHead}>
-                {searchOpen && q.trim() !== '' ? (
-                  <Text style={styles.resultsHead}>RESULTS — TITLE · DEVELOPER · PUBLISHER</Text>
-                ) : null}
+                {resultsHead}
                 {q.trim() === '' && filtered.length > 0 ? (
                   <NowPlayingHero hero={hero} onLogHours={onLogHours} />
                 ) : null}

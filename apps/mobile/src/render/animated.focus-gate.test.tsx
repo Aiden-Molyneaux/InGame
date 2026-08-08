@@ -178,3 +178,46 @@ describe('P6/R4 — the LAYER half: unmount cancels the loop (what a host blur t
     expect(toJSON()).toBeNull();
   });
 });
+
+// R5×R4 (Murr, e642c01 major 2) — under `freezeOnBlur` the HOST gate's unmount is a RENDER, and a
+// blurred screen's renders defer until refocus: the unmount that cancelled the loops may never come
+// while blurred. The layer therefore carries its own IMPERATIVE brake — the host passes the
+// navigation handle as a PROP (props cross the skia reconciler boundary, context does not) and the
+// layer's blur/focus listeners stop/restart the loops directly, no render involved. These pin the
+// brake AND its inertness when the render path does win the race.
+describe('R5×R4 — the IMPERATIVE brake (freeze can defer the host-side unmount)', () => {
+  beforeEach(() => {
+    mockWithRepeat.mockClear();
+    mockCancelAnimation.mockClear();
+    mockReduceMotion = false;
+  });
+
+  it('a blur event stops the loops IN PLACE (no unmount); refocus restarts them', () => {
+    const nav = makeNavigation(true);
+    render(<RealAnimatedCardLayer composition={composition} width={224} height={314} navigation={nav} />);
+    expect(mockWithRepeat).toHaveBeenCalledTimes(1); // running while focused
+    act(() => nav.emit('blur'));
+    expect(mockCancelAnimation).toHaveBeenCalledTimes(1); // braked imperatively — the layer never re-rendered
+    act(() => nav.emit('focus'));
+    expect(mockWithRepeat).toHaveBeenCalledTimes(2); // restarted on refocus
+  });
+
+  it('mounted on an already-BLURRED screen (the freeze race): parked until focus', () => {
+    const nav = makeNavigation(false);
+    render(<RealAnimatedCardLayer composition={composition} width={224} height={314} navigation={nav} />);
+    expect(mockWithRepeat).not.toHaveBeenCalled(); // never starts blurred
+    act(() => nav.emit('focus'));
+    expect(mockWithRepeat).toHaveBeenCalledTimes(1);
+  });
+
+  it('brake + render-path unmount coexist inertly: exactly one cancel per running loop', () => {
+    const nav = makeNavigation(true);
+    const { unmount } = render(
+      <RealAnimatedCardLayer composition={composition} width={224} height={314} navigation={nav} />,
+    );
+    act(() => nav.emit('blur')); // the brake fires first…
+    expect(mockCancelAnimation).toHaveBeenCalledTimes(1);
+    unmount(); // …then the render path catches up — the guarded stop() must not double-cancel
+    expect(mockCancelAnimation).toHaveBeenCalledTimes(1);
+  });
+});

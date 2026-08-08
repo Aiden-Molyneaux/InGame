@@ -72,15 +72,19 @@ export function useSurfaceFocused(): boolean {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
-/** A shared value looping 0→1 forever at a linear rate; cancelled on unmount. */
-function useLoopPhase(duration: number): SharedValue<number> {
-  const p = useSharedValue(0);
-  useEffect(() => {
-    p.value = 0;
-    p.value = withRepeat(withTiming(1, { duration, easing: Easing.linear }), -1, false);
-    return () => cancelAnimation(p);
-  }, [duration, p]);
-  return p;
+/**
+ * The minimal navigation surface the imperative motion brake below needs. Passed as a PROP from the
+ * Canvas HOST (CardComposition / ProofPrint) into AnimatedCardLayer: props cross the skia
+ * reconciler boundary, React context does not. Structurally matches react-navigation's object.
+ */
+export type MotionNavigation = {
+  isFocused: () => boolean;
+  addListener: (type: 'focus' | 'blur', cb: () => void) => () => void;
+};
+
+/** The host-side half of the brake: read the navigation handle to pass into AnimatedCardLayer. */
+export function useSurfaceNavigation(): MotionNavigation | undefined {
+  return useContext(NavigationContext) as unknown as MotionNavigation | undefined;
 }
 
 // ── The marquee light's colour (owner sitting 2026-07-27 — reverses the warm-bulb deferral): the
@@ -111,9 +115,8 @@ export function marqueeLightColors(frameColor: unknown): { glow: string; core: s
 }
 
 /** A bright light chasing the card's rectangular border (MARQUEE frame). */
-function MarqueeChase({ W, H, color }: { W: number; H: number; color?: unknown }) {
+function MarqueeChase({ W, H, color, phase }: { W: number; H: number; color?: unknown; phase: SharedValue<number> }) {
   const { glow, core } = marqueeLightColors(color);
-  const phase = useLoopPhase(2400);
   const inset = Math.max(2, W * 0.014);
   const transform = useDerivedValue(() => {
     'worklet';
@@ -162,8 +165,9 @@ const MOTE_SEEDS: MoteSeed[] = [
   { x: 0.34, off: 0.68, r: 1.5 },
 ];
 
-function Mote({ seed, W, H }: { seed: MoteSeed; W: number; H: number }) {
-  const phase = useLoopPhase(2800);
+// Every mote shares the ONE embers phase (they always ticked in lock-step anyway — identical
+// duration, same mount instant — and each already differentiates via `seed.off`); one loop, not 8.
+function Mote({ seed, W, H, phase }: { seed: MoteSeed; W: number; H: number; phase: SharedValue<number> }) {
   const transform = useDerivedValue(() => {
     'worklet';
     const local = (phase.value + seed.off) % 1;
@@ -188,19 +192,18 @@ function Mote({ seed, W, H }: { seed: MoteSeed; W: number; H: number }) {
 }
 
 /** Warm motes rising from the base (EMBERS effect) — the static hearth glow is in buildCard.ts. */
-function EmberRise({ W, H }: { W: number; H: number }) {
+function EmberRise({ W, H, phase }: { W: number; H: number; phase: SharedValue<number> }) {
   return (
     <>
       {MOTE_SEEDS.map((seed, i) => (
-        <Mote key={i} seed={seed} W={W} H={H} />
+        <Mote key={i} seed={seed} W={W} H={H} phase={phase} />
       ))}
     </>
   );
 }
 
 /** A bright band sweeping L→R — the shared motion for FROST / HOLOGRAPHIC / METALLIC. */
-function SheenSweep({ W, H, color, duration }: { W: number; H: number; color: string; duration: number }) {
-  const phase = useLoopPhase(duration);
+function SheenSweep({ W, H, color, phase }: { W: number; H: number; color: string; phase: SharedValue<number> }) {
   const bandW = W * 0.5;
   const transform = useDerivedValue(() => {
     'worklet';
@@ -229,30 +232,95 @@ export function AnimatedCardLayer({
   composition,
   width,
   height,
+  navigation,
 }: {
   composition: CardComposition;
   width: number;
   height: number;
+  /**
+   * The host screen's navigation handle (pass via `useSurfaceNavigation()` from the Canvas HOST —
+   * context can't cross the skia reconciler boundary, props can). Powers the IMPERATIVE focus
+   * brake below; omitted (tests, non-screen hosts) the loops simply run while mounted.
+   */
+  navigation?: MotionNavigation;
 }) {
   const reduce = useReducedMotion();
-  // P6/R4 — the FOCUS gate does NOT live here (walk-4 Murr major): this layer renders inside a skia
-  // <Canvas>, whose children run under skia's OWN react-reconciler root — host React context (incl.
-  // NavigationContext) never crosses that boundary, so a context read here always sees `undefined`
-  // and the gate would be a silent no-op. The gate lives HOST-SIDE: the two Canvas hosts
-  // (CardComposition · the PROOF print) call `useSurfaceFocused()` in the host tree and simply don't
-  // mount this layer while blurred — unmounting runs `useLoopPhase`'s cleanup, cancelling every loop.
-  // (`useReducedMotion` is safe here: Reanimated reads a module-level accessibility listener, not
-  // React context, so it works across reconciler roots.)
+  // P6/R4 — the render-path FOCUS gate does NOT live here (walk-4 Murr major): this layer renders
+  // inside a skia <Canvas>, whose children run under skia's OWN react-reconciler root — host React
+  // context (incl. NavigationContext) never crosses that boundary, so a context read here always
+  // sees `undefined` and the gate would be a silent no-op. The gate lives HOST-SIDE: the two Canvas
+  // hosts (CardComposition · the PROOF print) call `useSurfaceFocused()` in the host tree and don't
+  // mount this layer while blurred. (`useReducedMotion` is safe here: Reanimated reads a
+  // module-level accessibility listener, not React context, so it works across reconciler roots.)
+  //
+  // R5×R4 (Murr, e642c01 major 2) — the host gate is RENDER-driven, and under `freezeOnBlur` a
+  // blurred screen's re-render DEFERS until refocus: the unmount that was supposed to cancel these
+  // UI-thread loops may never happen for the whole blurred lifetime. So the loops are owned HERE by
+  // ONE effect with an IMPERATIVE brake: navigation blur/focus listeners (plain JS callbacks — they
+  // fire regardless of freeze) stop/restart the loops directly. The `running` flag makes both sides
+  // idempotent, so when the render path DOES win the race (layer unmounts on blur), the listener's
+  // stop and the cleanup's stop coexist inertly — exactly one cancel per running loop.
+  //
+  // One shared value per motion kind — a CLOSED set (hasMotion's list), created unconditionally
+  // (hook discipline); only the kinds the composition carries ever START a loop. The embers motes
+  // share ONE phase (see Mote).
+  const marquee = useSharedValue(0);
+  const embers = useSharedValue(0);
+  const frost = useSharedValue(0);
+  const holo = useSharedValue(0);
+  const metal = useSharedValue(0);
+  const marqueeOn = composition.frame?.kind === 'marquee';
+  const embersOn = composition.effect?.kind === 'embers';
+  const frostOn = composition.effect?.kind === 'frost';
+  const holoOn = composition.finish?.kind === 'holographic';
+  const metalOn = composition.finish?.kind === 'metallic';
+  useEffect(() => {
+    if (reduce) return;
+    const active: Array<[SharedValue<number>, number]> = [];
+    if (marqueeOn) active.push([marquee, 2400]);
+    if (embersOn) active.push([embers, 2800]);
+    if (frostOn) active.push([frost, 3500]);
+    if (holoOn) active.push([holo, 2400]);
+    if (metalOn) active.push([metal, 2600]);
+    if (active.length === 0) return;
+    let running = false;
+    const start = () => {
+      if (running) return;
+      running = true;
+      for (const [p, duration] of active) {
+        p.value = 0;
+        p.value = withRepeat(withTiming(1, { duration, easing: Easing.linear }), -1, false);
+      }
+    };
+    const stop = () => {
+      if (!running) return;
+      running = false;
+      for (const [p] of active) cancelAnimation(p);
+    };
+    // Never start blurred: if the freeze race mounted (or kept) this layer on a blurred screen,
+    // stay parked until the focus listener fires.
+    if (!navigation || navigation.isFocused()) start();
+    const subs: Array<() => void> = [];
+    if (navigation) {
+      subs.push(navigation.addListener('blur', stop));
+      subs.push(navigation.addListener('focus', start));
+    }
+    return () => {
+      subs.forEach((off) => off());
+      stop();
+    };
+  }, [reduce, navigation, marqueeOn, embersOn, frostOn, holoOn, metalOn, marquee, embers, frost, holo, metal]);
+
   const u = cardStepUnit(width); // F-18: match the card's proportional silhouette (was fixed W>=96?6:3)
   const clip = useMemo(() => Skia.Path.MakeFromSVGString(steppedRectPath(width, height, u)), [width, height, u]);
   if (reduce) return null;
 
   const layers: React.ReactNode[] = [];
-  if (composition.frame?.kind === 'marquee') layers.push(<MarqueeChase key="marquee" W={width} H={height} color={composition.frame?.color} />);
-  if (composition.effect?.kind === 'embers') layers.push(<EmberRise key="embers" W={width} H={height} />);
-  if (composition.effect?.kind === 'frost') layers.push(<SheenSweep key="frost" W={width} H={height} color="rgba(207,234,255,0.4)" duration={3500} />);
-  if (composition.finish?.kind === 'holographic') layers.push(<SheenSweep key="holo" W={width} H={height} color="rgba(255,255,255,0.45)" duration={2400} />);
-  if (composition.finish?.kind === 'metallic') layers.push(<SheenSweep key="metal" W={width} H={height} color="rgba(255,240,190,0.5)" duration={2600} />);
+  if (marqueeOn) layers.push(<MarqueeChase key="marquee" W={width} H={height} color={composition.frame?.color} phase={marquee} />);
+  if (embersOn) layers.push(<EmberRise key="embers" W={width} H={height} phase={embers} />);
+  if (frostOn) layers.push(<SheenSweep key="frost" W={width} H={height} color="rgba(207,234,255,0.4)" phase={frost} />);
+  if (holoOn) layers.push(<SheenSweep key="holo" W={width} H={height} color="rgba(255,255,255,0.45)" phase={holo} />);
+  if (metalOn) layers.push(<SheenSweep key="metal" W={width} H={height} color="rgba(255,240,190,0.5)" phase={metal} />);
   if (!layers.length) return null;
 
   return <Group clip={clip ?? undefined}>{layers}</Group>;
