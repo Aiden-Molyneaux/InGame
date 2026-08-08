@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { trackSkia } from './flatten';
 
-// The CanvasKit lifecycle tracker (the ~680-flatten WASM-heap crash fuse, load-harness 2026-08-01) —
+// The CanvasKit lifecycle tracker (the ~680-flatten WASM-heap crash fuse, load-harness 2026-08-08) —
 // `trackSkia` is the mechanism that lets renderElementToPng delete every per-render native allocation.
 // These tests pin its contract against a fake JsiSk-shaped API: every factory result carrying the
 // JsiSk disposable signature (`dispose` fn + `__typename__`) is registered — through nested factories

@@ -49,7 +49,7 @@ full + thumb PNGs to disk. Measured on this shared box **while the owner was wal
 ## 2. Measurement table (against :4001, per tier)
 
 <!-- MEASUREMENT-TABLE -->
-**Filled 2026-08-01 (the post-R3/R5 re-run — new box, idle; `ingame-volload-db` :5434 disposable
+**Filled 2026-08-08 (the post-R3/R5 re-run — new box, idle; `ingame-volload-db` :5434 disposable
 container + :4001 API; all torn down):**
 
 | tier | entries | coll_cold_ms | coll_warm_med_ms | coll_KB | bytes/entry | nextCursor | me_cold_ms | me_warm_med_ms | me_KB |
@@ -66,7 +66,7 @@ container + :4001 API; all torn down):**
   versioning. Measured live (5.6ms / 25.2KB thumb).
 - **Cliff #2 (`/me/collection` unpaginated) — UNCHANGED, still the worst:** `nextCursor: null` at
   every tier, ~1.39KB/entry linear payload, cold 164ms @ N=1000. The server cursor/limit seam
-  remains the fix (R3 client virtualization landed 2026-08-01 caps the CLIENT cost only).
+  remains the fix (R3 client virtualization landed 2026-08-08 caps the CLIENT cost only).
 - **`/me` equipped fan-out — architectural waste confirmed, no latency cliff at ≤2000** (13–28ms;
   single indexed read is cheap locally). Fix before cross-user surfaces compound it.
 - **NEW — the CanvasKit flatten ceiling:** `render/flatten.ts` never `.delete()`s CanvasKit
@@ -74,7 +74,7 @@ container + :4001 API; all torn down):**
   the PROCESS hard-aborts (`RuntimeError: Aborted()` from canvaskit-wasm) at ~684–690 cumulative
   flattens — reproduced 4× at the same range. This is the API's own publish path: a long-lived
   production API has a ~680-publish crash fuse, and any in-process batch reflatten/backfill hits it
-  in minutes. Flagged 2026-08-01 for a fix packet (explicit `.delete()` lifecycle or per-batch
+  in minutes. Flagged 2026-08-08 for a fix packet (explicit `.delete()` lifecycle or per-batch
   process recycling). **FIXED same day** — `8d20b66`+`227f327` (tracked-facade lifecycle; Murr
   SOUND; 1500-composition soak flat; see review-coverage).
 - Flatten throughput 3.8–4.2 cards/s on the idle new box (the §4 ~2.8/s was laptop contention, not

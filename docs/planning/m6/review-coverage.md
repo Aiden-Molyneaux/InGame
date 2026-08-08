@@ -329,7 +329,7 @@
 API healthy (`dev-stack up` + `doctor` green) → claude-in-chrome at `http://localhost:8082` → login
 `demo@ingame.app` / `InGameDemo1!` → **wait ~3–4s per screen to settle** → screenshot. NOT the Claude_Browser preview pane.
 
-## Pre-beta perf wave — R3 shelf virtualization + R5 freezeOnBlur (2026-08-01) — MURR CLOSED (re-verify SOUND) · Parvati web-lane CLEAN
+## Pre-beta perf wave — R3 shelf virtualization + R5 freezeOnBlur (2026-08-08) — MURR CLOSED (re-verify SOUND) · Parvati web-lane CLEAN
 - **Scope (P6 §6 rows 4/6, the owner's pre-beta cut):** collection shelf/grid/list moved from
   ScrollView+.map() to ONE windowed FlatList (initialNumToRender 10 · maxToRenderPerBatch 8 ·
   windowSize 7; TOP + empty shelf keep ScrollView; NoResults via ListEmptyComponent so matched↔zero
@@ -354,7 +354,7 @@ API healthy (`dev-stack up` + `doctor` green) → claude-in-chrome at `http://lo
   bound the open window ~30s if unwanted) · scroll resets to top on a view switch (list remount) ·
   a card left flipped animates its flip-back on tab RETURN (deferred render — the R5 beat) ·
   landing+view-switch can double-issue the same scrollToIndex target (idempotent).
-- **Parvati (web lane :8082, claude-in-chrome, 2026-08-01): CLEAN on every reachable leg** — driven
+- **Parvati (web lane :8082, claude-in-chrome, 2026-08-08): CLEAN on every reachable leg** — driven
   per the runbook's hidden-tab posture (a11y tree + synthetic pointers + network reads; screenshots
   intermittent). REACHED: shelf windowing LIVE-CONFIRMED (exactly 10 of 18 rows mounted, badge
   "18 GAMES", hint overlay present) · all four views cycle (shelf→grid 18 cells→list rows→TOP
@@ -377,8 +377,8 @@ API healthy (`dev-stack up` + `doctor` green) → claude-in-chrome at `http://lo
   suites named in the builder report) · the RTL hidden-element `CARD:` query weakness (test-hygiene
   pass someday).
 
-## Flatten CanvasKit lifecycle fix (2026-08-01) — MURR CLOSED (SOUND ×2) · the load-harness crash-fuse packet
-- **Scope:** the ~680-flatten WASM-heap crash fuse (the 2026-08-01 load-harness NEW finding — the
+## Flatten CanvasKit lifecycle fix (2026-08-08) — MURR CLOSED (SOUND ×2) · the load-harness crash-fuse packet
+- **Scope:** the ~680-flatten WASM-heap crash fuse (the 2026-08-08 load-harness NEW finding — the
   API's own publish path). `apps/api/src/render/flatten.ts` only: `trackSkia` recursive-Proxy facade
   registering every JsiSk factory allocation · one `renderElementToPng` mechanism mounting on a
   PRIVATE SkiaSGRoot (replaces the library's `drawOffscreen`, whose module-private Skia handle is

@@ -8,6 +8,9 @@
       "developmentClient": true,
       "distribution": "internal"
     },
+    "soak": {
+      "distribution": "internal"
+    },
     "production": {
       "autoIncrement": true
     }

@@ -197,7 +197,7 @@ async function getSkiaCtx(): Promise<any> {
 // CanvasKit objects (Surface · Image · Paint · Path · Font · Shader · …) are embind handles into the
 // WASM heap: JS GC never frees them, so every PER-RENDER allocation must be `.delete()`d explicitly or
 // the heap fills until canvaskit hard-aborts (`RuntimeError: Aborted()` at ~684–690 cumulative flattens
-// — the 2026-08-01 load-harness MEASUREMENT-TABLE, reproduced 4×). Ownership ground truth (canvaskit-wasm
+// — the 2026-08-08 load-harness MEASUREMENT-TABLE, reproduced 4×). Ownership ground truth (canvaskit-wasm
 // typings + the JsiSk web wrappers this module runs on):
 //   • Every JsiSk wrapper exposes `dispose()` → `ref.delete()` and stamps `__typename__` — the tracker's
 //     disposable signature. For JS-backed values (Matrix/Point/Rect/Data) `dispose()` is a no-op, so

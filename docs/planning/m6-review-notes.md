@@ -299,7 +299,7 @@ CREATED: NONE (device sticker nudge restored to identical; coachmark flag restor
 SCREENS: add-game search-jar — REACHED · status-beat(NEXT) — REACHED · populated fork(header/strip/design-your-own→styler→back/keep→collection/adopt-sheet) — REACHED · empty fork(no strip, no silent skip) — REACHED · SEE-ALL door — NOT-REACHED (seed max 5 < strip 6; correctly hidden, target route verified directly) · full-list TOP/NEW/terminal/provenance — REACHED · full-list adopt-gating ?adopt=1 vs catalog — REACHED (live+code) · full-list LOAD-MORE — NOT-REACHED (N<24) · inline gallery OWN SORT TOP↔NEW — REACHED · inline CATALOG browse-only — code-confirmed · styler structural fan+taste(PASS) — REACHED · styler base-re-derive(Murr) — REACHED · styler DEAL ×4 coherent/zone-respecting/emblem-free — REACHED · styler leave-without-keeping — REACHED · collection row-body nav + card-flip + a11y "Open {game}" — REACHED · about-edit disclaimer InlineBanner — REACHED
 CREATED: 2 games added→removed (Smoke Odyssey Delta, Skylanders; demo back to 17) · junk game Smoke Odyssey Delta un-deleted→restored to exact deleted_at · styler draft discarded (0 residue) · no purchases/publishes/adoptions/users
 
-## 2026-08-01 — the PRE-BETA PERF WAVE lands (R3+R5) + the new-box takeover
+## 2026-08-08 — the PRE-BETA PERF WAVE lands (R3+R5) + the new-box takeover
 - **Machine:** development moved to the new PC (repo migrated C:→X: mid-session by the sibling
   setup; the move killed the API/Metro/DB-container processes — all recovered, dev-DB contents
   verified intact: 14 walkseed users · 72 designs · ADawg's 5; backup chain started
