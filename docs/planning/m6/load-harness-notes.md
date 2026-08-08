@@ -75,10 +75,10 @@ container + :4001 API; all torn down):**
   flattens — reproduced 4× at the same range. This is the API's own publish path: a long-lived
   production API has a ~680-publish crash fuse, and any in-process batch reflatten/backfill hits it
   in minutes. Flagged 2026-08-01 for a fix packet (explicit `.delete()` lifecycle or per-batch
-  process recycling).
+  process recycling). **FIXED same day** — `8d20b66`+`227f327` (tracked-facade lifecycle; Murr
+  SOUND; 1500-composition soak flat; see review-coverage).
 - Flatten throughput 3.8–4.2 cards/s on the idle new box (the §4 ~2.8/s was laptop contention, not
   a code floor).
-_(filled in after the seed + measure pass completes)_
 
 ### Scaling shape of the read paths (what to read from the table)
 

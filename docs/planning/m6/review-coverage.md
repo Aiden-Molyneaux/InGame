@@ -376,3 +376,34 @@ API healthy (`dev-stack up` + `doctor` green) → claude-in-chrome at `http://lo
   owner look) · R7-client expo-image (rides P2b) · jest "worker force-exited" hygiene (pre-existing,
   suites named in the builder report) · the RTL hidden-element `CARD:` query weakness (test-hygiene
   pass someday).
+
+## Flatten CanvasKit lifecycle fix (2026-08-01) — MURR CLOSED (SOUND ×2) · the load-harness crash-fuse packet
+- **Scope:** the ~680-flatten WASM-heap crash fuse (the 2026-08-01 load-harness NEW finding — the
+  API's own publish path). `apps/api/src/render/flatten.ts` only: `trackSkia` recursive-Proxy facade
+  registering every JsiSk factory allocation · one `renderElementToPng` mechanism mounting on a
+  PRIVATE SkiaSGRoot (replaces the library's `drawOffscreen`, whose module-private Skia handle is
+  uninstrumentable and which never disposed anything) · `finally` drains snapshot → tracked
+  allocations → surface, individually guarded, on every error path. Commits `8d20b66` (fix) +
+  `227f327` (hardening: retryable skia-ctx cache — a transient first-flatten failure no longer
+  poisons every later publish · the 3-path seam-pin test for the deep `sksg/Reconciler` require ·
+  typed encode guard · facade-boundary comment · the real-wasm wiring smoke, embind-tombstone
+  deterministic).
+- **Murr (fable, fresh-context): SOUND round 1 (0 blocker/0 major, 3 minors + debt) → hardening
+  round → RE-VERIFY SOUND (0/0/0).** Ownership claims verified against library source (nothing
+  freed by unmount → no double-delete class; boot typeface registry untracked; paint-pool/shader
+  replay allocations tracked via the container's facade); proxy identity/`new`/thenable hazards
+  grepped absent for the actual consumer set; full+thumb concurrency per-call-closure clean;
+  drawOffscreen parity command-by-command + builder sha256 byte-parity.
+- **Proof (builder soak, out-of-CI by design — machine-flaky class):** pre-fix external memory
+  +~2.9MB/composition, death at 600–700 compositions; post-fix 1500 compositions (3000 renders +
+  30 shares) flat at ~134–140MB external. CI carries the deterministic guards instead: the
+  lifecycle contract tests, the seam pins, the two real-wasm smokes (tracker registered >0 AND
+  drained, incl. the throwing-plan path).
+- **DEBT ledgered (comment-mitigated, don't build for it):** the ROOT-side facade wire
+  (`new SkiaSGRoot(trackedSkia)`) has no test guard — swapping it to raw Skia re-arms the replay
+  leak silently · the facade's method-on-result blind spot (`path.copy()`,
+  `makeShaderWithChildren`) re-arms only if a future cosmetic adds path-trimming or runtime
+  shaders — both named in the flatten.ts lifecycle comment.
+- **Definitive green (witnessed, final tree):** typecheck PASS · lint 0 err ·
+  **vitest 916/916 FULL (68 files; +9: lifecycle contract ×4, seam pins ×3, wasm smokes ×2) ·
+  mobile 930/930 (untouched, re-run)**.

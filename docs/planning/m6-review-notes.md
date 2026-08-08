@@ -317,3 +317,8 @@ CREATED: 2 games added→removed (Smoke Odyssey Delta, Skylanders; demo back to 
 - **Also this session:** G-C/P15 provisioning prompt drafted (`docs/planning/m6/
   gc-provisioning-prompt.md`, delivered to the owner) · owner's pre-beta list mapped to lanes
   (iOS walk-5 · Android lane→parity walk · load harness post-landing · RevenueCat/launch session).
+- **Same day, the load-harness follow-through:** the CanvasKit flatten crash fuse FIXED + LANDED
+  (`8d20b66` + `227f327` hardening; Murr SOUND ×2; gate section in review-coverage §"Flatten
+  CanvasKit lifecycle fix"). Soak: 1500 compositions flat post-fix vs death at ~650 pre-fix;
+  render output byte-identical. The /me/collection server-pagination seam remains the one open
+  load cliff (paired with G-C/staging work).
