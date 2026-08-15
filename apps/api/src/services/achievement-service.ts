@@ -19,6 +19,7 @@ import * as suspensionRepo from '../repositories/suspension-repo';
 import { NotFoundError } from '../errors/AppError';
 import { computeProgress, targetOf, unitOf } from '../achievements/criteria';
 import { reconcileUserAchievements } from '../achievements/engine';
+import { flushPendingPostCommitHooks } from '../events/post-commit';
 import type { AchievementDefinitionRow, UserAchievementRow } from '../db/schema';
 
 // The achievements READ surface (M6 P6 — api-contract §Achievements 0.36). Three privacy-aware reads:
@@ -71,6 +72,13 @@ export async function getDefinitions(actorId: string): Promise<AchievementDefVie
  * match/dual criterion has no bar and never appears here).
  */
 export async function getMyAchievements(actorId: string): Promise<MeAchievementsResponse> {
+  // W-A8 read-your-writes (P4 fix round): the on-action celebration refetch races the DETACHED
+  // post-commit pass, and the hook-ONLY unlock classes (event_match / window_count / dual_actor —
+  // the secret eggs, deliberately never reconciled below) would lose that race and defer their
+  // celebration to the next unrelated refetch. Await the SNAPSHOT of in-flight passes (one-shot —
+  // passes scheduled after this line don't block, so no livelock) before assembling: the caller's
+  // just-committed mutation scheduled its pass before responding, so it is always covered.
+  await flushPendingPostCommitHooks();
   // RECONCILE-ON-READ (decision 0078 — OQ-151 reversed at the owner walk): a READ endpoint deliberately
   // triggering the mutation-path reconcile. The trophy case is the natural healing point for the
   // at-most-once evaluator gap + pre-genesis satisfied counters — each unlock runs the engine's normal

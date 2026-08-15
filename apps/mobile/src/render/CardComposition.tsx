@@ -28,13 +28,15 @@ export { preloadCardTypefaces } from './typefaceCache';
 export function useCardSkiaCtx(): SkiaCtx {
   // Faces still loading resolve as undefined and the builder falls back per-face (decision 0068 —
   // a slow/broken font never crashes the draw). The one state bump re-renders this host when the
-  // warm-up completes; after the app's first canvases the cache is full and the effect no-ops.
+  // warm-up settles. NO early return on "already warm" (Murr, fix round): a host that rendered at
+  // 6/7 could see the 7th settle BEFORE its effect ran — an early return would then skip the bump
+  // and the fallback font would stick until an unrelated re-render. The unconditional set is free
+  // at warm steady-state: the value is already FACE_KEYS.length, so React bails out unchanged.
   const [, setWarmFaces] = useState(loadedTypefaceCount());
   useEffect(() => {
-    if (loadedTypefaceCount() === FACE_KEYS.length) return; // fully warm — nothing to await
     let live = true;
     void preloadCardTypefaces().then(() => {
-      if (live) setWarmFaces(loadedTypefaceCount());
+      if (live) setWarmFaces(FACE_KEYS.length);
     });
     return () => {
       live = false;

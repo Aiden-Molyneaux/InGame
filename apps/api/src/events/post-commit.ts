@@ -54,10 +54,14 @@ export async function runPostCommitHooks(events: EmittedEvent[]): Promise<void> 
 // P4 (perf-round2 S3) — the evaluation leaves the request lifecycle. The @mutation seam used to
 // AWAIT runPostCommitHooks before returning, so every mutating 200 paid the full achievements pass
 // (predicate counters refetch the actor's whole event history — a serial DB tax that GROWS with
-// history). Detaching changes NO accepted semantics: the trigger was ALREADY at-most-once (a crash
-// between commit and evaluation drops the pass — the window widens by one event-loop tick, and the
-// 0078 reconcile-on-read heals the count family either way), and failures were ALREADY
-// swallow-and-log (runPostCommitHooks catches; nothing here can fail the committed mutation).
+// history). Detaching preserves the accepted failure semantics — failures were ALREADY
+// swallow-and-log (runPostCommitHooks catches; nothing here can fail the committed mutation) and
+// the trigger was ALREADY at-most-once — but WIDENS the drop window honestly: the old await was
+// also the THROTTLE, so detached passes now QUEUE without backpressure under bursts (mutations can
+// outpace evaluation), and a process exit (SIGTERM/crash) drops EVERY queued pass — potentially
+// seconds of evaluations, not one tick. The count family still self-heals via the 0078
+// reconcile-on-read either way; a drain-on-shutdown belongs with the G-C signal handler when that
+// lands (and a queue cap with the S4 worker-ization — see perf-round2 next-wave).
 const pendingHooks = new Set<Promise<void>>();
 
 /** Fire-and-forget the post-commit pass on the next event-loop tick (the mutation's caller returns
@@ -75,9 +79,25 @@ export function schedulePostCommitHooks(events: EmittedEvent[]): void {
 }
 
 /**
- * TEST SEAM — await every scheduled post-commit pass (loops in case a hook's own mutations schedule
- * more). Production code never calls this; integration tests that assert on post-commit EFFECTS
- * (unlock rows, achievement.unlocked outbox rows) flush here instead of sleeping.
+ * ONE-SHOT awaiter over the passes pending RIGHT NOW — a SNAPSHOT of the current set, so passes
+ * scheduled AFTER this call never block it (it cannot livelock under continuous traffic, unlike
+ * the looping test seam below). The W-A8 read-your-writes bridge: a mutation's 200 races the
+ * client's on-action MeAchievements refetch (~2-5ms RTT) against the detached pass (~5-30ms), and
+ * the hook-ONLY unlock classes (event_match / window_count / dual_actor — deliberately never
+ * reconciled at read, decision 0078 boundary) would otherwise miss their celebration until some
+ * later unrelated refetch. GET /me/achievements awaits this before serving: the caller's just-fired
+ * pass was scheduled BEFORE its mutation responded, so it is always in the snapshot. Awaits ALL
+ * currently-pending passes (any actor's) — acceptable at beta scale, bounded by the snapshot.
+ */
+export function flushPendingPostCommitHooks(): Promise<void> {
+  return Promise.all([...pendingHooks]).then(() => undefined);
+}
+
+/**
+ * TEST SEAM — await every scheduled post-commit pass (LOOPS until the set drains, in case a hook's
+ * own mutations schedule more — never use on the request path; the snapshot awaiter above is the
+ * production bridge). Integration tests that assert on post-commit EFFECTS (unlock rows,
+ * achievement.unlocked outbox rows) flush here instead of sleeping.
  */
 export async function waitForPostCommitHooks(): Promise<void> {
   while (pendingHooks.size > 0) {

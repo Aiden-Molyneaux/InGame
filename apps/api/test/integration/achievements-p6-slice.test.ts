@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import type { Express } from 'express';
-import { COMPOSITION_SCHEMA_VERSION } from '@ingame/shared';
+import { COMPOSITION_SCHEMA_VERSION, type DomainEventType } from '@ingame/shared';
 
 // M6 P6 — the achievements engine (ACH-01/02/03/04/09) + the 0077 starter seed. The §5 invariant list
 // IS this failing-test list (test-first): unlock on threshold-cross · replay → no second unlock · F36
@@ -741,6 +741,62 @@ describe('P4: post-commit hooks run OFF the mutation request path (detached + fl
       const rows = await getDb().select({ id: games.id }).from(games).where(eq(games.name, name));
       expect(rows).toHaveLength(1);
     } finally {
+      const { wireAchievementsEngine } = await import('../../src/achievements/engine');
+      wireAchievementsEngine();
+    }
+  });
+
+  // W-A8 read-your-writes (the Murr fix on the detachment): GET /me/achievements awaits the
+  // SNAPSHOT of in-flight passes — the on-action celebration refetch can never outrun the
+  // hook-only unlock classes — while a pass scheduled AFTER the snapshot never blocks the read
+  // (the one-shot awaiter cannot livelock under continuous traffic).
+  it('W-A8: GET /me/achievements WAITS for the in-flight pass, but a pass scheduled AFTER its snapshot does not block it', async () => {
+    await seedReal();
+    const a = await seedUser();
+    const { registerPostCommitHook, schedulePostCommitHooks } = await import('../../src/events/post-commit');
+    let releaseFirst!: () => void;
+    let releaseSecond!: () => void;
+    const gate1 = new Promise<void>((r) => (releaseFirst = r));
+    const gate2 = new Promise<void>((r) => (releaseSecond = r));
+    const finished = [false, false];
+    let call = 0;
+    registerPostCommitHook(async () => {
+      const n = call++;
+      await (n === 0 ? gate1 : gate2);
+      finished[n] = true;
+    });
+    try {
+      const evt = (type: string) => ({
+        eventType: type as DomainEventType,
+        actorId: a.id,
+        entityId: randomUUID(),
+        payload: {},
+        occurredAt: new Date(),
+      });
+      // The just-200'd mutation's pass: scheduled BEFORE the celebration refetch arrives.
+      schedulePostCommitHooks([evt('list.reranked')]);
+
+      let readResolved = false;
+      const read = meAch(a.token).then((r) => {
+        readResolved = true;
+        return r;
+      });
+      // Give the read ample time to reach the flush point — it must be HELD by the gated pass.
+      await new Promise((r) => setTimeout(r, 150));
+      expect(readResolved).toBe(false); // read-your-writes: the read waits for the in-flight pass
+
+      // A pass scheduled AFTER the read's snapshot (continuous traffic) — must NOT block the read.
+      schedulePostCommitHooks([evt('list.reranked')]);
+      releaseFirst();
+      const res = await read; // resolves while gate2 is still CLOSED
+      expect(res.status).toBe(200);
+      expect(finished[0]).toBe(true); // the awaited pass completed before the read served
+      expect(finished[1]).toBe(false); // the post-snapshot pass is still gated — no livelock
+    } finally {
+      releaseFirst();
+      releaseSecond();
+      const { waitForPostCommitHooks } = await import('../../src/events/post-commit');
+      await waitForPostCommitHooks(); // drain before the next test's resetDb
       const { wireAchievementsEngine } = await import('../../src/achievements/engine');
       wireAchievementsEngine();
     }

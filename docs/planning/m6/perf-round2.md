@@ -38,6 +38,11 @@ than recorded.
   index on `status='published'`. At-scale-only.
 - **S7 — reorder at scale:** per-entry UPDATE loop (`collection-repo.ts:315-320`) + the 100KB
   `express.json` ceiling 413s a ~2300-entry full permutation. Fold into the pagination packet.
+- **P4 follow-through — the detached post-commit queue has no cap:** `pendingHooks`
+  (`events/post-commit.ts`) queues without backpressure — the old awaited seam WAS the throttle —
+  so at load, mutations can outpace evaluation (each queued pass re-reads the active defs + the
+  actor's event history) and a SIGTERM drops every queued pass, not one tick. A bounded queue /
+  drain-on-shutdown pairs naturally with the S4 worker-ization (one worker owns both).
 - **Suspected, needs device/scale measurement:** styler drag JS-lane frame time at MAX_ELEMENTS on
   low-end Android · feed's serial per-friend shelf reads (time with walk-seed-rich) · catalog
   leading-wildcard ilike (pg_trgm when catalog ~10k) · decoded-image memory on 200-item friend
