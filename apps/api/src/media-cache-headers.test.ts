@@ -29,7 +29,7 @@ beforeAll(async () => {
   const { createApp } = await import('./app');
   app = createApp();
   // The cold ./app import alone takes ~8s under a loaded parallel run — the default 10s hook
-  // timeout flakes on machine contention (observed 2026-08-08, full-suite runs on the new box).
+  // timeout flakes on machine contention (observed 2026-08-15, full-suite runs on the new box).
 }, 30_000);
 
 afterAll(async () => {

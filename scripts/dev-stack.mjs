@@ -83,7 +83,7 @@ async function waitFor(label, checkFn, timeoutMs, logFile) {
 // --- health checks -------------------------------------------------------------------------
 
 // The dev DB is the CONTAINER, not "whatever answers on a port": a machine can run a NATIVE
-// postgres on :5432 (observed 2026-08-08, Hits 2 — doctor false-greened while ingame-dev-db sat
+// postgres on :5432 (observed 2026-08-15, Hits 2 — doctor false-greened while ingame-dev-db sat
 // Exited after a Docker Desktop crash; promoted from qa-runbook "doctor db check FALSE-GREEN").
 // Probe pg_isready INSIDE the container so only the real dev DB can pass.
 const dbUp = async () => {

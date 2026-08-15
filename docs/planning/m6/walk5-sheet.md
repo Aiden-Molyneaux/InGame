@@ -1,4 +1,4 @@
-# Walk-5 sheet — the full iOS pass + the perf-wave probes (prepped 2026-08-08)
+# Walk-5 sheet — the full iOS pass + the perf-wave probes (prepped 2026-08-15)
 
 > The route itself is [`acceptance-suite-w4-to-now.md`](acceptance-suite-w4-to-now.md) — walk the
 > whole app your way and jot notes as usual; they become the walk-5 stash. THIS sheet is what's NEW
@@ -80,7 +80,7 @@ reaches the dev API over Tailscale like the dev build does).
 
 *Findings → `walk5-notes.md` stash as usual; I triage into packets when you're done.*
 
-## G · Perf-packet spot-checks (added post-landing 2026-08-08 — 60 seconds total)
+## G · Perf-packet spot-checks (added post-landing 2026-08-15 — 60 seconds total)
 - [ ] Card titles render in their real fonts everywhere (shelf, styler, PROOF view) and the PROOF
   flatten still exports — the new typeface cache's native asset path is web-proven, device-glance owed.
 - [ ] Nothing network-weird after the API restart (gzip now on) — screens just load; if anything

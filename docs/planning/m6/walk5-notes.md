@@ -1,4 +1,4 @@
-# Walk-5 notes stash (owner, 2026-08-08 — walk in progress, notes arrive in batches)
+# Walk-5 notes stash (owner, 2026-08-15 — walk in progress, notes arrive in batches)
 
 ## Batch 1
 
@@ -16,7 +16,7 @@
   no pending landing at all — instead immediate feedback: toast/inline "Added — hidden by your
   current filter" with a CLEAR FILTERS action; (3) any user scroll / view switch / filter change
   cancels a pending landing (auto-scroll never fights user intent). Await owner nod.
-- **[CR, pre-beta] Canvas BREAKOUT transition** — owner correction 2026-08-08: this is the
+- **[CR, pre-beta] Canvas BREAKOUT transition** — owner correction 2026-08-15: this is the
   Canvas's screen-expansion beat itself (the CR-01 zoom breakout), NOT card content latency. The
   owner worked on it and couldn't get it un-clunky — taste-heavy animation choreography. Plan:
   prototype 2–3 DISTINCT transition treatments for on-device feel (per the design-iteration

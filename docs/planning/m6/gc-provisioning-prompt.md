@@ -66,7 +66,7 @@ and owns every credential; you guide, verify, and record.
    deliberate CORS/hosting answer; that's an orchestrator/code decision, not a dashboard toggle.
 4. **Migrations.** Run the drizzle migrations against the prod DB (from this machine with a
    temporary env, or the host's release-command hook — prefer the host hook if trivial; otherwise
-   record the choice). Verify `__drizzle_migrations` count matches local (26 as of 2026-08-08).
+   record the choice). Verify `__drizzle_migrations` count matches local (26 as of 2026-08-15).
 5. **DNS + TLS.** `api.ingamehq.com` → the host (CNAME per host docs) in the Cloudflare zone;
    verify HTTPS `GET /api/health` returns ok. While in Cloudflare: delete the stray `ingame.app`
    zone (#21).

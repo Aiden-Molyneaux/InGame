@@ -1,4 +1,4 @@
-# Perf round 2 — the post-R3/R5 critical hunt (2026-08-08, investigation only)
+# Perf round 2 — the post-R3/R5 critical hunt (2026-08-15, investigation only)
 
 Two fresh fable investigators over m6 @ `6ef180b` (client-runtime lens · server/network lens),
 briefed to find what P6 did NOT cover. Zero code changes. P6 remains the prior art
