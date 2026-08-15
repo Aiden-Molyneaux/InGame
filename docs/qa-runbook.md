@@ -264,3 +264,16 @@ sequence via javascript_tool instead; it makes the hidden-tab lane fully drivabl
   `db:migrate` at the native postgres).
 - **Verified:** 2026-08-15 · **Hits:** 2 *(post-repo-migration recovery — container exited 255 when
   the C:→X: move killed its sibling processes; then a same-day Docker Desktop crash/restart)*
+
+## Claude-session restart kills the "detached" dev services on the 2026-08 box
+- **Symptom:** mid-walk, the phone app goes blank with disabled nav (logged-in from cached state,
+  every query failing) and/or the dev client can't reload; API :4000 health 000; the api.log tail
+  shows `^C npm error Lifecycle script dev:local failed`; agent-started Metro :8081 gone too.
+- **Diagnosis:** on this machine, processes started from an agent session's shell — INCLUDING the
+  supervisor's `startDetached` children — die when the Claude session's process restarts (sandbox
+  job-object teardown kills the whole tree; the old box's "detached Metro survives session ends"
+  observation does NOT hold here). Three kills in one day: agent Metro ×2, the shared API ×1.
+- **Fix:** `node scripts/dev-stack.mjs up` (plus the phone-Metro line if the owner isn't running
+  it) — recovery is one command. **Durable posture: the OWNER runs `up` and the :8081 Metro from
+  their own terminal** — owner-owned processes survive agent-session churn.
+- **Verified:** 2026-08-15 · **Hits:** 3 (same day)
