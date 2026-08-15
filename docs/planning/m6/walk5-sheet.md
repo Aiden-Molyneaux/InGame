@@ -79,3 +79,9 @@ reaches the dev API over Tailscale like the dev build does).
   for the Android-lane session (next provisioning draft, on my queue).
 
 *Findings → `walk5-notes.md` stash as usual; I triage into packets when you're done.*
+
+## G · Perf-packet spot-checks (added post-landing 2026-08-08 — 60 seconds total)
+- [ ] Card titles render in their real fonts everywhere (shelf, styler, PROOF view) and the PROOF
+  flatten still exports — the new typeface cache's native asset path is web-proven, device-glance owed.
+- [ ] Nothing network-weird after the API restart (gzip now on) — screens just load; if anything
+  looks byte-mangled, tell me immediately.

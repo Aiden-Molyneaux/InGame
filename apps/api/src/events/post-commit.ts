@@ -88,6 +88,9 @@ export function schedulePostCommitHooks(events: EmittedEvent[]): void {
  * later unrelated refetch. GET /me/achievements awaits this before serving: the caller's just-fired
  * pass was scheduled BEFORE its mutation responded, so it is always in the snapshot. Awaits ALL
  * currently-pending passes (any actor's) — acceptable at beta scale, bounded by the snapshot.
+ * WARNING (murr, re-verify pass): a future HOOK that itself calls getMyAchievements (or this
+ * flush) would await its own containing pass and deadlock the read — unreachable today (hooks
+ * never touch the service read); keep it that way when wiring a second hook.
  */
 export function flushPendingPostCommitHooks(): Promise<void> {
   return Promise.all([...pendingHooks]).then(() => undefined);

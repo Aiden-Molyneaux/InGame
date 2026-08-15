@@ -407,3 +407,39 @@ API healthy (`dev-stack up` + `doctor` green) → claude-in-chrome at `http://lo
 - **Definitive green (witnessed, final tree):** typecheck PASS · lint 0 err ·
   **vitest 916/916 FULL (68 files; +9: lifecycle contract ×4, seam pins ×3, wasm smokes ×2) ·
   mobile 930/930 (untouched, re-run)**.
+
+## Pre-beta perf packet P1–P7 (2026-08-08) — MURR CLOSED (fix round → re-verify SOUND) · the perf-round2 cut
+- **Scope (perf-round2.md PRE-BETA CUT):** P1 module-level typeface cache (`typefaceCache.ts` — the
+  7 title fonts load+parse ONCE per app lifetime via rn-skia's own loadData path; the CardFace
+  warmup finally warms what its comment claimed) · P2 `compression()` (measured 5.9× on the biggest
+  payloads; /media PNGs verified pass-through; rule-08 registry entry) · P3 keepAlive 65s/66s ·
+  P4 achievements OFF the mutation path (setImmediate + tracked pendingHooks; reconcile progress
+  passed into the read loop killing the ~20-26-query double-compute) · P5 cold-start collection
+  prefetch racing the /me gate · P6 client SkImage dispose · P7 migration 0026 (domain_events
+  composites `(actor,type,occurred)` + `(type,occurred DESC)`; the single-column pair DROPPED with
+  a proven every-reader prefix audit) + OQ-161 (retention). Commits `11a1b13` (build) + `ead05ca`
+  (fix round) + the landing comment.
+- **Murr (fable, fresh-context) round 1: NEEDS-FIXES — 1 MAJOR** (the packet's one semantics
+  change): detaching achievements silently broke W-A8's on-action celebration guarantee for the
+  hook-ONLY unlock classes (event_match/window_count/dual_actor — the secret eggs; deliberately
+  never reconciled at read, 0078) — the on-action refetch (~2-5ms) races the detached pass
+  (~5-30ms) and an egg celebration defers to a later unrelated refetch. **Fix:**
+  `flushPendingPostCommitHooks()` — a ONE-SHOT snapshot awaiter (never the looping test seam —
+  livelock) awaited first in getMyAchievements; the caller's pass is scheduled before its 200 so
+  it's always in the snapshot → read-your-writes restored for the only read that celebrates,
+  mutations stay fast. Pinned by a two-gate test (read held by the pre-snapshot pass; a
+  post-snapshot pass provably does NOT block — `[true,false]`). Minors closed: the typeface
+  settle-miss window (unconditional constant-bump, React bails at steady state) · the honest
+  no-backpressure/SIGTERM comment. Debt paid: typefaceCache tests decoupled (resetModules per it,
+  isolation-run proven). **Re-Murr: SOUND (0/0)** — snapshot one-shot-ness, rejection-safety
+  through the export, reentrancy hunt (no hook can reach the read today; a warning sentence added
+  at landing), both test inversions argued concretely. Recorded next-wave: the uncapped
+  pendingHooks queue (pairs with S4 worker-ization).
+- **Definitive green (witnessed, final tree):** typecheck PASS · lint 0 err ·
+  **vitest 68 files / 919 FULL · mobile 117 suites / 934**.
+- **Landing ops:** migration 0026 + the API restart (compression/keep-alive take effect) HELD for
+  a pause in the owner's live walk — dev-DB backup first, then `db:migrate`, then the API bounce;
+  doctor's drift row reads 27-on-disk/26-applied until then BY DESIGN.
+- **Walk-sheet residue (appended to walk5-sheet):** device glance at card titles + a PROOF flatten
+  (P1's native asset path is jest-mocked, web-proven only) · on-phone gzip decode sanity (P2) ·
+  P3 is live-only by nature.
