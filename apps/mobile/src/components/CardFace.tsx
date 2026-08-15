@@ -53,9 +53,16 @@ export function loadRenderModule(): Promise<RenderModule | null> {
  * that snap to their styling a beat later (owner gate-5 A.1).
  */
 export function preloadComposedCard(): Promise<{ default: ComponentType<ComposedCardProps> }> {
-  composedCardPromise ??= loadRenderModule().then((mod) => ({
-    default: mod?.CardComposition ?? ((() => null) as ComponentType<ComposedCardProps>),
-  }));
+  composedCardPromise ??= loadRenderModule().then((mod) => {
+    // P1 (perf-round2) — ALSO warm the module-level typeface cache, making this comment's claim
+    // true: the 7 title faces load + parse once, HERE, before the first composed face mounts.
+    // Fire-and-forget (not awaited): a slow/failed font must never wedge the lazy gate behind
+    // Suspense — the live draw already degrades per-face while faces arrive (decision 0068).
+    void mod?.preloadCardTypefaces?.();
+    return {
+      default: mod?.CardComposition ?? ((() => null) as ComponentType<ComposedCardProps>),
+    };
+  });
   return composedCardPromise;
 }
 

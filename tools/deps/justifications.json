@@ -32,6 +32,8 @@
   "supertest": "HTTP assertions against the Express app at the boundary — the integration heart (testing-strategy §2). Provenance: ladjs.",
   "testcontainers": "Throwaway real-Postgres containers so integration tests run against a real DB, not mocks (testing-strategy §2; F36). Provenance: Testcontainers org.",
   "@testcontainers/postgresql": "The Postgres module for Testcontainers (the integration PG container). Provenance: Testcontainers org.",
+  "compression": "Response compression middleware (perf-round2 P2/S1): measured 5.9× gzip on the app's largest JSON payloads (N=2000 collection 3.5MB→599KB @ ~30ms CPU) — RN fetch decompresses transparently on both platforms. Node's stdlib zlib has no negotiate-Accept-Encoding/threshold/filter middleware — hand-rolling one re-implements exactly this battle-tested ~200 lines (content-type filter via `compressible` correctly skips the /media PNGs). Provenance: expressjs (the Express core team's own middleware).",
+  "@types/compression": "compression type definitions. Provenance: DefinitelyTyped.",
   "@types/express": "Express type definitions. Provenance: DefinitelyTyped.",
   "@types/pg": "pg type definitions. Provenance: DefinitelyTyped.",
   "@types/supertest": "supertest type definitions. Provenance: DefinitelyTyped.",

@@ -16,6 +16,17 @@
 
 ## Open
 
+- OQ-161: **`domain_events` needs a retention policy — it is append-only, never pruned, and grows with
+  TIME, not users.** Surfaced by the perf-round2 pre-beta packet (S5/P7): every mutation writes an
+  outbox row, the feed scan and the achievements counters both read history, and nothing ever deletes.
+  P7 added the composite indexes `(actor_id, event_type, occurred_at)` + `(event_type, occurred_at DESC)`
+  (migration 0026) as cheap insurance on the two hot readers, but indexes only flatten the read cost —
+  the table itself still grows unboundedly. To decide: a retention window (and whose reads it must not
+  break — the count-from-genesis achievement counters recompute from FULL history, so naive pruning
+  would silently shrink earned progress; the feed only ever reads the recent edge), whether pruned
+  history must be snapshotted/aggregated first (per-user counter materialization?), and when it bites
+  (grows with events/day × days — measure at beta with real traffic before choosing a horizon).
+  (perf-round2 P7, 2026-08-15) [behavior] pre-GA
 - OQ-160: **SYS-11 in-app feedback capture is unbuilt — the admin console's feedback viewer is owed with it.**
   Found while building the P7 admin console v1 (decision 0081): the ruled v1 cut included a read-only
   "reports **& feedback**" viewer, but SYS-11's capture side does not exist anywhere — no

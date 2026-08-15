@@ -1,4 +1,5 @@
 import express, { type Express } from 'express';
+import compression from 'compression';
 import { mountRoutes } from './http/defineRoute';
 import { requestId } from './http/requestId';
 import { devCors } from './http/devCors';
@@ -65,6 +66,13 @@ export function createApp(): Express {
   // M6 P6 — register the ACH-02 post-commit evaluator so a mutation's committed events unlock
   // achievements in-process (idempotent; a no-op until definitions are seeded). See achievements/engine.
   wireAchievementsEngine();
+  // P2 (perf-round2 S1) — response compression, library defaults (1KB threshold, gzip/deflate by
+  // Accept-Encoding). Measured 5.9× on the app's largest JSON payloads (N=2000 collection
+  // 3.5MB→599KB @ ~30ms CPU); RN fetch decompresses transparently on both platforms. The /media
+  // static mounts below pass through it HARMLESSLY: the default filter keys off `compressible`
+  // (Content-Type), and image/png|jpeg are NOT compressible (verified against the installed
+  // module) — only text/JSON bodies are encoded, the flattened renders ship raw as before.
+  app.use(compression());
   // The raw request bytes are captured on parse so the M5 P2 IAP webhook can verify the RevenueCat
   // signature over them BEFORE trusting the parsed JSON (the RC/HMAC seam; the mock verifies the static
   // Authorization header). Harmless for every other route — a small buffer reference, no behavior change.

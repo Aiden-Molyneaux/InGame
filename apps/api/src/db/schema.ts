@@ -436,8 +436,21 @@ export const domainEvents = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
-    actorIdx: index('domain_events_actor_idx').on(table.actorId),
-    typeIdx: index('domain_events_type_idx').on(table.eventType),
+    // P7 (perf-round2 S5) — composite indexes for the two hot readers of this append-only,
+    // never-pruned table (it grows with TIME, not users): the achievements counters filter
+    // (actor_id, event_type IN …) per hit, and the feed scan filters event_type IN … then sorts
+    // occurred_at DESC before LIMIT. The old single-column actor/type indexes are DROPPED as
+    // provably subsumed: each was the exact leading prefix of its composite replacement, and a
+    // btree serves every leading-prefix scan — so any plan they could serve, the composites serve
+    // (verified against every domain_events read: achievement-repo counts by actor+type, feed-repo
+    // by type+time; nothing queries actor-only or type-only). Keeping them would be pure write
+    // amplification on every mutation's outbox insert. Retention policy → OQ-161.
+    actorTypeTimeIdx: index('domain_events_actor_type_time_idx').on(
+      table.actorId,
+      table.eventType,
+      table.occurredAt,
+    ),
+    typeTimeIdx: index('domain_events_type_time_idx').on(table.eventType, table.occurredAt.desc()),
   }),
 );
 

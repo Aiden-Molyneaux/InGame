@@ -55,6 +55,9 @@ jest.mock('@shopify/react-native-skia', () => {
       Font: () => ({}),
     },
     useTypeface: () => null,
+    // P1 typeface cache — the module-level loader rides `loadData` now; resolve null (no face) so
+    // graceful degradation is exercised and the factory (which touches Skia.Typeface) never runs.
+    loadData: jest.fn(() => Promise.resolve(null)),
     drawAsImage: jest.fn(),
   };
 });

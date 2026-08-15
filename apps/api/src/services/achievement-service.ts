@@ -77,7 +77,9 @@ export async function getMyAchievements(actorId: string): Promise<MeAchievements
   // atomic tx (badge + PX + entitlement + achievement.unlocked emission, rule-05 satisfied), idempotent
   // under the unique index, bounded to the CALLER's own defs (beta-scale per-user work). The read below
   // then assembles from the healed state — a satisfied counter can never render as in-progress again.
-  await reconcileUserAchievements(actorId);
+  // P4 (perf-round2): the reconcile pass ALREADY computed every locked count-family def's counter —
+  // its progress map feeds the in-progress bars below, so the read never recomputes per def.
+  const { progress } = await reconcileUserAchievements(actorId);
   const defs = await achievementRepo.listActiveDefinitions();
   const unlocks = await achievementRepo.listUnlocks(actorId);
   const unlockedAt = new Map<string, Date>(unlocks.map((u: UserAchievementRow) => [u.achievementId, u.unlockedAt]));
@@ -101,7 +103,9 @@ export async function getMyAchievements(actorId: string): Promise<MeAchievements
     const criterion = row.criterion as unknown as AchievementCriterion;
     const target = targetOf(criterion);
     if (target === null) continue; // a milestone with no bar (none seeded) — never listed in-progress
-    const current = await computeProgress(actorId, criterion);
+    // The reconcile pass's snapshot covers the count family; the fallback compute covers what it
+    // deliberately skips (a window_count bar — today's UTC day — or a def whose counter threw there).
+    const current = progress.get(row.id) ?? (await computeProgress(actorId, criterion));
     inProgress.push({ ...toDef(row), progress: { current, target, unit: unitOf(criterion) ?? 'events' } });
   }
 

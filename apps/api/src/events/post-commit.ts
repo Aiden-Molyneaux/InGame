@@ -50,3 +50,37 @@ export async function runPostCommitHooks(events: EmittedEvent[]): Promise<void> 
     logger.error({ err, eventCount: events.length }, 'post-commit hook failed (evaluation dropped; self-heals on the next event)');
   }
 }
+
+// P4 (perf-round2 S3) — the evaluation leaves the request lifecycle. The @mutation seam used to
+// AWAIT runPostCommitHooks before returning, so every mutating 200 paid the full achievements pass
+// (predicate counters refetch the actor's whole event history — a serial DB tax that GROWS with
+// history). Detaching changes NO accepted semantics: the trigger was ALREADY at-most-once (a crash
+// between commit and evaluation drops the pass — the window widens by one event-loop tick, and the
+// 0078 reconcile-on-read heals the count family either way), and failures were ALREADY
+// swallow-and-log (runPostCommitHooks catches; nothing here can fail the committed mutation).
+const pendingHooks = new Set<Promise<void>>();
+
+/** Fire-and-forget the post-commit pass on the next event-loop tick (the mutation's caller returns
+ *  immediately). Tracked in `pendingHooks` so tests can flush deterministically. */
+export function schedulePostCommitHooks(events: EmittedEvent[]): void {
+  if (!hook || events.length === 0) return;
+  const task = new Promise<void>((resolve) => {
+    setImmediate(() => {
+      // runPostCommitHooks never rejects (it swallows), but settle-on-either keeps the set honest.
+      runPostCommitHooks(events).then(resolve, resolve);
+    });
+  });
+  pendingHooks.add(task);
+  void task.then(() => pendingHooks.delete(task));
+}
+
+/**
+ * TEST SEAM — await every scheduled post-commit pass (loops in case a hook's own mutations schedule
+ * more). Production code never calls this; integration tests that assert on post-commit EFFECTS
+ * (unlock rows, achievement.unlocked outbox rows) flush here instead of sleeping.
+ */
+export async function waitForPostCommitHooks(): Promise<void> {
+  while (pendingHooks.size > 0) {
+    await Promise.all([...pendingHooks]);
+  }
+}

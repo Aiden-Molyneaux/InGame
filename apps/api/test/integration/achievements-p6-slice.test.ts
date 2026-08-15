@@ -22,6 +22,14 @@ let app: Express;
 function authed(token: string) {
   return { Authorization: `Bearer ${token}` };
 }
+/** P4 (perf-round2) — post-commit hooks are DETACHED from the mutation response now, so a mutating
+ *  helper flushes them before returning: assertions on hook EFFECTS (unlock rows, achievement.unlocked
+ *  outbox rows, feed items) stay deterministic without sleeps. The dedicated P4 tests below are the
+ *  only place that mutates WITHOUT flushing (they prove the detachment itself). */
+async function flushPostCommit() {
+  const { waitForPostCommitHooks } = await import('../../src/events/post-commit');
+  await waitForPostCommitHooks();
+}
 async function seedUser(over: Record<string, unknown> = {}) {
   const { getDb } = await import('../../src/db/client');
   const { users } = await import('../../src/db/schema');
@@ -42,6 +50,7 @@ async function seedGame(token: string, name: string): Promise<string> {
   const g = await getDb().select().from(genres).limit(1);
   const res = await request(app).post('/api/catalog/games').set(authed(token)).send({ name, genreIds: [g[0]!.id] });
   if (res.status !== 201) throw new Error(`seedGame failed: ${res.status} ${JSON.stringify(res.body)}`);
+  await flushPostCommit();
   return res.body.id as string;
 }
 function comp(seed: number) {
@@ -58,20 +67,24 @@ async function publishCard(token: string, gameId: string, seed: number): Promise
   const cardId = draft.body.id as string;
   const pub = await request(app).post(`/api/cards/${cardId}/publish`).set(authed(token));
   if (pub.status !== 200) throw new Error(`publish failed: ${pub.status} ${JSON.stringify(pub.body)}`);
+  await flushPostCommit();
   return cardId;
 }
 async function addGame(token: string, gameId: string): Promise<string> {
   const res = await request(app).post('/api/me/collection').set(authed(token)).send({ gameId });
   if (res.status !== 201 && res.status !== 200) throw new Error(`addGame failed: ${res.status} ${JSON.stringify(res.body)}`);
+  await flushPostCommit();
   return res.body.entryId as string;
 }
 async function setStatus(token: string, entryId: string, status: string) {
   const res = await request(app).patch(`/api/me/collection/${entryId}`).set(authed(token)).send({ status });
   if (res.status !== 200) throw new Error(`setStatus failed: ${res.status} ${JSON.stringify(res.body)}`);
+  await flushPostCommit();
 }
 async function adopt(token: string, cardId: string) {
   const res = await request(app).post(`/api/cards/${cardId}/adopt`).set(authed(token));
   if (res.status !== 200) throw new Error(`adopt failed: ${res.status} ${JSON.stringify(res.body)}`);
+  await flushPostCommit();
   return res.body;
 }
 // B1 NEAT FREAK is triggered by `list.reranked` (the Top-10 ARRANGE re-rank) — the W-C9 re-point from
@@ -99,6 +112,7 @@ async function unlockNeatFreak(token: string) {
     const r = await rerankTop10(token, i % 2 === 0 ? [g2, g1] : [g1, g2]);
     if (r.status !== 200) throw new Error(`rerankTop10 failed: ${r.status} ${JSON.stringify(r.body)}`);
   }
+  await flushPostCommit();
 }
 const meAch = (token: string) => request(app).get('/api/me/achievements').set(authed(token));
 const defs = (token: string) => request(app).get('/api/achievements').set(authed(token));
@@ -394,6 +408,7 @@ describe('ACH-03: secret masking on GET /achievements + reveal on unlock', () =>
       const r = await rerankTop10(a.token, i % 2 === 0 ? [g2, g1] : [g1, g2]);
       expect(r.status).toBe(200);
     }
+    await flushPostCommit(); // the B1 unlock rides the detached hook (P4)
     const res = await defs(a.token);
     const b1 = (res.body.achievements as Array<Record<string, unknown>>).find((d) => d.key === 'b1_neat_freak');
     expect(b1).toBeTruthy(); // now REVEALED (unlocked), no longer masked
@@ -664,5 +679,70 @@ describe('ACH-02 / decision 0078: reconcile-on-read heals dropped evaluations', 
     expect(await unlockRowCount(a.id, 'b1_neat_freak')).toBe(1);
     expect(await milestoneEntriesFor(a.token, 'b1_neat_freak')).toHaveLength(1);
     expect(await unlockedEventCount(a.id, 'b1_neat_freak')).toBe(1);
+  });
+});
+
+// ── P4 (perf-round2 S3) — the achievements pass is OFF the mutation path ──────────────────────────────
+// These are the only tests that mutate WITHOUT the flush helper: they pin the detachment itself.
+// A gated hook stands in for the engine so the ordering is observable; each test rewires the real
+// engine in `finally`.
+describe('P4: post-commit hooks run OFF the mutation request path (detached + flushable)', () => {
+  /** The one raw mutation used here — seedGame WITHOUT its built-in flush. */
+  async function rawCreateGame(token: string, name: string) {
+    const { getDb } = await import('../../src/db/client');
+    const { genres } = await import('../../src/db/schema');
+    const g = await getDb().select().from(genres).limit(1);
+    return request(app).post('/api/catalog/games').set(authed(token)).send({ name, genreIds: [g[0]!.id] });
+  }
+
+  it('the mutating response returns while the hook is still pending; waitForPostCommitHooks flushes it', async () => {
+    const a = await seedUser();
+    const { registerPostCommitHook, waitForPostCommitHooks } = await import('../../src/events/post-commit');
+    let release!: () => void;
+    const gate = new Promise<void>((r) => (release = r));
+    let hookFinished = false;
+    registerPostCommitHook(async () => {
+      await gate;
+      hookFinished = true;
+    });
+    try {
+      // Under the OLD (awaited) seam this request would HANG on the gate and the test would time out —
+      // the 201 landing while the hook is provably unfinished IS the detachment proof.
+      const res = await rawCreateGame(a.token, `P4_${randomUUID().slice(0, 6)}`);
+      expect(res.status).toBe(201);
+      expect(hookFinished).toBe(false); // the response did NOT wait for the hook
+      release();
+      await waitForPostCommitHooks(); // the flush seam: deterministic settle, no sleeps
+      expect(hookFinished).toBe(true);
+    } finally {
+      release(); // never leave a pending task gated (even on assertion failure)
+      const { wireAchievementsEngine } = await import('../../src/achievements/engine');
+      wireAchievementsEngine(); // restore the real evaluator
+    }
+  });
+
+  it('a THROWING hook is swallowed-and-logged — the mutation stays committed, the flush still settles', async () => {
+    const a = await seedUser();
+    const { registerPostCommitHook, waitForPostCommitHooks } = await import('../../src/events/post-commit');
+    let fired = false;
+    registerPostCommitHook(async () => {
+      fired = true;
+      throw new Error('post-commit boom');
+    });
+    try {
+      const name = `P4E_${randomUUID().slice(0, 6)}`;
+      const res = await rawCreateGame(a.token, name);
+      expect(res.status).toBe(201); // the committed mutation can never be failed by its hook
+      await waitForPostCommitHooks(); // resolves despite the rejection (swallow-and-log preserved)
+      expect(fired).toBe(true);
+      // The mutation's own write survived the hook failure.
+      const { getDb } = await import('../../src/db/client');
+      const { games } = await import('../../src/db/schema');
+      const rows = await getDb().select({ id: games.id }).from(games).where(eq(games.name, name));
+      expect(rows).toHaveLength(1);
+    } finally {
+      const { wireAchievementsEngine } = await import('../../src/achievements/engine');
+      wireAchievementsEngine();
+    }
   });
 });

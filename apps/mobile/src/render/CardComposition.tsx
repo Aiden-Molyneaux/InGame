@@ -1,16 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
-import { Canvas, Group, Fill, Rect, Oval, Path, Text, LinearGradient, RadialGradient, BlurMask, Skia, useTypeface, drawAsImage } from '@shopify/react-native-skia';
-import { ChakraPetch_700Bold } from '@expo-google-fonts/chakra-petch';
-import { PaytoneOne_400Regular } from '@expo-google-fonts/paytone-one';
-import { PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
-import { Bitter_700Bold } from '@expo-google-fonts/bitter';
-import { SpaceMono_700Bold } from '@expo-google-fonts/space-mono';
-import { Pacifico_400Regular } from '@expo-google-fonts/pacifico';
-import { AllertaStencil_400Regular } from '@expo-google-fonts/allerta-stencil';
+import { Canvas, Group, Fill, Rect, Oval, Path, Text, LinearGradient, RadialGradient, BlurMask, Skia, drawAsImage } from '@shopify/react-native-skia';
 import { buildCardElements, buildBedElements, buildOverlayElements, buildCellStrip, buildBaseStrip, buildCompositionStrip, type SkiaCtx, type StripCell } from './buildCard';
 import { AnimatedCardLayer, hasMotion, useSurfaceFocused, useSurfaceNavigation } from './animated';
+import { FACE_KEYS, getLoadedTypeface, loadedTypefaceCount, preloadCardTypefaces } from './typefaceCache';
 import type { CardComposition as Comp } from './composition';
+
+// Re-exported so CardFace's warmup can reach the cache THROUGH the one lazy render-module gate
+// (importing typefaceCache directly from an eager module would drag skia into the boot graph).
+export { preloadCardTypefaces } from './typefaceCache';
 
 // CardComposition (CARD-15) — the react-native-skia consumer of the shared render module. The live
 // editor renders <CardComposition/>; flattenComposition() produces the static image (PROOF / the
@@ -20,32 +18,37 @@ import type { CardComposition as Comp } from './composition';
 // painted live over it — the CARD-15 image+overlay viewer architecture, demonstrated in-app).
 
 /**
- * Skia context for the RN build — loads the title typefaces. Call from a component (it's a hook).
- * useTypeface (NOT useFont(...).getTypeface()) — a Font's extracted typeface is a raw pointer the
- * canvaskit/web backend refuses in `Skia.Font(tf, size)` ("raw pointer to smart pointer is
- * illegal"); useTypeface yields the proper smart-pointer Typeface on both targets.
+ * Skia context for the RN build — the title typefaces, served from the MODULE-LEVEL cache
+ * (P1/perf-round2: fonts load + FreeType-parse ONCE per app lifetime, not per canvas mount; see
+ * typefaceCache.ts). Call from a component (it's a hook — it re-renders the host once the faces
+ * land). The cache holds proper smart-pointer Typefaces via `MakeFreeTypeFaceFromData` — the same
+ * objects `useTypeface` yielded (NOT `useFont(...).getTypeface()`, whose raw pointer the
+ * canvaskit/web backend refuses in `Skia.Font(tf, size)`).
  */
 export function useCardSkiaCtx(): SkiaCtx {
-  const typeface = useTypeface(ChakraPetch_700Bold) ?? undefined; // 0063 "clean-sans"
-  const display = useTypeface(PaytoneOne_400Regular) ?? undefined; // 0063 "bold-display" — already bundled
-  // decision 0068 title fonts — a missing typeface (still loading) falls back to `typeface` in the
-  // builder, so a slow font never crashes the draw (buildCard's face resolution).
-  const pixel = useTypeface(PressStart2P_400Regular) ?? undefined;
-  const slab = useTypeface(Bitter_700Bold) ?? undefined;
-  const mono = useTypeface(SpaceMono_700Bold) ?? undefined;
-  const script = useTypeface(Pacifico_400Regular) ?? undefined;
-  const stencil = useTypeface(AllertaStencil_400Regular) ?? undefined;
+  // Faces still loading resolve as undefined and the builder falls back per-face (decision 0068 —
+  // a slow/broken font never crashes the draw). The one state bump re-renders this host when the
+  // warm-up completes; after the app's first canvases the cache is full and the effect no-ops.
+  const [, setWarmFaces] = useState(loadedTypefaceCount());
+  useEffect(() => {
+    if (loadedTypefaceCount() === FACE_KEYS.length) return; // fully warm — nothing to await
+    let live = true;
+    void preloadCardTypefaces().then(() => {
+      if (live) setWarmFaces(loadedTypefaceCount());
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
+  const typeface = getLoadedTypeface('clean-sans'); // the builder's fallback face
   const typefaces: Record<string, unknown> = {};
-  if (typeface) typefaces['clean-sans'] = typeface;
-  if (display) typefaces['bold-display'] = display;
-  if (pixel) typefaces['press-start'] = pixel;
-  if (slab) typefaces['bitter'] = slab;
-  if (mono) typefaces['space-mono'] = mono;
-  if (script) typefaces['pacifico'] = script;
+  for (const key of FACE_KEYS) {
+    const tf = getLoadedTypeface(key);
+    if (tf) typefaces[key] = tf;
+  }
   // COSM-05 (W-5/0080) — SCRIPT ULTIMATE (`pacifico-ultimate`) is its own SKU id (`fontId` IS the
   // cosmetic id), but draws the same Pacifico face.
-  if (script) typefaces['pacifico-ultimate'] = script;
-  if (stencil) typefaces['stencil'] = stencil;
+  if (typefaces['pacifico']) typefaces['pacifico-ultimate'] = typefaces['pacifico'];
   return { Group, Fill, Rect, Oval, Path, Text, LinearGradient, RadialGradient, BlurMask, Skia, typeface, typefaces };
 }
 
@@ -252,5 +255,12 @@ export function ProofPrint({
  */
 export async function flattenComposition(composition: Comp, width: number, height: number, ctx: SkiaCtx): Promise<string> {
   const image = await drawAsImage(buildCardElements(composition, width, height, ctx, false), { width, height });
-  return `data:image/png;base64,${image.encodeToBase64()}`;
+  // P6 (perf-round2 C6) — dispose the SkImage once its bytes are encoded (the API flatten-leak's
+  // client sibling): the base64 string owns the pixels now; the native/WASM-heap object must not
+  // wait for GC. `finally` keeps the error path leak-free (an encode throw still disposes).
+  try {
+    return `data:image/png;base64,${image.encodeToBase64()}`;
+  } finally {
+    image.dispose();
+  }
 }

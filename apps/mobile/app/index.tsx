@@ -1,6 +1,7 @@
+import { useEffect } from 'react';
 import { Redirect } from 'expo-router';
-import { useAppSelector } from '../src/store/hooks';
-import { useGetMeQuery } from '../src/store/api';
+import { useAppDispatch, useAppSelector } from '../src/store/hooks';
+import { api, useGetMeQuery } from '../src/store/api';
 
 // The entry gate: a rehydrated access token (from expo-secure-store, F14) → the tab shell; otherwise
 // the Welcome / sign-in screen. AUTH-09 (auth-epic P-E): a session whose self-shape still has
@@ -16,6 +17,18 @@ export default function Index() {
   // dispatches setSession. The gate then reads GET /me for the live self-shape; skipped whenever the
   // slice already holds it (fresh sign-in) or there is no session at all. Hook is unconditional (F-16).
   const me = useGetMeQuery(undefined, { skip: !token || storedUser != null });
+  // P5 (perf-round2 C5) — fire the collection prefetch ALONGSIDE the /me gate: the shelf read is
+  // independent of the self-shape, so racing it with the auth RTT takes one full round-trip off
+  // every cold-start TTI (the chain was fonts → persist → SecureStore → /me → only then the shelf).
+  // The GATE ITSELF IS UNTOUCHED (the usernamePending wall below stands exactly as before) — this
+  // only warms the RTK cache the collection tab will read. `prefetch` without `force` respects an
+  // already-cached shelf (warm relaunch → no duplicate GET), and a 401's teardown clears the cache
+  // via the reauth layer as ever. Hook is unconditional (F-16); the token guard lives inside.
+  const dispatch = useAppDispatch();
+  useEffect(() => {
+    if (!token) return;
+    dispatch(api.util.prefetch('getCollection', undefined, {}));
+  }, [token, dispatch]);
 
   if (!token) return <Redirect href="/sign-in" />;
 

@@ -183,6 +183,13 @@
       "when": 1785162965347,
       "tag": "0025_eminent_doctor_faustus",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1786811283314,
+      "tag": "0026_heavy_mongu",
+      "breakpoints": true
     }
   ]
 }

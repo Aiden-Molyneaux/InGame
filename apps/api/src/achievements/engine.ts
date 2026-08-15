@@ -147,18 +147,33 @@ const RECONCILABLE_KINDS = new Set([
   'participant_count',
 ]);
 
+/** What a reconcile pass computed — handed to the read so it never re-runs the counters (P4). */
+export interface ReconcileResult {
+  /** Keys newly unlocked by THIS pass (observability/tests). */
+  newlyUnlocked: string[];
+  /**
+   * defId → the CURRENT progress computed for every still-locked count-family def this pass
+   * evaluated (including ones it then unlocked). GET /me/achievements reads its in-progress bars
+   * from here instead of recomputing per def (perf-round2 P4 — the double-compute kill); defs the
+   * pass didn't evaluate (window_count bars, a def whose counter threw) simply aren't in the map.
+   */
+  progress: Map<string, number>;
+}
+
 /**
  * Idempotently unlock every ACTIVE count-family definition the user has ALREADY satisfied, through the
  * SAME atomic path the live evaluator uses (badge + PX + entitlement + the achievement.unlocked event,
  * one tx per unlock — rule-05 emissions ride the shared `unlock`). Safe under F36 (two parallel reads
  * race into the unique(userId, achievementId) index → one row, one reward) and safe to call on every
- * read (already-unlocked defs short-circuit). Returns the newly-unlocked keys (observability/tests).
+ * read (already-unlocked defs short-circuit). Returns the newly-unlocked keys plus the computed
+ * progress snapshot (see ReconcileResult).
  */
-export async function reconcileUserAchievements(userId: string): Promise<string[]> {
-  const defs = await achievementRepo.listActiveDefinitions();
-  if (defs.length === 0) return [];
-  const unlocked = await achievementRepo.unlockedAchievementIds(userId);
+export async function reconcileUserAchievements(userId: string): Promise<ReconcileResult> {
+  const progress = new Map<string, number>();
   const newlyUnlocked: string[] = [];
+  const defs = await achievementRepo.listActiveDefinitions();
+  if (defs.length === 0) return { newlyUnlocked, progress };
+  const unlocked = await achievementRepo.unlockedAchievementIds(userId);
   for (const def of defs) {
     if (unlocked.has(def.id)) continue;
     const criterion = criterionOf(def);
@@ -167,6 +182,7 @@ export async function reconcileUserAchievements(userId: string): Promise<string[
     if (target === null) continue;
     try {
       const current = await computeProgress(userId, criterion);
+      progress.set(def.id, current);
       if (current < target) continue;
       const created = await unlock(def, userId, { current, target });
       if (created) newlyUnlocked.push(def.key);
@@ -175,7 +191,7 @@ export async function reconcileUserAchievements(userId: string): Promise<string[
       logger.error({ err, defKey: def.key, userId }, 'achievement reconcile-on-read failed (retries next read)');
     }
   }
-  return newlyUnlocked;
+  return { newlyUnlocked, progress };
 }
 
 /** Wire the engine into the post-commit seam (called by the app factory + the dev entrypoint). */

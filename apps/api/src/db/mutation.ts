@@ -1,7 +1,7 @@
 import { getDb, type Tx } from './client';
 import { emitOnCommit } from '../events/emitOnCommit';
 import { insertAuditRow } from '../repositories/audit-repo';
-import { runPostCommitHooks, type EmittedEvent } from '../events/post-commit';
+import { schedulePostCommitHooks, type EmittedEvent } from '../events/post-commit';
 import type { DomainEventType } from '@ingame/shared';
 
 // F43 — the `@mutation` seam. ONE recognized seam that the authz-test, outbox-emit, and MOD-10
@@ -79,9 +79,11 @@ export function mutation<Args extends unknown[], R>(
       };
       return body(ctx, actorId, ...args);
     });
-    // POST-COMMIT: the tx has durably committed; evaluate achievements off the emitted events. This is
-    // best-effort (failures are logged, never rethrown) so it can never fail the committed mutation.
-    await runPostCommitHooks(emitted);
+    // POST-COMMIT: the tx has durably committed; the achievements pass is SCHEDULED off the request
+    // lifecycle (P4/perf-round2 — the response no longer waits on it). Best-effort semantics are
+    // UNCHANGED and already accepted: failures are logged, never rethrown, and the trigger stays
+    // at-most-once (see events/post-commit.ts) — it can never fail the committed mutation.
+    schedulePostCommitHooks(emitted);
     return result;
   };
 }
