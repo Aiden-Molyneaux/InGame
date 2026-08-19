@@ -31,3 +31,19 @@
   round-2 P1 typeface cache + P5 prefetch land FIRST (they attack the root cause of the lateness —
   don't tune animation timing around a latency about to shrink). Proposed primitive: one shared
   `useCardReady` signal + a `CardReveal` choreography used by publish, styler→canvas, adopt.
+
+## Batch 2 (2026-08-19)
+
+- **[CR] Friend Collection screen — filter/search parity with the personal Collection:** the
+  filtering and search UI should LOOK like the owner's own Collection screen's (same controls,
+  same placement/affordances) so the functionality feels transferable between the two surfaces.
+  Build note: R3 windowed the owner shelf's tools; the friend shelf is also the C3 windowing
+  candidate — pairing the parity work with that packet may be natural, but parity is the ruling
+  either way.
+- **[CR ×2] Friend COMPARE screen — "The Rankings" section:**
+  1. **Relocate:** it ranks the owner against ALL friends — that's Friends-screen information, not
+     individual-compare information. Move the view to the Friends screen (design question: where —
+     a section? a door-row?); the compare screen keeps only the two-person comparison.
+  2. **Affordance:** the active "Games" vs "Hours" filter doesn't afford itself as a control —
+     it should follow the app's established switch patterns (SectionSwitch / the cream tabs
+     convention per the button ruling, decision 0069) wherever the section lands.
