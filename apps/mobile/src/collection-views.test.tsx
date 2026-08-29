@@ -1,5 +1,5 @@
 import React from 'react';
-import { render as rtlRender, screen, fireEvent } from '@testing-library/react-native';
+import { render as rtlRender, screen, fireEvent, act } from '@testing-library/react-native';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import prefsReducer, { setCollectionView, setCol12CoachmarkSeen, type CollectionView } from './store/prefsSlice';
@@ -55,6 +55,10 @@ let mockRouteParams: { focus?: string; justAdded?: string } = {};
 // object re-armed the one-shot landing every render (an artifact impossible in the app, where
 // setParams also clears the param; the R3 scroll-count assertions need the honest identity).
 let mockRouterSingleton: Record<string, unknown> | undefined;
+// walk-5 keep-flip — a REGISTERING useFocusEffect (was a no-op): it runs the focus callback like the
+// real navigator and collects the blur cleanup, so tests can fire a BLUR while the screen stays
+// MOUNTED (the Tabs-navigator reality the COL-12 ruling is about — leaving the tab never unmounts).
+let mockFocusCleanups: Array<() => void> = [];
 jest.mock('expo-router', () => ({
   useRouter: () =>
     (mockRouterSingleton ??= {
@@ -65,7 +69,18 @@ jest.mock('expo-router', () => ({
       setParams: (...a: unknown[]) => mockSetParams(...a),
     }),
   useLocalSearchParams: () => mockRouteParams,
-  useFocusEffect: () => {},
+  useFocusEffect: (cb: () => void | (() => void)) => {
+    const { useEffect } = require('react');
+    useEffect(() => {
+      const cleanup = cb();
+      if (typeof cleanup !== 'function') return undefined;
+      mockFocusCleanups.push(cleanup);
+      return () => {
+        mockFocusCleanups = mockFocusCleanups.filter((fn) => fn !== cleanup);
+        cleanup();
+      };
+    }, [cb]);
+  },
 }));
 // FlipCard renders REAL (its own suite proves it jest-safe) so the B6 shelf assertion pins the actual
 // fix: the real FlipCard no longer passes nowPlaying into the row card. EntryCard is the probe.
@@ -108,7 +123,15 @@ beforeEach(() => {
   mockSetParams.mockClear();
   mockRouteParams = {};
   mockItems = defaultItems();
+  mockFocusCleanups = [];
 });
+
+// Fire a navigator BLUR: run every registered focus cleanup WITHOUT unmounting (the Tabs navigator
+// keeps the Collection mounted while another tab shows — the store-preview-teardown pattern).
+const fireBlur = () =>
+  act(() => {
+    [...mockFocusCleanups].forEach((fn) => fn());
+  });
 
 describe('COL-07 walk2-B6: now-playing chrome is HERO-ONLY', () => {
   it('list view — the hero carries the pin; rows have NO ▶ NOW inline tag', () => {
@@ -316,6 +339,8 @@ describe('R3: the shelf is windowed and the landing scroll uses scrollToIndex', 
   });
 
   it('a failed scroll RECOMPUTES at retry time — a stale captured index is never replayed (Murr major 3)', () => {
+    // (walk-5 note: the retry lane survives the redesign — an in-flight FIRED landing still
+    // recomputes; only USER acts — scroll/view/filter — close it, pinned in the walk-5 suite below.)
     jest.useFakeTimers();
     const scrollToIndex = jest.spyOn(FlatList.prototype, 'scrollToIndex').mockImplementation(() => {});
     const scrollToOffset = jest.spyOn(FlatList.prototype, 'scrollToOffset').mockImplementation(() => {});
@@ -344,6 +369,138 @@ describe('R3: the shelf is windowed and the landing scroll uses scrollToIndex', 
       scrollToIndex.mockRestore();
       scrollToOffset.mockRestore();
       jest.useRealTimers();
+    }
+  });
+});
+
+// ── WALK-5 Batch-1 (owner rulings 2026-08-15) ────────────────────────────────────────────────────
+// COL-12 keep-flip (spec 0.70): the blur-time flip reset is DROPPED — a flipped card stays as the
+// user left it across tab switches (the deferred flip-back-on-return beat was rejected). The
+// view-switch reset is the one the spec KEEPS.
+describe('COL-12 walk-5 (spec 0.70): flips survive a tab round-trip; a view switch still resets', () => {
+  it('a flipped card STAYS flipped across a blur (the Tabs navigator keeps the screen mounted)', () => {
+    renderView('shelf', true);
+    fireEvent.press(screen.getByLabelText('Game 2 card'));
+    expect(screen.queryByLabelText('Game 2 card')).toBeNull(); // it turned to the stats back
+    fireBlur(); // leave the tab — pre-walk-5 this cleanup rebuilt flippedIds and the front returned
+    expect(screen.queryByLabelText('Game 2 card')).toBeNull(); // the ruling: the back stays
+  });
+
+  it('switching view mode still resets the flip (the reset COL-12 keeps)', () => {
+    renderView('shelf', true);
+    fireEvent.press(screen.getByLabelText('Game 2 card'));
+    expect(screen.queryByLabelText('Game 2 card')).toBeNull();
+    fireEvent.press(screen.getByLabelText('View')); // the tools View cycle: shelf → grid
+    expect(screen.getByLabelText('Game 2 card')).toBeTruthy(); // front face again in the grid
+  });
+});
+
+// The walk-5 landing redesign (owner-approved; replaces the never-expires open window):
+//   (a) fire only when the fresh add is present under the current filters at fetch-settle;
+//   (b) filter excludes it → NO pending landing, an immediate toast with CLEAR FILTERS instead;
+//   (c) user scroll / view switch / filter change cancels a pending landing.
+// These render with a live store handle (renderLive) so a test can re-render mid-flight — the param
+// arriving AFTER a filter is active, or the fetch settling AFTER a cancellation.
+describe('walk-5: filter-excluded adds toast; user acts cancel a pending landing', () => {
+  const { FlatList } = require('react-native');
+  const TOAST = 'Added — hidden by your current filter';
+  const SEARCH_PLACEHOLDER = 'Title · developer · publisher';
+
+  function renderLive(view: CollectionView) {
+    const store = configureStore({ reducer: { prefs: prefsReducer } });
+    store.dispatch(setCollectionView(view));
+    store.dispatch(setCol12CoachmarkSeen(true));
+    const ui = () => (
+      <Provider store={store}>
+        <Collection />
+      </Provider>
+    );
+    const r = rtlRender(ui());
+    return { ...r, refresh: () => r.rerender(ui()) };
+  }
+
+  it('(b) an active search that EXCLUDES the fresh add → immediate toast, no pulse, no scroll', () => {
+    jest.useFakeTimers();
+    const spy = jest.spyOn(FlatList.prototype, 'scrollToIndex').mockImplementation(() => {});
+    try {
+      const r = renderLive('shelf');
+      fireEvent.press(screen.getByLabelText('Search'));
+      fireEvent.changeText(screen.getByLabelText(SEARCH_PLACEHOLDER), 'Game 1'); // excludes e2
+      mockRouteParams = { justAdded: 'e2' }; // the add flow lands; the shelf data already holds e2
+      r.refresh();
+      act(() => {
+        // the cached-shelf mainline decides on the param effect's one-frame rAF beat (the shelf
+        // data's identity is unchanged, so the settle effect has nothing to re-run on)
+        jest.advanceTimersByTime(50);
+      });
+      expect(screen.getByText(TOAST)).toBeTruthy();
+      expect(screen.queryByTestId('just-added-e2')).toBeNull(); // there IS no landing…
+      expect(spy).not.toHaveBeenCalled(); // …and no scroll ever issues
+
+      // CLEAR FILTERS drops the filters + exits search and dismisses the toast; the entry simply
+      // appears under the unfiltered shelf — deliberately WITHOUT a landing (no yank, walk-5 b).
+      fireEvent.press(screen.getByText('CLEAR FILTERS'));
+      expect(screen.queryByText(TOAST)).toBeNull();
+      expect(screen.getByText('3 GAMES')).toBeTruthy(); // unfiltered again (was "1 OF 3 GAMES")
+      expect(screen.getByLabelText('Open Game 2')).toBeTruthy(); // the fresh add's row is on the shelf
+      expect(screen.queryByTestId('just-added-e2')).toBeNull();
+      expect(spy).not.toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+      jest.useRealTimers();
+    }
+  });
+
+  it('(c) a USER scroll cancels a pending landing — the late fetch-settle fires nothing', () => {
+    const spy = jest.spyOn(FlatList.prototype, 'scrollToIndex').mockImplementation(() => {});
+    try {
+      mockRouteParams = { justAdded: 'e9' }; // not in the shelf yet — the fetch hasn't settled
+      const r = renderLive('shelf');
+      expect(screen.queryByTestId('just-added-e9')).toBeNull(); // pending, honestly unfired
+      const list = screen.UNSAFE_getByType(FlatList);
+      act(() => {
+        // onScrollBeginDrag = TOUCH-initiated only; the landing's own scrollToIndex never fires it
+        (list.props as { onScrollBeginDrag: () => void }).onScrollBeginDrag();
+      });
+      mockItems = [...defaultItems(), CI(9)]; // NOW the fetch settles with the entry present
+      r.refresh();
+      expect(screen.queryByTestId('just-added-e9')).toBeNull(); // cancelled — it never fires
+      expect(spy).not.toHaveBeenCalled();
+      expect(screen.queryByText(TOAST)).toBeNull(); // cancelled ≠ hidden-by-filter
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('(c) a view switch cancels a pending landing (replaces the R3 re-land lane)', () => {
+    const spy = jest.spyOn(FlatList.prototype, 'scrollToIndex').mockImplementation(() => {});
+    try {
+      mockRouteParams = { justAdded: 'e9' };
+      const r = renderLive('shelf');
+      fireEvent.press(screen.getByLabelText('View')); // shelf → grid — a user act, not a re-land cue
+      mockItems = [...defaultItems(), CI(9)];
+      r.refresh();
+      expect(screen.queryByTestId('just-added-e9')).toBeNull();
+      expect(spy).not.toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('(c) a filter change cancels a pending landing — even one the new filter would SHOW', () => {
+    const spy = jest.spyOn(FlatList.prototype, 'scrollToIndex').mockImplementation(() => {});
+    try {
+      mockRouteParams = { justAdded: 'e9' };
+      const r = renderLive('shelf');
+      fireEvent.press(screen.getByLabelText('Search'));
+      fireEvent.changeText(screen.getByLabelText(SEARCH_PLACEHOLDER), 'Game'); // a filter CHANGE
+      mockItems = [...defaultItems(), CI(9)]; // e9 matches 'Game' — it WOULD be visible now
+      r.refresh();
+      expect(screen.queryByTestId('just-added-e9')).toBeNull(); // but the user act already cancelled
+      expect(spy).not.toHaveBeenCalled();
+      expect(screen.queryByText(TOAST)).toBeNull();
+    } finally {
+      spy.mockRestore();
     }
   });
 });

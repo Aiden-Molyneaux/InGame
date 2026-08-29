@@ -17,6 +17,7 @@ import { ScrollLockContext, useScrollLockHost } from '../../src/components/Scrol
 import { TextField } from '../../src/components/TextField';
 import { GenreTag } from '../../src/components/GenreTag';
 import { CurrencyCounter } from '../../src/components/commerce';
+import { Toast } from '../../src/components/lifecycle/Toast';
 import { TertiaryLink } from '../../src/components/TertiaryLink';
 import { KeyboardLift } from '../../src/components/KeyboardLift';
 import { COLLECTION_STATUSES, STATUS_LABEL } from '../../src/constants/collection';
@@ -138,7 +139,7 @@ const statLine = (i: CollectionItem) => `${i.hours} HRS · ${STATUS_LABEL[i.stat
 const catalogLine = (i: CollectionItem) =>
   [i.developer, i.releaseYear, i.genres[0]?.name].filter(Boolean).join(' · ').toUpperCase();
 
-// ── walk-4 P2 (OC-3) — the JUST-ADDED landing, ONE hook owning the whole mechanism ────────────────
+// ── walk-4 P2 (OC-3) · walk-5 Batch-1 — the JUST-ADDED landing, ONE hook owning the whole mechanism ─
 // The add flow ends by dismissing its stack to the Collection carrying a one-shot
 // `justAdded=<entryId>`: the shelf MARKS that entry (the ~1.5s pulse) and SCROLLS it into view (the
 // default MY ORDER sort can bury a fresh add below the fold). One-shot by construction: the param is
@@ -148,11 +149,27 @@ const catalogLine = (i: CollectionItem) =>
 // R3 (P6 §6 row 6): the shelf is WINDOWED — a far row may simply not be mounted, so the scroll rides
 // `scrollToIndex` (the list computes the position; the retired Walk-4 Murr per-row y-report map only
 // ever saw MOUNTED rows) with an estimated-offset + RECOMPUTE retry for the unmeasured case.
-function useJustAddedLanding(view: CollectionView, filtered: CollectionItem[]) {
+//
+// walk-5 Batch-1 (owner-approved design — replaces the never-expires open window):
+//   (a) the landing FIRES only when the new entry is actually present under the current filters at
+//       fetch-settle (the pulse marks at fire, never at param arrival);
+//   (b) if an active filter/search EXCLUDES the fresh add, there is NO pending landing at all — the
+//       host shows an immediate "Added — hidden by your current filter" toast with CLEAR FILTERS;
+//   (c) any USER scroll (onScrollBeginDrag — programmatic scrolls don't fire it), view switch, or
+//       filter change CANCELS the open landing — auto-scroll never fights user intent. This
+//       supersedes the R3 view-switch RE-land lane (and retires the owner-eye double-issue note).
+function useJustAddedLanding(
+  view: CollectionView,
+  filtered: CollectionItem[],
+  items: CollectionItem[],
+  filterKey: string,
+) {
   const router = useRouter();
   const params = useLocalSearchParams<{ justAdded?: string }>();
   const listRef = useRef<FlatList<CollectionItem>>(null);
-  const [justAdded, setJustAdded] = useState<string | null>(null); // the mark rows render the pulse from
+  const [justAdded, setJustAdded] = useState<string | null>(null); // the FIRED mark rows render the pulse from
+  // walk-5 (b) — fetch settled but an active filter excludes the fresh add: the host toasts instead.
+  const [hiddenByFilter, setHiddenByFilter] = useState(false);
   const justAddedIdRef = useRef<string | null>(null); // the open landing, readable from async callbacks
   const didScrollRef = useRef(false); // the scroll fires once per landing (retries re-open it deliberately)
   const markTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -160,6 +177,8 @@ function useJustAddedLanding(view: CollectionView, filtered: CollectionItem[]) {
   // Render-synced refs so every (possibly delayed) scroll computes against the CURRENT list.
   const filteredRef = useRef(filtered);
   filteredRef.current = filtered;
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
   const viewRef = useRef(view);
   viewRef.current = view;
 
@@ -168,8 +187,11 @@ function useJustAddedLanding(view: CollectionView, filtered: CollectionItem[]) {
     const list = listRef.current;
     if (list == null) return; // no windowed list mounted (TOP/empty lane) — the flag stays honest, a later lane may land it
     const idx = filteredRef.current.findIndex((i) => i.entryId === id);
-    if (idx < 0) return; // not in the loaded shelf yet — the filtered effect below retries
+    if (idx < 0) return; // not in the loaded shelf yet — the settle effect below retries
     didScrollRef.current = true;
+    // walk-5 (a) — the pulse marks at FIRE: only a landing that actually happens is celebrated (the
+    // old param-arrival mark could sit on an entry the current filters never showed).
+    setJustAdded(id);
     // Under numColumns the list's items are ROWS — scrollToIndex takes the row index, not the item's.
     const cols = viewRef.current === 'grid' ? 2 : 1;
     list.scrollToIndex({ index: Math.floor(idx / cols), viewOffset: 12, animated: true });
@@ -183,6 +205,36 @@ function useJustAddedLanding(view: CollectionView, filtered: CollectionItem[]) {
       setJustAdded(null);
       justAddedIdRef.current = null; // closes the landing — bounds every retry lane below
     }, JUST_ADDED_MS);
+  }, []);
+
+  // walk-5 (a)/(b) — the fetch-settle decision, run at param arrival and whenever the shelf data /
+  // filtered projection changes while a landing is open: present under the current filters → FIRE;
+  // present in the shelf but filtered OUT → no landing, raise the hidden-by-filter toast; absent
+  // from the shelf entirely → the fetch hasn't settled the entry yet, stay pending (bounded by the
+  // (c) cancellation paths, not a timer).
+  const settleLanding = useCallback(() => {
+    const id = justAddedIdRef.current;
+    if (id == null || didScrollRef.current) return;
+    if (filteredRef.current.some((i) => i.entryId === id)) {
+      scrollToJustAdded(id);
+      return;
+    }
+    if (itemsRef.current.some((i) => i.entryId === id)) {
+      justAddedIdRef.current = null; // no pending landing at all (walk-5 b)
+      setHiddenByFilter(true);
+    }
+  }, [scrollToJustAdded]);
+
+  // walk-5 (c) — the ONE cancellation path (user scroll · view switch · filter change): closes the
+  // open landing whether pending or mid-pulse, and kills both timers, so no retry lane can fire a
+  // late scroll (every retry re-checks justAddedIdRef at fire time — the existing Murr guard this
+  // composes with). Idempotent: a closed landing is a no-op.
+  const cancelLanding = useCallback(() => {
+    if (justAddedIdRef.current == null) return;
+    justAddedIdRef.current = null;
+    if (markTimerRef.current) clearTimeout(markTimerRef.current);
+    if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    setJustAdded(null);
   }, []);
 
   // The unmeasured-target fallback (fresh mount, or a target far outside the window): jump to the
@@ -205,46 +257,47 @@ function useJustAddedLanding(view: CollectionView, filtered: CollectionItem[]) {
     [scrollToJustAdded],
   );
 
-  // Param arrival — consume the one-shot and open the landing.
+  // Param arrival — consume the one-shot and open the landing. The decision (fire · toast · wait)
+  // is settleLanding's; the rAF re-check covers the same-commit cold mount (list mounted a frame later).
   useEffect(() => {
     const id = params.justAdded;
     if (!id) return;
     didScrollRef.current = false;
     justAddedIdRef.current = id;
-    setJustAdded(id); // rows wear the pulse only once the entry actually renders
+    setHiddenByFilter(false); // a fresh add supersedes a stale hidden-by-filter toast
     router.setParams({ justAdded: undefined });
-    // The retained-tab mainline: the shelf data already holds the entry — scroll a frame later (so a
-    // same-commit cold mount has the list mounted before the scroll issues).
-    requestAnimationFrame(() => scrollToJustAdded(id));
-  }, [params.justAdded, router, scrollToJustAdded]);
+    requestAnimationFrame(() => settleLanding());
+  }, [params.justAdded, router, settleLanding]);
 
-  // The cold-mount retry: the param can be consumed before the shelf data lands (the query is still
-  // in flight behind the screen's isLoading return) — when the entry appears in `filtered`, land on
-  // it. Replaces the old per-row layout-report retry, which needed a mounted row.
+  // The fetch-settle lane: the param can be consumed before the shelf data lands (the query is still
+  // in flight behind the screen's isLoading return) — when the shelf/projection changes while a
+  // landing is open, re-decide (fire, or discover the filter excludes it → toast).
   useEffect(() => {
-    if (justAddedIdRef.current != null && !didScrollRef.current) scrollToJustAdded(justAddedIdRef.current);
-  }, [filtered, scrollToJustAdded]);
+    settleLanding();
+  }, [filtered, items, settleLanding]);
 
-  // A view switch REMOUNTS the list (key={view}) — a pending recompute-retry aimed at the OLD
-  // list's geometry must die with it; an open landing then re-lands on the NEW list (fresh index,
-  // fresh column count, a frame later so the remounted list's ref is attached). `prevViewRef` keeps
-  // the mount run inert — this lane is for view CHANGES only (the param/filtered effects own mount).
+  // walk-5 (c) — a view switch CANCELS the open landing (it REMOUNTS the list, key={view}, so the
+  // cancel also kills any recompute-retry aimed at the old list's geometry). Replaces the R3
+  // re-land lane: the switch is a user act, and auto-scroll never fights user intent. `prevViewRef`
+  // keeps the mount run inert — this lane is for view CHANGES only.
   const prevViewRef = useRef(view);
   useEffect(() => {
     if (prevViewRef.current !== view) {
       prevViewRef.current = view;
-      const openId = justAddedIdRef.current;
-      if (openId != null) {
-        didScrollRef.current = false;
-        requestAnimationFrame(() => {
-          if (justAddedIdRef.current === openId) scrollToJustAdded(openId);
-        });
-      }
+      cancelLanding();
     }
-    return () => {
-      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
-    };
-  }, [view, scrollToJustAdded]);
+  }, [view, cancelLanding]);
+
+  // walk-5 (c) — a filter/search change cancels too (same mount-inert prev-ref pattern). The key is
+  // the FILTER config (q · status · genre), deliberately not the sort: sorting reorders the shelf
+  // but excludes nothing, and a still-pending landing remains valid under any order.
+  const prevFilterKeyRef = useRef(filterKey);
+  useEffect(() => {
+    if (prevFilterKeyRef.current !== filterKey) {
+      prevFilterKeyRef.current = filterKey;
+      cancelLanding();
+    }
+  }, [filterKey, cancelLanding]);
 
   // Unmount — both timers die with the screen.
   useEffect(
@@ -255,7 +308,11 @@ function useJustAddedLanding(view: CollectionView, filtered: CollectionItem[]) {
     [],
   );
 
-  return { listRef, justAdded, onScrollToIndexFailed };
+  // STABLE dismiss — Toast re-arms its auto-dismiss timer when onDismiss changes identity, and this
+  // screen re-renders on every flip/query keystroke; an inline closure would keep the toast alive.
+  const dismissHiddenByFilter = useCallback(() => setHiddenByFilter(false), []);
+
+  return { listRef, justAdded, onScrollToIndexFailed, cancelLanding, hiddenByFilter, dismissHiddenByFilter };
 }
 
 export default function Collection() {
@@ -290,7 +347,8 @@ export default function Collection() {
   const [logHoursId, setLogHoursId] = useState<string | null>(null);
   // COL-12 — the peek-flip is TRANSIENT screen state (never persisted). A Set of flipped entryIds
   // (owner ruling 2026-07-12: many-flipped, not one-at-a-time); cleared on a view-switch (the effect
-  // below) and on blur (the useFocusEffect cleanup). Shelf + grid only — dense-list/top still NAVIGATE.
+  // below) but NOT on blur — a flipped card survives a tab round-trip (walk-5 ruling, spec 0.70).
+  // Shelf + grid only — dense-list/top still NAVIGATE.
   const [flippedIds, setFlippedIds] = useState<Set<string>>(new Set());
   // COL-13 — the TOP view ARRANGE toggle (drag re-rank + CardPicker). Cleared on any view-switch.
   const [topArranging, setTopArranging] = useState(false);
@@ -328,12 +386,13 @@ export default function Collection() {
 
   // Leaving the tab with the dock focused would strand the keyboard over the next screen (the Tabs
   // navigator keeps this screen mounted) — dismiss it on blur; the dock itself survives the round trip.
-  // COL-12: the peek-flip is transient — clear every flip on blur too (spec: resets on leaving the screen).
+  // COL-12 (walk-5 ruling, spec 0.70): flips are NOT cleared here — a flipped card STAYS as the user
+  // left it across tab switches (the deferred flip-back-on-return beat is rejected). Still transient:
+  // in-memory only (a relog/remount clears it) and still reset on a view switch (the effect below).
   useFocusEffect(
     useCallback(() => {
       return () => {
         Keyboard.dismiss();
-        setFlippedIds((prev) => (prev.size === 0 ? prev : new Set()));
       };
     }, []),
   );
@@ -399,8 +458,17 @@ export default function Collection() {
     return out;
   }, [items, q, statusFilter, genreFilter, sortKey, sortAsc]);
 
-  // walk-4 P2 (OC-3) — the JUST-ADDED landing (the whole mechanism lives in the one hook below).
-  const { listRef, justAdded, onScrollToIndexFailed } = useJustAddedLanding(view, filtered);
+  // walk-4 P2 (OC-3) · walk-5 — the JUST-ADDED landing (the whole mechanism lives in the one hook
+  // below). `filterKey` is the EXCLUSION config only (q · status · genre — sort reorders, never
+  // excludes): a change to it cancels a pending landing (walk-5 c). Sets are re-created per toggle
+  // (never mutated), so the memo's identity deps are honest.
+  const filterKey = useMemo(
+    () =>
+      [q.trim().toLowerCase(), [...statusFilter].sort().join(','), [...genreFilter].sort().join(',')].join('|'),
+    [q, statusFilter, genreFilter],
+  );
+  const { listRef, justAdded, onScrollToIndexFailed, cancelLanding, hiddenByFilter, dismissHiddenByFilter } =
+    useJustAddedLanding(view, filtered, items, filterKey);
 
   // ── R3 (P6 §6 row 6) — the windowed shelf: per-view row renderers for the FlatList. Hooks, so they
   // live ABOVE the isLoading/isError early returns. `renderRow`'s identity changing on flip/mark
@@ -527,7 +595,7 @@ export default function Collection() {
       <View style={styles.stage}>
       <ScrollLockContext.Provider value={scrollLockApi}>
       {view === 'top' || data.collectionTotal === 0 ? (
-        <ScrollView testID="collection-scroll" style={styles.scroll} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} scrollEnabled={!bgLocked && dragScrollEnabled}>
+        <ScrollView testID="collection-scroll" style={styles.scroll} contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} scrollEnabled={!bgLocked && dragScrollEnabled} onScrollBeginDrag={cancelLanding}>
           {resultsHead}
           {data.collectionTotal === 0 ? (
             <EmptyShelf onAdd={() => router.push('/add-game')} />
@@ -560,6 +628,10 @@ export default function Collection() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           scrollEnabled={!bgLocked && dragScrollEnabled}
+          // walk-5 (c) — a USER scroll cancels the open landing. onScrollBeginDrag fires only for
+          // touch-initiated drags, never for the landing's own programmatic scrollToIndex — the
+          // discrimination that lets the auto-scroll survive its own motion.
+          onScrollBeginDrag={cancelLanding}
           data={filtered}
           keyExtractor={keyExtractor}
           renderItem={renderRow}
@@ -713,6 +785,24 @@ export default function Collection() {
         onClose={() => setTopPickerOpen(false)}
         collectionItems={items}
       />
+
+      {/* walk-5 (b) — the add succeeded but an active filter/search hides the fresh entry: immediate
+          feedback instead of a pending landing. The action rides the Toast's one action slot
+          (onRetry/retryLabel — the friend-requests/game-page hosting pattern) and reuses the OQ-130
+          clearAll (drops filters + exits search); clearing raises no landing — walk-5 (b) is "no
+          pending landing at all", so the entry simply appears under MY ORDER, un-yanked. */}
+      {hiddenByFilter ? (
+        <Toast
+          message="Added — hidden by your current filter"
+          tone="success"
+          onRetry={() => {
+            clearAll();
+            dismissHiddenByFilter();
+          }}
+          retryLabel="Clear filters"
+          onDismiss={dismissHiddenByFilter}
+        />
+      ) : null}
     </View>
   );
 }
@@ -782,7 +872,10 @@ type FlipRowProps = RowProps & {
 // How long the new entry stays marked after the add flow lands (the OC-3 "~1.5s highlight pulse").
 const JUST_ADDED_MS = 1500;
 
-// The pulse itself — an ABSOLUTE-FILL accent outline over the row. Absolute so it adds no height and
+// The pulse itself — an ABSOLUTE-FILL GOLD outline over the row (walk-5 CR: gold, not the orange
+// accent — the landing is a moment-of-delight highlight and gold is the celebratory metal, the 0069
+// grammar; `scr.value` is the theme-adapted gold token, deepened on light themes so the outline
+// still reads there — never a raw hex). Absolute so it adds no height and
 // shifts nothing (the same layout-stability rule the coachmark strip and the search status slot obey):
 // a row that grows a border when it's marked would jog the whole shelf. Three quick beats over the
 // ~1.5s window, then it unmounts with the state — self-terminating, never an idle loop (P6 lane).
@@ -808,7 +901,7 @@ function JustAddedPulse({ entryId }: { entryId: string }) {
       pointerEvents="none"
       style={[
         StyleSheet.absoluteFill,
-        { borderWidth: 2, borderColor: t.scr.accent },
+        { borderWidth: 2, borderColor: t.scr.value },
         reduceMotion ? null : { opacity },
       ]}
     />

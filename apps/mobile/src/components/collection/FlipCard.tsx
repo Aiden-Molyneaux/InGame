@@ -20,7 +20,8 @@ import { useReducedMotion } from '../../a11y/useReducedMotion';
 // (CARD-07): a TAP flips it in place to the CARD-01 stats back; a LONG-PRESS is the NAVIGATE shortcut to
 // the Game page; the back's VIEW GAME control is the visible navigate path (decision 0026 kept navigation
 // on the back rather than behind a hidden gesture). Transient — the flipped state lives on the Collection
-// screen and is never persisted (the parent clears it on view-switch + blur).
+// screen and is never persisted (the parent clears it on view-switch; it SURVIVES a tab round-trip —
+// the walk-5 keep-flip ruling, COL-12 spec 0.70).
 //
 // The flip is TWO faces on a REANIMATED 3D turn (front rotateY 0→180 · back 180→360, perspective, with
 // the opacity step at 90° computed in the SAME worklet — perfectly frame-synchronized on the UI thread).
