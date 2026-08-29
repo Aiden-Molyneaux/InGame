@@ -443,3 +443,39 @@ API healthy (`dev-stack up` + `doctor` green) → claude-in-chrome at `http://lo
 - **Walk-sheet residue (appended to walk5-sheet):** device glance at card titles + a PROOF flatten
   (P1's native asset path is jest-mocked, web-proven only) · on-phone gzip decode sanity (P2) ·
   P3 is live-only by nature.
+
+## Walk-5 fix wave A+B (2026-08-29) — MURR CLOSED (combined SOUND, fix round re-verify SOUND)
+- **Scope:** the owner's walk-5 rulings built as two parallel packets. **A (`6416af0`):** gold landing
+  pulse (`t.scr.value`) · keep-flip-state — the COL-12 blur reset REMOVED (product-spec **0.70** +
+  changelog + 00-INDEX sync; flips persist across tab switches, the R5 flip-back beat retired) · the
+  landing/toast redesign (fires only if visible at settle · filter-excluded → success Toast "Added —
+  hidden by your current filter" + CLEAR FILTERS · any user scroll/view-switch/filter-change cancels;
+  supersedes the never-expires owner-eye and the double-issue note). **B (`290c660`):** friend-collection
+  tools parity (bottom-docked ToolButton bar · search morph w/ title·developer·publisher haystack ·
+  PulledSheet drawer moved to screen root — a latent F-15 overlay-anchoring bug fixed in passing ·
+  NO MATCHES beat) · Rankings REMOVED from compare, landed on Friends in BOTH forms (door-row default,
+  `RANKINGS_INLINE` flag for the owner's on-device pick — the loser gets deleted) + `/friends-rankings`
+  page · Games/Hours via stock SectionSwitch (the 0069 cream revert respected). **Fix round
+  (`fea994f`):** TOP-view search branch order mirrored to the owner shelf (NO MATCHES reachable from
+  TOP; Murr's alternative fix half-rejected after reading the owner semantics — resultsHead is
+  deliberately un-gated) · the stale freezeOnBlur comment corrected · OQ-162 (toolsGlyphs/ToolsBar
+  de-dup) + OQ-163 (promote the ladder to GET /me/friends/rankings BEFORE PROF-03 — the anchor-friend
+  seam hazard + the 409 miscopy) · walk5-sheet flip-back row MOOT.
+- **Murr (fable, fresh-context): combined SOUND (0 blocker/0 major)** — landing state machine raced
+  clean (fire/toast mutually exclusive, retry-after-cancel dead twice, programmatic scroll never
+  self-cancels per RN semantics) · sheet-lock pairing safe · compare amputation total · route/authz
+  clean · anchor stability bounded · all 13 new tests invert-verified. Fix round **re-verify SOUND**
+  (the pre-fix-failing test confirmed; the overcorrection-guard pair legitimate).
+- **OWNER-EYE (the walk list):** door-row vs inline Rankings pick (flip `RANKINGS_INLINE`) ·
+  mid-pulse cancel feel (any touch kills the 1.5s pulse — "pending" read literally) · the success
+  toast's orange CLEAR FILTERS button (Toast's failure-slot reused; rename-to-`action` is the followup
+  if blessed) · gold pulse legibility on light themes · Android hardware-back through morph→drawer ·
+  GAMES-metric ladder keeps hours-computed ranks (pre-existing, now prominent) · COL-11's sort-set
+  gap on the friend drawer (3 of 5 — spec vs contract disagree; needs a COL-11 ruling).
+- **Definitive green (witnessed, final tree):** typecheck PASS · lint 0 err · vitest 68 files/919
+  FULL · mobile **118 suites/952**. /health 🟢 (spec 0.70 + OQ rows).
+- **Also landed this push:** `railway.json` startCommand gains `--enable-source-maps` (deploy-config
+  Murr minor); the deploy-config packet (`0031d98`) was separately audited SOUND — its gate record:
+  externals/inlining/depth clean, the bundled migrator SMOKE-PROVEN (27/27 on a scratch DB), debts
+  ledgered (isDirectRun-under-bundle trap commented, npm ci breadth, SIGTERM drain → pairs with the
+  G-C signal handler).

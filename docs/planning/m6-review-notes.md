@@ -322,3 +322,14 @@ CREATED: 2 games added→removed (Smoke Odyssey Delta, Skylanders; demo back to 
   CanvasKit lifecycle fix"). Soak: 1500 compositions flat post-fix vs death at ~650 pre-fix;
   render output byte-identical. The /me/collection server-pagination seam remains the one open
   load cliff (paired with G-C/staging work).
+
+## 2026-08-29 — the beta hard-push session: walk-5 fix wave + G-C day
+- **Walk-5 fix wave LANDED** (`6416af0` A · `290c660` B · `fea994f` fix round; Murr combined SOUND +
+  re-verify SOUND; gate section in review-coverage §"Walk-5 fix wave A+B"). Spec: COL-12 → 0.70
+  (flips persist). New: /friends-rankings (door-row default + RANKINGS_INLINE variant for the owner
+  pick). OQ-162/163 filed. Owner-eye list in the gate section — fold into the next device sitting.
+- **G-C DAY (in flight, this session):** Railway project `ingame` — prod Postgres online · InGame
+  service on branch m6 · deploy config `0031d98` (Murr SOUND; bundled migrator smoke 27/27) ·
+  8 env vars + volume /data (MEDIA_DIR) staged · secrets owner-installed · backups ruling: Hobby +
+  nightly pg_dump job (to build). Deploy + DNS + staging env + R2 follow in-session; receipt to
+  m1p-provisioning-log at close.

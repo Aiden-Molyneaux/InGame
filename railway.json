@@ -6,7 +6,7 @@
   },
   "deploy": {
     "preDeployCommand": "node apps/api/dist/server/migrate.js",
-    "startCommand": "node apps/api/dist/server/index.js",
+    "startCommand": "node --enable-source-maps apps/api/dist/server/index.js",
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 120,
     "restartPolicyType": "ON_FAILURE",
