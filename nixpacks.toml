@@ -1,0 +1,11 @@
+# Nixpacks build config for the API service. The build/start commands live in `railway.json`;
+# this file exists for ONE reason — the Node version pin.
+#
+# Nixpacks' node provider reads `engines.node` from the root package.json BEFORE `.nvmrc`, and ours
+# is a RANGE (">=20.19.0"), which resolves to the newest Node that satisfies it — NOT the 20.19.6
+# that `.nvmrc` pins and that CI, this repo, and the verified production bundle
+# (`apps/api/scripts/build-prod.mjs`, esbuild target node20) are tested on. Pinning the major here
+# removes that ambiguity without tightening `engines`, which would start warning on dev boxes that
+# run newer Node.
+[variables]
+NIXPACKS_NODE_VERSION = "20"

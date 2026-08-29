@@ -15,7 +15,7 @@
   "scripts": {
     "stack": "node scripts/dev-stack.mjs",
     "typecheck": "tsc -b tsconfig.json && tsc --noEmit -p apps/mobile/tsconfig.json && tsc --noEmit -p apps/admin/tsconfig.json",
-    "build": "tsc -b tsconfig.json",
+    "build": "tsc -b tsconfig.json && node apps/api/scripts/build-prod.mjs",
     "lint": "eslint . && npm run lint:custom && npm run lint:mobile",
     "lint:eslint": "eslint .",
     "lint:custom": "node tools/lint/run.mjs",
@@ -34,6 +34,7 @@
   "devDependencies": {
     "@eslint/js": "^9.15.0",
     "@types/node": "^20.17.6",
+    "esbuild": "^0.28.2",
     "eslint": "^9.15.0",
     "eslint-config-prettier": "^9.1.0",
     "globals": "^15.12.0",
