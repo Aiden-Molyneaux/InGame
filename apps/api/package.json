@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "InGame API — Node/Express + TypeScript, layered routes→controllers→services→repositories, zod, Drizzle/Postgres. Hosts the F29 golden-path slice (PATCH /me bio).",
+  "description": "InGame API \u00e2\u20ac\u201d Node/Express + TypeScript, layered routes\u00e2\u2020\u2019controllers\u00e2\u2020\u2019services\u00e2\u2020\u2019repositories, zod, Drizzle/Postgres. Hosts the F29 golden-path slice (PATCH /me bio).",
   "main": "./src/index.ts",
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -13,7 +13,7 @@
     "start:prod": "node dist/server/index.js",
     "db:migrate:prod": "node dist/server/migrate.js",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx src/db/migrate.ts",
+    "db:migrate": "tsx src/db/migrate-entry.ts",
     "db:backup": "tsx src/db/backup.ts",
     "db:reset": "tsx src/db/reset.ts",
     "db:seed-dev": "tsx src/dev/seed-dev.ts",

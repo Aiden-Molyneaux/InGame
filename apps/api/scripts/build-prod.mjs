@@ -51,7 +51,9 @@ await build({
     // The server. `node apps/api/dist/server/index.js` (package.json `start:prod`).
     index: resolve(apiRoot, 'src/index.ts'),
     // The drizzle migration runner, so the deploy's pre-deploy hook needs no tsx either.
-    migrate: resolve(apiRoot, 'src/db/migrate.ts'),
+    // The UNCONDITIONAL entry — not migrate.ts, whose isDirectRun() guard silently no-ops under
+    // runner cwd/argv variance (the first Railway deploy proved it; see migrate-entry.ts).
+    migrate: resolve(apiRoot, 'src/db/migrate-entry.ts'),
   },
   outdir: resolve(apiRoot, 'dist/server'),
   bundle: true,
