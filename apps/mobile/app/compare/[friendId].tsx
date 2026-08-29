@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from 'react';
-import { View, Text, Pressable, ScrollView } from 'react-native';
+import { type ReactNode } from 'react';
+import { View, Text, ScrollView } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { themedStyles, useTheme } from '../../src/theme';
@@ -10,13 +10,16 @@ import { LoadError } from '../../src/components/lifecycle/LoadError';
 import { Unavailable } from '../../src/components/lifecycle/Unavailable';
 import { FaceOff } from '../../src/components/compare/FaceOff';
 import { ComparePair } from '../../src/components/compare/ComparePair';
-import { FriendsLeaderboard } from '../../src/components/compare/FriendsLeaderboard';
 import { useGetMeQuery } from '../../src/store/api';
 import { useGetCompareQuery } from '../../src/store/compareApi';
 import { SCREEN_HEADER_PAD, RETURN_SEAM_PAD } from '../../src/components/ScreenHead';
 
 // P9 — Compare (SOC-03 · compare-states.html · the marquee return-driver). The duel: a totals FaceOff
-// (who leads, by how much) → per-shared-game card-vs-card ComparePair matchups → the FriendsLeaderboard.
+// (who leads, by how much) → per-shared-game card-vs-card ComparePair matchups. TWO PEOPLE ONLY —
+// walk-5 owner ruling: "The Rankings" (the whole-circle ladder) left this screen for the FRIENDS tab
+// (app/(tabs)/friends.tsx + app/friends-rankings.tsx), because it ranks you against ALL friends and is
+// therefore Friends-screen information, not individual-compare information. The payload still carries
+// `leaderboard` (the /me/compare shape is unchanged — the relocation is UI-only); this screen ignores it.
 // NON-COMMERCE — no gold anywhere (comparing creates no card, ECON-01/F-02). Read-only over the friend's
 // VISIBLE data (PROF-03) — the omission branches render honestly (ARCH A2). FRIEND-ONLY: a non-friend/
 // self → 409 NOT_FRIENDS (a calm state); blocked/suspended/deleted/unknown → 404 (the generic Unavailable,
@@ -31,8 +34,6 @@ export default function Compare() {
   const { data, isLoading, isError, error, refetch } = useGetCompareQuery(friendId ?? '', {
     skip: !friendId,
   });
-  const [metric, setMetric] = useState<'hours' | 'games'>('hours');
-
   if (isLoading || !friendId) {
     return (
       <Frame title="Compare" backLabel="Return" onBack={() => router.back()}>
@@ -75,7 +76,6 @@ export default function Compare() {
   const games = data.games ?? [];
   const collectionHidden = data.games === undefined; // PROF-03 — the friend hides their collection
   const hoursHidden = data.totals.theirHours === undefined; // PROF-03 — the friend hides hours
-  const leaderboard = data.leaderboard;
 
   return (
     <Frame title="Compare" backLabel={`Return to ${friendName}`} onBack={() => router.back()}>
@@ -118,21 +118,6 @@ export default function Compare() {
           </View>
         )}
       </Section>
-
-      {/* THE RANKINGS — omitted when hours are hidden (the friend is off the hours ladder, PROF-03) */}
-      {leaderboard && leaderboard.length > 0 ? (
-        <Section
-          title="The rankings"
-          note={metric === 'hours' ? 'HOURS · GAMES' : 'GAMES · HOURS'}
-          onNote={() => setMetric((m) => (m === 'hours' ? 'games' : 'hours'))}
-        >
-          <FriendsLeaderboard
-            rows={leaderboard}
-            metric={metric}
-            onOpenUser={(userId) => router.push(`/user/${userId}`)}
-          />
-        </Section>
-      ) : null}
     </Frame>
   );
 }
@@ -206,29 +191,15 @@ function CompareSkeleton() {
 }
 
 // ── section header + the shared screen frame ───────────────────────────────────────────────────────
-function Section({
-  title,
-  note,
-  onNote,
-  children,
-}: {
-  title: string;
-  note?: string;
-  onNote?: () => void;
-  children: ReactNode;
-}) {
+// walk-5: the `onNote` (pressable note) lane went with The Rankings — its metric flip was the only
+// caller. The remaining note is a display caption.
+function Section({ title, note, children }: { title: string; note?: string; children: ReactNode }) {
   const styles = useStyles();
   return (
     <View style={styles.section}>
       <View style={styles.sectionRow}>
         <Text style={styles.sectionHead}>{title.toUpperCase()}</Text>
-        {note ? (
-          onNote ? (
-            <TertiaryLink label={note} chevron="none" onPress={onNote} />
-          ) : (
-            <Text style={styles.sectionNote}>{note}</Text>
-          )
-        ) : null}
+        {note ? <Text style={styles.sectionNote}>{note}</Text> : null}
       </View>
       {children}
     </View>

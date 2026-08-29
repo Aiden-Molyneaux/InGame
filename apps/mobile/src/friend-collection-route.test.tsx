@@ -91,12 +91,50 @@ describe('P9 friend-collection route — read-only (COL-10/11)', () => {
     expect(screen.queryByLabelText(/^Arrange/)).toBeNull();
   });
 
-  it('the read-only browse tools are present (sort · filter · view · compare)', () => {
+  // walk-5 CR — filter/search PARITY with the owner Collection: the same four icon-only ToolButton
+  // keycaps in the same bottom-docked bar, the trailing key being COMPARE where the owner's gold ADD
+  // sits (a friend's shelf is read-only).
+  it('the read-only browse tools are the owner tools-bar set (search · sort · filter · view · compare)', () => {
     set({ data: FULL });
     render(wrap(<FriendCollection />));
-    expect(screen.getByLabelText('Sort direction')).toBeTruthy();
-    expect(screen.getByLabelText('Filter')).toBeTruthy();
+    expect(screen.getByTestId('friend-collection-tools-bar')).toBeTruthy();
+    for (const key of ['Search', 'Sort', 'Filter', 'View']) {
+      expect(screen.getByLabelText(key)).toBeTruthy();
+    }
     expect(screen.getByText('COMPARE')).toBeTruthy();
+    expect(screen.queryByText('ADD')).toBeNull(); // the owner's gold ADD never appears here (F-02)
+  });
+
+  it('the Search keycap MORPHS the bar into the docked SearchField + ⊗ clear (the owner beat)', () => {
+    set({ data: FULL });
+    render(wrap(<FriendCollection />));
+    fireEvent.press(screen.getByLabelText('Search'));
+    expect(screen.getByTestId('friend-collection-search-bar')).toBeTruthy();
+    expect(screen.getByLabelText('Title · developer · publisher')).toBeTruthy();
+    expect(screen.getByLabelText('Clear search')).toBeTruthy();
+    expect(screen.queryByTestId('friend-collection-tools-bar')).toBeNull(); // the bar MORPHED, not stacked
+  });
+
+  it('search matches the owner haystack (title · developer · publisher), not title alone', () => {
+    set({ data: { ...FULL, items: [ITEM(1), ITEM(2, { nowPlaying: false, developer: 'Hollow Works' })] } as unknown as FriendCollectionResponse });
+    render(wrap(<FriendCollection />));
+    fireEvent.press(screen.getByLabelText('Search'));
+    fireEvent.changeText(screen.getByLabelText('Title · developer · publisher'), 'hollow works');
+    expect(screen.getByText('RESULTS — TITLE · DEVELOPER · PUBLISHER')).toBeTruthy();
+    expect(screen.getByText('GAME 2')).toBeTruthy();
+    expect(screen.queryByText('GAME 1')).toBeNull();
+  });
+
+  it('a query matching nothing lands on the owner NO MATCHES beat with a Clear', () => {
+    set({ data: FULL });
+    render(wrap(<FriendCollection />));
+    fireEvent.press(screen.getByLabelText('Search'));
+    fireEvent.changeText(screen.getByLabelText('Title · developer · publisher'), 'zzzz');
+    expect(screen.getByText('NO MATCHES')).toBeTruthy();
+    fireEvent.press(screen.getByText('CLEAR ›')); // TertiaryLink's default trailing-chevron grammar
+    // cleared → the shelf is back, and the now-playing hero un-yields (so GAME 1 appears twice)
+    expect(screen.getAllByText('GAME 1').length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText('NO MATCHES')).toBeNull();
   });
 
   it('an entry tap → the adaptive Game page in FRIEND posture (?via — the SOC-11 content)', () => {
@@ -113,8 +151,9 @@ describe('P9 friend-collection route — read-only (COL-10/11)', () => {
     mockProfile = { data: { username: 'riko', friendsCount: 14, top10: [{ rank: 1, gameId: 'g1', title: 'Game 1', card: { imageUrl: null } }] } };
     set({ data: FULL });
     render(wrap(<FriendCollection />));
-    // cycle the view keycap shelf → grid → list → top
-    const viewChip = () => screen.getByLabelText(/^View:/);
+    // cycle the view keycap shelf → grid → list → top (the owner ToolButton grammar — the keycap wears
+    // the current mode's glyph, its accessibility name is just "View")
+    const viewChip = () => screen.getByLabelText('View');
     fireEvent.press(viewChip());
     fireEvent.press(viewChip());
     fireEvent.press(viewChip());

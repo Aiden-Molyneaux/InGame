@@ -77,14 +77,23 @@ describe('P9 Compare route — the SOC-03 postures', () => {
     mockBack.mockReset();
   });
 
-  it('P1 has-overlap → the face-off verdict, matchup + leaderboard', () => {
+  it('P1 has-overlap → the face-off verdict + the matchups (two people only)', () => {
     set({ data: FULL });
     render(wrap(<Compare />));
     expect(screen.getByText('YOU LEAD · +60 HRS')).toBeTruthy(); // 1240 vs 1180
     expect(screen.getByText('THE MATCHUPS · 1 SHARED')).toBeTruthy();
-    expect(screen.getByText('THE RANKINGS')).toBeTruthy();
-    // the isMe leaderboard row lights "YOU" — it plus the FaceOff "YOU" side → at least two matches
-    expect(screen.getAllByText('YOU').length).toBeGreaterThanOrEqual(2);
+    // the FaceOff still names your side of the duel
+    expect(screen.getAllByText('YOU').length).toBeGreaterThanOrEqual(1);
+  });
+
+  // walk-5 owner CR — "The Rankings" ranks you against ALL friends, so it left this screen for the
+  // FRIENDS tab (door-row → /friends-rankings). Compare keeps the two-person comparison ONLY: the
+  // payload still carries `leaderboard`, and this screen must not draw it.
+  it('the whole-circle RANKINGS is GONE from compare, even when the payload carries a leaderboard', () => {
+    set({ data: FULL });
+    render(wrap(<Compare />));
+    expect(screen.queryByText('THE RANKINGS')).toBeNull();
+    expect(screen.queryByText('@riko')).toBeNull(); // the leaderboard's row identity, not rendered here
   });
 
   it('a card tap → their card opens the game page in FRIEND posture (?via), yours the OWN game page', () => {
@@ -111,7 +120,6 @@ describe('P9 Compare route — the SOC-03 postures', () => {
     render(wrap(<Compare />));
     expect(screen.getByText('HOURS PRIVATE')).toBeTruthy();
     expect(screen.getByText('VANTA KEEPS HOURS PRIVATE')).toBeTruthy();
-    expect(screen.queryByText('THE RANKINGS')).toBeNull(); // leaderboard omitted
   });
 
   it('409 NOT_FRIENDS → the calm friends-only state (distinct from the 404)', () => {

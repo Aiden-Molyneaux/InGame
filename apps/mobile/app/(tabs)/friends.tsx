@@ -12,6 +12,12 @@ import { FeedRow } from '../../src/components/social/FeedRow';
 import { HeaderKey } from '../../src/components/social/HeaderKey';
 import { achievementDetailFor } from '../../src/components/social/achievementFeedDetail';
 import { AchievementSheet, type AchievementDetail } from '../../src/components/achievements/AchievementSheet';
+import {
+  RankingsBoard,
+  RankingsDoorRow,
+  useFriendRankings,
+  type RankingsMetric,
+} from '../../src/components/social/FriendRankings';
 import { themedStyles, useTheme } from '../../src/theme';
 import { useGetFriendsQuery, useGetFriendRequestsQuery } from '../../src/store/friendApi';
 import { useGetFeedQuery, useLazyGetFeedQuery, mergeFeedPages } from '../../src/store/feedApi';
@@ -22,6 +28,16 @@ import { useGetAchievementDefsQuery } from '../../src/store/achievementsApi';
 // the friends rail (roster peek → ALL FRIENDS), and the persistent ADD FRIENDS header key (→ the hub).
 // Cold-start (0 friends) → the InviteHook doorway; quiet window (friends, thin feed) → a short digest +
 // a gentle nudge. Renders inside the persistent DeviceShell; the FRIENDS keycap is active (ShellNav).
+
+// ── walk-5 CR: "The Rankings" relocation — TWO CANDIDATE FORMS, the owner picks on device ─────────
+// The whole-circle ladder moved here off the Compare screen (it ranks you against ALL friends, so it's
+// Friends-screen information). Both candidate forms are built; this flag selects which one renders:
+//   false (WIRED-IN DEFAULT) → the compact DOOR-ROW, opening the dedicated /friends-rankings page
+//   true                     → the INLINE SECTION, the ladder drawn on the tab itself
+// OWNER: flip this to compare the two on device, then say which one stays. THE LOSER GETS DELETED —
+// this flag, the dead branch, and (if inline wins) the /friends-rankings route go with it.
+const RANKINGS_INLINE = false;
+
 export default function Friends() {
   const router = useRouter();
   const t = useTheme();
@@ -44,6 +60,11 @@ export default function Friends() {
   const [extraItems, setExtraItems] = useState<FeedItem[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [moreError, setMoreError] = useState(false);
+
+  // walk-5 — the relocated circle ladder (see RANKINGS_INLINE above). The hook is unconditional (F-16);
+  // it self-skips when the roster is empty, and both candidate forms read the same rows.
+  const rankings = useFriendRankings();
+  const [rankMetric, setRankMetric] = useState<RankingsMetric>('hours');
 
   // Whenever page 1 (re)loads — initial, a focus refetch, or a `Social` invalidation — RESET the
   // accumulated tail + re-seat the cursor (walk-3 discipline: a fresh page-1 head can strand the old tail).
@@ -136,6 +157,25 @@ export default function Friends() {
                 <Text style={styles.tileName}>ALL {roster.length}</Text>
               </Pressable>
             </ScrollView>
+
+            {/* THE RANKINGS (walk-5 relocation) — seated between the roster rail and the activity
+                river: it is roster information (who's ahead in your circle), and the feed stays the
+                tail of the landing. Absent until the ladder has rows (a 1-person "circle" ranks
+                nothing). See RANKINGS_INLINE at the top of this file. */}
+            {rankings.rows.length > 0 ? (
+              <View style={styles.rankSlot}>
+                {RANKINGS_INLINE ? (
+                  <RankingsBoard
+                    rows={rankings.rows}
+                    metric={rankMetric}
+                    onMetric={setRankMetric}
+                    onOpenUser={(userId) => router.push(`/user/${userId}`)}
+                  />
+                ) : (
+                  <RankingsDoorRow rows={rankings.rows} onPress={() => router.push('/friends-rankings')} />
+                )}
+              </View>
+            ) : null}
 
             {/* RECENT ACTIVITY — the SOC-06 river */}
             <View style={styles.sec}>
@@ -273,6 +313,10 @@ const useStyles = themedStyles((t) => ({
   bannerT: { fontFamily: t.font.screenBold, fontSize: t.type.body, color: t.scr.ink, letterSpacing: 0.3 },
   bannerS: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.dim, letterSpacing: 0.5 },
   bannerGo: { fontFamily: t.font.screenBold, fontSize: t.type.title, color: t.scr.accent },
+
+  // walk-5 — the rankings slot rides the same top beat as the other post-rail blocks (the `sec` header's
+  // marginTop), so the door-row / inline board sits on the tab's existing rhythm.
+  rankSlot: { marginTop: t.space.xl },
 
   loadMore: { alignItems: 'center', marginTop: t.space.lg },
   end: { fontFamily: t.font.screenSemi, fontSize: t.type.micro, color: t.scr.faint, letterSpacing: 0.4, marginTop: t.space.lg, lineHeight: 14 },
