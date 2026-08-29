@@ -274,10 +274,19 @@ export default function FriendCollection() {
         </Pressable>
       ) : null}
 
+      {/* Branch ORDER copied from the owner shelf (collection.tsx:600-615): empty shelf → NO MATCHES
+          → the view. NO MATCHES is checked BEFORE the TOP lane deliberately — the owner's own comment
+          on that branch reads "filters/search matched nothing but the shelf isn't empty (TOP lane
+          too)". Getting this order backwards (walk-5 Murr) left the RESULTS header sitting over an
+          unfiltered Top-10 with NO MATCHES unreachable while searching from TOP. */}
       {items.length === 0 ? (
         <Text style={styles.empty}>{username} hasn&apos;t added any games yet.</Text>
+      ) : filtered.length === 0 ? (
+        <NoResults onClear={clearAll} showClear={filterActive} />
       ) : view === 'top' ? (
         // COL-13 — the friend read-only TOP (decision 0050); reads friendProfile.top10 (P5 live now).
+        // The curated Top-10 renders over the FULL shelf — curation is independent of sort/filter, the
+        // owner rule (`SelfTopView collectionItems={items}`), so a matching query leaves it untouched.
         <FriendTopView
           entries={top10}
           username={username}
@@ -285,8 +294,6 @@ export default function FriendCollection() {
           focusGameId={focus}
           onOpenGame={openEntry}
         />
-      ) : filtered.length === 0 ? (
-        <NoResults onClear={clearAll} showClear={filterActive} />
       ) : view === 'list' ? (
         <FriendListView items={filtered} onOpen={openEntry} />
       ) : view === 'grid' ? (

@@ -23,10 +23,11 @@ export default function TabsLayout() {
       // R5 (P6 §6 row 4) — the tabs are the app's PERMANENT query subscribers (they never unmount,
       // by design, and each holds shelf/profile/discover subscriptions): freezeOnBlur stops a
       // blurred tab re-rendering on every RTK invalidation (the R2 fan-out) — renders defer and
-      // catch up on refocus. Blur-time cleanups (Keyboard.dismiss, the COL-12 flip reset) fire on
-      // the blur event BEFORE the freeze, and timers/effects keep running — only rendering pauses.
-      // One visible consequence (verified, accepted): a card left flipped renders its flip-back on
-      // RETURN to the tab (the reset's render is deferred) instead of animating while hidden.
+      // catch up on refocus. Blur-time cleanups (Keyboard.dismiss) fire on the blur event BEFORE the
+      // freeze, and timers/effects keep running — only rendering pauses.
+      // walk-5 (owner ruling, product-spec 0.70): the COL-12 blur-time FLIP RESET IS GONE — a flipped
+      // card STAYS in the state the user left it across tab switches. So the flip-back-on-return beat
+      // this comment used to warn about no longer exists: freeze has nothing to defer there.
       screenOptions={{ headerShown: false, freezeOnBlur: true }}
       tabBar={() => null}
     >

@@ -163,6 +163,45 @@ describe('P9 friend-collection route — read-only (COL-10/11)', () => {
     expect(screen.queryByLabelText('Add to Top 10')).toBeNull();
   });
 
+  // walk-5 Murr — searching from TOP must behave EXACTLY as the owner shelf does (collection.tsx:
+  // 600-615): the RESULTS header is not view-gated, NO MATCHES is checked BEFORE the TOP lane
+  // ("TOP lane too"), and a MATCHING query leaves the curated Top-10 rendering over the FULL shelf
+  // (curation is independent of sort/filter). Pre-fix the TOP branch ran first, so the header sat
+  // over an unfiltered Top-10 and NO MATCHES was unreachable from TOP.
+  describe('search-in-TOP mirrors the owner shelf', () => {
+    const toTop = () => {
+      const viewChip = () => screen.getByLabelText('View');
+      fireEvent.press(viewChip());
+      fireEvent.press(viewChip());
+      fireEvent.press(viewChip());
+    };
+    const withTop10 = () => {
+      mockProfile = { data: { username: 'riko', friendsCount: 14, top10: [{ rank: 1, gameId: 'g1', title: 'Game 1', card: { imageUrl: null } }] } };
+      set({ data: FULL });
+    };
+
+    it('a query matching NOTHING collapses TOP to NO MATCHES (the curated list yields)', () => {
+      withTop10();
+      render(wrap(<FriendCollection />));
+      toTop();
+      fireEvent.press(screen.getByLabelText('Search'));
+      fireEvent.changeText(screen.getByLabelText('Title · developer · publisher'), 'zzzz');
+      expect(screen.getByText('NO MATCHES')).toBeTruthy();
+      expect(screen.queryByText(/READ-ONLY · RIKO'S CURATED TOP 10/i)).toBeNull();
+    });
+
+    it('a MATCHING query keeps the curated Top-10 unfiltered, under the RESULTS header', () => {
+      withTop10();
+      render(wrap(<FriendCollection />));
+      toTop();
+      fireEvent.press(screen.getByLabelText('Search'));
+      fireEvent.changeText(screen.getByLabelText('Title · developer · publisher'), 'game');
+      expect(screen.getByText('RESULTS — TITLE · DEVELOPER · PUBLISHER')).toBeTruthy();
+      expect(screen.getByText(/READ-ONLY · RIKO'S CURATED TOP 10/i)).toBeTruthy();
+      expect(screen.queryByText('NO MATCHES')).toBeNull();
+    });
+  });
+
   it('404 → the terminal Unavailable', () => {
     set({ isError: true, error: { status: 404 } });
     render(wrap(<FriendCollection />));

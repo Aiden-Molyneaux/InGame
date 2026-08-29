@@ -29,8 +29,12 @@
   shelf scrolls to it + pulses. While it's mid-scroll on a later try, tap the View keycap
   (shelf→grid mid-landing). **PASS:** no crash, grid re-lands or settles quietly (the stale-retry
   fix). Scroll the 18-card shelf fast. **PASS:** rows fill in without blanks/jank.
-- [ ] **Flip-back beat (bless or flag):** flip a card, switch tabs, return. The flip-back now
-  animates ON RETURN (freeze defers it). Documented as accepted — eyeball it once.
+- ~~**Flip-back beat (bless or flag):** flip a card, switch tabs, return. The flip-back now
+  animates ON RETURN (freeze defers it). Documented as accepted — eyeball it once.~~
+  **→ MOOT (walk-5 batch 1 ruling, product-spec 0.70).** The owner REJECTED the deferred flip-back:
+  a flipped card now STAYS in the state the user left it across tab switches, so the blur-time
+  COL-12 flip reset was removed. With no reset there is nothing for freeze to defer — the beat this
+  probe was written to judge no longer exists. Nothing to walk; kept for the trail.
 - [ ] **View-switch scroll reset (bless or flag):** switching shelf/grid/list now resets scroll
   to top (list remount). Old behavior kept arbitrary offsets.
 

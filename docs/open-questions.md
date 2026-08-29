@@ -16,6 +16,31 @@
 
 ## Open
 
+- OQ-163: **The friend-circle rankings ladder has no read of its own — it rides an ANCHOR friend's
+  compare payload, and PROF-03 hours-privacy will blank it.** The walk-5 relocation moved "The
+  Rankings" off the Compare screen onto the Friends surface (door-row → `/friends-rankings`), but the
+  cohort ladder is still only assembled inside `GET /me/compare/:friendId`
+  (`users-service.getCompare` → `friendCohortTotals` + the actor's own row, ranked). So
+  `useFriendRankings` (`apps/mobile/src/components/social/FriendRankings.tsx`) fetches the compare
+  payload for the ROSTER HEAD and reads `leaderboard` off it. That is safe TODAY only because
+  `resolveCompareVisibility()` is hardcoded `{ hoursVisible: true }`: the moment real hours-privacy
+  ships, one anchor who hides hours omits `leaderboard` and blanks the ladder **for the whole circle**
+  — a privacy setting belonging to one friend silently deleting a screen about everybody. Promote the
+  ladder to its own read (**`GET /me/friends/rankings`**) BEFORE that switch is wired; api-contract
+  ripple. Fold in while promoting: the anchor read's 409 `NOT_FRIENDS` (a race — the roster head
+  unfriends between the two reads) currently surfaces through the page's generic LoadError as
+  "Check your connection and try again", which is a miscopy for a non-network cause. (walk-5 wave B
+  + Murr audit, 2026-08-29) [behavior] pre-beta
+- OQ-162: **The Collection tools-bar glyph set + the tools bar itself are duplicated, not shared.**
+  component-map §5.4 names a `ToolsBar` component, but none exists: the owner shelf declares its bar
+  and its board SVG glyphs INLINE (`apps/mobile/app/(tabs)/collection.tsx:56-116`), and walk-5 wave B
+  gave the glyphs a shared home at `apps/mobile/src/components/collection/toolsGlyphs.tsx` for the
+  friend shelf (`app/user/[id]/collection.tsx`) without being able to touch the owner file (a
+  parallel packet owned it that wave). So the two shelves now render byte-identical glyphs from two
+  places — exactly the drift the owner's parity CR was about. Two steps, both small: (a) delete the
+  inline glyph copies from `collection.tsx:56-116` and import from `toolsGlyphs.tsx`; (b) decide
+  whether to extract the real `ToolsBar` the map already names, so the bar's geometry/chrome is shared
+  too rather than mirrored by hand. (walk-5 wave B + Murr audit, 2026-08-29) [presentation]
 - OQ-161: **`domain_events` needs a retention policy — it is append-only, never pruned, and grows with
   TIME, not users.** Surfaced by the perf-round2 pre-beta packet (S5/P7): every mutation writes an
   outbox row, the feed scan and the achievements counters both read history, and nothing ever deletes.
